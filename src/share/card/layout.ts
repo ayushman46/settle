@@ -114,6 +114,8 @@ const BOTTOM_PAD = 56
 
 const TILE = 88
 const TITLE_LINE = 64
+/** How far a comma reaches below the baseline, as a fraction of the font size (Geist). */
+export const AMOUNT_DESCENT = 0.16
 const STYLE = {
   category: { size: 30, weight: 600 },
   date: { size: 28, weight: 400 },
@@ -241,7 +243,8 @@ export function layoutShareCard(input: ShareCardInput, opts: ShareCardLayoutOpti
     const titleTop = tileY + TILE + 36
     const subtitleY = titleTop + titleLines.length * TITLE_LINE + 32
     const amountY = subtitleY + 28 + Math.round(amountSize * 0.84)
-    const underlineY = amountY + 20
+    // Below the comma's tail (Geist descends 0.16em under the baseline), with clear air.
+    const underlineY = amountY + Math.round(amountSize * AMOUNT_DESCENT) + 14
     const dividerY = underlineY + 12 + 34
     const peopleTop = dividerY + 32
     return { titleLines, tileY, titleTop, subtitleY, amountY, underlineY, dividerY, peopleTop, roomForRows: maxCardH - peopleTop - progressH - BOTTOM_PAD }

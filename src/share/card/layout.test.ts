@@ -4,7 +4,7 @@ import { formatBillDate } from '../../lib/format'
 import { formatMoney } from '../../lib/money'
 import { categoryLabel } from '../categories'
 import { CATEGORY_ICON_PATHS, CHECK_ICON_PATHS } from './icons'
-import { CARD_SIZE, layoutShareCard, type CardOp, type CardScene, type ShareCardInput, type ShareCardLayoutOptions } from './layout'
+import { AMOUNT_DESCENT, CARD_SIZE, layoutShareCard, type CardOp, type CardScene, type ShareCardInput, type ShareCardLayoutOptions } from './layout'
 import { fakeMeasure } from './testMeasure'
 import { CARD_THEMES, CATEGORY_COLORS } from './theme'
 
@@ -196,6 +196,18 @@ describe('layoutShareCard', () => {
     expect(amount?.style.size).toBeLessThan(112)
     const small = texts(layoutShareCard(input(), LIGHT, fakeMeasure)).find((op) => op.text === money(276_650))
     expect(small?.style.size).toBe(112)
+  })
+
+  it("keeps the lime underline clear of the total's comma, at every size", () => {
+    for (const total of [84_000, 276_650, 3_200_000, 99_999_999_999_999]) {
+      const scene = layoutShareCard(input({ total }), LIGHT, fakeMeasure)
+      const amount = texts(scene).find((op) => op.text === money(total))
+      const underline = scene.ops.find((op) => op.kind === 'rect' && op.fill === CARD_THEMES.light.accent && op.h === 12)
+      const ticket = scene.ops.find((op) => op.kind === 'ticket')
+      if (!amount || underline?.kind !== 'rect' || ticket?.kind !== 'ticket') throw new Error('missing amount, underline or ticket')
+      expect(underline.y - (amount.y + amount.style.size * AMOUNT_DESCENT), String(total)).toBeGreaterThanOrEqual(8)
+      expect(underline.y + underline.h).toBeLessThan(ticket.notchY - ticket.notchR)
+    }
   })
 
   it('truncates long names before they reach the amount', () => {
