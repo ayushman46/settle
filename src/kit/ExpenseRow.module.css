@@ -1,0 +1,36 @@
+/* A touch taller than a plain list row: the category tile and the two-line right side need air. */
+.row {
+  min-height: calc(var(--s-16) + var(--s-2));
+}
+
+.recurring {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  margin-inline-start: 6px;
+  vertical-align: -1px;
+  color: var(--ink-3);
+}
+
+/* Amount over its status, right-aligned; the column never squeezes the amount. */
+.side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  min-width: 0;
+}
+
+.amount {
+  letter-spacing: -0.015em;
+}
+
+.status {
+  max-width: 100%;
+}
+
+.caption {
+  font: var(--text-caption);
+  color: var(--ink-2);
+  white-space: nowrap;
+}
