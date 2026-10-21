@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { callApi, isOffline, isRecord, retryAfterSeconds } from './http'
+import { callApi, isOffline, isRecord, PRO_ALLOWANCE_MIN_WAIT_SECONDS, retryAfterSeconds, waitPhrase } from './http'
 
 const fetchMock = vi.fn<typeof fetch>()
 
@@ -149,6 +149,24 @@ describe('retryAfterSeconds', () => {
     expect(retryAfterSeconds(withHeader(new Date(now - 90_000).toUTCString()), now)).toBe(0)
     expect(retryAfterSeconds(withHeader('soon'), now)).toBeNull()
     expect(retryAfterSeconds(new Response(null, { status: 429 }), now)).toBeNull()
+  })
+})
+
+describe('waitPhrase', () => {
+  it('names the wait in minutes, then hours, always rounding up', () => {
+    expect(waitPhrase(0)).toBe('about a minute')
+    expect(waitPhrase(60)).toBe('about a minute')
+    expect(waitPhrase(61)).toBe('about 2 minutes')
+    expect(waitPhrase(600)).toBe('about 10 minutes')
+    expect(waitPhrase(89 * 60)).toBe('about 89 minutes')
+    expect(waitPhrase(90 * 60)).toBe('about 2 hours')
+    expect(waitPhrase(6 * 3600 - 1)).toBe('about 6 hours')
+    expect(waitPhrase(86_400)).toBe('about 24 hours')
+  })
+
+  it('leaves room for every non-Pro limit below the fair-use threshold', () => {
+    // The free per-device window (10 minutes by default) never reads as the Pro allowance.
+    expect(PRO_ALLOWANCE_MIN_WAIT_SECONDS).toBe(600)
   })
 })
 

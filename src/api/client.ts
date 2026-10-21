@@ -4,6 +4,7 @@
  */
 import {
   isCategoryId,
+  LICENSE_HEADER,
   SCAN_BUDGET_MS,
   type ApiErrorCode,
   type HealthResponse,
@@ -11,7 +12,7 @@ import {
   type ScannedItem,
 } from '../../shared/api'
 import { licenseHeaders } from '../pro/store'
-import { callApi, isOffline, isRecord, type CallResult } from './http'
+import { callApi, isOffline, isRecord, PRO_ALLOWANCE_MIN_WAIT_SECONDS, waitPhrase, type CallResult } from './http'
 
 /** What can go wrong with a scan: the API's scan-related codes plus our own transport ones. */
 export type ScanErrorCode = Exclude<ApiErrorCode, 'not_a_split' | 'billing_unavailable'> | 'network' | 'aborted'
@@ -40,14 +41,16 @@ export const SCANS_BUSY_MESSAGE = 'Lots of bills are being read right now — tr
 
 /**
  * The `rate_limited` copy for a `Retry-After` of `seconds`: a short wait is "busy", a long one is our
- * per-device limit ("about N minutes"). Without the header, the catalog copy.
+ * per-device limit ("about N minutes") — or, for a scan sent with Pro (`pro`), the day's fair-use
+ * allowance. Without the header, the catalog copy.
  */
-export function rateLimitedMessage(seconds: number | null): string {
+export function rateLimitedMessage(seconds: number | null, pro = false): string {
   if (seconds === null) return SCAN_ERROR_MESSAGES.rate_limited
   if (seconds < 60) return SCANS_BUSY_MESSAGE
-  const minutes = Math.ceil(seconds / 60)
-  const when = minutes === 1 ? 'about a minute' : `about ${minutes} minutes`
-  return `Too many scans. Try again in ${when} — or type the items in.`
+  if (pro && seconds > PRO_ALLOWANCE_MIN_WAIT_SECONDS) {
+    return `You've reached today's fair-use AI limit. It resets in ${waitPhrase(seconds)} — you can still type the items in.`
+  }
+  return `Too many scans. Try again in ${waitPhrase(seconds)} — or type the items in.`
 }
 
 /** Shown instead of trying at all when the browser knows it's offline. */
@@ -93,7 +96,7 @@ function fallbackCode(status: number): ScanErrorCode {
 }
 
 /** The ScanError for a failed call: our own copy for every code, never the server's words. */
-function scanErrorFrom(result: Exclude<CallResult, { ok: true }>): ScanError {
+function scanErrorFrom(result: Exclude<CallResult, { ok: true }>, pro: boolean): ScanError {
   switch (result.kind) {
     case 'timeout':
       return new ScanError('timeout')
@@ -106,7 +109,7 @@ function scanErrorFrom(result: Exclude<CallResult, { ok: true }>): ScanError {
     case 'http': {
       const code =
         result.code !== null && SCAN_API_CODES.has(result.code) ? (result.code as ScanErrorCode) : fallbackCode(result.status)
-      if (code === 'rate_limited') return new ScanError(code, rateLimitedMessage(result.retryAfter))
+      if (code === 'rate_limited') return new ScanError(code, rateLimitedMessage(result.retryAfter, pro))
       return new ScanError(code)
     }
   }
@@ -155,14 +158,15 @@ export function parseScanResponse(body: unknown): ScanResponse | null {
  * @throws ScanError
  */
 export async function scanBill(dataUrl: string, signal?: AbortSignal): Promise<ScanResponse> {
+  const headers = licenseHeaders()
   const result = await callApi('/api/scan', {
     method: 'POST',
     body: { image: dataUrl },
-    headers: licenseHeaders(),
+    headers,
     timeoutMs: SCAN_TIMEOUT_MS,
     signal,
   })
-  if (!result.ok) throw scanErrorFrom(result)
+  if (!result.ok) throw scanErrorFrom(result, LICENSE_HEADER in headers)
   const parsed = parseScanResponse(result.body)
   if (!parsed) throw new ScanError('upstream_error')
   return parsed

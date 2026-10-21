@@ -26,6 +26,24 @@ export function retryAfterSeconds(response: Response, now: number = Date.now()):
   return Number.isFinite(at) ? Math.max(0, Math.ceil((at - now) / 1000)) : null
 }
 
+/**
+ * How long a wait is, for copy: "about a minute", "about 10 minutes", "about 6 hours". Rounded up,
+ * so we never promise sooner than the server will let them back in.
+ */
+export function waitPhrase(seconds: number): string {
+  const minutes = Math.max(1, Math.ceil(seconds / 60))
+  if (minutes === 1) return 'about a minute'
+  if (minutes < 90) return `about ${minutes} minutes`
+  return `about ${Math.ceil(minutes / 60)} hours`
+}
+
+/**
+ * A Pro request told to wait longer than this has used up the day's fair-use AI allowance: every
+ * other limit it can meet (requests in flight, NVIDIA's own back-off, the free per-device window)
+ * clears within ten minutes.
+ */
+export const PRO_ALLOWANCE_MIN_WAIT_SECONDS = 10 * 60
+
 export type CallFailureKind = 'timeout' | 'aborted' | 'network' | 'bad_body'
 
 export type CallResult =

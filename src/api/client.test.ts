@@ -140,6 +140,33 @@ describe('scanBill', () => {
     expect(rateLimitedMessage(61)).toBe('Too many scans. Try again in about 2 minutes — or type the items in.')
   })
 
+  it('words a long wait in hours', () => {
+    expect(rateLimitedMessage(3 * 3600)).toBe('Too many scans. Try again in about 3 hours — or type the items in.')
+  })
+
+  it("tells Pro when the day's fair-use allowance is used up", async () => {
+    installLicense(await signer.token(), signer.publicKey)
+    const limited = (retryAfter: string) =>
+      new Response(JSON.stringify({ error: { code: 'rate_limited' } }), {
+        status: 429,
+        headers: { 'Content-Type': 'application/json', 'Retry-After': retryAfter },
+      })
+    fetchMock.mockResolvedValueOnce(limited(String(5 * 3600 + 120)))
+    expect((await scanError(scanBill('data:x'))).message).toBe(
+      "You've reached today's fair-use AI limit. It resets in about 6 hours — you can still type the items in.",
+    )
+    // A short wait is still just busy, Pro or not.
+    fetchMock.mockResolvedValueOnce(limited('10'))
+    expect((await scanError(scanBill('data:x'))).message).toBe(SCANS_BUSY_MESSAGE)
+    fetchMock.mockResolvedValueOnce(limited('300'))
+    expect((await scanError(scanBill('data:x'))).message).toBe('Too many scans. Try again in about 5 minutes — or type the items in.')
+  })
+
+  it("never calls a free scan's wait the Pro allowance", () => {
+    expect(rateLimitedMessage(5 * 3600, false)).toBe('Too many scans. Try again in about 5 hours — or type the items in.')
+    expect(rateLimitedMessage(5 * 3600, true)).toMatch(/^You've reached today's fair-use AI limit/)
+  })
+
   it('waits longer than the server spends on one scan', () => {
     expect(SCAN_TIMEOUT_MS).toBe(SCAN_BUDGET_MS + 10_000)
   })

@@ -149,6 +149,18 @@ describe('describeSplit', () => {
     expect(describeRateLimitedMessage(60)).toBe('Too many AI splits for now. Try again in about a minute — or split it by hand.')
   })
 
+  it("words a long wait in hours, and tells Pro when the day's fair-use allowance is used up", async () => {
+    expect(describeRateLimitedMessage(2 * 3600)).toBe('Too many AI splits for now. Try again in about 2 hours — or split it by hand.')
+    installLicense(await signer.token(), signer.publicKey)
+    fetchMock.mockResolvedValueOnce(json({ error: { code: 'rate_limited' } }, 429, { 'Retry-After': '40000' }))
+    expect((await describeError(describeSplit('Tea 40', HINTS))).message).toBe(
+      "You've reached today's fair-use AI limit. It resets in about 12 hours — you can still split it by hand.",
+    )
+    fetchMock.mockResolvedValueOnce(json({ error: { code: 'rate_limited' } }, 429, { 'Retry-After': '10' }))
+    expect((await describeError(describeSplit('Tea 40', HINTS))).message).toBe(DESCRIBE_ERROR_MESSAGES.rate_limited)
+    expect(describeRateLimitedMessage(40_000, false)).toBe('Too many AI splits for now. Try again in about 12 hours — or split it by hand.')
+  })
+
   it('treats a malformed answer as an upstream error', async () => {
     fetchMock.mockResolvedValueOnce(new Response('not json', { status: 200 }))
     expect((await describeError(describeSplit('Tea 40', HINTS))).code).toBe('upstream_error')

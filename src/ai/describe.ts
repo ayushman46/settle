@@ -7,12 +7,13 @@ import {
   DESCRIBE_BUDGET_MS,
   DESCRIBE_LIMITS,
   isCategoryId,
+  LICENSE_HEADER,
   type DescribedPerson,
   type DescribeRequest,
   type DescribeResponse,
 } from '../../shared/api'
 import type { DescribedSplit } from '../domain/types'
-import { callApi, isOffline, isRecord, type CallResult } from '../api/http'
+import { callApi, isOffline, isRecord, PRO_ALLOWANCE_MIN_WAIT_SECONDS, waitPhrase, type CallResult } from '../api/http'
 import { isIsoDate } from '../engine/dates'
 import { isKnownCurrency } from '../lib/currencies'
 import { graphemes, nameKey, normalizeName } from '../lib/people'
@@ -70,12 +71,16 @@ export class DescribeError extends Error {
   }
 }
 
-/** `rate_limited` copy for a `Retry-After`: a short wait is "busy", a long one names the wait. */
-export function describeRateLimitedMessage(seconds: number | null): string {
+/**
+ * `rate_limited` copy for a `Retry-After`: a short wait is "busy", a long one names the wait — or,
+ * for a request sent with Pro (`pro`), says the day's fair-use allowance is used up.
+ */
+export function describeRateLimitedMessage(seconds: number | null, pro = false): string {
   if (seconds === null || seconds < 60) return DESCRIBE_ERROR_MESSAGES.rate_limited
-  const minutes = Math.ceil(seconds / 60)
-  const when = minutes === 1 ? 'about a minute' : `about ${minutes} minutes`
-  return `Too many AI splits for now. Try again in ${when} — or split it by hand.`
+  if (pro && seconds > PRO_ALLOWANCE_MIN_WAIT_SECONDS) {
+    return `You've reached today's fair-use AI limit. It resets in ${waitPhrase(seconds)} — you can still split it by hand.`
+  }
+  return `Too many AI splits for now. Try again in ${waitPhrase(seconds)} — or split it by hand.`
 }
 
 const DESCRIBE_API_CODES: ReadonlySet<string> = new Set<DescribeErrorCode>([
@@ -98,7 +103,7 @@ function fallbackCode(status: number): DescribeErrorCode {
   return 'upstream_error'
 }
 
-function describeErrorFrom(result: Exclude<CallResult, { ok: true }>): DescribeError {
+function describeErrorFrom(result: Exclude<CallResult, { ok: true }>, pro: boolean): DescribeError {
   switch (result.kind) {
     case 'timeout':
       return new DescribeError('timeout')
@@ -113,7 +118,7 @@ function describeErrorFrom(result: Exclude<CallResult, { ok: true }>): DescribeE
         result.code !== null && DESCRIBE_API_CODES.has(result.code)
           ? (result.code as DescribeErrorCode)
           : fallbackCode(result.status)
-      if (code === 'rate_limited') return new DescribeError(code, describeRateLimitedMessage(result.retryAfter))
+      if (code === 'rate_limited') return new DescribeError(code, describeRateLimitedMessage(result.retryAfter, pro))
       return new DescribeError(code)
     }
   }
@@ -206,14 +211,15 @@ export async function describeSplit(text: string, ctx: DescribeHints, signal?: A
   if (!/[\p{L}\p{N}]/u.test(body.text)) throw new DescribeError('bad_request')
   if (Array.from(body.text).length > DESCRIBE_LIMITS.maxTextChars) throw new DescribeError('bad_request', DESCRIBE_TOO_LONG_MESSAGE)
 
+  const headers = licenseHeaders()
   const result = await callApi('/api/describe', {
     method: 'POST',
     body,
-    headers: licenseHeaders(),
+    headers,
     timeoutMs: DESCRIBE_TIMEOUT_MS,
     signal,
   })
-  if (!result.ok) throw describeErrorFrom(result)
+  if (!result.ok) throw describeErrorFrom(result, LICENSE_HEADER in headers)
   const parsed = parseDescribeResponse(result.body)
   if (!parsed) throw new DescribeError('upstream_error')
   return parsed
