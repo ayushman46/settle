@@ -19,7 +19,10 @@ export interface AvatarStackProps {
   className?: string
 }
 
-/** Overlapping avatars for "who's on this item", capped with a "+N" counter. */
+/**
+ * Overlapping avatars for "who's on this item", capped with a "+N" counter. The rings that
+ * separate them match `--surface`; on another surface set `--avatar-ring` (e.g. on a dark card).
+ */
 export function AvatarStack({ people, max = 4, size = 'sm', label, className }: AvatarStackProps) {
   const limit = Math.max(1, Math.floor(max))
   const overflow = people.length > limit

@@ -57,7 +57,7 @@
 
 .selected {
   box-shadow:
-    0 0 0 2px var(--surface),
+    0 0 0 2px var(--avatar-ring, var(--surface)),
     0 0 0 4px var(--accent);
 }
 
@@ -72,7 +72,7 @@
   border-radius: 50%;
   background: var(--accent);
   color: var(--on-accent);
-  box-shadow: 0 0 0 2px var(--surface);
+  box-shadow: 0 0 0 2px var(--avatar-ring, var(--surface));
   animation: badge-pop var(--dur-3) var(--ease-spring) backwards;
 }
 

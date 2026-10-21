@@ -19,12 +19,18 @@
   --stack-size: var(--s-10);
 }
 
+/*
+ * Each circle is cut out of the one before it by a ring of the surface it sits on. On another
+ * surface (a dark balance card, the canvas) set `--avatar-ring` on an ancestor.
+ */
 .item {
   margin-left: calc(var(--stack-size) * -0.3);
-  box-shadow: 0 0 0 2px var(--surface);
+  box-shadow: 0 0 0 2px var(--avatar-ring, var(--surface));
 }
 
+/* Positioned like the avatars, so the counter stacks on top in source order instead of beneath. */
 .more {
+  position: relative;
   display: inline-grid;
   flex: none;
   place-items: center;
