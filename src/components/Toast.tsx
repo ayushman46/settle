@@ -43,8 +43,8 @@ function isTextEntry(target: EventTarget | null): boolean {
 }
 
 /**
- * Hosts the app's single toast: a pill that floats just above the active action bar (the
- * screen's or the open sheet's), announced politely, auto-hiding and pausing while touched,
+ * Hosts the app's single toast: a pill that floats just above the live bottom controls (the
+ * screen's action bar or the open sheet's footer, the tab bar, a FAB), announced politely, auto-hiding and pausing while touched,
  * hovered or focused. A new toast replaces the current one. While one with an action (Undo) is
  * up, Ctrl/Cmd+Z runs it — so keyboard and screen-reader users don't have to reach the pill.
  */
@@ -227,14 +227,17 @@ function ToastPill({ item, leaving = false, onDismiss, onPause, onResume }: Toas
   )
 }
 
-/** Distance (px) from the layout viewport's bottom to the top of the live action bar, or null. */
+/**
+ * Distance (px) from the layout viewport's bottom to the top of the highest live bottom element
+ * (an action bar, the open sheet's footer, the tab bar or a FAB above it), or null when none.
+ */
 function anchorOffset(): number | null {
-  const anchors = Array.from(document.querySelectorAll<HTMLElement>('[data-toast-anchor]')).filter(
-    (el) => !el.closest('[inert], [data-closing]'),
-  )
-  const anchor = anchors[anchors.length - 1]
-  if (!anchor) return null
-  const rect = anchor.getBoundingClientRect()
-  if (rect.height === 0 && rect.top === 0) return null
-  return Math.max(0, Math.round(window.innerHeight - rect.top))
+  let top: number | null = null
+  for (const el of document.querySelectorAll<HTMLElement>('[data-toast-anchor]')) {
+    if (el.closest('[inert], [data-closing]')) continue
+    const rect = el.getBoundingClientRect()
+    if (rect.height === 0 && rect.top === 0) continue
+    if (top === null || rect.top < top) top = rect.top
+  }
+  return top === null ? null : Math.max(0, Math.round(window.innerHeight - top))
 }
