@@ -60,6 +60,7 @@ describe('FALLBACK_BILLING_CONFIG', () => {
     const yearly = planById(FALLBACK_BILLING_CONFIG, 'pro_yearly')
     expect(yearly?.savingsPercent).toBe(Math.floor((1 - (yearly?.amount ?? 0) / (12 * monthly)) * 100))
     expect(yearly?.badge).toBe('Best value')
+    expect(planById(FALLBACK_BILLING_CONFIG, 'pro_lifetime')?.badge).toBe('Pay once')
   })
 })
 

@@ -20,7 +20,7 @@ export const BILLING_CONFIG_TIMEOUT_MS = 8_000
 /** The Pro allowance per day when the server doesn't say (fair use). */
 const DEFAULT_PRO_AI_PER_DAY = 200
 
-/** Used until the server answers, and whenever it can't: the launch prices, checkout off. */
+/** Used until the server answers, and whenever it can't: the launch prices (as server/plans.ts builds them), checkout off. */
 export const FALLBACK_BILLING_CONFIG: BillingConfig = Object.freeze<BillingConfig>({
   checkout: null,
   keyId: null,
@@ -29,7 +29,7 @@ export const FALLBACK_BILLING_CONFIG: BillingConfig = Object.freeze<BillingConfi
     { id: 'pro_monthly', name: 'Monthly', amount: 4900, currency: 'INR', days: 30, badge: null, savingsPercent: null },
     // 12 × ₹49 = ₹588 a year; ₹399 saves ₹189 → 32% (rounded down, never overstated).
     { id: 'pro_yearly', name: 'Yearly', amount: 39900, currency: 'INR', days: 365, badge: 'Best value', savingsPercent: 32 },
-    { id: 'pro_lifetime', name: 'Lifetime', amount: 99900, currency: 'INR', days: null, badge: null, savingsPercent: null },
+    { id: 'pro_lifetime', name: 'Lifetime', amount: 99900, currency: 'INR', days: null, badge: 'Pay once', savingsPercent: null },
   ],
   licensePublicKey: null,
   proAiPerDay: DEFAULT_PRO_AI_PER_DAY,
