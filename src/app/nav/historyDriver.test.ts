@@ -250,6 +250,16 @@ describe('the bill flow', () => {
     expect(pops.map((p) => p.step)).toEqual(['scan'])
   })
 
+  it('a flow handler that navigates away wins over the step it was told about', async () => {
+    driver.navigate('/app/bill')
+    driver.init('scan')
+    driver.syncTo('review')
+    driver.setPopHandler(() => driver.navigate('/app/friends', { replace: true }))
+    await press('back')
+    expect(driver.location().path).toBe('/app/friends')
+    expect(state()).toEqual(page({ depth: 1, url: '/app/friends' }))
+  })
+
   it('keeps following pages when the flow’s handler throws', async () => {
     const reportError = vi.fn()
     vi.stubGlobal('reportError', reportError)

@@ -561,6 +561,18 @@ describe('navigate while a sheet is open', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
+  it('a close handler that navigates wins over the Back that closed its sheet', async () => {
+    const { user } = renderApp('/app', <Sheet label="Unsaved" onClose={() => navigate('/app/friends')} />)
+    act(() => navigate('/app/groups'))
+    await user.click(screen.getByRole('button', { name: 'Open Unsaved' }))
+    await back()
+    expect(heading()).toBe('Friends')
+    expect(url()).toBe('/app/friends')
+    expect(entry()).toEqual({ depth: 2, sheet: 0, bill: null, url: '/app/friends' })
+    await back()
+    expect(heading()).toBe('Groups')
+  })
+
   it('a sheet that refuses to close stays open over the new page', async () => {
     function Sticky() {
       useBackClose(true, () => {})

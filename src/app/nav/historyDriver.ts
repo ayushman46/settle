@@ -277,8 +277,8 @@ export class HistoryDriver {
       }
       // Where this lands isn't known for sure (only the entry's own record says), so it is
       // followed like the system Back button; calls made meanwhile wait for it.
-      this.enqueue({ kind: 'travel', delta: screen - 1 - top.depth })
       this.traveling = true
+      this.enqueue({ kind: 'travel', delta: screen - 1 - top.depth })
     })
   }
 
@@ -564,7 +564,10 @@ export class HistoryDriver {
     const closed = this.interceptors.filter((i) => i.depth > landed.depth)
     this.interceptors = this.interceptors.filter((i) => i.depth <= landed.depth)
     this.planned = landed
+    const shown = this.locationUrl
     this.notify(closed)
+    // A close handler navigated somewhere else: that newer move wins.
+    if (this.locationUrl !== shown) return
 
     let at = landed
     if (landed.sheet > 0) {
@@ -586,6 +589,7 @@ export class HistoryDriver {
       const handler = this.popHandler
       const entry = toFlowEntry(at)
       if (handler && entry) runAll([() => handler(entry)])
+      if (this.locationUrl !== shown) return
     }
 
     // 3. Another page.
