@@ -556,6 +556,53 @@ describe('POST /api/describe', () => {
     expect(logger.info).toHaveBeenCalledWith(expect.stringContaining('[describe] ok · nvidia/nemotron-test-text · shares · 3 people'))
   })
 
+  it('reads a UTF-8 body end to end: "₹" names the currency, "I paid" the payer, "last night" the date', async () => {
+    // What Lightning answered for this sentence in the live run (it left the currency out).
+    fetchMock.mockResolvedValueOnce(
+      chatResponse({
+        isExpense: true,
+        title: 'Swiggy order',
+        category: 'food',
+        amount: 1260,
+        currency: null,
+        payer: 'Me',
+        mode: 'equal',
+        people: [
+          { name: 'Me', value: null },
+          { name: 'riya', value: null },
+          { name: 'sam', value: null },
+        ],
+        headcount: null,
+        date: null,
+      }),
+    )
+    const text = 'Swiggy order ₹1,260 last night with riya & sam, I paid'
+    const bytes = new TextEncoder().encode(JSON.stringify({ text, people: ['Riya Sharma', 'Sam'], currency: 'INR', today: '2026-10-21' }))
+    const response = await makeApp().request(
+      '/api/describe',
+      { method: 'POST', headers: { 'content-type': 'application/json; charset=utf-8' }, body: bytes },
+      fromSocket('198.51.100.1'),
+    )
+    expect(response.status).toBe(200)
+    expect((await response.json()) as DescribeResponse).toEqual({
+      title: 'Swiggy Order',
+      category: 'food',
+      amount: 1260,
+      currency: 'INR',
+      mode: 'equal',
+      payer: 'Me',
+      people: [
+        { name: 'Me', value: null },
+        { name: 'Riya Sharma', value: null },
+        { name: 'Sam', value: null },
+      ],
+      headcount: null,
+      date: '2026-10-20',
+      model: 'nvidia/nemotron-test-text',
+    })
+    expect(JSON.stringify(sentBody(fetchMock))).toContain('₹1,260')
+  })
+
   it("resolves dates from the client's today, or the server's when it sends none", async () => {
     fetchMock.mockImplementation(async () => chatResponse({ ...CAB_REPLY, date: null }))
     const withToday = (await (await postDescribe(makeApp(), { text: 'Cab 840 with Riya yesterday', today: '2026-10-21' })).json()) as DescribeResponse
