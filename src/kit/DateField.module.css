@@ -1,0 +1,114 @@
+/* A pill that looks like a chip; the native date input lies invisibly on top and takes the taps. */
+.field {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: var(--s-2);
+  max-width: 100%;
+  height: var(--tap);
+  padding-inline: var(--s-3) var(--s-3);
+  border-radius: var(--r-pill);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+  color: var(--ink);
+  font: var(--text-label);
+  font-weight: 600;
+  white-space: nowrap;
+  transition:
+    transform var(--dur-2) var(--ease-spring),
+    background-color var(--dur-2) var(--ease-out),
+    box-shadow var(--dur-2) var(--ease-out);
+}
+
+.field:active:not(.disabled) {
+  transform: scale(0.97);
+  background: var(--surface-2);
+  transition-duration: var(--dur-1);
+}
+
+@media (hover: hover) {
+  .field:hover:not(.disabled) {
+    background: var(--surface-2);
+  }
+}
+
+/* The input is invisible, so the chip shows its keyboard focus. */
+.field:has(.input:focus-visible) {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.icon {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  color: var(--ink-2);
+}
+
+.text {
+  min-width: 0;
+  overflow: hidden;
+  font-variant-numeric: tabular-nums;
+  text-overflow: ellipsis;
+}
+
+.chevron {
+  flex: none;
+  width: var(--s-4);
+  height: var(--s-4);
+  margin-inline-start: calc(var(--s-1) * -1);
+  color: var(--ink-3);
+}
+
+.input {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: inherit;
+  background: transparent;
+  color: transparent;
+  /* 16px: iOS never zooms into it. */
+  font-size: max(16px, 1rem);
+  opacity: 0;
+  cursor: pointer;
+  appearance: none;
+}
+
+.input:focus-visible {
+  outline: none;
+}
+
+/* Chrome's picker button covers the whole chip, so a click anywhere opens the calendar. */
+.input::-webkit-calendar-picker-indicator {
+  position: absolute;
+  inset: 0;
+  width: auto;
+  height: auto;
+  margin: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+.disabled {
+  opacity: 0.55;
+}
+
+.disabled .input {
+  cursor: default;
+}
+
+@media (forced-colors: active) {
+  .field {
+    border: 1px solid CanvasText;
+  }
+
+  .field:has(.input:focus-visible) {
+    outline-color: Highlight;
+  }
+}
