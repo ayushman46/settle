@@ -20,6 +20,7 @@ export {
 export {
   CHECKOUT_MESSAGES,
   FALLBACK_BILLING_CONFIG,
+  hasFreshBillingConfig,
   loadBillingConfig,
   planById,
   planMonths,

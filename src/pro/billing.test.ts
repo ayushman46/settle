@@ -14,7 +14,7 @@ import {
 import { FALLBACK_BILLING_CONFIG } from './config'
 import { readPendingPayment } from './pending'
 import { CLAIM_RETRY_DELAYS_MS, proState } from './store'
-import { createTestSigner, resetProModulesForTests, type TestSigner } from './testKit'
+import { createTestSigner, rememberBillingConfig, resetProModulesForTests, type TestSigner } from './testKit'
 
 type Handler = (init: RequestInit | undefined) => Response | Promise<Response>
 
@@ -241,8 +241,20 @@ describe('startCheckout', () => {
     expect(calls('/api/billing/order')).toHaveLength(0)
   })
 
-  it('is unavailable when the server cannot be reached and only the built-in plans are known', async () => {
-    await expect(startCheckout('pro_yearly')).resolves.toEqual({ status: 'unavailable' })
+  it('says the server cannot be reached rather than calling checkout unavailable', async () => {
+    // Only the built-in plans are known (checkout off) — that's not the server saying no.
+    await expect(startCheckout('pro_yearly')).resolves.toEqual({ status: 'failed', message: CHECKOUT_MESSAGES.network })
+    // Nor is a remembered config from a visit when checkout was off.
+    rememberBillingConfig({ checkout: null })
+    resetBillingForTests()
+    await expect(startCheckout('pro_yearly')).resolves.toEqual({ status: 'failed', message: CHECKOUT_MESSAGES.network })
+    expect(calls('/api/billing/order')).toHaveLength(0)
+  })
+
+  it('tries the order when a remembered config has checkout but the server is out of reach', async () => {
+    rememberBillingConfig({ checkout: 'razorpay', keyId: 'rzp_test_abc' })
+    await expect(startCheckout('pro_yearly')).resolves.toEqual({ status: 'failed', message: CHECKOUT_MESSAGES.network })
+    expect(calls('/api/billing/order')).toHaveLength(1)
   })
 
   it('is unavailable when billing is switched off between config and order', async () => {

@@ -9,12 +9,13 @@
 import type { OrderResponse } from '../../shared/api'
 import { BRAND, type License, type PlanId } from '../domain/types'
 import { callApi, isOffline, isRecord } from '../api/http'
-import { loadBillingConfig, planById } from './config'
+import { hasFreshBillingConfig, loadBillingConfig, planById } from './config'
 import { claimPayment } from './store'
 import { isPlanId } from './token'
 
 export {
   FALLBACK_BILLING_CONFIG,
+  hasFreshBillingConfig,
   loadBillingConfig,
   planById,
   planMonths,
@@ -219,7 +220,10 @@ function pay(Razorpay: RazorpayConstructor, order: OrderResponse, planName: stri
 async function runCheckout(planId: PlanId, opts: CheckoutOptions): Promise<CheckoutResult> {
   if (isOffline()) return failed(CHECKOUT_MESSAGES.offline)
   const config = await loadBillingConfig({ fresh: true })
-  if (config.checkout !== 'razorpay') return { status: 'unavailable' }
+  if (config.checkout !== 'razorpay') {
+    // Only the server's own answer means "not set up"; a remembered or built-in config can't tell.
+    return hasFreshBillingConfig() ? { status: 'unavailable' } : failed(CHECKOUT_MESSAGES.network)
+  }
   const plan = planById(config, planId)
   if (!plan) return failed(CHECKOUT_MESSAGES.planMissing)
 
