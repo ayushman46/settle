@@ -116,6 +116,44 @@ function Friends() {
   )
 }
 
+/** A form with an unsaved-changes guard: while dirty, Back asks first (a confirm sheet). */
+function Editor() {
+  const [dirty, setDirty] = useState(true)
+  const [confirming, setConfirming] = useState(false)
+  useBackClose(dirty, () => setConfirming(true))
+  useBackClose(confirming, () => setConfirming(false))
+  return (
+    <main>
+      <h1>Editor</h1>
+      <button onClick={() => (dirty ? setConfirming(true) : goBack('/app'))}>Leave</button>
+      <Sheet label="People" />
+      {confirming && (
+        <div role="dialog" aria-label="Discard changes?">
+          <button onClick={() => setConfirming(false)}>Keep editing</button>
+          <button
+            onClick={() => {
+              setConfirming(false)
+              setDirty(false)
+              goBack('/app')
+            }}
+          >
+            Discard
+          </button>
+          <button
+            onClick={() => {
+              setConfirming(false)
+              setDirty(false)
+              navigate('/app/groups/saved', { replace: true })
+            }}
+          >
+            Save
+          </button>
+        </div>
+      )}
+    </main>
+  )
+}
+
 const stepAfter = (step: StepId): StepId | null => STEPS[STEPS.indexOf(step) + 1] ?? null
 const stepBefore = (step: StepId): StepId | null => STEPS[STEPS.indexOf(step) - 1] ?? null
 
@@ -165,7 +203,7 @@ function BillFlow({ resumeAt = 'scan' }: { resumeAt?: StepId }) {
   )
 }
 
-const ROUTES = ['/app', '/app/groups', '/app/groups/:id', '/app/bill', '/app/friends', '/app/*'] as const
+const ROUTES = ['/app', '/app/groups', '/app/groups/:id', '/app/bill', '/app/friends', '/app/split/new', '/app/*'] as const
 
 let billResumeAt: StepId = 'scan'
 
@@ -188,6 +226,9 @@ function Shell({ children }: { children?: ReactNode }) {
       break
     case '/app/friends':
       page = <Friends />
+      break
+    case '/app/split/new':
+      page = <Editor />
       break
     case '/app/*':
       page = <Redirect to="/app" />
@@ -703,6 +744,96 @@ describe('navigate while a sheet is open', () => {
     expect(heading()).toBe('Groups')
     expect(entry()).toEqual({ depth: 2, sheet: 1, bill: null, url: '/app/groups' })
     expect(historyDriver().openSheets).toBe(1)
+  })
+})
+
+describe('a guard for unsaved changes', () => {
+  const confirmDialog = () => screen.queryByRole('dialog', { name: 'Discard changes?' })
+
+  it('Back asks first, Back again keeps editing, and the next Back asks again', async () => {
+    const { user } = renderApp()
+    act(() => navigate('/app/split/new'))
+    await settle()
+    expect(entry()).toEqual({ depth: 2, sheet: 1, bill: null, url: '/app/split/new' })
+
+    await back()
+    expect(heading()).toBe('Editor')
+    expect(confirmDialog()).toBeInTheDocument()
+    await settle()
+    expect(entry()).toMatchObject({ depth: 3, sheet: 2 })
+
+    await back()
+    expect(confirmDialog()).not.toBeInTheDocument()
+    expect(heading()).toBe('Editor')
+    expect(entry()).toEqual({ depth: 2, sheet: 1, bill: null, url: '/app/split/new' })
+
+    await back()
+    expect(confirmDialog()).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Keep editing' }))
+    await settle()
+    expect(confirmDialog()).not.toBeInTheDocument()
+    expect(heading()).toBe('Editor')
+    expect(entry()).toEqual({ depth: 2, sheet: 1, bill: null, url: '/app/split/new' })
+  })
+
+  it('the confirm opened from the screen’s own button closes on Back, leaving the guard', async () => {
+    const { user } = renderApp()
+    act(() => navigate('/app/split/new'))
+    await user.click(screen.getByRole('button', { name: 'Leave' }))
+    expect(confirmDialog()).toBeInTheDocument()
+    await back()
+    expect(confirmDialog()).not.toBeInTheDocument()
+    expect(heading()).toBe('Editor')
+    expect(entry()).toEqual({ depth: 2, sheet: 1, bill: null, url: '/app/split/new' })
+  })
+
+  it('a sheet over the form closes before the guard asks', async () => {
+    const { user } = renderApp()
+    act(() => navigate('/app/split/new'))
+    await user.click(screen.getByRole('button', { name: 'Open People' }))
+    await back()
+    expect(screen.queryByRole('dialog', { name: 'People' })).not.toBeInTheDocument()
+    expect(confirmDialog()).not.toBeInTheDocument()
+    await back()
+    expect(confirmDialog()).toBeInTheDocument()
+  })
+
+  it('Discard leaves to the screen beneath without leaving entries behind', async () => {
+    const { user } = renderApp()
+    act(() => navigate('/app/groups'))
+    act(() => navigate('/app/split/new'))
+    await back()
+    await user.click(screen.getByRole('button', { name: 'Discard' }))
+    await settle()
+    expect(heading()).toBe('Groups')
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(entry()).toEqual({ depth: 1, sheet: 0, bill: null, url: '/app/groups' })
+    expect(historyDriver().openSheets).toBe(0)
+    await back()
+    expect(heading()).toBe('Home')
+  })
+
+  it('a deep-linked form discards to the fallback', async () => {
+    const { user } = renderApp('/app/split/new')
+    await back()
+    await user.click(screen.getByRole('button', { name: 'Discard' }))
+    await settle()
+    expect(heading()).toBe('Home')
+    expect(entry()).toEqual({ depth: 0, sheet: 0, bill: null, url: '/app' })
+    expect(historyDriver().openSheets).toBe(0)
+  })
+
+  it('saving swaps the form for the saved page without asking', async () => {
+    const { user } = renderApp()
+    act(() => navigate('/app/split/new'))
+    await back()
+    await user.click(screen.getByRole('button', { name: 'Save' }))
+    expect(heading()).toBe('Group saved')
+    await settle()
+    expect(entry()).toEqual({ depth: 1, sheet: 0, bill: null, url: '/app/groups/saved' })
+    expect(historyDriver().openSheets).toBe(0)
+    await back()
+    expect(heading()).toBe('Home')
   })
 })
 

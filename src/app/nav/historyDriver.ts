@@ -83,6 +83,12 @@ interface Pending {
   timer: ReturnType<typeof setTimeout>
 }
 
+/** A sheet asking for an entry while another sheet's `onBack` runs. */
+interface Opening {
+  onBack: () => void
+  open: () => void
+}
+
 /** Surfaces an error (console/devtools, error trackers) without interrupting the caller. */
 function report(error: unknown): void {
   if (typeof globalThis.reportError === 'function') {
@@ -153,6 +159,8 @@ export class HistoryDriver {
   /** Running `deferred`: the screen hasn't caught up with history yet. */
   private replaying = false
   private interceptors: Interceptor[] = []
+  /** While a sheet's `onBack` runs: the sheets asking for entries, held until it returns. */
+  private openings: Opening[] | null = null
   private popHandler: PopHandler | null = null
   private readonly listeners = new Set<() => void>()
   private locationUrl: string
@@ -358,10 +366,16 @@ export class HistoryDriver {
 
   /* ------------------------------------------------------------------ sheets */
 
-  /** Pushes an entry for a sheet; Back pops it and calls `onBack` instead of changing the page. */
+  /**
+   * Pushes an entry for a sheet; Back pops it and calls `onBack` instead of changing the page.
+   * A sheet that stays open when Back closes it (it can't be dismissed yet, or it guards unsaved
+   * changes and opens a confirm) holds a new entry by calling `openSheet` again with the same
+   * `onBack` from inside it: that entry goes beneath any sheet opened meanwhile, so the next Back
+   * closes the newer sheet first.
+   */
   openSheet(onBack: () => void): SheetHandle {
     const interceptor: Interceptor = { depth: -1, onBack, released: false }
-    this.run(() => {
+    const open = (): void => {
       if (interceptor.released) return
       this.start()
       const cur = this.top()
@@ -369,7 +383,9 @@ export class HistoryDriver {
       this.write('push', entry)
       interceptor.depth = entry.depth
       this.interceptors.push(interceptor)
-    })
+    }
+    if (this.openings) this.openings.push({ onBack, open })
+    else this.run(open)
     return {
       release: () => {
         interceptor.released = true
@@ -391,6 +407,7 @@ export class HistoryDriver {
     this.traveling = false
     this.deferred = []
     this.interceptors = []
+    this.openings = null
     this.popHandler = null
     this.listeners.clear()
     this.lastDirection = 'none'
@@ -589,7 +606,30 @@ export class HistoryDriver {
   private notify(closed: Interceptor[]): void {
     if (closed.length === 0) return
     const ordered = [...closed].sort((a, b) => b.depth - a.depth)
-    runAll(ordered.map((i) => i.onBack))
+    for (const interceptor of ordered) this.close(interceptor)
+  }
+
+  /**
+   * Runs a popped sheet's `onBack`. Entries asked for meanwhile are held until it returns, then
+   * the sheet's own (it stayed open) goes first, beneath any sheet it opened.
+   */
+  private close(interceptor: Interceptor): void {
+    const outer = this.openings
+    const openings: Opening[] = []
+    this.openings = openings
+    try {
+      interceptor.onBack()
+    } catch (error) {
+      report(error)
+    } finally {
+      this.openings = outer
+    }
+    const own = openings.filter((o) => o.onBack === interceptor.onBack)
+    const others = openings.filter((o) => o.onBack !== interceptor.onBack)
+    for (const opening of [...own, ...others]) {
+      if (outer) outer.push(opening)
+      else this.run(opening.open)
+    }
   }
 
   /**

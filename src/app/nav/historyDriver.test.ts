@@ -278,6 +278,64 @@ describe('the bill flow', () => {
   })
 })
 
+describe('sheets', () => {
+  it('a sheet that stays open holds its entry again beneath the sheets its onBack opened', async () => {
+    driver.start()
+    const confirmBack = vi.fn()
+    const guardBack = (): void => {
+      driver.openSheet(confirmBack) // e.g. "Discard changes?"
+      driver.openSheet(guardBack) // still guarding
+    }
+    driver.openSheet(guardBack)
+    await idle()
+
+    await press('back')
+    expect(driver.openSheets).toBe(2)
+    expect(state()).toEqual(page({ depth: 2, sheet: 2, url: '/app' }))
+
+    await press('back')
+    expect(confirmBack).toHaveBeenCalledTimes(1)
+    expect(driver.openSheets).toBe(1)
+    expect(state()).toEqual(page({ depth: 1, sheet: 1, url: '/app' }))
+  })
+
+  it('a sheet released before its held entry is written never gets one', async () => {
+    driver.start()
+    let reopened: { release(): void } | null = null
+    const onBack = (): void => {
+      reopened = driver.openSheet(onBack)
+      reopened.release()
+    }
+    driver.openSheet(onBack)
+    await idle()
+    await press('back')
+    expect(reopened).not.toBeNull()
+    expect(driver.openSheets).toBe(0)
+    expect(state()).toEqual(page({ url: '/app' }))
+  })
+
+  it('an onBack that throws still gets what it asked for, and the sheets beneath are told', async () => {
+    const reportError = vi.fn()
+    vi.stubGlobal('reportError', reportError)
+    driver.navigate('/app/groups')
+    const lower = vi.fn()
+    const kept = vi.fn()
+    driver.openSheet(lower)
+    driver.openSheet(() => {
+      driver.openSheet(kept)
+      throw new Error('sheet broke')
+    })
+    await idle()
+    driver.back('/app')
+    await idle()
+    expect(reportError).toHaveBeenCalledWith(new Error('sheet broke'))
+    expect(lower).toHaveBeenCalledTimes(1)
+    expect(driver.location().path).toBe('/app')
+    expect(driver.openSheets).toBe(1)
+    expect(state()).toEqual(page({ depth: 1, sheet: 1, url: '/app' }))
+  })
+})
+
 describe('foreign entries', () => {
   it('an in-page link over an open sheet is claimed as that sheet’s entry', async () => {
     driver.navigate('/app/groups')

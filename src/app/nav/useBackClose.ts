@@ -7,6 +7,13 @@ import { historyDriver, type SheetHandle } from './historyDriver'
  * including inside the bill flow. While `open`, a history entry is held for the sheet; Back pops
  * it and calls `onClose`. Closing from the UI (`open` → false) removes that entry again, and so
  * does navigating away. Nested sheets close top-most first.
+ *
+ * If `open` is still true once `onClose` has run, the entry is held again — beneath any sheet
+ * `onClose` opened. That makes an unsaved-changes guard two lines:
+ *
+ *   useBackClose(dirty, () => setConfirming(true))         // Back asks first…
+ *   useBackClose(confirming, () => setConfirming(false))   // …and Back again keeps editing
+ *   // Discard: setDirty(false) and goBack(fallback) in the same handler.
  */
 export function useBackClose(open: boolean, onClose: () => void): void {
   const onCloseRef = useRef(onClose)
