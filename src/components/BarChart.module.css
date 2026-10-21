@@ -1,0 +1,133 @@
+.figure {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+}
+
+/* Bars stand on a dashed baseline; the top 28px is room for the value bubble. */
+.plot {
+  position: relative;
+  display: grid;
+  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-flow: column;
+  align-items: end;
+  gap: var(--s-2);
+  padding-top: 28px;
+  background:
+    repeating-linear-gradient(to right, var(--line-strong) 0 4px, transparent 4px 8px) bottom / 100% 1px no-repeat;
+}
+
+.column {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  height: 100%;
+  min-width: 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.bar {
+  width: min(100%, 32px);
+  height: calc(var(--bar, 0) * 100%);
+  border-radius: 8px 8px 3px 3px;
+  background: var(--chart-bar);
+  transform-origin: bottom;
+  animation: grow calc(var(--dur-4) * 1.4) var(--ease-spring) backwards;
+  animation-delay: calc(var(--i, 0) * 40ms);
+  transition:
+    background-color var(--dur-2) var(--ease-out),
+    height var(--dur-4) var(--ease-out);
+}
+
+.zero {
+  visibility: hidden;
+}
+
+.active .bar {
+  background: var(--chart-bar-active);
+}
+
+@media (hover: hover) {
+  .column:not(.active):hover .bar {
+    background: color-mix(in srgb, var(--chart-bar) 70%, var(--chart-bar-active));
+  }
+}
+
+/* The value bubble rides just above the highlighted bar (kept inside the plot at the edges). */
+.bubble {
+  position: absolute;
+  bottom: calc(var(--bar, 0) * 100% + 6px);
+  left: 50%;
+  z-index: 1;
+  padding: 3px var(--s-2);
+  border-radius: var(--radius-pill);
+  background: var(--primary);
+  color: var(--on-primary);
+  font: var(--text-micro);
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  transform: translateX(-50%);
+  animation: bubble-in var(--dur-3) var(--ease-spring) var(--dur-3) backwards;
+}
+
+.first .bubble {
+  left: 0;
+  transform: none;
+}
+
+.last .bubble {
+  right: 0;
+  left: auto;
+  transform: none;
+}
+
+.labels {
+  display: grid;
+  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-flow: column;
+  gap: var(--s-2);
+}
+
+.label {
+  overflow: hidden;
+  font: var(--text-micro);
+  color: var(--ink-2);
+  text-align: center;
+  text-overflow: clip;
+  white-space: nowrap;
+}
+
+.labelActive {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+@keyframes grow {
+  from {
+    transform: scaleY(0);
+  }
+}
+
+@keyframes bubble-in {
+  from {
+    opacity: 0;
+    translate: 0 4px;
+  }
+}
+
+@media (forced-colors: active) {
+  .bar {
+    background: GrayText;
+  }
+
+  .active .bar {
+    background: Highlight;
+  }
+}

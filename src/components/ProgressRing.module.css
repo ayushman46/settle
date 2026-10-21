@@ -1,0 +1,83 @@
+.ring {
+  --ring-color: var(--ring-fill);
+
+  position: relative;
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+}
+
+.accent {
+  --ring-color: var(--ring-fill);
+}
+
+.positive {
+  --ring-color: var(--positive);
+}
+
+.ink {
+  --ring-color: var(--primary);
+}
+
+.svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  /* Start at 12 o'clock and fill clockwise. */
+  transform: rotate(-90deg);
+}
+
+.track {
+  fill: none;
+  stroke: var(--ring-track);
+}
+
+.arc {
+  fill: none;
+  stroke: var(--ring-color);
+  stroke-linecap: round;
+  stroke-dashoffset: var(--ring-offset, 100);
+  animation: sweep calc(var(--dur-4) * 1.6) var(--ease-out) var(--dur-1) backwards;
+  transition:
+    stroke-dashoffset var(--dur-4) var(--ease-out),
+    stroke var(--dur-2) var(--ease-out);
+}
+
+/* A round cap would still draw a dot at 0%. */
+.empty {
+  visibility: hidden;
+}
+
+.center {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--ink);
+  font: var(--text-micro);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.center > svg {
+  width: 45%;
+  height: 45%;
+}
+
+@keyframes sweep {
+  from {
+    stroke-dashoffset: 100;
+  }
+}
+
+@media (forced-colors: active) {
+  .track {
+    stroke: GrayText;
+  }
+
+  .arc {
+    stroke: Highlight;
+  }
+}
