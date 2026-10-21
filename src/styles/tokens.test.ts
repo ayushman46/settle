@@ -99,6 +99,7 @@ const PAIRS: readonly Pair[] = [
   ui('--tabbar-icon-active', '--tabbar-pill', 'Active tab icon on its pill'),
   ui('--tabbar-pill', '--tabbar-bg', 'Active tab pill', '--bg'),
   text('--qr-ink', '--qr-paper', 'QR modules'),
+  text('--surface', '--negative', 'Count bubbles (tab bar, quick actions)'),
   ...CATEGORY_IDS.map((id) => text(`--cat-${id}-ink`, `--cat-${id}-bg`, `Category tile: ${id}`)),
   ...CATEGORY_IDS.map((id) => ui(`--cat-${id}-ink`, '--surface', `Chart segment: ${id}`)),
   ...Array.from({ length: 8 }, (_, i) => text(`--avatar-${i}-ink`, `--avatar-${i}-bg`, `Avatar ${i}`)),

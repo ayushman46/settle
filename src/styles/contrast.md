@@ -59,6 +59,7 @@ composited over the token in brackets (what can scroll underneath).
 | `--tabbar-icon-active on --tabbar-pill` | Active tab icon on its pill | 3 | 14.91 | 14.91 |
 | `--tabbar-pill on --tabbar-bg (over --bg)` | Active tab pill | 3 | 18.85 | 14.14 |
 | `--qr-ink on --qr-paper` | QR modules | 4.5 | 19.05 | 19.05 |
+| `--surface on --negative` | Count bubbles (tab bar, quick actions) | 4.5 | 5.85 | 7.79 |
 | `--cat-food-ink on --cat-food-bg` | Category tile: food | 4.5 | 4.92 | 8.24 |
 | `--cat-groceries-ink on --cat-groceries-bg` | Category tile: groceries | 4.5 | 5.01 | 8.56 |
 | `--cat-rent-ink on --cat-rent-bg` | Category tile: rent | 4.5 | 6.38 | 7.57 |

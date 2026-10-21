@@ -16,6 +16,8 @@
   display: flex;
   justify-content: center;
   min-width: 0;
+  /* Labels size against their column (see the container query below). */
+  container: qa-cell / inline-size;
   animation: cell-in var(--dur-3) var(--ease-out) backwards;
 }
 
@@ -94,17 +96,30 @@
 
 .label {
   display: -webkit-box;
-  max-width: 100%;
+  /* Borrows the column gap, and long words hyphenate ("Subscrip-tion" at 320px) rather than snap. */
+  max-width: calc(100% + var(--s-1));
+  margin-inline: calc(var(--s-1) / -2);
   overflow: hidden;
   font: var(--text-micro);
   font-size: 0.78125rem;
   font-weight: 550;
   line-height: 1.25;
+  letter-spacing: -0.005em;
   color: var(--ink);
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
+  -webkit-hyphens: auto;
+  hyphens: auto;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
   line-clamp: 2;
+}
+
+/* Narrow columns (a 320px phone): a touch smaller and tighter, so "Subscription" stays whole. */
+@container qa-cell (max-width: 72px) {
+  .label {
+    font-size: 0.71875rem;
+    letter-spacing: -0.01em;
+  }
 }
 
 .action:disabled {
