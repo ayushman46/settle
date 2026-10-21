@@ -180,6 +180,11 @@ export function knownLicensePublicKey(): string | null {
   return current?.licensePublicKey ?? null
 }
 
+/** True once this page load has the server's own config (so its key is the current one). */
+export function hasFreshBillingConfig(): boolean {
+  return fresh
+}
+
 function subscribe(listener: () => void): () => void {
   listeners.add(listener)
   if (!fresh && Date.now() - failedAt >= RETRY_AFTER_FAILURE_MS) void refreshBillingConfig()

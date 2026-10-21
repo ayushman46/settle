@@ -169,6 +169,31 @@ describe('usePro', () => {
     expect(window.localStorage.getItem(LICENSE_KEY)).toContain(forged)
   })
 
+  it('re-checks against the server’s current key when the remembered one is out of date', async () => {
+    const token = await signer.token()
+    installLicense(token, other.publicKey)
+    serveConfig(signer.publicKey)
+    const verify = vi.spyOn(crypto.subtle, 'verify')
+    const { result } = renderHook(() => usePro())
+    expect(result.current.status).toBe('pro')
+    // Once with the remembered key (no), once with the server's current one (yes).
+    await waitFor(() => expect(verify).toHaveBeenCalledTimes(2))
+    await act(async () => {
+      expect(await verify.mock.results[1]?.value).toBe(true)
+    })
+    expect(calls('/api/billing/config')).toHaveLength(1)
+    expect(result.current.status).toBe('pro')
+    expect(licenseToken()).toBe(token)
+    expect(calls('/api/license/verify')).toHaveLength(0)
+  })
+
+  it('ignores a stored license the remembered key rejects when the current key cannot be fetched', async () => {
+    installLicense(await signer.token(), other.publicKey)
+    const { result } = renderHook(() => usePro())
+    await waitFor(() => expect(result.current.status).toBe('free'))
+    expect(calls('/api/billing/config')).toHaveLength(1)
+  })
+
   it('stays Pro when the quiet re-check cannot reach anyone', async () => {
     const token = await signer.token()
     window.localStorage.setItem(LICENSE_KEY, JSON.stringify({ v: 1, token }))
@@ -377,10 +402,31 @@ describe('claimPayment', () => {
     expect(proState().status).toBe('free')
   })
 
-  it('refuses a license that is not genuine', async () => {
+  it('refuses a license that the server’s current key says is not genuine', async () => {
+    serveConfig(signer.publicKey)
     routes['/api/billing/verify'] = async () => json({ license: await other.token() })
     await expect(claimPayment(payment)).resolves.toEqual({ ok: false, pending: false })
     expect(proState().status).toBe('free')
+    expect(readPendingPayment()).toBeNull()
+  })
+
+  it('checks a new license against the server’s current key when the remembered one is out of date', async () => {
+    rememberBillingConfig({ licensePublicKey: other.publicKey })
+    serveConfig(signer.publicKey)
+    const token = await signer.token({ id: 'pay_1' })
+    routes['/api/billing/verify'] = () => json({ license: token })
+    await expect(claimPayment(payment)).resolves.toMatchObject({ ok: true, license: { id: 'pay_1' } })
+    expect(licenseToken()).toBe(token)
+  })
+
+  it('keeps a paid license when only an unconfirmed remembered key doubts it', async () => {
+    // Keys were rotated since the last visit and the config can't be fetched right now.
+    rememberBillingConfig({ licensePublicKey: other.publicKey })
+    const token = await signer.token({ id: 'pay_1' })
+    routes['/api/billing/verify'] = () => json({ license: token })
+    await expect(claimPayment(payment)).resolves.toMatchObject({ ok: true, license: { id: 'pay_1' } })
+    expect(proState().status).toBe('pro')
+    expect(readPendingPayment()).toBeNull()
   })
 
   it('claims a payment left over from an earlier visit on start', async () => {

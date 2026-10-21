@@ -9,8 +9,8 @@
 import { useSyncExternalStore } from 'react'
 import type { License, ProFeature } from '../domain/types'
 import { exchangePayment } from './claim'
-import { knownLicensePublicKey, loadBillingConfig } from './config'
-import { checkLicenseToken, isLicenseActive } from './license'
+import { hasFreshBillingConfig, knownLicensePublicKey, loadBillingConfig } from './config'
+import { checkLicenseToken, isLicenseActive, type LicenseCheck } from './license'
 import { clearPendingPayment, readPendingPayment, savePendingPayment, type PendingPayment } from './pending'
 import { extractLicenseToken, LICENSE_HEADER, parseLicenseToken } from './token'
 
@@ -78,6 +78,28 @@ function writeStored(token: string | null): void {
   }
 }
 
+/* ------------------------------------------------------------------ checking against the current key */
+
+interface KeyedCheck {
+  check: LicenseCheck
+  /** The verdict rests on the server's word this visit (its current key, or its own check), not a remembered key. */
+  confirmed: boolean
+}
+
+/**
+ * Checks a token with the key we know; when a remembered key says no, asks the server once for its
+ * current key and checks again (keys can be rotated between visits).
+ */
+async function checkWithCurrentKey(token: string): Promise<KeyedCheck> {
+  const key = knownLicensePublicKey() ?? (await loadBillingConfig()).licensePublicKey
+  const check = await checkLicenseToken(token, key)
+  if (check.status !== 'invalid' || key === null) return { check, confirmed: true }
+  const freshKey = (await loadBillingConfig({ fresh: true })).licensePublicKey
+  const confirmed = hasFreshBillingConfig()
+  if (freshKey && freshKey !== key) return { check: await checkLicenseToken(token, freshKey), confirmed }
+  return { check, confirmed }
+}
+
 /* ------------------------------------------------------------------ state */
 
 let stored: Stored | null = null
@@ -130,8 +152,7 @@ function recheck(): void {
   const token = current.token
   checked = token
   void (async () => {
-    const key = knownLicensePublicKey() ?? (await loadBillingConfig()).licensePublicKey
-    const result = await checkLicenseToken(token, key)
+    const { check: result } = await checkWithCurrentKey(token)
     if (stored?.token !== token) return
     if (result.status === 'invalid') {
       rejected = token
@@ -250,13 +271,7 @@ export async function redeemLicense(input: string): Promise<RedeemResult> {
   const token = extractLicenseToken(input)
   if (!token) return { ok: false, reason: 'invalid' }
 
-  const key = (await loadBillingConfig()).licensePublicKey
-  let check = await checkLicenseToken(token, key)
-  if (check.status === 'invalid') {
-    // The remembered key may be out of date — one more try with the server's current one.
-    const freshKey = (await loadBillingConfig({ fresh: true })).licensePublicKey
-    if (freshKey && freshKey !== key) check = await checkLicenseToken(token, freshKey)
-  }
+  const { check } = await checkWithCurrentKey(token)
   if (check.status === 'invalid') return { ok: false, reason: 'invalid' }
   if (check.status === 'unverified') return { ok: false, reason: 'network' }
   if (!isLicenseActive(check.license)) return { ok: false, reason: 'expired' }
@@ -314,11 +329,10 @@ async function attemptClaims(payment: PendingPayment, retries: readonly number[]
   for (let attempt = 0; ; attempt++) {
     const result = await exchangePayment(payment)
     if (result.ok) {
-      const key = (await loadBillingConfig()).licensePublicKey
-      const check = await checkLicenseToken(result.token, key)
+      const { check, confirmed } = await checkWithCurrentKey(result.token)
       const parsed = parseLicenseToken(result.token)
-      // Fresh from our own server for this payment: keep it unless it's provably not genuine.
-      if (check.status === 'invalid' || !parsed) {
+      // Fresh from our own server for this payment: keep it unless its current key says it isn't genuine.
+      if ((check.status === 'invalid' && confirmed) || !parsed) {
         clearPendingPayment()
         return { ok: false, pending: false }
       }
