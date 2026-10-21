@@ -2,7 +2,9 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { ME_ID, type Friend } from '../domain/types'
 import { clearAllData, exportBackup, importBackup, parseBackup, type BackupFile } from './backup'
 import { saveExpense, setPaidBack } from './expenses'
-import { addFriend } from './friends'
+import { addFriend, updateFriend } from './friends'
+
+const updateFriendName = (id: string, name: string) => updateFriend(id, { name })
 import { createGroup, recordSettlement } from './groups'
 import { MIGRATION_KEY } from './legacy'
 import { updateProfile } from './profile'
@@ -124,6 +126,22 @@ describe('importBackup — merge', () => {
     expect(merged).toMatchObject({ payerId: riya.id, shares: { [ME_ID]: 30000, [riya.id]: 30000, kabir: 30000 }, paidBack: { kabir: 5 } })
     expect(merged?.participants.map((p) => p.friendId)).toEqual([ME_ID, riya.id, 'kabir'])
     expect(friendsStore.get().find((f) => f.id === riya.id)?.phone).toBe('9876543210')
+  })
+
+  it('prefers an exact id match over an earlier friend with the same name', () => {
+    const riyaOld = addFriend({ name: 'Riya' })
+    const file = roundTrip(exportBackup()) as BackupFile
+    // Locally, the first "Riya" was renamed; a second friend now has that name.
+    updateFriendName(riyaOld.id, 'Riya K')
+    const other = addFriend({ name: 'riya' })
+    // The same-named friend comes first in the list, so a name match would be found before the id.
+    const [meEntry, ...rest] = friendsStore.get()
+    friendsStore.set([meEntry, ...rest.reverse()].filter((f) => f !== undefined))
+    expect(friendsStore.get()[1]?.id).toBe(other.id)
+    file.friends = file.friends.map((f) => (f.id === riyaOld.id ? { ...f, upiId: 'riya@okaxis' } : f))
+    importBackup(parseBackup(file) as BackupFile, 'merge')
+    expect(friendsStore.get().find((f) => f.id === riyaOld.id)?.upiId).toBe('riya@okaxis')
+    expect(friendsStore.get().find((f) => f.id === other.id)?.upiId).toBeNull()
   })
 
   it('lets the newer edit win and combines payments', () => {

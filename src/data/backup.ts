@@ -16,7 +16,7 @@ import {
   recurringListSchema,
   withMe,
 } from './schemas'
-import { flushAllStores, localStore } from './store'
+import { flushAllStores, localStore, unreadableKey } from './store'
 import { expensesStore, friendsStore, groupsStore, profileStore, recurringStore, STORAGE_KEYS } from './stores'
 import { LEGACY_KEYS } from './legacy'
 
@@ -178,7 +178,9 @@ export function importBackup(file: BackupFile, mode: 'merge' | 'replace'): { add
   const idMap = new Map<string, string>()
   for (const incoming of file.friends) {
     if (incoming.id === ME_ID) continue
-    const index = friends.findIndex((f) => f.id === incoming.id || (f.id !== ME_ID && nameKey(f.name) === nameKey(incoming.name)))
+    const sameId = friends.findIndex((f) => f.id === incoming.id)
+    const index =
+      sameId !== -1 ? sameId : friends.findIndex((f) => f.id !== ME_ID && nameKey(f.name) === nameKey(incoming.name))
     const existing = friends[index]
     if (existing) {
       if (existing.id !== incoming.id) idMap.set(incoming.id, existing.id)
@@ -245,7 +247,8 @@ export function importBackup(file: BackupFile, mode: 'merge' | 'replace'): { add
  */
 export function clearAllData(): void {
   const storage = localStore()
-  for (const key of [...Object.values(STORAGE_KEYS), ...LEGACY_KEYS]) {
+  const keys = Object.values(STORAGE_KEYS)
+  for (const key of [...keys, ...keys.map(unreadableKey), ...LEGACY_KEYS]) {
     try {
       storage?.removeItem(key)
     } catch {

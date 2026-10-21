@@ -82,8 +82,12 @@ export function updateFriend(id: string, patch: Partial<Pick<Friend, 'name' | 'u
         : prev.color,
   }
   if (id === ME_ID) {
-    // The profile is the source of truth for the owner's name and UPI ID.
-    updateProfile({ name: next.name, upiId: next.upiId })
+    // The profile is the source of truth for the owner's name and UPI ID. Only what the patch
+    // actually changes goes there — ME's placeholder name ("Me") must never become the profile's.
+    const profilePatch: { name?: string; upiId?: string | null } = {}
+    if (name !== prev.name) profilePatch.name = name
+    if (patch.upiId !== undefined) profilePatch.upiId = patch.upiId
+    updateProfile(profilePatch)
     const synced = friendsStore.get().find((f) => f.id === ME_ID) ?? next
     const withRest = { ...synced, phone: next.phone, color: next.color }
     friendsStore.set(friendsStore.get().map((f) => (f.id === ME_ID ? withRest : f)))

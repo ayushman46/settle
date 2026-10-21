@@ -47,6 +47,11 @@ function isEnvelope(value: unknown): value is Envelope {
   return typeof value === 'object' && value !== null && typeof (value as { v?: unknown }).v === 'number' && 'data' in value
 }
 
+/** Where a copy of unreadable stored data is kept (see `createStore`). */
+export function unreadableKey(key: string): string {
+  return `${key}.unreadable`
+}
+
 /** localStorage, or null when it's unavailable (SSR, blocked cookies, some private modes). */
 export function localStore(): Storage | null {
   try {
@@ -117,19 +122,21 @@ export function createStore<T>(opts: CreateStoreOptions<T>): PersistedStore<T> {
   let timer: ReturnType<typeof setTimeout> | null = null
   let storageListenerAttached = false
 
-  /** Reads a raw stored string. `persist` = the value came from an old format and should be re-saved. */
-  function decode(raw: string | null): { value: T; persist: boolean } {
-    if (raw === null) return { value: initial(), persist: false }
+  /**
+   * Reads a raw stored string: null when nothing usable is there. `persist` = the value came from
+   * an older format and should be re-saved in the current one.
+   */
+  function decode(raw: string | null): { value: T; persist: boolean } | null {
+    if (raw === null) return null
     let parsed: unknown
     try {
       parsed = JSON.parse(raw)
     } catch {
-      return { value: initial(), persist: false }
+      return null
     }
     if (isEnvelope(parsed) && parsed.v >= version) {
       const result = z.safeParse(schema, parsed.data)
-      if (result.success) return { value: result.data, persist: false }
-      return { value: initial(), persist: false }
+      return result.success ? { value: result.data, persist: false } : null
     }
     if (migrate) {
       try {
@@ -139,7 +146,20 @@ export function createStore<T>(opts: CreateStoreOptions<T>): PersistedStore<T> {
         // An unreadable old format is treated like no data.
       }
     }
-    return { value: initial(), persist: false }
+    return null
+  }
+
+  /**
+   * Keeps one copy of stored data we couldn't read under `<key>.unreadable` before it can be
+   * overwritten, so a bug or a downgrade never destroys the owner's records for good.
+   */
+  function keepUnreadable(raw: string): void {
+    try {
+      const storage = localStore()
+      if (storage && storage.getItem(unreadableKey(key)) === null) storage.setItem(unreadableKey(key), raw)
+    } catch {
+      // Full or blocked storage — nothing more we can do.
+    }
   }
 
   function readStorage(): { value: T; persist: boolean } {
@@ -149,7 +169,10 @@ export function createStore<T>(opts: CreateStoreOptions<T>): PersistedStore<T> {
     } catch {
       raw = null
     }
-    return decode(raw)
+    const decoded = decode(raw)
+    if (decoded) return decoded
+    if (raw !== null) keepUnreadable(raw)
+    return { value: initial(), persist: false }
   }
 
   function notify(): void {
@@ -161,8 +184,7 @@ export function createStore<T>(opts: CreateStoreOptions<T>): PersistedStore<T> {
     if (event.key !== key && event.key !== null) return
     // Our own unsaved change is newer: keep it; the other tab adopts it once we write.
     if (dirty || !loaded) return
-    const next = decode(event.key === null ? null : event.newValue).value
-    state = next
+    state = decode(event.key === null ? null : event.newValue)?.value ?? initial()
     notify()
   }
 

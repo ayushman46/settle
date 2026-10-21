@@ -19,6 +19,11 @@ const EXPENSE_MESSAGES: Readonly<Record<ExpenseErrorCode, string>> = {
   not_found: 'That expense no longer exists.',
 }
 
+/** Friendly copy for an expense problem — for inline hints next to a disabled Save button. */
+export function expenseErrorMessage(code: ExpenseErrorCode): string {
+  return EXPENSE_MESSAGES[code]
+}
+
 export class ExpenseError extends Error {
   readonly code: ExpenseErrorCode
   constructor(code: ExpenseErrorCode) {

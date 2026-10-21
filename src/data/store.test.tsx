@@ -8,6 +8,7 @@ import {
   reloadAllStores,
   shallowArrayEqual,
   shallowRecordEqual,
+  unreadableKey,
   useStorageWritable,
   useStore,
   WRITE_DELAY_MS,
@@ -54,13 +55,25 @@ describe('createStore — loading', () => {
     expect(store.get()).toEqual(['a', 'b'])
   })
 
-  it('falls back to initial() for corrupt JSON or an invalid shape', () => {
+  it('falls back to initial() for corrupt JSON or an invalid shape, keeping a copy of what was there', () => {
     const corrupt = makeStore()
     window.localStorage.setItem(corrupt.key, '{oops')
     expect(corrupt.get()).toEqual(['initial'])
+    expect(window.localStorage.getItem(unreadableKey(corrupt.key))).toBe('{oops')
     const wrong = makeStore()
     window.localStorage.setItem(wrong.key, JSON.stringify({ v: 2, data: [1, 2] }))
     expect(wrong.get()).toEqual(['initial'])
+    expect(window.localStorage.getItem(unreadableKey(wrong.key))).toBe('{"v":2,"data":[1,2]}')
+  })
+
+  it('keeps only the first unreadable copy', () => {
+    const store = makeStore()
+    window.localStorage.setItem(store.key, 'first')
+    store.get()
+    window.localStorage.setItem(store.key, 'second')
+    store.reload()
+    store.get()
+    expect(window.localStorage.getItem(unreadableKey(store.key))).toBe('first')
   })
 
   it('reads data written by a newer version when it still fits', () => {

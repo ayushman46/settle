@@ -109,6 +109,15 @@ describe('updateFriend', () => {
     expect(me()).toEqual(next)
   })
 
+  it('never copies the "Me" placeholder into the profile', () => {
+    updateFriend(ME_ID, { phone: '9999999999' })
+    expect(profileStore.get().name).toBe('')
+    expect(me()).toMatchObject({ name: 'Me', phone: '9999999999' })
+    updateProfile({ upiId: 'ayush@okaxis' })
+    updateFriend(ME_ID, { color: 4 })
+    expect(profileStore.get().upiId).toBe('ayush@okaxis')
+  })
+
   it('throws for an unknown friend', () => {
     expect(() => updateFriend('nobody', { name: 'X' })).toThrow(expect.objectContaining({ code: 'not_found' }))
   })

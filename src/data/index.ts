@@ -9,6 +9,7 @@ export {
   reloadAllStores,
   shallowArrayEqual,
   shallowRecordEqual,
+  unreadableKey,
   useStorageWritable,
   useStore,
   WRITE_DELAY_MS,
@@ -38,7 +39,7 @@ export {
   useSummary,
   type ExpenseFilter,
 } from './hooks'
-export { DataError, ExpenseError, type DataErrorCode, type ExpenseErrorCode } from './errors'
+export { DataError, ExpenseError, expenseErrorMessage, type DataErrorCode, type ExpenseErrorCode } from './errors'
 export { updateProfile } from './profile'
 export { addFriend, findFriendByName, isFriendInUse, removeFriend, touchFriends, updateFriend } from './friends'
 export {
