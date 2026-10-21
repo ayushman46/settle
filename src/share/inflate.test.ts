@@ -20,6 +20,16 @@ function seeded(seed: number) {
 
 const encode = (text: string) => new TextEncoder().encode(text)
 
+/**
+ * Index of the first byte where `a` and `b` differ (-1 when identical). `toEqual` walks typed
+ * arrays element by element through its generic matcher, which takes seconds for 200 KB.
+ */
+function firstDifference(a: Uint8Array, b: Uint8Array): number {
+  const length = Math.max(a.length, b.length)
+  for (let i = 0; i < length; i++) if (a[i] !== b[i]) return i
+  return -1
+}
+
 describe('inflateRaw', () => {
   it('decodes fixed-Huffman blocks (short inputs)', async () => {
     for (const text of ['', 'a', 'hello', 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', '{"v":1,"t":"Chai"}']) {
@@ -39,10 +49,13 @@ describe('inflateRaw', () => {
   it('decodes stored blocks (incompressible bytes) and long back-references', async () => {
     const rand = seeded(42)
     const noise = new Uint8Array(70_000).map(() => Math.floor(rand() * 256))
-    expect(inflateRaw(await deflateRaw(noise), 1 << 20)).toEqual(noise)
+    const stored = await deflateRaw(noise)
+    // Incompressible input comes back as stored blocks: a few bytes of framing per 64 KB.
+    expect(stored.length).toBeGreaterThan(noise.length)
+    expect(firstDifference(inflateRaw(stored, 1 << 20), noise)).toBe(-1)
 
     const runs = new Uint8Array(200_000).map((_, i) => (i % 40_000 < 20_000 ? 65 : (i * 31) % 256))
-    expect(inflateRaw(await deflateRaw(runs), 1 << 20)).toEqual(runs)
+    expect(firstDifference(inflateRaw(await deflateRaw(runs), 1 << 20), runs)).toBe(-1)
   })
 
   it('round-trips many random texts', async () => {
