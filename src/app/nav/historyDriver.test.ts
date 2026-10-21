@@ -155,6 +155,42 @@ describe('pages', () => {
   })
 })
 
+describe('twins', () => {
+  it('a correction that finds a twin beneath never leaves the app', async () => {
+    driver.navigate('/app/groups')
+    const sheet = driver.openSheet(vi.fn())
+    await idle()
+    // The browser lands the sheet's release somewhere else: a twin of the page, at the bottom.
+    vi.spyOn(window.history, 'go').mockImplementation(() => {
+      const twin = { settle: 1, depth: 0 }
+      window.history.replaceState(twin, '', '/app/groups')
+      window.dispatchEvent(new PopStateEvent('popstate', { state: twin }))
+    })
+    const leave = vi.spyOn(window.history, 'back')
+    sheet.release()
+    await idle()
+    expect(leave).not.toHaveBeenCalled()
+    expect(driver.location().path).toBe('/app/groups')
+    expect(driver.busy).toBe(false)
+  })
+
+  it('Back onto a twin while going back keeps the app’s fallback for the bottom of the trail', async () => {
+    driver.dispose()
+    driver = fresh('/app/friends')
+    driver.navigate('/app/groups')
+    driver.navigate('/app/friends', { replace: true })
+    driver.navigate('/app/groups')
+    driver.navigate('/app/friends', { replace: true })
+    await idle()
+    const leave = vi.spyOn(window.history, 'back')
+    driver.back('/app/you')
+    await idle()
+    expect(leave).not.toHaveBeenCalled()
+    expect(driver.location().path).toBe('/app/you')
+    expect(state()).toEqual(page({ url: '/app/you' }))
+  })
+})
+
 describe('back()', () => {
   it('waits for the browser and follows where it lands', async () => {
     driver.navigate('/app/groups')

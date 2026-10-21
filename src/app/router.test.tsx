@@ -452,11 +452,26 @@ describe('Back and Forward', () => {
     expect(entry()).toEqual({ depth: 0, sheet: 0, bill: null, url: '/app' })
   })
 
-  it('a twin at the start of the visit stays: there is nothing of ours beneath it', async () => {
+  it('Back onto a twin at the start of the visit carries on out of the app', async () => {
     renderApp()
-    act(() => navigate('/app/friends'))
-    act(() => navigate('/app', { replace: true }))
-    await back()
+    act(() => navigate('/app/groups'))
+    act(() => navigate('/app', { replace: true })) // e.g. the Home tab from a pushed tab root
+    const leave = vi.spyOn(window.history, 'back').mockImplementation(() => {})
+    await act(() => system(-1))
+    expect(leave).toHaveBeenCalledTimes(1)
+    expect(heading()).toBe('Home')
+    expect(entry()).toEqual({ depth: 0, sheet: 0, bill: null, url: '/app' })
+    expect(historyDriver().busy).toBe(false)
+  })
+
+  it('goBack onto a twin at the start of the visit goes to its fallback instead of leaving', async () => {
+    const { user } = renderApp('/app/friends')
+    act(() => navigate('/app/groups'))
+    act(() => navigate('/app/friends', { replace: true }))
+    const leave = vi.spyOn(window.history, 'back')
+    await user.click(screen.getByRole('button', { name: 'Back' }))
+    await settle()
+    expect(leave).not.toHaveBeenCalled()
     expect(heading()).toBe('Home')
     expect(entry()).toEqual({ depth: 0, sheet: 0, bill: null, url: '/app' })
   })

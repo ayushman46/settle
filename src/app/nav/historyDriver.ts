@@ -76,13 +76,20 @@ interface Interceptor {
 type Op =
   | { kind: 'push' | 'replace'; entry: NavEntry }
   | { kind: 'go'; delta: number; closed: Interceptor[] }
-  | { kind: 'travel'; delta: number }
+  | { kind: 'travel'; delta: number; fallback: string | null }
 
 interface Pending {
   kind: 'go' | 'travel'
   closed: Interceptor[]
+  /** A `back()`'s fallback, for when it lands on a twin with nothing of ours beneath. */
+  fallback: string | null
   timer: ReturnType<typeof setTimeout>
 }
+
+/** How history got where it is: Back/Forward, the app's `back()` (with its fallback), or a correction of ours. */
+type Arrival = { kind: 'system' } | { kind: 'back'; fallback: string } | { kind: 'correction' }
+
+const SYSTEM: Arrival = { kind: 'system' }
 
 /** A sheet asking for an entry while another sheet's `onBack` runs. */
 interface Opening {
@@ -299,10 +306,7 @@ export class HistoryDriver {
         this.navigate(fallback, { replace: true })
         return
       }
-      // Where this lands isn't known for sure (only the entry's own record says), so it is
-      // followed like the system Back button; calls made meanwhile wait for it.
-      this.traveling = true
-      this.enqueue({ kind: 'travel', delta: page - 1 - top.depth })
+      this.travel(page - 1 - top.depth, fallback)
     })
   }
 
@@ -518,6 +522,24 @@ export class HistoryDriver {
     }
   }
 
+  /**
+   * Goes back `-delta` entries to wherever that lands (only the entry's own record says), followed
+   * like the system Back button; calls made meanwhile wait for it.
+   */
+  private travel(delta: number, fallback: string | null): void {
+    this.traveling = true
+    this.enqueue({ kind: 'travel', delta, fallback })
+  }
+
+  /** Back out of the app from its first page: to the previous site, or nowhere when there is none. */
+  private leave(): void {
+    try {
+      this.win.history.back()
+    } catch {
+      // Stays put; the next Back press leaves.
+    }
+  }
+
   private write(kind: 'push' | 'replace', entry: NavEntry): void {
     this.planned = entry
     this.enqueue({ kind, entry })
@@ -543,7 +565,10 @@ export class HistoryDriver {
     const { history } = this.win
     if (op.kind === 'go' || op.kind === 'travel') {
       const timer = setTimeout(() => this.settle(undefined), TRAVERSAL_TIMEOUT_MS)
-      this.pending = { kind: op.kind, closed: op.kind === 'go' ? op.closed : [], timer }
+      this.pending =
+        op.kind === 'go'
+          ? { kind: 'go', closed: op.closed, fallback: null, timer }
+          : { kind: 'travel', closed: [], fallback: op.fallback, timer }
       try {
         history.go(op.delta)
       } catch {
@@ -595,7 +620,8 @@ export class HistoryDriver {
     this.pending = null
     if (pending.kind === 'travel') {
       this.traveling = false
-      this.route(landed === undefined ? this.reality() : landed)
+      const arrival: Arrival = pending.fallback === null ? SYSTEM : { kind: 'back', fallback: pending.fallback }
+      this.route(landed === undefined ? this.reality() : landed, arrival)
       this.runDeferred()
     } else {
       this.notify(pending.closed)
@@ -645,17 +671,17 @@ export class HistoryDriver {
       if (real.sheet > 0 && !this.owns(real.depth)) this.go(onSameScreen(real, this.anchorBelow(real)))
       return
     }
-    this.route(real)
+    this.route(real, { kind: 'correction' })
   }
 
   private readonly onPopState = (event: PopStateEvent): void => {
     const landed = parseState(event.state, urlOf(this.win.location))
     if (this.pending) this.settle(landed && isWellFormed(landed) ? landed : null)
-    else this.route(landed)
+    else this.route(landed, SYSTEM)
   }
 
   /** History moved under us (Back/Forward, `back()`, or a correction): bring the screen in line. */
-  private route(landed: NavEntry | null): void {
+  private route(landed: NavEntry | null, arrival: Arrival): void {
     const prev = this.planned
     if (!landed || !isWellFormed(landed)) {
       // Not ours (e.g. an in-page #link): claim it for what is on screen.
@@ -704,11 +730,13 @@ export class HistoryDriver {
       // Back onto a twin of the page on show (a replace put the page right above a copy of
       // itself, e.g. an edit screen saved back to its detail): one more step back, so no Back
       // press is spent on a page that is already showing.
+      // From the first page of the visit, Back carries on out of the app as it would have from
+      // the page on show; the app's own back arrow goes to its fallback instead.
       const twin = at.sheet === 0 && at.bill === null && prev.bill === null && at.depth === screenDepth(prev) - 1
-      if (twin && at.depth > 0) {
-        this.traveling = true
-        this.enqueue({ kind: 'travel', delta: -1 })
-      }
+      if (!twin || arrival.kind === 'correction') return
+      if (at.depth > 0) this.travel(-1, arrival.kind === 'back' ? arrival.fallback : null)
+      else if (arrival.kind === 'back') this.navigate(arrival.fallback, { replace: true })
+      else this.leave()
       return
     }
     this.remember(prev)
