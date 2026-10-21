@@ -1,0 +1,49 @@
+.solo {
+  display: inline-flex;
+  flex: none;
+}
+
+/* A removed person: a quiet grey disc instead of someone else's pastel. Doubled to beat Avatar's colour class. */
+.unknown.unknown {
+  --av-bg: var(--surface-3);
+  --av-ink: var(--ink-2);
+}
+
+/* Avatar over its name — the people-row look. The name never widens the column. */
+.person {
+  --person-width: calc(var(--s-10) + var(--s-6));
+
+  display: inline-flex;
+  flex: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: var(--person-width);
+  min-width: 0;
+}
+
+.xs,
+.sm {
+  --person-width: var(--s-12);
+}
+
+.lg {
+  --person-width: calc(var(--s-16) + var(--s-2));
+}
+
+.name {
+  width: 100%;
+  overflow: hidden;
+  color: var(--ink-2);
+  font: var(--text-caption);
+  font-weight: 550;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: color var(--dur-2) var(--ease-out);
+}
+
+.selected .name {
+  color: var(--ink);
+  font-weight: 650;
+}
