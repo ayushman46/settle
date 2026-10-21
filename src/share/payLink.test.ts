@@ -154,7 +154,7 @@ describe('encodePayLink / decodePayLink', () => {
   it('accepts the whole URL, a bare fragment, and chat-app mangling', async () => {
     const url = await encodePayLink(payload(), ORIGIN)
     const hash = fragment(url)
-    for (const input of [url, `#${hash}`, hash, `  ${url}  `, `${url}.`, `${url})`, `${url}!!`, `#${encodeURIComponent(hash)}`]) {
+    for (const input of [url, `#${hash}`, hash, `  ${url}  `, `${url}.`, `${url})`, `${url}!!`, `${url}?utm_source=wa`, `${url} see you!`, `#${encodeURIComponent(hash)}`]) {
       expect(await decodePayLink(input)).toEqual(payload())
     }
   })
@@ -171,6 +171,7 @@ describe('encodePayLink / decodePayLink', () => {
       '#j.!!!!',
       '#%E0%A4%A',
       `#${'A'.repeat(PAY_LINK_LIMITS.maxFragmentLength + 10)}`,
+      `#${'A'.repeat(PAY_LINK_LIMITS.maxFragmentLength * 4)}`,
       null,
       undefined,
       42,

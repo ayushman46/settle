@@ -300,8 +300,13 @@ export async function encodePayLink(payload: PayLinkPayload, origin?: string): P
   return `${base}${PAY_PATH}#${fragment}`
 }
 
-/** The fragment of a hash or URL, without "#", trailing punctuation chat apps glue on, or spaces. */
+/**
+ * The payload part of a hash or URL: what follows "#", up to the first character that can't be
+ * in a link (chat apps glue on ")", ".", "?utm=…", spaces…).
+ */
 function fragmentOf(input: string): string | null {
+  // Generous for percent-encoding, but never scan megabytes of pasted text.
+  if (input.length > L.maxFragmentLength * 3 + 2_048) return null
   let text = input.trim()
   const hashAt = text.indexOf('#')
   if (hashAt !== -1) text = text.slice(hashAt + 1)
@@ -312,9 +317,9 @@ function fragmentOf(input: string): string | null {
       return null
     }
   }
-  text = text.replace(/[^A-Za-z0-9_\-+/=]+$/, '')
-  if (!text || text.length > L.maxFragmentLength) return null
-  return text
+  const fragment = /^(?:j\.)?[A-Za-z0-9_\-+/]+/.exec(text)?.[0] ?? ''
+  if (!fragment || fragment.length > L.maxFragmentLength) return null
+  return fragment
 }
 
 /**
