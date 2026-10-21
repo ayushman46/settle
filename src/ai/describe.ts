@@ -36,6 +36,15 @@ export type DescribeErrorCode =
 /** The example we coach with, everywhere. */
 export const DESCRIBE_EXAMPLE = 'Dinner 2400 with Riya and Sam'
 
+/** What the "Just say it" field cycles through: one per way of splitting it understands. */
+export const DESCRIBE_EXAMPLES: readonly string[] = [
+  DESCRIBE_EXAMPLE,
+  'Rent 32000 me 40% Aditya 30% Neha 30%',
+  'Cab 840 with Riya and Sam, Sam pays double',
+  'Netflix 649 for 4',
+  'Groceries 1260, Neha paid, split with me',
+]
+
 /** Our own words for every failure — never the server's. */
 export const DESCRIBE_ERROR_MESSAGES: Readonly<Record<DescribeErrorCode, string>> = {
   bad_request: `Say what it was for and how much — like “${DESCRIBE_EXAMPLE}”.`,
