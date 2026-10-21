@@ -8,7 +8,7 @@
  *   const { pattern, params } = useRoute(ROUTES)        // first matching pattern
  *   navigate('/app/groups/g1')                          // push (scrolls to the top)
  *   navigate('/app', { replace: true })                 // swap out the page on screen
- *   goBack('/app/groups')                               // back, or there when nothing is beneath
+ *   goBack('/app/groups')                               // back a page, or there when nothing is beneath
  *   <Link to="/app/friends">People</Link>               // a real link; plain clicks stay in the app
  */
 import {
@@ -88,8 +88,9 @@ export function navigate(to: string, options?: NavigateOptions): void {
 }
 
 /**
- * Back one screen (closing any sheets over it) when the app has a screen beneath this one; else
- * replaces this page with `fallback` — so a deep link's back arrow never leaves the app.
+ * Back one page (closing any sheets over it; from the bill flow, leaving the whole flow — its own
+ * Back steps through it) when the app has a page beneath this one; else replaces this page with
+ * `fallback` — so a deep link's back arrow never leaves the app.
  */
 export function goBack(fallback?: string): void {
   historyDriver().back(fallback ?? '/app')
@@ -106,7 +107,7 @@ export function Redirect({ to }: { to: string }): null {
   return null
 }
 
-/** True when the screen on show has one of the app's screens beneath it (read at call time). */
+/** True when the page on show has one of the app's pages beneath it, so `goBack` stays in the app (read at call time). */
 export function canGoBack(): boolean {
   return historyDriver().canGoBack()
 }

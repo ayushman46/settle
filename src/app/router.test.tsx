@@ -190,6 +190,7 @@ function BillFlow({ resumeAt = 'scan' }: { resumeAt?: StepId }) {
       <button onClick={() => next && setStep(next)}>Next step</button>
       <button onClick={() => (previous ? setStep(previous) : goBack('/app'))}>Step back</button>
       <button onClick={() => navigate('/app/friends')}>Add friends</button>
+      <button onClick={() => goBack('/app')}>Close flow</button>
       <button
         onClick={() => {
           navigate('/app/groups/saved', { replace: true })
@@ -979,6 +980,42 @@ describe('the bill flow inside /app/bill', () => {
     expect(heading()).toBe('Home')
     expect(entry()).toEqual({ depth: 0, sheet: 0, bill: null, url: '/app' })
     expect(window.history.length).toBe(length)
+  })
+
+  it('goBack from any step leaves the whole flow, sheets and all', async () => {
+    const { user } = renderApp()
+    act(() => navigate('/app/groups'))
+    await user.click(screen.getByRole('link', { name: 'Goa trip' }))
+    act(() => navigate('/app/bill'))
+    await user.click(screen.getByRole('button', { name: 'Next step' }))
+    await user.click(screen.getByRole('button', { name: 'Next step' }))
+    await user.click(screen.getByRole('button', { name: 'Open Item' }))
+    expect(entry()).toEqual({ depth: 6, sheet: 1, bill: 'paid', url: '/app/bill' })
+    expect(canGoBack()).toBe(true)
+
+    await user.click(screen.getByRole('button', { name: 'Close flow' }))
+    await settle()
+    expect(heading()).toBe('Group g1')
+    expect(direction()).toBe('back')
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(flowLog).toEqual(['sheet:Item'])
+    expect(entry()).toEqual({ depth: 2, sheet: 0, bill: null, url: '/app/groups/g1' })
+    expect(historyDriver().openSheets).toBe(0)
+    await back()
+    expect(heading()).toBe('Groups')
+  })
+
+  it('goBack from a deep-linked flow mid-way swaps the whole flow for the fallback', async () => {
+    billResumeAt = 'paid'
+    const { user } = renderApp('/app/bill')
+    await settle()
+    expect(entry()).toEqual({ depth: 2, sheet: 0, bill: 'paid', url: '/app/bill' })
+    expect(canGoBack()).toBe(false)
+    await user.click(screen.getByRole('button', { name: 'Close flow' }))
+    await settle()
+    expect(heading()).toBe('Home')
+    expect(entry()).toEqual({ depth: 0, sheet: 0, bill: null, url: '/app' })
+    expect(canGoBack()).toBe(false)
   })
 
   it('a reload mid-flow keeps the step and its trail', async () => {

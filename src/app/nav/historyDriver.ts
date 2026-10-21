@@ -201,10 +201,10 @@ export class HistoryDriver {
     return this.lastDirection
   }
 
-  /** True when the screen on show has one of the app's screens beneath it (so Back stays in the app). */
+  /** True when the page on show has one of the app's pages beneath it (so `back()` stays in the app). */
   canGoBack(): boolean {
     this.start()
-    return screenDepth(this.top()) > 0
+    return pageDepth(this.top()) > 0
   }
 
   /** Called whenever the page on screen (or the direction) changes. */
@@ -285,22 +285,23 @@ export class HistoryDriver {
   }
 
   /**
-   * Back one screen (closing any sheets over it) when the app has a screen beneath this one;
-   * otherwise replaces this page with `fallback`, so a deep link's back arrow never leaves the app.
+   * Back one page — closing any sheets over it and, from the bill flow, leaving the whole flow
+   * (its own Back steps through it) — when the app has a page beneath this one; otherwise
+   * replaces this page with `fallback`, so a deep link's back arrow never leaves the app.
    */
   back(fallback: string): void {
     this.run(() => {
       this.start()
       const top = this.top()
-      const screen = screenDepth(top)
-      if (screen === 0) {
+      const page = pageDepth(top)
+      if (page === 0) {
         this.navigate(fallback, { replace: true })
         return
       }
       // Where this lands isn't known for sure (only the entry's own record says), so it is
       // followed like the system Back button; calls made meanwhile wait for it.
       this.traveling = true
-      this.enqueue({ kind: 'travel', delta: screen - 1 - top.depth })
+      this.enqueue({ kind: 'travel', delta: page - 1 - top.depth })
     })
   }
 

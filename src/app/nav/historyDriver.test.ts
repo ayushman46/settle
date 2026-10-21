@@ -225,6 +225,27 @@ describe('the bill flow', () => {
     expect(pops.map((p) => p.step)).toEqual(['scan'])
   })
 
+  it('back() leaves the whole flow, without telling it about steps', async () => {
+    driver.navigate('/app/bill')
+    driver.init('scan')
+    driver.syncTo('assign')
+    expect(driver.canGoBack()).toBe(true)
+    driver.back('/app')
+    await idle()
+    expect(driver.location().path).toBe('/app')
+    expect(state()).toEqual(page({ url: '/app' }))
+    expect(pops).toEqual([])
+  })
+
+  it('canGoBack looks beneath the flow, not beneath its step', async () => {
+    driver.dispose()
+    driver = fresh('/app/bill')
+    driver.init('people')
+    await idle()
+    expect(state()).toEqual(page({ depth: 3, bill: 'people', url: '/app/bill' }))
+    expect(driver.canGoBack()).toBe(false)
+  })
+
   it('reads a v2 trail as a flow that started at depth 0', async () => {
     driver.dispose()
     window.history.replaceState({ billsplit: 'scan', depth: 0 }, '', '/')
