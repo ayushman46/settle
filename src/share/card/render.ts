@@ -1,11 +1,12 @@
-/** Renders the share card to a PNG: fonts first, then layout → paint on a canvas. */
+/** Renders share cards to PNGs: fonts first, then layout → paint on a canvas. */
 import { BRAND, ME_ID, type AccentId, type Expense, type Friend, type Profile } from '../../domain/types'
 import { formatBillDate } from '../../lib/format'
 import { formatMoney } from '../../lib/money'
 import { outsideName } from '../names'
 import { CARD_SIZE, layoutShareCard, type ShareCardInput } from './layout'
 import { canvasMeasure, paintScene, type Ctx2D } from './paint'
-import { FONT_FAMILY } from './textFit'
+import type { CardLayoutOptions, CardScene } from './parts'
+import { FONT_FAMILY, type Measure } from './textFit'
 
 export class ShareCardError extends Error {
   constructor(message: string) {
@@ -126,15 +127,19 @@ export interface ShareCardOptions {
 }
 
 /**
- * A 1080×1350 PNG receipt of the split for the group chat. Rejects with `ShareCardError` if the
- * browser can't draw it.
+ * Draws a laid-out card to a PNG: Geist first (for `chars`), then layout and paint on a DOM
+ * canvas, or an OffscreenCanvas when that is all there is. Rejects with `ShareCardError`.
  */
-export async function renderShareCard(input: ShareCardInput, opts: ShareCardOptions): Promise<Blob> {
-  await loadFonts(cardCharacters(input))
+export async function renderScene(
+  chars: string,
+  opts: ShareCardOptions,
+  layout: (opts: CardLayoutOptions, measure: Measure) => CardScene,
+): Promise<Blob> {
+  await loadFonts(chars)
   const surface = domSurface() ?? offscreenSurface()
   if (!surface) throw new ShareCardError("This browser can't draw images")
   try {
-    const scene = layoutShareCard(input, { ...opts, siteLabel: defaultSiteLabel() }, canvasMeasure(surface.ctx))
+    const scene = layout({ ...opts, siteLabel: defaultSiteLabel() }, canvasMeasure(surface.ctx))
     paintScene(surface.ctx, scene)
     const blob = await surface.toBlob()
     if (!blob || blob.size === 0) throw new ShareCardError("Couldn't create the image")
@@ -145,6 +150,14 @@ export async function renderShareCard(input: ShareCardInput, opts: ShareCardOpti
   } finally {
     surface.release()
   }
+}
+
+/**
+ * A 1080×1350 PNG receipt of the split for the group chat. Rejects with `ShareCardError` if the
+ * browser can't draw it.
+ */
+export async function renderShareCard(input: ShareCardInput, opts: ShareCardOptions): Promise<Blob> {
+  return renderScene(cardCharacters(input), opts, (layoutOpts, measure) => layoutShareCard(input, layoutOpts, measure))
 }
 
 /** The card's data for an expense: names as friends know them, payer first on the card. */

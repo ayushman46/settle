@@ -1,28 +1,57 @@
 /**
- * The share card's layout, as a list of drawing operations. Pure (text is measured through the
- * injected `measure`), so the geometry is tested without a canvas; `paint.ts` draws the result.
+ * The expense share card's layout, as a list of drawing operations. Pure (text is measured
+ * through the injected `measure`), so the geometry is tested without a canvas; `paint.ts` draws it.
  *
  *   ┌──────────────────────────────┐   1080 × 1350 (4:5, the size chat apps show uncropped)
  *   │ [icon] Food & drinks         │
  *   │        18 Oct 2026           │
  *   │ Dinner at Toit               │   title, up to 2 lines
  *   │ Paid by Riya · split 4 ways  │
- *   │ ₹2,766                       │   shrink-to-fit total, lime underline
+ *   │ ₹2,766                       │   shrink-to-fit total, accent underline
  *   ├( - - - - - - - - - - - - - )─┤   ticket tear with notches
- *   │ (RS) Riya    Paid the bill  ₹│   people (two densities, "+N more" when they don't fit)
+ *   │ (RS) Riya    Paid the bill  ₹│   people (four densities, "+N more" when they don't fit)
  *   │ ████████░░░░  ₹1,382 of …    │   collected so far
  *   └──────────────────────────────┘
  *        ✓ Made with Settle · …        footer, only with the watermark
  */
-import { BRAND, type AccentId, type CategoryId, type Minor } from '../../domain/types'
+import type { CategoryId, Minor } from '../../domain/types'
 import { formatBillDate } from '../../lib/format'
 import { formatMoney } from '../../lib/money'
-import { initials } from '../../lib/people'
 import { categoryLabel } from '../categories'
 import { cleanText } from '../text'
 import { CATEGORY_ICON_PATHS, CHECK_ICON_PATHS, ICON_STROKE } from './icons'
-import { avatarColor, CATEGORY_COLORS, cardTheme, type CardThemeName } from './theme'
+import {
+  AMOUNT_SIZES,
+  BOTTOM_PAD,
+  CARD_SIZE,
+  CARD_W,
+  CARD_X,
+  cardTop,
+  CW,
+  DENSITIES,
+  drawAvatar,
+  drawBackdrop,
+  drawFooter,
+  drawHeadText,
+  drawHero,
+  drawMoreAvatar,
+  drawTicket,
+  heroGeometry,
+  maxCardHeight,
+  plural,
+  STYLE,
+  textOp,
+  TILE,
+  X0,
+  type CardLayoutOptions,
+  type CardOp,
+  type CardScene,
+  type RowDensity,
+} from './parts'
+import { CATEGORY_COLORS, cardTheme } from './theme'
 import { fitFontSize, fitText, wrapText, type Measure, type TextStyle } from './textFit'
+
+export { AMOUNT_DESCENT, CARD_SIZE, type CardOp, type CardScene, type RowDensity } from './parts'
 
 export interface ShareCardPerson {
   name: string
@@ -44,91 +73,9 @@ export interface ShareCardInput {
   people: ShareCardPerson[]
 }
 
-export interface ShareCardLayoutOptions {
-  /** Adds the "Made with Settle" footer (free plan). */
-  watermark: boolean
-  theme: CardThemeName
-  /** Accent palette (Pro accent themes); lime by default. */
-  accent?: AccentId
-  /** Footer text after the brand: the site's host, or the tagline. */
-  siteLabel: string
-}
-
-export type CardOp =
-  | { kind: 'background'; color: string }
-  | { kind: 'glow'; x: number; y: number; r: number; color: string; alpha: number }
-  | {
-      kind: 'ticket'
-      x: number
-      y: number
-      w: number
-      h: number
-      radius: number
-      notchY: number
-      notchR: number
-      fill: string
-      stroke: string
-      shadow: { color: string; blur: number; offsetY: number } | null
-    }
-  | { kind: 'rect'; x: number; y: number; w: number; h: number; radius: number; fill: string; stroke?: string }
-  | { kind: 'circle'; x: number; y: number; r: number; fill: string | null; stroke?: string; lineWidth?: number }
-  | { kind: 'line'; x1: number; y1: number; x2: number; y2: number; color: string; width: number; dash?: [number, number] }
-  | {
-      kind: 'text'
-      text: string
-      x: number
-      /** Baseline (or middle, see `baseline`). */
-      y: number
-      style: TextStyle
-      color: string
-      align: 'left' | 'right' | 'center'
-      baseline: 'alphabetic' | 'middle'
-      /** The width the text was fitted to (for checks; not passed to fillText). */
-      maxWidth: number
-    }
-  | { kind: 'icon'; paths: readonly string[]; x: number; y: number; size: number; color: string; lineWidth: number }
-
-export type RowDensity = 'spacious' | 'regular' | 'compact' | 'tight'
-
-export interface CardScene {
-  width: number
-  height: number
-  ops: CardOp[]
-  /** Card bounds and what made it in — for tests and callers that want to know. */
-  card: { x: number; y: number; w: number; h: number }
-  rows: { density: RowDensity; shown: number; hidden: number }
-}
-
-export const CARD_SIZE = { width: 1080, height: 1350 } as const
+export type ShareCardLayoutOptions = CardLayoutOptions
 
 /* ------------------------------------------------------------------ metrics */
-
-const MARGIN = 72
-const CARD_X = MARGIN
-const CARD_W = CARD_SIZE.width - 2 * MARGIN
-const PAD = 56
-const X0 = CARD_X + PAD
-const CW = CARD_W - 2 * PAD
-const RADIUS = 48
-const NOTCH_R = 24
-const FOOTER_H = 96
-const BOTTOM_PAD = 56
-
-const TILE = 88
-const TITLE_LINE = 64
-/** How far a comma reaches below the baseline, as a fraction of the font size (Geist). */
-export const AMOUNT_DESCENT = 0.16
-const STYLE = {
-  category: { size: 30, weight: 600 },
-  date: { size: 28, weight: 400 },
-  title: { size: 56, weight: 600, tracking: -1 },
-  subtitle: { size: 28, weight: 400 },
-  amount: (size: number): TextStyle => ({ size, weight: 600, tracking: -Math.round(size * 0.025) }),
-  progress: { size: 28, weight: 600 },
-  progressMuted: { size: 28, weight: 400 },
-  footerBrand: { size: 28, weight: 600 },
-  footerSite: { size: 28, weight: 400 },
-} as const satisfies Record<string, TextStyle | ((size: number) => TextStyle)>
 
 interface RowMetrics {
   height: number
@@ -186,9 +133,6 @@ const ROWS: Readonly<Record<RowDensity, RowMetrics>> = {
   },
 }
 
-/** Densest first fit wins; past the tightest, the rest go into a "+N more" row. */
-const DENSITIES: readonly RowDensity[] = ['spacious', 'regular', 'compact', 'tight']
-
 /** Height of the collected-so-far block (gap + bar + gap + text). */
 const PROGRESS_H = 32 + 14 + 20 + 30
 
@@ -210,10 +154,6 @@ function orderPeople(people: readonly ShareCardPerson[]): ShareCardPerson[] {
   return [...payer, ...people.filter((p) => !p.isPayer)]
 }
 
-function plural(n: number, one: string, many: string): string {
-  return `${n} ${n === 1 ? one : many}`
-}
-
 /* ------------------------------------------------------------------ layout */
 
 export function layoutShareCard(input: ShareCardInput, opts: ShareCardLayoutOptions, measure: Measure): CardScene {
@@ -221,8 +161,8 @@ export function layoutShareCard(input: ShareCardInput, opts: ShareCardLayoutOpti
   const cat = CATEGORY_COLORS[opts.theme][input.category] ?? CATEGORY_COLORS[opts.theme].other
   const money = (minor: Minor) => formatMoney(minor, input.currency, { trimZeros: true })
   const ops: CardOp[] = []
-  const text = (op: Omit<Extract<CardOp, { kind: 'text' }>, 'kind' | 'baseline'> & { baseline?: 'alphabetic' | 'middle' }) => {
-    ops.push({ kind: 'text', baseline: 'alphabetic', ...op })
+  const text = (op: Parameters<typeof textOp>[0]) => {
+    ops.push(textOp(op))
   }
 
   const people = orderPeople(input.people)
@@ -234,36 +174,25 @@ export function layoutShareCard(input: ShareCardInput, opts: ShareCardLayoutOpti
   /* ---- measure the fixed blocks (y relative to the card's top) ---- */
   const title = cleanText(input.title, 120) || categoryLabel(input.category)
   const amountText = money(input.total)
-  const amountSize = fitFontSize(amountText, CW, { max: 112, min: 64, step: 4 }, STYLE.amount, measure)
+  const amountSize = fitFontSize(amountText, CW, AMOUNT_SIZES, STYLE.amount, measure)
   const amountStyle = STYLE.amount(amountSize)
-  const footer = opts.watermark ? FOOTER_H : 0
-  const maxCardH = CARD_SIZE.height - 2 * MARGIN - footer
+  const maxCardH = maxCardHeight(opts.watermark)
   const progressH = debtors.length > 0 ? PROGRESS_H : 0
-
-  const header = (titleLines: string[]) => {
-    const tileY = PAD
-    const titleTop = tileY + TILE + 36
-    const subtitleY = titleTop + titleLines.length * TITLE_LINE + 32
-    const amountY = subtitleY + 28 + Math.round(amountSize * 0.84)
-    // Below the comma's tail (Geist descends 0.16em under the baseline), with clear air.
-    const underlineY = amountY + Math.round(amountSize * AMOUNT_DESCENT) + 14
-    const dividerY = underlineY + 12 + 34
-    const peopleTop = dividerY + 32
-    return { titleLines, tileY, titleTop, subtitleY, amountY, underlineY, dividerY, peopleTop, roomForRows: maxCardH - peopleTop - progressH - BOTTOM_PAD }
-  }
+  const roomForRows = (lines: number) => maxCardH - heroGeometry(lines, amountSize).bodyTop - progressH - BOTTOM_PAD
   /** Rows of the given density that fit, keeping a slot for "+N more" when needed. */
   const fitRows = (room: number, density: RowDensity) => Math.max(1, Math.floor(room / ROWS[density].height))
 
   // A long title gets two lines, unless that would push people into "+N more".
-  let geo = header(wrapText(title, CW, 2, STYLE.title, measure))
-  if (geo.titleLines.length > 1 && people.length > fitRows(geo.roomForRows, 'tight')) {
-    geo = header(wrapText(title, CW, 1, STYLE.title, measure))
+  let titleLines = wrapText(title, CW, 2, STYLE.title, measure)
+  if (titleLines.length > 1 && people.length > fitRows(roomForRows(titleLines.length), 'tight')) {
+    titleLines = wrapText(title, CW, 1, STYLE.title, measure)
   }
-  const { titleLines, tileY, titleTop, subtitleY, amountY, underlineY, dividerY, peopleTop, roomForRows } = geo
+  const hero = heroGeometry(titleLines.length, amountSize)
+  const room = roomForRows(titleLines.length)
 
   /* ---- fit the people ---- */
-  const density: RowDensity = DENSITIES.find((d) => people.length * ROWS[d].height <= roomForRows) ?? 'tight'
-  const fit = fitRows(roomForRows, density)
+  const density: RowDensity = DENSITIES.find((d) => people.length * ROWS[d].height <= room) ?? 'tight'
+  const fit = fitRows(room, density)
   const shown = people.length > fit ? fit - 1 : people.length
   const rows: Row[] = people.slice(0, shown)
   const hiddenPeople = people.slice(shown)
@@ -277,99 +206,49 @@ export function layoutShareCard(input: ShareCardInput, opts: ShareCardLayoutOpti
       more: hiddenPeople.length,
     })
   }
-  const metrics = ROWS[density]
-  const rowsH = rows.length * metrics.height
-  const cardH = peopleTop + rowsH + progressH + BOTTOM_PAD
-  const cardY = MARGIN + Math.max(0, Math.round((maxCardH - cardH) / 2))
+  const m = ROWS[density]
+  const rowsH = rows.length * m.height
+  const cardH = hero.bodyTop + rowsH + progressH + BOTTOM_PAD
+  const cardY = cardTop(cardH, opts.watermark)
   const top = (rel: number) => cardY + rel
 
-  /* ---- background ---- */
-  ops.push({ kind: 'background', color: theme.bg })
-  ops.push({ kind: 'glow', x: CARD_SIZE.width - 40, y: 40, r: 640, color: theme.accent, alpha: theme.glow })
-  ops.push({ kind: 'glow', x: 40, y: CARD_SIZE.height - 60, r: 560, color: cat.ink, alpha: theme.categoryGlow })
-
   /* ---- the card ---- */
-  ops.push({
-    kind: 'ticket',
-    x: CARD_X,
-    y: cardY,
-    w: CARD_W,
-    h: cardH,
-    radius: RADIUS,
-    notchY: top(dividerY),
-    notchR: NOTCH_R,
-    fill: theme.surface,
-    stroke: theme.line,
-    shadow: theme.shadow,
-  })
+  drawBackdrop(ops, theme, cat.ink, theme.categoryGlow)
+  drawTicket(ops, theme, cardY, cardH, top(hero.dividerY))
 
   /* ---- header: category tile, label, date ---- */
-  ops.push({ kind: 'rect', x: X0, y: top(tileY), w: TILE, h: TILE, radius: 28, fill: cat.bg })
+  ops.push({ kind: 'rect', x: X0, y: top(hero.tileY), w: TILE, h: TILE, radius: 28, fill: cat.bg })
   const iconSize = 44
   ops.push({
     kind: 'icon',
     paths: CATEGORY_ICON_PATHS[input.category] ?? CATEGORY_ICON_PATHS.other,
     x: X0 + (TILE - iconSize) / 2,
-    y: top(tileY) + (TILE - iconSize) / 2,
+    y: top(hero.tileY) + (TILE - iconSize) / 2,
     size: iconSize,
     color: cat.ink,
     lineWidth: ICON_STROKE,
   })
-  const headX = X0 + TILE + 28
-  const headW = CW - TILE - 28
   const date = formatBillDate(input.date)
-  const labelY = date ? top(tileY) + 38 : top(tileY) + TILE / 2 + 11
-  text({ text: fitText(categoryLabel(input.category), headW, STYLE.category, measure), x: headX, y: labelY, style: STYLE.category, color: cat.ink, align: 'left', maxWidth: headW })
-  if (date) {
-    text({ text: fitText(date, headW, STYLE.date, measure), x: headX, y: top(tileY) + 76, style: STYLE.date, color: theme.ink2, align: 'left', maxWidth: headW })
-  }
+  drawHeadText(ops, top(hero.tileY), { text: categoryLabel(input.category), color: cat.ink }, date ? { text: date, color: theme.ink2 } : null, measure)
 
-  /* ---- title, subtitle, total ---- */
-  titleLines.forEach((line, i) => {
-    text({ text: line, x: X0, y: top(titleTop) + 50 + i * TITLE_LINE, style: STYLE.title, color: theme.ink, align: 'left', maxWidth: CW })
-  })
+  /* ---- title, subtitle, total, tear ---- */
   const payer = cleanText(input.payerName, 40)
   const ways = input.people.length
   const subtitle = [payer ? `Paid by ${payer}` : null, ways > 0 ? `split ${plural(ways, 'way', 'ways')}` : null].filter(Boolean).join(' · ')
-  if (subtitle) {
-    text({ text: fitText(subtitle, CW, STYLE.subtitle, measure), x: X0, y: top(subtitleY), style: STYLE.subtitle, color: theme.ink2, align: 'left', maxWidth: CW })
-  }
-  const amountFitted = fitText(amountText, CW, amountStyle, measure)
-  text({ text: amountFitted, x: X0, y: top(amountY), style: amountStyle, color: theme.ink, align: 'left', maxWidth: CW })
-  const underlineW = Math.min(CW, Math.max(96, measure(amountFitted, amountStyle) * 0.42))
-  ops.push({ kind: 'rect', x: X0, y: top(underlineY), w: underlineW, h: 12, radius: 6, fill: theme.accent })
-
-  /* ---- tear line ---- */
-  ops.push({
-    kind: 'line',
-    x1: CARD_X + NOTCH_R + 20,
-    y1: top(dividerY),
-    x2: CARD_X + CARD_W - NOTCH_R - 20,
-    y2: top(dividerY),
-    color: theme.lineStrong,
-    width: 3,
-    dash: [12, 12],
-  })
+  drawHero(ops, theme, cardY, hero, { titleLines, subtitle, amount: amountText, amountStyle }, measure)
 
   /* ---- people ---- */
-  const m = metrics
   rows.forEach((row, i) => {
-    const rowTop = top(peopleTop) + i * m.height
+    const rowTop = top(hero.bodyTop) + i * m.height
     const cy = rowTop + m.height / 2
     const ax = X0 + m.avatar / 2
     const nameX = X0 + m.avatar + 24
-    const avatar = avatarColor(row.color)
 
     if (row.more !== undefined) {
-      ops.push({ kind: 'circle', x: ax, y: cy, r: m.avatar / 2, fill: theme.surface2 })
-      const label = `+${row.more}`
-      const labelStyle: TextStyle = { size: Math.round(m.avatar * 0.36), weight: 600 }
-      text({ text: label, x: ax, y: cy, style: labelStyle, color: theme.ink2, align: 'center', baseline: 'middle', maxWidth: m.avatar })
+      drawMoreAvatar(ops, theme, ax, cy, m.avatar, row.more)
     } else {
       if (row.isPayer) ops.push({ kind: 'circle', x: ax, y: cy, r: m.avatar / 2 + 6, fill: null, stroke: theme.accent, lineWidth: 5 })
-      ops.push({ kind: 'circle', x: ax, y: cy, r: m.avatar / 2, fill: avatar.bg })
-      const initialsStyle: TextStyle = { size: Math.round(m.avatar * 0.38), weight: 600 }
-      text({ text: initials(row.name), x: ax, y: cy + 1, style: initialsStyle, color: avatar.ink, align: 'center', baseline: 'middle', maxWidth: m.avatar })
+      drawAvatar(ops, ax, cy, m.avatar, row.name, row.color)
       if (row.paid && !row.isPayer) {
         const br = Math.round(m.avatar * 0.2)
         const bx = ax + m.avatar * 0.36
@@ -406,7 +285,7 @@ export function layoutShareCard(input: ShareCardInput, opts: ShareCardLayoutOpti
 
   /* ---- collected so far ---- */
   if (debtors.length > 0) {
-    const barY = top(peopleTop) + rowsH + 32
+    const barY = top(hero.bodyTop) + rowsH + 32
     const ratio = owed > 0 ? Math.min(1, collected / owed) : 0
     ops.push({ kind: 'rect', x: X0, y: barY, w: CW, h: 14, radius: 7, fill: theme.surface2 })
     if (ratio > 0) {
@@ -415,38 +294,20 @@ export function layoutShareCard(input: ShareCardInput, opts: ShareCardLayoutOpti
     }
     const lineY = barY + 14 + 20 + 26
     const right = `${paidCount} of ${debtors.length} paid`
-    const rightW = measure(right, STYLE.progressMuted)
-    text({ text: right, x: X0 + CW, y: lineY, style: STYLE.progressMuted, color: theme.ink2, align: 'right', maxWidth: CW })
+    const rightW = measure(right, STYLE.muted)
+    text({ text: right, x: X0 + CW, y: lineY, style: STYLE.muted, color: theme.ink2, align: 'right', maxWidth: CW })
     const settled = paidCount === debtors.length
     const leftW = CW - rightW - 24
     const left = settled ? 'All settled up' : `${money(collected)} of ${money(owed)} collected`
     if (settled) {
       ops.push({ kind: 'icon', paths: CHECK_ICON_PATHS, x: X0, y: lineY - 26, size: 30, color: theme.positive, lineWidth: 3 })
-      text({ text: fitText(left, leftW - 40, STYLE.progress, measure), x: X0 + 40, y: lineY, style: STYLE.progress, color: theme.positive, align: 'left', maxWidth: leftW - 40 })
+      text({ text: fitText(left, leftW - 40, STYLE.strong, measure), x: X0 + 40, y: lineY, style: STYLE.strong, color: theme.positive, align: 'left', maxWidth: leftW - 40 })
     } else {
-      text({ text: fitText(left, leftW, STYLE.progress, measure), x: X0, y: lineY, style: STYLE.progress, color: theme.ink, align: 'left', maxWidth: leftW })
+      text({ text: fitText(left, leftW, STYLE.strong, measure), x: X0, y: lineY, style: STYLE.strong, color: theme.ink, align: 'left', maxWidth: leftW })
     }
   }
 
-  /* ---- footer ---- */
-  if (opts.watermark) {
-    const brand = `Made with ${BRAND.name}`
-    const mark = 40
-    const gap = 14
-    const brandW = measure(brand, STYLE.footerBrand)
-    const sep = ' · '
-    const maxSiteW = CARD_SIZE.width - 2 * MARGIN - mark - gap - brandW - measure(sep, STYLE.footerSite)
-    const site = fitText(cleanText(opts.siteLabel, 80), maxSiteW, STYLE.footerSite, measure)
-    const siteText = site ? `${sep}${site}` : ''
-    const siteW = siteText ? measure(siteText, STYLE.footerSite) : 0
-    const total = mark + gap + brandW + siteW
-    const left = (CARD_SIZE.width - total) / 2
-    const baseline = CARD_SIZE.height - MARGIN - 18
-    ops.push({ kind: 'rect', x: left, y: baseline - 30, w: mark, h: mark, radius: 12, fill: theme.accent })
-    ops.push({ kind: 'icon', paths: CHECK_ICON_PATHS, x: left + 8, y: baseline - 22, size: 24, color: theme.onAccent, lineWidth: 3 })
-    text({ text: brand, x: left + mark + gap, y: baseline, style: STYLE.footerBrand, color: theme.ink, align: 'left', maxWidth: brandW })
-    if (siteText) text({ text: siteText, x: left + mark + gap + brandW, y: baseline, style: STYLE.footerSite, color: theme.ink2, align: 'left', maxWidth: siteW })
-  }
+  if (opts.watermark) drawFooter(ops, theme, opts.siteLabel, measure)
 
   return {
     width: CARD_SIZE.width,
@@ -456,4 +317,3 @@ export function layoutShareCard(input: ShareCardInput, opts: ShareCardLayoutOpti
     rows: { density, shown, hidden: hiddenPeople.length },
   }
 }
-
