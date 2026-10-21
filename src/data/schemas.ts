@@ -44,15 +44,31 @@ export const DEFAULT_GROUP_EMOJI = '👥'
 
 /* ------------------------------------------------------------------ cleaners (shared with actions) */
 
+/** Zero-width joiner: glues emoji sequences (👩‍💻), so it survives the control-character clean-up. */
+const ZWJ = '\u200d'
+
+function stripControls(value: string): string {
+  return value.replace(/[\p{Cc}\p{Cf}]/gu, (c) => (c === ZWJ ? c : ''))
+}
+
+function capGraphemes(value: string, max: number): string {
+  const chars = graphemes(value)
+  return chars.length <= max ? value : chars.slice(0, max).join('').trim()
+}
+
 /** NFC, single spaces, no control characters, at most `max` user-perceived characters. */
 export function cleanText(value: string, max: number): string {
-  const cleaned = value
+  return capGraphemes(stripControls(value.normalize('NFC').replace(/\s+/g, ' ')).trim(), max)
+}
+
+/** Like `cleanText` but keeps line breaks (at most one blank line in a row) — for notes. */
+export function cleanMultiline(value: string, max: number): string {
+  const lines = value
     .normalize('NFC')
-    .replace(/\s+/g, ' ')
-    .replace(/[\p{Cc}\p{Cf}]/gu, (c) => (c === '‍' ? c : ''))
-    .trim()
-  const chars = graphemes(cleaned)
-  return chars.length <= max ? cleaned : chars.slice(0, max).join('').trim()
+    .replace(/\r\n?/g, '\n')
+    .split('\n')
+    .map((line) => stripControls(line.replace(/\s+/g, ' ')).trim())
+  return capGraphemes(lines.join('\n').replace(/\n{3,}/g, '\n\n').trim(), max)
 }
 
 /** A valid, normalized UPI ID or null. */
@@ -338,7 +354,7 @@ export const expenseSchema: ZodType<Expense> = repaired(expenseShape, (e) => {
     if (friendId !== e.payerId && (fixed.shares[friendId] ?? 0) > 0 && Number.isFinite(at)) paidBack[friendId] = at
   }
   const title = cleanText(e.title, MAX_TITLE_LENGTH)
-  const note = e.note === null ? null : cleanText(e.note, MAX_NOTE_LENGTH) || null
+  const note = e.note === null ? null : cleanMultiline(e.note, MAX_NOTE_LENGTH) || null
   return {
     id: e.id,
     kind: e.bill ? e.kind : 'split',

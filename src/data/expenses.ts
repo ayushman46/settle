@@ -8,6 +8,7 @@ import { ExpenseError, type ExpenseErrorCode } from './errors'
 import { touchFriends } from './friends'
 import {
   cleanCurrency,
+  cleanMultiline,
   cleanText,
   EXPENSE_SOURCES,
   fallbackTitle,
@@ -59,7 +60,7 @@ function normalizeDraft(draft: ExpenseDraft): NormalizedDraft {
 
   const title = cleanText(draft.title ?? '', MAX_TITLE_LENGTH)
   const category = isCategoryId(draft.category) ? draft.category : (categoryFromText(title) ?? 'other')
-  const note = typeof draft.note === 'string' ? cleanText(draft.note, MAX_NOTE_LENGTH) || null : null
+  const note = typeof draft.note === 'string' ? cleanMultiline(draft.note, MAX_NOTE_LENGTH) || null : null
   const groupId = draft.groupId && groupsStore.get().some((g) => g.id === draft.groupId) ? draft.groupId : null
 
   return {
