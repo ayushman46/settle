@@ -7,16 +7,16 @@ import { createWebApp } from './web'
 
 let clientDir: string
 let app: ReturnType<typeof createWebApp>
-const SHELL = '<!doctype html><html><head><title>BillSplit</title></head><body><div id="root"></div></body></html>'
+const SHELL = '<!doctype html><html><head><title>Settle</title></head><body><div id="root"></div></body></html>'
 const BIG_SCRIPT = `console.log(${JSON.stringify('x'.repeat(5000))});`
 
 beforeAll(() => {
-  clientDir = mkdtempSync(join(tmpdir(), 'billsplit-web-'))
+  clientDir = mkdtempSync(join(tmpdir(), 'settle-web-'))
   mkdirSync(join(clientDir, 'assets'))
   writeFileSync(join(clientDir, 'index.html'), SHELL)
   writeFileSync(join(clientDir, 'assets', 'index-abc123.js'), BIG_SCRIPT)
   writeFileSync(join(clientDir, 'sw.js'), 'self.addEventListener("fetch", () => {})')
-  writeFileSync(join(clientDir, 'manifest.webmanifest'), '{"name":"BillSplit"}')
+  writeFileSync(join(clientDir, 'manifest.webmanifest'), '{"name":"Settle"}')
   app = createWebApp(testConfig({ apiKey: null }), { clientDir, logger: silentLogger() })
 })
 
@@ -38,23 +38,29 @@ describe('createWebApp', () => {
     const csp = response.headers.get('content-security-policy') ?? ''
     for (const directive of [
       "default-src 'self'",
-      "script-src 'self'",
+      "script-src 'self' https://checkout.razorpay.com",
       "style-src 'self' 'unsafe-inline'",
-      "img-src 'self' data: blob:",
+      "img-src 'self' data: blob: https://cdn.razorpay.com",
       "font-src 'self' data:",
-      "connect-src 'self'",
+      "connect-src 'self' https://api.razorpay.com https://lumberjack.razorpay.com",
+      "frame-src https://api.razorpay.com https://checkout.razorpay.com",
       "manifest-src 'self'",
       "worker-src 'self'",
       "object-src 'none'",
       "frame-ancestors 'none'",
       "base-uri 'self'",
+      "form-action 'self'",
     ]) {
       expect(csp).toContain(directive)
     }
+    expect(csp).not.toMatch(/script-src[^;]*'unsafe-(?:inline|eval)'/)
     expect(response.headers.get('x-content-type-options')).toBe('nosniff')
     expect(response.headers.get('x-frame-options')).toBe('DENY')
     expect(response.headers.get('referrer-policy')).toBe('no-referrer')
-    expect(response.headers.get('permissions-policy')).toContain('camera=(self)')
+    const permissions = response.headers.get('permissions-policy') ?? ''
+    expect(permissions).toContain('camera=(self)')
+    expect(permissions).toContain('microphone=()')
+    expect(permissions).toContain('payment=(self "https://api.razorpay.com" "https://checkout.razorpay.com")')
   })
 
   it('caches hashed assets forever and compresses them', async () => {
@@ -75,10 +81,21 @@ describe('createWebApp', () => {
     expect(manifest.headers.get('content-type')).toBe('application/manifest+json')
   })
 
-  it('falls back to the app shell for client routes', async () => {
-    for (const path of ['/review', '/some/deep/link', '/split?id=1']) {
+  it('serves the app shell for every app route', async () => {
+    for (const path of ['/', '/app', '/app/', '/app/groups', '/app/groups/g_123/settle', '/app/split/new?from=describe', '/app/bill', '/pay', '/pay#j.eyJ2IjoxfQ', '/privacy', '/terms']) {
       const response = await app.request(path)
-      expect(response.status).toBe(200)
+      expect(response.status, path).toBe(200)
+      expect(response.headers.get('content-type')).toMatch(/^text\/html/)
+      expect(await response.text()).toBe(SHELL)
+    }
+  })
+
+  it('serves the shell for unknown pages too (the app shows its landing page), but as a 404', async () => {
+    for (const path of ['/review', '/some/deep/link', '/apps', '/payments', '/app-store']) {
+      const response = await app.request(path)
+      expect(response.status, path).toBe(404)
+      expect(response.headers.get('content-type')).toMatch(/^text\/html/)
+      expect(response.headers.get('content-security-policy')).toBeTruthy()
       expect(await response.text()).toBe(SHELL)
     }
   })
@@ -104,6 +121,12 @@ describe('createWebApp', () => {
     }
   })
 
+  it('serves the billing config through the web app', async () => {
+    const response = await app.request('/api/billing/config')
+    expect(response.status).toBe(200)
+    expect(await response.json()).toMatchObject({ currency: 'INR', plans: [{ id: 'pro_monthly' }, { id: 'pro_yearly' }, { id: 'pro_lifetime' }] })
+  })
+
   it('serves the API with JSON errors and no-store', async () => {
     const health = await app.request('/api/health')
     expect(health.status).toBe(200)
@@ -124,6 +147,7 @@ describe('createWebApp', () => {
     try {
       const bare = createWebApp(testConfig(), { clientDir: join(clientDir, 'does-not-exist'), logger: silentLogger() })
       expect((await bare.request('/')).status).toBe(404)
+      expect((await bare.request('/unknown-page')).status).toBe(404)
       expect((await bare.request('/api/health')).status).toBe(200)
     } finally {
       consoleError.mockRestore()
