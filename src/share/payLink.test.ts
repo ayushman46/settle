@@ -9,6 +9,7 @@ import {
   payLinkFromExpense,
   payLinkItemLines,
   payLinkProgress,
+  payLinkUpiRequest,
   type PayLinkPayload,
 } from './payLink'
 import { FRIENDS, makeExpense, makeFriend, makeProfile } from './testing'
@@ -510,5 +511,29 @@ describe('reading a payload', () => {
     const cake = [0, 1, 2].map((i) => payLinkItemLines(p, i).find((l) => l.name === 'Cake')?.amount ?? 0)
     expect(cake.reduce((a, b) => a + b, 0)).toBe(1_000)
     expect(payLinkItemLines(payload(), 1)).toEqual([])
+  })
+})
+
+describe('payLinkUpiRequest', () => {
+  it("builds each friend's UPI payment: payee, their exact share, the title as the note", () => {
+    const request = payLinkUpiRequest(payload(), 2)
+    expect(request).toEqual({ uri: expect.stringMatching(/^upi:\/\/pay\?/), vpa: 'ayush@okaxis', amount: 69_150 })
+    const params = new URLSearchParams(request?.uri.slice('upi://pay?'.length))
+    expect(Object.fromEntries(params)).toEqual({ pa: 'ayush@okaxis', pn: 'Ayush', am: '691.50', cu: 'INR', tn: 'Dinner at Toit' })
+    // Marked as paid still gets a request (the page shows them as paid).
+    expect(payLinkUpiRequest(payload(), 1)?.amount).toBe(69_150)
+  })
+
+  it("returns null when UPI can't take it", () => {
+    expect(payLinkUpiRequest(payload(), 0)).toBeNull() // the payee
+    expect(payLinkUpiRequest(payload(), 9)).toBeNull() // nobody there
+    expect(payLinkUpiRequest(payload({ to: { n: 'Ayush', u: null } }), 2)).toBeNull()
+    expect(payLinkUpiRequest(payload({ to: { n: 'Ayush', u: 'not-upi' } }), 2)).toBeNull()
+    expect(payLinkUpiRequest(payload({ c: 'USD' }), 2)).toBeNull()
+    expect(payLinkUpiRequest(payload({ p: [{ n: 'A', a: 100, paid: true }, { n: 'B', a: 0 }] }), 1)).toBeNull()
+  })
+
+  it('works for a payee who is not part of the split', () => {
+    expect(payLinkUpiRequest(payload({ pi: undefined }), 0)?.amount).toBe(69_150)
   })
 })

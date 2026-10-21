@@ -11,11 +11,13 @@ export {
   payLinkFromExpense,
   payLinkItemLines,
   payLinkProgress,
+  payLinkUpiRequest,
   type PayLinkDebtor,
   type PayLinkItem,
   type PayLinkItemLine,
   type PayLinkPayload,
   type PayLinkPerson,
+  type PayLinkUpiRequest,
 } from './payLink'
 export {
   defaultSiteLabel,

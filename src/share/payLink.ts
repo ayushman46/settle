@@ -9,7 +9,7 @@
 import * as z from 'zod/mini'
 import { CATEGORY_IDS, ME_ID, type CategoryId, type Expense, type Friend, type Minor, type Profile } from '../domain/types'
 import { allocate, MAX_MINOR } from '../lib/money'
-import { isValidUpiId, normalizeUpiId } from '../lib/upi'
+import { buildUpiLink, isValidUpiId, normalizeUpiId } from '../lib/upi'
 import { base64UrlToBytes, bytesToBase64Url } from './base64url'
 import { categoryLabel } from './categories'
 import { inflateRaw } from './inflate'
@@ -493,4 +493,23 @@ export function payLinkItemLines(payload: PayLinkPayload, personIndex: number): 
     })
   }
   return lines
+}
+
+export interface PayLinkUpiRequest {
+  /** `upi://pay?…` with the payee, this person's amount and the title as the note. */
+  uri: string
+  /** The payee's UPI ID, for "copy UPI ID". */
+  vpa: string
+  amount: Minor
+}
+
+/**
+ * How one person on a pay link pays by UPI (whether or not they're marked paid — the page says
+ * so), or null when UPI can't take it: no valid UPI ID, not rupees, a zero share, or the payee.
+ */
+export function payLinkUpiRequest(payload: PayLinkPayload, personIndex: number): PayLinkUpiRequest | null {
+  const person = payload.p[personIndex]
+  const vpa = payload.to.u ? normalizeUpiId(payload.to.u) : ''
+  if (!person || personIndex === payload.pi || person.a <= 0 || payload.c !== 'INR' || !isValidUpiId(vpa)) return null
+  return { uri: buildUpiLink({ vpa, payeeName: payload.to.n, amountMinor: person.a, note: payload.t }), vpa, amount: person.a }
 }
