@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { CATEGORY_IDS } from '../shared/categories'
 import { BILL_SCHEMA, SYSTEM_PROMPT, USER_PROMPT } from './prompt'
 
 describe('BILL_SCHEMA', () => {
@@ -20,6 +21,12 @@ describe('BILL_SCHEMA', () => {
     expect(keys.indexOf('items')).toBeLessThan(keys.indexOf('subtotal'))
     expect(keys.at(-1)).toBe('total')
   })
+
+  it('asks for one of the shared categories, right after the merchant', () => {
+    expect(BILL_SCHEMA.properties.category).toEqual({ type: 'string', enum: [...CATEGORY_IDS], description: 'What the bill is for' })
+    const keys = Object.keys(BILL_SCHEMA.properties)
+    expect(keys.indexOf('category')).toBe(keys.indexOf('merchant') + 1)
+  })
 })
 
 describe('prompts', () => {
@@ -31,5 +38,10 @@ describe('prompts', () => {
     for (const rule of ['CGST', 'SGST', 'Round-off', 'Service charge', 'LINE TOTAL', 'wraps', 'SUGGESTED tips', 'incl. VAT', 'POSITIVE', 'never its rate', 'isBill']) {
       expect(SYSTEM_PROMPT).toContain(rule)
     }
+  })
+
+  it('read service bills (electricity, rides, stays) as a total without items', () => {
+    for (const rule of ['EMPTY items list', 'electricity', 'cab', 'hotel', 'payable by the due date']) expect(SYSTEM_PROMPT).toContain(rule)
+    for (const category of CATEGORY_IDS) expect(SYSTEM_PROMPT).toContain(category)
   })
 })

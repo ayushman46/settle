@@ -8,7 +8,8 @@
  * no JSON at all).
  */
 import { z } from 'zod'
-import type { ScanResponse, ScannedItem } from '../shared/api'
+import type { CategoryId, ScanResponse, ScannedItem } from '../shared/api'
+import { inferCategory, toCategory } from './category'
 
 export class ParseError extends Error {
   override readonly name = 'ParseError'
@@ -33,6 +34,7 @@ type AliasTable = ReadonlyArray<readonly [target: string, keys: readonly string[
 const BILL_FIELDS: AliasTable = [
   ['isBill', ['isbill', 'isreceipt', 'isinvoice']],
   ['merchant', ['merchant', 'merchantname', 'restaurant', 'restaurantname', 'store', 'storename', 'shop', 'shopname', 'vendor', 'business', 'businessname']],
+  ['category', ['category', 'billcategory', 'billtype', 'type', 'kind']],
   ['date', ['date', 'billdate', 'invoicedate', 'receiptdate', 'transactiondate']],
   ['currency', ['currency', 'currencycode']],
   ['items', ['items', 'lineitems', 'lines', 'products', 'orderitems']],
@@ -96,13 +98,13 @@ const SMART_DOUBLE_QUOTES = /[“”„‟″«»]/g
 const MAX_OBJECT_STARTS = 64
 
 /**
- * Pulls the bill JSON object out of a model reply: strips `<think>` blocks and code
- * fences, finds the first balanced `{...}` (string-aware) that parses and looks like a
- * bill, and tolerates trailing commas, comments, smart quotes, single quotes, unquoted
- * keys and Python literals.
+ * Pulls the answer's JSON object out of a model reply: strips `<think>` blocks and code
+ * fences, finds the first balanced `{...}` (string-aware) that parses and `looksRight`
+ * (by default: looks like a bill), and tolerates trailing commas, comments, smart quotes,
+ * single quotes, unquoted keys and Python literals.
  * @throws ParseError when there is no such object.
  */
-export function extractJson(text: string): unknown {
+export function extractJson(text: string, looksRight: (value: Record<string, unknown>) => boolean = looksLikeBill): unknown {
   let source = String(text).replace(/^\uFEFF/, '').replace(REASONING_BLOCK, '')
   // A reasoning block whose opening tag lived in the chat template: keep what follows it.
   const lastClosing = [...source.matchAll(REASONING_CLOSE)].at(-1)
@@ -115,13 +117,13 @@ export function extractJson(text: string): unknown {
   candidates.push(source)
 
   for (const candidate of candidates) {
-    const found = findBillObject(candidate) ?? findBillObject(candidate.replace(SMART_DOUBLE_QUOTES, '"'))
+    const found = findObject(candidate, looksRight) ?? findObject(candidate.replace(SMART_DOUBLE_QUOTES, '"'), looksRight)
     if (found !== undefined) return found
   }
-  throw new ParseError('The model reply contained no bill JSON.')
+  throw new ParseError('The model reply contained no matching JSON object.')
 }
 
-function findBillObject(text: string): Record<string, unknown> | undefined {
+function findObject(text: string, looksRight: (value: Record<string, unknown>) => boolean): Record<string, unknown> | undefined {
   let start = text.indexOf('{')
   for (let tries = 0; start !== -1 && tries < MAX_OBJECT_STARTS; tries++) {
     const end = matchingBrace(text, start)
@@ -129,8 +131,8 @@ function findBillObject(text: string): Record<string, unknown> | undefined {
     if (end !== -1) {
       const parsed = parseLenient(text.slice(start, end + 1))
       if (isRecord(parsed)) {
-        if (looksLikeBill(parsed)) return parsed
-        // Valid JSON that isn't the bill (e.g. the schema echoed back): skip over it whole.
+        if (looksRight(parsed)) return parsed
+        // Valid JSON that isn't the answer (e.g. the schema echoed back): skip over it whole.
         next = end + 1
       }
     }
@@ -139,8 +141,13 @@ function findBillObject(text: string): Record<string, unknown> | undefined {
   return undefined
 }
 
+/** An echoed JSON schema ("type": "object", "properties": {...}) is never the answer. */
+export function isEchoedSchema(value: Record<string, unknown>): boolean {
+  return value.type === 'object' && isRecord(value.properties)
+}
+
 function looksLikeBill(value: Record<string, unknown>): boolean {
-  if (value.type === 'object' && isRecord(value.properties)) return false // an echoed JSON schema
+  if (isEchoedSchema(value)) return false
   const keys = Object.keys(value).map(normalizeKey)
   if (keys.some((key) => STRONG_BILL_KEYS.has(key))) return true
   // `{name, qty, total}` is a line item (e.g. from a reply whose outer object is broken).
@@ -387,6 +394,7 @@ export const ExtractionSchema = z.preprocess(
   z.object({
     isBill: lenient(toBoolean),
     merchant: lenient(cleanText),
+    category: lenient(toCategory),
     date: lenient(cleanText),
     currency: lenient(cleanText),
     items: lenient(toItems),
@@ -408,6 +416,7 @@ export function parseExtraction(raw: unknown): Extraction {
   return {
     isBill: true,
     merchant: null,
+    category: null,
     date: null,
     currency: null,
     items: [],
@@ -464,7 +473,12 @@ export function classifyLine(name: string): LineKind | null {
 // 6. Names, currency, dates
 // ---------------------------------------------------------------------------
 
-const ACRONYMS = new Set(['BBQ', 'BLT', 'IPA', 'XS', 'XL', 'XXL', 'XXXL', 'NY', 'USA', 'UK', 'KFC', 'LIIT', 'VIP', 'MRP', 'OG', 'PBJ', 'DIY', 'NV'])
+const ACRONYMS = new Set([
+  'BBQ', 'BLT', 'IPA', 'XS', 'XL', 'XXL', 'XXXL', 'NY', 'USA', 'UK', 'KFC', 'LIIT', 'VIP', 'MRP', 'OG', 'PBJ', 'DIY', 'NV',
+  // Utilities and services printed as acronyms on their bills.
+  'BESCOM', 'BSES', 'TNEB', 'TANGEDCO', 'KSEB', 'MSEDCL', 'CESC', 'APSPDCL', 'TSSPDCL', 'BWSSB', 'DJB', 'IGL', 'MGL', 'BSNL', 'MTNL',
+  'IRCTC', 'OYO', 'LPG', 'CNG', 'DTH', 'GST', 'PG', 'HP', 'BPCL', 'IOCL', 'HPCL',
+])
 const MINOR_WORDS = new Set(['a', 'an', 'and', 'or', 'of', 'with', 'in', 'on', 'the', 'to', 'for', 'per', 'n'])
 const MAX_NAME_LENGTH = 80
 
@@ -780,15 +794,17 @@ export function normalize(extraction: Extraction, model: string): ScanResponse {
   const totals = settleExtras(printed, extras, itemsSum)
 
   const warnings: string[] = []
-  if (totals.subtotal !== null && Math.abs(itemsSum - totals.subtotal) > Math.max(1, totals.subtotal * 0.01)) {
+  if (items.length > 0 && totals.subtotal !== null && Math.abs(itemsSum - totals.subtotal) > Math.max(1, totals.subtotal * 0.01)) {
     warnings.push(WARNINGS.itemsMismatch)
   }
   if (totals.total === null) warnings.push(WARNINGS.noTotal)
 
+  const merchant = tidyName(extraction.merchant)
   return {
-    merchant: tidyName(extraction.merchant),
+    merchant,
     date: normalizeDate(extraction.date),
     currency: normalizeCurrency(extraction.currency),
+    category: extraction.category ?? inferCategory(merchant) ?? inferCategory(items.map((item) => item.name).join(' · ')),
     items,
     ...totals,
     warnings: warnings.slice(0, 2),
@@ -796,16 +812,35 @@ export function normalize(extraction: Extraction, model: string): ScanResponse {
   }
 }
 
-/**
- * Whether a scan is worth showing: at least one item, and either a priced item or a
- * printed total (a list of names with no prices and no total is not a readable bill).
- */
-export function isUsable(scan: ScanResponse): boolean {
+/** Bills people order from item by item: a total alone means the model missed the items. */
+const ITEMIZED_CATEGORIES: ReadonlySet<CategoryId> = new Set(['food', 'groceries', 'shopping'])
+
+function hasItems(scan: ScanResponse): boolean {
   return scan.items.length > 0 && (scan.items.some((item) => item.amount > 0) || scan.total !== null)
 }
 
-/** True when a parsed model reply is good enough to stop trying other models. */
+function hasTotal(scan: ScanResponse): boolean {
+  return scan.total !== null && scan.total > 0
+}
+
+/**
+ * Whether a scan is worth showing: items with prices (or with a printed total), or just a
+ * total — electricity, cab and hotel bills are split as an amount. A list of names with no
+ * prices and no total is not a readable bill.
+ */
+export function isUsable(scan: ScanResponse): boolean {
+  return hasItems(scan) || hasTotal(scan)
+}
+
+/**
+ * True when a parsed model reply is good enough to stop trying other models. A total with no
+ * items is enough for a service bill, but on a restaurant, grocery or shop bill (or one we
+ * can't place) another model may read the items — the reply is still kept as a last resort.
+ */
 export function isAcceptableReply(raw: unknown): boolean {
   const extraction = parseExtraction(raw)
-  return !extraction.isBill || isUsable(normalize(extraction, ''))
+  if (!extraction.isBill) return true
+  const scan = normalize(extraction, '')
+  if (hasItems(scan)) return true
+  return hasTotal(scan) && scan.category !== null && !ITEMIZED_CATEGORIES.has(scan.category)
 }

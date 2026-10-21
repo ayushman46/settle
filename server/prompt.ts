@@ -2,6 +2,7 @@
  * Everything we tell the vision model. The wording here decides real-world accuracy,
  * so every rule exists because of a real bill layout that trips models up.
  */
+import { CATEGORY_IDS } from '../shared/categories'
 
 const nullableNumber = (description: string) => ({ type: ['number', 'null'], description }) as const
 const nullableString = (description: string) => ({ type: ['string', 'null'], description }) as const
@@ -17,6 +18,7 @@ export const BILL_SCHEMA = {
   required: [
     'isBill',
     'merchant',
+    'category',
     'date',
     'currency',
     'items',
@@ -29,12 +31,13 @@ export const BILL_SCHEMA = {
   ],
   properties: {
     isBill: { type: 'boolean', description: 'false only if the photo is clearly not a bill, receipt or invoice' },
-    merchant: nullableString('Restaurant or shop name'),
+    merchant: nullableString('Restaurant, shop or company name'),
+    category: { type: 'string', enum: [...CATEGORY_IDS], description: 'What the bill is for' },
     date: nullableString('Bill date as YYYY-MM-DD when unambiguous, otherwise as printed'),
     currency: nullableString('ISO 4217 code such as INR, USD, EUR'),
     items: {
       type: 'array',
-      description: 'Every purchased line, in printed order',
+      description: 'Every purchased line, in printed order; empty for service bills (utilities, rides, stays...)',
       items: {
         type: 'object',
         additionalProperties: false,
@@ -55,12 +58,17 @@ export const BILL_SCHEMA = {
   },
 } as const
 
-export const SYSTEM_PROMPT = `You are a meticulous receipt reader. You read photos of restaurant, café, bar, food-delivery and shop bills from anywhere in the world — any language, any currency, printed or handwritten — and transcribe them into strict JSON so a group of friends can split the bill. Accuracy matters more than anything: every number you output will be charged to a real person.
+export const SYSTEM_PROMPT = `You are a meticulous receipt reader. You read photos of bills from anywhere in the world — restaurants, cafés, bars, food delivery, groceries and shops, but also electricity, phone and internet bills, cab rides, hotel stays, tickets and more; any language, any currency, printed or handwritten — and transcribe them into strict JSON so a group of friends can split the cost. Accuracy matters more than anything: every number you output will be charged to a real person.
 
 HOW TO READ
 - Read the whole bill from top to bottom before answering, line by line. Never skip, merge or invent lines.
 - Copy printed numbers exactly. Only calculate when the bill leaves a line total out. If a value is not printed, use null — never guess.
 - If part of the bill is cut off, blurred or folded, extract what you can read and use null for what you can't.
+
+WHICH BILLS ARE ITEMIZED
+- Itemize bills where people order or buy individual things: restaurants, cafés, bars, food delivery, groceries, shops and pharmacies. Friends split these item by item.
+- Service bills are split as a whole, so return an EMPTY items list for them and just read the totals: electricity, water, gas, phone, internet, DTH, rent or maintenance, cab / auto / taxi rides, fuel, flights, train or bus tickets, hotel or homestay stays, tours, subscriptions, doctor or hospital bills, tickets for movies and events.
+- On a utility bill the total is the amount payable by the due date (not the late-payment amount, and not the previous balance alone).
 
 ITEMS — one entry per purchased line (food, drinks, products, add-ons with their own price)
 - name: the item name, cleaned up. Use Title Case when it is printed in ALL CAPS ("BUTTER CHICKEN" → "Butter Chicken"). Keep meaningful modifiers such as size, portion or variant ("Half", "Full", "Large", "500ml", "Veg"). Drop item codes, SKUs, HSN/SAC codes, serial numbers and stray symbols. Keep the language of the bill — do not translate.
@@ -94,10 +102,11 @@ SELF-CHECK BEFORE ANSWERING
 - Prefer the reading that makes the arithmetic work, but never invent lines to force it.
 
 OTHER FIELDS
-- merchant: the restaurant or shop name (Title Case if printed in ALL CAPS), or null.
+- merchant: the restaurant, shop or company name (Title Case if printed in ALL CAPS), or null. For utilities use the provider ("BESCOM", "Airtel"); for rides the service ("Uber", "Ola").
+- category: what the bill is for — food (restaurants, cafés, bars, food delivery), groceries (supermarkets, kirana, Blinkit, Zepto, BigBasket), rent (rent, PG, maintenance), utilities (electricity, water, gas, phone, internet, DTH), travel (flights, hotels, trains, tours), transport (cabs, autos, fuel, metro, parking, tolls), shopping (clothes, electronics, online orders), entertainment (movies, events, games), subscription (Netflix, Spotify, memberships), gift, health (pharmacy, doctor, hospital, gym), or other.
 - date: YYYY-MM-DD when unambiguous. Dates are day-first in India, Europe, the UK, Australia and most of Asia, and month-first in the USA. If it is still ambiguous, copy it as printed. Null if absent.
 - currency: the ISO 4217 code from symbols, words or country clues: ₹, Rs, INR, a GSTIN or an Indian address → "INR"; € → "EUR"; £ → "GBP"; $ → "USD" unless the country says otherwise (S$ → "SGD", A$ → "AUD", C$ → "CAD", HK$ → "HKD", NZ$ → "NZD"); ¥ → "JPY" or "CNY" depending on the country; AED or د.إ → "AED"; RM → "MYR"; Rp → "IDR"; ฿ → "THB". Null if there is no clue at all.
-- isBill: false only when the photo is clearly not a bill, receipt or invoice (a person, a plate of food, a menu, a screenshot of something else). When isBill is false, return an empty items list and null for every other field.
+- isBill: false only when the photo is clearly not a bill, receipt or invoice (a person, a plate of food, a menu, a screenshot of something else). When isBill is false, return an empty items list, category "other" and null for every other field.
 - If the photo shows more than one bill, read the most complete one.
 
 Answer with ONLY the JSON object — no markdown, no code fences, no comments, no explanations.`
@@ -106,7 +115,7 @@ Answer with ONLY the JSON object — no markdown, no code fences, no comments, n
  * The user turn. Repeats the schema for models that ignore `response_format`
  * (and for the retry we make without it).
  */
-export const USER_PROMPT = `Read the bill in this photo and return it as one JSON object that follows this JSON schema exactly — every key present, keys in this order, null where a value isn't printed:
+export const USER_PROMPT = `Read the bill in this photo and return it as one JSON object that follows this JSON schema exactly — every key present, keys in this order, null where a value isn't printed (category is always one of the listed values):
 
 ${JSON.stringify(BILL_SCHEMA)}
 

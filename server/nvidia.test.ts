@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { SCAN_BUDGET_MS } from '../shared/api'
 import { DEFAULT_TIMEOUT_MS, type ServerConfig } from './config'
-import { buildRequestBody, extractBill, forgetPromptOnlyModels, readContent, UpstreamError } from './nvidia'
-import { isAcceptableReply } from './parse'
+import { buildRequestBody, completeJson, extractBill, forgetPromptOnlyModels, readContent, UpstreamError, type CompletionTask } from './nvidia'
+import { extractJson, isAcceptableReply } from './parse'
 import { BILL_SCHEMA, SYSTEM_PROMPT, USER_PROMPT } from './prompt'
 import { BILL, chatResponse, errorResponse, hangingFetch, JPEG_DATA_URL, sentBody, TEST_KEY, testConfig } from './testing'
 
@@ -169,6 +169,19 @@ describe('extractBill', () => {
     expect(error.kind).toBe('auth')
     expect(error.status).toBe(status)
     expect(fetchMock).toHaveBeenCalledTimes(1)
+  })
+
+  it.each([
+    [503, '{"status":503,"title":"Service Unavailable","detail":"ResourceExhausted: no capacity for this model"}'],
+    [429, 'grpc error: RESOURCE_EXHAUSTED'],
+    [403, 'Resource exhausted for function'],
+    [500, 'Model is overloaded, please retry'],
+  ])('treats a full model (%i "%s") as unavailable and tries the next one — never as a key or quota problem', async (status, message) => {
+    fetchMock.mockResolvedValueOnce(errorResponse(status, message)).mockResolvedValueOnce(chatResponse(BILL))
+    const onAttemptFailed = vi.fn()
+    const result = await extractBill(testConfig(), JPEG_DATA_URL, { onAttemptFailed })
+    expect(result.model).toBe('google/gemma-test')
+    expect(onAttemptFailed).toHaveBeenCalledWith(expect.objectContaining({ kind: 'unavailable', status }))
   })
 
   it('fails fast on 429 and passes Retry-After along', async () => {
@@ -388,5 +401,44 @@ describe('extractBill — remembering models that refuse response_format', () =>
     fetchMock.mockResolvedValueOnce(chatResponse(BILL))
     await extractBill(testConfig(), JPEG_DATA_URL)
     expect(sentBody(fetchMock)).toHaveProperty('response_format')
+  })
+})
+
+describe('completeJson — any JSON task', () => {
+  const task = (overrides: Partial<CompletionTask> = {}): CompletionTask => ({
+    noun: 'split',
+    models: ['text/fast', 'text/slow'],
+    timeoutMs: 1_000,
+    budgetMs: 5_000,
+    minAttemptMs: 100,
+    body: (model, structured) => ({ model, messages: [], ...(structured ? { response_format: { type: 'json_schema' } } : {}) }),
+    parse: (content) => extractJson(content, (value) => 'people' in value),
+    ...overrides,
+  })
+
+  it('sends the task body to each model and reads the answer with its parser', async () => {
+    fetchMock.mockResolvedValueOnce(chatResponse('Sure! {"people": ["Riya"]}'))
+    expect(await completeJson(testConfig(), task())).toEqual({ raw: { people: ['Riya'] }, model: 'text/fast' })
+    expect(sentBody(fetchMock)).toEqual({ model: 'text/fast', messages: [], response_format: { type: 'json_schema' } })
+  })
+
+  it('falls back when a reply has no matching object, naming the task in the error', async () => {
+    fetchMock.mockResolvedValueOnce(chatResponse('{"total": 5}')).mockResolvedValueOnce(chatResponse('{"people": []}'))
+    const onAttemptFailed = vi.fn()
+    expect((await completeJson(testConfig(), task(), { onAttemptFailed })).model).toBe('text/slow')
+    expect(onAttemptFailed).toHaveBeenCalledWith(expect.objectContaining({ kind: 'bad_output', message: 'text/fast replied without split JSON.' }))
+  })
+
+  it('keeps to the task budget and reports a timeout naming the task', async () => {
+    fetchMock.mockImplementation(hangingFetch())
+    const error = await failure(completeJson(testConfig(), task({ timeoutMs: 30, budgetMs: 50, minAttemptMs: 25 })))
+    expect(error.kind).toBe('timeout')
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    expect(error.message).toBe('text/fast took longer than 30 ms.')
+  })
+
+  it('refuses to run without a key', async () => {
+    expect((await failure(completeJson(testConfig({ apiKey: null }), task()))).kind).toBe('not_configured')
+    expect(fetchMock).not.toHaveBeenCalled()
   })
 })

@@ -1,11 +1,12 @@
 /**
- * Reads a bill photo with NVIDIA's OpenAI-compatible chat-completions API.
+ * Asks NVIDIA's OpenAI-compatible chat-completions API for JSON: reading a bill photo
+ * (`extractBill`) or a sentence (`completeJson`, used by describe.ts).
  *
  * Models are tried in order. We fall back to the next one on failures another model
- * might not have (unknown model, 4xx/5xx, network, timeout, unusable output) and fail
- * fast on ones no model can fix (rejected key, rate limit, the caller going away).
- * All attempts share one time budget (`SCAN_BUDGET_MS`) that ends before the client
- * gives up, so the user always gets our answer rather than a generic timeout.
+ * might not have (unknown model, 4xx/5xx, capacity, network, timeout, unusable output) and
+ * fail fast on ones no model can fix (rejected key, rate limit, the caller going away).
+ * All attempts share one time budget that ends before the client gives up, so the user
+ * always gets our answer rather than a generic timeout.
  */
 import { SCAN_BUDGET_MS } from '../shared/api'
 import { redactSecrets, type ServerConfig } from './config'
@@ -25,7 +26,7 @@ export type UpstreamErrorKind =
   | 'aborted'
   /** The model answered, but not with a usable bill. */
   | 'bad_output'
-  /** 404, other 4xx, 5xx or a network failure. */
+  /** 404, other 4xx, 5xx (capacity included) or a network failure. */
   | 'unavailable'
 
 interface UpstreamErrorDetails {
@@ -56,7 +57,7 @@ export class UpstreamError extends Error {
   }
 }
 
-export interface ExtractOptions {
+export interface CompletionOptions {
   /** Aborts every attempt (wire it to the client's request so a disconnect stops the work). */
   signal?: AbortSignal
   /**
@@ -66,8 +67,28 @@ export interface ExtractOptions {
   accept?: (raw: unknown) => boolean
   /** Called for every failed attempt that we recover from or fall back after. */
   onAttemptFailed?: (error: UpstreamError) => void
+}
+
+export interface ExtractOptions extends CompletionOptions {
   /** Time for all attempts together, in ms. Defaults to `SCAN_BUDGET_MS` (the client waits a little longer). */
   budgetMs?: number
+}
+
+/** One kind of JSON request: which models, how long, what to send and how to read the answer. */
+export interface CompletionTask {
+  /** What the JSON describes, for log messages: "bill", "split". */
+  noun: string
+  models: readonly string[]
+  /** Time limit for one attempt, in ms. */
+  timeoutMs: number
+  /** Time for all attempts together, in ms. */
+  budgetMs: number
+  /** With less time than this left, no new attempt starts: we report what we have. */
+  minAttemptMs: number
+  /** The chat-completions request body for one attempt; `structured` asks for `response_format`. */
+  body: (model: string, structured: boolean) => Record<string, unknown>
+  /** Finds the JSON answer in a reply. Throws when there is none. */
+  parse: (content: string) => unknown
 }
 
 export interface ExtractResult {
@@ -80,8 +101,10 @@ const MAX_TOKENS = 4096
 /** How much of an upstream error body we keep for logs. */
 const MAX_DETAIL_CHARS = 600
 const SCHEMA_REJECTION = /response_format|json_schema|guided|schema/i
+/** A model that is out of capacity right now: another model may well have room. */
+const CAPACITY = /resource[\s_-]?exhausted|out of capacity|overloaded/i
 /** With less time than this left, another model can't read a bill: report what we have. */
-const MIN_ATTEMPT_MS = 5_000
+const MIN_SCAN_ATTEMPT_MS = 5_000
 /** How long we remember that a model refused `response_format`. */
 const PROMPT_ONLY_MEMORY_MS = 60 * 60_000
 const FAIL_FAST: ReadonlySet<UpstreamErrorKind> = new Set(['not_configured', 'auth', 'rate_limited', 'aborted'])
@@ -141,35 +164,58 @@ export function forgetPromptOnlyModels(): void {
 }
 
 /**
- * Asks each configured model in turn to read the bill, within `budgetMs` overall.
+ * Asks each configured vision model in turn to read the bill, within `budgetMs` overall.
  * @throws UpstreamError when no model produced a parseable bill.
  */
 export async function extractBill(config: ServerConfig, dataUrl: string, options: ExtractOptions = {}): Promise<ExtractResult> {
-  const { signal, accept, onAttemptFailed, budgetMs = SCAN_BUDGET_MS } = options
+  const { budgetMs = SCAN_BUDGET_MS, ...rest } = options
+  return completeJson(
+    config,
+    {
+      noun: 'bill',
+      models: config.models,
+      timeoutMs: config.timeoutMs,
+      budgetMs,
+      minAttemptMs: MIN_SCAN_ATTEMPT_MS,
+      body: (model, structured) => buildRequestBody(model, dataUrl, structured),
+      parse: extractJson,
+    },
+    rest,
+  )
+}
+
+/**
+ * Runs one JSON task: each model in turn (and the same model again without `response_format`
+ * if it refuses that), within the task's time budget.
+ * @throws UpstreamError when no model produced a parseable answer.
+ */
+export async function completeJson(config: ServerConfig, task: CompletionTask, options: CompletionOptions = {}): Promise<ExtractResult> {
+  const { signal, accept, onAttemptFailed } = options
   if (config.apiKey === null) throw new UpstreamError('not_configured', 'NVIDIA_API_KEY is not set.')
 
-  const deadline = Date.now() + budgetMs
+  const deadline = Date.now() + task.budgetMs
   let worst: UpstreamError | null = null
   let lastResort: ExtractResult | null = null
   let attempts = 0
   let outOfTime = false
 
-  models: for (const model of config.models) {
+  models: for (const model of task.models) {
     let structured = !prefersPromptOnly(config, model)
     for (;;) {
-      if (signal?.aborted) throw new UpstreamError('aborted', 'The scan was cancelled.', { model })
+      if (signal?.aborted) throw new UpstreamError('aborted', 'The request was cancelled.', { model })
       const remaining = deadline - Date.now()
-      if (attempts > 0 && remaining < MIN_ATTEMPT_MS) {
+      if (attempts > 0 && remaining < task.minAttemptMs) {
         outOfTime = true
         break models
       }
       attempts++
       try {
-        const timeoutMs = Math.max(1, Math.min(config.timeoutMs, remaining))
-        const raw = parseReply(await complete(config, model, dataUrl, structured, timeoutMs, signal), model)
+        const timeoutMs = Math.max(1, Math.min(task.timeoutMs, remaining))
+        const content = await complete(config, model, task.body(model, structured), timeoutMs, signal)
+        const raw = parseReply(content, model, task)
         if (accept && !accept(raw)) {
           lastResort ??= { raw, model }
-          throw new UpstreamError('bad_output', `${model} returned a bill without usable items.`, { model })
+          throw new UpstreamError('bad_output', `${model} returned a ${task.noun} without anything usable.`, { model })
         }
         return { raw, model }
       } catch (caught) {
@@ -194,7 +240,7 @@ export async function extractBill(config: ServerConfig, dataUrl: string, options
 
   if (lastResort) return lastResort
   if (worst) throw worst
-  if (outOfTime) throw new UpstreamError('timeout', `No model finished reading the bill within ${budgetMs} ms.`)
+  if (outOfTime) throw new UpstreamError('timeout', `No model finished the ${task.noun} within ${task.budgetMs} ms.`)
   throw new UpstreamError('unavailable', 'No NVIDIA models are configured.')
 }
 
@@ -202,11 +248,11 @@ function isSchemaRejection(error: UpstreamError): boolean {
   return (error.status === 400 || error.status === 422) && SCHEMA_REJECTION.test(error.detail)
 }
 
-function parseReply(content: string, model: string): unknown {
+function parseReply(content: string, model: string, task: CompletionTask): unknown {
   try {
-    return extractJson(content)
+    return task.parse(content)
   } catch (error) {
-    throw new UpstreamError('bad_output', `${model} replied without bill JSON.`, {
+    throw new UpstreamError('bad_output', `${model} replied without ${task.noun} JSON.`, {
       model,
       detail: content.slice(0, MAX_DETAIL_CHARS),
       cause: error,
@@ -222,8 +268,7 @@ function unexpected(error: unknown, model: string): UpstreamError {
 async function complete(
   config: ServerConfig,
   model: string,
-  dataUrl: string,
-  structured: boolean,
+  body: Record<string, unknown>,
   timeoutMs: number,
   signal: AbortSignal | undefined,
 ): Promise<string> {
@@ -245,7 +290,7 @@ async function complete(
         'Content-Type': 'application/json',
         Accept: 'application/json',
       },
-      body: JSON.stringify(buildRequestBody(model, dataUrl, structured)),
+      body: JSON.stringify(body),
       signal: controller.signal,
     })
     if (!response.ok) throw await httpError(response, model, config.apiKey)
@@ -261,7 +306,7 @@ async function complete(
   } catch (error) {
     if (error instanceof UpstreamError) throw error
     if (timedOut) throw new UpstreamError('timeout', `${model} took longer than ${timeoutMs} ms.`, { model, cause: error })
-    if (signal?.aborted) throw new UpstreamError('aborted', 'The scan was cancelled.', { model, cause: error })
+    if (signal?.aborted) throw new UpstreamError('aborted', 'The request was cancelled.', { model, cause: error })
     throw new UpstreamError('unavailable', `Couldn't reach NVIDIA for ${model}: ${describe(error)}`, { model, cause: error })
   } finally {
     clearTimeout(timer)
@@ -277,7 +322,15 @@ async function httpError(response: Response, model: string, apiKey: string | nul
   } catch {
     // The body is only for logs; a timeout while reading it is reported by the caller.
   }
-  const kind: UpstreamErrorKind = status === 401 || status === 403 ? 'auth' : status === 429 ? 'rate_limited' : 'unavailable'
+  // "ResourceExhausted" is one model being full (NVIDIA sends it as a 503, sometimes a 429 or
+  // 403): another model may have room, so it's never a key problem or a reason to stop.
+  const kind: UpstreamErrorKind = CAPACITY.test(detail)
+    ? 'unavailable'
+    : status === 401 || status === 403
+      ? 'auth'
+      : status === 429
+        ? 'rate_limited'
+        : 'unavailable'
   return new UpstreamError(kind, `${model} answered HTTP ${status}.`, {
     model,
     status,

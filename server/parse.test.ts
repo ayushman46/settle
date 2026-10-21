@@ -22,6 +22,7 @@ const scan = (raw: unknown, model = 'test-model') => normalize(parseExtraction(r
 const SAFFRON = {
   isBill: true,
   merchant: 'SAFFRON TABLE',
+  category: 'food',
   date: '2026-10-18',
   currency: 'INR',
   items: [
@@ -124,6 +125,19 @@ describe('extractJson', () => {
     const started = performance.now()
     expect(() => extractJson('{'.repeat(50_000))).toThrow(ParseError)
     expect(performance.now() - started).toBeLessThan(2000)
+  })
+})
+
+describe('extractJson with another shape of answer', () => {
+  const isSplit = (value: Record<string, unknown>) => 'people' in value
+
+  it('finds the object the caller is looking for, skipping echoed schemas and other objects', () => {
+    const reply = `Schema: {"type":"object","properties":{"people":{}}} Example: {"total": 5} Answer: {"people": [], "amount": 840}`
+    expect(extractJson(reply, isSplit)).toEqual({ people: [], amount: 840 })
+  })
+
+  it('throws ParseError when no object matches', () => {
+    expect(() => extractJson('{"amount": 840}', isSplit)).toThrow(ParseError)
   })
 })
 
@@ -363,6 +377,7 @@ describe('parseExtraction', () => {
     expect(parseExtraction({ items: [{ name: 'Tea' }] })).toEqual({
       isBill: true,
       merchant: null,
+      category: null,
       date: null,
       currency: null,
       items: [{ name: 'Tea', quantity: 1, amount: null }],
@@ -423,6 +438,7 @@ describe('normalize', () => {
       merchant: 'Saffron Table',
       date: '2026-10-18',
       currency: 'INR',
+      category: 'food',
       items: [
         { name: 'Paneer Tikka', quantity: 1, amount: 345 },
         { name: 'Butter Chicken', quantity: 1, amount: 495 },
@@ -625,11 +641,13 @@ describe('normalize', () => {
 })
 
 describe('isUsable / isAcceptableReply', () => {
-  it('needs at least one item, and a price or a total', () => {
+  it('needs priced items, items with a total, or just a total', () => {
     expect(isUsable(scan({ items: [] }))).toBe(false)
     expect(isUsable(scan({ items: [{ name: 'A' }] }))).toBe(false)
     expect(isUsable(scan({ items: [{ name: 'A' }], total: 10 }))).toBe(true)
     expect(isUsable(scan({ items: [{ name: 'A', amount: 3 }] }))).toBe(true)
+    expect(isUsable(scan({ items: [], total: 1230 }))).toBe(true)
+    expect(isUsable(scan({ items: [], total: 0 }))).toBe(false)
   })
 
   it('accepts usable bills and confident "not a bill" answers', () => {
@@ -637,5 +655,66 @@ describe('isUsable / isAcceptableReply', () => {
     expect(isAcceptableReply({ isBill: false, items: [] })).toBe(true)
     expect(isAcceptableReply({ isBill: true, items: [] })).toBe(false)
     expect(isAcceptableReply('garbage')).toBe(false)
+  })
+
+  it('accepts a total alone for service bills, but asks another model for the items of a restaurant bill', () => {
+    const totalOnly = (category: string | null, merchant: string | null = null) => ({ isBill: true, merchant, category, items: [], total: 1230 })
+    for (const category of ['utilities', 'transport', 'travel', 'rent', 'subscription', 'health', 'entertainment', 'gift', 'other']) {
+      expect(isAcceptableReply(totalOnly(category))).toBe(true)
+    }
+    for (const category of ['food', 'groceries', 'shopping', null]) expect(isAcceptableReply(totalOnly(category))).toBe(false)
+    // No category from the model, but the merchant says what it is.
+    expect(isAcceptableReply(totalOnly(null, 'BESCOM'))).toBe(true)
+    expect(isAcceptableReply(totalOnly(null, 'Swiggy'))).toBe(false)
+    // Still usable (and shown) when no model does better.
+    expect(isUsable(scan(totalOnly('food')))).toBe(true)
+  })
+})
+
+describe('categories', () => {
+  it('keeps a category id, in any case', () => {
+    expect(scan({ ...SAFFRON, category: 'transport' }).category).toBe('transport')
+    expect(scan({ ...SAFFRON, category: ' Utilities ' }).category).toBe('utilities')
+  })
+
+  it('maps a free-text label onto a category, under any of its usual keys', () => {
+    expect(scan({ ...SAFFRON, category: 'Dining' }).category).toBe('food')
+    expect(scan({ ...SAFFRON, category: 'Electricity bill' }).category).toBe('utilities')
+    const { category: _omit, ...rest } = SAFFRON
+    expect(scan({ ...rest, bill_type: 'Taxi' }).category).toBe('transport')
+    expect(scan({ ...rest, type: 'Hotel stay' }).category).toBe('travel')
+  })
+
+  it('falls back on the merchant, then the items, then null', () => {
+    const { category: _omit, ...rest } = SAFFRON
+    expect(scan({ ...rest, merchant: 'UBER INDIA' }).category).toBe('transport')
+    expect(scan({ ...rest, merchant: 'Tata Power-DDL' }).category).toBe('utilities')
+    expect(scan({ ...rest, merchant: 'Toit', items: [{ name: 'Craft Beer', amount: 400 }] }).category).toBe('food')
+    expect(scan({ ...rest, category: 'misc', merchant: 'Shop 42', items: [{ name: 'Thing', amount: 400 }] }).category).toBeNull()
+  })
+})
+
+describe('total-only bills', () => {
+  it('keeps the totals with an empty item list and no mismatch warning', () => {
+    const result = scan({
+      isBill: true,
+      merchant: 'BESCOM',
+      category: 'utilities',
+      date: '05/10/2026',
+      currency: 'INR',
+      items: [],
+      subtotal: 1180,
+      tax: 50,
+      serviceCharge: null,
+      discount: null,
+      tip: null,
+      total: 1230,
+    })
+    expect(result).toMatchObject({ merchant: 'BESCOM', category: 'utilities', items: [], subtotal: 1180, tax: 50, total: 1230, warnings: [] })
+    expect(isUsable(result)).toBe(true)
+  })
+
+  it('still warns when there is no total at all', () => {
+    expect(scan({ isBill: true, category: 'transport', items: [], total: null }).warnings).toEqual([WARNINGS.noTotal])
   })
 })
