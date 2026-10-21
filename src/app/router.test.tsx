@@ -422,6 +422,59 @@ describe('Back and Forward', () => {
     expect(direction()).toBe('back')
   })
 
+  it('Back steps over a twin of the page on show that a replace left beneath it', async () => {
+    const { user } = renderApp()
+    act(() => navigate('/app/groups'))
+    act(() => navigate('/app/groups/g1'))
+    act(() => navigate('/app/split/new')) // e.g. editing from the group…
+    await user.click(screen.getByRole('button', { name: 'Leave' }))
+    act(() => navigate('/app/groups/g1', { replace: true })) // …saved back to it
+    await settle()
+    expect(entry()).toEqual({ depth: 3, sheet: 0, bill: null, url: '/app/groups/g1' })
+
+    await back()
+    await settle()
+    expect(heading()).toBe('Groups')
+    expect(direction()).toBe('back')
+    expect(entry()).toEqual({ depth: 1, sheet: 0, bill: null, url: '/app/groups' })
+  })
+
+  it('goBack steps over a twin too, however many replaces stacked them', async () => {
+    const { user } = renderApp()
+    act(() => navigate('/app/friends'))
+    act(() => navigate('/app/groups/saved', { replace: true }))
+    act(() => navigate('/app/friends'))
+    act(() => navigate('/app/groups/saved', { replace: true }))
+    expect(entry()).toEqual({ depth: 2, sheet: 0, bill: null, url: '/app/groups/saved' })
+    await user.click(screen.getByRole('button', { name: 'Back' }))
+    await settle()
+    expect(heading()).toBe('Home')
+    expect(entry()).toEqual({ depth: 0, sheet: 0, bill: null, url: '/app' })
+  })
+
+  it('a twin at the start of the visit stays: there is nothing of ours beneath it', async () => {
+    renderApp()
+    act(() => navigate('/app/friends'))
+    act(() => navigate('/app', { replace: true }))
+    await back()
+    expect(heading()).toBe('Home')
+    expect(entry()).toEqual({ depth: 0, sheet: 0, bill: null, url: '/app' })
+  })
+
+  it('Back from a sheet over a page closes just the sheet, even with a twin beneath', async () => {
+    const { user } = renderApp()
+    act(() => navigate('/app/groups/g1'))
+    act(() => navigate('/app/friends'))
+    act(() => navigate('/app/groups/g1', { replace: true }))
+    await user.click(screen.getByRole('button', { name: 'Open Group menu' }))
+    await back()
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(entry()).toEqual({ depth: 2, sheet: 0, bill: null, url: '/app/groups/g1' })
+    await back()
+    await settle()
+    expect(heading()).toBe('Home')
+  })
+
   it('a reload resumes the page and its trail', async () => {
     const { unmount } = renderApp()
     act(() => navigate('/app/groups'))

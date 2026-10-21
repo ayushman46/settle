@@ -13,7 +13,8 @@
  * history operations are queued: anything requested while a traversal is in flight runs after
  * its `popstate`. Back and Forward (and `back()`, which asks the browser to go back) are followed
  * when they land, in this order: open sheets above the entry close (top-most first), then a step
- * change inside the bill flow, then a change of page.
+ * change inside the bill flow, then a change of page — stepping over a twin of the page on show
+ * that a replace left right beneath it, so no Back press is ever spent on nothing.
  */
 import { STEPS, type StepId } from '../../types'
 import {
@@ -699,7 +700,17 @@ export class HistoryDriver {
     }
 
     // 3. Another page.
-    if (at.url === this.locationUrl) return
+    if (at.url === this.locationUrl) {
+      // Back onto a twin of the page on show (a replace put the page right above a copy of
+      // itself, e.g. an edit screen saved back to its detail): one more step back, so no Back
+      // press is spent on a page that is already showing.
+      const twin = at.sheet === 0 && at.bill === null && prev.bill === null && at.depth === screenDepth(prev) - 1
+      if (twin && at.depth > 0) {
+        this.traveling = true
+        this.enqueue({ kind: 'travel', delta: -1 })
+      }
+      return
+    }
     this.remember(prev)
     this.show(at.url, directionOf(prev, at))
     this.restore(at)
