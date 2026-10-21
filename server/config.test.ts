@@ -1,4 +1,5 @@
 import { generateKeyPairSync } from 'node:crypto'
+import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { DESCRIBE_BUDGET_MS, SCAN_BUDGET_MS } from '../shared/api'
 import {
@@ -227,5 +228,33 @@ describe('loadConfig — checkout and licensing', () => {
     const config = loadConfig({ LICENSE_PRIVATE_KEY: PRIVATE_KEY_B64 })
     expect(config.license.publicKeySpki).toBe(PUBLIC_KEY_B64)
     expect(loadConfig({ LICENSE_PUBLIC_KEY: PUBLIC_KEY_B64 }).license).toMatchObject({ privateKey: null, publicKeySpki: PUBLIC_KEY_B64 })
+  })
+})
+
+describe('.env.example', () => {
+  const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8')
+  const example = read('../.env.example')
+
+  it('documents every variable the server reads', () => {
+    const source = read('./config.ts') + read('./index.ts')
+    const used = new Set([...source.matchAll(/\benv\.([A-Z][A-Z0-9_]*)/g)].map((match) => match[1] ?? ''))
+    expect(used.size).toBeGreaterThan(15)
+    for (const name of used) expect(example, name).toMatch(new RegExp(`^(?:# )?${name}=`, 'm'))
+  })
+
+  it('ships no secrets: keys are blank and the rest are commented-out defaults', () => {
+    for (const line of example.split(/\r?\n/)) {
+      const setting = /^([A-Z][A-Z0-9_]*)=(.*)$/.exec(line)
+      if (setting && setting[1] !== 'NVIDIA_MODEL' && setting[1] !== 'NVIDIA_TEXT_MODEL') expect(setting[2], setting[1]).toBe('')
+    }
+    expect(example).not.toMatch(/nvapi-[\w-]{6,}|rzp_(?:test|live)_[A-Za-z0-9]{8,}|-----BEGIN/)
+  })
+
+  it('suggests the same models and prices the server defaults to', () => {
+    const value = (name: string) => new RegExp(`^(?:# )?${name}=(.*)$`, 'm').exec(example)?.[1]
+    expect(value('NVIDIA_MODEL')).toBe(DEFAULT_MODELS.join(','))
+    expect(value('NVIDIA_TEXT_MODEL')).toBe(DEFAULT_TEXT_MODELS.join(','))
+    expect(value('PRO_PRICES')).toBe(Object.entries(DEFAULT_PRICES).map(([plan, paise]) => `${plan}=${paise}`).join(','))
+    expect(loadConfig({ PRO_PRICES: value('PRO_PRICES') }).warnings).toEqual([])
   })
 })
