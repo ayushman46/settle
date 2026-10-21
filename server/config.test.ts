@@ -1,42 +1,88 @@
+import { generateKeyPairSync } from 'node:crypto'
 import { describe, expect, it } from 'vitest'
-import { SCAN_BUDGET_MS } from '../shared/api'
-import { DEFAULT_BASE_URL, DEFAULT_MODELS, loadConfig, parsePort, redactSecrets } from './config'
+import { DESCRIBE_BUDGET_MS, SCAN_BUDGET_MS } from '../shared/api'
+import {
+  checkoutReady,
+  DEFAULT_BASE_URL,
+  DEFAULT_MODELS,
+  DEFAULT_RAZORPAY_BASE_URL,
+  DEFAULT_TEXT_MODELS,
+  loadConfig,
+  parsePort,
+  redactSecrets,
+} from './config'
+import { DEFAULT_PRICES } from './plans'
+
+const pair = generateKeyPairSync('ed25519')
+const PRIVATE_KEY_B64 = pair.privateKey.export({ type: 'pkcs8', format: 'der' }).toString('base64')
+const PUBLIC_KEY_B64 = pair.publicKey.export({ type: 'spki', format: 'der' }).toString('base64')
 
 describe('loadConfig', () => {
   it('uses sensible defaults for an empty environment', () => {
     expect(loadConfig({})).toEqual({
       apiKey: null,
       models: [...DEFAULT_MODELS],
+      textModels: [...DEFAULT_TEXT_MODELS],
       baseUrl: DEFAULT_BASE_URL,
       timeoutMs: 35_000,
+      describeTimeoutMs: 15_000,
       rateLimit: { max: 30, windowMs: 600_000 },
+      proAiPerDay: 200,
       trustProxy: 0,
       maxConcurrentScans: 8,
+      billing: {
+        razorpay: null,
+        razorpayBaseUrl: DEFAULT_RAZORPAY_BASE_URL,
+        prices: { pro_monthly: 4900, pro_yearly: 39900, pro_lifetime: 99900 },
+        rateLimit: { max: 30, windowMs: 600_000 },
+      },
+      license: { privateKey: null, publicKey: null, publicKeySpki: null },
+      warnings: [],
     })
-    expect(DEFAULT_MODELS).toEqual(['nvidia/nemotron-3.5-super-vl-120b-a12b', 'google/gemma-4-31b-it', 'meta/llama-3.2-90b-vision-instruct'])
+    expect(DEFAULT_MODELS).toEqual(['nvidia/nemotron-3.5-super-vl-120b-a12b', 'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning'])
+    expect(DEFAULT_TEXT_MODELS).toEqual(['nvidia/nemotron-3.5-lightning-30b-a3b', 'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning'])
   })
 
   it('reads every variable', () => {
-    expect(
-      loadConfig({
-        NVIDIA_API_KEY: '  nvapi-abc123DEF  ',
-        NVIDIA_MODEL: 'a/b, c/d ,a/b,, e/f',
-        NVIDIA_BASE_URL: 'https://example.test/v1///',
-        NVIDIA_TIMEOUT_MS: '15000',
-        RATE_LIMIT_MAX: '5',
-        RATE_LIMIT_WINDOW_MS: '60_000',
-        TRUST_PROXY: '1',
-        MAX_CONCURRENT_SCANS: '4',
-      }),
-    ).toEqual({
+    const config = loadConfig({
+      NVIDIA_API_KEY: '  nvapi-abc123DEF  ',
+      NVIDIA_MODEL: 'a/b, c/d ,a/b,, e/f',
+      NVIDIA_TEXT_MODEL: 't/fast, t/slow',
+      NVIDIA_BASE_URL: 'https://example.test/v1///',
+      NVIDIA_TIMEOUT_MS: '15000',
+      NVIDIA_TEXT_TIMEOUT_MS: '9000',
+      RATE_LIMIT_MAX: '5',
+      RATE_LIMIT_WINDOW_MS: '60_000',
+      PRO_AI_PER_DAY: '500',
+      TRUST_PROXY: '1',
+      MAX_CONCURRENT_SCANS: '4',
+      RAZORPAY_KEY_ID: 'rzp_live_AbCdEf12345678',
+      RAZORPAY_KEY_SECRET: ' "s3cretS3cret" ',
+      PRO_PRICES: 'pro_monthly=9900, pro_lifetime=149900',
+      BILLING_RATE_LIMIT_MAX: '12',
+      LICENSE_PRIVATE_KEY: PRIVATE_KEY_B64,
+    })
+    expect(config).toMatchObject({
       apiKey: 'nvapi-abc123DEF',
       models: ['a/b', 'c/d', 'e/f'],
+      textModels: ['t/fast', 't/slow'],
       baseUrl: 'https://example.test/v1',
       timeoutMs: 15_000,
+      describeTimeoutMs: 9_000,
       rateLimit: { max: 5, windowMs: 60_000 },
+      proAiPerDay: 500,
       trustProxy: 1,
       maxConcurrentScans: 4,
+      billing: {
+        razorpay: { keyId: 'rzp_live_AbCdEf12345678', keySecret: 's3cretS3cret' },
+        prices: { pro_monthly: 9900, pro_yearly: 39900, pro_lifetime: 149900 },
+        rateLimit: { max: 12, windowMs: 600_000 },
+      },
+      license: { publicKeySpki: PUBLIC_KEY_B64 },
+      warnings: [],
     })
+    expect(config.license.privateKey?.asymmetricKeyType).toBe('ed25519')
+    expect(checkoutReady(config)).toBe(true)
   })
 
   it.each(['', '   ', 'nvapi-', 'nvapi-xxxxxxxx', 'your-api-key', 'YOUR_NVIDIA_API_KEY', '<your key>', '...', 'changeme', '""', "''", 'null'])(
@@ -73,8 +119,16 @@ describe('loadConfig', () => {
     expect(loadConfig({ MAX_CONCURRENT_SCANS: 'lots' }).maxConcurrentScans).toBe(8)
   })
 
-  it('caps one attempt at the whole scan budget', () => {
+  it('caps one attempt at the whole scan (or describe) budget', () => {
     expect(loadConfig({ NVIDIA_TIMEOUT_MS: '99999999' }).timeoutMs).toBe(SCAN_BUDGET_MS)
+    expect(loadConfig({ NVIDIA_TEXT_TIMEOUT_MS: '99999999' }).describeTimeoutMs).toBe(DESCRIBE_BUDGET_MS)
+  })
+
+  it('lets PRO_AI_PER_DAY=0 and BILLING_RATE_LIMIT_MAX=0 lift those caps', () => {
+    const config = loadConfig({ PRO_AI_PER_DAY: '0', BILLING_RATE_LIMIT_MAX: '0' })
+    expect(config.proAiPerDay).toBe(0)
+    expect(config.billing.rateLimit.max).toBe(0)
+    expect(loadConfig({ PRO_AI_PER_DAY: 'lots' }).proAiPerDay).toBe(200)
   })
 
   it.each([
@@ -108,6 +162,14 @@ describe('parsePort', () => {
 })
 
 describe('redactSecrets', () => {
+  it('removes every given secret and basic-auth credentials', () => {
+    const text = 'nvapi-key=abc rzp=sk_live_123 Authorization: Basic cnpwX3Rlc3Q6c2VjcmV0'
+    const redacted = redactSecrets(text, null, 'sk_live_123', undefined, 'abc')
+    expect(redacted).not.toContain('sk_live_123')
+    expect(redacted).not.toContain('cnpwX3Rlc3Q6c2VjcmV0')
+    expect(redacted).not.toContain('=abc')
+  })
+
   it('removes the configured key, key-shaped strings and bearer tokens', () => {
     const text = 'key=sk-secret-value nvapi-AbCdEf123456 Authorization: Bearer abc.def.ghi'
     const redacted = redactSecrets(text, 'sk-secret-value')
@@ -119,5 +181,51 @@ describe('redactSecrets', () => {
 
   it('leaves ordinary text alone', () => {
     expect(redactSecrets('HTTP 404 model not found', null)).toBe('HTTP 404 model not found')
+  })
+})
+
+describe('loadConfig — checkout and licensing', () => {
+  it('turns checkout on only with both Razorpay keys and a license key to sign with', () => {
+    const razorpay = { RAZORPAY_KEY_ID: 'rzp_test_AbCdEf12345678', RAZORPAY_KEY_SECRET: 'abcDEF123456ghiJKL789012' }
+    expect(checkoutReady(loadConfig({ ...razorpay, LICENSE_PRIVATE_KEY: PRIVATE_KEY_B64 }))).toBe(true)
+    expect(checkoutReady(loadConfig(razorpay))).toBe(false)
+    expect(checkoutReady(loadConfig({ LICENSE_PRIVATE_KEY: PRIVATE_KEY_B64 }))).toBe(false)
+  })
+
+  it.each([
+    [{ RAZORPAY_KEY_ID: 'rzp_test_AbCdEf12345678' }, /RAZORPAY_KEY_SECRET is missing/],
+    [{ RAZORPAY_KEY_SECRET: 'abcDEF123456ghiJKL789012' }, /RAZORPAY_KEY_ID is missing/],
+    [{ RAZORPAY_KEY_ID: 'key_123', RAZORPAY_KEY_SECRET: 'abcDEF123456ghiJKL789012' }, /should look like rzp_test_/],
+  ])('keeps checkout off and explains why for %j', (env, warning) => {
+    const config = loadConfig(env)
+    expect(config.billing.razorpay).toBeNull()
+    expect(config.warnings.join(' ')).toMatch(warning)
+  })
+
+  it.each(['', '  ', 'rzp_test_xxxxxxxxxxxxxx', 'rzp_live_', 'your_key_id', '<key id>'])('treats placeholder key id %j as not set', (keyId) => {
+    const config = loadConfig({ RAZORPAY_KEY_ID: keyId, RAZORPAY_KEY_SECRET: 'your_key_secret' })
+    expect(config.billing.razorpay).toBeNull()
+    expect(config.warnings).toEqual([])
+  })
+
+  it('never puts secrets in warnings', () => {
+    const config = loadConfig({
+      RAZORPAY_KEY_ID: 'oops-not-a-key-id',
+      RAZORPAY_KEY_SECRET: 'superSecretValue123',
+      LICENSE_PRIVATE_KEY: 'not-a-key-at-all',
+      LICENSE_PUBLIC_KEY: 'also-not-a-key',
+      PRO_PRICES: 'pro_monthly=1,pro_weekly=500',
+    })
+    const text = config.warnings.join('\n')
+    expect(text).not.toContain('superSecretValue123')
+    expect(text).not.toContain('not-a-key-at-all')
+    expect(config.warnings).toHaveLength(5)
+    expect(config.billing.prices).toEqual(DEFAULT_PRICES)
+  })
+
+  it('derives the public key from the private key and serves it as SPKI base64', () => {
+    const config = loadConfig({ LICENSE_PRIVATE_KEY: PRIVATE_KEY_B64 })
+    expect(config.license.publicKeySpki).toBe(PUBLIC_KEY_B64)
+    expect(loadConfig({ LICENSE_PUBLIC_KEY: PUBLIC_KEY_B64 }).license).toMatchObject({ privateKey: null, publicKeySpki: PUBLIC_KEY_B64 })
   })
 })

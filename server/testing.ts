@@ -1,24 +1,63 @@
 /**
  * Shared fixtures for the server tests (not imported by production code).
  */
+import { createPublicKey, generateKeyPairSync } from 'node:crypto'
 import { vi, type Mock } from 'vitest'
 import type { Logger } from './app'
-import type { ServerConfig } from './config'
+import type { BillingSettings, ServerConfig } from './config'
+import { DEFAULT_PRICES } from './plans'
+import { NO_LICENSE_KEYS, spkiBase64, type LicenseKeys } from './license'
 
 export const TEST_KEY = 'nvapi-test-key-0123456789'
+export const TEST_RAZORPAY = { keyId: 'rzp_test_AbCdEf12345678', keySecret: 'rzpTestSecret0123456789ab' } as const
 
+/** A real Ed25519 key pair for the whole test run. */
+const pair = generateKeyPairSync('ed25519')
+export const TEST_LICENSE_KEYS: LicenseKeys = {
+  privateKey: pair.privateKey,
+  publicKey: pair.publicKey,
+  publicKeySpki: spkiBase64(pair.publicKey),
+}
+
+/** Another server's keys: tokens they sign must not verify with ours. */
+const otherPair = generateKeyPairSync('ed25519')
+export const OTHER_LICENSE_KEYS: LicenseKeys = {
+  privateKey: otherPair.privateKey,
+  publicKey: createPublicKey(otherPair.privateKey),
+  publicKeySpki: spkiBase64(otherPair.publicKey),
+}
+
+export function testBilling(overrides: Partial<BillingSettings> = {}): BillingSettings {
+  return {
+    razorpay: { ...TEST_RAZORPAY },
+    razorpayBaseUrl: 'https://razorpay.test/v1',
+    prices: { ...DEFAULT_PRICES },
+    rateLimit: { max: 0, windowMs: 60_000 },
+    ...overrides,
+  }
+}
+
+/** AI and billing fully set up (with fakes), limits off. Billing off: `{ billing: testBilling({ razorpay: null }) }`. */
 export function testConfig(overrides: Partial<ServerConfig> = {}): ServerConfig {
   return {
     apiKey: TEST_KEY,
     models: ['nvidia/nemotron-test-vl', 'google/gemma-test'],
+    textModels: ['nvidia/nemotron-test-text', 'meta/llama-test-text'],
     baseUrl: 'https://nvidia.test/v1',
     timeoutMs: 5_000,
+    describeTimeoutMs: 5_000,
     rateLimit: { max: 0, windowMs: 60_000 },
+    proAiPerDay: 0,
     trustProxy: 0,
     maxConcurrentScans: 0,
+    billing: testBilling(),
+    license: TEST_LICENSE_KEYS,
+    warnings: [],
     ...overrides,
   }
 }
+
+export { NO_LICENSE_KEYS }
 
 const base64 = (bytes: number[], filler = 64) => Buffer.from([...bytes, ...new Array<number>(filler).fill(0)]).toString('base64')
 
