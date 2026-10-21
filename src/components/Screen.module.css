@@ -95,6 +95,19 @@
   padding-bottom: var(--s-3);
 }
 
+/* A tab root with its own actions: they ride just above the tab bar (which owns the safe area). */
+:global(html:has([data-tabbar])) .footer {
+  bottom: calc(var(--tabbar-h) + var(--safe-bottom));
+  padding-bottom: var(--s-3);
+}
+
+/* …and drop back to the keyboard while typing on touch screens, where the tab bar steps aside. */
+@media (pointer: coarse) {
+  :global(html:has([data-tabbar]):has(:is(input:not([type='radio'], [type='checkbox'], [type='file'], [type='range']), textarea):focus)) .footer {
+    bottom: var(--keyboard-inset, 0px);
+  }
+}
+
 /* Soft fade so content scrolls *under* the actions instead of being cut off. */
 .footer::before {
   content: '';

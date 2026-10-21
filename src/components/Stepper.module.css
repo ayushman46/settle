@@ -5,6 +5,9 @@
   flex: none;
   align-items: center;
   gap: var(--s-1);
+  /* Hugs its buttons even as a stretched flex/grid item. */
+  width: fit-content;
+  max-width: 100%;
   padding: 2px;
   border-radius: var(--r-pill);
   background: var(--surface);
