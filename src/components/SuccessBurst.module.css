@@ -1,0 +1,212 @@
+/*
+ * The celebration plays on the dark "balance card" ground in both themes (ink + accent is the
+ * brand moment). Rest state is the finished picture; keyframes only describe where things come
+ * FROM, so with reduced motion (token durations → 0) it simply appears complete.
+ */
+
+.root {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-8);
+  padding: calc(var(--safe-top) + var(--s-8)) var(--gutter) calc(var(--safe-bottom) + var(--s-12));
+  background: var(--balance-card-gradient), var(--balance-card-bg);
+  color: var(--balance-card-ink);
+  text-align: center;
+  outline: none;
+  overflow: hidden;
+  cursor: pointer;
+  animation: backdrop-in var(--dur-2) var(--ease-out) backwards;
+}
+
+/* ---------- Badge, rings and confetti ---------- */
+
+.stage {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 128px;
+  height: 128px;
+}
+
+.badge {
+  position: relative;
+  z-index: 1;
+  width: 112px;
+  height: 112px;
+  overflow: visible;
+}
+
+.disc {
+  fill: var(--accent);
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: disc-in var(--dur-4) var(--ease-spring) var(--dur-1) backwards;
+}
+
+.check {
+  fill: none;
+  stroke: var(--on-accent);
+  stroke-width: 8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+  animation: draw var(--dur-3) var(--ease-out) calc(var(--dur-3) + var(--dur-1)) backwards;
+}
+
+.ring {
+  position: absolute;
+  inset: 8px;
+  border: 3px solid var(--accent);
+  border-radius: 50%;
+  opacity: 0;
+  animation: ripple calc(var(--dur-4) * 2) var(--ease-out) var(--dur-3) backwards;
+}
+
+.ring2 {
+  animation-delay: calc(var(--dur-3) + 140ms);
+}
+
+.ring3 {
+  animation-delay: calc(var(--dur-3) + 280ms);
+}
+
+/* Each fleck flies out along its angle and fades; it rests (invisible) at the end of its path.
+   Angle, distance, size, colour and delay come from inline styles (defaults here). */
+.fleck {
+  --a: 0deg;
+  --d: 120px;
+  --s: 8px;
+  --c: var(--accent);
+  --delay: 0ms;
+
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: var(--s);
+  height: var(--s);
+  margin: calc(var(--s) / -2) 0 0 calc(var(--s) / -2);
+  border-radius: 2px;
+  background: var(--c);
+  opacity: 0;
+  transform: rotate(var(--a)) translateY(calc(var(--d) * -1)) rotate(45deg) scale(0.6);
+  animation: fleck calc(var(--dur-4) * 1.7) var(--ease-out) calc(var(--dur-3) + var(--delay)) backwards;
+}
+
+.fleck:nth-child(odd) {
+  border-radius: 50%;
+}
+
+/* ---------- Text ---------- */
+
+.text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-2);
+  max-width: 32ch;
+}
+
+.title {
+  font: var(--text-title);
+  letter-spacing: var(--tracking-tight);
+  color: var(--balance-card-ink);
+  animation: rise var(--dur-4) var(--ease-out) calc(var(--dur-3) + var(--dur-2)) backwards;
+}
+
+.amount {
+  font: var(--text-display);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: var(--tracking-display);
+  color: var(--balance-card-ink);
+  animation: rise var(--dur-4) var(--ease-out) calc(var(--dur-3) + var(--dur-3)) backwards;
+}
+
+.subtitle {
+  font: var(--text-body);
+  color: var(--balance-card-ink-2);
+  animation: rise var(--dur-4) var(--ease-out) calc(var(--dur-4) + var(--dur-2)) backwards;
+}
+
+/* ---------- Keyframes ---------- */
+
+@keyframes backdrop-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes disc-in {
+  from {
+    opacity: 0;
+    transform: scale(0.2);
+  }
+}
+
+@keyframes draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+}
+
+@keyframes ripple {
+  0% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+
+  15% {
+    opacity: 0.7;
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(2.6);
+  }
+}
+
+@keyframes fleck {
+  0% {
+    opacity: 0;
+    transform: rotate(var(--a)) translateY(-20px) rotate(0deg) scale(1);
+  }
+
+  25% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+    transform: rotate(var(--a)) translateY(calc(var(--d) * -1)) rotate(225deg) scale(0.6);
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(var(--s-3));
+  }
+}
+
+/* Reduced motion: a calm, complete picture — no rings or confetti. */
+@media (prefers-reduced-motion: reduce) {
+  .ring,
+  .fleck {
+    display: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .disc {
+    fill: Highlight;
+  }
+
+  .check {
+    stroke: HighlightText;
+  }
+}
