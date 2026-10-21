@@ -1,6 +1,6 @@
 /**
- * Tiny in-memory fixed-window rate limiter for `/api/scan`, keyed by client IP, plus a cap
- * on scans in flight. Good enough for a single instance: it protects the NVIDIA quota from
+ * Tiny in-memory fixed-window rate limiters (per client IP, per Pro license) plus a cap on
+ * requests in flight. Good enough for a single instance: they protect the NVIDIA quota from
  * one noisy client and the server's memory from a burst.
  */
 import { getConnInfo } from '@hono/node-server/conninfo'
@@ -138,16 +138,45 @@ export function rateLimit(config: RateLimitConfig, options: RateLimitOptions): M
   const now = options.now ?? Date.now
   const keyFor = options.keyFor ?? clientKey
   const limiter = createRateLimiter(config, now)
+  return tieredRateLimit({
+    now,
+    choose: (c) => ({ limiter, key: keyFor(c), tier: 'default' }),
+    onLimited: (c, retryAfter) => options.onLimited(c, retryAfter),
+  })
+}
 
+/** Which allowance a request draws from. */
+export interface LimitChoice<Tier extends string = string> {
+  limiter: RateLimiter
+  key: string
+  tier: Tier
+}
+
+export interface TieredRateLimitOptions<Tier extends string> {
+  /** The allowance for this request, or null when it is unlimited. */
+  choose: (c: Context) => LimitChoice<Tier> | null
+  /** Builds the 429 response. `retryAfter` is in seconds. */
+  onLimited: (c: Context, retryAfter: number, tier: Tier) => Response | Promise<Response>
+  now?: () => number
+}
+
+/**
+ * Rate limiting with more than one allowance — e.g. per IP for everyone, per license for Pro.
+ * Sets IETF draft `RateLimit-*` headers for the allowance used.
+ */
+export function tieredRateLimit<Tier extends string>(options: TieredRateLimitOptions<Tier>): MiddlewareHandler {
+  const now = options.now ?? Date.now
   return async (c, next) => {
-    const decision = limiter.hit(keyFor(c))
+    const choice = options.choose(c)
+    if (choice === null) return next()
+    const decision = choice.limiter.hit(choice.key)
     const resetSeconds = Math.max(1, Math.ceil((decision.resetAt - now()) / 1000))
     c.header('RateLimit-Limit', String(decision.limit))
     c.header('RateLimit-Remaining', String(decision.remaining))
     c.header('RateLimit-Reset', String(resetSeconds))
     if (!decision.allowed) {
       c.header('Retry-After', String(resetSeconds))
-      return options.onLimited(c, resetSeconds)
+      return options.onLimited(c, resetSeconds, choice.tier)
     }
     await next()
   }

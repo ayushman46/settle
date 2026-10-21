@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import { describe, expect, it, vi } from 'vitest'
-import { clientKey, concurrencyLimit, createRateLimiter, normalizeAddress, rateLimit } from './ratelimit'
+import { clientKey, concurrencyLimit, createRateLimiter, normalizeAddress, rateLimit, tieredRateLimit } from './ratelimit'
 import { fromSocket } from './testing'
 
 function clock(start = 1_000_000) {
@@ -194,5 +194,52 @@ describe('concurrencyLimit middleware', () => {
     const pending = [post(), post(), post()]
     for (let i = 0; i < pending.length; i++) await release()
     expect((await Promise.all(pending)).map((response) => response.status)).toEqual([200, 200, 200])
+  })
+})
+
+describe('tieredRateLimit middleware', () => {
+  function app(time = clock()) {
+    const free = createRateLimiter({ max: 1, windowMs: 60_000 }, time.now)
+    const pro = createRateLimiter({ max: 3, windowMs: 86_400_000 }, time.now)
+    const hono = new Hono()
+    hono.post(
+      '/ai',
+      tieredRateLimit<'free' | 'pro'>({
+        now: time.now,
+        choose: (c) => {
+          const license = c.req.header('x-license')
+          if (license === 'unlimited') return null
+          return license ? { limiter: pro, key: `license:${license}`, tier: 'pro' } : { limiter: free, key: clientKey(c), tier: 'free' }
+        },
+        onLimited: (c, retryAfter, tier) => c.json({ limited: tier, retryAfter }, 429),
+      }),
+      (c) => c.json({ ok: true }),
+    )
+    return hono
+  }
+  const post = (hono: Hono, headers: Record<string, string> = {}, ip = '198.51.100.1') => hono.request('/ai', { method: 'POST', headers }, fromSocket(ip))
+
+  it('draws each request from the allowance its tier chose', async () => {
+    const hono = app()
+    expect((await post(hono)).status).toBe(200)
+    expect(await (await post(hono)).json()).toEqual({ limited: 'free', retryAfter: 60 })
+
+    // Same address, but a license: its own, bigger allowance.
+    for (let i = 0; i < 3; i++) expect((await post(hono, { 'x-license': 'abc' })).status).toBe(200)
+    const limited = await post(hono, { 'x-license': 'abc' })
+    expect(await limited.json()).toEqual({ limited: 'pro', retryAfter: 86_400 })
+    expect(limited.headers.get('RateLimit-Limit')).toBe('3')
+
+    // A different license has its own allowance, wherever it comes from.
+    expect((await post(hono, { 'x-license': 'def' }, '203.0.113.5')).status).toBe(200)
+  })
+
+  it('skips limiting (and its headers) when the tier is unlimited', async () => {
+    const hono = app()
+    for (let i = 0; i < 5; i++) {
+      const response = await post(hono, { 'x-license': 'unlimited' })
+      expect(response.status).toBe(200)
+      expect(response.headers.has('RateLimit-Limit')).toBe(false)
+    }
   })
 })
