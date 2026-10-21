@@ -1,0 +1,235 @@
+/*
+ * Every fill and stroke is a theme token, so the art follows light/dark and the accent palette.
+ * Motion is a gentle first-paint flourish; reduced motion shows the finished picture.
+ */
+
+.art {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+/* ---------- Fills ---------- */
+
+.blob {
+  fill: var(--surface-2);
+}
+
+.shadow {
+  fill: var(--ink);
+  opacity: 0.07;
+}
+
+.paper {
+  fill: var(--surface);
+}
+
+.ink,
+.inkFill {
+  fill: var(--ink);
+}
+
+.faint {
+  fill: var(--line-strong);
+}
+
+.accent {
+  fill: var(--accent);
+}
+
+.positive {
+  fill: var(--positive-soft);
+}
+
+.av0 { fill: var(--avatar-0-bg); }
+.av1 { fill: var(--avatar-1-bg); }
+.av2 { fill: var(--avatar-2-bg); }
+
+/* ---------- Strokes ---------- */
+
+.outline,
+.outlineThin,
+.stroke,
+.bracket,
+.dash,
+.wave,
+.slash,
+.checkMark {
+  stroke: var(--ink);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.outline {
+  stroke-width: 3;
+}
+
+.outlineThin {
+  stroke-width: 2;
+}
+
+.stroke,
+.bracket,
+.checkMark {
+  fill: none;
+  stroke-width: 3;
+}
+
+.checkMark {
+  stroke: var(--positive);
+}
+
+.dash {
+  fill: none;
+  stroke: var(--line-strong);
+  stroke-width: 2;
+  stroke-dasharray: 4 5;
+}
+
+.wave {
+  fill: none;
+  stroke: var(--line-strong);
+  stroke-width: 5;
+}
+
+.slash {
+  fill: none;
+  stroke-width: 5;
+}
+
+.sparkle {
+  stroke-width: 2;
+}
+
+.coinRim {
+  fill: none;
+  stroke: var(--on-accent);
+  stroke-opacity: 0.25;
+  stroke-width: 1.5;
+}
+
+/* Rings stroke the accent family for the donut in the insights card. */
+.trackRing {
+  fill: none;
+  stroke: var(--surface-2);
+  stroke-width: 9;
+}
+
+.ring {
+  fill: none;
+  stroke-width: 9;
+  transform: rotate(-90deg);
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.ringFood {
+  stroke: var(--cat-food-ink);
+}
+
+.ringTravel {
+  stroke: var(--cat-travel-ink);
+}
+
+.ringAccent {
+  stroke: var(--accent);
+}
+
+.scanGlow {
+  fill: var(--accent);
+  opacity: 0.3;
+}
+
+/* ---------- First-paint motion ---------- */
+
+.float {
+  animation: float-in var(--dur-4) var(--ease-spring) backwards;
+}
+
+.pop,
+.coin {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: pop-in var(--dur-4) var(--ease-spring) var(--dur-3) backwards;
+}
+
+.sparkle {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: twinkle var(--dur-4) var(--ease-spring) calc(var(--dur-3) + var(--dur-2)) backwards;
+}
+
+.grow {
+  transform-box: fill-box;
+  transform-origin: bottom;
+  animation: grow-in var(--dur-4) var(--ease-spring) var(--dur-2) backwards;
+}
+
+.scan {
+  animation: scan 2.4s var(--ease-in-out) var(--dur-4) 2 alternate;
+}
+
+.spin {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: spin-in calc(var(--dur-4) * 1.4) var(--ease-spring) backwards;
+}
+
+/* Money on its way: a dotted arc. */
+.travel {
+  stroke-dasharray: 0.1 8;
+  stroke-width: 3.5;
+}
+
+@keyframes float-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) rotate(-3deg);
+  }
+}
+
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+}
+
+@keyframes twinkle {
+  from {
+    opacity: 0;
+    transform: scale(0) rotate(-45deg);
+  }
+}
+
+@keyframes grow-in {
+  from {
+    transform: scaleY(0);
+  }
+}
+
+@keyframes scan {
+  to {
+    transform: translateY(26px);
+  }
+}
+
+@keyframes spin-in {
+  from {
+    opacity: 0;
+    transform: rotate(-60deg) scale(0.8);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scan {
+    animation: none !important;
+  }
+}
+
+@media (forced-colors: active) {
+  .art * {
+    forced-color-adjust: none;
+  }
+}

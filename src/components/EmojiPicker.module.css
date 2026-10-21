@@ -10,18 +10,20 @@
   display: grid;
   place-items: center;
   min-width: 0;
-  aspect-ratio: 1;
-  min-height: var(--tap);
+  height: 52px;
   border-radius: var(--r-lg);
   transition: transform var(--dur-2) var(--ease-spring);
 }
 
-/* The tile is drawn inside the cell so neighbours never touch. */
+/* A fixed-size tile centred in the cell, so wide cells don't make giant tiles and neighbours never touch. */
 .option::before {
   content: '';
   position: absolute;
-  inset: 3px;
-  border-radius: var(--r-md);
+  inset: 0;
+  width: min(48px, calc(100% - 4px));
+  height: 48px;
+  margin: auto;
+  border-radius: 16px;
   background: transparent;
   transition:
     background-color var(--dur-2) var(--ease-out),
@@ -38,7 +40,7 @@
 }
 
 .option:focus-visible {
-  outline-offset: -1px;
+  outline-offset: -2px;
 }
 
 @media (hover: hover) {

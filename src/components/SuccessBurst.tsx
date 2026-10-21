@@ -20,18 +20,18 @@ export interface SuccessBurstProps {
 
 /** Confetti flecks: angle (deg), distance (px), size (px), colour token, delay (ms). */
 const FLECKS: ReadonlyArray<[number, number, number, string, number]> = [
-  [0, 118, 8, '--accent', 0],
-  [30, 132, 6, '--pro-3', 40],
-  [60, 112, 7, '--avatar-0-bg', 20],
-  [90, 128, 9, '--pro-2', 60],
-  [120, 116, 6, '--accent', 30],
-  [150, 136, 8, '--avatar-3-bg', 10],
-  [180, 120, 7, '--pro-1', 50],
-  [210, 130, 6, '--avatar-5-bg', 20],
-  [240, 114, 9, '--accent', 40],
-  [270, 134, 7, '--pro-3', 0],
-  [300, 118, 6, '--avatar-4-bg', 30],
-  [330, 128, 8, '--pro-2', 60],
+  [0, 124, 11, '--accent', 0],
+  [30, 140, 8, '--pro-3', 40],
+  [60, 116, 10, '--avatar-0-bg', 20],
+  [90, 134, 12, '--pro-2', 60],
+  [120, 120, 8, '--accent', 30],
+  [150, 142, 11, '--avatar-3-bg', 10],
+  [180, 126, 9, '--pro-1', 50],
+  [210, 136, 8, '--avatar-5-bg', 20],
+  [240, 118, 12, '--accent', 40],
+  [270, 140, 9, '--pro-3', 0],
+  [300, 122, 8, '--avatar-4-bg', 30],
+  [330, 134, 11, '--pro-2', 60],
 ]
 
 /**
