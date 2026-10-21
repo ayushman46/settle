@@ -22,7 +22,7 @@ export const CATEGORY_META: Readonly<Record<CategoryId, CategoryMeta>> = {
       'dessert', 'ice cream', 'bakery', 'buffet', 'takeaway', 'drinks', 'beer', 'bar', 'pub',
       'swiggy', 'zomato', 'eatsure', 'eatfit', 'dominos', 'domino s', 'mcdonalds', 'mcdonald s',
       'kfc', 'starbucks', 'chaayos', 'ccd', 'cafe coffee day', 'barbeque nation', 'haldiram',
-      'haldirams', 'dhaba', 'khana', 'nashta', 'pani puri', 'chaat',
+      'haldirams', 'dhaba', 'khana', 'nashta', 'pani puri', 'chaat', 'uber eats',
     ],
   },
   groceries: {
@@ -31,7 +31,7 @@ export const CATEGORY_META: Readonly<Record<CategoryId, CategoryMeta>> = {
     keywords: [
       'grocery', 'groceries', 'supermarket', 'kirana', 'provisions', 'ration', 'vegetables',
       'veggies', 'sabzi', 'fruits', 'milk', 'blinkit', 'zepto', 'bigbasket', 'big basket', 'bb now',
-      'dmart', 'd mart', 'instamart', 'swiggy instamart', 'jiomart', 'reliance fresh',
+      'dmart', 'd mart', 'instamart', 'swiggy instamart', 'jiomart', 'jio mart', 'reliance fresh',
       'more supermarket', 'nature s basket', 'spencers', 'spencer s', 'star bazaar', 'amazon fresh',
       'flipkart minutes', 'dunzo', 'country delight', 'milkbasket',
     ],

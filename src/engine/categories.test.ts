@@ -46,6 +46,8 @@ describe('categoryFromText', () => {
     ['Big Basket monthly', 'groceries'],
     ['DMart', 'groceries'],
     ['Swiggy Instamart', 'groceries'],
+    ['Jio Mart order', 'groceries'],
+    ['Uber Eats', 'food'],
     ['Uber to airport', 'transport'],
     ['Ola', 'transport'],
     ['Rapido bike', 'transport'],
