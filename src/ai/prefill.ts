@@ -223,7 +223,9 @@ export function describedToPrefill(d: DescribedSplit, ctx: DescribeContext): Spl
       inputs = raw.map(() => null)
   }
 
-  const prefill: SplitPrefill = { source: 'describe', mode, currency }
+  const prefill: SplitPrefill = { source: 'describe', mode }
+  // An unknown code would void the whole hand-off; the split screen then uses the profile's.
+  if (isKnownCurrency(currency)) prefill.currency = currency
   const title = tidyTitle(d.title)
   if (title) prefill.title = title
   const category = pickCategory(d, title)

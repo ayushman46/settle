@@ -197,6 +197,14 @@ describe('describedToPrefill — amounts', () => {
     expect(describedToPrefill(draft({ currency: 'XYZ' }), context(FRIENDS, 'GBP').ctx).currency).toBe('GBP')
   })
 
+  it('never hands on a currency the split screen would reject', () => {
+    const prefill = describedToPrefill(draft({ amount: 840 }), context(FRIENDS, 'rupees').ctx)
+    expect(prefill.currency).toBeUndefined()
+    expect(prefill.total).toBe(84_000)
+    setSplitPrefill(prefill)
+    expect(takeSplitPrefill()).toMatchObject({ total: 84_000, source: 'describe' })
+  })
+
   it('leaves the amount blank when the text had none', () => {
     const { ctx } = context()
     expect(describedToPrefill(draft({ amount: null }), ctx).total).toBeUndefined()
