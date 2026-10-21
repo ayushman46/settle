@@ -28,7 +28,7 @@ export { CARD_SIZE, type ShareCardInput, type ShareCardPerson } from './card/lay
 export { NUDGE_MAX_LENGTH, NUDGE_TONES, nudgeText, nudgeVariantCount, type NudgeInput, type NudgeTone } from './nudge'
 export { normalizePhone, smsUrl, whatsappUrl } from './links'
 export { safeFilename, shareFile, type ShareFileOptions, type ShareFileOutcome } from './shareFile'
-export { summaryText } from './summary'
+export { payLinkMessage, summaryText, type PayLinkMessageOptions } from './summary'
 export { categoryLabel } from './categories'
 export { outsideName } from './names'
 // Text sharing and the clipboard live in lib/share (v2); re-exported so screens need one import.

@@ -1,17 +1,28 @@
-/** The plain-text summary of a split, for "Copy summary" and chats that don't unfurl links. */
+/** The plain-text versions of a split: the full summary ("Copy summary") and the short group-chat message that carries a pay link. */
 import { BRAND } from '../domain/types'
 import { formatBillDate } from '../lib/format'
 import { formatMoney } from '../lib/money'
 import { graphemes } from '../lib/people'
 import { isValidUpiId, normalizeUpiId } from '../lib/upi'
-import type { PayLinkPayload } from './payLink'
+import { payLinkProgress, type PayLinkPayload } from './payLink'
+import { ellipsize, firstName } from './text'
 
 /** Longest name column we pad to; longer names just push their amount along. */
 const MAX_PAD = 14
+/** Space kept between a name and its amount, however long the name. */
+const MIN_GAP = 2
 
 function padName(name: string, width: number): string {
-  const length = graphemes(name).length
-  return length >= width ? name : name + ' '.repeat(width - length)
+  return name + ' '.repeat(Math.max(MIN_GAP, width - graphemes(name).length))
+}
+
+function moneyOf(payload: PayLinkPayload): (minor: number) => string {
+  return (minor) => formatMoney(minor, payload.c, { trimZeros: true })
+}
+
+/** The payee's UPI ID when friends can actually use it (rupees only, a valid ID), else null. */
+function usableUpi(payload: PayLinkPayload): string | null {
+  return payload.c === 'INR' && payload.to.u && isValidUpiId(payload.to.u) ? normalizeUpiId(payload.to.u) : null
 }
 
 /**
@@ -19,9 +30,9 @@ function padName(name: string, width: number): string {
  * 🧾 Dinner at Toit · 18 Oct 2026
  * Total ₹2,766 · split 4 ways
  *
- * Ayush   ₹691.50 · paid the bill
- * Riya    ₹691.50 ✓
- * Sam     ₹691.50
+ * Ayush        ₹691.50 · paid the bill
+ * Riya         ₹691.50 ✓
+ * Sam          ₹691.50
  *
  * Pay Ayush on UPI: ayush@okaxis
  * Pay in a tap: https://…/pay#…
@@ -30,7 +41,7 @@ function padName(name: string, width: number): string {
  * ```
  */
 export function summaryText(payload: PayLinkPayload, link?: string | null): string {
-  const money = (minor: number) => formatMoney(minor, payload.c, { trimZeros: true })
+  const money = moneyOf(payload)
   const lines: string[] = []
   const date = formatBillDate(payload.d)
   lines.push(`🧾 ${date ? `${payload.t} · ${date}` : payload.t}`)
@@ -40,7 +51,7 @@ export function summaryText(payload: PayLinkPayload, link?: string | null): stri
 
   if (ways > 0) {
     lines.push('')
-    const width = Math.min(MAX_PAD, Math.max(...payload.p.map((p) => graphemes(p.n).length))) + 2
+    const width = Math.min(MAX_PAD, Math.max(...payload.p.map((p) => graphemes(p.n).length))) + MIN_GAP
     payload.p.forEach((person, i) => {
       const status = i === payload.pi ? ' · paid the bill' : person.paid ? ' ✓' : ''
       lines.push(`${padName(person.n, width)}${money(person.a)}${status}`)
@@ -48,12 +59,54 @@ export function summaryText(payload: PayLinkPayload, link?: string | null): stri
   }
 
   const owing = payload.p.some((p, i) => i !== payload.pi && !p.paid && p.a > 0)
-  const upi = payload.c === 'INR' && payload.to.u && isValidUpiId(payload.to.u) ? normalizeUpiId(payload.to.u) : null
+  const upi = usableUpi(payload)
   const pay: string[] = []
   if (owing && upi) pay.push(`Pay ${payload.to.n} on UPI: ${upi}`)
   if (owing && link?.trim()) pay.push(`Pay in a tap: ${link.trim()}`)
   if (pay.length > 0) lines.push('', ...pay)
 
   lines.push('', `— split with ${BRAND.name}`)
+  return lines.join('\n')
+}
+
+export interface PayLinkMessageOptions {
+  /** The sender is the payee (they paid and are collecting): "pay me" rather than "pay Riya". */
+  fromPayee: boolean
+}
+
+/**
+ * The short message that goes with a pay link into the group chat — the link does the rest:
+ *
+ * ```
+ * 🧾 Dinner at Toit · ₹2,766 split 4 ways
+ * Tap your name to pay me with any UPI app 👇
+ * https://…/pay#…
+ * ```
+ *
+ * Without a link it carries the UPI ID instead; once everyone has paid it says so.
+ */
+export function payLinkMessage(payload: PayLinkPayload, link: string | null, opts: PayLinkMessageOptions): string {
+  const money = moneyOf(payload)
+  const title = ellipsize(payload.t, 48, 120)
+  const ways = payload.p.length
+  const { outstanding, peopleCount } = payLinkProgress(payload)
+  const owing = outstanding > 0
+  const headline =
+    peopleCount > 0 && !owing
+      ? `🧾 ${title} · all settled up ✓`
+      : `🧾 ${title} · ${money(payload.tot)}${ways > 1 ? ` split ${ways} ways` : ''}`
+
+  const url = link?.trim() || null
+  const upi = usableUpi(payload)
+  const payee = opts.fromPayee ? 'me' : firstName(payload.to.n)
+  const lines = [headline]
+  if (url) {
+    if (!owing) lines.push('See the split 👇')
+    else if (upi) lines.push(`Tap your name to pay ${payee} with any UPI app 👇`)
+    else lines.push('Tap your name to see your share 👇')
+    lines.push(url)
+  } else if (owing && upi) {
+    lines.push(opts.fromPayee ? `My UPI: ${upi}` : `Pay ${payee} on UPI: ${upi}`)
+  }
   return lines.join('\n')
 }

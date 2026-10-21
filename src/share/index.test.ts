@@ -55,6 +55,9 @@ describe('share kit entry point', () => {
     for (const name of names) expect(typeof contract[name], name).toBe('function')
     expect(payloadShape.v).toBe(1)
     expect(cardShape.people).toHaveLength(1)
+    for (const extra of [share.payLinkMessage, share.summaryText, share.payLinkDebtors, share.payLinkItemLines, share.shareCardInputFromExpense]) {
+      expect(typeof extra).toBe('function')
+    }
     expect(typeof share.copyText).toBe('function')
     expect(typeof share.shareResult).toBe('function')
     expect(share.NUDGE_TONES.map((t) => t.tone)).toEqual(['friendly', 'funny', 'firm'])
