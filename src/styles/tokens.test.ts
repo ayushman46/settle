@@ -86,6 +86,7 @@ const PAIRS: readonly Pair[] = [
   ...['--bg', '--surface', '--warning-soft'].map((bg) => text('--warning-ink', bg, 'Warnings')),
   ...['--pro-1', '--pro-2', '--pro-3'].map((bg) => text('--on-pro', bg, 'Pro gradient')),
   text('--balance-card-ink', '--balance-card-bg', 'Balance card'),
+  text('--accent', '--balance-card-bg', 'Accent on dark cards (signature quick action, balance highlights)'),
   text('--balance-card-ink-2', '--balance-card-bg', 'Balance card secondary'),
   text('--balance-card-ink-2', '--balance-card-glow', 'Balance card secondary over its glow', '--balance-card-bg'),
   text('--tabbar-ink', '--tabbar-bg', 'Tab label over the canvas', '--bg'),

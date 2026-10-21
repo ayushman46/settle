@@ -1,0 +1,225 @@
+/*
+ * The hero input: a tall white pill floating on the canvas (hairline + soft lift in light, a
+ * hairline in dark). The examples sit in a "ghost" layer under the transparent input.
+ */
+
+.pill {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  width: 100%;
+  min-height: 60px;
+  padding: var(--s-2) var(--s-2) var(--s-2) var(--s-2);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: var(--shadow-card);
+  text-align: start;
+  transition:
+    box-shadow var(--dur-2) var(--ease-out),
+    transform var(--dur-2) var(--ease-spring);
+}
+
+/* Focused (field) / keyboard-focused (button): an ink ring, like every field. */
+.pill:focus-within:not(.button),
+.button:focus-visible {
+  box-shadow:
+    var(--shadow-card),
+    inset 0 0 0 2px var(--focus-ring);
+  outline: 2px solid transparent;
+}
+
+.button {
+  cursor: pointer;
+}
+
+.button:active:not(:disabled) {
+  transform: scale(0.985);
+  transition-duration: var(--dur-1);
+}
+
+@media (hover: hover) {
+  .button:hover:not(:disabled) {
+    box-shadow: var(--shadow-md), 0 0 0 1px var(--line);
+  }
+}
+
+.disabled,
+.button:disabled {
+  opacity: 0.55;
+}
+
+/* ---------- Leading sparkle ---------- */
+
+.leading {
+  display: grid;
+  flex: none;
+  place-items: center;
+  color: var(--ink-2);
+}
+
+.leading > svg {
+  width: 22px;
+  height: 22px;
+}
+
+.spark {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--pro-gradient);
+  color: var(--on-pro);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.35);
+}
+
+.spark > svg {
+  width: 20px;
+  height: 20px;
+}
+
+.busy .spark > svg {
+  animation: twinkle 1.2s var(--ease-in-out) infinite;
+}
+
+/* ---------- Text ---------- */
+
+.field {
+  position: relative;
+  display: grid;
+  flex: 1 1 auto;
+  align-items: center;
+  min-width: 0;
+  min-height: 44px;
+}
+
+.ghost,
+.input {
+  grid-area: 1 / 1;
+}
+
+.ghost {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.example {
+  min-width: 0;
+  overflow: hidden;
+  font: var(--text-body);
+  font-size: 1.0625rem;
+  color: var(--ink-placeholder);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Each new example rolls up into place. */
+.rolling {
+  animation: roll-in var(--dur-4) var(--ease-out) backwards;
+}
+
+.input {
+  width: 100%;
+  min-width: 0;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font: var(--text-body);
+  font-size: max(16px, 1.0625rem);
+  caret-color: var(--ink);
+  outline: none;
+  appearance: none;
+}
+
+.input:focus-visible {
+  outline: none;
+}
+
+/* ---------- Trailing / submit ---------- */
+
+.trailing {
+  display: flex;
+  flex: none;
+  align-items: center;
+  padding-inline-end: var(--s-1);
+  color: var(--ink-2);
+}
+
+.trailing > svg {
+  width: 22px;
+  height: 22px;
+}
+
+.submit {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: var(--on-primary);
+  animation: submit-in var(--dur-3) var(--ease-spring) backwards;
+  transition:
+    transform var(--dur-2) var(--ease-spring),
+    background-color var(--dur-2) var(--ease-out);
+}
+
+.submit > svg {
+  width: 20px;
+  height: 20px;
+}
+
+.submit:active:not(:disabled) {
+  transform: scale(0.9);
+  transition-duration: var(--dur-1);
+}
+
+@media (hover: hover) {
+  .submit:hover:not(:disabled) {
+    background: var(--primary-hover);
+  }
+}
+
+.submit:disabled {
+  cursor: default;
+}
+
+@keyframes roll-in {
+  from {
+    opacity: 0;
+    transform: translateY(60%);
+  }
+}
+
+@keyframes submit-in {
+  from {
+    opacity: 0;
+    transform: scale(0.5) rotate(-45deg);
+  }
+}
+
+@keyframes twinkle {
+  50% {
+    opacity: 0.55;
+    transform: scale(0.85) rotate(12deg);
+  }
+}
+
+@media (forced-colors: active) {
+  .pill {
+    border: 1px solid CanvasText;
+  }
+
+  .pill:focus-within:not(.button),
+  .button:focus-visible {
+    outline: 2px solid Highlight;
+  }
+}

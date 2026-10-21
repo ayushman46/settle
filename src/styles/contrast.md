@@ -44,6 +44,7 @@ composited over the token in brackets (what can scroll underneath).
 | `--on-pro on --pro-2` | Pro gradient | 4.5 | 13.49 | 13.49 |
 | `--on-pro on --pro-3` | Pro gradient | 4.5 | 12.29 | 12.29 |
 | `--balance-card-ink on --balance-card-bg` | Balance card | 4.5 | 18.59 | 15.64 |
+| `--accent on --balance-card-bg` | Accent on dark cards (signature quick action, balance highlights) | 4.5 | 14.55 | 13.38 |
 | `--balance-card-ink-2 on --balance-card-bg` | Balance card secondary | 4.5 | 9.00 | 7.82 |
 | `--balance-card-ink-2 on --balance-card-glow (over --balance-card-bg)` | Balance card secondary over its glow | 4.5 | 4.98 | 5.10 |
 | `--tabbar-ink on --tabbar-bg (over --bg)` | Tab label over the canvas | 4.5 | 7.92 | 8.27 |
@@ -112,6 +113,7 @@ composited over the token in brackets (what can scroll underneath).
 | mint (`#7FE3C0`) | `--accent-ink on --surface` | 4.5 | 6.60 | 11.56 |
 | mint (`#7FE3C0`) | `--accent-ink on --surface-2` | 4.5 | 5.78 | 10.51 |
 | mint (`#7FE3C0`) | `--accent-ink on --accent-soft` | 4.5 | 5.84 | 9.49 |
+| mint (`#7FE3C0`) | `--accent on --balance-card-bg` | 4.5 | 12.09 | 11.11 |
 | mint (`#7FE3C0`) | `--tabbar-icon-active on --tabbar-pill` | 3 | 12.39 | 12.39 |
 | mint (`#7FE3C0`) | `--tabbar-pill on --tabbar-bg (over --bg)` | 3 | 18.85 | 11.75 |
 | mint (`#7FE3C0`) | `--switch-on-track on --surface` | 3 | 19.05 | 11.56 |
@@ -126,6 +128,7 @@ composited over the token in brackets (what can scroll underneath).
 | sky (`#9FCDFF`) | `--accent-ink on --surface` | 4.5 | 6.85 | 10.72 |
 | sky (`#9FCDFF`) | `--accent-ink on --surface-2` | 4.5 | 6.00 | 9.74 |
 | sky (`#9FCDFF`) | `--accent-ink on --accent-soft` | 4.5 | 5.92 | 9.23 |
+| sky (`#9FCDFF`) | `--accent on --balance-card-bg` | 4.5 | 11.20 | 10.30 |
 | sky (`#9FCDFF`) | `--tabbar-icon-active on --tabbar-pill` | 3 | 11.48 | 11.48 |
 | sky (`#9FCDFF`) | `--tabbar-pill on --tabbar-bg (over --bg)` | 3 | 18.85 | 10.89 |
 | sky (`#9FCDFF`) | `--switch-on-track on --surface` | 3 | 19.05 | 10.72 |
@@ -140,6 +143,7 @@ composited over the token in brackets (what can scroll underneath).
 | violet (`#CBB8FF`) | `--accent-ink on --surface` | 4.5 | 7.87 | 10.03 |
 | violet (`#CBB8FF`) | `--accent-ink on --surface-2` | 4.5 | 6.89 | 9.11 |
 | violet (`#CBB8FF`) | `--accent-ink on --accent-soft` | 4.5 | 6.66 | 9.11 |
+| violet (`#CBB8FF`) | `--accent on --balance-card-bg` | 4.5 | 10.48 | 9.64 |
 | violet (`#CBB8FF`) | `--tabbar-icon-active on --tabbar-pill` | 3 | 10.74 | 10.74 |
 | violet (`#CBB8FF`) | `--tabbar-pill on --tabbar-bg (over --bg)` | 3 | 18.85 | 10.19 |
 | violet (`#CBB8FF`) | `--switch-on-track on --surface` | 3 | 19.05 | 10.03 |
@@ -154,6 +158,7 @@ composited over the token in brackets (what can scroll underneath).
 | coral (`#FFB59F`) | `--accent-ink on --surface` | 4.5 | 6.76 | 10.47 |
 | coral (`#FFB59F`) | `--accent-ink on --surface-2` | 4.5 | 5.92 | 9.51 |
 | coral (`#FFB59F`) | `--accent-ink on --accent-soft` | 4.5 | 5.84 | 9.11 |
+| coral (`#FFB59F`) | `--accent on --balance-card-bg` | 4.5 | 10.95 | 10.06 |
 | coral (`#FFB59F`) | `--tabbar-icon-active on --tabbar-pill` | 3 | 11.22 | 11.22 |
 | coral (`#FFB59F`) | `--tabbar-pill on --tabbar-bg (over --bg)` | 3 | 18.85 | 10.64 |
 | coral (`#FFB59F`) | `--switch-on-track on --surface` | 3 | 19.05 | 10.47 |

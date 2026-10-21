@@ -24,6 +24,13 @@ export { PersonToggle, type PersonToggleProps } from './PersonToggle'
 export { Progress, type ProgressProps } from './Progress'
 export { QrCode, type QrCodeProps } from './QrCode'
 export {
+  QuickAction,
+  QuickActionGrid,
+  type QuickActionGridProps,
+  type QuickActionProps,
+  type QuickActionTone,
+} from './QuickAction'
+export {
   Receipt,
   ReceiptDivider,
   ReceiptRow,
@@ -32,6 +39,7 @@ export {
   type ReceiptRowProps,
 } from './Receipt'
 export { Screen, ScreenTransition, type NavDirection, type ScreenProps, type ScreenTransitionProps } from './Screen'
+export { SearchPill, type SearchPillProps } from './SearchPill'
 export { SectionHeader, type SectionHeaderAction, type SectionHeaderProps } from './SectionHeader'
 export { SegmentedControl, type SegmentedControlProps, type SegmentedOption } from './SegmentedControl'
 export { Skeleton, SkeletonRows, type SkeletonProps, type SkeletonRowsProps } from './Skeleton'

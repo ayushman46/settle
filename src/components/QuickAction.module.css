@@ -1,0 +1,200 @@
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  row-gap: var(--s-5);
+  column-gap: var(--s-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.three {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.cell {
+  display: flex;
+  justify-content: center;
+  min-width: 0;
+  animation: cell-in var(--dur-3) var(--ease-out) backwards;
+}
+
+/* A soft cascade on first paint. */
+.cell:nth-child(2) { animation-delay: 25ms; }
+.cell:nth-child(3) { animation-delay: 50ms; }
+.cell:nth-child(4) { animation-delay: 75ms; }
+.cell:nth-child(5) { animation-delay: 100ms; }
+.cell:nth-child(6) { animation-delay: 125ms; }
+.cell:nth-child(7) { animation-delay: 150ms; }
+.cell:nth-child(n + 8) { animation-delay: 175ms; }
+
+.action {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-2);
+  width: 100%;
+  max-width: 84px;
+  min-width: 0;
+  padding: 2px 0;
+  border-radius: var(--r-lg);
+  color: var(--ink);
+  text-align: center;
+}
+
+.action:focus-visible {
+  outline-offset: 2px;
+}
+
+.tile {
+  --qa-bg: var(--balance-card-bg);
+  --qa-fg: var(--accent);
+
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 20px;
+  background: var(--qa-bg);
+  color: var(--qa-fg);
+  transition:
+    transform var(--dur-2) var(--ease-spring),
+    box-shadow var(--dur-2) var(--ease-out);
+}
+
+@supports (corner-shape: squircle) {
+  .tile {
+    border-radius: 50%;
+    corner-shape: squircle;
+  }
+}
+
+.icon {
+  display: grid;
+  place-items: center;
+}
+
+.icon > svg {
+  width: 26px;
+  height: 26px;
+}
+
+.action:active:not(:disabled) .tile {
+  transform: scale(0.92);
+  transition-duration: var(--dur-1);
+}
+
+@media (hover: hover) {
+  .action:hover:not(:disabled) .tile {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+}
+
+.label {
+  display: -webkit-box;
+  max-width: 100%;
+  overflow: hidden;
+  font: var(--text-micro);
+  font-size: 0.78125rem;
+  font-weight: 550;
+  line-height: 1.25;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.action:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+/* ---------- Tones ---------- */
+
+/* The signature tile: a dark card with an accent glyph, in both themes (hairline in dark). */
+.ink {
+  --qa-bg: var(--balance-card-bg);
+  --qa-fg: var(--accent);
+
+  box-shadow: inset 0 0 0 1px var(--balance-card-line);
+}
+
+.accent {
+  --qa-bg: var(--accent);
+  --qa-fg: var(--on-accent);
+}
+
+.food { --qa-bg: var(--cat-food-bg); --qa-fg: var(--cat-food-ink); }
+.groceries { --qa-bg: var(--cat-groceries-bg); --qa-fg: var(--cat-groceries-ink); }
+.rent { --qa-bg: var(--cat-rent-bg); --qa-fg: var(--cat-rent-ink); }
+.utilities { --qa-bg: var(--cat-utilities-bg); --qa-fg: var(--cat-utilities-ink); }
+.travel { --qa-bg: var(--cat-travel-bg); --qa-fg: var(--cat-travel-ink); }
+.transport { --qa-bg: var(--cat-transport-bg); --qa-fg: var(--cat-transport-ink); }
+.shopping { --qa-bg: var(--cat-shopping-bg); --qa-fg: var(--cat-shopping-ink); }
+.entertainment { --qa-bg: var(--cat-entertainment-bg); --qa-fg: var(--cat-entertainment-ink); }
+.subscription { --qa-bg: var(--cat-subscription-bg); --qa-fg: var(--cat-subscription-ink); }
+.gift { --qa-bg: var(--cat-gift-bg); --qa-fg: var(--cat-gift-ink); }
+.health { --qa-bg: var(--cat-health-bg); --qa-fg: var(--cat-health-ink); }
+.other { --qa-bg: var(--cat-other-bg); --qa-fg: var(--cat-other-ink); }
+
+/* ---------- Badges ---------- */
+
+.badge {
+  position: absolute;
+  top: -4px;
+  right: -6px;
+  display: grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  padding-inline: 5px;
+  border-radius: var(--radius-pill);
+  background: var(--negative);
+  color: var(--surface);
+  box-shadow: 0 0 0 2px var(--bg);
+  font: var(--text-micro);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  animation: pop var(--dur-3) var(--ease-spring) var(--dur-2) backwards;
+}
+
+.dot {
+  top: -2px;
+  right: -2px;
+  min-width: 12px;
+  width: 12px;
+  height: 12px;
+  padding: 0;
+}
+
+.tag {
+  right: -10px;
+  background: var(--pro-gradient);
+  color: var(--on-pro);
+  letter-spacing: 0.02em;
+}
+
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+}
+
+@keyframes cell-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--s-2)) scale(0.96);
+  }
+}
+
+@media (forced-colors: active) {
+  .tile {
+    border: 1px solid CanvasText;
+  }
+}
