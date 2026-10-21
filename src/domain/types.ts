@@ -8,6 +8,7 @@
  * finishes, it is saved here as an `Expense` with `kind: 'bill'` and a `bill` snapshot.
  */
 
+import type { CategoryId } from '../../shared/categories'
 import type { BillItem, BillMeta, Minor, Shares } from '../types'
 
 export type { Minor } from '../types'
@@ -22,34 +23,9 @@ export const ME_ID = 'me'
 
 /* ------------------------------------------------------------------ categories */
 
-export type CategoryId =
-  | 'food'
-  | 'groceries'
-  | 'rent'
-  | 'utilities'
-  | 'travel'
-  | 'transport'
-  | 'shopping'
-  | 'entertainment'
-  | 'subscription'
-  | 'gift'
-  | 'health'
-  | 'other'
-
-export const CATEGORY_IDS: readonly CategoryId[] = [
-  'food',
-  'groceries',
-  'rent',
-  'utilities',
-  'travel',
-  'transport',
-  'shopping',
-  'entertainment',
-  'subscription',
-  'gift',
-  'health',
-  'other',
-]
+// Defined once in shared/ so the server's scan and describe answers use the same ids.
+export type { CategoryId } from '../../shared/categories'
+export { CATEGORY_IDS } from '../../shared/categories'
 
 /* ------------------------------------------------------------------ people */
 
@@ -227,16 +203,5 @@ export const FREE_AI_PER_DAY = 3
 
 /* ------------------------------------------------------------------ AI (describe a split) */
 
-/** What `POST /api/describe` returns: a draft the user confirms before anything is saved. */
-export interface DescribedSplit {
-  title: string
-  category: CategoryId
-  /** Major units (rupees), or null if the text didn't say. */
-  amount: number | null
-  currency: string | null
-  mode: Exclude<SplitMode, 'items'>
-  /** Name of who paid as written ("Me" for the speaker), or null if not said. */
-  payer: string | null
-  /** People as written; "Me" is the speaker. value: exact → major amount, percent → %, shares → weight, equal → null. */
-  people: Array<{ name: string; value: number | null }>
-}
+/** What `POST /api/describe` returns: a draft the user confirms before anything is saved (wire contract in shared/api.ts). */
+export type { DescribedSplit } from '../../shared/api'

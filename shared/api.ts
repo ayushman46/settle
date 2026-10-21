@@ -2,6 +2,12 @@
  * Wire contract between the browser and the API server.
  * Imported by both `src/` (client) and `server/` — keep it dependency-free.
  */
+import type { CategoryId } from './categories'
+
+export type { CategoryId } from './categories'
+export { CATEGORY_IDS, isCategoryId } from './categories'
+
+/* ------------------------------------------------------------------ scan a bill */
 
 /** Request body for `POST /api/scan`. */
 export interface ScanRequest {
@@ -18,13 +24,21 @@ export interface ScannedItem {
   amount: number
 }
 
-/** Successful response of `POST /api/scan`. All money values are MAJOR units, 2dp-rounded. */
+/**
+ * Successful response of `POST /api/scan`. All money values are MAJOR units, 2dp-rounded.
+ *
+ * Restaurant, café, grocery and shop bills come back itemized. Service bills (electricity,
+ * phone, cab rides, hotel stays, rent…) usually come back with `items: []` and just a
+ * `total` — split those as an amount rather than item by item.
+ */
 export interface ScanResponse {
   merchant: string | null
   /** Bill date as printed, normalised to YYYY-MM-DD when unambiguous. */
   date: string | null
   /** ISO 4217 code in upper case, e.g. "INR". Null when the bill gives no hint. */
   currency: string | null
+  /** What the bill is for ("food" for a restaurant, "utilities" for electricity…). Null when unclear. */
+  category: CategoryId | null
   items: ScannedItem[]
   /** Sum of items before charges, as printed. */
   subtotal: number | null
@@ -44,6 +58,69 @@ export interface ScanResponse {
   model: string
 }
 
+/* ------------------------------------------------------------------ describe a split ("Just say it") */
+
+/** The four ways to divide an amount (itemized bills are a separate flow). */
+export type AmountSplitMode = 'equal' | 'exact' | 'percent' | 'shares'
+
+export interface DescribedPerson {
+  /** As written, tidied: "Me" is the speaker; known people keep the caller's spelling. */
+  name: string
+  /** exact → MAJOR amount, percent → % (e.g. 40), shares → positive whole weight, equal → null. */
+  value: number | null
+}
+
+/** What `POST /api/describe` makes of a sentence: a draft the user confirms before anything is saved. */
+export interface DescribedSplit {
+  title: string
+  category: CategoryId
+  /** MAJOR units (rupees), or null if the text didn't say. */
+  amount: number | null
+  /** ISO 4217 code — only when the text names a currency ("₹", "Rs", "$", "euros"…), else null. */
+  currency: string | null
+  mode: AmountSplitMode
+  /** Who paid, as in `people[].name` ("Me" for the speaker) — only when the text says so, else null. */
+  payer: string | null
+  /** Everyone sharing the cost, de-duplicated. "Me" is the speaker. */
+  people: DescribedPerson[]
+  /**
+   * How many people share it in all, the speaker included, when the text gives a number
+   * ("Netflix 649 for 4"). Can exceed `people.length` when not everyone is named. Null when not said.
+   */
+  headcount?: number | null
+  /** YYYY-MM-DD when the text names the day ("yesterday", "on Friday", "18 Oct"), never in the future. */
+  date?: string | null
+}
+
+/** Request body for `POST /api/describe`. */
+export interface DescribeRequest {
+  /** What the user typed, e.g. "Cab 840 with Riya and Sam, Sam pays double". */
+  text: string
+  /** The user's default currency (ISO 4217) — a hint for "$"/"Rs", never assumed when the text names none. */
+  currency?: string
+  /** Names the user already splits with; matching names come back spelled exactly like these. */
+  people?: string[]
+  /** The user's local date, YYYY-MM-DD, to resolve "yesterday" and weekdays. */
+  today?: string
+}
+
+/** Successful response of `POST /api/describe`. */
+export type DescribeResponse = DescribedSplit & {
+  /** The model that produced this result. */
+  model: string
+}
+
+export const DESCRIBE_LIMITS = {
+  maxTextChars: 500,
+  maxPeople: 50,
+  maxNameChars: 40,
+} as const
+
+/** The most time the server spends on one `POST /api/describe`, across every model. */
+export const DESCRIBE_BUDGET_MS = 30_000
+
+/* ------------------------------------------------------------------ health */
+
 /** Response of `GET /api/health`. */
 export interface HealthResponse {
   ok: true
@@ -53,17 +130,119 @@ export interface HealthResponse {
   models: string[]
 }
 
+/* ------------------------------------------------------------------ Pro: plans, checkout, licenses */
+
+export type PlanId = 'pro_monthly' | 'pro_yearly' | 'pro_lifetime'
+
+export const PLAN_IDS: readonly PlanId[] = ['pro_monthly', 'pro_yearly', 'pro_lifetime']
+
+/** A one-time Pro pass. Nothing renews automatically. */
+export interface Plan {
+  id: PlanId
+  /** "Monthly", "Yearly", "Lifetime". */
+  name: string
+  /** Price in MINOR units (paise). */
+  amount: number
+  currency: 'INR'
+  /** How long the pass lasts; null = forever. */
+  days: number | null
+  /** Short highlight for the plan card, e.g. "Best value". */
+  badge: string | null
+  /** Whole percent saved against paying monthly for the same time (rounded down, never overstated). */
+  savingsPercent: number | null
+}
+
+/** Response of `GET /api/billing/config`. */
+export interface BillingConfig {
+  /** 'razorpay' when checkout is set up on this server; null → show plans, offer "Redeem a code". */
+  checkout: 'razorpay' | null
+  /** Razorpay key id for Checkout (public by design); null when checkout is off. */
+  keyId: string | null
+  currency: 'INR'
+  plans: Plan[]
+  /** Ed25519 public key (SPKI DER, standard base64) that signs licenses; null when licensing is off. */
+  licensePublicKey: string | null
+  /** AI scans/describes per day included with Pro (fair use). */
+  proAiPerDay: number
+}
+
+/** Request body for `POST /api/billing/order`. */
+export interface OrderRequest {
+  plan: PlanId
+}
+
+/** Response of `POST /api/billing/order`: everything Razorpay Checkout needs. */
+export interface OrderResponse {
+  orderId: string
+  /** MINOR units (paise). */
+  amount: number
+  currency: 'INR'
+  keyId: string
+  plan: PlanId
+}
+
+/** Request body for `POST /api/billing/verify` — the three values Razorpay Checkout hands back. */
+export interface VerifyRequest {
+  orderId: string
+  paymentId: string
+  signature: string
+}
+
+/** Response of `POST /api/billing/verify`. */
+export interface VerifyResponse {
+  /** A signed license token (see `LICENSE_PREFIX`). Store it; it is the user's proof of Pro. */
+  license: string
+}
+
+/** The signed part of a license token. */
+export interface LicensePayload {
+  /** Payment id (purchases) or code id (promo codes). */
+  id: string
+  plan: PlanId
+  /** Issued at, epoch seconds. */
+  iat: number
+  /** Expires at, epoch seconds; null = lifetime. */
+  exp: number | null
+}
+
+/** Request body for `POST /api/license/verify`. */
+export interface LicenseVerifyRequest {
+  license: string
+}
+
+/** Response of `POST /api/license/verify`. */
+export interface LicenseVerifyResponse {
+  /** True when the token is well-formed and signed by this server's key (even if it has expired). */
+  valid: boolean
+  /** True when valid and not expired. */
+  active: boolean
+  license: LicensePayload | null
+}
+
+/**
+ * License tokens: `SETTLE1.<base64url(JSON LicensePayload)>.<base64url(Ed25519 signature)>`,
+ * the signature covering the ASCII bytes `SETTLE1.<base64url payload>`.
+ */
+export const LICENSE_PREFIX = 'SETTLE1'
+
+/** Request header carrying the license token on AI calls, for the Pro allowance. */
+export const LICENSE_HEADER = 'X-Settle-License'
+
+/* ------------------------------------------------------------------ errors */
+
 export type ApiErrorCode =
   | 'bad_request' // malformed body / not a data URL
   | 'unsupported_image' // mime type not accepted
   | 'image_too_large' // decoded image over the limit
   | 'not_a_bill' // the model says the photo isn't a bill/receipt
   | 'unreadable' // model answered but nothing usable could be extracted
+  | 'not_a_split' // the text doesn't describe an expense
   | 'not_configured' // NVIDIA_API_KEY missing on the server
   | 'upstream_auth' // NVIDIA rejected the key (401/403)
   | 'rate_limited' // too many requests (ours or NVIDIA's 429)
   | 'timeout' // NVIDIA took too long
   | 'upstream_error' // any other NVIDIA/network failure
+  | 'billing_unavailable' // checkout / licensing isn't set up on this server
 
 /** Body of every non-2xx response from `/api/*`. `message` is safe to show to end users. */
 export interface ApiErrorBody {
