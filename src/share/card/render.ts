@@ -1,5 +1,7 @@
 /** Renders the share card to a PNG: fonts first, then layout → paint on a canvas. */
 import { BRAND, ME_ID, type Expense, type Friend, type Profile } from '../../domain/types'
+import { formatBillDate } from '../../lib/format'
+import { formatMoney } from '../../lib/money'
 import { outsideName } from '../names'
 import { CARD_SIZE, layoutShareCard, type ShareCardInput } from './layout'
 import { canvasMeasure, paintScene, type Ctx2D } from './paint'
@@ -17,15 +19,31 @@ const FONT_TIMEOUT_MS = 2_000
 
 const FONT_WEIGHTS = [400, 500, 600] as const
 
-/** Makes sure Geist is ready (the card uses weights the page may not have needed yet). Never throws. */
-async function loadFonts(): Promise<void> {
+/**
+ * Every character the card draws, once each. Geist ships in unicode-range subsets and "₹" lives
+ * in latin-ext, so `fonts.load` has to see the real text to fetch every file the card needs.
+ */
+export function cardCharacters(input: ShareCardInput): string {
+  const text = [
+    input.title,
+    input.payerName,
+    ...input.people.map((p) => p.name),
+    formatMoney(input.total, input.currency, { trimZeros: true }),
+    formatBillDate(input.date) ?? '',
+    `${BRAND.name} ${BRAND.tagline} 0123456789 +…·`,
+  ].join(' ')
+  return [...new Set(Array.from(text))].join('')
+}
+
+/** Makes sure Geist is ready for `text`, in weights and subsets the page may not have used yet. Never throws. */
+async function loadFonts(text: string): Promise<void> {
   const fonts = typeof document === 'undefined' ? undefined : (document as Document & { fonts?: FontFaceSet }).fonts
   if (!fonts || typeof fonts.load !== 'function') return
   let timer: ReturnType<typeof setTimeout> | undefined
   const timeout = new Promise<void>((resolve) => {
     timer = setTimeout(resolve, FONT_TIMEOUT_MS)
   })
-  const loads = FONT_WEIGHTS.map((weight) => fonts.load(`${weight} 32px ${FONT_FAMILY}`).catch(() => []))
+  const loads = FONT_WEIGHTS.map((weight) => fonts.load(`${weight} 32px ${FONT_FAMILY}`, text).catch(() => []))
   await Promise.race([Promise.all(loads).then(() => undefined), timeout])
   clearTimeout(timer)
 }
@@ -107,7 +125,7 @@ export async function renderShareCard(
   input: ShareCardInput,
   opts: { watermark: boolean; theme: 'light' | 'dark' },
 ): Promise<Blob> {
-  await loadFonts()
+  await loadFonts(cardCharacters(input))
   const surface = domSurface() ?? offscreenSurface()
   if (!surface) throw new ShareCardError("This browser can't draw images")
   try {

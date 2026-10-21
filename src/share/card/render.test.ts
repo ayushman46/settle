@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { BRAND, ME_ID } from '../../domain/types'
 import { FRIENDS, makeExpense, makeFriend, makeProfile } from '../testing'
 import type { ShareCardInput } from './layout'
-import { defaultSiteLabel, renderShareCard, ShareCardError, shareCardFilename, shareCardInputFromExpense } from './render'
+import { cardCharacters, defaultSiteLabel, renderShareCard, ShareCardError, shareCardFilename, shareCardInputFromExpense } from './render'
 import { recordingContext, type RecordingContext } from './testCanvas'
 
 const INPUT: ShareCardInput = {
@@ -35,7 +35,7 @@ function stubCanvas(opts: { context?: boolean; blob?: Blob | null; toBlobThrows?
   })
 }
 
-function stubFonts(load: (font: string) => Promise<FontFace[]>) {
+function stubFonts(load: (font: string, text?: string) => Promise<FontFace[]>) {
   Object.defineProperty(document, 'fonts', { value: { load: vi.fn(load) }, configurable: true })
 }
 
@@ -73,14 +73,23 @@ describe('renderShareCard', () => {
 
   it('waits for Geist in every weight it uses', async () => {
     stubCanvas()
-    const loads: string[] = []
-    stubFonts(async (font) => {
-      loads.push(font)
+    const loads: Array<[string, string | undefined]> = []
+    stubFonts(async (font, text) => {
+      loads.push([font, text])
       return []
     })
     await renderShareCard(INPUT, { watermark: true, theme: 'light' })
-    expect(loads.map((f) => f.split(' ')[0])).toEqual(['400', '500', '600'])
-    expect(loads.every((f) => f.includes('"Geist Variable"'))).toBe(true)
+    expect(loads.map(([f]) => f.split(' ')[0])).toEqual(['400', '500', '600'])
+    expect(loads.every(([f]) => f.includes('"Geist Variable"'))).toBe(true)
+    // With the card's own text, so the "₹" subset (latin-ext) is fetched before drawing.
+    expect(loads.every(([, text]) => text === cardCharacters(INPUT))).toBe(true)
+  })
+
+  it('asks for every character it will draw, once', () => {
+    const chars = cardCharacters({ ...INPUT, title: 'Café 🍕 Toit', people: [...INPUT.people, { name: 'Zoë', color: 0, amount: 1, paid: false, isPayer: false }] })
+    for (const ch of ['₹', 'é', '🍕', 'Z', 'ë', '2', '7', '·', BRAND.name.charAt(0)]) expect(chars, ch).toContain(ch)
+    expect(new Set(Array.from(chars)).size).toBe(Array.from(chars).length)
+    expect(cardCharacters({ ...INPUT, currency: 'EUR' })).toContain('€')
   })
 
   it('draws with fallback fonts when Geist fails or is slow', async () => {
