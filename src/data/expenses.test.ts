@@ -110,6 +110,11 @@ describe('saveExpense', () => {
     const edited = saveExpense({ ...draft({ with: [riya, sam], total: 90000 }), id: e.id })
     expect(edited).toMatchObject({ id: e.id, createdAt: 1000, updatedAt: 3000, total: 90000, paidBack: { [riya]: 2000 } })
     expect(expensesStore.get()).toHaveLength(1)
+    // A bigger share means she owes again; a smaller one keeps her paid.
+    now.mockReturnValue(3500)
+    expect(saveExpense({ ...draft({ with: [riya, sam], total: 120000 }), id: e.id }).paidBack).toEqual({})
+    setPaidBack(e.id, riya, true)
+    expect(Object.keys(saveExpense({ ...draft({ with: [riya, sam], total: 60000 }), id: e.id }).paidBack)).toEqual([riya])
     // Removing Riya from the split drops her tick.
     const without = saveExpense({ ...draft({ with: [sam] }), id: e.id })
     expect(without.paidBack).toEqual({})

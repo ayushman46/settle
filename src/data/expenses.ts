@@ -92,6 +92,18 @@ function cleanPaidBack(paidBack: Readonly<Record<string, number>>, e: Pick<Expen
   return out
 }
 
+/**
+ * Ticks carried over an edit: someone who'd paid back stays paid unless their share went up
+ * (then they owe the new amount again — an edit never quietly forgives money).
+ */
+function carriedPaidBack(existing: Expense, next: Pick<Expense, 'payerId' | 'shares'>): Record<string, number> {
+  const out: Record<string, number> = {}
+  for (const [id, at] of Object.entries(existing.paidBack)) {
+    if ((next.shares[id] ?? 0) <= (existing.shares[id] ?? 0)) out[id] = at
+  }
+  return cleanPaidBack(out, next)
+}
+
 /** The first problem `saveExpense` would throw for, or null when the draft can be saved. */
 export function expenseDraftIssue(draft: ExpenseDraft): ExpenseErrorCode | null {
   try {
@@ -105,7 +117,8 @@ export function expenseDraftIssue(draft: ExpenseDraft): ExpenseErrorCode | null 
 
 /**
  * Creates or updates an expense (by `draft.id`). Shares are computed by the engine and always add
- * up to the total. Editing keeps who has already paid back unless the draft says otherwise.
+ * up to the total. Editing keeps who has already paid back (unless their share went up, or the
+ * draft says otherwise).
  * Throws ExpenseError: 'no_people' | 'bad_total' | 'exact_mismatch' | 'percent_mismatch' |
  * 'zero_weights' | 'payer_missing'.
  */
@@ -119,7 +132,11 @@ export function saveExpense(draft: ExpenseDraft): Expense {
     createdAt: existing?.createdAt ?? now,
     updatedAt: now,
     ...expense,
-    paidBack: cleanPaidBack(draft.paidBack ?? existing?.paidBack ?? {}, expense),
+    paidBack: draft.paidBack
+      ? cleanPaidBack(draft.paidBack, expense)
+      : existing
+        ? carriedPaidBack(existing, expense)
+        : {},
   }
   expensesStore.set(existing ? list.map((e) => (e.id === saved.id ? saved : e)) : [saved, ...list])
   touchFriends([saved.payerId, ...saved.participants.map((p) => p.friendId)], now)
