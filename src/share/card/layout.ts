@@ -14,14 +14,14 @@
  *   └──────────────────────────────┘
  *        ✓ Made with Settle · …        footer, only with the watermark
  */
-import { BRAND, type CategoryId, type Minor } from '../../domain/types'
+import { BRAND, type AccentId, type CategoryId, type Minor } from '../../domain/types'
 import { formatBillDate } from '../../lib/format'
 import { formatMoney } from '../../lib/money'
 import { initials } from '../../lib/people'
 import { categoryLabel } from '../categories'
 import { cleanText } from '../text'
 import { CATEGORY_ICON_PATHS, CHECK_ICON_PATHS, ICON_STROKE } from './icons'
-import { avatarColor, CARD_THEMES, CATEGORY_COLORS, type CardThemeName } from './theme'
+import { avatarColor, CATEGORY_COLORS, cardTheme, type CardThemeName } from './theme'
 import { fitFontSize, fitText, wrapText, type Measure, type TextStyle } from './textFit'
 
 export interface ShareCardPerson {
@@ -48,6 +48,8 @@ export interface ShareCardLayoutOptions {
   /** Adds the "Made with Settle" footer (free plan). */
   watermark: boolean
   theme: CardThemeName
+  /** Accent palette (Pro accent themes); lime by default. */
+  accent?: AccentId
   /** Footer text after the brand: the site's host, or the tagline. */
   siteLabel: string
 }
@@ -215,7 +217,7 @@ function plural(n: number, one: string, many: string): string {
 /* ------------------------------------------------------------------ layout */
 
 export function layoutShareCard(input: ShareCardInput, opts: ShareCardLayoutOptions, measure: Measure): CardScene {
-  const theme = CARD_THEMES[opts.theme]
+  const theme = cardTheme(opts.theme, opts.accent)
   const cat = CATEGORY_COLORS[opts.theme][input.category] ?? CATEGORY_COLORS[opts.theme].other
   const money = (minor: Minor) => formatMoney(minor, input.currency, { trimZeros: true })
   const ops: CardOp[] = []

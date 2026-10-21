@@ -6,7 +6,7 @@ import { categoryLabel } from '../categories'
 import { CATEGORY_ICON_PATHS, CHECK_ICON_PATHS } from './icons'
 import { AMOUNT_DESCENT, CARD_SIZE, layoutShareCard, type CardOp, type CardScene, type ShareCardInput, type ShareCardLayoutOptions } from './layout'
 import { fakeMeasure } from './testMeasure'
-import { CARD_THEMES, CATEGORY_COLORS } from './theme'
+import { CARD_ACCENTS, CARD_THEMES, CATEGORY_COLORS } from './theme'
 
 type TextOp = Extract<CardOp, { kind: 'text' }>
 
@@ -147,6 +147,24 @@ describe('layoutShareCard', () => {
     expect(title(light)).toBe(CARD_THEMES.light.ink)
     expect(title(dark)).toBe(CARD_THEMES.dark.ink)
     expectWellFormed(dark, { ...LIGHT, theme: 'dark' })
+  })
+
+  it("paints the payer ring, the underline, progress and glow in the owner's accent (Pro)", () => {
+    for (const theme of ['light', 'dark'] as const) {
+      const opts = { ...LIGHT, theme, accent: 'violet' as const }
+      const scene = layoutShareCard(input(), opts, fakeMeasure)
+      expectWellFormed(scene, opts)
+      const violet = CARD_ACCENTS.violet.accent
+      expect(scene.ops.filter((op) => op.kind === 'circle' && op.stroke === violet)).toHaveLength(1)
+      expect(scene.ops).toContainEqual(expect.objectContaining({ kind: 'rect', h: 12, fill: violet }))
+      expect(scene.ops).toContainEqual(expect.objectContaining({ kind: 'glow', color: violet }))
+      const fill = scene.ops.filter((op) => op.kind === 'rect' && op.h === 14)[1]
+      expect(fill).toMatchObject({ fill: violet })
+      if (theme === 'light') expect(fill).toMatchObject({ stroke: CARD_ACCENTS.violet.inkLight })
+      // Lime is gone everywhere.
+      expect(JSON.stringify(scene.ops)).not.toContain(CARD_ACCENTS.lime.accent)
+    }
+    expect(layoutShareCard(input(), { ...LIGHT, accent: 'lime' }, fakeMeasure)).toEqual(layoutShareCard(input(), LIGHT, fakeMeasure))
   })
 
   it('tears the ticket at the dashed divider', () => {

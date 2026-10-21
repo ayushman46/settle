@@ -4,6 +4,7 @@ import { FRIENDS, makeExpense, makeFriend, makeProfile } from '../testing'
 import type { ShareCardInput } from './layout'
 import { cardCharacters, defaultSiteLabel, renderShareCard, ShareCardError, shareCardFilename, shareCardInputFromExpense } from './render'
 import { recordingContext, type RecordingContext } from './testCanvas'
+import { CARD_ACCENTS } from './theme'
 
 const INPUT: ShareCardInput = {
   title: 'Dinner at Toit',
@@ -69,6 +70,18 @@ describe('renderShareCard', () => {
     await renderShareCard(INPUT, { watermark: false, theme: 'dark' })
     expect(rec.named('fillRect')[0]?.state.fillStyle).toBe('#0b0c0e')
     expect(rec.named('fillText').some((c) => String(c.args[0]).includes('Made with'))).toBe(false)
+  })
+
+  it("draws in the owner's accent when one is given (lime otherwise)", async () => {
+    stubCanvas()
+    await renderShareCard(INPUT, { watermark: true, theme: 'light', accent: 'coral' })
+    const fills = rec.named('fill').map((c) => c.state.fillStyle)
+    expect(fills).toContain(CARD_ACCENTS.coral.accent)
+    expect(fills).not.toContain(CARD_ACCENTS.lime.accent)
+
+    rec = recordingContext()
+    await renderShareCard(INPUT, { watermark: true, theme: 'light' })
+    expect(rec.named('fill').map((c) => c.state.fillStyle)).toContain(CARD_ACCENTS.lime.accent)
   })
 
   it('waits for Geist in every weight it uses', async () => {

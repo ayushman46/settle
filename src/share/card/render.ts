@@ -1,5 +1,5 @@
 /** Renders the share card to a PNG: fonts first, then layout → paint on a canvas. */
-import { BRAND, ME_ID, type Expense, type Friend, type Profile } from '../../domain/types'
+import { BRAND, ME_ID, type AccentId, type Expense, type Friend, type Profile } from '../../domain/types'
 import { formatBillDate } from '../../lib/format'
 import { formatMoney } from '../../lib/money'
 import { outsideName } from '../names'
@@ -117,14 +117,19 @@ export function defaultSiteLabel(where?: Pick<Location, 'hostname' | 'host'>): s
   }
 }
 
+export interface ShareCardOptions {
+  /** Adds the "Made with Settle" footer (free plan; Pro shares clean cards). */
+  watermark: boolean
+  theme: 'light' | 'dark'
+  /** Draws the card in the owner's accent palette (Pro accent themes); lime by default. */
+  accent?: AccentId
+}
+
 /**
- * A 1080×1350 PNG receipt of the split for the group chat. `watermark` adds the "Made with
- * Settle" footer (free plan). Rejects with `ShareCardError` if the browser can't draw it.
+ * A 1080×1350 PNG receipt of the split for the group chat. Rejects with `ShareCardError` if the
+ * browser can't draw it.
  */
-export async function renderShareCard(
-  input: ShareCardInput,
-  opts: { watermark: boolean; theme: 'light' | 'dark' },
-): Promise<Blob> {
+export async function renderShareCard(input: ShareCardInput, opts: ShareCardOptions): Promise<Blob> {
   await loadFonts(cardCharacters(input))
   const surface = domSurface() ?? offscreenSurface()
   if (!surface) throw new ShareCardError("This browser can't draw images")

@@ -5,7 +5,7 @@
 import { describe, expect, it } from 'vitest'
 import { CATEGORY_IDS } from '../../domain/types'
 import { readCssBlocks } from '../../styles/contrast'
-import { AVATAR_COLORS, CARD_THEMES, CATEGORY_COLORS, type CardThemeName } from './theme'
+import { AVATAR_COLORS, CARD_ACCENTS, CARD_THEMES, CATEGORY_COLORS, type CardThemeName } from './theme'
 
 // Vitest stubs CSS imports (even `?raw`), so the stylesheet is read from disk. The client
 // tsconfig has no Node types; the two functions used are typed here.
@@ -60,5 +60,13 @@ describe('share-card colours match the design tokens', () => {
 
   it('the lime edge is the light accent ink', () => {
     expect(CARD_THEMES.light.accentEdge).toBe(VARS.light['--accent-ink-light'])
+  })
+
+  it('accent palettes', () => {
+    for (const [accent, palette] of Object.entries(CARD_ACCENTS)) {
+      const vars = accent === 'lime' ? VARS.light : decls(`:root[data-accent='${accent}']`)
+      expect(palette.accent, `${accent} --accent`).toBe(vars['--accent'])
+      expect(palette.inkLight, `${accent} --accent-ink-light`).toBe(vars['--accent-ink-light'])
+    }
   })
 })

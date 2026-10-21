@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { CATEGORY_IDS } from '../../domain/types'
-import { avatarColor, AVATAR_COLORS, CARD_THEMES, CATEGORY_COLORS, withAlpha, type CardThemeName } from './theme'
+import { CATEGORY_IDS, type AccentId } from '../../domain/types'
+import { avatarColor, AVATAR_COLORS, CARD_ACCENTS, CARD_THEMES, cardTheme, CATEGORY_COLORS, withAlpha, type CardThemeName } from './theme'
 
 function luminance(hex: string): number {
   const n = parseInt(hex.slice(1), 16)
@@ -48,6 +48,38 @@ describe('card palette contrast (WCAG 2.2 AA)', () => {
 
   it('has colours for every category in both themes', () => {
     for (const name of THEMES) expect(Object.keys(CATEGORY_COLORS[name]).sort()).toEqual([...CATEGORY_IDS].sort())
+  })
+})
+
+describe('cardTheme (accent palettes)', () => {
+  const ACCENTS = Object.keys(CARD_ACCENTS) as AccentId[]
+
+  it('is the plain theme in lime', () => {
+    for (const name of THEMES) expect(cardTheme(name)).toEqual(CARD_THEMES[name])
+    for (const name of THEMES) expect(cardTheme(name, 'lime')).toEqual(CARD_THEMES[name])
+  })
+
+  it('swaps the accent fill (and the light edge) and nothing else', () => {
+    for (const name of THEMES) {
+      for (const accent of ACCENTS) {
+        const t = cardTheme(name, accent)
+        expect(t.accent).toBe(CARD_ACCENTS[accent].accent)
+        expect(t.accentEdge).toBe(name === 'light' ? CARD_ACCENTS[accent].inkLight : null)
+        expect({ ...t, accent: null, accentEdge: null }).toEqual({ ...CARD_THEMES[name], accent: null, accentEdge: null })
+      }
+    }
+  })
+
+  it('reads an unknown accent as lime', () => {
+    expect(cardTheme('dark', 'neon' as AccentId)).toEqual(CARD_THEMES.dark)
+  })
+
+  it.each(THEMES)('%s: every accent keeps ink text readable and its edge visible', (name) => {
+    for (const accent of ACCENTS) {
+      const t = cardTheme(name, accent)
+      expect(contrast(t.onAccent, t.accent), accent).toBeGreaterThanOrEqual(4.5)
+      if (t.accentEdge) expect(contrast(t.accentEdge, t.surface2), accent).toBeGreaterThanOrEqual(3)
+    }
   })
 })
 

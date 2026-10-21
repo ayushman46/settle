@@ -25,6 +25,7 @@ export {
   shareCardInputFromExpense,
 } from './card/render'
 export { CARD_SIZE, type ShareCardInput, type ShareCardPerson } from './card/layout'
+export type { ShareCardOptions } from './card/render'
 export { NUDGE_MAX_LENGTH, NUDGE_TONES, nudgeText, nudgeVariantCount, type NudgeInput, type NudgeTone } from './nudge'
 export { normalizePhone, smsUrl, whatsappUrl } from './links'
 export { safeFilename, shareFile, type ShareFileOptions, type ShareFileOutcome } from './shareFile'

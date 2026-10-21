@@ -2,7 +2,7 @@
  * Share-card colours. A canvas can't read CSS variables for a theme the page isn't in, so these
  * mirror `src/styles/tokens.css` (v3 palette) — keep them in step. Contrast is checked in tests.
  */
-import type { CategoryId } from '../../domain/types'
+import type { AccentId, CategoryId } from '../../domain/types'
 
 export type CardThemeName = 'light' | 'dark'
 
@@ -64,6 +64,25 @@ export const CARD_THEMES: Readonly<Record<CardThemeName, CardTheme>> = {
     glow: 0.18,
     categoryGlow: 0.14,
   },
+}
+
+/**
+ * The accent palettes (Pro) a card can be drawn in, as in tokens.css `:root[data-accent=…]`:
+ * the fill, and its light-theme ink (which edges the progress fill on a light track).
+ */
+export const CARD_ACCENTS: Readonly<Record<AccentId, { accent: string; inkLight: string }>> = {
+  lime: { accent: '#cbf266', inkLight: '#3d6b0a' },
+  mint: { accent: '#7fe3c0', inkLight: '#0a6a4d' },
+  sky: { accent: '#9fcdff', inkLight: '#0b5aab' },
+  violet: { accent: '#cbb8ff', inkLight: '#5a33c0' },
+  coral: { accent: '#ffb59f', inkLight: '#a5341a' },
+}
+
+/** A card theme in one of the accent palettes (unknown accents read as lime). */
+export function cardTheme(name: CardThemeName, accent: AccentId = 'lime'): CardTheme {
+  const base = CARD_THEMES[name]
+  const palette = Object.hasOwn(CARD_ACCENTS, accent) ? CARD_ACCENTS[accent] : CARD_ACCENTS.lime
+  return { ...base, accent: palette.accent, accentEdge: base.accentEdge === null ? null : palette.inkLight }
 }
 
 /** Soft tint (icon tile) + saturated ink (icon, label) per category. */
