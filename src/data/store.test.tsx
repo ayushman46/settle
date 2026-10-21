@@ -188,6 +188,19 @@ describe('createStore — writing', () => {
     expect(result.current).toBe(true)
   })
 
+  it('retries a failed save when the page is hidden', () => {
+    const store = makeStore()
+    const setItem = vi.spyOn(Storage.prototype, 'setItem').mockImplementationOnce(() => {
+      throw new Error('QuotaExceededError')
+    })
+    store.set(['retry me'])
+    vi.advanceTimersByTime(WRITE_DELAY_MS)
+    expect(window.localStorage.getItem(store.key)).toBeNull()
+    window.dispatchEvent(new Event('pagehide'))
+    expect(setItem).toHaveBeenCalledTimes(2)
+    expect(saved(store.key)).toEqual({ v: 2, data: ['retry me'] })
+  })
+
   it('reload() drops memory and pending writes and re-reads storage', () => {
     const store = makeStore()
     store.set(['unsaved'])

@@ -207,17 +207,15 @@ export function createStore<T>(opts: CreateStoreOptions<T>): PersistedStore<T> {
       timer = null
     }
     if (!dirty) return
-    dirty = false
     const storage = localStore()
-    if (!storage) {
-      setWriteOk(false)
-      return
-    }
     try {
+      if (!storage) throw new Error('Storage unavailable')
       const envelope: Envelope = { v: version, data: state }
       storage.setItem(key, JSON.stringify(envelope))
+      dirty = false
       setWriteOk(true)
     } catch {
+      // Still dirty: the next change, or the flush when the page is hidden, tries again.
       setWriteOk(false)
     }
   }
