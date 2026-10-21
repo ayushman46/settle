@@ -152,6 +152,14 @@ describe('usePro', () => {
     expect(result.current.status).toBe('expired')
   })
 
+  it('stops sending the license the moment it runs out, even before the screen catches up', async () => {
+    const exp = now() + 60
+    installLicense(await signer.token({ exp }), signer.publicKey)
+    expect(licenseHeaders()).toHaveProperty(LICENSE_HEADER)
+    vi.spyOn(Date, 'now').mockReturnValue((exp + 1) * 1000)
+    expect(licenseHeaders()).toEqual({})
+  })
+
   it('ignores (but never deletes) a stored license that is not genuine', async () => {
     const forged = await other.token({ plan: 'pro_lifetime', exp: null })
     installLicense(forged, signer.publicKey)

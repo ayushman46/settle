@@ -282,7 +282,8 @@ export function licenseToken(): string | null {
 /** `{ 'X-Settle-License': token }` while Pro is active (for the AI endpoints' Pro allowance), else `{}`. */
 export function licenseHeaders(): Record<string, string> {
   const token = licenseToken()
-  return token && state.isPro ? { [LICENSE_HEADER]: token } : {}
+  // Checked against the clock here, not the last published state (a sleeping tab's timer may lag).
+  return token && stored && isLicenseActive(stored.license) ? { [LICENSE_HEADER]: token } : {}
 }
 
 /* ------------------------------------------------------------------ claiming a payment */
