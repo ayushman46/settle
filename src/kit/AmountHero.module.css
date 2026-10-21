@@ -1,0 +1,97 @@
+.hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-2);
+  width: 100%;
+  min-width: 0;
+  padding-block: var(--s-2);
+}
+
+/* Currency pill: small and quiet above the big number. */
+.currency {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: calc(var(--s-8) + 2px);
+  padding-inline: 5px var(--s-3);
+  border-radius: var(--r-pill);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+  color: var(--ink);
+  font: var(--text-label);
+  font-weight: 650;
+  letter-spacing: 0.02em;
+  transition:
+    transform var(--dur-2) var(--ease-spring),
+    background-color var(--dur-2) var(--ease-out);
+}
+
+/* 44px touch target around the compact pill. */
+.currency::after {
+  content: '';
+  position: absolute;
+  inset: calc((var(--s-8) + 2px - var(--tap)) / 2) 0;
+}
+
+.currency:active:not(:disabled) {
+  transform: scale(0.95);
+  background: var(--surface-2);
+  transition-duration: var(--dur-1);
+}
+
+@media (hover: hover) {
+  .currency:hover:not(:disabled) {
+    background: var(--surface-2);
+  }
+}
+
+.symbol {
+  display: inline-grid;
+  place-items: center;
+  min-width: var(--s-6);
+  height: var(--s-6);
+  padding-inline: 4px;
+  border-radius: var(--r-pill);
+  background: var(--accent);
+  color: var(--on-accent);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+/* Space for the symbol pill when there is none (unknown currency). */
+.currency:not(:has(.symbol)) {
+  padding-inline-start: var(--s-3);
+}
+
+.chevron {
+  width: var(--s-4);
+  height: var(--s-4);
+  margin-inline-start: -2px;
+  color: var(--ink-2);
+}
+
+.words {
+  max-width: 32ch;
+  margin-top: calc(var(--s-2) * -1);
+  color: var(--ink-2);
+  font: var(--text-caption);
+  font-weight: 500;
+  text-align: center;
+  text-wrap: balance;
+  animation: words-in var(--dur-2) var(--ease-out);
+}
+
+@media (forced-colors: active) {
+  .currency {
+    border: 1px solid CanvasText;
+  }
+}
+
+@keyframes words-in {
+  from {
+    opacity: 0;
+  }
+}
