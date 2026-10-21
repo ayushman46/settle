@@ -67,6 +67,8 @@ describe('share-card colours match the design tokens', () => {
       const vars = accent === 'lime' ? VARS.light : decls(`:root[data-accent='${accent}']`)
       expect(palette.accent, `${accent} --accent`).toBe(vars['--accent'])
       expect(palette.inkLight, `${accent} --accent-ink-light`).toBe(vars['--accent-ink-light'])
+      // Dark accent text is the fill itself, which is what cardTheme draws.
+      expect(palette.accent, `${accent} --accent-ink-dark`).toBe(vars['--accent-ink-dark'])
     }
   })
 })

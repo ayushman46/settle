@@ -19,6 +19,8 @@ export interface CardTheme {
   onAccent: string
   /** Edge that makes a lime fill read on a light track (tokens: --accent-edge); null when not needed. */
   accentEdge: string | null
+  /** Accent-coloured text (tokens: --accent-ink): AA on the card in both themes. */
+  accentInk: string
   positive: string
   onPositive: string
   /** Soft drop shadow under the card (light only — dark relies on its hairline). */
@@ -41,6 +43,7 @@ export const CARD_THEMES: Readonly<Record<CardThemeName, CardTheme>> = {
     accent: '#cbf266',
     onAccent: '#0e1013',
     accentEdge: '#3d6b0a',
+    accentInk: '#3d6b0a',
     positive: '#0b7a43',
     onPositive: '#ffffff',
     shadow: { color: 'rgba(14, 16, 19, 0.10)', blur: 64, offsetY: 24 },
@@ -58,6 +61,7 @@ export const CARD_THEMES: Readonly<Record<CardThemeName, CardTheme>> = {
     accent: '#cbf266',
     onAccent: '#0e1013',
     accentEdge: null,
+    accentInk: '#cbf266',
     positive: '#4ade80',
     onPositive: '#0e1013',
     shadow: null,
@@ -82,7 +86,12 @@ export const CARD_ACCENTS: Readonly<Record<AccentId, { accent: string; inkLight:
 export function cardTheme(name: CardThemeName, accent: AccentId = 'lime'): CardTheme {
   const base = CARD_THEMES[name]
   const palette = Object.hasOwn(CARD_ACCENTS, accent) ? CARD_ACCENTS[accent] : CARD_ACCENTS.lime
-  return { ...base, accent: palette.accent, accentEdge: base.accentEdge === null ? null : palette.inkLight }
+  return {
+    ...base,
+    accent: palette.accent,
+    accentEdge: base.accentEdge === null ? null : palette.inkLight,
+    accentInk: name === 'light' ? palette.inkLight : palette.accent,
+  }
 }
 
 /** Soft tint (icon tile) + saturated ink (icon, label) per category. */

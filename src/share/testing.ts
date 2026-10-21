@@ -1,5 +1,5 @@
 /** Test fixtures for the share kit (imported by tests only). */
-import { ME_ID, type Expense, type Friend, type Profile } from '../domain/types'
+import { ME_ID, type Expense, type Friend, type Group, type Profile } from '../domain/types'
 
 export function makeFriend(id: string, name: string, extra: Partial<Friend> = {}): Friend {
   return { id, name, color: 0, upiId: null, phone: null, createdAt: 0, lastUsedAt: 0, ...extra }
@@ -49,6 +49,23 @@ export function makeExpense(extra: Partial<Expense> = {}): Expense {
     paidBack: { riya: 1 },
     recurringId: null,
     source: 'manual',
+    ...extra,
+  }
+}
+
+/** A trip with me, Riya, Sam and Neha (no settlements yet). */
+export function makeGroup(extra: Partial<Group> = {}): Group {
+  return {
+    id: 'g1',
+    name: 'Goa 2026',
+    emoji: '🏖️',
+    kind: 'trip',
+    currency: 'INR',
+    memberIds: [ME_ID, 'riya', 'sam', 'neha'],
+    settlements: [],
+    createdAt: 0,
+    updatedAt: 0,
+    archived: false,
     ...extra,
   }
 }

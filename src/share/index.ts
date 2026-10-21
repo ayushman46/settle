@@ -23,9 +23,11 @@ export {
   ShareCardError,
   shareCardFilename,
   shareCardInputFromExpense,
+  type ShareCardOptions,
 } from './card/render'
 export { CARD_SIZE, type ShareCardInput, type ShareCardPerson } from './card/layout'
-export type { ShareCardOptions } from './card/render'
+export { groupCardInputFromGroup, renderGroupCard } from './card/group'
+export { GROUP_KIND_LABELS, type GroupCardInput, type GroupCardPerson, type GroupCardTransfer } from './card/groupLayout'
 export { NUDGE_MAX_LENGTH, NUDGE_TONES, nudgeText, nudgeVariantCount, type NudgeInput, type NudgeTone } from './nudge'
 export { normalizePhone, smsUrl, whatsappUrl } from './links'
 export { safeFilename, shareFile, type ShareFileOptions, type ShareFileOutcome } from './shareFile'

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { CATEGORY_IDS, type AccentId } from '../../domain/types'
-import { avatarColor, AVATAR_COLORS, CARD_ACCENTS, CARD_THEMES, cardTheme, CATEGORY_COLORS, withAlpha, type CardThemeName } from './theme'
+import { avatarColor, AVATAR_COLORS, CARD_ACCENTS, CARD_THEMES, cardTheme, CATEGORY_COLORS, withAlpha, type CardTheme, type CardThemeName } from './theme'
 
 function luminance(hex: string): number {
   const n = parseInt(hex.slice(1), 16)
@@ -59,13 +59,15 @@ describe('cardTheme (accent palettes)', () => {
     for (const name of THEMES) expect(cardTheme(name, 'lime')).toEqual(CARD_THEMES[name])
   })
 
-  it('swaps the accent fill (and the light edge) and nothing else', () => {
+  it('swaps the accent fill, its text colour and the light edge, and nothing else', () => {
     for (const name of THEMES) {
       for (const accent of ACCENTS) {
         const t = cardTheme(name, accent)
         expect(t.accent).toBe(CARD_ACCENTS[accent].accent)
         expect(t.accentEdge).toBe(name === 'light' ? CARD_ACCENTS[accent].inkLight : null)
-        expect({ ...t, accent: null, accentEdge: null }).toEqual({ ...CARD_THEMES[name], accent: null, accentEdge: null })
+        expect(t.accentInk).toBe(name === 'light' ? CARD_ACCENTS[accent].inkLight : CARD_ACCENTS[accent].accent)
+        const rest = (x: CardTheme) => ({ ...x, accent: null, accentEdge: null, accentInk: null })
+        expect(rest(t)).toEqual(rest(CARD_THEMES[name]))
       }
     }
   })
@@ -79,6 +81,7 @@ describe('cardTheme (accent palettes)', () => {
       const t = cardTheme(name, accent)
       expect(contrast(t.onAccent, t.accent), accent).toBeGreaterThanOrEqual(4.5)
       if (t.accentEdge) expect(contrast(t.accentEdge, t.surface2), accent).toBeGreaterThanOrEqual(3)
+      expect(contrast(t.accentInk, t.surface), accent).toBeGreaterThanOrEqual(4.5)
     }
   })
 })

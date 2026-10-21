@@ -75,3 +75,6 @@ export const CATEGORY_ICON_PATHS: Readonly<Record<CategoryId, readonly string[]>
 
 /** Lucide "check". */
 export const CHECK_ICON_PATHS: readonly string[] = ['M20 6 9 17l-5-5']
+
+/** Lucide "arrow-right" (who pays whom). */
+export const ARROW_ICON_PATHS: readonly string[] = ['M5 12h14', 'm12 5 7 7-7 7']
