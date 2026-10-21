@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { CategoryId, Expense } from '../domain/types'
-import { insights } from './insights'
+import { insights, insightsRange } from './insights'
 import { expenseShares } from './split'
 
 let seq = 0
@@ -30,6 +30,16 @@ function expense(total: number, people: string[], payerId: string, date: string,
     source: 'manual',
   }
 }
+
+describe('insightsRange', () => {
+  it('turns range chips into inclusive dates', () => {
+    expect(insightsRange('this_month', '2026-10-21')).toEqual({ from: '2026-10-01', to: '2026-10-21' })
+    expect(insightsRange('last_3_months', '2026-02-10')).toEqual({ from: '2025-12-01', to: '2026-02-10' })
+    expect(insightsRange('this_year', '2026-10-21')).toEqual({ from: '2026-01-01', to: '2026-10-21' })
+    expect(insightsRange('all', '2026-10-21')).toEqual({})
+    expect(insightsRange('this_month', 'today')).toEqual({})
+  })
+})
 
 describe('insights', () => {
   const data = [

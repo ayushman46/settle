@@ -186,3 +186,32 @@ export function expenseShares(
     roundToWhole: e.roundedToWhole,
   }).shares
 }
+
+/**
+ * "Split the rest equally": hands what's left of the total (exact) or of 100% (percent) to the
+ * people who have nothing entered yet — or to everyone when all have something — in equal parts,
+ * the payer first in line for leftovers. Nothing changes when nothing is left (or too much was
+ * entered), or for equal and shares modes.
+ */
+export function splitRestEqually(input: AmountSplitInput): Participant[] {
+  const people = uniqueParticipants(input.participants)
+  if (input.mode !== 'exact' && input.mode !== 'percent') return people
+  const goal = input.mode === 'exact' ? (isValidTotal(input.total) ? input.total : 0) : FULL_PERCENT_BPS
+  const entered = people.map((p) => wholeInput(p.input))
+  const rest = goal - entered.reduce((a, b) => a + b, 0)
+  if (rest <= 0 || people.length === 0) return people
+  const empty = people.map((_, i) => i).filter((i) => (entered[i] ?? 0) === 0)
+  const targets = empty.length > 0 ? empty : people.map((_, i) => i)
+  const parts = allocatePayerFirst(
+    rest,
+    targets.map(() => 1),
+    targets.map((i) => people[i]?.friendId ?? ''),
+    input.payerId,
+  )
+  const next = people.map((p, i) => ({ friendId: p.friendId, input: entered[i] ?? 0 }))
+  targets.forEach((index, k) => {
+    const p = next[index]
+    if (p) p.input += parts[k] ?? 0
+  })
+  return next
+}

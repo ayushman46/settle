@@ -1,7 +1,16 @@
 import { describe, expect, it } from 'vitest'
 import type { Participant } from '../domain/types'
 import { MAX_MINOR } from '../lib/money'
-import { expenseShares, FULL_PERCENT_BPS, isValidTotal, roundSharesToWhole, splitAmount, uniqueParticipants, type AmountSplitInput } from './split'
+import {
+  expenseShares,
+  FULL_PERCENT_BPS,
+  isValidTotal,
+  roundSharesToWhole,
+  splitAmount,
+  splitRestEqually,
+  uniqueParticipants,
+  type AmountSplitInput,
+} from './split'
 
 /** Small seeded PRNG (mulberry32) so property tests are reproducible. */
 function rng(seed: number): () => number {
@@ -231,6 +240,40 @@ describe('expenseShares', () => {
 
   it('uses splitAmount for amount modes', () => {
     expect(expenseShares({ total: 300, currency: 'INR', mode: 'shares', participants: withInputs({ a: 2, b: 1 }), payerId: 'a', roundedToWhole: false, bill: null })).toEqual({ a: 200, b: 100 })
+  })
+})
+
+describe('splitRestEqually', () => {
+  const rest = (partial: Partial<AmountSplitInput>) =>
+    splitRestEqually({ total: 1000, currency: 'INR', mode: 'exact', participants: people('a', 'b', 'c'), payerId: 'a', ...partial })
+
+  it('gives what is left to the people with nothing entered', () => {
+    expect(rest({ participants: withInputs({ a: 400, b: null, c: 0 }) })).toEqual(withInputs({ a: 400, b: 300, c: 300 }))
+  })
+
+  it('spreads the rest over everyone when all have something, payer first for leftovers', () => {
+    expect(rest({ total: 1001, participants: withInputs({ a: 100, b: 100, c: 100 }), payerId: 'c' })).toEqual(
+      withInputs({ a: 334, b: 333, c: 334 }),
+    )
+  })
+
+  it('works on percentages', () => {
+    const next = rest({ mode: 'percent', participants: withInputs({ a: 4000, b: null, c: null }) })
+    expect(next).toEqual(withInputs({ a: 4000, b: 3000, c: 3000 }))
+    expect(splitAmount({ total: 3200000, currency: 'INR', mode: 'percent', participants: next, payerId: 'a' }).ok).toBe(true)
+  })
+
+  it('always leaves an exact split that adds up', () => {
+    const next = rest({ total: 999, participants: withInputs({ a: 1, b: null, c: null }) })
+    expect(splitAmount({ total: 999, currency: 'INR', mode: 'exact', participants: next, payerId: 'a' }).ok).toBe(true)
+  })
+
+  it('changes nothing when nothing is left, too much is entered, or the mode has no remainder', () => {
+    expect(rest({ participants: withInputs({ a: 1000, b: null }) })).toEqual(withInputs({ a: 1000, b: null }))
+    expect(rest({ participants: withInputs({ a: 1200, b: null }) })).toEqual(withInputs({ a: 1200, b: null }))
+    expect(rest({ mode: 'shares', participants: withInputs({ a: 2, b: null }) })).toEqual(withInputs({ a: 2, b: null }))
+    expect(rest({ total: 0, participants: withInputs({ a: null }) })).toEqual(withInputs({ a: null }))
+    expect(rest({ participants: [] })).toEqual([])
   })
 })
 

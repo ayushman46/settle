@@ -3,7 +3,7 @@
  * cost me — never the whole bill I happened to pay for.
  */
 import { CATEGORY_IDS, type CategoryId, type Expense, type Minor } from '../domain/types'
-import { isIsoDate, periodOf, periodsBetween } from './dates'
+import { addMonths, isIsoDate, periodOf, periodsBetween } from './dates'
 
 export interface InsightsOptions {
   meId: string
@@ -85,4 +85,20 @@ export function insights(expenses: readonly Expense[], opts: InsightsOptions): I
     .sort((a, b) => b.amount - a.amount || b.count - a.count || (a.friendId < b.friendId ? -1 : 1))
 
   return { spent, paidOut, byCategory, byMonth, topFriends, count }
+}
+
+export type InsightsRange = 'this_month' | 'last_3_months' | 'this_year' | 'all'
+
+/** Inclusive date bounds for a range chip, relative to `today` (`YYYY-MM-DD`). */
+export function insightsRange(range: InsightsRange, today: string): { from?: string; to?: string } {
+  if (!isIsoDate(today) || range === 'all') return {}
+  const month = periodOf(today)
+  switch (range) {
+    case 'this_month':
+      return { from: `${month}-01`, to: today }
+    case 'last_3_months':
+      return { from: `${addMonths(month, -2)}-01`, to: today }
+    case 'this_year':
+      return { from: `${today.slice(0, 4)}-01-01`, to: today }
+  }
 }

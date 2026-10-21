@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Expense, Group, Participant, Settlement } from '../domain/types'
-import { collectProgress, expenseNet, groupBalances, isSettledInGroup, overallSummary, simplifyDebts } from './balances'
+import { collectProgress, expenseNet, expenseStanding, groupBalances, isSettledInGroup, overallSummary, simplifyDebts } from './balances'
 import { expenseShares } from './split'
 
 function rng(seed: number): () => number {
@@ -299,6 +299,29 @@ describe('overallSummary', () => {
   it('includes archived groups (the money is still owed)', () => {
     const g = group({ archived: true, memberIds: ['me', 'a'] })
     expect(overallSummary([expense({ groupId: 'g1', total: 1000, people: ['me', 'a'] })], [g], 'me', 'INR').owedToMe).toBe(500)
+  })
+})
+
+describe('expenseStanding', () => {
+  it('describes an expense I paid for', () => {
+    const e = expense({ total: 900, people: ['me', 'a', 'b'], paidBack: { a: 1 } })
+    expect(expenseStanding(e, 'me')).toEqual({ role: 'paid', myShare: 300, net: 600, outstanding: 300, pending: 1 })
+  })
+
+  it('describes what I owe, and clears once ticked off', () => {
+    const e = expense({ total: 900, people: ['me', 'a', 'b'], payerId: 'a' })
+    expect(expenseStanding(e, 'me')).toEqual({ role: 'owe', myShare: 300, net: -300, outstanding: -300, pending: 0 })
+    expect(expenseStanding({ ...e, paidBack: { me: 1 } }, 'me').outstanding).toBe(0)
+  })
+
+  it('is neutral when I am not involved', () => {
+    expect(expenseStanding(expense({ total: 900, people: ['a', 'b'], payerId: 'a' }), 'me')).toEqual({ role: 'none', myShare: 0, net: 0, outstanding: 0, pending: 0 })
+  })
+
+  it('leaves group-settled expenses to the group balances', () => {
+    const e = expense({ groupId: 'g1', total: 900, people: ['me', 'a', 'b'] })
+    expect(expenseStanding(e, 'me', [group()])).toEqual({ role: 'paid', myShare: 300, net: 600, outstanding: null, pending: 0 })
+    expect(expenseStanding(e, 'me').outstanding).toBe(600)
   })
 })
 

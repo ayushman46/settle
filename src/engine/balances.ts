@@ -207,3 +207,33 @@ export function collectProgress(e: Expense): {
   }
   return { collected, outstanding: total - collected, total, paidCount, peopleCount }
 }
+
+export interface ExpenseStanding {
+  /** I paid for it, I owe the payer, or I'm not part of it. */
+  role: 'paid' | 'owe' | 'none'
+  /** My own share of the expense. */
+  myShare: Minor
+  /** What the expense means for me on its own: + I lent this much, − I borrowed this much. */
+  net: Minor
+  /**
+   * What's still open on this expense between me and others: + still owed to me, − I still owe.
+   * Null for expenses settled through their group's balances (see `isSettledInGroup`).
+   */
+  outstanding: Minor | null
+  /** People who still have to pay me back (when I paid). */
+  pending: number
+}
+
+/** One expense from my point of view — for list rows ("you lent ₹540 · 2 pending") and filters. */
+export function expenseStanding(e: Expense, meId: string, groups: readonly Group[] = []): ExpenseStanding {
+  const myShare = shareOf(e, meId)
+  const net = expenseNet(e)[meId] ?? 0
+  const role = e.payerId === meId ? 'paid' : myShare > 0 ? 'owe' : 'none'
+  if (isSettledInGroup(e, groups)) return { role, myShare, net, outstanding: null, pending: 0 }
+  if (role === 'paid') {
+    const progress = collectProgress(e)
+    return { role, myShare, net, outstanding: progress.outstanding, pending: progress.peopleCount - progress.paidCount }
+  }
+  const outstanding = role === 'owe' && e.paidBack[meId] === undefined ? -myShare : 0
+  return { role, myShare, net, outstanding: outstanding === 0 ? 0 : outstanding, pending: 0 }
+}

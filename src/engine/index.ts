@@ -5,6 +5,7 @@ export {
   isValidTotal,
   roundSharesToWhole,
   splitAmount,
+  splitRestEqually,
   uniqueParticipants,
   type AmountSplitInput,
   type AmountSplitMode,
@@ -14,13 +15,16 @@ export {
 export {
   collectProgress,
   expenseNet,
+  expenseStanding,
   groupBalances,
+  isSettledInGroup,
   overallSummary,
   simplifyDebts,
+  type ExpenseStanding,
   type OverallSummary,
   type Transfer,
 } from './balances'
-export { insights, type Insights, type InsightsOptions } from './insights'
+export { insights, insightsRange, type Insights, type InsightsOptions, type InsightsRange } from './insights'
 export { DUE_SOON_DAYS, dueRecurring, nextRecurringPeriod, type RecurringDue } from './recurring'
 export { CATEGORY_META, categoryFromText, isCategoryId, type CategoryMeta } from './categories'
 export {
