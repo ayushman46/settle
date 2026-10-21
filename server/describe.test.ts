@@ -407,7 +407,7 @@ describe('normalizeDescribed — people', () => {
 })
 
 describe('normalizeDescribed — modes and values', () => {
-  const three = (values: Array<number | null>) => values.map((value, i) => ({ name: ['Me', 'Riya', 'Sam'][i], value }))
+  const three = (values: unknown[]) => values.map((value, i) => ({ name: ['Me', 'Riya', 'Sam'][i], value }))
   const text = 'Dinner 2400 with Riya and Sam'
 
   it('clears values for equal splits', () => {
