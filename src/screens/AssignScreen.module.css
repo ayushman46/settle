@@ -1,0 +1,50 @@
+.titleBlock {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+  min-width: 0;
+}
+
+/* Items-assigned meter under the title: a highlighter stroke filling up. */
+.meter {
+  position: relative;
+  height: var(--s-2);
+  overflow: hidden;
+  border-radius: var(--r-pill);
+  background: var(--surface-3);
+}
+
+/* Lime alone vanishes on the light track (1.1:1); a dark-green edge makes the fill read. */
+.meterFill {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent-ink);
+  transform-origin: left center;
+  transition: transform var(--dur-3) var(--ease-spring);
+}
+
+@media (prefers-color-scheme: dark) {
+  .meterFill {
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent-ink) 25%, transparent);
+  }
+}
+
+.quick {
+  align-self: flex-start;
+}
+
+/* "Tap to assign": a dashed, quiet pill that reads as an empty slot. */
+.pending {
+  display: inline-flex;
+  align-items: center;
+  height: calc(var(--s-6) + var(--s-1));
+  padding-inline: var(--s-3);
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--r-pill);
+  color: var(--ink-2);
+  font: var(--text-caption);
+  font-weight: 550;
+  white-space: nowrap;
+}

@@ -1,0 +1,26 @@
+# Installed / generated inside the image
+node_modules
+dist
+coverage
+*.tsbuildinfo
+.vite
+
+# Secrets never go into an image — pass NVIDIA_API_KEY at run time
+.env
+.env.*
+!.env.example
+
+# VCS, editors, tooling
+.git
+.gitignore
+.vscode
+.idea
+.claude
+*.log
+npm-debug.log*
+.DS_Store
+Thumbs.db
+
+# Docker itself
+Dockerfile
+.dockerignore

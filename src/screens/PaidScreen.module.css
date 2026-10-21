@@ -1,0 +1,178 @@
+/* ---------- Hero amount ---------- */
+
+.amount {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-4);
+  padding-top: var(--s-2);
+}
+
+.hero {
+  width: 100%;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--s-2);
+  max-width: 100%;
+}
+
+/* Live explanation of how the amount compares with the items. */
+.note {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-2);
+  max-width: 40ch;
+  padding: var(--s-3) var(--s-4);
+  border-radius: var(--r-md);
+  font: var(--text-caption);
+  font-size: 0.875rem;
+  font-weight: 500;
+  animation: note-in var(--dur-2) var(--ease-out) backwards;
+}
+
+.note:empty {
+  padding: 0;
+}
+
+.noteIcon {
+  display: inline-flex;
+  flex: none;
+  margin-top: 1px;
+}
+
+.noteIcon > svg {
+  width: calc(var(--s-4) + 2px);
+  height: calc(var(--s-4) + 2px);
+}
+
+.extra {
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+}
+
+.saving {
+  background: var(--positive-soft);
+  color: var(--positive);
+}
+
+.same {
+  background: var(--surface-2);
+  color: var(--ink-2);
+}
+
+/* ---------- What the bill says ---------- */
+
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  width: 100%;
+  min-height: calc(var(--s-12) + var(--s-2));
+  padding: var(--s-3) var(--s-4);
+  color: var(--ink);
+  text-align: start;
+  transition: background-color var(--dur-2) var(--ease-out);
+}
+
+.toggle:active {
+  background: var(--surface-2);
+  transition-duration: var(--dur-1);
+}
+
+@media (hover: hover) {
+  .toggle:hover {
+    background: color-mix(in srgb, var(--surface-2) 70%, transparent);
+  }
+}
+
+.toggle:focus-visible {
+  outline-offset: -2px;
+  border-radius: var(--r-lg);
+}
+
+.toggleTitle {
+  flex: 1 1 auto;
+  min-width: 0;
+  font: var(--text-label);
+  font-weight: 600;
+}
+
+.chevron {
+  flex: none;
+  width: var(--s-5);
+  height: var(--s-5);
+  color: var(--ink-2);
+  transition: transform var(--dur-3) var(--ease-spring);
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+}
+
+.breakdownBody {
+  padding: 0 var(--s-4) var(--s-4);
+  animation: open-in var(--dur-3) var(--ease-out) backwards;
+}
+
+.rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  margin: 0;
+  padding-top: var(--s-3);
+  border-top: 1px solid var(--line);
+}
+
+.line {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-4);
+  padding-block: 2px;
+  font: var(--text-label);
+  font-weight: 450;
+  color: var(--ink);
+}
+
+.line dt,
+.line dd {
+  margin: 0;
+}
+
+.line dt {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.line dd {
+  flex: none;
+}
+
+.lineMuted {
+  color: var(--ink-2);
+}
+
+.lineTotal {
+  margin-top: var(--s-2);
+  padding-top: var(--s-3);
+  border-top: 1px dashed var(--line-strong);
+  font-weight: 650;
+}
+
+@keyframes note-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--s-1));
+  }
+}
+
+@keyframes open-in {
+  from {
+    opacity: 0;
+    transform: translateY(calc(var(--s-2) * -1));
+  }
+}

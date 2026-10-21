@@ -1,0 +1,80 @@
+/*
+ * Numeric typography rule: every amount is Geist (the surrounding sans) with tabular digits.
+ * Hierarchy comes only from size, weight and colour — never from switching to the mono face.
+ */
+.money {
+  font-family: inherit;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: inherit;
+}
+
+/* The `font` shorthand resets font-variant-numeric, so tabular-nums is restated after it. */
+.sm {
+  font: var(--text-caption);
+  font-variant-numeric: tabular-nums;
+}
+
+.md {
+  font: var(--text-body);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+.lg {
+  font: var(--text-headline);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+/*
+ * Display amounts fill their container's width (a size container) and shrink to fit long values:
+ * `--money-fit-em` is the amount's estimated width in em, set by the component.
+ */
+.xl {
+  display: block;
+  width: 100%;
+  container-type: inline-size;
+  font: var(--text-display);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: var(--tracking-display);
+}
+
+.fit {
+  font-size: min(1em, 100cqi / var(--money-fit-em, 1));
+}
+
+.inherit {
+  font-size: inherit;
+  line-height: inherit;
+}
+
+.symbol {
+  display: inline-block;
+  margin-inline-end: 0.08em;
+  font-size: 0.55em;
+  font-weight: 550;
+  letter-spacing: 0;
+  vertical-align: 0.6em;
+  color: var(--ink-2);
+}
+
+.strong {
+  font-weight: 650;
+}
+
+.muted {
+  color: var(--ink-2);
+}
+
+.positive {
+  color: var(--positive);
+}
+
+.negative {
+  color: var(--negative);
+}
+
+.accent {
+  color: var(--accent-ink);
+}

@@ -1,0 +1,44 @@
+.bar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  padding-bottom: var(--s-2);
+}
+
+.row {
+  display: grid;
+  grid-template-columns: minmax(var(--tap), 1fr) minmax(0, auto) minmax(var(--tap), 1fr);
+  align-items: center;
+  gap: var(--s-2);
+  min-height: calc(var(--btn-h) + var(--s-1));
+  /* Optically aligns the chevron glyph with the 20px content gutter. */
+  padding-inline: calc(var(--gutter) - var(--s-3));
+}
+
+.start {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.end {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: var(--s-1);
+}
+
+.title {
+  min-width: 0;
+  overflow: hidden;
+  font: var(--text-label);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.progress {
+  padding-inline: var(--gutter);
+}

@@ -1,0 +1,55 @@
+/*
+ * `:global(#root:has(> [data-nav]))` keeps screens that are mounted straight into #root (without
+ * an AppFrame) in the same column, so no screen ever stretches across a desktop window.
+ */
+
+.frame,
+:global(#root:has(> [data-nav])) {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex: 1 0 auto;
+  flex-direction: column;
+  width: 100%;
+  max-width: var(--app-max);
+  min-height: 100vh;
+  min-height: 100dvh;
+  margin-inline: auto;
+  background: var(--bg);
+}
+
+/*
+ * Wider screens: the column becomes a phone card rising from the bottom of a dotted desk. Its
+ * bottom edge is the window's, so sticky footers, the tab bar, FABs and toasts sit exactly where
+ * they would on a phone. `overflow: clip` rounds the corners without creating a scroll container
+ * (sticky headers keep tracking the page scroll).
+ */
+@media (min-width: 600px) and (min-height: 600px) {
+  :global(html:has([data-app-frame], #root > [data-nav])) {
+    scrollbar-gutter: stable both-edges;
+    background-color: var(--desk-bg);
+    background-image: radial-gradient(circle, var(--desk-dot) 1px, transparent 1.5px);
+    background-size: 22px 22px;
+    background-attachment: fixed;
+  }
+
+  :global(body:has([data-app-frame], #root > [data-nav])) {
+    padding: var(--s-8) var(--s-4) 0;
+    background: transparent;
+  }
+
+  /* The card, not #root, fills the window below the desk's top margin (no stray scroll). */
+  :global(#root:has([data-app-frame])) {
+    min-height: 0;
+  }
+
+  .frame,
+  :global(#root:has(> [data-nav])) {
+    min-height: calc(100dvh - var(--s-8));
+    border-radius: var(--radius-sheet) var(--radius-sheet) 0 0;
+    box-shadow:
+      var(--shadow-lg),
+      0 0 0 1px var(--line);
+    overflow: clip;
+  }
+}

@@ -1,0 +1,75 @@
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-2);
+  padding: var(--s-10) var(--s-4);
+  text-align: center;
+  animation: empty-in var(--dur-3) var(--ease-out) backwards;
+}
+
+.sm {
+  padding: var(--s-6) var(--s-4);
+}
+
+.icon {
+  display: grid;
+  place-items: center;
+  width: var(--s-16);
+  height: var(--s-16);
+  margin-bottom: var(--s-3);
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+}
+
+.icon > svg {
+  width: calc(var(--s-6) + var(--s-1));
+  height: calc(var(--s-6) + var(--s-1));
+}
+
+.illustration {
+  display: grid;
+  place-items: center;
+  margin-bottom: var(--s-2);
+}
+
+.sm .icon {
+  width: var(--s-12);
+  height: var(--s-12);
+  margin-bottom: var(--s-2);
+}
+
+.sm .icon > svg {
+  width: var(--s-6);
+  height: var(--s-6);
+}
+
+.title {
+  font: var(--text-headline);
+  letter-spacing: var(--tracking-tight);
+  color: var(--ink);
+  text-wrap: balance;
+}
+
+.text {
+  max-width: 30ch;
+  font: var(--text-label);
+  font-weight: 450;
+  color: var(--ink-2);
+}
+
+.action {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--s-2);
+  margin-top: var(--s-4);
+}
+
+@keyframes empty-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+}

@@ -1,0 +1,141 @@
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  /* Narrow cards (two columns on a phone) stack the avatar over the name — see below. */
+  container: person-toggle / inline-size;
+  border-radius: var(--r-lg);
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px transparent;
+  transition:
+    background-color var(--dur-2) var(--ease-out),
+    box-shadow var(--dur-2) var(--ease-out),
+    transform var(--dur-2) var(--ease-spring);
+}
+
+.toggle {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  gap: var(--s-3);
+  width: 100%;
+  min-height: calc(var(--s-16) + var(--s-1));
+  padding: var(--s-3);
+  border-radius: inherit;
+  text-align: start;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+/* Names wrap at spaces (a single word only breaks if it can't fit a line on its own). */
+.name {
+  display: -webkit-box;
+  overflow: hidden;
+  font: var(--text-label);
+  font-weight: 600;
+  color: var(--ink);
+  overflow-wrap: break-word;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+}
+
+.meta {
+  animation: meta-in var(--dur-2) var(--ease-out) backwards;
+  font: var(--text-caption);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-2);
+  overflow-wrap: break-word;
+}
+
+/*
+ * Beside a 40px avatar, a ~160px card leaves ~80px for the name, so "Bartholomew" or
+ * "Christopher" would split mid-word. Below ~11.5rem the avatar sits above the name instead,
+ * giving the name the card's full width.
+ */
+@container person-toggle (max-width: 11.5rem) {
+  .toggle {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--s-2);
+  }
+
+  .text {
+    max-width: 100%;
+  }
+}
+
+.trailing {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0 var(--s-3) var(--s-3);
+  animation: reveal var(--dur-2) var(--ease-out) backwards;
+}
+
+/* ---------- States ---------- */
+
+.selected {
+  background: var(--accent-soft);
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+.selected .meta {
+  color: var(--accent-ink);
+  font-weight: 600;
+}
+
+.disabled {
+  opacity: 0.5;
+}
+
+.card:has(> .toggle:active:not(:disabled)) {
+  transform: scale(0.97);
+  transition-duration: var(--dur-1);
+  transition-timing-function: var(--ease-out);
+}
+
+@media (hover: hover) {
+  .card:not(.selected):not(.disabled):has(> .toggle:hover) {
+    background: var(--surface-3);
+  }
+}
+
+/* The focus ring wraps the whole card (including the trailing stepper) where :has() exists. */
+.toggle:focus-visible {
+  outline-offset: -2px;
+}
+
+@supports selector(:has(a)) {
+  .toggle:focus-visible {
+    outline: none;
+  }
+
+  .card:has(> .toggle:focus-visible) {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+}
+
+@keyframes meta-in {
+  from {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+}
+
+@keyframes reveal {
+  from {
+    opacity: 0;
+    transform: translateY(calc(var(--s-1) * -1));
+  }
+}

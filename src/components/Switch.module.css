@@ -1,0 +1,129 @@
+.row {
+  --track-w: 52px;
+  --track-h: 32px;
+  --thumb: 24px;
+  --thumb-gap: 4px;
+
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+  width: 100%;
+  min-height: calc(var(--s-12) + var(--s-2));
+  padding-block: var(--s-2);
+  color: var(--ink);
+  text-align: start;
+}
+
+.compact {
+  display: inline-flex;
+  width: auto;
+  min-height: var(--tap);
+}
+
+.row:focus-visible {
+  outline-offset: 4px;
+  border-radius: var(--r-md);
+}
+
+.text {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.label {
+  font: var(--text-body);
+  font-weight: 550;
+  color: var(--ink);
+}
+
+.description {
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
+/* ---------- Track & thumb ---------- */
+
+.track {
+  position: relative;
+  flex: none;
+  width: var(--track-w);
+  height: var(--track-h);
+  border-radius: var(--radius-pill);
+  background: var(--switch-off-track);
+  transition: background-color var(--dur-2) var(--ease-out);
+}
+
+.thumb {
+  position: absolute;
+  top: calc((var(--track-h) - var(--thumb)) / 2);
+  left: var(--thumb-gap);
+  display: grid;
+  place-items: center;
+  width: var(--thumb);
+  height: var(--thumb);
+  border-radius: 50%;
+  background: var(--switch-off-thumb);
+  color: var(--switch-on-track);
+  box-shadow: var(--shadow-thumb);
+  transition:
+    transform var(--dur-3) var(--ease-spring),
+    background-color var(--dur-2) var(--ease-out),
+    width var(--dur-2) var(--ease-out);
+}
+
+.check {
+  width: 14px;
+  height: 14px;
+  opacity: 0;
+  transform: scale(0.4);
+  transition:
+    opacity var(--dur-2) var(--ease-out),
+    transform var(--dur-3) var(--ease-spring);
+}
+
+.on .track {
+  background: var(--switch-on-track);
+}
+
+.on .thumb {
+  background: var(--switch-on-thumb);
+  transform: translateX(calc(var(--track-w) - var(--thumb) - 2 * var(--thumb-gap)));
+}
+
+.on .check {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Press: the thumb stretches a little toward where it's going, like a native switch. */
+.row:active:not(:disabled) .thumb {
+  width: calc(var(--thumb) + 4px);
+}
+
+.on:active:not(:disabled) .thumb {
+  transform: translateX(calc(var(--track-w) - var(--thumb) - 4px - 2 * var(--thumb-gap)));
+}
+
+.row:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+@media (forced-colors: active) {
+  .track {
+    border: 2px solid CanvasText;
+  }
+
+  .thumb {
+    forced-color-adjust: none;
+    background: CanvasText;
+  }
+
+  .on .thumb {
+    background: Highlight;
+  }
+}

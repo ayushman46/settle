@@ -1,0 +1,470 @@
+/*
+ * Settle design tokens v3 — "GPay-grade, our own brand".
+ * Cool near-white canvas, ink-black primary, one signature lime accent, a soft hue per category,
+ * pastel people. Every colour and size in component CSS comes from here.
+ *
+ * THEMING
+ *   :root                                   light (default)
+ *   :root[data-theme='dark']                dark, chosen in the app
+ *   @media (prefers-color-scheme: dark)     dark, following the system (unless data-theme='light')
+ *   :root[data-accent='mint'|'sky'|'violet'|'coral']   accent palettes (lime is the default)
+ * The two dark blocks must stay identical — tokens.test.ts fails if they drift.
+ *
+ * CONTRAST (WCAG 2.2 AA, computed — see contrast.md, regenerated and enforced by tokens.test.ts)
+ *   text ≥ 4.5:1 · UI boundaries and meaningful graphics ≥ 3:1, in both themes and every accent.
+ *   --ink-3 is for icons, chevrons, field boundaries and disabled states only — never for text.
+ *   Accent fills (--accent) always carry --on-accent text; accent-coloured TEXT uses --accent-ink.
+ */
+
+:root {
+  color-scheme: light;
+
+  /* ---------- Accent palette (lime). Fills are the same in both themes; text/soft vary. ---------- */
+  --accent: #cbf266;
+  --accent-hover: #bde650;
+  --on-accent: #0e1013;
+  --accent-soft-light: #eefbcc;
+  --accent-soft-dark: #253113;
+  --accent-ink-light: #3d6b0a;
+  --accent-ink-dark: #cbf266;
+
+  /* ---------- Surfaces ---------- */
+  --bg: #f5f6f8;
+  --surface: #ffffff;
+  --surface-2: #eef0f3;
+  --surface-3: #e4e7eb;
+  --scrim: rgb(14 16 19 / 0.45);
+  /* Sticky headers: the canvas, slightly see-through (content blurs underneath). */
+  --header-bg: rgb(245 246 248 / 0.86);
+
+  /* ---------- Ink ---------- */
+  --ink: #0e1013;
+  --ink-2: #4b515a;
+  /* Non-text only (icons, chevrons, field boundaries, disabled) — 3.4:1 on --surface-2. */
+  --ink-3: #7b818a;
+  /* Placeholder text: AA (≥ 4.5:1) on --surface-2 fields, --surface and --bg. */
+  --ink-placeholder: #646a73;
+  --line: #e3e6ea;
+  --line-strong: #d3d7dd;
+
+  /* ---------- Actions ---------- */
+  --primary: #0e1013;
+  --primary-hover: #262a30;
+  --on-primary: #ffffff;
+  --accent-soft: var(--accent-soft-light);
+  --accent-ink: var(--accent-ink-light);
+  /* A thin edge that makes a lime fill read on light tracks (meters, bars); faint in dark. */
+  --accent-edge: var(--accent-ink);
+
+  /* ---------- Status ---------- */
+  --positive: #0b7a43;
+  --positive-soft: #dcf5e6;
+  --negative: #c2261b;
+  --negative-soft: #fde7e5;
+  --warning: #f59e0b;
+  --warning-ink: #8a4b08;
+  --warning-soft: #fef3c7;
+
+  --focus-ring: #0e1013;
+
+  /* ---------- Pro / brand gradient (always with --on-pro text) ---------- */
+  --pro-1: #d4f57a;
+  --pro-2: #8eebc8;
+  --pro-3: #a9d4ff;
+  --on-pro: #0e1013;
+  --pro-gradient: linear-gradient(120deg, var(--pro-1), var(--pro-2) 55%, var(--pro-3));
+
+  /* ---------- Balance card (premium dark card in both themes) ---------- */
+  --balance-card-bg: #111317;
+  --balance-card-ink: #ffffff;
+  --balance-card-ink-2: #aeb5bf;
+  --balance-card-line: rgb(255 255 255 / 0.1);
+  /* Decorative lime glow in a corner; text over it keeps AA (checked). */
+  --balance-card-glow: rgb(203 242 102 / 0.22);
+  --balance-card-gradient:
+    radial-gradient(120% 90% at 100% 0%, var(--balance-card-glow), transparent 60%),
+    radial-gradient(80% 70% at 0% 100%, rgb(126 227 192 / 0.1), transparent 70%),
+    linear-gradient(160deg, #1b1e23, var(--balance-card-bg) 60%);
+
+  /* ---------- Tab bar ---------- */
+  --tabbar-h: 64px;
+  --tabbar-bg: rgb(255 255 255 / 0.86);
+  --tabbar-border: var(--line);
+  --tabbar-ink: #4b515a;
+  --tabbar-ink-active: #0e1013;
+  /* Active tab: an ink pill with a lime icon (light) / a lime pill with an ink icon (dark). */
+  --tabbar-pill: var(--primary);
+  --tabbar-icon-active: var(--accent);
+
+  /* ---------- Controls ---------- */
+  --switch-on-track: var(--primary);
+  --switch-on-thumb: var(--accent);
+  --switch-off-track: var(--ink-3);
+  --switch-off-thumb: #ffffff;
+  --chart-bar: var(--ink-3);
+  --chart-bar-active: var(--primary);
+  --ring-track: var(--surface-3);
+  --ring-fill: var(--accent-ink);
+  --amount-underline-focus: var(--ink);
+  --amount-selection: color-mix(in srgb, var(--accent) 55%, var(--accent-ink));
+
+  /* QR codes keep dark modules on a light field in every theme (scanners need it). */
+  --qr-ink: #0e1013;
+  --qr-paper: #ffffff;
+
+  /* Desktop: the app column floats on a quiet desk. */
+  --desk-bg: #e7eaee;
+  --desk-dot: rgb(14 16 19 / 0.08);
+
+  /* ---------- Categories — soft tint + saturated ink (icon tiles, chart segments) ---------- */
+  --cat-food-bg: #ffe8d6;
+  --cat-food-ink: #b23f0b;
+  --cat-groceries-bg: #dcf4e2;
+  --cat-groceries-ink: #1d7438;
+  --cat-rent-bg: #e3e6ff;
+  --cat-rent-ink: #3940c0;
+  --cat-utilities-bg: #fff1bf;
+  --cat-utilities-ink: #855600;
+  --cat-travel-bg: #dbeeff;
+  --cat-travel-ink: #0b5fb3;
+  --cat-transport-bg: #d4f2ee;
+  --cat-transport-ink: #0a6a62;
+  --cat-shopping-bg: #ffe0ee;
+  --cat-shopping-ink: #ad2367;
+  --cat-entertainment-bg: #ece2ff;
+  --cat-entertainment-ink: #6633c4;
+  --cat-subscription-bg: #eaf6c8;
+  --cat-subscription-ink: #476505;
+  --cat-gift-bg: #fae0ff;
+  --cat-gift-ink: #9228a8;
+  --cat-health-bg: #ffe2df;
+  --cat-health-ink: #b3261e;
+  --cat-other-bg: #e8ebef;
+  --cat-other-ink: #4b515a;
+
+  /* ---------- People — pastel fill + matching ink (index = Friend.color), same in both themes ---------- */
+  --avatar-0-bg: #ffd8c2; --avatar-0-ink: #7a2e0e; /* peach */
+  --avatar-1-bg: #c9f0d8; --avatar-1-ink: #14532d; /* mint */
+  --avatar-2-bg: #cfe5ff; --avatar-2-ink: #1e3a8a; /* sky */
+  --avatar-3-bg: #e3d7ff; --avatar-3-ink: #4c1d95; /* lilac */
+  --avatar-4-bg: #fff1a8; --avatar-4-ink: #713f12; /* lemon */
+  --avatar-5-bg: #ffd3df; --avatar-5-ink: #881337; /* rose */
+  --avatar-6-bg: #c2eeea; --avatar-6-ink: #134e4a; /* teal */
+  --avatar-7-bg: #eadfcf; --avatar-7-ink: #57412a; /* sand */
+
+  /* ---------- Type ---------- */
+  --font-sans: 'Geist Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  /* Mono is only for identifiers read character by character (UPI IDs, codes). Every amount, count,
+     percentage and date uses --font-sans with font-variant-numeric: tabular-nums. */
+  --font-mono: 'Geist Mono Variable', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+
+  --text-display-lg: 600 3.5rem/1 var(--font-sans); /* 56px — pay-screen amounts */
+  --text-display: 600 3rem/1.04 var(--font-sans); /* 48px — hero amounts */
+  --text-title: 650 1.75rem/1.15 var(--font-sans); /* 28px — screen titles */
+  --text-headline: 600 1.25rem/1.25 var(--font-sans); /* 20px */
+  --text-section: 650 1.0625rem/1.3 var(--font-sans); /* 17px — section headers */
+  --text-body: 400 1rem/1.45 var(--font-sans); /* 16px — also the minimum input size (no iOS zoom) */
+  --text-label: 550 0.9375rem/1.3 var(--font-sans); /* 15px */
+  --text-caption: 450 0.8125rem/1.35 var(--font-sans); /* 13px */
+  --text-micro: 550 0.75rem/1.2 var(--font-sans); /* 12px */
+  --tracking-tight: -0.025em;
+  --tracking-display: -0.04em;
+
+  /* ---------- Space (4px grid) ---------- */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 20px;
+  --s-6: 24px;
+  --s-8: 32px;
+  --s-10: 40px;
+  --s-12: 48px;
+  --s-16: 64px;
+
+  /* ---------- Shape ---------- */
+  --r-sm: 10px;
+  --r-md: 14px;
+  --r-lg: 20px;
+  --r-xl: 28px;
+  --r-pill: 999px;
+  --radius-card: 24px;
+  --radius-sheet: 28px;
+  --radius-tile: 18px;
+  --radius-field: 14px;
+  --radius-pill: 999px;
+
+  /* ---------- Depth (very soft shadows + hairlines in light; hairlines only in dark) ---------- */
+  --shadow-xs: 0 1px 2px rgb(14 16 19 / 0.05);
+  --shadow-sm: 0 1px 2px rgb(14 16 19 / 0.05), 0 0 0 1px rgb(14 16 19 / 0.04);
+  --shadow-card: 0 1px 2px rgb(14 16 19 / 0.04), 0 8px 24px -12px rgb(14 16 19 / 0.1), 0 0 0 1px rgb(14 16 19 / 0.04);
+  --shadow-md: 0 12px 32px -14px rgb(14 16 19 / 0.2), 0 2px 6px -2px rgb(14 16 19 / 0.06);
+  --shadow-lg: 0 28px 64px -24px rgb(14 16 19 / 0.32);
+  --shadow-sheet: 0 -16px 48px -16px rgb(14 16 19 / 0.26);
+  --shadow-fab: 0 12px 28px -10px rgb(14 16 19 / 0.45), 0 2px 6px rgb(14 16 19 / 0.12);
+  /* Small knobs (switch thumbs, sliders) — the same lift in both themes. */
+  --shadow-thumb: 0 1px 3px rgb(14 16 19 / 0.28), 0 0 0 0.5px rgb(14 16 19 / 0.06);
+
+  /* ---------- Motion ---------- */
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-spring: cubic-bezier(0.32, 1.25, 0.6, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-1: 120ms;
+  --dur-2: 200ms;
+  --dur-3: 320ms;
+  --dur-4: 480ms;
+
+  /* ---------- Layout ---------- */
+  --app-max: 480px;
+  --gutter: 20px;
+  --tap: 44px; /* minimum touch target */
+  --btn-h: 56px;
+  --fab-size: 56px;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Explicit light (overrides a dark system preference — the dark media block skips it). */
+:root[data-theme='light'] {
+  color-scheme: light;
+}
+
+/* ---------- Dark: chosen in the app ---------- */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --bg: #0b0c0e;
+  --surface: #16181b;
+  --surface-2: #1e2125;
+  --surface-3: #282c31;
+  --scrim: rgb(0 0 0 / 0.62);
+  --header-bg: rgb(11 12 14 / 0.84);
+
+  --ink: #f3f5f7;
+  --ink-2: #a9b0ba;
+  --ink-3: #6b727c;
+  --ink-placeholder: #8b929c;
+  --line: #262a2f;
+  --line-strong: #353a41;
+
+  --primary: #f3f5f7;
+  --primary-hover: #ffffff;
+  --on-primary: #0e1013;
+  --accent-soft: var(--accent-soft-dark);
+  --accent-ink: var(--accent-ink-dark);
+  --accent-edge: color-mix(in srgb, var(--accent-ink) 25%, transparent);
+
+  --positive: #4ade80;
+  --positive-soft: #10301d;
+  --negative: #ff8a80;
+  --negative-soft: #3a1714;
+  --warning: #fbbf24;
+  --warning-ink: #fcd34d;
+  --warning-soft: #33280b;
+
+  --focus-ring: #f3f5f7;
+
+  --balance-card-bg: #191c20;
+  --balance-card-ink: #f3f5f7;
+  --balance-card-ink-2: #a9b0ba;
+  --balance-card-line: rgb(255 255 255 / 0.08);
+  --balance-card-glow: rgb(203 242 102 / 0.16);
+  --balance-card-gradient:
+    radial-gradient(120% 90% at 100% 0%, var(--balance-card-glow), transparent 60%),
+    radial-gradient(80% 70% at 0% 100%, rgb(126 227 192 / 0.08), transparent 70%),
+    linear-gradient(160deg, #22262b, var(--balance-card-bg) 60%);
+
+  --tabbar-bg: rgb(22 24 27 / 0.86);
+  --tabbar-ink: #a9b0ba;
+  --tabbar-ink-active: #f3f5f7;
+  --tabbar-pill: var(--accent);
+  --tabbar-icon-active: var(--on-accent);
+
+  --switch-on-track: var(--accent);
+  --switch-on-thumb: var(--on-accent);
+  --switch-off-thumb: #f3f5f7;
+  --chart-bar-active: var(--accent);
+  --ring-fill: var(--accent);
+  --amount-underline-focus: var(--accent);
+  --amount-selection: var(--accent);
+
+  --desk-bg: #050607;
+  --desk-dot: rgb(255 255 255 / 0.06);
+
+  --cat-food-bg: #3a2416;
+  --cat-food-ink: #ffb27a;
+  --cat-groceries-bg: #14301d;
+  --cat-groceries-ink: #7edc9a;
+  --cat-rent-bg: #1f2347;
+  --cat-rent-ink: #aab2ff;
+  --cat-utilities-bg: #352a0b;
+  --cat-utilities-ink: #ffd465;
+  --cat-travel-bg: #10283f;
+  --cat-travel-ink: #8cc8ff;
+  --cat-transport-bg: #0f302d;
+  --cat-transport-ink: #6edccf;
+  --cat-shopping-bg: #3a1428;
+  --cat-shopping-ink: #ff9cc8;
+  --cat-entertainment-bg: #2a1c45;
+  --cat-entertainment-ink: #c7a8ff;
+  --cat-subscription-bg: #26300f;
+  --cat-subscription-ink: #c8ee6a;
+  --cat-gift-bg: #36163d;
+  --cat-gift-ink: #eba2ff;
+  --cat-health-bg: #3b1716;
+  --cat-health-ink: #ff9a90;
+  --cat-other-bg: #23272c;
+  --cat-other-ink: #b4bbc5;
+
+  --shadow-xs: 0 0 0 1px var(--line);
+  --shadow-sm: 0 0 0 1px var(--line);
+  --shadow-card: 0 0 0 1px var(--line);
+  --shadow-md: 0 0 0 1px var(--line), 0 12px 32px -14px rgb(0 0 0 / 0.7);
+  --shadow-lg: 0 0 0 1px var(--line), 0 28px 64px -24px rgb(0 0 0 / 0.8);
+  --shadow-sheet: 0 0 0 1px var(--line), 0 -16px 48px -16px rgb(0 0 0 / 0.6);
+  --shadow-fab: 0 0 0 1px rgb(255 255 255 / 0.06), 0 12px 28px -10px rgb(0 0 0 / 0.8);
+}
+
+/* ---------- Dark: following the system (keep identical to the block above) ---------- */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+
+    --bg: #0b0c0e;
+    --surface: #16181b;
+    --surface-2: #1e2125;
+    --surface-3: #282c31;
+    --scrim: rgb(0 0 0 / 0.62);
+    --header-bg: rgb(11 12 14 / 0.84);
+
+    --ink: #f3f5f7;
+    --ink-2: #a9b0ba;
+    --ink-3: #6b727c;
+    --ink-placeholder: #8b929c;
+    --line: #262a2f;
+    --line-strong: #353a41;
+
+    --primary: #f3f5f7;
+    --primary-hover: #ffffff;
+    --on-primary: #0e1013;
+    --accent-soft: var(--accent-soft-dark);
+    --accent-ink: var(--accent-ink-dark);
+    --accent-edge: color-mix(in srgb, var(--accent-ink) 25%, transparent);
+
+    --positive: #4ade80;
+    --positive-soft: #10301d;
+    --negative: #ff8a80;
+    --negative-soft: #3a1714;
+    --warning: #fbbf24;
+    --warning-ink: #fcd34d;
+    --warning-soft: #33280b;
+
+    --focus-ring: #f3f5f7;
+
+    --balance-card-bg: #191c20;
+    --balance-card-ink: #f3f5f7;
+    --balance-card-ink-2: #a9b0ba;
+    --balance-card-line: rgb(255 255 255 / 0.08);
+    --balance-card-glow: rgb(203 242 102 / 0.16);
+    --balance-card-gradient:
+      radial-gradient(120% 90% at 100% 0%, var(--balance-card-glow), transparent 60%),
+      radial-gradient(80% 70% at 0% 100%, rgb(126 227 192 / 0.08), transparent 70%),
+      linear-gradient(160deg, #22262b, var(--balance-card-bg) 60%);
+
+    --tabbar-bg: rgb(22 24 27 / 0.86);
+    --tabbar-ink: #a9b0ba;
+    --tabbar-ink-active: #f3f5f7;
+    --tabbar-pill: var(--accent);
+    --tabbar-icon-active: var(--on-accent);
+
+    --switch-on-track: var(--accent);
+    --switch-on-thumb: var(--on-accent);
+    --switch-off-thumb: #f3f5f7;
+    --chart-bar-active: var(--accent);
+    --ring-fill: var(--accent);
+    --amount-underline-focus: var(--accent);
+    --amount-selection: var(--accent);
+
+    --desk-bg: #050607;
+    --desk-dot: rgb(255 255 255 / 0.06);
+
+    --cat-food-bg: #3a2416;
+    --cat-food-ink: #ffb27a;
+    --cat-groceries-bg: #14301d;
+    --cat-groceries-ink: #7edc9a;
+    --cat-rent-bg: #1f2347;
+    --cat-rent-ink: #aab2ff;
+    --cat-utilities-bg: #352a0b;
+    --cat-utilities-ink: #ffd465;
+    --cat-travel-bg: #10283f;
+    --cat-travel-ink: #8cc8ff;
+    --cat-transport-bg: #0f302d;
+    --cat-transport-ink: #6edccf;
+    --cat-shopping-bg: #3a1428;
+    --cat-shopping-ink: #ff9cc8;
+    --cat-entertainment-bg: #2a1c45;
+    --cat-entertainment-ink: #c7a8ff;
+    --cat-subscription-bg: #26300f;
+    --cat-subscription-ink: #c8ee6a;
+    --cat-gift-bg: #36163d;
+    --cat-gift-ink: #eba2ff;
+    --cat-health-bg: #3b1716;
+    --cat-health-ink: #ff9a90;
+    --cat-other-bg: #23272c;
+    --cat-other-ink: #b4bbc5;
+
+    --shadow-xs: 0 0 0 1px var(--line);
+    --shadow-sm: 0 0 0 1px var(--line);
+    --shadow-card: 0 0 0 1px var(--line);
+    --shadow-md: 0 0 0 1px var(--line), 0 12px 32px -14px rgb(0 0 0 / 0.7);
+    --shadow-lg: 0 0 0 1px var(--line), 0 28px 64px -24px rgb(0 0 0 / 0.8);
+    --shadow-sheet: 0 0 0 1px var(--line), 0 -16px 48px -16px rgb(0 0 0 / 0.6);
+    --shadow-fab: 0 0 0 1px rgb(255 255 255 / 0.06), 0 12px 28px -10px rgb(0 0 0 / 0.8);
+  }
+}
+
+/* ---------- Accents (Pro). Each sets the fill + its light/dark text and soft tints. ---------- */
+:root[data-accent='mint'] {
+  --accent: #7fe3c0;
+  --accent-hover: #67d9b1;
+  --accent-soft-light: #dcf7ed;
+  --accent-soft-dark: #0f2e26;
+  --accent-ink-light: #0a6a4d;
+  --accent-ink-dark: #7fe3c0;
+}
+
+:root[data-accent='sky'] {
+  --accent: #9fcdff;
+  --accent-hover: #88c0fb;
+  --accent-soft-light: #e2f0ff;
+  --accent-soft-dark: #12263d;
+  --accent-ink-light: #0b5aab;
+  --accent-ink-dark: #9fcdff;
+}
+
+:root[data-accent='violet'] {
+  --accent: #cbb8ff;
+  --accent-hover: #bca4ff;
+  --accent-soft-light: #efe9ff;
+  --accent-soft-dark: #241b3d;
+  --accent-ink-light: #5a33c0;
+  --accent-ink-dark: #cbb8ff;
+}
+
+:root[data-accent='coral'] {
+  --accent: #ffb59f;
+  --accent-hover: #ffa289;
+  --accent-soft-light: #ffeae4;
+  --accent-soft-dark: #3a1c15;
+  --accent-ink-light: #a5341a;
+  --accent-ink-dark: #ffb59f;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-1: 0ms;
+    --dur-2: 0ms;
+    --dur-3: 0ms;
+    --dur-4: 0ms;
+  }
+}

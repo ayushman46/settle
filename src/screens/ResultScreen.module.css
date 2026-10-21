@@ -1,0 +1,328 @@
+.receipt {
+  animation: receipt-in calc(var(--dur-3) * 1.5) var(--ease-out) var(--dur-1) backwards;
+}
+
+/* ---------- Header ---------- */
+
+.receiptHead {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  text-align: center;
+}
+
+.merchant {
+  max-width: 100%;
+  font: var(--text-label);
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.date {
+  font: var(--text-caption);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-2);
+}
+
+.totalBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-1);
+  margin-top: var(--s-5);
+  text-align: center;
+}
+
+.totalLabel {
+  font: var(--text-micro);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+
+/* Money xl fills the block's width and shrinks long totals to fit it. */
+.total {
+  letter-spacing: var(--tracking-display);
+}
+
+.meta {
+  margin-top: var(--s-1);
+  font: var(--text-caption);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-2);
+}
+
+.adjustment {
+  margin-top: var(--s-1);
+  padding: 2px var(--s-3);
+  border-radius: var(--r-pill);
+  background: var(--surface-2);
+  color: var(--ink-2);
+  font: var(--text-caption);
+  font-weight: 550;
+  font-variant-numeric: tabular-nums;
+}
+
+/* "Who paid? Settle up" — a quiet jump to the settle-up section below the receipt. */
+.settleLink {
+  margin-top: var(--s-2);
+  text-decoration: underline;
+  text-decoration-color: var(--line-strong);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.3em;
+}
+
+/* ---------- People ---------- */
+
+.people {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.person {
+  position: relative;
+  /* Rows land one after another once the receipt is in. */
+  animation: row-in var(--dur-3) var(--ease-out) backwards;
+  animation-delay: calc(var(--dur-3) + var(--dur-1) * var(--i, 0) / 3);
+}
+
+.person + .person {
+  border-top: 1px solid var(--line);
+}
+
+.personHead {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    'avatar main chevron'
+    'avatar status status';
+  align-items: center;
+  gap: 2px var(--s-3);
+  width: calc(100% + var(--s-4));
+  min-height: calc(var(--s-16) + var(--s-1));
+  margin-inline: calc(var(--s-2) * -1);
+  padding: var(--s-3) var(--s-2);
+  border-radius: var(--r-md);
+  color: var(--ink);
+  text-align: start;
+  transition:
+    background-color var(--dur-2) var(--ease-out),
+    transform var(--dur-2) var(--ease-spring);
+}
+
+.personHead:active {
+  background: var(--surface-2);
+  transform: scale(0.985);
+  transition-duration: var(--dur-1);
+}
+
+@media (hover: hover) {
+  .personHead:hover {
+    background: color-mix(in srgb, var(--surface-2) 70%, transparent);
+  }
+}
+
+.personHead:focus-visible {
+  outline-offset: -2px;
+}
+
+.personAvatar {
+  grid-area: avatar;
+}
+
+/*
+ * Name + total on one line when they fit. The name's flex basis is 0 but it never gets narrower
+ * than its longest word (automatic minimum), so when even that can't sit beside the total, the
+ * total wraps under it (right-aligned) instead of the name breaking mid-word.
+ */
+.personMain {
+  grid-area: main;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 0 var(--s-3);
+  min-width: 0;
+}
+
+.personName {
+  flex: 1 1 0;
+  max-width: 100%;
+  font: var(--text-body);
+  font-weight: 600;
+  overflow-wrap: break-word;
+}
+
+.paidBadge {
+  display: inline-block;
+  margin-inline-start: var(--s-2);
+  vertical-align: 1px;
+  padding: 1px var(--s-2);
+  border-radius: var(--r-pill);
+  background: var(--accent);
+  color: var(--on-accent);
+  font: var(--text-micro);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.personStatus {
+  grid-area: status;
+  min-width: 0;
+  font: var(--text-caption);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-2);
+  overflow-wrap: break-word;
+}
+
+/* The total's type lives here so the invisible sizer (its final value) measures the same. */
+.personTotal {
+  display: inline-grid;
+  justify-items: end;
+  margin-inline-start: auto;
+  font: var(--text-headline);
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+}
+
+.personTotal > *,
+.personTotal::after {
+  grid-area: 1 / 1;
+}
+
+.personTotal::after {
+  content: attr(data-final);
+  height: 0;
+  overflow: hidden;
+  visibility: hidden;
+}
+
+.chevron {
+  grid-area: chevron;
+  width: var(--s-4);
+  height: var(--s-4);
+  color: var(--ink-3);
+  transition: transform var(--dur-3) var(--ease-spring);
+}
+
+.personHead[aria-expanded='true'] .chevron {
+  transform: rotate(180deg);
+}
+
+/* ---------- Expanded breakdown ---------- */
+
+.details {
+  padding: 0 0 var(--s-4) calc(var(--s-10) + var(--s-3));
+  animation: details-in var(--dur-3) var(--ease-out) backwards;
+}
+
+.details[hidden] {
+  display: none;
+}
+
+.lines {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.line {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-3);
+  min-width: 0;
+}
+
+.lineName {
+  min-width: 0;
+  font: var(--text-label);
+  font-weight: 450;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.lineNote {
+  display: inline-block;
+  padding: 0 var(--s-2);
+  border-radius: var(--r-pill);
+  background: var(--surface-2);
+  color: var(--ink-2);
+  font: var(--text-caption);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  vertical-align: 1px;
+}
+
+.lineAmount {
+  flex: none;
+  color: var(--ink-2);
+}
+
+.noLines {
+  font: var(--text-label);
+  font-weight: 450;
+  color: var(--ink-2);
+}
+
+.subtotals {
+  display: flex;
+  flex-direction: column;
+  margin-top: var(--s-3);
+  padding-top: var(--s-2);
+  border-top: 1px dashed var(--line-strong);
+}
+
+/* ---------- Footer ---------- */
+
+.check {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  font: var(--text-label);
+  font-weight: 550;
+  color: var(--ink);
+  text-align: center;
+}
+
+.checkIcon {
+  flex: none;
+  width: var(--s-5);
+  height: var(--s-5);
+  color: var(--accent-ink);
+}
+
+@keyframes receipt-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--s-4)) scale(0.98);
+  }
+}
+
+@keyframes row-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--s-2));
+  }
+}
+
+@keyframes details-in {
+  from {
+    opacity: 0;
+    transform: translateY(calc(var(--s-1) * -1));
+  }
+}

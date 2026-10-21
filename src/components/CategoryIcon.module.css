@@ -1,0 +1,64 @@
+.tile {
+  --tile-size: 44px;
+  --tile-bg: var(--cat-other-bg);
+  --tile-ink: var(--cat-other-ink);
+
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: var(--tile-size);
+  height: var(--tile-size);
+  border-radius: calc(var(--tile-size) * 0.32);
+  background: var(--tile-bg);
+  color: var(--tile-ink);
+}
+
+/* Where supported, a true squircle (superellipse) instead of rounded corners. */
+@supports (corner-shape: squircle) {
+  .tile {
+    border-radius: 50%;
+    corner-shape: squircle;
+  }
+}
+
+.icon {
+  width: 50%;
+  height: 50%;
+}
+
+.sm {
+  --tile-size: 32px;
+}
+
+.md {
+  --tile-size: 44px;
+}
+
+.lg {
+  --tile-size: 56px;
+}
+
+.xl {
+  --tile-size: 72px;
+}
+
+.food { --tile-bg: var(--cat-food-bg); --tile-ink: var(--cat-food-ink); }
+.groceries { --tile-bg: var(--cat-groceries-bg); --tile-ink: var(--cat-groceries-ink); }
+.rent { --tile-bg: var(--cat-rent-bg); --tile-ink: var(--cat-rent-ink); }
+.utilities { --tile-bg: var(--cat-utilities-bg); --tile-ink: var(--cat-utilities-ink); }
+.travel { --tile-bg: var(--cat-travel-bg); --tile-ink: var(--cat-travel-ink); }
+.transport { --tile-bg: var(--cat-transport-bg); --tile-ink: var(--cat-transport-ink); }
+.shopping { --tile-bg: var(--cat-shopping-bg); --tile-ink: var(--cat-shopping-ink); }
+.entertainment { --tile-bg: var(--cat-entertainment-bg); --tile-ink: var(--cat-entertainment-ink); }
+.subscription { --tile-bg: var(--cat-subscription-bg); --tile-ink: var(--cat-subscription-ink); }
+.gift { --tile-bg: var(--cat-gift-bg); --tile-ink: var(--cat-gift-ink); }
+.health { --tile-bg: var(--cat-health-bg); --tile-ink: var(--cat-health-ink); }
+.other { --tile-bg: var(--cat-other-bg); --tile-ink: var(--cat-other-ink); }
+
+/* Windows high contrast: keep the tile's outline and the glyph in system colours. */
+@media (forced-colors: active) {
+  .tile {
+    border: 1px solid CanvasText;
+    color: CanvasText;
+  }
+}

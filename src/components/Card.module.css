@@ -1,0 +1,28 @@
+.card {
+  position: relative;
+  min-width: 0;
+  border-radius: var(--radius-card);
+  overflow: clip;
+}
+
+/* Soft lift + hairline in light; a hairline only in dark (from the token). */
+.surface {
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+}
+
+.sunken {
+  background: var(--surface-2);
+}
+
+.pad-none {
+  padding: 0;
+}
+
+.pad-md {
+  padding: var(--s-4);
+}
+
+.pad-lg {
+  padding: var(--s-6);
+}

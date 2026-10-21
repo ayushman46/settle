@@ -1,0 +1,42 @@
+.stack {
+  --stack-size: calc(var(--s-6) + var(--s-1));
+
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  padding-left: calc(var(--stack-size) * 0.3);
+}
+
+.xs {
+  --stack-size: calc(var(--s-5) + 2px);
+}
+
+.sm {
+  --stack-size: calc(var(--s-6) + var(--s-1));
+}
+
+.md {
+  --stack-size: var(--s-10);
+}
+
+.item {
+  margin-left: calc(var(--stack-size) * -0.3);
+  box-shadow: 0 0 0 2px var(--surface);
+}
+
+.more {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  min-width: var(--stack-size);
+  height: var(--stack-size);
+  padding-inline: var(--s-1);
+  border-radius: var(--r-pill);
+  background: var(--surface-3);
+  color: var(--ink-2);
+  font-family: var(--font-sans);
+  font-size: calc(var(--stack-size) * 0.4);
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}

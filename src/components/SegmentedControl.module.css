@@ -1,0 +1,118 @@
+/*
+ * Equal columns on a soft track; the ink thumb slides under the checked option. Its width is one
+ * column (track minus padding, divided by the count) and it moves by whole widths.
+ */
+
+.track {
+  --seg-pad: 4px;
+  --seg-h: var(--tap);
+
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-columns: repeat(var(--seg-count, 2), minmax(0, 1fr));
+  width: 100%;
+  padding: var(--seg-pad);
+  border-radius: var(--radius-pill);
+  background: var(--surface-2);
+}
+
+.sm {
+  --seg-pad: 3px;
+  --seg-h: 34px;
+}
+
+.thumb {
+  position: absolute;
+  top: var(--seg-pad);
+  bottom: var(--seg-pad);
+  left: var(--seg-pad);
+  z-index: -1;
+  width: calc((100% - 2 * var(--seg-pad)) / var(--seg-count, 2));
+  border-radius: var(--radius-pill);
+  background: var(--primary);
+  box-shadow: var(--shadow-sm);
+  transform: translateX(calc(100% * var(--seg-index, 0)));
+  transition: transform var(--dur-3) var(--ease-spring);
+}
+
+.none .thumb {
+  opacity: 0;
+}
+
+.option {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 0;
+  min-height: var(--seg-h);
+  padding: var(--s-1) var(--s-3);
+  border-radius: var(--radius-pill);
+  color: var(--ink-2);
+  font: var(--text-label);
+  font-weight: 600;
+  text-align: center;
+  transition:
+    color var(--dur-2) var(--ease-out),
+    transform var(--dur-2) var(--ease-spring);
+}
+
+/* Compact segments keep a 44px touch target. */
+.sm .option::after {
+  content: '';
+  position: absolute;
+  inset: calc((var(--seg-h) - var(--tap)) / 2) 0;
+}
+
+.option:focus-visible {
+  outline-offset: 1px;
+}
+
+.checked {
+  color: var(--on-primary);
+}
+
+@media (hover: hover) {
+  .option:not(.checked):not(:disabled):hover {
+    color: var(--ink);
+  }
+}
+
+.option:not(.checked):active:not(:disabled) {
+  transform: scale(0.96);
+  transition-duration: var(--dur-1);
+}
+
+.option:disabled {
+  color: var(--ink-3);
+  cursor: default;
+}
+
+.icon {
+  display: inline-flex;
+  flex: none;
+}
+
+.icon > svg {
+  width: 18px;
+  height: 18px;
+}
+
+.label {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* Windows high contrast: the thumb's fill is dropped, so outline the checked option instead. */
+@media (forced-colors: active) {
+  .track {
+    border: 1px solid CanvasText;
+  }
+
+  .checked {
+    outline: 2px solid Highlight;
+    outline-offset: -2px;
+  }
+}

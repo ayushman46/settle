@@ -1,0 +1,13 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "composite": true,
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.server.tsbuildinfo",
+    "emitDeclarationOnly": true,
+    "noEmit": false,
+    "declarationDir": "./node_modules/.tmp/types-server",
+    "lib": ["ES2023"],
+    "types": ["node"]
+  },
+  "include": ["server", "shared"]
+}

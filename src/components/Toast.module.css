@@ -1,0 +1,145 @@
+.viewport {
+  position: fixed;
+  inset: auto 0 max(var(--s-4), calc(var(--safe-bottom) + var(--s-2)));
+  z-index: 60;
+  display: grid;
+  justify-items: center;
+  padding-inline: var(--gutter);
+  pointer-events: none;
+  transition: bottom var(--dur-3) var(--ease-out);
+}
+
+/* Sits just above the live action bar (measured in Toast.tsx). */
+.viewport[data-anchored] {
+  bottom: calc(var(--toast-bottom, 0px) + var(--s-2));
+}
+
+/* The live region and the leaving copy share one cell so they overlap while swapping. */
+.live {
+  grid-area: 1 / 1;
+  display: grid;
+  justify-items: center;
+  width: 100%;
+  max-width: calc(var(--app-max) - 2 * var(--gutter));
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  max-width: 100%;
+  min-height: var(--s-12);
+  padding: var(--s-2) var(--s-2) var(--s-2) var(--s-5);
+  border-radius: var(--r-xl);
+  background: var(--primary);
+  color: var(--on-primary);
+  box-shadow: var(--shadow-lg);
+  font: var(--text-label);
+  font-weight: 550;
+  pointer-events: auto;
+  animation: toast-in var(--dur-3) var(--ease-spring) backwards;
+}
+
+/* Without an action the pill is balanced on both sides. */
+.toast:not(:has(.action)) {
+  padding-inline-end: var(--s-5);
+}
+
+.leaving {
+  pointer-events: none;
+  animation: toast-out var(--dur-2) var(--ease-out) forwards;
+}
+
+.glyph {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: var(--s-5);
+  height: var(--s-5);
+  margin-inline-start: calc(var(--s-1) * -1);
+  border-radius: 50%;
+}
+
+.glyph > svg {
+  width: var(--s-4);
+  height: var(--s-4);
+}
+
+.success {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.success > svg {
+  width: calc(var(--s-3) + 1px);
+  height: calc(var(--s-3) + 1px);
+}
+
+.error {
+  background: var(--negative-soft);
+  color: var(--negative);
+}
+
+.warning {
+  background: var(--warning-soft);
+  color: var(--warning-ink);
+}
+
+.info {
+  color: var(--on-primary);
+}
+
+.info > svg {
+  width: var(--s-5);
+  height: var(--s-5);
+}
+
+.message {
+  min-width: 0;
+  padding-block: var(--s-1);
+  overflow-wrap: anywhere;
+}
+
+.action {
+  position: relative;
+  flex: none;
+  height: calc(var(--s-8) + var(--s-1));
+  padding-inline: var(--s-4);
+  border-radius: var(--r-pill);
+  background: var(--accent);
+  color: var(--on-accent);
+  font: var(--text-label);
+  font-weight: 650;
+  user-select: none;
+  -webkit-user-select: none;
+  transition: transform var(--dur-2) var(--ease-spring);
+}
+
+.action::after {
+  content: '';
+  position: absolute;
+  inset: calc((var(--s-8) + var(--s-1) - var(--tap)) / 2) 0;
+}
+
+.action:active {
+  transform: scale(0.95);
+  transition-duration: var(--dur-1);
+}
+
+.action:focus-visible {
+  outline-color: var(--on-primary);
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--s-3)) scale(0.96);
+  }
+}
+
+@keyframes toast-out {
+  to {
+    opacity: 0;
+    transform: translateY(var(--s-2)) scale(0.98);
+  }
+}

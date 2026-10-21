@@ -1,0 +1,140 @@
+/* ---------- Currency pill (top bar) ---------- */
+
+.currency {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+  height: calc(var(--s-8) + var(--s-1));
+  padding-inline: var(--s-3) var(--s-2);
+  border-radius: var(--r-pill);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+  color: var(--ink);
+  font: var(--text-label);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  transition:
+    transform var(--dur-2) var(--ease-spring),
+    background-color var(--dur-2) var(--ease-out);
+}
+
+/* 44px touch target around the compact pill. */
+.currency::after {
+  content: '';
+  position: absolute;
+  inset: calc((var(--s-8) + var(--s-1) - var(--tap)) / 2) 0;
+}
+
+.currency:active {
+  background: var(--surface-2);
+  transform: scale(0.96);
+  transition-duration: var(--dur-1);
+}
+
+@media (hover: hover) {
+  .currency:hover {
+    background: var(--surface-2);
+  }
+}
+
+.currencySymbol {
+  color: var(--ink-2);
+}
+
+.currencyChevron {
+  width: var(--s-4);
+  height: var(--s-4);
+  color: var(--ink-2);
+}
+
+/* ---------- Content ---------- */
+
+.tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  margin-top: calc(var(--s-2) * -1);
+}
+
+/* The bill's name as a chip: long names (up to 60 characters) end in an ellipsis, never overflow. */
+.billName {
+  min-width: 0;
+  max-width: 100%;
+  font-weight: 600;
+}
+
+.warnings {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  margin: 0;
+  padding-inline-start: 1.1em;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+
+.sectionTitle {
+  padding-inline: var(--s-1);
+  font: var(--text-micro);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+
+.free {
+  padding: 2px var(--s-2);
+  border-radius: var(--r-pill);
+  background: var(--positive-soft);
+  color: var(--positive);
+  font: var(--text-micro);
+  letter-spacing: 0.02em;
+}
+
+.addIcon {
+  display: grid;
+  place-items: center;
+  width: calc(var(--s-6) + var(--s-1));
+  height: calc(var(--s-6) + var(--s-1));
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.addIcon > svg {
+  width: var(--s-4);
+  height: var(--s-4);
+}
+
+/* ---------- Summary ---------- */
+
+.summary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  padding: var(--s-2) var(--s-1) 0;
+}
+
+.totalRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-4);
+}
+
+.totalLabel {
+  font: var(--text-body);
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.subtotalNote {
+  font: var(--text-caption);
+  color: var(--ink-2);
+  text-align: end;
+}

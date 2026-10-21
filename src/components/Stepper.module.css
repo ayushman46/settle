@@ -1,0 +1,80 @@
+.stepper {
+  --stepper-btn: calc(var(--s-8));
+
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: var(--s-1);
+  padding: 2px;
+  border-radius: var(--r-pill);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.md {
+  --stepper-btn: var(--tap);
+}
+
+.button {
+  position: relative;
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: var(--stepper-btn);
+  height: var(--stepper-btn);
+  border-radius: 50%;
+  background: var(--surface-2);
+  color: var(--ink);
+  transition:
+    transform var(--dur-2) var(--ease-spring),
+    background-color var(--dur-2) var(--ease-out),
+    color var(--dur-2) var(--ease-out);
+}
+
+/* 44px touch target around the compact button. */
+.sm .button::after {
+  content: '';
+  position: absolute;
+  inset: calc((var(--stepper-btn) - var(--tap)) / 2);
+  border-radius: 50%;
+}
+
+.button > svg {
+  width: var(--s-4);
+  height: var(--s-4);
+}
+
+.button:active:not([aria-disabled='true']):not(:disabled) {
+  transform: scale(0.88);
+  background: var(--surface-3);
+  transition-duration: var(--dur-1);
+}
+
+@media (hover: hover) {
+  .button:hover:not([aria-disabled='true']):not(:disabled) {
+    background: var(--surface-3);
+  }
+}
+
+.button[aria-disabled='true'],
+.button:disabled {
+  background: transparent;
+  color: var(--ink-3);
+  cursor: default;
+}
+
+.value {
+  min-width: 2.2ch;
+  padding-inline: var(--s-1);
+  font: var(--text-label);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  color: var(--ink);
+}
+
+.disabled {
+  opacity: 0.5;
+}

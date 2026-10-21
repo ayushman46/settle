@@ -1,0 +1,241 @@
+/*
+ * States are driven imperatively on .root (data-state / data-dragging / data-closing) so drags
+ * run at 60fps without React renders. Closed is the default: a freshly mounted panel sits just
+ * below the screen and transitions up when data-state="open" lands.
+ */
+
+.root {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  pointer-events: none;
+}
+
+.root[data-state='open'] {
+  pointer-events: auto;
+}
+
+/* ---------- Scrim ---------- */
+
+.scrim {
+  position: absolute;
+  inset: 0;
+  background: var(--scrim);
+  opacity: 0;
+  touch-action: none;
+  transition: opacity var(--dur-3) var(--ease-out);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.root[data-state='open'] .scrim {
+  opacity: var(--sheet-drag, 1);
+}
+
+/* ---------- Panel ---------- */
+
+.panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: var(--app-max);
+  max-height: calc(var(--sheet-vh, 100dvh) - var(--s-6) - var(--safe-top));
+  margin: 0 auto var(--sheet-kb, 0px);
+  border-radius: var(--radius-sheet) var(--radius-sheet) 0 0;
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: var(--shadow-sheet);
+  outline: none;
+  transform: translate3d(0, calc(100% + var(--s-8)), 0);
+  transition:
+    transform var(--dur-3) var(--ease-out),
+    margin-bottom var(--dur-2) var(--ease-out);
+  will-change: transform;
+}
+
+/* The spring overshoots a little: keep paper under the panel so no gap shows at the bottom. */
+.panel::after {
+  content: '';
+  position: absolute;
+  inset: 100% 0 auto;
+  height: var(--s-16);
+  background: var(--surface);
+  pointer-events: none;
+}
+
+.root[data-state='open'] .panel {
+  transform: translate3d(0, 0, 0);
+  transition:
+    transform calc(var(--dur-3) * 1.4) var(--ease-spring),
+    margin-bottom var(--dur-2) var(--ease-out);
+}
+
+.tall .panel {
+  height: calc(var(--sheet-vh, 100dvh) - var(--s-6) - var(--safe-top));
+}
+
+.root[data-dragging] .panel,
+.root[data-dragging] .scrim,
+.root[data-dragging] .track {
+  transition: none;
+}
+
+.root[data-dragging='y'] .panel {
+  cursor: grabbing;
+}
+
+/* ---------- Header ---------- */
+
+.handle {
+  display: grid;
+  flex: none;
+  place-items: center;
+  height: var(--s-5);
+  touch-action: none;
+  cursor: grab;
+}
+
+.handle::before {
+  content: '';
+  width: calc(var(--s-8) + var(--s-1));
+  height: var(--s-1);
+  border-radius: var(--r-pill);
+  background: var(--line-strong);
+}
+
+.header {
+  display: flex;
+  flex: none;
+  align-items: flex-start;
+  gap: var(--s-3);
+  padding: var(--s-1) var(--gutter) var(--s-4);
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.headerText {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: var(--s-1);
+  min-width: 0;
+  padding-top: var(--s-1);
+}
+
+.eyebrow {
+  font: var(--text-micro);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+
+.title {
+  font: var(--text-headline);
+  letter-spacing: var(--tracking-tight);
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.description {
+  font: var(--text-label);
+  font-weight: 450;
+  color: var(--ink-2);
+}
+
+.close {
+  margin-top: calc(var(--s-1) * -1);
+  margin-right: calc(var(--s-1) * -1);
+}
+
+/* ---------- Body ---------- */
+
+.body {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: var(--s-1) var(--gutter) var(--s-5);
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.bodyLast {
+  padding-bottom: max(var(--s-6), calc(var(--safe-bottom) + var(--s-2)));
+}
+
+.track {
+  transition:
+    transform var(--dur-3) var(--ease-spring),
+    opacity var(--dur-2) var(--ease-out);
+}
+
+.slide {
+  min-width: 0;
+}
+
+/* `fill`: the content stretches to the body's full height (e.g. a photo viewer) and scrolls itself. */
+.fill {
+  display: flex;
+  flex-direction: column;
+  overflow-y: hidden;
+}
+
+.fill > .track,
+.fill .slide {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.slideForward {
+  animation: slide-forward var(--dur-3) var(--ease-out) backwards;
+}
+
+.slideBack {
+  animation: slide-back var(--dur-3) var(--ease-out) backwards;
+}
+
+/* ---------- Footer ---------- */
+
+.footer {
+  position: relative;
+  flex: none;
+  padding: var(--s-3) var(--gutter) max(var(--s-4), var(--safe-bottom));
+  background: var(--surface);
+}
+
+/* Content scrolls under a soft fade rather than a hard edge. */
+.footer::before {
+  content: '';
+  position: absolute;
+  inset: auto 0 100%;
+  height: var(--s-5);
+  background: linear-gradient(to bottom, transparent, var(--surface));
+  pointer-events: none;
+}
+
+@keyframes slide-forward {
+  from {
+    opacity: 0;
+    transform: translate3d(var(--s-6), 0, 0);
+  }
+}
+
+@keyframes slide-back {
+  from {
+    opacity: 0;
+    transform: translate3d(calc(var(--s-6) * -1), 0, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panel,
+  .root[data-state='open'] .panel {
+    transition: none;
+  }
+}

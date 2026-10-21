@@ -1,0 +1,38 @@
+/*
+ * Scanners need dark modules on a light field, so --qr-ink / --qr-paper are the same in every
+ * theme (tokens.css).
+ */
+
+.qr {
+  display: grid;
+  place-items: center;
+  max-width: 100%;
+  aspect-ratio: 1;
+  padding: var(--s-3);
+  border-radius: var(--radius-card);
+  background: var(--qr-paper);
+  box-shadow:
+    var(--shadow-sm),
+    0 0 0 1px var(--line);
+}
+
+.svg {
+  width: 100%;
+  height: 100%;
+  fill: var(--qr-ink);
+  animation: qr-in var(--dur-3) var(--ease-out) backwards;
+}
+
+.fallback {
+  padding: var(--s-4);
+  font: var(--text-caption);
+  color: var(--qr-ink);
+  text-align: center;
+}
+
+@keyframes qr-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}

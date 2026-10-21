@@ -1,0 +1,126 @@
+/*
+ * The torn edge is a CSS mask (a solid body + a row of triangles), so the shadow has to come
+ * from `filter: drop-shadow` on the wrapper — it follows the masked silhouette, teeth included.
+ */
+
+.receipt {
+  --tooth: var(--s-4);
+  --tooth-depth: var(--s-2);
+
+  position: relative;
+  min-width: 0;
+  filter: drop-shadow(0 0 0.5px var(--line-strong))
+    drop-shadow(0 var(--s-3) var(--s-5) color-mix(in srgb, var(--scrim) 34%, transparent));
+}
+
+.paper {
+  --pad: var(--s-5);
+
+  position: relative;
+  padding: var(--pad);
+  background: linear-gradient(
+    to bottom,
+    var(--surface),
+    color-mix(in srgb, var(--surface) 97%, var(--ink-3))
+  );
+  color: var(--ink);
+}
+
+.pad-sm {
+  --pad: var(--s-4);
+}
+
+.pad-md {
+  --pad: var(--s-5);
+}
+
+.pad-lg {
+  --pad: var(--s-6);
+}
+
+.edge-none {
+  border-radius: var(--r-md);
+}
+
+.edge-bottom {
+  padding-bottom: calc(var(--pad) + var(--tooth-depth));
+  border-radius: var(--r-md) var(--r-md) 0 0;
+  -webkit-mask:
+    linear-gradient(#000 0 0) top / 100% calc(100% - var(--tooth-depth) + 1px) no-repeat,
+    conic-gradient(from -45deg at 50% 100%, #000 90deg, #0000 0) bottom / var(--tooth) var(--tooth-depth) repeat-x;
+  mask:
+    linear-gradient(#000 0 0) top / 100% calc(100% - var(--tooth-depth) + 1px) no-repeat,
+    conic-gradient(from -45deg at 50% 100%, #000 90deg, #0000 0) bottom / var(--tooth) var(--tooth-depth) repeat-x;
+}
+
+.edge-both {
+  padding-block: calc(var(--pad) + var(--tooth-depth));
+  -webkit-mask:
+    linear-gradient(#000 0 0) center / 100% calc(100% - 2 * var(--tooth-depth) + 2px) no-repeat,
+    conic-gradient(from 135deg at 50% 0, #000 90deg, #0000 0) top / var(--tooth) var(--tooth-depth) repeat-x,
+    conic-gradient(from -45deg at 50% 100%, #000 90deg, #0000 0) bottom / var(--tooth) var(--tooth-depth) repeat-x;
+  mask:
+    linear-gradient(#000 0 0) center / 100% calc(100% - 2 * var(--tooth-depth) + 2px) no-repeat,
+    conic-gradient(from 135deg at 50% 0, #000 90deg, #0000 0) top / var(--tooth) var(--tooth-depth) repeat-x,
+    conic-gradient(from -45deg at 50% 100%, #000 90deg, #0000 0) bottom / var(--tooth) var(--tooth-depth) repeat-x;
+}
+
+/* ---------- Divider ---------- */
+
+.divider {
+  height: 1px;
+  margin-inline: calc(var(--pad) * -1);
+  border: 0;
+  background: repeating-linear-gradient(
+    to right,
+    var(--line-strong) 0 var(--s-2),
+    transparent var(--s-2) calc(var(--s-2) + var(--s-1) + 2px)
+  );
+  background-position: calc(var(--s-1) / 2) 0;
+}
+
+.space-sm {
+  margin-block: var(--s-3);
+}
+
+.space-md {
+  margin-block: var(--s-4);
+}
+
+.space-lg {
+  margin-block: var(--s-5);
+}
+
+/* ---------- Row ---------- */
+
+.row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-4);
+  min-width: 0;
+  padding-block: var(--s-1);
+  font: var(--text-label);
+  font-weight: 450;
+  color: var(--ink);
+}
+
+.label {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.value {
+  flex: none;
+  font-variant-numeric: tabular-nums;
+  text-align: end;
+  white-space: nowrap;
+}
+
+.strong {
+  font-weight: 650;
+}
+
+.muted {
+  color: var(--ink-2);
+}

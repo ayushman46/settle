@@ -1,0 +1,56 @@
+/*
+ * The photo fills the tall sheet's body (the sheet's `fill` option), so "fit" shows the whole
+ * bill and zooming pans inside the photo frame.
+ */
+.viewport {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  border-radius: var(--r-lg);
+  background: var(--surface-2);
+  /* Native pinch-zoom and panning inside the photo. */
+  touch-action: pan-x pan-y pinch-zoom;
+}
+
+.zoomButton {
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: zoom-in;
+}
+
+.zoomButton:focus-visible {
+  outline-offset: -2px;
+  border-radius: var(--r-lg);
+}
+
+.image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  animation: photo-in var(--dur-3) var(--ease-out) backwards;
+}
+
+/* Zoomed: the button takes the zoomed width (inline style); the photo keeps its aspect ratio. */
+.zoomed .zoomButton {
+  max-width: none;
+  height: auto;
+  cursor: zoom-out;
+}
+
+.zoomed .image {
+  max-width: none;
+  height: auto;
+  animation: none;
+}
+
+@keyframes photo-in {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+}

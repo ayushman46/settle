@@ -1,0 +1,38 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-5);
+  padding-top: var(--s-1);
+}
+
+.row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-3);
+  min-width: 0;
+}
+
+.qty {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+/* Matches the TextField / AmountInput label so the two columns line up. */
+.qtyLabel {
+  font: var(--text-label);
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.qtyControl {
+  display: flex;
+  align-items: center;
+  min-height: calc(var(--s-12) + var(--s-1));
+}
+
+.amount {
+  flex: 1 1 auto;
+  min-width: 0;
+}

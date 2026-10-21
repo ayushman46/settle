@@ -1,0 +1,89 @@
+.avatar {
+  --av-size: var(--s-10);
+  --av-bg: var(--avatar-0-bg);
+  --av-ink: var(--avatar-0-ink);
+
+  position: relative;
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: var(--av-size);
+  height: var(--av-size);
+  border-radius: 50%;
+  background: var(--av-bg);
+  color: var(--av-ink);
+  font-family: var(--font-sans);
+  font-size: calc(var(--av-size) * 0.4);
+  font-weight: 650;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  user-select: none;
+  -webkit-user-select: none;
+  transition: box-shadow var(--dur-2) var(--ease-out);
+}
+
+.initials {
+  /* Optical centring: caps sit slightly high in most fonts. */
+  transform: translateY(0.03em);
+  white-space: nowrap;
+}
+
+.xs {
+  --av-size: calc(var(--s-5) + 2px);
+
+  font-weight: 700;
+}
+
+.sm {
+  --av-size: calc(var(--s-6) + var(--s-1));
+}
+
+.md {
+  --av-size: var(--s-10);
+}
+
+.lg {
+  --av-size: calc(var(--s-12) + var(--s-2));
+}
+
+.c0 { --av-bg: var(--avatar-0-bg); --av-ink: var(--avatar-0-ink); }
+.c1 { --av-bg: var(--avatar-1-bg); --av-ink: var(--avatar-1-ink); }
+.c2 { --av-bg: var(--avatar-2-bg); --av-ink: var(--avatar-2-ink); }
+.c3 { --av-bg: var(--avatar-3-bg); --av-ink: var(--avatar-3-ink); }
+.c4 { --av-bg: var(--avatar-4-bg); --av-ink: var(--avatar-4-ink); }
+.c5 { --av-bg: var(--avatar-5-bg); --av-ink: var(--avatar-5-ink); }
+.c6 { --av-bg: var(--avatar-6-bg); --av-ink: var(--avatar-6-ink); }
+.c7 { --av-bg: var(--avatar-7-bg); --av-ink: var(--avatar-7-ink); }
+
+.selected {
+  box-shadow:
+    0 0 0 2px var(--surface),
+    0 0 0 4px var(--accent);
+}
+
+.badge {
+  position: absolute;
+  right: -3px;
+  bottom: -3px;
+  display: grid;
+  place-items: center;
+  width: max(var(--s-4), calc(var(--av-size) * 0.4));
+  height: max(var(--s-4), calc(var(--av-size) * 0.4));
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--on-accent);
+  box-shadow: 0 0 0 2px var(--surface);
+  animation: badge-pop var(--dur-3) var(--ease-spring) backwards;
+}
+
+.badge > svg {
+  width: 62%;
+  height: 62%;
+}
+
+@keyframes badge-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+}

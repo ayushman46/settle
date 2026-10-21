@@ -1,0 +1,69 @@
+/* ---------- Bar ---------- */
+
+.progress {
+  display: flex;
+  gap: var(--s-1);
+  width: 100%;
+}
+
+.segment {
+  position: relative;
+  flex: 1 1 0;
+  height: var(--s-1);
+  overflow: hidden;
+  border-radius: var(--r-pill);
+  background: var(--surface-3);
+}
+
+.segment::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--ink);
+  transform: scaleX(0);
+  transform-origin: left center;
+}
+
+.segment.done::after {
+  transform: scaleX(1);
+}
+
+.segment.current::after {
+  transform: scaleX(1);
+  animation: fill calc(var(--dur-3) * 2) var(--ease-out) var(--dur-1) backwards;
+}
+
+/* ---------- Dots ---------- */
+
+.dots {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+}
+
+.dot {
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: var(--r-pill);
+  background: var(--surface-3);
+  transition:
+    width var(--dur-3) var(--ease-spring),
+    background-color var(--dur-2) var(--ease-out);
+}
+
+.dot.done {
+  background: var(--ink-3);
+}
+
+.dot.current {
+  width: var(--s-4);
+  background: var(--ink);
+}
+
+@keyframes fill {
+  from {
+    transform: scaleX(0);
+  }
+}

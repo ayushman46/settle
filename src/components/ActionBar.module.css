@@ -1,0 +1,38 @@
+.bar {
+  display: flex;
+  flex-direction: column;
+}
+
+.hint {
+  font: var(--text-caption);
+  color: var(--ink-2);
+  text-align: center;
+}
+
+.hint:not(:empty) {
+  margin-bottom: var(--s-3);
+  animation: hint-in var(--dur-2) var(--ease-out) backwards;
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+.row {
+  flex-direction: row;
+}
+
+/* Doubled class beats the children's own `flex: none` (e.g. Button) regardless of CSS order. */
+.actions.row > * {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+@keyframes hint-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--s-1));
+  }
+}

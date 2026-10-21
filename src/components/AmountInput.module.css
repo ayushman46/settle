@@ -1,0 +1,246 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  min-width: 0;
+}
+
+.label {
+  font: var(--text-label);
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.control {
+  display: flex;
+  align-items: baseline;
+  min-width: 0;
+  cursor: text;
+}
+
+.symbol {
+  flex: none;
+  color: var(--ink-2);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Input + invisible mirror share one grid cell, so the input is exactly as wide as its text. */
+.sizer {
+  display: inline-grid;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.mirror,
+.input {
+  grid-area: 1 / 1;
+  min-width: 1ch;
+  font: inherit;
+  letter-spacing: inherit;
+}
+
+.mirror {
+  visibility: hidden;
+  overflow: hidden;
+  white-space: pre;
+  /* Room for the caret after the last digit. */
+  padding-inline-end: 0.08em;
+}
+
+.input {
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  caret-color: var(--ink);
+  outline: none;
+  appearance: none;
+}
+
+.input::placeholder {
+  color: var(--ink-placeholder);
+  opacity: 1;
+}
+
+.input:focus-visible {
+  outline: none;
+}
+
+/* The prefilled amount is selected on focus: an accent deep enough to see on the canvas, ink text (AA). */
+.input::selection {
+  background: var(--amount-selection);
+  color: var(--on-accent);
+}
+
+/* ---------- Hero ---------- */
+
+.hero {
+  align-items: center;
+  gap: var(--s-3);
+}
+
+.hero .control {
+  --amount-size: calc(var(--s-12) + var(--s-2));
+
+  justify-content: center;
+  width: 100%;
+  min-height: calc(var(--amount-size) * 1.35);
+  padding: var(--s-2) var(--s-2) var(--s-3);
+  border-radius: var(--r-lg);
+  /* Sans with tabular digits: even widths for the auto-shrink, but tight grouping commas. */
+  font-family: var(--font-sans);
+  font-size: calc(var(--amount-size) * var(--amount-fit, 1));
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+  letter-spacing: var(--tracking-display);
+  transition: font-size var(--dur-2) var(--ease-out);
+}
+
+/* Smaller, raised currency symbol — the payments-app look. */
+.hero .symbol {
+  align-self: flex-start;
+  margin: 0.14em 0.1em 0 0;
+  font-family: var(--font-sans);
+  font-size: 0.5em;
+  font-weight: 550;
+  letter-spacing: 0;
+}
+
+/* A highlighter underline marks the active field without a box. */
+.hero .sizer {
+  position: relative;
+}
+
+.hero .sizer::after {
+  content: '';
+  position: absolute;
+  inset: auto -0.06em -0.08em;
+  height: 0.12em;
+  border-radius: var(--r-pill);
+  background: var(--line-strong);
+  transform-origin: center;
+  transition:
+    background-color var(--dur-2) var(--ease-out),
+    transform var(--dur-3) var(--ease-spring);
+}
+
+/* Focused: an ink underline in light (lime alone is 1.3:1 on white); the accent in dark (14:1). */
+.hero .control:focus-within .sizer::after {
+  background: var(--amount-underline-focus);
+  transform: scaleY(1.4);
+}
+
+.hero .invalid .sizer::after {
+  background: var(--negative);
+}
+
+.hero .messages {
+  text-align: center;
+}
+
+/* ---------- Field ---------- */
+
+.field .control {
+  gap: var(--s-2);
+  align-items: center;
+  min-height: calc(var(--s-12) + var(--s-1));
+  padding-inline: var(--s-4);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px var(--ink-3);
+  font: var(--text-headline);
+  font-variant-numeric: tabular-nums;
+  transition:
+    background-color var(--dur-2) var(--ease-out),
+    box-shadow var(--dur-2) var(--ease-out);
+}
+
+.field .control:focus-within {
+  background: var(--surface);
+  box-shadow: inset 0 0 0 2px var(--ink);
+}
+
+/* Invisible normally; Windows high contrast turns it into the focus indicator (both sizes). */
+.control:focus-within {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+}
+
+.field .invalid,
+.field .invalid:focus-within {
+  box-shadow: inset 0 0 0 2px var(--negative);
+}
+
+.field .symbol {
+  font-family: var(--font-sans);
+  font-size: 0.85em;
+}
+
+.field .sizer {
+  flex: 1 1 auto;
+}
+
+.field .mirror {
+  display: none;
+}
+
+/* Windows high contrast drops box-shadows and backgrounds: system colours instead. */
+@media (forced-colors: active) {
+  .field .control {
+    border: 1px solid CanvasText;
+  }
+
+  .control:focus-within {
+    outline: 2px solid Highlight;
+  }
+
+  .hero .sizer::after {
+    forced-color-adjust: none;
+    background: CanvasText;
+  }
+
+  .hero .control:focus-within .sizer::after {
+    background: Highlight;
+  }
+}
+
+/* ---------- Messages ---------- */
+
+.messages:empty {
+  display: none;
+}
+
+.hint,
+.error {
+  font: var(--text-caption);
+}
+
+.hint {
+  color: var(--ink-2);
+}
+
+.error {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: var(--s-1);
+  color: var(--negative);
+  font-weight: 550;
+}
+
+.errorIcon {
+  flex: none;
+  width: var(--s-4);
+  height: var(--s-4);
+  margin-top: 1px;
+}
+
+.disabled {
+  opacity: 0.55;
+}
+
+.disabled .control {
+  cursor: default;
+}

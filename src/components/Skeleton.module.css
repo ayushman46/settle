@@ -1,0 +1,75 @@
+.skeleton {
+  display: block;
+  flex: none;
+  width: 100%;
+  height: calc(var(--s-3) + 2px);
+  border-radius: var(--r-sm);
+  background-color: var(--surface-3);
+  background-image: linear-gradient(
+    100deg,
+    transparent 30%,
+    color-mix(in srgb, var(--surface) 70%, transparent) 50%,
+    transparent 70%
+  );
+  background-repeat: no-repeat;
+  background-size: 200% 100%;
+  background-position: 150% 0;
+  animation: shimmer 1.4s var(--ease-out) infinite;
+  animation-delay: calc(var(--row-index, 0) * 90ms);
+}
+
+.sm {
+  border-radius: var(--s-1);
+}
+
+.md {
+  height: var(--s-12);
+  border-radius: var(--r-md);
+}
+
+.pill {
+  height: calc(var(--s-6) + var(--s-1));
+  border-radius: var(--r-pill);
+}
+
+.circle {
+  width: var(--s-10);
+  height: var(--s-10);
+  border-radius: 50%;
+}
+
+.rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-4);
+  animation: row-in var(--dur-3) var(--ease-out) backwards;
+  animation-delay: calc(var(--row-index, 0) * 60ms);
+}
+
+@keyframes shimmer {
+  to {
+    background-position: -50% 0;
+  }
+}
+
+@keyframes row-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--s-1));
+  }
+}
+
+/* Reduced motion: still placeholders, no sweep. */
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    background-image: none;
+    animation: none !important;
+  }
+}

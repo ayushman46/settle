@@ -1,0 +1,149 @@
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  min-width: 0;
+}
+
+.label {
+  font: var(--text-label);
+  font-weight: 600;
+  color: var(--ink);
+}
+
+/* A 1px boundary that reads on paper (≥ 3:1), a 2px ink ring when focused. */
+.control {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-height: calc(var(--s-12) + var(--s-1));
+  padding-inline: var(--s-4);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px var(--ink-3);
+  cursor: text;
+  transition:
+    background-color var(--dur-2) var(--ease-out),
+    box-shadow var(--dur-2) var(--ease-out);
+}
+
+.control:focus-within {
+  background: var(--surface);
+  box-shadow: inset 0 0 0 2px var(--ink);
+  /* Invisible normally; Windows high contrast turns it into the focus indicator. */
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+}
+
+.invalid,
+.invalid:focus-within {
+  box-shadow: inset 0 0 0 2px var(--negative);
+}
+
+.input {
+  flex: 1 1 auto;
+  width: 100%;
+  min-width: 0;
+  height: calc(var(--s-12) + var(--s-1));
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font: var(--text-body);
+  /* Never below 16px — iOS zooms into smaller fields. */
+  font-size: max(16px, 1rem);
+  caret-color: var(--ink);
+  outline: none;
+  appearance: none;
+}
+
+.input::placeholder {
+  color: var(--ink-placeholder);
+  opacity: 1;
+}
+
+/* The ring on .control is the focus indicator. */
+.input:focus-visible {
+  outline: none;
+}
+
+.start,
+.end {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  color: var(--ink-2);
+}
+
+.start > svg,
+.end > svg {
+  width: var(--s-5);
+  height: var(--s-5);
+}
+
+.end {
+  margin-inline-end: calc(var(--s-3) * -1);
+}
+
+.messages:empty {
+  display: none;
+}
+
+.hint,
+.error {
+  font: var(--text-caption);
+}
+
+.hint {
+  color: var(--ink-2);
+}
+
+.error {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-1);
+  color: var(--negative);
+  font-weight: 550;
+  animation: shake calc(var(--dur-3) + var(--dur-1)) var(--ease-out);
+}
+
+.errorIcon {
+  flex: none;
+  width: var(--s-4);
+  height: var(--s-4);
+  margin-top: 1px;
+}
+
+.disabled {
+  opacity: 0.55;
+}
+
+.disabled .control {
+  cursor: default;
+}
+
+/* Windows high contrast drops box-shadows: draw the field and its focus with system colours. */
+@media (forced-colors: active) {
+  .control {
+    border: 1px solid CanvasText;
+  }
+
+  .control:focus-within {
+    outline: 2px solid Highlight;
+  }
+}
+
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  25% {
+    transform: translateX(calc(var(--s-1) * -1));
+  }
+
+  60% {
+    transform: translateX(var(--s-1));
+  }
+}

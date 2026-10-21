@@ -1,0 +1,183 @@
+.transition {
+  display: contents;
+}
+
+.screen {
+  position: relative;
+  display: flex;
+  flex: 1 0 auto;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+  /* Clip the sideways entrance without creating a scroll container (sticky keeps working). */
+  overflow-x: clip;
+}
+
+/* Frosted: content blurs softly underneath as it scrolls (solid canvas where blur isn't supported). */
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  padding-top: var(--safe-top);
+  background: var(--bg);
+}
+
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+  .header {
+    background: var(--header-bg);
+    -webkit-backdrop-filter: saturate(1.6) blur(18px);
+    backdrop-filter: saturate(1.6) blur(18px);
+  }
+}
+
+/* A hairline fades in once the page scrolls under the header (progressive enhancement). */
+.header::after {
+  content: '';
+  position: absolute;
+  inset: 100% 0 auto;
+  height: 1px;
+  background: var(--line);
+  opacity: 0;
+  pointer-events: none;
+}
+
+@supports (animation-timeline: scroll()) {
+  .header::after {
+    animation: hairline linear both;
+    animation-timeline: scroll(root block);
+    animation-range: 0 var(--s-8);
+  }
+}
+
+.content {
+  display: flex;
+  flex: 1 0 auto;
+  flex-direction: column;
+  gap: var(--s-6);
+  min-width: 0;
+  padding: var(--s-3) var(--gutter) var(--s-8);
+  animation: enter-rise var(--dur-3) var(--ease-out) backwards;
+}
+
+/* Direction-aware entrance (set by ScreenTransition / any ancestor with data-nav). */
+:global([data-nav='forward']) .content {
+  animation-name: enter-forward;
+  animation-duration: calc(var(--dur-3) * 1.1);
+}
+
+:global([data-nav='back']) .content {
+  animation-name: enter-back;
+  animation-duration: calc(var(--dur-3) * 1.1);
+}
+
+/* Switching tabs: a quick cross-fade with the slightest lift, no sideways travel. */
+:global([data-nav='fade']) .content {
+  animation-name: enter-fade;
+  animation-duration: var(--dur-3);
+}
+
+.noHeader {
+  padding-top: calc(var(--safe-top) + var(--s-8));
+}
+
+.footer {
+  position: sticky;
+  /* iOS: ride above the on-screen keyboard (src/lib/keyboardInset.ts); 0 everywhere else. */
+  bottom: var(--keyboard-inset, 0px);
+  z-index: 2;
+  padding: var(--s-3) var(--gutter) max(var(--s-4), var(--safe-bottom));
+  background: var(--bg);
+  animation: fade var(--dur-3) var(--ease-out) backwards;
+}
+
+/* The keyboard covers the home indicator, so the safe-area padding isn't needed while it's up. */
+:global(:root[data-keyboard]) .footer {
+  padding-bottom: var(--s-3);
+}
+
+/* Soft fade so content scrolls *under* the actions instead of being cut off. */
+.footer::before {
+  content: '';
+  position: absolute;
+  inset: auto 0 100%;
+  height: var(--s-6);
+  background: linear-gradient(to bottom, transparent, var(--bg));
+  pointer-events: none;
+}
+
+/*
+ * Very short viewports (landscape phones, 400% zoom): sticky bars would cover most of the screen,
+ * so they scroll with the page instead.
+ */
+@media (max-height: 420px) {
+  .header,
+  .footer {
+    position: static;
+  }
+
+  .footer::before {
+    display: none;
+  }
+}
+
+/*
+ * …except on a touch screen while typing: there the short viewport is usually the on-screen
+ * keyboard (index.html asks for `interactive-widget=resizes-content`), and the primary action
+ * belongs right above it — like a payments app's "Pay" button.
+ */
+@media (max-height: 420px) and (pointer: coarse) {
+  :global(:root:has(:is(input:not([type='radio'], [type='checkbox'], [type='file']), textarea):focus)) .footer {
+    position: sticky;
+  }
+}
+
+@keyframes enter-rise {
+  from {
+    opacity: 0;
+    transform: translateY(var(--s-3));
+  }
+}
+
+@keyframes enter-forward {
+  from {
+    opacity: 0;
+    transform: translateX(var(--s-6));
+  }
+}
+
+@keyframes enter-back {
+  from {
+    opacity: 0;
+    transform: translateX(calc(var(--s-6) * -1));
+  }
+}
+
+@keyframes enter-fade {
+  from {
+    opacity: 0;
+    transform: translateY(var(--s-1));
+  }
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes hairline {
+  to {
+    opacity: 1;
+  }
+}
+
+/*
+ * Reduced motion: no movement, just a short crossfade. (Token durations are zeroed in this
+ * mode, so the fade's length is spelled out; opacity-only change is vestibular-safe.)
+ */
+@media (prefers-reduced-motion: reduce) {
+  .content,
+  :global([data-nav]) .content {
+    animation: fade 160ms linear backwards !important;
+  }
+}

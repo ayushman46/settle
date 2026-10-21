@@ -1,0 +1,240 @@
+.button {
+  --btn-bg: var(--primary);
+  --btn-fg: var(--on-primary);
+  --btn-border: transparent;
+  --btn-icon: var(--s-5);
+
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  max-width: 100%;
+  border: 1px solid var(--btn-border);
+  border-radius: var(--r-pill);
+  background: var(--btn-bg);
+  color: var(--btn-fg);
+  text-align: center;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  isolation: isolate;
+  transition:
+    transform var(--dur-2) var(--ease-spring),
+    background-color var(--dur-2) var(--ease-out),
+    border-color var(--dur-2) var(--ease-out),
+    color var(--dur-2) var(--ease-out),
+    box-shadow var(--dur-2) var(--ease-out);
+}
+
+.button:focus-visible {
+  outline-offset: 3px;
+}
+
+/* Press feedback: a quick squeeze plus a state layer tinted with the text colour. */
+.button::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  z-index: -1;
+  border-radius: inherit;
+  background: currentColor;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--dur-2) var(--ease-out);
+}
+
+.button:active:not(:disabled) {
+  transform: scale(0.97);
+  transition-duration: var(--dur-1);
+  transition-timing-function: var(--ease-out);
+}
+
+.button:active:not(:disabled)::before {
+  opacity: 0.1;
+  transition-duration: var(--dur-1);
+}
+
+.content {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  min-width: 0;
+  transition: opacity var(--dur-2) var(--ease-out);
+}
+
+/* Labels wrap (balanced) instead of being cut off when text is enlarged; one line at normal sizes. */
+.label {
+  min-width: 0;
+  text-wrap: balance;
+  overflow-wrap: break-word;
+}
+
+.icon {
+  display: inline-flex;
+  flex: none;
+}
+
+.icon > svg {
+  width: var(--btn-icon);
+  height: var(--btn-icon);
+}
+
+.spinner {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+}
+
+.loading .content {
+  opacity: 0;
+}
+
+/* ---------- Sizes ---------- */
+
+/* Heights are minimums, so enlarged text grows the button instead of overflowing it. */
+.lg {
+  min-height: var(--btn-h);
+  padding: var(--s-2) var(--s-6);
+  font: var(--text-body);
+  font-weight: 600;
+  letter-spacing: -0.011em;
+}
+
+.md {
+  min-height: var(--tap);
+  padding: var(--s-2) var(--s-5);
+  font: var(--text-label);
+  font-weight: 600;
+}
+
+.sm {
+  --btn-icon: var(--s-4);
+
+  min-height: calc(var(--s-8) + var(--s-1));
+  padding: var(--s-1) var(--s-4);
+  font: var(--text-label);
+  font-weight: 600;
+}
+
+/* Keeps the touch target at 44px while the pill stays compact. */
+.sm::after {
+  content: '';
+  position: absolute;
+  inset: calc((var(--s-8) + var(--s-1) - var(--tap)) / 2) 0;
+}
+
+.ghost.lg,
+.danger.lg {
+  padding-inline: var(--s-5);
+}
+
+.ghost.md,
+.danger.md,
+.ghost.sm,
+.danger.sm {
+  padding-inline: var(--s-3);
+}
+
+.block {
+  display: flex;
+  width: 100%;
+}
+
+/* ---------- Variants ---------- */
+
+/* Ink pill with a faint top sheen — the signature primary action. */
+.primary {
+  --btn-bg: var(--primary);
+  --btn-fg: var(--on-primary);
+
+  background-image: linear-gradient(to bottom, rgb(255 255 255 / 0.09), transparent 55%);
+  box-shadow: var(--shadow-sm);
+}
+
+.secondary {
+  --btn-bg: var(--surface);
+  --btn-fg: var(--ink);
+  --btn-border: var(--line-strong);
+}
+
+.tonal {
+  --btn-bg: var(--surface-2);
+  --btn-fg: var(--ink);
+}
+
+.ghost {
+  --btn-bg: transparent;
+  --btn-fg: var(--ink);
+}
+
+.danger {
+  --btn-bg: transparent;
+  --btn-fg: var(--negative);
+}
+
+.accent {
+  --btn-bg: var(--accent);
+  --btn-fg: var(--on-accent);
+
+  box-shadow: var(--shadow-sm);
+}
+
+@media (hover: hover) {
+  .primary:hover:not(:disabled) {
+    --btn-bg: var(--primary-hover);
+  }
+
+  .secondary:hover:not(:disabled),
+  .ghost:hover:not(:disabled) {
+    --btn-bg: var(--surface-2);
+  }
+
+  .tonal:hover:not(:disabled) {
+    --btn-bg: var(--surface-3);
+  }
+
+  .danger:hover:not(:disabled) {
+    --btn-bg: var(--negative-soft);
+  }
+
+  .accent:hover:not(:disabled) {
+    --btn-bg: color-mix(in srgb, var(--accent) 88%, var(--ink));
+  }
+}
+
+.secondary:active:not(:disabled),
+.ghost:active:not(:disabled) {
+  --btn-bg: var(--surface-2);
+}
+
+.tonal:active:not(:disabled) {
+  --btn-bg: var(--surface-3);
+}
+
+.danger:active:not(:disabled) {
+  --btn-bg: var(--negative-soft);
+}
+
+/* Disabled (but not loading): flat and quiet so the hint above it does the talking. */
+.button:disabled:not(.loading) {
+  --btn-bg: var(--surface-3);
+  --btn-fg: var(--ink-3);
+  --btn-border: transparent;
+
+  background-image: none;
+  box-shadow: none;
+}
+
+.ghost:disabled:not(.loading),
+.danger:disabled:not(.loading) {
+  --btn-bg: transparent;
+}
+
+.secondary:disabled:not(.loading) {
+  --btn-bg: var(--surface-2);
+  --btn-border: var(--line);
+}

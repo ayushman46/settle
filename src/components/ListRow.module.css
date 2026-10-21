@@ -1,0 +1,150 @@
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item {
+  position: relative;
+  animation: row-in var(--dur-3) var(--ease-out) backwards;
+}
+
+/* First paint: rows cascade in, a beat apart (only the first screenful; later rows join at once). */
+.item:nth-child(2) { animation-delay: 30ms; }
+.item:nth-child(3) { animation-delay: 60ms; }
+.item:nth-child(4) { animation-delay: 90ms; }
+.item:nth-child(5) { animation-delay: 120ms; }
+.item:nth-child(6) { animation-delay: 150ms; }
+.item:nth-child(7) { animation-delay: 180ms; }
+.item:nth-child(n + 8) { animation-delay: 210ms; }
+
+.row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  width: 100%;
+  min-height: calc(var(--s-12) + var(--s-2));
+  padding: var(--s-3) var(--s-4);
+  color: var(--ink);
+  text-align: start;
+}
+
+/* Hairlines between rows, inset from both edges. */
+.row + .row::before,
+.item + .item > .row::before {
+  content: '';
+  position: absolute;
+  inset: 0 var(--s-4) auto;
+  height: 1px;
+  background: var(--line);
+  pointer-events: none;
+}
+
+.clickable {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  transition: background-color var(--dur-2) var(--ease-out);
+}
+
+.clickable:focus-visible {
+  outline-offset: -2px;
+  border-radius: var(--r-lg);
+}
+
+.clickable:active:not(:disabled) {
+  background: var(--surface-2);
+  transition-duration: var(--dur-1);
+}
+
+.clickable:active:not(:disabled) .text,
+.clickable:active:not(:disabled) .leading,
+.clickable:active:not(:disabled) .trailing {
+  transform: scale(0.985);
+}
+
+@media (hover: hover) {
+  .clickable:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--surface-2) 70%, transparent);
+  }
+}
+
+.clickable:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.leading,
+.trailing {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: var(--s-2);
+  transition: transform var(--dur-2) var(--ease-spring);
+}
+
+.trailing {
+  justify-content: flex-end;
+  max-width: 55%;
+  margin-inline-start: auto;
+  text-align: end;
+}
+
+.text {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  transition: transform var(--dur-2) var(--ease-spring);
+}
+
+.title {
+  display: -webkit-box;
+  overflow: hidden;
+  font: var(--text-body);
+  font-weight: 550;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+/* Wraps rather than clipping, so "Qty 4 · ₹75.00 each" keeps its price at large text sizes. */
+.subtitle {
+  font: var(--text-caption);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-2);
+  overflow-wrap: break-word;
+}
+
+.chevron {
+  flex: none;
+  width: var(--s-5);
+  height: var(--s-5);
+  margin-inline-end: calc(var(--s-1) * -1);
+  color: var(--ink-3);
+}
+
+/* Needs attention: a dashed highlighter tick on the leading edge. */
+.pending::after {
+  content: '';
+  position: absolute;
+  inset: var(--s-3) auto var(--s-3) 0;
+  width: 3px;
+  border-radius: 0 var(--r-pill) var(--r-pill) 0;
+  background: repeating-linear-gradient(
+    to bottom,
+    var(--ink-3) 0 var(--s-1),
+    transparent var(--s-1) calc(var(--s-1) * 2)
+  );
+}
+
+@keyframes row-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--s-1));
+  }
+}
