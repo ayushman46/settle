@@ -10,6 +10,7 @@ import {
   goBack,
   Link,
   navigate,
+  Redirect,
   resetNavForTests,
   useBackClose,
   useLocation,
@@ -164,7 +165,7 @@ function BillFlow({ resumeAt = 'scan' }: { resumeAt?: StepId }) {
   )
 }
 
-const ROUTES = ['/app', '/app/groups', '/app/groups/:id', '/app/bill', '/app/friends'] as const
+const ROUTES = ['/app', '/app/groups', '/app/groups/:id', '/app/bill', '/app/friends', '/app/*'] as const
 
 let billResumeAt: StepId = 'scan'
 
@@ -187,6 +188,9 @@ function Shell({ children }: { children?: ReactNode }) {
       break
     case '/app/friends':
       page = <Friends />
+      break
+    case '/app/*':
+      page = <Redirect to="/app" />
       break
     default:
       page = <h1>Not found</h1>
@@ -1010,6 +1014,33 @@ describe('hooks', () => {
     act(() => resetNavForTests())
     expect(direction()).toBe('none')
     expect(heading()).toBe('Groups')
+  })
+})
+
+describe('Redirect', () => {
+  it('swaps an unknown page for Home before it paints, without adding an entry', () => {
+    const length = window.history.length
+    renderApp('/app/nope?x=1')
+    expect(heading()).toBe('Home')
+    expect(url()).toBe('/app')
+    expect(direction()).toBe('none')
+    expect(window.history.length).toBe(length)
+    expect(entry()).toEqual({ depth: 0, sheet: 0, bill: null, url: '/app' })
+  })
+
+  it('replaces a pushed unknown page, so Back skips it', async () => {
+    renderApp('/app/groups')
+    act(() => navigate('/app/old-link'))
+    expect(heading()).toBe('Home')
+    expect(entry()).toEqual({ depth: 1, sheet: 0, bill: null, url: '/app' })
+    await back()
+    expect(heading()).toBe('Groups')
+  })
+
+  it('works under StrictMode', () => {
+    renderApp('/app/nope', undefined, true)
+    expect(heading()).toBe('Home')
+    expect(entry()).toEqual({ depth: 0, sheet: 0, bill: null, url: '/app' })
   })
 })
 

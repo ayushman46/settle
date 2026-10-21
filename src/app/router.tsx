@@ -12,6 +12,7 @@
  *   <Link to="/app/friends">People</Link>               // a real link; plain clicks stay in the app
  */
 import {
+  useLayoutEffect,
   useMemo,
   useSyncExternalStore,
   type AnchorHTMLAttributes,
@@ -92,6 +93,17 @@ export function navigate(to: string, options?: NavigateOptions): void {
  */
 export function goBack(fallback?: string): void {
   historyDriver().back(fallback ?? '/app')
+}
+
+/**
+ * Replaces the page on screen with `to` before it paints — for unknown paths, the onboarding
+ * gate and sending installed users from `/` to `/app`. Renders nothing.
+ */
+export function Redirect({ to }: { to: string }): null {
+  useLayoutEffect(() => {
+    navigate(to, { replace: true })
+  }, [to])
+  return null
 }
 
 /** True when the screen on show has one of the app's screens beneath it (read at call time). */
