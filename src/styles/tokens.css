@@ -96,6 +96,11 @@
   --tabbar-pill: var(--primary);
   --tabbar-icon-active: var(--accent);
 
+  /* ---------- Fields: outlined white on the cool canvas (light), a lifted fill (dark) ---------- */
+  --field-bg: var(--surface);
+  /* The 1px boundary every text field draws (≥ 3:1 against the field and what's around it). */
+  --field-border: var(--ink-3);
+
   /* ---------- Controls ---------- */
   --switch-on-track: var(--primary);
   --switch-on-thumb: var(--accent);
@@ -280,6 +285,8 @@
   --tabbar-pill: var(--accent);
   --tabbar-icon-active: var(--on-accent);
 
+  --field-bg: var(--surface-2);
+
   --switch-on-track: var(--accent);
   --switch-on-thumb: var(--on-accent);
   --switch-off-thumb: #f3f5f7;
@@ -376,6 +383,8 @@
     --tabbar-ink-active: #f3f5f7;
     --tabbar-pill: var(--accent);
     --tabbar-icon-active: var(--on-accent);
+
+    --field-bg: var(--surface-2);
 
     --switch-on-track: var(--accent);
     --switch-on-thumb: var(--on-accent);

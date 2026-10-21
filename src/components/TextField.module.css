@@ -11,16 +11,16 @@
   color: var(--ink);
 }
 
-/* A 1px boundary that reads on paper (≥ 3:1), a 2px ink ring when focused. */
+/* Outlined: a 1px boundary that reads on every surface (≥ 3:1), a 2px ink ring when focused. */
 .control {
   display: flex;
   align-items: center;
   gap: var(--s-2);
   min-height: calc(var(--s-12) + var(--s-1));
   padding-inline: var(--s-4);
-  border-radius: var(--r-md);
-  background: var(--surface-2);
-  box-shadow: inset 0 0 0 1px var(--ink-3);
+  border-radius: var(--radius-field);
+  background: var(--field-bg);
+  box-shadow: inset 0 0 0 1px var(--field-border);
   cursor: text;
   transition:
     background-color var(--dur-2) var(--ease-out),

@@ -19,6 +19,11 @@ composited over the token in brackets (what can scroll underneath).
 | `--ink-placeholder on --bg` | Placeholders | 4.5 | 5.04 | 6.23 |
 | `--ink-placeholder on --surface` | Placeholders | 4.5 | 5.45 | 5.67 |
 | `--ink-placeholder on --surface-2` | Placeholders | 4.5 | 4.78 | 5.15 |
+| `--ink on --field-bg` | Text typed into a field | 4.5 | 19.05 | 14.79 |
+| `--ink-placeholder on --field-bg` | Placeholder inside a field | 4.5 | 5.45 | 5.15 |
+| `--field-border on --field-bg` | Field boundary | 3 | 3.93 | 3.33 |
+| `--field-border on --bg` | Field boundary | 3 | 3.63 | 4.03 |
+| `--field-border on --surface` | Field boundary | 3 | 3.93 | 3.66 |
 | `--ink on --header-bg (over --bg)` | Sticky header over the canvas | 4.5 | 17.62 | 17.91 |
 | `--ink on --header-bg (over --balance-card-bg)` | Sticky header over a dark card | 4.5 | 13.13 | 17.61 |
 | `--on-primary on --primary` | Primary button | 4.5 | 19.05 | 17.43 |
