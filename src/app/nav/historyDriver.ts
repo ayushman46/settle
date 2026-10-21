@@ -62,6 +62,9 @@ export interface NavigateOptions {
 
 const FIRST_STEP: StepId = STEPS[0] ?? 'scan'
 
+/** Scroll positions remembered for Back/Forward (oldest forgotten first). */
+const MAX_SCROLL_MEMORY = 100
+
 interface Interceptor {
   /** Depth of the sheet's entry; -1 until it has one. */
   depth: number
@@ -130,6 +133,11 @@ function scrollToTop(win: Window): void {
   }
 }
 
+/** Identifies a screen's entry for scroll memory (sheets and their screen share it). */
+function scrollKey(entry: NavEntry): string {
+  return `${screenDepth(entry)} ${entry.url}`
+}
+
 export class HistoryDriver {
   private readonly win: Window
   private attached = false
@@ -142,12 +150,17 @@ export class HistoryDriver {
   private traveling = false
   /** Calls made while `traveling`, run in order once it has landed. */
   private deferred: Array<() => void> = []
+  /** Running `deferred`: the screen hasn't caught up with history yet. */
+  private replaying = false
   private interceptors: Interceptor[] = []
   private popHandler: PopHandler | null = null
   private readonly listeners = new Set<() => void>()
   private locationUrl: string
   private locationSnapshot: NavLocation
   private lastDirection: NavDirection = 'none'
+  /** Page scroll of screens left for another page, so Back/Forward return to where the person was. */
+  private readonly scrolls = new Map<string, number>()
+  private cancelRestore: (() => void) | null = null
 
   constructor(win: Window) {
     this.win = win
@@ -256,6 +269,7 @@ export class HistoryDriver {
         return
       }
       if (top.sheet > 0) this.go(onSameScreen(top, screen))
+      this.remember(top)
       this.write('push', { depth: screen + 1, sheet: 0, bill: null, url })
       this.show(url, 'forward')
       scrollToTop(this.win)
@@ -380,6 +394,9 @@ export class HistoryDriver {
     this.popHandler = null
     this.listeners.clear()
     this.lastDirection = 'none'
+    this.scrolls.clear()
+    this.cancelRestore?.()
+    this.cancelRestore = null
   }
 
   /* ------------------------------------------------------------------ internals */
@@ -439,6 +456,49 @@ export class HistoryDriver {
     runAll([...this.listeners])
   }
 
+  /** Notes how far the page on screen is scrolled, for when Back/Forward returns to `entry`. */
+  private remember(entry: NavEntry): void {
+    // Replaying calls made during a `back()`: the page still showing isn't `entry`'s, so keep
+    // what was noted when the person last left it.
+    if (this.replaying) return
+    const key = scrollKey(entry)
+    this.scrolls.delete(key)
+    const top = this.win.scrollY
+    if (!(top > 0)) return
+    this.scrolls.set(key, top)
+    if (this.scrolls.size > MAX_SCROLL_MEMORY) {
+      const oldest = this.scrolls.keys().next().value
+      if (oldest !== undefined) this.scrolls.delete(oldest)
+    }
+  }
+
+  /**
+   * Back/Forward arrived at `entry`: once its screen has rendered (and scrolled itself to the
+   * top on mount), put the page back where the person left it.
+   */
+  private restore(entry: NavEntry): void {
+    this.cancelRestore?.()
+    this.cancelRestore = null
+    const top = this.scrolls.get(scrollKey(entry))
+    if (top === undefined) return
+    const apply = (): void => {
+      this.cancelRestore = null
+      if (this.locationUrl !== entry.url) return
+      try {
+        this.win.scrollTo({ top, behavior: 'instant' })
+      } catch {
+        // Not important.
+      }
+    }
+    if (typeof this.win.requestAnimationFrame === 'function') {
+      const frame = this.win.requestAnimationFrame(apply)
+      this.cancelRestore = () => this.win.cancelAnimationFrame(frame)
+    } else {
+      const timer = setTimeout(apply, 16)
+      this.cancelRestore = () => clearTimeout(timer)
+    }
+  }
+
   private write(kind: 'push' | 'replace', entry: NavEntry): void {
     this.planned = entry
     this.enqueue({ kind, entry })
@@ -489,14 +549,19 @@ export class HistoryDriver {
   }
 
   private runDeferred(): void {
-    while (!this.traveling) {
-      const task = this.deferred.shift()
-      if (!task) return
-      try {
-        task()
-      } catch (error) {
-        report(error)
+    this.replaying = true
+    try {
+      while (!this.traveling) {
+        const task = this.deferred.shift()
+        if (!task) return
+        try {
+          task()
+        } catch (error) {
+          report(error)
+        }
       }
+    } finally {
+      this.replaying = false
     }
   }
 
@@ -593,7 +658,10 @@ export class HistoryDriver {
     }
 
     // 3. Another page.
+    if (at.url === this.locationUrl) return
+    this.remember(prev)
     this.show(at.url, directionOf(prev, at))
+    this.restore(at)
   }
 }
 

@@ -425,6 +425,123 @@ describe('Back and Forward', () => {
   })
 })
 
+describe('scroll', () => {
+  /** A scrollable window: `scrollY` follows `scrollTo`. */
+  function scrollableWindow() {
+    let y = 0
+    Object.defineProperty(window, 'scrollY', { configurable: true, get: () => y })
+    const scrollTo = vi.spyOn(window, 'scrollTo').mockImplementation(((options: ScrollToOptions) => {
+      y = options.top ?? y
+    }) as typeof window.scrollTo)
+    return {
+      scrollTo,
+      set: (top: number) => {
+        y = top
+      },
+      restore: () => Object.defineProperty(window, 'scrollY', { configurable: true, value: 0 }),
+    }
+  }
+
+  it('Back and Forward return to where each page was scrolled; a push starts at the top', async () => {
+    const page = scrollableWindow()
+    try {
+      const { user } = renderApp('/app/groups')
+      page.set(480)
+      await user.click(screen.getByRole('link', { name: 'Goa trip' }))
+      expect(window.scrollY).toBe(0)
+      page.set(120)
+
+      await back()
+      expect(heading()).toBe('Groups')
+      await waitFor(() => expect(window.scrollY).toBe(480))
+
+      await forward()
+      expect(heading()).toBe('Group g1')
+      await waitFor(() => expect(window.scrollY).toBe(120))
+    } finally {
+      page.restore()
+    }
+  })
+
+  it('a page pushed again starts at the top, not where its last visit was', async () => {
+    const page = scrollableWindow()
+    try {
+      renderApp('/app/groups')
+      act(() => navigate('/app/groups/g1'))
+      page.set(300)
+      await back()
+      page.set(0) // the screen scrolls itself to the top when it mounts
+      act(() => navigate('/app/groups/g1'))
+      await back()
+      await forward()
+      await tick(40)
+      expect(heading()).toBe('Group g1')
+      expect(page.scrollTo).not.toHaveBeenCalledWith({ top: 300, behavior: 'instant' })
+    } finally {
+      page.restore()
+    }
+  })
+
+  it('a replace never inherits the scroll of the page it replaced', async () => {
+    const page = scrollableWindow()
+    try {
+      renderApp('/app/groups')
+      act(() => navigate('/app/groups/g1'))
+      page.set(200)
+      act(() => navigate('/app/friends', { replace: true }))
+      page.set(50)
+      await back()
+      page.set(0)
+      await forward()
+      expect(heading()).toBe('Friends')
+      await waitFor(() => expect(window.scrollY).toBe(50))
+      expect(page.scrollTo).not.toHaveBeenCalledWith({ top: 200, behavior: 'instant' })
+    } finally {
+      page.restore()
+    }
+  })
+
+  it('a page passed through by a goBack keeps the scroll it was left at', async () => {
+    const page = scrollableWindow()
+    try {
+      renderApp()
+      act(() => navigate('/app/groups'))
+      page.set(400)
+      act(() => navigate('/app/groups/g1'))
+      page.set(90)
+      await act(async () => {
+        goBack()
+        navigate('/app/friends')
+        await idle()
+      })
+      expect(heading()).toBe('Friends')
+      await back()
+      expect(heading()).toBe('Groups')
+      await waitFor(() => expect(window.scrollY).toBe(400))
+    } finally {
+      page.restore()
+    }
+  })
+
+  it('leaving the bill flow and coming back restores the step’s scroll', async () => {
+    const page = scrollableWindow()
+    try {
+      const { user } = renderApp()
+      act(() => navigate('/app/bill'))
+      await user.click(screen.getByRole('button', { name: 'Next step' }))
+      page.set(260)
+      await user.click(screen.getByRole('button', { name: 'Add friends' }))
+      expect(window.scrollY).toBe(0)
+      billResumeAt = 'review'
+      await back()
+      expect(heading()).toBe('Bill: review')
+      await waitFor(() => expect(window.scrollY).toBe(260))
+    } finally {
+      page.restore()
+    }
+  })
+})
+
 describe('sheets over pages', () => {
   it('Back closes the sheet and keeps the page; the next Back changes page', async () => {
     const { user } = renderApp()
