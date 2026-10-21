@@ -75,12 +75,12 @@ describe('whatsappUrl', () => {
 })
 
 describe('smsUrl', () => {
-  it('addresses the number with a + and puts the text in body', () => {
-    expect(smsUrl('Hi Sam, ₹540 for chai', '098765 43210')).toBe('sms:+919876543210?body=Hi%20Sam%2C%20%E2%82%B9540%20for%20chai')
+  it('addresses the number with a + and puts the text in body ("?&" for iOS and Android)', () => {
+    expect(smsUrl('Hi Sam, ₹540 for chai', '098765 43210')).toBe('sms:+919876543210?&body=Hi%20Sam%2C%20%E2%82%B9540%20for%20chai')
   })
 
   it('leaves the recipient empty without a number', () => {
-    expect(smsUrl('Hi')).toBe('sms:?body=Hi')
-    expect(smsUrl('Hi', '123')).toBe('sms:?body=Hi')
+    expect(smsUrl('Hi')).toBe('sms:?&body=Hi')
+    expect(smsUrl('Hi', '123')).toBe('sms:?&body=Hi')
   })
 })

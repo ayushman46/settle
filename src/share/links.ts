@@ -46,8 +46,11 @@ export function whatsappUrl(text: string, phone?: string | null): string {
   return `https://wa.me/${digits ?? ''}?text=${encodeURIComponent(text)}`
 }
 
-/** `sms:+<digits>?body=…` (or `sms:?body=…` to pick the recipient), understood by iOS and Android. */
+/**
+ * `sms:+<digits>?&body=…` (or `sms:?&body=…` to pick the recipient). Android reads `body` from the
+ * query and older iOS only after an "&", so "?&" works on both.
+ */
 export function smsUrl(text: string, phone?: string | null): string {
   const digits = normalizePhone(phone)
-  return `sms:${digits ? `+${digits}` : ''}?body=${encodeURIComponent(text)}`
+  return `sms:${digits ? `+${digits}` : ''}?&body=${encodeURIComponent(text)}`
 }
