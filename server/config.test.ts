@@ -146,6 +146,11 @@ describe('loadConfig', () => {
     expect(loadConfig({ TRUST_PROXY: raw }).trustProxy).toBe(expected)
   })
 
+  it('treats "none" typed into required secret fields of a hosting dashboard as not set, without warnings', () => {
+    const config = loadConfig({ NVIDIA_API_KEY: 'none', LICENSE_PRIVATE_KEY: 'none', RAZORPAY_KEY_ID: 'none', RAZORPAY_KEY_SECRET: 'none', PROXY_SECRET: 'none' })
+    expect(config).toMatchObject({ apiKey: null, proxySecret: null, billing: { razorpay: null }, license: { privateKey: null, publicKey: null }, warnings: [] })
+  })
+
   it('reads PROXY_SECRET, trimmed and unquoted', () => {
     const secret = 'Zx8-render-generated-value-0123456789'
     expect(loadConfig({ PROXY_SECRET: `  "${secret}" ` })).toMatchObject({ proxySecret: secret, warnings: [] })
