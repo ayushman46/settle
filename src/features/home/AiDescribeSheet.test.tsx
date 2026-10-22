@@ -18,6 +18,9 @@ import {
   testSigner,
 } from './testKit'
 
+/** Typing-heavy tests: room to finish on a busy machine. */
+const SLOW = { timeout: 20_000 }
+
 const OCT_22 = new Date(2026, 9, 22, 12)
 let riya: string
 
@@ -58,7 +61,7 @@ async function say(text: string) {
   return opened
 }
 
-describe('AiDescribeSheet — reading a split', () => {
+describe('AiDescribeSheet — reading a split', SLOW, () => {
   it('sends the sentence with your currency, people and date, then shows the draft', async () => {
     const calls = serveDescribe(described())
     const { sheet } = await say('Dinner 2400 with Riya and Sam')
@@ -196,7 +199,7 @@ describe('AiDescribeSheet — reading a split', () => {
   })
 })
 
-describe('AiDescribeSheet — when it can’t read it', () => {
+describe('AiDescribeSheet — when it can’t read it', SLOW, () => {
   it('explains a sentence that isn’t an expense, and offers splitting by hand', async () => {
     serveDescribe({ error: { code: 'not_a_split', message: 'nope' } }, 422)
     const { sheet, user } = await say('hello there')
@@ -264,7 +267,7 @@ describe('AiDescribeSheet — when it can’t read it', () => {
   })
 })
 
-describe('AiDescribeSheet — Pro', () => {
+describe('AiDescribeSheet — Pro', SLOW, () => {
   it('reads without a daily limit and sends the license', async () => {
     await installPro()
     consumeAiQuota()

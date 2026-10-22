@@ -39,6 +39,13 @@ export function expensePath(id: string): string {
   return `/app/expense/${encodeURIComponent(id)}`
 }
 
+/** Today's AI allowance, beside "Just say it": "3 free today", or unlimited with Pro. */
+export function allowanceLabel(remaining: number): string {
+  if (!Number.isFinite(remaining)) return 'Unlimited with Pro'
+  if (remaining <= 0) return 'Free AI splits used today'
+  return `${remaining} free ${remaining === 1 ? 'split' : 'splits'} today`
+}
+
 /** "Taj Café · 6 items · ₹2,340" — what's in the bill being split. */
 export function draftLine(draft: BillDraftSummary): string {
   const parts = [draft.title?.trim() || (draft.editing ? 'Saved bill' : 'Bill in progress')]

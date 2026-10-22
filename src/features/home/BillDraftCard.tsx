@@ -3,13 +3,13 @@ import { openBill, useBillDraft } from '../bill/launch'
 import { draftLine } from './homeLinks'
 import styles from './HomeScreen.module.css'
 
-/** A bill left half-split on this phone, one tap from picking it back up. Nothing when there's none. */
+/** A bill left half-split on this phone, one tap from picking it back up where it was left. Nothing when there's none. */
 export function BillDraftCard() {
   const draft = useBillDraft()
   if (!draft) return null
   const heading = draft.editing ? 'Finish editing your bill' : 'Continue your bill'
   return (
-    <button type="button" className={styles.draft} onClick={() => openBill()}>
+    <button type="button" className={styles.draft} onClick={() => openBill({ kind: 'resume' })}>
       <span className={styles.draftIcon} aria-hidden="true">
         <ReceiptText />
       </span>

@@ -5,12 +5,13 @@ import { Screen, SearchPill } from '../../components'
 import { DESCRIBE_EXAMPLES } from '../../ai'
 import { useHasData, useSummary } from '../../data'
 import { BalanceCard } from '../../kit/BalanceCard'
+import { useAiQuota } from '../../pro/quota'
 import { AiDescribeSheet } from './AiDescribeSheet'
 import { BillDraftCard } from './BillDraftCard'
 import { DueSplits } from './DueSplits'
 import { FirstRunCard } from './FirstRunCard'
 import { HomeHeader } from './HomeHeader'
-import { FRIENDS_PATH } from './homeLinks'
+import { allowanceLabel, FRIENDS_PATH } from './homeLinks'
 import { HomeQuickActions } from './HomeQuickActions'
 import { PeopleRow } from './PeopleRow'
 import { RecentActivity } from './RecentActivity'
@@ -24,20 +25,28 @@ import styles from './HomeScreen.module.css'
 export function HomeScreen() {
   const hasData = useHasData()
   const summary = useSummary()
+  const quota = useAiQuota()
   const [saying, setSaying] = useState(false)
 
   return (
     <Screen contentClassName={styles.content}>
       <HomeHeader />
 
-      <SearchPill
-        asButton
-        placeholder="Just say it…"
-        label="Just say it: describe an expense for the AI to split"
-        examples={DESCRIBE_EXAMPLES}
-        onClick={() => setSaying(true)}
-        className={styles.say}
-      />
+      <div className={styles.say}>
+        <p className={styles.sayHead}>
+          <span className={styles.sayTitle} aria-hidden="true">
+            Just say it
+          </span>
+          <span className={styles.sayQuota}>{allowanceLabel(quota.remaining)}</span>
+        </p>
+        <SearchPill
+          asButton
+          placeholder="Just say it…"
+          label="Just say it: describe an expense for the AI to split"
+          examples={DESCRIBE_EXAMPLES}
+          onClick={() => setSaying(true)}
+        />
+      </div>
 
       <BillDraftCard />
 

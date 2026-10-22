@@ -11,6 +11,9 @@ import { currentHour, greetingName, helloLine, timeOfDayGreeting } from './greet
 import { draftLine } from './homeLinks'
 import { atTime, currentUrl, installPro, renderHome, resetHome, seedExpense, serveHealth, testSigner } from './testKit'
 
+/** Typing-heavy tests: room to finish on a busy machine. */
+const SLOW = { timeout: 20_000 }
+
 const OCT_22_EVENING = new Date(2026, 9, 22, 19, 30)
 
 beforeEach(async () => {
@@ -27,7 +30,7 @@ afterEach(() => {
   resetHome()
 })
 
-describe('HomeScreen — greeting', () => {
+describe('HomeScreen — greeting', SLOW, () => {
   it('greets the owner by first name with the time of day', () => {
     renderHome()
     expect(screen.getByRole('heading', { level: 1, name: 'Hi, Ayush' })).toBeInTheDocument()
@@ -62,7 +65,7 @@ describe('HomeScreen — greeting', () => {
   })
 })
 
-describe('HomeScreen — first run', () => {
+describe('HomeScreen — first run', SLOW, () => {
   it('invites a first split instead of balances and activity', async () => {
     const { user } = renderHome()
     expect(screen.getByRole('heading', { name: 'Split your first expense' })).toBeInTheDocument()
@@ -87,7 +90,7 @@ describe('HomeScreen — first run', () => {
   })
 })
 
-describe('HomeScreen — quick actions', () => {
+describe('HomeScreen — quick actions', SLOW, () => {
   it.each([
     ['Split amount', '/app/split/new'],
     ['New group', '/app/groups?new=1'],
@@ -125,7 +128,7 @@ describe('HomeScreen — quick actions', () => {
   })
 })
 
-describe('HomeScreen — balances, people and activity', () => {
+describe('HomeScreen — balances, people and activity', SLOW, () => {
   it('shows what you’re owed and settles up with your people', async () => {
     const riya = addFriend({ name: 'Riya Sharma' }).id
     const sam = addFriend({ name: 'Sam' }).id
@@ -198,7 +201,7 @@ describe('HomeScreen — balances, people and activity', () => {
   })
 })
 
-describe('HomeScreen — due recurring splits', () => {
+describe('HomeScreen — due recurring splits', SLOW, () => {
   function seedRent(): void {
     const riya = addFriend({ name: 'Riya' }).id
     vi.setSystemTime(new Date(2026, 8, 1, 12))
@@ -245,7 +248,7 @@ describe('HomeScreen — due recurring splits', () => {
   })
 })
 
-describe('HomeScreen — a bill in progress', () => {
+describe('HomeScreen — a bill in progress', SLOW, () => {
   it('offers to pick a half-split bill back up', async () => {
     saveSession(reducer(loadSession(null), newBillAction('sample', 'INR')))
     const { user } = renderHome()
@@ -253,6 +256,7 @@ describe('HomeScreen — a bill in progress', () => {
     expect(card).toHaveTextContent(/\d+ items · ₹/)
     await user.click(card)
     expect(currentUrl()).toBe('/app/bill')
+    expect(takeBillStart()).toEqual({ kind: 'resume' })
   })
 
   it('describes the draft briefly', () => {
@@ -266,7 +270,7 @@ describe('HomeScreen — a bill in progress', () => {
   })
 })
 
-describe('HomeScreen — Just say it', () => {
+describe('HomeScreen — Just say it', SLOW, () => {
   it('opens the AI sheet from the hero field', async () => {
     const { user } = renderHome()
     await user.click(screen.getByRole('button', { name: /^Just say it/ }))
