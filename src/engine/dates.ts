@@ -31,8 +31,16 @@ function parts(iso: string): { year: number; month: number; day: number } | null
   return { year, month, day }
 }
 
+const MONTH_DAYS = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+
 /** Days in a month (`month` is 1..12). */
 export function daysInMonth(year: number, month: number): number {
+  // Arithmetic for ordinary dates (checked for every saved expense at startup, so no Date
+  // objects); the calendar itself for anything unusual.
+  if (Number.isInteger(year) && year >= 100 && year <= 9999 && Number.isInteger(month) && month >= 1 && month <= 12) {
+    if (month !== 2) return MONTH_DAYS[month - 1] ?? 31
+    return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0 ? 29 : 28
+  }
   return new Date(Date.UTC(year, month, 0)).getUTCDate()
 }
 

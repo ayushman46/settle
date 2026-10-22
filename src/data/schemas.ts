@@ -52,6 +52,9 @@ function stripControls(value: string): string {
 }
 
 function capGraphemes(value: string, max: number): string {
+  // A string never has more characters than UTF-16 units: short text needs no segmenting (the
+  // common case, and it keeps loading thousands of saved records fast).
+  if (value.length <= max) return value
   const chars = graphemes(value)
   return chars.length <= max ? value : chars.slice(0, max).join('').trim()
 }
@@ -119,9 +122,15 @@ export function fallbackTitle(category: CategoryId): string {
 
 /**
  * A list schema that keeps every item `item` accepts and silently drops the rest (and repeats
- * of an id already seen), up to `max` items.
+ * of an id already seen), up to `max` items. `isCanonical` (optional) recognises a record that
+ * `item` would hand back unchanged; those skip the schema (the fast path for what the app saved).
  */
-export function records<T>(item: ZodType<T>, idOf: (value: T) => string, max = Number.POSITIVE_INFINITY): ZodType<T[]> {
+export function records<T>(
+  item: ZodType<T>,
+  idOf: (value: T) => string,
+  max = Number.POSITIVE_INFINITY,
+  isCanonical?: (raw: unknown) => raw is T,
+): ZodType<T[]> {
   return z.pipe(
     z.array(z.unknown()),
     z.transform((items: unknown[]) => {
@@ -129,12 +138,18 @@ export function records<T>(item: ZodType<T>, idOf: (value: T) => string, max = N
       const out: T[] = []
       for (const raw of items) {
         if (out.length >= max) break
-        const parsed = z.safeParse(item, raw)
-        if (!parsed.success) continue
-        const id = idOf(parsed.data)
+        let value: T
+        if (isCanonical?.(raw)) {
+          value = raw
+        } else {
+          const parsed = z.safeParse(item, raw)
+          if (!parsed.success) continue
+          value = parsed.data
+        }
+        const id = idOf(value)
         if (seen.has(id)) continue
         seen.add(id)
-        out.push(parsed.data)
+        out.push(value)
       }
       return out
     }),
@@ -379,7 +394,146 @@ export const expenseSchema: ZodType<Expense> = repaired(expenseShape, (e) => {
   }
 })
 
-export const expensesSchema: ZodType<Expense[]> = records(expenseSchema, (e) => e.id)
+/* ------------------------------------------------------------------ expenses: the fast path */
+
+// Checking 1,500 saved expenses with the schema above costs seconds on a budget phone. Records
+// the app saved itself are already in the exact form the schema produces, so a direct check of
+// that form lets them skip it; anything else (older formats, hand edits, damage) still goes
+// through the schema and gets repaired or dropped. `isCanonicalExpense` must only ever say yes
+// when `expenseSchema` would return an equal record — src/data/canonical.test.ts checks it.
+
+const EXPENSE_KEYS: readonly (keyof Expense)[] = [
+  'id',
+  'kind',
+  'title',
+  'category',
+  'currency',
+  'total',
+  'date',
+  'createdAt',
+  'updatedAt',
+  'payerId',
+  'mode',
+  'participants',
+  'shares',
+  'roundedToWhole',
+  'note',
+  'groupId',
+  'bill',
+  'paidBack',
+  'recurringId',
+  'source',
+]
+const BILL_KEYS: readonly (keyof BillSnapshot)[] = ['meta', 'items', 'assignments', 'warnings']
+const META_KEYS: readonly (keyof BillMeta)[] = ['merchant', 'date', 'subtotal', 'tax', 'serviceCharge', 'discount', 'tip', 'total']
+const ITEM_KEYS: readonly (keyof BillItem)[] = ['id', 'name', 'quantity', 'amount']
+const PARTICIPANT_KEYS: readonly (keyof Participant)[] = ['friendId', 'input']
+const CATEGORY_SET: ReadonlySet<unknown> = new Set(CATEGORY_IDS)
+const SOURCE_SET: ReadonlySet<unknown> = new Set(EXPENSE_SOURCES)
+const MODE_SET: ReadonlySet<unknown> = new Set(['equal', 'exact', 'percent', 'shares', 'items'])
+const CURRENCY_CODE = /^[A-Z]{3}$/
+
+type Plain = Record<string, unknown>
+
+/** A plain object (as JSON.parse makes them) with no `__proto__` key. */
+function isPlain(value: unknown): value is Plain {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) return false
+  const proto: unknown = Object.getPrototypeOf(value)
+  return (proto === Object.prototype || proto === null) && !Object.hasOwn(value, '__proto__')
+}
+
+/** A plain object with exactly `keys` (no more, none missing). */
+function hasExactly(value: unknown, keys: readonly string[]): value is Plain {
+  if (!isPlain(value)) return false
+  if (Object.keys(value).length !== keys.length) return false
+  for (const key of keys) if (!Object.hasOwn(value, key)) return false
+  return true
+}
+
+function isIdText(value: unknown): value is string {
+  return typeof value === 'string' && value.length >= 1 && value.length <= 200
+}
+
+function isFiniteNumber(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value)
+}
+
+/** What `cleanTimestamp` keeps as it is: +0 or a positive whole number. */
+function isCleanTimestamp(value: unknown): value is number {
+  return typeof value === 'number' && (Object.is(value, 0) || (Number.isInteger(value) && value > 0))
+}
+
+function isNumberRecord(value: unknown): value is Record<string, number> {
+  if (!isPlain(value)) return false
+  for (const key of Object.keys(value)) if (!isFiniteNumber(value[key])) return false
+  return true
+}
+
+function isCanonicalBill(value: unknown): value is BillSnapshot {
+  if (!hasExactly(value, BILL_KEYS)) return false
+  const { meta, items, assignments, warnings } = value
+  if (!hasExactly(meta, META_KEYS)) return false
+  for (const key of META_KEYS) {
+    const v = meta[key]
+    if (v === null) continue
+    if (key === 'merchant' || key === 'date' ? typeof v !== 'string' : !Number.isSafeInteger(v)) return false
+  }
+  if (!Array.isArray(items)) return false
+  for (const it of items) {
+    if (!hasExactly(it, ITEM_KEYS)) return false
+    if (!isIdText(it.id) || typeof it.name !== 'string' || !isFiniteNumber(it.quantity) || !Number.isSafeInteger(it.amount)) return false
+  }
+  if (!isPlain(assignments)) return false
+  for (const key of Object.keys(assignments)) if (!isNumberRecord(assignments[key])) return false
+  if (!Array.isArray(warnings)) return false
+  for (const w of warnings) if (typeof w !== 'string') return false
+  return true
+}
+
+/** True when `raw` is exactly what `expenseSchema` would return for it (so it can skip the schema). */
+export function isCanonicalExpense(raw: unknown): raw is Expense {
+  if (!hasExactly(raw, EXPENSE_KEYS)) return false
+  const e = raw
+  if (!isIdText(e.id) || !isIdText(e.payerId)) return false
+  if (typeof e.currency !== 'string' || !CURRENCY_CODE.test(e.currency)) return false
+  if (!isValidTotal(e.total)) return false
+  if (!CATEGORY_SET.has(e.category) || !SOURCE_SET.has(e.source) || !MODE_SET.has(e.mode)) return false
+  if (typeof e.roundedToWhole !== 'boolean') return false
+  if (e.groupId !== null && !isIdText(e.groupId)) return false
+  if (e.recurringId !== null && !isIdText(e.recurringId)) return false
+  if (!isCleanTimestamp(e.createdAt) || !isCleanTimestamp(e.updatedAt) || e.updatedAt < e.createdAt) return false
+  if (!isIsoDate(e.date)) return false
+
+  // Bills: `kind` is "split" without a snapshot, and item-by-item needs one.
+  if (e.bill !== null && !isCanonicalBill(e.bill)) return false
+  if (e.kind !== 'split' && !(e.kind === 'bill' && e.bill !== null)) return false
+  if (e.mode === 'items' && e.bill === null) return false
+
+  // Text exactly as the cleaners leave it.
+  if (typeof e.title !== 'string' || e.title === '' || cleanText(e.title, MAX_TITLE_LENGTH) !== e.title) return false
+  if (e.note !== null && (typeof e.note !== 'string' || e.note === '' || cleanMultiline(e.note, MAX_NOTE_LENGTH) !== e.note)) return false
+
+  // Participants: 1–100 different people, each input null or a finite number.
+  const participants = e.participants
+  if (!Array.isArray(participants) || participants.length === 0 || participants.length > MAX_PARTICIPANTS) return false
+  const seen = new Set<string>()
+  for (const p of participants) {
+    if (!hasExactly(p, PARTICIPANT_KEYS) || !isIdText(p.friendId) || seen.has(p.friendId)) return false
+    if (p.input !== null && !isFiniteNumber(p.input)) return false
+    seen.add(p.friendId)
+  }
+
+  // Shares that add up (so they're kept as they are), and paid-back ticks the schema keeps.
+  const shares = e.shares
+  if (!isNumberRecord(shares) || !sharesAddUp(shares, e.total)) return false
+  if (!isNumberRecord(e.paidBack)) return false
+  for (const friendId of Object.keys(e.paidBack)) {
+    if (friendId === e.payerId || !((shares[friendId] ?? 0) > 0)) return false
+  }
+  return true
+}
+
+export const expensesSchema: ZodType<Expense[]> = records(expenseSchema, (e) => e.id, Number.POSITIVE_INFINITY, isCanonicalExpense)
 
 /* ------------------------------------------------------------------ groups */
 

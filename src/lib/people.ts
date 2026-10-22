@@ -69,6 +69,8 @@ export function normalizeName(name: string): string {
     // Invisible/control characters, except the zero-width joiner that glues emoji sequences.
     .replace(/[\p{Cc}\p{Cf}]/gu, (c) => (c === ZWJ ? c : ''))
     .trim()
+  // Never more characters than UTF-16 units, so short names skip segmenting.
+  if (cleaned.length <= MAX_NAME_LENGTH) return cleaned
   const chars = graphemes(cleaned)
   if (chars.length <= MAX_NAME_LENGTH) return cleaned
   return chars.slice(0, MAX_NAME_LENGTH).join('').trim()

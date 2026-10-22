@@ -40,6 +40,20 @@ describe('dates', () => {
     expect(daysInMonth(2026, 4)).toBe(30)
   })
 
+  it('counts month lengths exactly as the calendar does, for every year and month', () => {
+    const calendar = (year: number, month: number) => new Date(Date.UTC(year, month, 0)).getUTCDate()
+    const wrong: string[] = []
+    for (let year = 0; year <= 10_050; year++) {
+      for (let month = 0; month <= 13; month++) {
+        if (daysInMonth(year, month) !== calendar(year, month)) wrong.push(`${year}-${month}`)
+      }
+    }
+    expect(wrong).toEqual([])
+    for (const [year, month] of [[1900, 2], [2000, 2], [2100, 2], [-4, 2], [2026.5, 2], [2026, 2.5], [Number.NaN, 1]] as const) {
+      expect(daysInMonth(year, month)).toBe(calendar(year, month))
+    }
+  })
+
   it('adds days across months, years and DST changes', () => {
     expect(addDays('2026-10-21', 11)).toBe('2026-11-01')
     expect(addDays('2026-12-31', 1)).toBe('2027-01-01')
