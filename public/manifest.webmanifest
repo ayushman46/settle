@@ -1,19 +1,34 @@
 {
   "id": "/",
-  "name": "BillSplit",
-  "short_name": "BillSplit",
-  "description": "Snap a bill, tap who ate what, and get a clean per-person split in seconds.",
+  "name": "Settle — Split anything",
+  "short_name": "Settle",
+  "description": "Split any expense — restaurant bills, rent, trips, subscriptions — and get paid back over UPI. No sign-up, no ads, private by default.",
   "lang": "en",
-  "start_url": "/",
+  "dir": "ltr",
+  "start_url": "/app",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#F5F3EE",
-  "theme_color": "#F5F3EE",
-  "categories": ["finance", "food", "utilities"],
+  "background_color": "#F5F6F8",
+  "theme_color": "#F5F6F8",
+  "categories": ["finance", "productivity", "utilities"],
   "icons": [
     { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
     { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
     { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
     { "src": "/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    {
+      "name": "Scan a bill",
+      "short_name": "Scan bill",
+      "description": "Snap a restaurant bill and split it item by item",
+      "url": "/app/bill"
+    },
+    {
+      "name": "Split an amount",
+      "short_name": "Split amount",
+      "description": "Split rent, a cab, a subscription — anything",
+      "url": "/app/split/new"
+    }
   ]
 }

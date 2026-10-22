@@ -4,23 +4,40 @@
     <meta charset="UTF-8" />
     <!-- resizes-content: on Android the on-screen keyboard shrinks the page, so the bottom actions and toasts ride above it. -->
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
-    <meta name="description" content="Snap a bill, tap who ate what, and get a clean per-person split in seconds." />
-    <meta name="theme-color" content="#F5F3EE" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#0F0F0D" media="(prefers-color-scheme: dark)" />
+    <title>Settle — Split anything. Settle in a tap.</title>
+    <meta name="description" content="Settle splits any expense — restaurant bills (AI reads the photo), rent, trips, flatmates and subscriptions — and gets you paid back by UPI with one link. Free, no sign-up, private by default." />
+    <!-- The app canvas in each theme; the app repaints these when someone picks a theme of their own. -->
+    <meta name="theme-color" content="#F5F6F8" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0B0C0E" media="(prefers-color-scheme: dark)" />
     <meta name="color-scheme" content="light dark" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="application-name" content="Settle" />
     <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <meta name="apple-mobile-web-app-title" content="BillSplit" />
+    <meta name="apple-mobile-web-app-title" content="Settle" />
     <meta name="format-detection" content="telephone=no" />
+    <!-- Link previews (a pay link dropped in WhatsApp shows these). -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Settle" />
+    <meta property="og:title" content="Settle — Split anything. Settle in a tap." />
+    <meta property="og:description" content="Split any bill and get paid back over UPI. Friends tap their name and pay their share with any UPI app — no app, no sign-up." />
+    <meta property="og:image" content="/icon-512.png" />
+    <meta property="og:image:width" content="512" />
+    <meta property="og:image:height" content="512" />
+    <meta property="og:image:alt" content="Settle — a receipt on a lime tile" />
+    <meta name="twitter:card" content="summary" />
     <link rel="icon" type="image/svg+xml" href="/icon.svg" />
     <!-- iOS ignores SVG touch icons: an opaque, square PNG (iOS rounds the corners itself). -->
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
-    <title>BillSplit — split any bill in seconds</title>
   </head>
   <body>
     <div id="root"></div>
+    <noscript>
+      <p style="margin: 0; padding: 32px 20px; font: 16px/1.5 system-ui, sans-serif; text-align: center">
+        Settle needs JavaScript to split your expenses. Turn it on and reload the page.
+      </p>
+    </noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
