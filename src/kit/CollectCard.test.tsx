@@ -89,6 +89,12 @@ describe('CollectCard', () => {
     expect(screen.queryByRole('progressbar')).not.toBeInTheDocument()
   })
 
+  it('has nothing to pay back when someone covered only themselves', () => {
+    render(<CollectCard expense={dinner({ payerId: 'sam', participants: [{ friendId: 'sam', input: null }], shares: { sam: 1_000 }, paidBack: {} })} />)
+    expect(screen.getByRole('heading', { name: 'Nothing to pay back' })).toBeInTheDocument()
+    expect(screen.getByText('Sam covered only themselves.')).toBeInTheDocument()
+  })
+
   it('points group expenses to the group’s settle up', () => {
     const group = seedGroup()
     render(<CollectCard expense={dinner({ groupId: group.id })} />)
