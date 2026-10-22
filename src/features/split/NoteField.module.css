@@ -1,0 +1,69 @@
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  min-width: 0;
+}
+
+.label {
+  font: var(--text-label);
+  font-weight: 600;
+  color: var(--ink);
+}
+
+/* Same outline and focus ring as TextField, growing with its text. */
+.area {
+  display: block;
+  width: 100%;
+  min-height: calc(var(--s-12) + var(--s-1));
+  max-height: 40vh;
+  padding: var(--s-3) var(--s-4);
+  border: 0;
+  border-radius: var(--radius-field);
+  background: var(--field-bg);
+  box-shadow: inset 0 0 0 1px var(--field-border);
+  color: var(--ink);
+  font: var(--text-body);
+  font-size: max(16px, 1rem);
+  caret-color: var(--ink);
+  resize: none;
+  field-sizing: content;
+  overflow-wrap: anywhere;
+  transition:
+    background-color var(--dur-2) var(--ease-out),
+    box-shadow var(--dur-2) var(--ease-out);
+}
+
+.area::placeholder {
+  color: var(--ink-placeholder);
+  opacity: 1;
+}
+
+.area:focus {
+  background: var(--surface);
+  box-shadow: inset 0 0 0 2px var(--ink);
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+}
+
+.counter {
+  align-self: flex-end;
+  font: var(--text-caption);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-2);
+}
+
+.full {
+  color: var(--warning-ink);
+  font-weight: 550;
+}
+
+@media (forced-colors: active) {
+  .area {
+    border: 1px solid CanvasText;
+  }
+
+  .area:focus {
+    outline: 2px solid Highlight;
+  }
+}

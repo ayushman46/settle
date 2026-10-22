@@ -1,0 +1,145 @@
+.content {
+  gap: var(--s-8);
+}
+
+.section,
+.details {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  min-width: 0;
+}
+
+.details {
+  gap: var(--s-4);
+}
+
+/* Date · Group: one row of choices, wrapping on narrow phones. */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2);
+  min-width: 0;
+}
+
+.note {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-2);
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
+.noteIcon {
+  flex: none;
+  width: var(--s-4);
+  height: var(--s-4);
+  margin-top: 1px;
+  color: var(--ink-3);
+}
+
+/* ---------- "Splitting a whole trip?" ---------- */
+
+.tip {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-3);
+  padding: var(--s-4);
+  background: color-mix(in srgb, var(--cat-travel-bg) 55%, var(--surface));
+}
+
+.tipIcon {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-pill);
+  background: var(--cat-travel-bg);
+  color: var(--cat-travel-ink);
+}
+
+.tipIcon > svg {
+  width: 20px;
+  height: 20px;
+}
+
+.tipText {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  min-width: 0;
+}
+
+.tipTitle {
+  font: var(--text-label);
+  font-weight: 650;
+  color: var(--ink);
+}
+
+.tipBody {
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
+.tipActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  margin-top: var(--s-2);
+}
+
+/* ---------- Itemized bill ---------- */
+
+.bill {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  padding: var(--s-4);
+}
+
+.billLine {
+  font: var(--text-label);
+  font-weight: 650;
+  color: var(--ink);
+}
+
+.billBody {
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
+.billButton {
+  align-self: flex-start;
+  margin-top: var(--s-2);
+}
+
+/* ---------- Footer ---------- */
+
+.outcome {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  max-width: 100%;
+  color: var(--ink);
+  font-weight: 550;
+}
+
+.outcomeIcon {
+  flex: none;
+  width: var(--s-4);
+  height: var(--s-4);
+  color: var(--positive);
+}
+
+.confirm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+.gone {
+  align-self: flex-start;
+}
