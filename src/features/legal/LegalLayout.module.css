@@ -1,0 +1,121 @@
+.page {
+  display: flex;
+  flex: 1 0 auto;
+  flex-direction: column;
+  width: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--bg);
+  color: var(--ink);
+}
+
+.bar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  padding-top: var(--safe-top);
+  border-bottom: 1px solid var(--line);
+  background: var(--header-bg);
+  -webkit-backdrop-filter: saturate(1.6) blur(16px);
+  backdrop-filter: saturate(1.6) blur(16px);
+}
+
+.barInner {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  max-width: 760px;
+  min-height: 60px;
+  margin-inline: auto;
+  padding-inline: var(--s-3) var(--gutter);
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap);
+  padding-inline: var(--s-1);
+  border-radius: var(--r-md);
+  text-decoration: none;
+}
+
+.main {
+  padding: var(--s-8) var(--gutter) var(--s-16);
+}
+
+.article {
+  max-width: 720px;
+  margin-inline: auto;
+}
+
+.title {
+  font-size: clamp(2.25rem, 7vw, 3rem);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.04em;
+}
+
+.updated {
+  margin-top: var(--s-3);
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
+.summary {
+  margin-top: var(--s-8);
+  padding: var(--s-5) var(--s-6);
+  border-radius: var(--radius-card);
+  background: var(--accent-soft);
+}
+
+.summaryTitle {
+  font: var(--text-section);
+  color: var(--ink);
+}
+
+.summaryList {
+  display: grid;
+  gap: var(--s-2);
+  margin-top: var(--s-3);
+  padding-inline-start: var(--s-5);
+  color: var(--ink);
+}
+
+.summaryList li::marker {
+  color: var(--accent-ink);
+}
+
+.section {
+  margin-top: var(--s-10);
+}
+
+.sectionTitle {
+  font: var(--text-headline);
+  font-weight: 650;
+  letter-spacing: var(--tracking-tight);
+}
+
+.body {
+  display: grid;
+  gap: var(--s-4);
+  margin-top: var(--s-3);
+  font-size: 1.0625rem;
+  line-height: 1.6;
+  color: var(--ink-2);
+}
+
+.body strong {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.body ul {
+  display: grid;
+  gap: var(--s-3);
+  padding-inline-start: var(--s-5);
+}
+
+.body a {
+  color: var(--ink);
+  font-weight: 600;
+}
