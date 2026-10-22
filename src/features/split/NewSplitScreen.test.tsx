@@ -138,6 +138,12 @@ describe('NewSplitScreen — a new split', () => {
     expect(screen.getByRole('radio', { name: /Groceries/ })).toHaveAttribute('aria-checked', 'true')
   })
 
+  it('moves on to who’s in when Enter is pressed in the title', async () => {
+    const { user } = renderApp('/app/split/new')
+    await user.type(screen.getByLabelText("What's it for?"), 'Snacks{Enter}')
+    expect(screen.getByRole('textbox', { name: 'Search or add people' })).toHaveFocus()
+  })
+
   it('keeps a note with its line breaks', async () => {
     const { user } = renderApp('/app/split/new')
     await user.type(amountField(), '500')

@@ -198,6 +198,7 @@ function SplitScreen({ editing, url }: SplitScreenProps) {
   const saving = useRef(false)
   const opened = useRef(false)
   const categoriesRef = useRef<HTMLDivElement>(null)
+  const peopleRef = useRef<HTMLElement>(null)
 
   const group = useGroup(form.groupId)
   const isNew = editing === null
@@ -361,6 +362,14 @@ function SplitScreen({ editing, url }: SplitScreenProps) {
             const text = event.target.value
             change(form.categoryPicked ? { title: text } : { title: text, category: categoryFromText(text) ?? 'other' })
           }}
+          onKeyDown={(event) => {
+            // Enter moves on to who's in (the keyboard's "Next").
+            if (event.key !== 'Enter' || event.nativeEvent.isComposing) return
+            const search = peopleRef.current?.querySelector<HTMLInputElement>('input')
+            if (!search) return
+            event.preventDefault()
+            search.focus()
+          }}
         />
         <div ref={categoriesRef}>
           <CategoryPicker
@@ -420,7 +429,7 @@ function SplitScreen({ editing, url }: SplitScreenProps) {
         </section>
       ) : (
         <>
-          <section className={styles.section} aria-labelledby="split-people">
+          <section ref={peopleRef} className={styles.section} aria-labelledby="split-people">
             <SectionHeader id="split-people" title="Split with" />
             <PeoplePicker
               selectedIds={peopleIds}
