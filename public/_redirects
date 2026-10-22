@@ -1,0 +1,14 @@
+# Cloudflare Pages: the app's pages are one single-page shell (index.html, served as "/"),
+# exactly like server/web.ts APP_ROUTE. Anything else that isn't a file gets 404.html — a copy of
+# the shell made by `npm run build:pages` — with a real 404, so a missing /assets/ file is never
+# answered with a page. Rewrites must point at "/" (Pages redirects "/index.html" to "/").
+# Exact paths first: Pages matches them faster than the splat.
+/app        /  200
+/app/       /  200
+/pay        /  200
+/pay/       /  200
+/privacy    /  200
+/privacy/   /  200
+/terms      /  200
+/terms/     /  200
+/app/*      /  200
