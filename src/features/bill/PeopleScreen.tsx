@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef } from 'react'
 import { ArrowRight } from 'lucide-react'
 import { ActionBar, Button, PageTitle, Screen, TopBar, useToast } from '../../components'
-import { friendsStore } from '../../data'
+import { friendsStore, useGroup } from '../../data'
 import { ME_ID } from '../../domain/types'
 import { PeoplePicker } from '../../kit/index-a'
 import { MAX_PEOPLE } from '../../lib/people'
@@ -26,6 +26,7 @@ export function PeopleScreen() {
   const { session, dispatch } = useSession()
   const flow = useFlow()
   const toast = useToast()
+  const group = useGroup(session.groupId)
   const { people } = session
 
   const sessionRef = useRef(session)
@@ -97,6 +98,7 @@ export function PeopleScreen() {
         selectedIds={people.map((p) => p.id)}
         onChange={onChange}
         max={MAX_PEOPLE}
+        groupMemberIds={group?.memberIds}
         label="Search or add people at the table"
         className={styles.picker}
       />

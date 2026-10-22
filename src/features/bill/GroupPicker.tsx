@@ -124,7 +124,7 @@ export function GroupPicker({ value, onChange, className }: GroupPickerProps) {
                   {group ? group.emoji : <UsersRound />}
                 </span>
                 <span className={styles.text}>
-                  <span className={styles.optionName}>{group ? group.name : 'No group'}</span>
+                  <span className={styles.optionName}>{group ? group.name : 'No group'}</span>{' '}
                   <span className={styles.optionSub}>
                     {group ? plural(group.memberIds.length, 'member') : 'Just the people on this bill'}
                   </span>

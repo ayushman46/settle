@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { screen } from '@testing-library/react'
-import { addFriend, friendsStore, resetDataForTests } from '../../data'
+import { addFriend, createGroup, friendsStore, resetDataForTests } from '../../data'
 import { ME_ID } from '../../domain/types'
 import { resetFlowHistory } from '../../state/backStack'
 import type { Person, Session, Shares } from '../../types'
@@ -134,6 +134,18 @@ describe('PeopleScreen', () => {
     await user.click(screen.getByRole('button', { name: /^Undo/ }))
     expect(screen.getByText('Sam is already back')).toBeInTheDocument()
     expect(probe.current).toBe(after)
+  })
+
+  it('a bill filed under a group offers its members in one tap', async () => {
+    const riya = friend('Riya')
+    const sam = friend('Sam')
+    friend('Neha')
+    const trip = createGroup({ name: 'Goa trip', emoji: '🏖️', kind: 'trip', currency: 'INR', memberIds: [ME_ID, riya.id, sam.id] })
+    const { user, probe } = renderScreen(<PeopleScreen />, sampleSession('people', { groupId: trip.id }))
+
+    expect(screen.getByRole('region', { name: 'In this group' })).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Select all' }))
+    expect(ids(probe.current.people)).toEqual([ME_ID, riya.id, sam.id])
   })
 
   it('stops at 20 people', async () => {
