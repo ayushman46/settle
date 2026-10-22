@@ -1,0 +1,132 @@
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  min-width: 0;
+}
+
+/* ---------- "You spent" — the big number ---------- */
+
+.spent {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  min-width: 0;
+  padding: var(--s-5);
+  overflow: clip;
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+  animation: rise var(--dur-4) var(--ease-out) backwards;
+}
+
+/* A quiet lime glow in the corner — the accent as light, not as text. */
+.spent::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: -60% -40% auto auto;
+  width: 80%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  filter: blur(28px);
+  opacity: 0.9;
+  pointer-events: none;
+}
+
+.spentLabel {
+  font: var(--text-label);
+  color: var(--ink-2);
+}
+
+.spentAmount {
+  min-width: 0;
+  color: var(--ink);
+}
+
+.spentNote {
+  font: var(--text-caption);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-2);
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(128px, 1fr));
+  gap: var(--s-2);
+  margin: var(--s-2) 0 0;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding: var(--s-3);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+}
+
+.stat dt {
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
+.stat dd {
+  margin: 0;
+  overflow: hidden;
+  font: var(--text-headline);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---------- Charts ---------- */
+
+.chartCard {
+  animation: rise var(--dur-4) var(--ease-out) 80ms backwards;
+}
+
+/* ---------- Locked: the blurred sketch ---------- */
+
+.sketch {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+}
+
+/* ---------- Footnotes ---------- */
+
+.footnote {
+  font: var(--text-caption);
+  color: var(--ink-2);
+  text-align: center;
+}
+
+.private {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
+.private > svg {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  color: var(--accent-ink);
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(var(--s-3));
+  }
+}

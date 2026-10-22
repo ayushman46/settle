@@ -1,0 +1,90 @@
+.group {
+  min-width: 0;
+  margin: 0 calc(var(--gutter) * -1);
+  padding: 0;
+  border: 0;
+}
+
+/* Bleeds to the screen edges so the row can scroll under the gutters. */
+.row {
+  display: flex;
+  gap: var(--s-2);
+  padding: var(--s-1) var(--gutter);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-padding-inline: var(--gutter);
+  scrollbar-width: none;
+}
+
+.row::-webkit-scrollbar {
+  display: none;
+}
+
+.chip {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  height: 40px;
+  padding-inline: var(--s-4);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+  color: var(--ink);
+  font: var(--text-label);
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background-color var(--dur-2) var(--ease-out),
+    color var(--dur-2) var(--ease-out),
+    box-shadow var(--dur-2) var(--ease-out),
+    transform var(--dur-2) var(--ease-spring);
+}
+
+/* A 44px touch target around the 40px pill. */
+.chip::after {
+  content: '';
+  position: absolute;
+  inset: -2px 0;
+}
+
+.chip:active {
+  transform: scale(0.96);
+  transition-duration: var(--dur-1);
+}
+
+.checked {
+  background: var(--primary);
+  box-shadow: none;
+  color: var(--on-primary);
+}
+
+@media (hover: hover) {
+  .chip:not(.checked):hover {
+    box-shadow: inset 0 0 0 1px var(--ink-3);
+  }
+}
+
+.input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: inherit;
+}
+
+.chip:has(.input:focus-visible) {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+@media (forced-colors: active) {
+  .checked {
+    outline: 2px solid Highlight;
+  }
+}
