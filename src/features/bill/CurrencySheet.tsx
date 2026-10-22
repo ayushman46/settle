@@ -7,12 +7,23 @@ import { haptic } from '../../lib/haptics'
 import { currencySymbol } from '../../lib/money'
 import styles from './CurrencySheet.module.css'
 
+/** What changing a bill's currency does to its amounts (the default description). */
+const BILL_CURRENCY_NOTE =
+  'Numbers stay the same — only the currency changes. Currencies without decimals round to whole amounts.'
+
 export interface CurrencySheetProps {
   open: boolean
-  /** The bill's current currency (shown checked, listed first). */
+  /** The current currency (shown checked, listed first). */
   currency: string
   onClose: () => void
   onSelect: (code: string) => void
+  /** Sheet title. Default "Currency". */
+  title?: string
+  /**
+   * The line under the title: what picking a currency does here. Defaults to what it does to a
+   * bill's amounts; pass your own (e.g. "New splits start in this currency.") or null for none.
+   */
+  description?: string | null
 }
 
 interface Option {
@@ -50,10 +61,19 @@ function currencyOptions(query: string, current: string): Option[] {
 }
 
 /**
- * Searchable currency picker. Changing it keeps every amount's number (rounded for currencies
- * without decimals); only the currency changes. The screen offers Undo.
+ * Searchable currency picker: common currencies by name or code (any ISO code typed in full works
+ * too), the current one first. On a bill, changing it keeps every amount's number (rounded for
+ * currencies without decimals) and the screen offers Undo; elsewhere (default currency, a group)
+ * pass a `description` that says what it does there.
  */
-export function CurrencySheet({ open, currency, onClose, onSelect }: CurrencySheetProps) {
+export function CurrencySheet({
+  open,
+  currency,
+  onClose,
+  onSelect,
+  title = 'Currency',
+  description = BILL_CURRENCY_NOTE,
+}: CurrencySheetProps) {
   const [query, setQuery] = useState('')
   const [wasOpen, setWasOpen] = useState(open)
   if (open !== wasOpen) {
@@ -68,8 +88,8 @@ export function CurrencySheet({ open, currency, onClose, onSelect }: CurrencyShe
       open={open}
       onClose={onClose}
       size="tall"
-      title="Currency"
-      description="Numbers stay the same — only the currency changes. Currencies without decimals round to whole amounts."
+      title={title}
+      description={description ?? undefined}
     >
       <div className={styles.search}>
         <TextField
