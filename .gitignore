@@ -12,6 +12,14 @@ dist/
 
 # Test / tooling
 coverage/
+# Playwright: the production-like E2E build (dist/ belongs to the benchmarks), results and reports
+.e2e-build/
+test-results/
+playwright-report/
+blob-report/
+# Local Cloudflare Pages emulation (wrangler pages dev)
+.wrangler/
+.dev.vars
 .eslintcache
 .vite/
 

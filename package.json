@@ -1,8 +1,8 @@
 {
-  "name": "billsplit",
+  "name": "settle",
   "private": true,
   "version": "2.0.0",
-  "description": "Snap a bill, tap who ate what, get a clean per-person split. Bill reading powered by NVIDIA AI.",
+  "description": "Split anything and settle in a tap: AI bill splitting, groups and one UPI pay link for everyone. No sign-up, no ads, no database.",
   "type": "module",
   "engines": {
     "node": ">=22.12.0"
@@ -12,12 +12,16 @@
     "build": "tsc -b && vite build && vite build --ssr server/index.ts --outDir dist/server --emptyOutDir",
     "start": "node dist/server/index.js",
     "preview": "npm run build && npm start",
-    "typecheck": "tsc -b",
+    "typecheck": "tsc -b && tsc -p e2e/tsconfig.json && tsc -p functions/tsconfig.json",
     "lint": "eslint .",
     "test": "vitest run",
     "test:watch": "vitest",
     "check": "npm run typecheck && npm run lint && npm run test",
-    "license": "node scripts/license.mjs"
+    "license": "node scripts/license.mjs",
+    "e2e": "playwright test",
+    "e2e:ui-less": "playwright test --reporter=line",
+    "e2e:report": "playwright show-report",
+    "bench": "node bench/run.mjs"
   },
   "dependencies": {
     "@fontsource-variable/geist": "5.3.0",
@@ -31,7 +35,9 @@
     "zod": "4.6.7"
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.14.0",
     "@eslint/js": "10.0.1",
+    "@playwright/test": "1.64.1",
     "@testing-library/jest-dom": "7.0.1",
     "@testing-library/react": "16.3.3",
     "@testing-library/user-event": "14.6.8",
