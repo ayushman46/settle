@@ -1,0 +1,225 @@
+/*
+ * The premium dark card, in both themes. Design-system tokens are re-pointed inside it so nested
+ * components (Money, AvatarStack, focus rings) draw for a dark surface — every pair is AA
+ * (see contrast.md: balance-card ink, ink-2 and the accent on --balance-card-bg).
+ */
+.card {
+  --ink: var(--balance-card-ink);
+  --ink-2: var(--balance-card-ink-2);
+  --surface-3: rgb(255 255 255 / 0.14);
+  --line: var(--balance-card-line);
+  --focus-ring: var(--balance-card-ink);
+  --avatar-ring: var(--balance-card-bg);
+
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+  min-width: 0;
+  padding: var(--s-5) var(--s-5) var(--s-4);
+  overflow: clip;
+  border-radius: var(--radius-card);
+  background: var(--balance-card-gradient);
+  color: var(--balance-card-ink);
+  box-shadow: var(--shadow-md);
+  animation: card-in var(--dur-4) var(--ease-out) backwards;
+}
+
+/* A quiet signature: concentric rings drifting off the top corner. */
+.card::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  top: -96px;
+  right: -72px;
+  width: 200px;
+  aspect-ratio: 1;
+  border: 1px solid var(--balance-card-line);
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 28px rgb(255 255 255 / 0.018),
+    0 0 0 29px var(--balance-card-line),
+    0 0 0 60px rgb(255 255 255 / 0.012);
+  pointer-events: none;
+}
+
+.top {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  min-width: 0;
+}
+
+.label {
+  font: var(--text-label);
+  color: var(--balance-card-ink-2);
+}
+
+.amountBox {
+  min-width: 0;
+}
+
+.amount {
+  color: var(--balance-card-ink);
+}
+
+/* Money coming your way is the signature accent (AA on the card in every accent). */
+.owedAmount {
+  color: var(--accent);
+}
+
+/* ---------- Both directions ---------- */
+
+.totals {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s-2);
+  margin: 0;
+}
+
+.total {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding: var(--s-3);
+  border-radius: var(--r-md);
+  background: rgb(255 255 255 / 0.06);
+  box-shadow: inset 0 0 0 1px var(--balance-card-line);
+}
+
+.totalLabel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  font: var(--text-caption);
+  color: var(--balance-card-ink-2);
+  white-space: nowrap;
+}
+
+.dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.dotOwed {
+  background: var(--accent);
+}
+
+.dotOwe {
+  background: var(--balance-card-ink-2);
+}
+
+.totalValue {
+  margin: 0;
+  overflow: hidden;
+  font: var(--text-headline);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.other {
+  font: var(--text-caption);
+  color: var(--balance-card-ink-2);
+}
+
+/* ---------- Faces + action ---------- */
+
+.foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  padding-top: var(--s-3);
+  border-top: 1px solid var(--balance-card-line);
+}
+
+.people {
+  display: flex;
+  flex: 1 1 10rem;
+  align-items: center;
+  gap: var(--s-2);
+  min-width: 0;
+}
+
+.faces {
+  flex: none;
+}
+
+.peopleText {
+  min-width: 0;
+  overflow: hidden;
+  font: var(--text-caption);
+  font-weight: 550;
+  color: var(--balance-card-ink-2);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.settle {
+  flex: none;
+  margin-inline-start: auto;
+}
+
+/* ---------- Nothing outstanding: one calm line ---------- */
+
+.calm {
+  flex-direction: row;
+  align-items: center;
+  gap: var(--s-3);
+  padding-block: var(--s-4);
+}
+
+.calmIcon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: var(--s-10);
+  height: var(--s-10);
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.calmIcon > svg {
+  width: var(--s-5);
+  height: var(--s-5);
+}
+
+.calmText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.calmTitle {
+  margin: 0;
+  font: var(--text-section);
+  color: var(--balance-card-ink);
+}
+
+.calmSub {
+  font: var(--text-caption);
+  color: var(--balance-card-ink-2);
+}
+
+@keyframes card-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--s-2)) scale(0.985);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card {
+    animation: none;
+  }
+}
