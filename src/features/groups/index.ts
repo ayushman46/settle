@@ -20,6 +20,8 @@ export {
   ownExpenses,
   paymentSentence,
   standingLabel,
+  timelineHead,
+  timelineSize,
   type GroupKindMeta,
   type GroupStanding,
   type GroupTotals,
@@ -28,4 +30,5 @@ export {
   type TimelineDay,
   type TimelineEntry,
 } from './groupView'
+export { forgetTimelineLimits, rememberedTimelineLimit, rememberTimelineLimit, TIMELINE_PAGE } from './timelineMemory'
 export { expensePath, FRIENDS_PATH, friendPath, groupPath, GROUPS_PATH, newSplitPath, settleUpPath, YOU_PATH } from './paths'

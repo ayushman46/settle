@@ -1,0 +1,433 @@
+{
+ "label": "fix2-group-paging",
+ "date": "2026-10-22T23:04:08.485Z",
+ "a": "C:\\Users\\Ayush\\Downloads\\Billsplit-AI\\node_modules\\.cache\\settle-bench\\dist-fix2-A",
+ "b": "C:\\Users\\Ayush\\Downloads\\Billsplit-AI\\node_modules\\.cache\\settle-bench\\dist-fix2-B",
+ "runs": 5,
+ "results": {
+  "low · screen opens": {
+   "A": [
+    {
+     "Home → Groups (tab)": 1226.5999999940395,
+     "Home → Groups (tab) · long tasks ms": 1216,
+     "Groups → Group detail (300)": 6244.5999999940395,
+     "Groups → Group detail (300) · long tasks ms": 6194
+    },
+    {
+     "Home → Groups (tab)": 1304.5999999940395,
+     "Home → Groups (tab) · long tasks ms": 1303,
+     "Groups → Group detail (300)": 7765.100000023842,
+     "Groups → Group detail (300) · long tasks ms": 7737
+    },
+    {
+     "Home → Groups (tab)": 1262.800000011921,
+     "Home → Groups (tab) · long tasks ms": 1259,
+     "Groups → Group detail (300)": 7691.9000000059605,
+     "Groups → Group detail (300) · long tasks ms": 7664
+    },
+    {
+     "Home → Groups (tab)": 1399.0999999940395,
+     "Home → Groups (tab) · long tasks ms": 1402,
+     "Groups → Group detail (300)": 7745,
+     "Groups → Group detail (300) · long tasks ms": 7715
+    },
+    {
+     "Home → Groups (tab)": 1479.5999999940395,
+     "Home → Groups (tab) · long tasks ms": 1475,
+     "Groups → Group detail (300)": 7641.4000000059605,
+     "Groups → Group detail (300) · long tasks ms": 7645
+    }
+   ],
+   "B": [
+    {
+     "Home → Groups (tab)": 996.0999999940395,
+     "Home → Groups (tab) · long tasks ms": 986,
+     "Groups → Group detail (300)": 1586.4000000059605,
+     "Groups → Group detail (300) · long tasks ms": 1591
+    },
+    {
+     "Home → Groups (tab)": 1315.9000000059605,
+     "Home → Groups (tab) · long tasks ms": 1309,
+     "Groups → Group detail (300)": 1741.0999999940395,
+     "Groups → Group detail (300) · long tasks ms": 1735
+    },
+    {
+     "Home → Groups (tab)": 1275.4000000059605,
+     "Home → Groups (tab) · long tasks ms": 1269,
+     "Groups → Group detail (300)": 1587.9000000059605,
+     "Groups → Group detail (300) · long tasks ms": 1591
+    },
+    {
+     "Home → Groups (tab)": 933.0999999940395,
+     "Home → Groups (tab) · long tasks ms": 927,
+     "Groups → Group detail (300)": 1457.699999988079,
+     "Groups → Group detail (300) · long tasks ms": 1452
+    },
+    {
+     "Home → Groups (tab)": 1329.0999999940395,
+     "Home → Groups (tab) · long tasks ms": 1322,
+     "Groups → Group detail (300)": 1321.7000000178814,
+     "Groups → Group detail (300) · long tasks ms": 1330
+    }
+   ]
+  },
+  "low · scroll group:fling": {
+   "A": [
+    {
+     "reached": true,
+     "timeToOldest": 4014.9000000059605,
+     "frames": 61,
+     "longFrames": 24,
+     "droppedFrames": 179,
+     "p50Frame": 16.700000000000728,
+     "p95Frame": 183.29999999999927,
+     "maxFrame": 200.09999999999854,
+     "longTasks": 22,
+     "longTaskMs": 3223,
+     "stalledMs": 0,
+     "domNodes": 6227
+    },
+    {
+     "reached": true,
+     "timeToOldest": 4132.000000005959,
+     "frames": 35,
+     "longFrames": 25,
+     "droppedFrames": 212,
+     "p50Frame": 83.29999999999563,
+     "p95Frame": 333.1999999999971,
+     "maxFrame": 333.3000000000029,
+     "longTasks": 17,
+     "longTaskMs": 3520,
+     "stalledMs": 0,
+     "domNodes": 6227
+    },
+    {
+     "reached": true,
+     "timeToOldest": 4009.9000000119195,
+     "frames": 36,
+     "longFrames": 20,
+     "droppedFrames": 204,
+     "p50Frame": 33.30000000000291,
+     "p95Frame": 366.6000000000058,
+     "maxFrame": 366.6000000000058,
+     "longTasks": 13,
+     "longTaskMs": 3384,
+     "stalledMs": 0,
+     "domNodes": 6227
+    },
+    {
+     "reached": true,
+     "timeToOldest": 4024.69999998212,
+     "frames": 47,
+     "longFrames": 25,
+     "droppedFrames": 194,
+     "p50Frame": 33.29999999999927,
+     "p95Frame": 250,
+     "maxFrame": 299.8999999999978,
+     "longTasks": 19,
+     "longTaskMs": 3383,
+     "stalledMs": 0,
+     "domNodes": 6227
+    },
+    {
+     "reached": true,
+     "timeToOldest": 4013.9000000119195,
+     "frames": 49,
+     "longFrames": 29,
+     "droppedFrames": 191,
+     "p50Frame": 33.29999999999927,
+     "p95Frame": 233.29999999999927,
+     "maxFrame": 299.8000000000029,
+     "longTasks": 18,
+     "longTaskMs": 3211,
+     "stalledMs": 0,
+     "domNodes": 6227
+    }
+   ],
+   "B": [
+    {
+     "reached": true,
+     "timeToOldest": 9429.59999998808,
+     "frames": 31,
+     "longFrames": 28,
+     "droppedFrames": 534,
+     "p50Frame": 83.30000000000291,
+     "p95Frame": 1099.9000000000015,
+     "maxFrame": 1199.7000000000007,
+     "longTasks": 28,
+     "longTaskMs": 8950,
+     "stalledMs": 1099.8999999999942,
+     "domNodes": 6227
+    },
+    {
+     "reached": true,
+     "timeToOldest": 10777.699999999997,
+     "frames": 36,
+     "longFrames": 27,
+     "droppedFrames": 610,
+     "p50Frame": 50.10000000000218,
+     "p95Frame": 1433.2000000000007,
+     "maxFrame": 1499.7000000000007,
+     "longTasks": 22,
+     "longTaskMs": 9982,
+     "stalledMs": 916.6999999999971,
+     "domNodes": 6227
+    },
+    {
+     "reached": true,
+     "timeToOldest": 10860.500000017884,
+     "frames": 31,
+     "longFrames": 27,
+     "droppedFrames": 620,
+     "p50Frame": 66.79999999999927,
+     "p95Frame": 1383.0999999999985,
+     "maxFrame": 1533,
+     "longTasks": 26,
+     "longTaskMs": 10116,
+     "stalledMs": 883.3999999999978,
+     "domNodes": 6227
+    },
+    {
+     "reached": true,
+     "timeToOldest": 12443.300000005962,
+     "frames": 31,
+     "longFrames": 27,
+     "droppedFrames": 715,
+     "p50Frame": 100,
+     "p95Frame": 1716.4000000000015,
+     "maxFrame": 1883,
+     "longTasks": 27,
+     "longTaskMs": 11947,
+     "stalledMs": 1416.2999999999993,
+     "domNodes": 6227
+    },
+    {
+     "reached": true,
+     "timeToOldest": 11312.90000001192,
+     "frames": 37,
+     "longFrames": 26,
+     "droppedFrames": 641,
+     "p50Frame": 50,
+     "p95Frame": 1599.5999999999985,
+     "maxFrame": 1866.4000000000015,
+     "longTasks": 24,
+     "longTaskMs": 10532,
+     "stalledMs": 1049.8999999999905,
+     "domNodes": 6227
+    }
+   ]
+  },
+  "mid · screen opens": {
+   "A": [
+    {
+     "Home → Groups (tab)": 157.19999998807907,
+     "Home → Groups (tab) · long tasks ms": 147,
+     "Groups → Group detail (300)": 753.8000000119209,
+     "Groups → Group detail (300) · long tasks ms": 753
+    },
+    {
+     "Home → Groups (tab)": 166.59999999403954,
+     "Home → Groups (tab) · long tasks ms": 156,
+     "Groups → Group detail (300)": 780.4000000059605,
+     "Groups → Group detail (300) · long tasks ms": 780
+    },
+    {
+     "Home → Groups (tab)": 181.09999999403954,
+     "Home → Groups (tab) · long tasks ms": 169,
+     "Groups → Group detail (300)": 815.2999999821186,
+     "Groups → Group detail (300) · long tasks ms": 814
+    },
+    {
+     "Home → Groups (tab)": 216.19999998807907,
+     "Home → Groups (tab) · long tasks ms": 202,
+     "Groups → Group detail (300)": 783,
+     "Groups → Group detail (300) · long tasks ms": 781
+    },
+    {
+     "Home → Groups (tab)": 196.89999997615814,
+     "Home → Groups (tab) · long tasks ms": 183,
+     "Groups → Group detail (300)": 830,
+     "Groups → Group detail (300) · long tasks ms": 829
+    }
+   ],
+   "B": [
+    {
+     "Home → Groups (tab)": 167.7000000178814,
+     "Home → Groups (tab) · long tasks ms": 156,
+     "Groups → Group detail (300)": 185.30000001192093,
+     "Groups → Group detail (300) · long tasks ms": 164
+    },
+    {
+     "Home → Groups (tab)": 209.09999999403954,
+     "Home → Groups (tab) · long tasks ms": 197,
+     "Groups → Group detail (300)": 186.69999998807907,
+     "Groups → Group detail (300) · long tasks ms": 166
+    },
+    {
+     "Home → Groups (tab)": 181.7999999821186,
+     "Home → Groups (tab) · long tasks ms": 170,
+     "Groups → Group detail (300)": 204.2999999821186,
+     "Groups → Group detail (300) · long tasks ms": 184
+    },
+    {
+     "Home → Groups (tab)": 187,
+     "Home → Groups (tab) · long tasks ms": 174,
+     "Groups → Group detail (300)": 178.5,
+     "Groups → Group detail (300) · long tasks ms": 158
+    },
+    {
+     "Home → Groups (tab)": 194.59999999403954,
+     "Home → Groups (tab) · long tasks ms": 179,
+     "Groups → Group detail (300)": 168.80000001192093,
+     "Groups → Group detail (300) · long tasks ms": 148
+    }
+   ]
+  },
+  "mid · scroll group:fling": {
+   "A": [
+    {
+     "reached": true,
+     "timeToOldest": 3915.3999999999996,
+     "frames": 210,
+     "longFrames": 20,
+     "droppedFrames": 24,
+     "p50Frame": 16.69999999999891,
+     "p95Frame": 33.399999999999636,
+     "maxFrame": 50,
+     "longTasks": 1,
+     "longTaskMs": 50,
+     "stalledMs": 0,
+     "domNodes": 6227
+    },
+    {
+     "reached": true,
+     "timeToOldest": 3915.399999994039,
+     "frames": 212,
+     "longFrames": 21,
+     "droppedFrames": 22,
+     "p50Frame": 16.69999999999891,
+     "p95Frame": 33.30000000000109,
+     "maxFrame": 50,
+     "longTasks": 1,
+     "longTaskMs": 51,
+     "stalledMs": 0,
+     "domNodes": 6227
+    },
+    {
+     "reached": true,
+     "timeToOldest": 3915.19999999404,
+     "frames": 215,
+     "longFrames": 18,
+     "droppedFrames": 19,
+     "p50Frame": 16.69999999999891,
+     "p95Frame": 33.30000000000109,
+     "maxFrame": 49.900000000001455,
+     "longTasks": 0,
+     "longTaskMs": 0,
+     "stalledMs": 0,
+     "domNodes": 6227
+    },
+    {
+     "reached": true,
+     "timeToOldest": 3915.500000005961,
+     "frames": 221,
+     "longFrames": 13,
+     "droppedFrames": 13,
+     "p50Frame": 16.69999999999891,
+     "p95Frame": 33.19999999999891,
+     "maxFrame": 33.400000000001455,
+     "longTasks": 0,
+     "longTaskMs": 0,
+     "stalledMs": 0,
+     "domNodes": 6227
+    },
+    {
+     "reached": true,
+     "timeToOldest": 3915.2000000000007,
+     "frames": 217,
+     "longFrames": 17,
+     "droppedFrames": 17,
+     "p50Frame": 16.69999999999891,
+     "p95Frame": 33.30000000000109,
+     "maxFrame": 33.5,
+     "longTasks": 0,
+     "longTaskMs": 0,
+     "stalledMs": 0,
+     "domNodes": 6227
+    }
+   ],
+   "B": [
+    {
+     "reached": true,
+     "timeToOldest": 3915.2999999880794,
+     "frames": 186,
+     "longFrames": 17,
+     "droppedFrames": 48,
+     "p50Frame": 16.69999999999891,
+     "p95Frame": 33.399999999999636,
+     "maxFrame": 150,
+     "longTasks": 8,
+     "longTaskMs": 655,
+     "stalledMs": 0,
+     "domNodes": 6227
+    },
+    {
+     "reached": true,
+     "timeToOldest": 3915.5000000178807,
+     "frames": 186,
+     "longFrames": 14,
+     "droppedFrames": 48,
+     "p50Frame": 16.699999999999818,
+     "p95Frame": 50,
+     "maxFrame": 150,
+     "longTasks": 8,
+     "longTaskMs": 655,
+     "stalledMs": 0,
+     "domNodes": 6227
+    },
+    {
+     "reached": true,
+     "timeToOldest": 3915.5000000238415,
+     "frames": 184,
+     "longFrames": 17,
+     "droppedFrames": 50,
+     "p50Frame": 16.699999999999818,
+     "p95Frame": 33.399999999999636,
+     "maxFrame": 116.70000000000073,
+     "longTasks": 7,
+     "longTaskMs": 583,
+     "stalledMs": 0,
+     "domNodes": 6227
+    },
+    {
+     "reached": true,
+     "timeToOldest": 3915.100000005961,
+     "frames": 193,
+     "longFrames": 17,
+     "droppedFrames": 41,
+     "p50Frame": 16.699999999999818,
+     "p95Frame": 33.399999999999636,
+     "maxFrame": 100.09999999999854,
+     "longTasks": 7,
+     "longTaskMs": 528,
+     "stalledMs": 0,
+     "domNodes": 6227
+    },
+    {
+     "reached": true,
+     "timeToOldest": 3915.2999999821186,
+     "frames": 191,
+     "longFrames": 16,
+     "droppedFrames": 43,
+     "p50Frame": 16.699999999999818,
+     "p95Frame": 33.399999999999636,
+     "maxFrame": 116.70000000000073,
+     "longTasks": 7,
+     "longTaskMs": 520,
+     "stalledMs": 0,
+     "domNodes": 6227
+    }
+   ]
+  }
+ }
+}

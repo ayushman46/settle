@@ -25,6 +25,7 @@ export {
   type RowStatus,
   type RowTone,
 } from './expenseLabels'
+export { LoadMore, type LoadMoreProps } from './LoadMore'
 export { DARK_SCHEME, FINE_POINTER, TOUCH_FIRST, useMediaQuery } from './media'
 export { COUNT_UP_MS, motionAllowed, useCountUp, type CountUpOptions } from './motion'
 export { NudgeSheet, type NudgeChannel, type NudgeSheetProps } from './NudgeSheet'

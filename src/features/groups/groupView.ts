@@ -183,6 +183,32 @@ export function groupTimeline(group: Group, expenses: readonly Expense[]): Timel
   return days
 }
 
+/** Entries across all `days`. */
+export function timelineSize(days: readonly TimelineDay[]): number {
+  return days.reduce((sum, day) => sum + day.entries.length, 0)
+}
+
+/**
+ * The first `limit` entries of a timeline, still by day: whole days come back as they are (so
+ * their rows can skip re-rendering), and the day the limit falls in is cut short.
+ */
+export function timelineHead(days: readonly TimelineDay[], limit: number): TimelineDay[] {
+  const out: TimelineDay[] = []
+  const whole = Math.floor(limit)
+  let left = whole > 0 ? whole : 0
+  for (const day of days) {
+    if (left === 0) break
+    if (day.entries.length <= left) {
+      out.push(day)
+      left -= day.entries.length
+    } else {
+      out.push({ date: day.date, entries: day.entries.slice(0, left) })
+      left = 0
+    }
+  }
+  return out
+}
+
 /* ------------------------------------------------------------------ payments */
 
 export const METHOD_LABELS: Readonly<Record<Settlement['method'], string>> = {

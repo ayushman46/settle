@@ -14,6 +14,7 @@ import { ME_ID, type Group } from '../../domain/types'
 import { fullDateLabel } from '../../kit/index-a'
 import type * as ShareKit from '../../share'
 import { currentUrl, renderApp, resetScreens } from './testKit'
+import { forgetTimelineLimits, rememberedTimelineLimit, TIMELINE_PAGE } from './timelineMemory'
 
 const mocks = vi.hoisted(() => ({
   renderGroupCard: vi.fn<(input: unknown, opts: unknown) => Promise<Blob>>(),
@@ -47,6 +48,7 @@ afterEach(() => {
   vi.useRealTimers()
   vi.unstubAllGlobals()
   resetScreens()
+  forgetTimelineLimits()
 })
 
 const path = () => `/app/groups/${goa.id}`
@@ -129,6 +131,34 @@ describe('GroupDetailScreen — expenses', () => {
 
     await user.click(within(panel).getByRole('button', { name: /^Villa,/ }))
     await waitFor(() => expect(currentUrl()).toBe(`/app/expense/${villa.id}`))
+  })
+
+  it('lists a long history a page at a time, and remembers how far it got', async () => {
+    // Newest first: "Chai 45" on 1 Oct … "Chai 1" a day per expense earlier.
+    for (let i = 1; i <= TIMELINE_PAGE + 5; i += 1) {
+      const date = new Date(2026, 9, 1 - (TIMELINE_PAGE + 5 - i), 12)
+      const iso = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+      saveExpense(draft({ title: `Chai ${i}`, total: 2000, date: iso, groupId: goa.id, with: [riya] }))
+    }
+    const rows = () => within(screen.getByRole('region', { name: 'Expenses' })).getAllByRole('button', { name: /^Chai \d+,/ })
+    const { user, unmount } = renderApp(path())
+    expect(rows()).toHaveLength(TIMELINE_PAGE)
+    expect(rows()[0]).toHaveAccessibleName(/^Chai 45,/)
+    expect(screen.queryByRole('button', { name: /^Chai 5,/ })).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Show 5 more' }))
+    expect(rows()).toHaveLength(TIMELINE_PAGE + 5)
+    expect(rows().at(-1)).toHaveAccessibleName(/^Chai 1,/)
+    expect(screen.queryByRole('button', { name: /^Show \d+ more$/ })).not.toBeInTheDocument()
+    expect(rememberedTimelineLimit(goa.id)).toBe(TIMELINE_PAGE * 2)
+
+    // Coming back (or to the tab) shows as many rows as before.
+    await user.click(screen.getByRole('radio', { name: 'Balances' }))
+    await user.click(screen.getByRole('radio', { name: 'Expenses' }))
+    expect(rows()).toHaveLength(TIMELINE_PAGE + 5)
+    unmount()
+    renderApp(path())
+    expect(rows()).toHaveLength(TIMELINE_PAGE + 5)
   })
 
   it('removes a payment recorded by mistake, with an undo', async () => {

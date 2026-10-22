@@ -13,7 +13,12 @@ import {
   membersLabel,
   paymentSentence,
   standingLabel,
+  timelineHead,
+  timelineSize,
+  type TimelineDay,
+  type TimelineEntry,
 } from './groupView'
+import { forgetTimelineLimits, rememberedTimelineLimit, rememberTimelineLimit, TIMELINE_PAGE } from './timelineMemory'
 
 let riya: string
 let sam: string
@@ -137,6 +142,81 @@ describe('groupTimeline', () => {
     expect(days.map((d) => d.date)).toEqual(['2026-10-21', '2026-10-20'])
     expect(days[0]?.entries.map((e) => e.id)).toEqual([paid.id, villa.id])
     expect(days[1]?.entries.map((e) => e.id)).toEqual([lunch.id])
+  })
+})
+
+describe('timelineHead', () => {
+  /** Days with `counts[i]` placeholder entries each, newest first. */
+  function timeline(...counts: number[]): TimelineDay[] {
+    return counts.map((n, d) => ({
+      date: `2026-10-${String(28 - d).padStart(2, '0')}`,
+      entries: Array.from({ length: n }, (_, i) => ({ kind: 'payment', id: `${d}-${i}` }) as unknown as TimelineEntry),
+    }))
+  }
+  const ids = (days: TimelineDay[]) => days.map((d) => d.entries.map((e) => e.id))
+
+  it('counts every entry', () => {
+    expect(timelineSize([])).toBe(0)
+    expect(timelineSize(timeline(3, 1, 4))).toBe(8)
+  })
+
+  it('keeps whole days as they are and cuts the day the limit falls in', () => {
+    const days = timeline(3, 1, 4)
+    const head = timelineHead(days, 6)
+    expect(ids(head)).toEqual([['0-0', '0-1', '0-2'], ['1-0'], ['2-0', '2-1']])
+    expect(head[0]).toBe(days[0])
+    expect(head[1]).toBe(days[1])
+    expect(head[2]).not.toBe(days[2])
+    expect(head[2]?.date).toBe(days[2]?.date)
+    expect(days[2]?.entries).toHaveLength(4)
+  })
+
+  it('stops at a day boundary without an empty day', () => {
+    expect(ids(timelineHead(timeline(3, 1, 4), 4))).toEqual([['0-0', '0-1', '0-2'], ['1-0']])
+  })
+
+  it('returns everything when the limit covers it, and nothing for no room', () => {
+    const days = timeline(2, 2)
+    expect(timelineHead(days, 4)).toEqual(days)
+    expect(timelineHead(days, 1000)).toEqual(days)
+    expect(timelineHead(days, 0)).toEqual([])
+    expect(timelineHead(days, -3)).toEqual([])
+    expect(timelineHead(days, Number.NaN)).toEqual([])
+    expect(ids(timelineHead(days, 2.7))).toEqual([['0-0', '0-1']])
+  })
+
+  it('agrees with a plain slice of the flattened timeline for every limit', () => {
+    const days = timeline(5, 1, 7, 2, 3)
+    const flat = days.flatMap((d) => d.entries.map((e) => `${d.date}/${e.id}`))
+    for (let limit = 0; limit <= flat.length + 2; limit++) {
+      const head = timelineHead(days, limit)
+      expect(head.flatMap((d) => d.entries.map((e) => `${d.date}/${e.id}`))).toEqual(flat.slice(0, limit))
+      expect(head.every((d) => d.entries.length > 0)).toBe(true)
+    }
+  })
+})
+
+describe('timelineMemory', () => {
+  afterEach(() => forgetTimelineLimits())
+
+  it('starts each group on the first page and remembers how far it grew', () => {
+    expect(rememberedTimelineLimit('g1')).toBe(TIMELINE_PAGE)
+    rememberTimelineLimit('g1', TIMELINE_PAGE * 3)
+    expect(rememberedTimelineLimit('g1')).toBe(TIMELINE_PAGE * 3)
+    expect(rememberedTimelineLimit('g2')).toBe(TIMELINE_PAGE)
+    rememberTimelineLimit('g1', TIMELINE_PAGE)
+    expect(rememberedTimelineLimit('g1')).toBe(TIMELINE_PAGE)
+    forgetTimelineLimits()
+  })
+
+  it('ignores nonsense and keeps only the most recent groups', () => {
+    rememberTimelineLimit('g', Number.NaN)
+    expect(rememberedTimelineLimit('g')).toBe(TIMELINE_PAGE)
+    for (let i = 0; i < 25; i++) rememberTimelineLimit(`g${i}`, TIMELINE_PAGE * 2)
+    expect(rememberedTimelineLimit('g0')).toBe(TIMELINE_PAGE)
+    expect(rememberedTimelineLimit('g4')).toBe(TIMELINE_PAGE)
+    expect(rememberedTimelineLimit('g5')).toBe(TIMELINE_PAGE * 2)
+    expect(rememberedTimelineLimit('g24')).toBe(TIMELINE_PAGE * 2)
   })
 })
 

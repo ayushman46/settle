@@ -1,0 +1,221 @@
+{
+ "label": "fix2b-group-paging-cv",
+ "date": "2026-10-22T23:19:28.841Z",
+ "a": "C:\\Users\\Ayush\\Downloads\\Billsplit-AI\\node_modules\\.cache\\settle-bench\\dist-fix2b-A",
+ "b": "C:\\Users\\Ayush\\Downloads\\Billsplit-AI\\node_modules\\.cache\\settle-bench\\dist-fix2b-B",
+ "runs": 5,
+ "results": {
+  "low · screen opens": {
+   "A": [
+    {
+     "Home → Groups (tab)": 1931.699999988079,
+     "Home → Groups (tab) · long tasks ms": 1916,
+     "Groups → Group detail (300)": 8614.700000017881,
+     "Groups → Group detail (300) · long tasks ms": 8613
+    },
+    {
+     "Home → Groups (tab)": 1831,
+     "Home → Groups (tab) · long tasks ms": 1825,
+     "Groups → Group detail (300)": 11508.40000000596,
+     "Groups → Group detail (300) · long tasks ms": 11431
+    },
+    {
+     "Home → Groups (tab)": 1832.0999999940395,
+     "Home → Groups (tab) · long tasks ms": 1814,
+     "Groups → Group detail (300)": 11982.199999988079,
+     "Groups → Group detail (300) · long tasks ms": 11950
+    },
+    {
+     "Home → Groups (tab)": 2013.7999999821186,
+     "Home → Groups (tab) · long tasks ms": 2004,
+     "Groups → Group detail (300)": 12409.5,
+     "Groups → Group detail (300) · long tasks ms": 12194
+    },
+    {
+     "Home → Groups (tab)": 2160.0999999940395,
+     "Home → Groups (tab) · long tasks ms": 2147,
+     "Groups → Group detail (300)": 11747.59999999404,
+     "Groups → Group detail (300) · long tasks ms": 11729
+    }
+   ],
+   "B": [
+    {
+     "Home → Groups (tab)": 1788.7000000178814,
+     "Home → Groups (tab) · long tasks ms": 1753,
+     "Groups → Group detail (300)": 1045,
+     "Groups → Group detail (300) · long tasks ms": 1036
+    },
+    {
+     "Home → Groups (tab)": 1044.300000011921,
+     "Home → Groups (tab) · long tasks ms": 1039,
+     "Groups → Group detail (300)": 1264,
+     "Groups → Group detail (300) · long tasks ms": 1274
+    },
+    {
+     "Home → Groups (tab)": 1806.4000000059605,
+     "Home → Groups (tab) · long tasks ms": 1798,
+     "Groups → Group detail (300)": 2144.699999988079,
+     "Groups → Group detail (300) · long tasks ms": 2147
+    },
+    {
+     "Home → Groups (tab)": 2129.7000000178814,
+     "Home → Groups (tab) · long tasks ms": 2121,
+     "Groups → Group detail (300)": 1774.699999988079,
+     "Groups → Group detail (300) · long tasks ms": 1770
+    },
+    {
+     "Home → Groups (tab)": 1551.6000000238419,
+     "Home → Groups (tab) · long tasks ms": 1534,
+     "Groups → Group detail (300)": 1889.7999999821186,
+     "Groups → Group detail (300) · long tasks ms": 1879
+    }
+   ]
+  },
+  "low · scroll group:fling": {
+   "A": [
+    {
+     "reached": true,
+     "timeToOldest": 4015.199999988079,
+     "frames": 29,
+     "longFrames": 21,
+     "droppedFrames": 211,
+     "p50Frame": 33.400000000001455,
+     "p95Frame": 416.6000000000058,
+     "maxFrame": 483.29999999999563,
+     "longTasks": 11,
+     "longTaskMs": 3399,
+     "stalledMs": 0,
+     "domNodes": 6227
+    },
+    {
+     "reached": true,
+     "timeToOldest": 4016.800000000003,
+     "frames": 36,
+     "longFrames": 26,
+     "droppedFrames": 205,
+     "p50Frame": 50,
+     "p95Frame": 300,
+     "maxFrame": 466.59999999999854,
+     "longTasks": 17,
+     "longTaskMs": 3487,
+     "stalledMs": 0,
+     "domNodes": 6227
+    },
+    {
+     "reached": true,
+     "timeToOldest": 4022.0999999880805,
+     "frames": 32,
+     "longFrames": 21,
+     "droppedFrames": 209,
+     "p50Frame": 33.30000000000291,
+     "p95Frame": 350,
+     "maxFrame": 383.3000000000029,
+     "longTasks": 14,
+     "longTaskMs": 3514,
+     "stalledMs": 0,
+     "domNodes": 6227
+    },
+    {
+     "reached": true,
+     "timeToOldest": 4025.7999999821186,
+     "frames": 32,
+     "longFrames": 22,
+     "droppedFrames": 209,
+     "p50Frame": 49.799999999995634,
+     "p95Frame": 349.90000000000146,
+     "maxFrame": 350,
+     "longTasks": 14,
+     "longTaskMs": 3545,
+     "stalledMs": 0,
+     "domNodes": 6227
+    },
+    {
+     "reached": true,
+     "timeToOldest": 4096.999999982116,
+     "frames": 36,
+     "longFrames": 30,
+     "droppedFrames": 209,
+     "p50Frame": 50,
+     "p95Frame": 299.90000000000146,
+     "maxFrame": 300,
+     "longTasks": 14,
+     "longTaskMs": 3269,
+     "stalledMs": 0,
+     "domNodes": 6227
+    }
+   ],
+   "B": [
+    {
+     "reached": true,
+     "timeToOldest": 11326.699999988079,
+     "frames": 25,
+     "longFrames": 23,
+     "droppedFrames": 654,
+     "p50Frame": 266.59999999999854,
+     "p95Frame": 1199.9000000000015,
+     "maxFrame": 1533.1000000000022,
+     "longTasks": 27,
+     "longTaskMs": 10956,
+     "stalledMs": 1102.0000000000073,
+     "domNodes": 6227
+    },
+    {
+     "reached": true,
+     "timeToOldest": 9439.100000023842,
+     "frames": 30,
+     "longFrames": 27,
+     "droppedFrames": 536,
+     "p50Frame": 166.5,
+     "p95Frame": 999.7999999999993,
+     "maxFrame": 1366.4000000000015,
+     "longTasks": 27,
+     "longTaskMs": 8773,
+     "stalledMs": 999.8999999999978,
+     "domNodes": 6227
+    },
+    {
+     "reached": true,
+     "timeToOldest": 14009.69999998212,
+     "frames": 28,
+     "longFrames": 26,
+     "droppedFrames": 812,
+     "p50Frame": 300,
+     "p95Frame": 1433,
+     "maxFrame": 1866.3999999999978,
+     "longTasks": 30,
+     "longTaskMs": 13178,
+     "stalledMs": 2933.2000000000044,
+     "domNodes": 6227
+    },
+    {
+     "reached": true,
+     "timeToOldest": 14126.59999999404,
+     "frames": 29,
+     "longFrames": 27,
+     "droppedFrames": 818,
+     "p50Frame": 233.20000000000437,
+     "p95Frame": 1633.1000000000058,
+     "maxFrame": 1966.3999999999978,
+     "longTasks": 32,
+     "longTaskMs": 13514,
+     "stalledMs": 4232.299999999996,
+     "domNodes": 6227
+    },
+    {
+     "reached": true,
+     "timeToOldest": 12589.699999999997,
+     "frames": 24,
+     "longFrames": 24,
+     "droppedFrames": 731,
+     "p50Frame": 266.5,
+     "p95Frame": 1466.2999999999993,
+     "maxFrame": 1516.5,
+     "longTasks": 28,
+     "longTaskMs": 12037,
+     "stalledMs": 932.9000000000015,
+     "domNodes": 6227
+    }
+   ]
+  }
+ }
+}

@@ -1,4 +1,4 @@
-import { useId, useMemo, useState, type CSSProperties, type ReactNode } from 'react'
+import { memo, useEffect, useId, useMemo, useState, type CSSProperties, type ReactNode } from 'react'
 import { Archive, ArchiveRestore, ArrowRight, Ellipsis, HandCoins, Pencil, Plus, Share2, Trash2, UserPen } from 'lucide-react'
 import { goBack, navigate, useRoute, useSearchParams } from '../../app/router'
 import {
@@ -39,6 +39,7 @@ import { ME_ID, type Friend, type Group, type Minor, type Settlement } from '../
 import { CATEGORY_META } from '../../engine/categories'
 import { ExpenseRow } from '../../kit/index-b'
 import { FriendAvatar, friendLabel, friendObjectLabel, fullDateLabel, relativeDateLabel } from '../../kit/index-a'
+import { LoadMore } from '../../kit/LoadMore'
 import { cx } from '../../lib/cx'
 import { haptic } from '../../lib/haptics'
 import { formatMoney } from '../../lib/money'
@@ -54,10 +55,13 @@ import {
   membersLabel,
   METHOD_LABELS,
   paymentSentence,
+  timelineHead,
+  timelineSize,
   type GroupStanding,
   type TimelineEntry,
 } from './groupView'
 import { expensePath, GROUPS_PATH, newSplitPath, settleUpPath } from './paths'
+import { rememberedTimelineLimit, rememberTimelineLimit, TIMELINE_PAGE } from './timelineMemory'
 import styles from './GroupDetailScreen.module.css'
 
 const ROUTES = ['/app/groups/:id'] as const
@@ -248,6 +252,13 @@ function StandingCard({ group, standing, onShare }: { group: Group; standing: Gr
 function ExpensesTab({ group, onAdd, onPayment }: { group: Group; onAdd: () => void; onPayment: (s: Settlement) => void }) {
   const expenses = useExpenses({ groupId: group.id })
   const days = useMemo(() => groupTimeline(group, expenses), [group, expenses])
+  // A page at a time: a long-running flat's hundreds of rows would hold up opening the group.
+  const [limit, setLimit] = useState(() => rememberedTimelineLimit(group.id))
+  useEffect(() => {
+    rememberTimelineLimit(group.id, limit)
+  }, [group.id, limit])
+  const total = useMemo(() => timelineSize(days), [days])
+  const shown = useMemo(() => timelineHead(days, limit), [days, limit])
   if (days.length === 0) {
     return (
       <EmptyState
@@ -268,7 +279,7 @@ function ExpensesTab({ group, onAdd, onPayment }: { group: Group; onAdd: () => v
   }
   return (
     <div className={styles.days}>
-      {days.map((day) => (
+      {shown.map((day) => (
         <section key={day.date} className={styles.day}>
           <h3 className={styles.dayTitle}>{relativeDateLabel(day.date)}</h3>
           <Card padding="none">
@@ -280,11 +291,13 @@ function ExpensesTab({ group, onAdd, onPayment }: { group: Group; onAdd: () => v
           </Card>
         </section>
       ))}
+      {total > limit && <LoadMore remaining={total - limit} page={TIMELINE_PAGE} onMore={() => setLimit((n) => n + TIMELINE_PAGE)} />}
     </div>
   )
 }
 
-function TimelineRow({ entry, group, onPayment }: { entry: TimelineEntry; group: Group; onPayment: (s: Settlement) => void }) {
+/** One expense or payment; skips re-rendering while its entry is unchanged (say, as more rows load). */
+const TimelineRow = memo(function TimelineRow({ entry, group, onPayment }: { entry: TimelineEntry; group: Group; onPayment: (s: Settlement) => void }) {
   const friendsById = useFriendsById()
   if (entry.kind === 'expense') {
     return <ExpenseRow expense={entry.expense} hideGroup onClick={() => navigate(expensePath(entry.expense.id))} />
@@ -317,7 +330,7 @@ function TimelineRow({ entry, group, onPayment }: { entry: TimelineEntry; group:
       }
     />
   )
-}
+})
 
 /* ------------------------------------------------------------------ balances */
 
