@@ -57,7 +57,7 @@ export function GroupsScreen() {
     setCreating(null)
     // `?new=1` opened the sheet: leave a plain groups page beneath the new group, so Back
     // returns to the list rather than to a fresh "New group" sheet.
-    if (fromQuery) navigate(GROUPS_PATH, { replace: true })
+    dropNewQuery()
     navigate(groupPath(group.id))
   }
 
@@ -80,7 +80,7 @@ export function GroupsScreen() {
         <EmptyGroups onCreate={startCreate} />
       ) : (
         <>
-          <AcrossGroups rows={active} />
+          <AcrossGroups rows={rows} />
           {active.length > 0 ? (
             <section className={styles.section} aria-labelledby="groups-active">
               <h2 id="groups-active" className="visually-hidden">
@@ -133,11 +133,20 @@ export function GroupsScreen() {
         onCreated={created}
         onExited={() => {
           // Closed without creating: drop `?new=1`, so a reload doesn't reopen it.
-          if (fromQuery) navigate(GROUPS_PATH, { replace: true })
+          dropNewQuery()
         }}
       />
     </Screen>
   )
+}
+
+/**
+ * Swaps `/app/groups?new=1` for `/app/groups` — only while that is the page on show (by the
+ * time a sheet finishes closing, the app may already be on another page).
+ */
+function dropNewQuery(): void {
+  const { pathname, search } = window.location
+  if (pathname === GROUPS_PATH && new URLSearchParams(search).get('new') === '1') navigate(GROUPS_PATH, { replace: true })
 }
 
 function GroupRow({ row }: { row: Row }) {

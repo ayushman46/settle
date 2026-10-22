@@ -159,6 +159,14 @@ describe('GroupsScreen — with groups', () => {
     expect(within(screen.getByRole('region', { name: 'Across your groups' })).getByText('Also USD: owe $20')).toBeInTheDocument()
   })
 
+  it('still counts money open in archived groups', () => {
+    const old = createGroup({ name: 'Old flat', emoji: '🏠', kind: 'home', currency: 'INR', memberIds: [ME_ID, sam] })
+    saveExpense(draft({ total: 50000, groupId: old.id, with: [sam] }))
+    setGroupArchived(old.id, true)
+    renderApp('/app/groups')
+    expect(within(screen.getByRole('region', { name: 'Across your groups' })).getByText('₹250')).toBeInTheDocument()
+  })
+
   it('hides the summary when every group is square', () => {
     createGroup({ name: 'Goa', emoji: '🏖️', kind: 'trip', currency: 'INR', memberIds: [ME_ID, riya] })
     renderApp('/app/groups')
