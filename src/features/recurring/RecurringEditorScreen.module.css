@@ -1,0 +1,69 @@
+.content {
+  gap: var(--s-8);
+}
+
+.section,
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  min-width: 0;
+}
+
+.group {
+  gap: var(--s-4);
+}
+
+.caption {
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
+/*
+ * Recurring splits can't round to whole rupees yet (the template doesn't store it), so the split
+ * editor's round-to-whole switch is hidden here rather than offered and silently ignored.
+ */
+.split > [role='switch'] {
+  display: none;
+}
+
+/* ---------- "Next split" status ---------- */
+
+.next {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  padding: var(--s-4);
+  background: color-mix(in srgb, var(--accent-soft) 55%, var(--surface));
+}
+
+.nextText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.nextLabel {
+  font: var(--text-label);
+  font-weight: 650;
+  color: var(--ink);
+}
+
+.nextMonth,
+.nextHint {
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
+.confirm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+.gone {
+  align-self: flex-start;
+}

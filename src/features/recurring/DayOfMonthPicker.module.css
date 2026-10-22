@@ -1,0 +1,111 @@
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  max-width: 100%;
+  min-height: var(--tap);
+  padding: 0 var(--s-3) 0 var(--s-4);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+  color: var(--ink);
+  font: var(--text-label);
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    transform var(--dur-2) var(--ease-spring),
+    box-shadow var(--dur-2) var(--ease-out);
+}
+
+.chip:active {
+  transform: scale(0.97);
+  transition-duration: var(--dur-1);
+}
+
+@media (hover: hover) {
+  .chip:hover {
+    box-shadow: inset 0 0 0 1px var(--ink-3);
+  }
+}
+
+.icon,
+.chevron {
+  flex: none;
+  width: 18px;
+  height: 18px;
+}
+
+.icon {
+  color: var(--accent-ink);
+}
+
+.chevron {
+  color: var(--ink-3);
+}
+
+.label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* A calendar-like grid: 7 columns, big round targets. */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: var(--s-2);
+  padding-bottom: var(--s-2);
+}
+
+.day {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  min-width: var(--tap);
+  min-height: var(--tap);
+  border-radius: 50%;
+  background: var(--surface-2);
+  color: var(--ink);
+  font: var(--text-label);
+  font-variant-numeric: tabular-nums;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background-color var(--dur-2) var(--ease-out),
+    color var(--dur-2) var(--ease-out),
+    transform var(--dur-2) var(--ease-spring);
+}
+
+.day:active {
+  transform: scale(0.92);
+  transition-duration: var(--dur-1);
+}
+
+@media (hover: hover) {
+  .day:not(.checked):hover {
+    background: var(--surface-3);
+  }
+}
+
+.checked {
+  background: var(--primary);
+  color: var(--on-primary);
+  font-weight: 650;
+}
+
+/* 320px: the 7 columns shrink to fit (each day stays well above the 24px target minimum). */
+@media (max-width: 360px) {
+  .grid {
+    gap: 2px;
+  }
+
+  .day {
+    min-width: 0;
+    min-height: 0;
+  }
+}
+
+@media (forced-colors: active) {
+  .checked {
+    outline: 2px solid Highlight;
+  }
+}
