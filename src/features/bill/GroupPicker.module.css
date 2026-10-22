@@ -1,0 +1,178 @@
+/* "Group: 🏖 Goa trip ▾" — the same chip as "Paid by", so the details read as one row of choices. */
+.chip {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  height: var(--tap);
+  padding-inline: var(--s-4) var(--s-3);
+  border-radius: var(--r-pill);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+  color: var(--ink);
+  font: var(--text-label);
+  white-space: nowrap;
+  transition:
+    transform var(--dur-2) var(--ease-spring),
+    background-color var(--dur-2) var(--ease-out);
+}
+
+.chip:active {
+  transform: scale(0.97);
+  background: var(--surface-2);
+  transition-duration: var(--dur-1);
+}
+
+@media (hover: hover) {
+  .chip:hover {
+    background: var(--surface-2);
+  }
+}
+
+.lead {
+  flex: none;
+  color: var(--ink-2);
+  font-weight: 550;
+}
+
+.emoji {
+  flex: none;
+  font-size: 1.05em;
+  line-height: 1;
+}
+
+.name {
+  min-width: 0;
+  overflow: hidden;
+  font-weight: 650;
+  text-overflow: ellipsis;
+}
+
+.chevron {
+  flex: none;
+  width: var(--s-4);
+  height: var(--s-4);
+  color: var(--ink-2);
+}
+
+/* ---------- Sheet ---------- */
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  width: 100%;
+  min-height: calc(var(--s-12) + var(--s-4));
+  padding: var(--s-2);
+  border-radius: var(--r-lg);
+  color: var(--ink);
+  text-align: start;
+  transition:
+    transform var(--dur-2) var(--ease-spring),
+    background-color var(--dur-2) var(--ease-out);
+}
+
+.option:active {
+  transform: scale(0.985);
+  background: var(--surface-2);
+  transition-duration: var(--dur-1);
+}
+
+@media (hover: hover) {
+  .option:hover {
+    background: var(--surface-2);
+  }
+}
+
+.tile {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: var(--s-10);
+  height: var(--s-10);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.tile > svg {
+  width: var(--s-5);
+  height: var(--s-5);
+  color: var(--ink-2);
+}
+
+.text {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.optionName {
+  overflow: hidden;
+  font: var(--text-body);
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.optionSub {
+  overflow: hidden;
+  color: var(--ink-2);
+  font: var(--text-caption);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The tick: an empty ring that fills with the accent when picked. */
+.check {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: var(--s-6);
+  height: var(--s-6);
+  margin-inline-end: var(--s-1);
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 2px var(--ink-3);
+  color: transparent;
+  transition:
+    background-color var(--dur-2) var(--ease-out),
+    box-shadow var(--dur-2) var(--ease-out),
+    color var(--dur-2) var(--ease-out);
+}
+
+.check > svg {
+  width: 14px;
+  height: 14px;
+}
+
+.checked .check {
+  background: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent-edge);
+  color: var(--on-accent);
+}
+
+.checked .optionName {
+  font-weight: 650;
+}
+
+@media (forced-colors: active) {
+  .check {
+    border: 2px solid CanvasText;
+  }
+
+  .checked .check {
+    background: Highlight;
+    color: HighlightText;
+  }
+}

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type RefObject } from 'react'
 import { ArrowLeft, ArrowRight, Equal, SlidersHorizontal } from 'lucide-react'
 import { ActionBar, BottomSheet, Button, Chip, Money, PersonToggle, Progress, Stepper } from '../../components'
+import { ME_ID } from '../../domain/types'
 import { formatQuantity } from '../../lib/format'
 import { haptic } from '../../lib/haptics'
 import { formatMoney } from '../../lib/money'
@@ -226,7 +227,7 @@ export function AssignSheet({
               trailing={
                 uneven && on ? (
                   <Stepper
-                    label={`Shares for ${person.name}`}
+                    label={`Shares for ${person.id === ME_ID ? 'you' : person.name}`}
                     value={shares[person.id] ?? 1}
                     min={1}
                     max={maxShares}

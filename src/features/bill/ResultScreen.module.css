@@ -12,7 +12,42 @@
   text-align: center;
 }
 
+/* The bill's name is the rename control: "SAFFRON TABLE ✎". */
+.merchantButton {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  max-width: 100%;
+  min-height: var(--tap);
+  padding: 0 var(--s-3);
+  border-radius: var(--r-pill);
+  color: var(--ink);
+  transition:
+    background-color var(--dur-2) var(--ease-out),
+    transform var(--dur-2) var(--ease-spring);
+}
+
+.merchantButton:active {
+  background: var(--surface-2);
+  transform: scale(0.97);
+  transition-duration: var(--dur-1);
+}
+
+@media (hover: hover) {
+  .merchantButton:hover {
+    background: var(--surface-2);
+  }
+}
+
+.merchantIcon {
+  flex: none;
+  width: var(--s-4);
+  height: var(--s-4);
+  color: var(--ink-2);
+}
+
 .merchant {
+  min-width: 0;
   max-width: 100%;
   font: var(--text-label);
   font-weight: 650;
@@ -65,15 +100,6 @@
   font: var(--text-caption);
   font-weight: 550;
   font-variant-numeric: tabular-nums;
-}
-
-/* "Who paid? Settle up" — a quiet jump to the settle-up section below the receipt. */
-.settleLink {
-  margin-top: var(--s-2);
-  text-decoration: underline;
-  text-decoration-color: var(--line-strong);
-  text-decoration-thickness: 2px;
-  text-underline-offset: 0.3em;
 }
 
 /* ---------- People ---------- */
@@ -284,6 +310,22 @@
   margin-top: var(--s-3);
   padding-top: var(--s-2);
   border-top: 1px dashed var(--line-strong);
+}
+
+/* ---------- Details: who paid, when, which group, what for ---------- */
+
+.choices {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+  min-width: 0;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  min-width: 0;
 }
 
 /* ---------- Footer ---------- */
