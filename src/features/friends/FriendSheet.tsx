@@ -1,0 +1,247 @@
+import { useId, useRef, useState, type CSSProperties, type KeyboardEvent } from 'react'
+import { Check, Phone } from 'lucide-react'
+import { Avatar, BottomSheet, Button, TextField, useToast } from '../../components'
+import { addFriend, cleanPhone, DataError, findFriendByName, updateFriend, useFriends } from '../../data'
+import { ME_ID, type Friend } from '../../domain/types'
+import { UPI_ID_ERROR } from '../../kit/index-b'
+import { cx } from '../../lib/cx'
+import { haptic } from '../../lib/haptics'
+import { MAX_NAME_LENGTH, nextColor, normalizeName } from '../../lib/people'
+import { isValidUpiId } from '../../lib/upi'
+import { AVATAR_COLORS } from '../../types'
+import styles from './FriendSheet.module.css'
+
+/** The avatar palette's names, in palette order (see `--avatar-N-bg`). */
+const COLOR_NAMES = ['Peach', 'Mint', 'Sky', 'Lilac', 'Lemon', 'Rose', 'Teal', 'Sand'] as const
+
+export const PHONE_ERROR = 'That doesn’t look like a phone number. Use 7 to 15 digits, like 98765 43210.'
+
+export interface FriendSheetProps {
+  open: boolean
+  onClose: () => void
+  /** Who to edit; leave out to add someone new. */
+  friend?: Friend | null
+  /** Name to start with when adding (e.g. what was just searched for). */
+  initialName?: string
+  /** After saving: the saved person, and whether they're new. */
+  onSaved?: (friend: Friend, created: boolean) => void
+}
+
+interface Form {
+  name: string
+  upiId: string
+  phone: string
+  /** Picked by hand (null = keep theirs / the next free colour). */
+  color: number | null
+  /** Show field errors (after the first try to save, or leaving a field). */
+  touched: { upiId: boolean; phone: boolean }
+}
+
+function formFor(friend: Friend | null | undefined, initialName: string): Form {
+  return {
+    name: friend?.name ?? initialName,
+    upiId: friend?.upiId ?? '',
+    phone: friend?.phone ?? '',
+    color: null,
+    touched: { upiId: false, phone: false },
+  }
+}
+
+/**
+ * Add someone to your people, or edit them: their name, the UPI ID they get paid on (so friends
+ * can pay them in a tap) and a phone number for WhatsApp and SMS reminders — both optional — and
+ * the colour of their avatar. Names stay unique; a clash says who it clashes with.
+ */
+export function FriendSheet({ open, onClose, friend, initialName = '', onSaved }: FriendSheetProps) {
+  const toast = useToast()
+  const friends = useFriends()
+  const upiRef = useRef<HTMLInputElement>(null)
+  const phoneRef = useRef<HTMLInputElement>(null)
+  const editing = friend != null
+  const [form, setForm] = useState<Form>(() => formFor(friend, initialName))
+  const [wasOpen, setWasOpen] = useState(open)
+  if (open !== wasOpen) {
+    setWasOpen(open)
+    if (open) setForm(formFor(friend, initialName))
+  }
+  const patch = (next: Partial<Form>) => setForm((f) => ({ ...f, ...next }))
+
+  const others = friends.filter((f) => f.id !== ME_ID)
+  const name = normalizeName(form.name)
+  const clash = name ? findFriendByName(name, friends) : null
+  const nameError = clash && clash.id !== friend?.id ? `${clash.name} is already in your people.` : null
+  const upiOk = form.upiId.trim() === '' || isValidUpiId(form.upiId)
+  const phoneOk = form.phone.trim() === '' || cleanPhone(form.phone) !== null
+  const color = form.color ?? friend?.color ?? nextColor(others)
+  const ready = name !== '' && nameError === null && upiOk && phoneOk
+
+  const save = (): void => {
+    if (!ready) {
+      patch({ touched: { upiId: true, phone: true } })
+      haptic('warning')
+      return
+    }
+    const fields = { upiId: form.upiId.trim() || null, phone: form.phone.trim() || null }
+    try {
+      let saved: Friend
+      if (friend) {
+        saved = updateFriend(friend.id, { name, ...fields, color })
+      } else {
+        saved = addFriend({ name, ...fields })
+        if (saved.color !== color) saved = updateFriend(saved.id, { color })
+      }
+      haptic('success')
+      toast(editing ? 'Saved' : `${saved.name} added`, { tone: 'success' })
+      onSaved?.(saved, !editing)
+      onClose()
+    } catch (error) {
+      if (!(error instanceof DataError)) throw error
+      haptic('error')
+      toast(error.message, { tone: 'error' })
+    }
+  }
+
+  return (
+    <BottomSheet
+      open={open}
+      onClose={onClose}
+      title={editing ? `Edit ${friend.name}` : 'Add a person'}
+      description={editing ? undefined : 'They don’t need the app — just a name to split with.'}
+      footer={
+        <Button block disabled={name === '' || nameError !== null} onClick={save}>
+          {editing ? 'Save' : 'Add person'}
+        </Button>
+      }
+    >
+      <form
+        className={styles.form}
+        noValidate
+        onSubmit={(event) => {
+          event.preventDefault()
+          save()
+        }}
+      >
+        <div className={styles.preview} aria-hidden="true">
+          <Avatar name={name || '?'} color={color} size="lg" className={styles.previewAvatar} />
+        </div>
+        <TextField
+          label="Name"
+          value={form.name}
+          placeholder="Riya"
+          maxLength={MAX_NAME_LENGTH}
+          autoFocus={!editing}
+          autoComplete="off"
+          autoCapitalize="words"
+          enterKeyHint="next"
+          error={nameError}
+          onChange={(event) => patch({ name: event.currentTarget.value })}
+          onKeyDown={(event) => {
+            if (enterPressed(event)) upiRef.current?.focus()
+          }}
+        />
+        <TextField
+          ref={upiRef}
+          label="UPI ID"
+          value={form.upiId}
+          placeholder="riya@okaxis"
+          inputMode="email"
+          autoComplete="off"
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
+          enterKeyHint="next"
+          className={styles.mono}
+          hint="Optional — so they can be paid in a tap."
+          error={form.touched.upiId && !upiOk ? UPI_ID_ERROR : undefined}
+          onChange={(event) => patch({ upiId: event.currentTarget.value.replace(/\s+/g, '') })}
+          onKeyDown={(event) => {
+            if (enterPressed(event)) phoneRef.current?.focus()
+          }}
+          onBlur={() => patch({ touched: { ...form.touched, upiId: form.upiId !== '' } })}
+        />
+        <TextField
+          ref={phoneRef}
+          label="Phone"
+          type="tel"
+          value={form.phone}
+          placeholder="98765 43210"
+          inputMode="tel"
+          autoComplete="off"
+          enterKeyHint="done"
+          hint="Optional — for WhatsApp and SMS reminders."
+          error={form.touched.phone && !phoneOk ? PHONE_ERROR : undefined}
+          startAdornment={<Phone aria-hidden="true" className={styles.icon} />}
+          onChange={(event) => patch({ phone: event.currentTarget.value })}
+          onKeyDown={(event) => {
+            if (enterPressed(event)) save()
+          }}
+          onBlur={() => patch({ touched: { ...form.touched, phone: form.phone !== '' } })}
+        />
+        <ColorPicker value={color} onChange={(next) => patch({ color: next })} />
+      </form>
+    </BottomSheet>
+  )
+}
+
+/**
+ * True for Enter (not mid-composition), with its default stopped — the form has several fields,
+ * so Enter moves on (or saves from the last) instead of submitting by itself.
+ */
+function enterPressed(event: KeyboardEvent<HTMLInputElement>): boolean {
+  if (event.key !== 'Enter' || event.nativeEvent.isComposing) return false
+  event.preventDefault()
+  return true
+}
+
+function ColorPicker({ value, onChange }: { value: number; onChange: (color: number) => void }) {
+  const labelId = useId()
+  const refs = useRef<Array<HTMLButtonElement | null>>([])
+  const pick = (i: number, focus: boolean): void => {
+    const next = ((i % AVATAR_COLORS) + AVATAR_COLORS) % AVATAR_COLORS
+    if (focus) refs.current[next]?.focus()
+    if (next === value) return
+    haptic('select')
+    onChange(next)
+  }
+  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>): void => {
+    const moves: Record<string, number> = {
+      ArrowRight: value + 1,
+      ArrowDown: value + 1,
+      ArrowLeft: value - 1,
+      ArrowUp: value - 1,
+      Home: 0,
+      End: AVATAR_COLORS - 1,
+    }
+    const target = moves[event.key]
+    if (target === undefined) return
+    event.preventDefault()
+    pick(target, true)
+  }
+  return (
+    <div className={styles.colors}>
+      <p id={labelId} className={styles.colorsLabel}>
+        Avatar colour
+      </p>
+      <div role="radiogroup" aria-labelledby={labelId} className={styles.swatches} onKeyDown={onKeyDown}>
+        {COLOR_NAMES.map((label, i) => (
+          <button
+            key={label}
+            ref={(el) => {
+              refs.current[i] = el
+            }}
+            type="button"
+            role="radio"
+            aria-checked={i === value}
+            aria-label={label}
+            tabIndex={i === value ? 0 : -1}
+            className={cx(styles.swatch, i === value && styles.picked)}
+            style={{ '--swatch': `var(--avatar-${i}-bg)`, '--swatch-ink': `var(--avatar-${i}-ink)` } as CSSProperties}
+            onClick={() => pick(i, false)}
+          >
+            {i === value && <Check aria-hidden="true" strokeWidth={3} />}
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}

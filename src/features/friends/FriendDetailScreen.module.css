@@ -1,0 +1,268 @@
+.content {
+  gap: var(--s-6);
+}
+
+.goneAction {
+  align-self: flex-start;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  min-width: 0;
+}
+
+/* ---------- Hero ---------- */
+
+.hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-3);
+  min-width: 0;
+  padding-top: var(--s-2);
+  text-align: center;
+}
+
+/* A larger disc than the 56px avatar: the person is the page. */
+.avatar > span {
+  --av-size: 80px;
+}
+
+.avatar {
+  animation: pop var(--dur-4) var(--ease-spring) backwards;
+}
+
+.contact {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--s-2);
+  max-width: 100%;
+}
+
+.contactChip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  max-width: 100%;
+  min-height: var(--tap);
+  padding-inline: var(--s-3);
+  border-radius: var(--r-pill);
+  background: var(--surface);
+  box-shadow: var(--shadow-xs);
+  color: var(--ink);
+  font: var(--text-label);
+  text-decoration: none;
+  transition: transform var(--dur-2) var(--ease-spring);
+}
+
+.contactChip:active {
+  transform: scale(0.97);
+  transition-duration: var(--dur-1);
+}
+
+.contactChip > svg {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  color: var(--ink-2);
+}
+
+.upi {
+  min-width: 0;
+  overflow: hidden;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.contactChip > .copy {
+  width: 16px;
+  height: 16px;
+}
+
+/* No UPI ID yet: an invitation, not a gap. */
+.missing {
+  background: var(--accent-soft);
+  box-shadow: inset 0 0 0 1px var(--accent-edge);
+  color: var(--accent-ink);
+}
+
+.missing > svg {
+  color: var(--accent-ink);
+}
+
+/* ---------- Where you stand ---------- */
+
+.standing {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  min-width: 0;
+  padding: var(--s-5);
+  overflow: clip;
+  border-radius: var(--radius-card);
+  animation: rise var(--dur-4) var(--ease-out) backwards;
+}
+
+/* Money open between you: the dark premium card (tokens re-pointed for the dark surface). */
+.dark {
+  --ink: var(--balance-card-ink);
+  --ink-2: var(--balance-card-ink-2);
+  --line: var(--balance-card-line);
+  --line-strong: var(--balance-card-line);
+  --surface-2: rgb(255 255 255 / 0.1);
+  --surface-3: rgb(255 255 255 / 0.16);
+  --focus-ring: var(--balance-card-ink);
+
+  background: var(--balance-card-gradient);
+  color: var(--balance-card-ink);
+  box-shadow: var(--shadow-md);
+}
+
+.dark::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  top: -96px;
+  right: -72px;
+  width: 200px;
+  aspect-ratio: 1;
+  border: 1px solid var(--balance-card-line);
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 28px rgb(255 255 255 / 0.018),
+    0 0 0 29px var(--balance-card-line),
+    0 0 0 60px rgb(255 255 255 / 0.012);
+  pointer-events: none;
+}
+
+/* All square: a calm light card. */
+.square {
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: var(--shadow-card);
+}
+
+.standingLabel {
+  font: var(--text-label);
+  color: var(--ink-2);
+}
+
+.standingAmount {
+  color: var(--ink);
+}
+
+.owed {
+  color: var(--accent);
+}
+
+.standingLine {
+  font: var(--text-caption);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-2);
+}
+
+.standingActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  margin-top: var(--s-2);
+}
+
+/* ---------- Sources ---------- */
+
+.splitIcon {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  background: var(--cat-other-bg);
+  color: var(--cat-other-ink);
+}
+
+.splitIcon svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* ---------- Groups together ---------- */
+
+.groups {
+  display: flex;
+  gap: var(--s-2);
+  margin: 0 calc(var(--gutter) * -1);
+  padding: var(--s-1) var(--gutter);
+  overflow-x: auto;
+  scrollbar-width: none;
+  scroll-snap-type: x proximity;
+}
+
+.groups::-webkit-scrollbar {
+  display: none;
+}
+
+.groups > li {
+  flex: none;
+  scroll-snap-align: start;
+}
+
+.groupChip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  max-width: 220px;
+  min-height: 52px;
+  padding: var(--s-2) var(--s-4) var(--s-2) var(--s-2);
+  border-radius: var(--radius-tile);
+  background: var(--surface);
+  box-shadow: var(--shadow-xs);
+  color: var(--ink);
+  transition: transform var(--dur-2) var(--ease-spring);
+}
+
+.groupChip:active {
+  transform: scale(0.97);
+  transition-duration: var(--dur-1);
+}
+
+.groupName {
+  overflow: hidden;
+  font: var(--text-label);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.more {
+  align-self: center;
+}
+
+.remove {
+  align-self: center;
+}
+
+.sheetActions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(var(--s-2));
+  }
+}
+
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+}

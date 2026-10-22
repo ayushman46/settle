@@ -1,0 +1,62 @@
+.sources {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+}
+
+.source {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  min-width: 0;
+  padding-block: var(--s-3);
+}
+
+.source + .source {
+  border-top: 1px solid var(--line);
+}
+
+.splitIcon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  background: var(--cat-other-bg);
+  color: var(--cat-other-ink);
+}
+
+.splitIcon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.title {
+  overflow: hidden;
+  font: var(--text-label);
+  color: var(--ink);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sub {
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
+.side {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--s-1);
+}
