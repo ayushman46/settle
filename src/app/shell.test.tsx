@@ -5,7 +5,7 @@ import { ME_ID } from '../domain/types'
 import { openPaywall } from '../features/pro/paywall'
 import { fetchMock, serveBilling, testSigner } from '../features/pro/testing'
 import { rememberNames } from '../lib/recent'
-import { matchAppRoute, preloadCoreScreens } from './routes'
+import { matchAppRoute, PaywallHost, preloadCoreScreens } from './routes'
 import { navigate } from './router'
 import type { LazyScreen } from './lazyScreen'
 import { currentUrl, renderApp, resetShell, serveHealth, stubMedia } from './testKit'
@@ -410,6 +410,7 @@ describe('preloading screens', SLOW, () => {
     for (const path of ['/app/split/new', '/app/expense/e1', '/app/groups', '/app/activity', '/app/you', '/app/bill', '/app/friends']) {
       expect(screenAt(path).loaded).toBe(true)
     }
+    expect(PaywallHost.loaded).toBe(true)
   })
 
   it('starts while idle, then opens screens without a placeholder', async () => {

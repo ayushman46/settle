@@ -174,7 +174,7 @@ export function matchAppRoute(path: string): AppRoute | null {
   return APP_ROUTES.find((route) => matchPath(route.pattern, path) !== null) ?? null
 }
 
-/** The screens people reach from Home most, loaded ahead of time (also so they open offline). */
+/** The screens people reach from Home most (and the paywall), loaded ahead of time — also so they open offline. */
 const CORE_SCREENS: readonly LazyScreen[] = [
   NewSplitScreen,
   ExpenseDetailScreen,
@@ -185,6 +185,8 @@ const CORE_SCREENS: readonly LazyScreen[] = [
   FriendsScreen,
   GroupDetailScreen,
   FriendDetailScreen,
+  // Last: the paywall opens instantly the first time a free limit is reached.
+  PaywallHost,
 ]
 
 /** Loads the core screens' code one after another (never all at once). Failures are ignored. */
