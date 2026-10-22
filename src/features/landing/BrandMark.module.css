@@ -1,0 +1,51 @@
+.brand {
+  --mark: 32px;
+
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: calc(var(--mark) * 0.3);
+  color: var(--ink);
+}
+
+.sm {
+  --mark: 24px;
+}
+
+.md {
+  --mark: 32px;
+}
+
+.lg {
+  --mark: 44px;
+}
+
+.tile {
+  flex: none;
+  width: var(--mark);
+  height: var(--mark);
+}
+
+.paper {
+  fill: var(--accent);
+}
+
+.glyph {
+  fill: none;
+  stroke: var(--on-accent);
+  stroke-width: 30;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.word {
+  font-size: calc(var(--mark) * 0.66);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.035em;
+  white-space: nowrap;
+}
+
+.sm .word {
+  font-size: 17px;
+}

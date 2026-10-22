@@ -1,0 +1,747 @@
+/*
+ * Mini mockups inside the feature tiles: real design-system pieces at a slightly reduced scale,
+ * sitting on the tile's soft stage. Everything here is decorative (aria-hidden + inert).
+ */
+.visual {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 228px;
+  padding: var(--s-5);
+  border-radius: var(--r-lg);
+  background: var(--surface-2);
+  overflow: hidden;
+  font: var(--text-label);
+  color: var(--ink);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* A soft glow in the stage's corner, tinted per feature. */
+.visual::before {
+  content: '';
+  position: absolute;
+  inset: auto -20% -45% auto;
+  width: 70%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, var(--glow, color-mix(in srgb, var(--accent) 45%, transparent)), transparent);
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.visual > * {
+  position: relative;
+}
+
+.v-scan {
+  --glow: color-mix(in srgb, var(--cat-food-ink) 30%, transparent);
+}
+
+.v-describe {
+  --glow: color-mix(in srgb, var(--pro-2) 70%, transparent);
+}
+
+.v-groups {
+  --glow: color-mix(in srgb, var(--cat-travel-ink) 28%, transparent);
+}
+
+.v-recurring {
+  --glow: color-mix(in srgb, var(--cat-rent-ink) 28%, transparent);
+}
+
+.v-insights {
+  --glow: color-mix(in srgb, var(--cat-entertainment-ink) 26%, transparent);
+}
+
+.v-cards {
+  --glow: color-mix(in srgb, var(--cat-shopping-ink) 24%, transparent);
+}
+
+/* ---------- Shared bits ---------- */
+
+.muted {
+  display: block;
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
+.strong {
+  font-weight: 650;
+}
+
+.personName {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.card {
+  width: min(100%, 300px);
+  padding: var(--s-3) var(--s-4);
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-md);
+}
+
+.cardTitle {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-weight: 650;
+}
+
+/* ---------- AI bill ---------- */
+
+.scan {
+  position: relative;
+  width: min(100%, 300px);
+}
+
+.receipt {
+  transform: rotate(-1.5deg);
+}
+
+.merchant {
+  margin-bottom: var(--s-2);
+  font: var(--text-caption);
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-align: center;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+
+.items {
+  display: grid;
+  gap: var(--s-2);
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  font: var(--text-caption);
+}
+
+.itemName {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.itemAmount {
+  flex: none;
+  min-width: 3.6em;
+  text-align: end;
+}
+
+/* The lime scan line sweeping down the bill. */
+.scanLine {
+  position: absolute;
+  inset-inline: -6px;
+  top: 0;
+  height: 3px;
+  border-radius: var(--r-pill);
+  background: var(--accent);
+  box-shadow: 0 0 18px 4px color-mix(in srgb, var(--accent) 60%, transparent);
+  animation: sweep 3.2s var(--ease-in-out) infinite;
+}
+
+.aiChip {
+  position: absolute;
+  top: -12px;
+  right: -4px;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+  padding: var(--s-1) var(--s-3);
+  border-radius: var(--r-pill);
+  background: var(--primary);
+  color: var(--on-primary);
+  font: var(--text-micro);
+  box-shadow: var(--shadow-md);
+}
+
+.aiChip > svg {
+  width: 13px;
+  height: 13px;
+}
+
+@keyframes sweep {
+  0% {
+    top: 4%;
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    top: 92%;
+    opacity: 0;
+  }
+}
+
+/* ---------- Just say it ---------- */
+
+.describe {
+  display: grid;
+  gap: var(--s-3);
+  justify-items: center;
+  width: 100%;
+}
+
+.pill {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  width: min(100%, 340px);
+  padding: var(--s-2) var(--s-4) var(--s-2) var(--s-2);
+  border-radius: var(--r-pill);
+  background: var(--surface);
+  box-shadow: var(--shadow-md);
+}
+
+.sparkle {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--r-pill);
+  background: var(--pro-gradient);
+  color: var(--on-pro);
+}
+
+.sparkle > svg {
+  width: 16px;
+  height: 16px;
+}
+
+.pillText {
+  min-width: 0;
+  font: var(--text-caption);
+  font-weight: 550;
+}
+
+.cardHead {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding-bottom: var(--s-2);
+  border-bottom: 1px solid var(--line);
+}
+
+.people {
+  display: grid;
+  gap: var(--s-1);
+  padding-block: var(--s-2);
+}
+
+.person {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  font: var(--text-caption);
+}
+
+.tag {
+  flex: none;
+  padding: 1px var(--s-2);
+  border-radius: var(--r-pill);
+  background: var(--surface-2);
+  font: var(--text-micro);
+  color: var(--ink-2);
+}
+
+.ready {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-1);
+  min-height: 34px;
+  border-radius: var(--r-pill);
+  background: var(--accent);
+  color: var(--on-accent);
+  font: var(--text-caption);
+  font-weight: 650;
+}
+
+.ready > svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* ---------- Pay links ---------- */
+
+.paylink {
+  display: grid;
+  gap: var(--s-3);
+  width: min(100%, 300px);
+}
+
+.bubble {
+  justify-self: start;
+  max-width: 92%;
+  padding: var(--s-3);
+  border-radius: var(--r-lg) var(--r-lg) var(--r-lg) var(--r-sm);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+  font: var(--text-caption);
+}
+
+.linkChip {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin-top: var(--s-2);
+  padding: var(--s-2) var(--s-3);
+  border-radius: var(--r-md);
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  font-weight: 650;
+}
+
+.linkChip > svg {
+  flex: none;
+  width: 14px;
+  height: 14px;
+}
+
+.whoList {
+  display: grid;
+  padding: var(--s-1) var(--s-3);
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-md);
+}
+
+.who {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-height: 40px;
+  font: var(--text-caption);
+}
+
+.who + .who {
+  border-top: 1px solid var(--line);
+}
+
+.paid {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font: var(--text-micro);
+  color: var(--positive);
+}
+
+.paid > svg {
+  width: 12px;
+  height: 12px;
+}
+
+.payPill {
+  padding: var(--s-1) var(--s-3);
+  border-radius: var(--r-pill);
+  background: var(--primary);
+  color: var(--on-primary);
+  font: var(--text-micro);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Collect ---------- */
+
+.collect {
+  display: grid;
+  gap: var(--s-3);
+  width: min(100%, 300px);
+}
+
+.progress {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-3);
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-md);
+}
+
+.ringText {
+  font: var(--text-micro);
+  font-variant-numeric: tabular-nums;
+}
+
+.progressText {
+  font: var(--text-caption);
+  font-variant-numeric: tabular-nums;
+}
+
+.tones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+.tone {
+  padding: var(--s-1) var(--s-3);
+  border-radius: var(--r-pill);
+  background: var(--surface);
+  font: var(--text-micro);
+  color: var(--ink-2);
+  box-shadow: var(--shadow-sm);
+  white-space: nowrap;
+}
+
+.toneOn {
+  background: var(--primary);
+  color: var(--on-primary);
+}
+
+.nudge {
+  padding: var(--s-3);
+  border-radius: var(--r-lg) var(--r-lg) var(--r-sm) var(--r-lg);
+  background: var(--accent-soft);
+  font: var(--text-caption);
+  color: var(--ink);
+  white-space: pre-line;
+}
+
+/* ---------- Groups ---------- */
+
+.groups {
+  width: min(100%, 300px);
+  padding: var(--s-3) var(--s-4);
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-md);
+}
+
+.groupHead {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding-bottom: var(--s-2);
+  border-bottom: 1px solid var(--line);
+}
+
+.groupEmoji {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-tile);
+  background: var(--cat-travel-bg);
+  font-size: 20px;
+}
+
+.groupText {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.groupName {
+  display: block;
+  font-weight: 650;
+}
+
+.transfers {
+  display: grid;
+  gap: var(--s-1);
+  padding-block: var(--s-2);
+}
+
+.transfer {
+  display: flex;
+  align-items: center;
+  gap: var(--s-1);
+  min-height: 32px;
+  font: var(--text-caption);
+}
+
+.transfer .personName {
+  margin-inline-start: var(--s-1);
+}
+
+.arrow {
+  flex: none;
+  width: 12px;
+  height: 12px;
+  color: var(--ink-3);
+}
+
+.footnote {
+  font: var(--text-micro);
+  color: var(--positive);
+}
+
+/* ---------- Five ways ---------- */
+
+.modes {
+  display: grid;
+  gap: var(--s-4);
+  width: min(100%, 320px);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--s-2);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+  padding: var(--s-2) var(--s-3);
+  border-radius: var(--r-pill);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+  font: var(--text-caption);
+  font-weight: 600;
+}
+
+.chipOn {
+  background: var(--primary);
+  color: var(--on-primary);
+}
+
+.chip > svg {
+  width: 13px;
+  height: 13px;
+}
+
+.switchCard {
+  padding-inline: var(--s-3);
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-md);
+}
+
+/* ---------- Share cards ---------- */
+
+.cards {
+  position: relative;
+  display: grid;
+  width: min(100%, 230px);
+}
+
+.shareCard {
+  grid-area: 1 / 1;
+  padding: var(--s-4);
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-lg);
+  transform: rotate(3deg);
+}
+
+.shareCardBack {
+  background: var(--balance-card-gradient);
+  transform: rotate(-6deg) translate(-14px, 6px);
+  opacity: 0.9;
+}
+
+.shareHead {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  font: var(--text-caption);
+}
+
+.shareAmount {
+  margin-block: var(--s-3) var(--s-2);
+  font-size: 2rem;
+  font-weight: 650;
+  line-height: 1;
+  letter-spacing: var(--tracking-display);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The share card's lime underline, as on the real PNG. */
+.underline {
+  text-decoration-line: underline;
+  text-decoration-color: var(--accent);
+  text-decoration-thickness: 0.14em;
+  text-underline-offset: 0.14em;
+  text-decoration-skip-ink: none;
+}
+
+.shareRows {
+  display: grid;
+  gap: var(--s-1);
+}
+
+.shareRow {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  font: var(--text-caption);
+}
+
+.tick {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  color: var(--positive);
+}
+
+.madeWith {
+  margin-top: var(--s-3);
+  padding-top: var(--s-2);
+  border-top: 1px dashed var(--line-strong);
+  font: var(--text-micro);
+  color: var(--ink-2);
+  text-align: center;
+}
+
+/* ---------- Privacy (the dark tile) ---------- */
+
+.v-privacy {
+  --glow: rgb(203 242 102 / 0.35);
+
+  background: var(--balance-card-gradient);
+  color: var(--balance-card-ink);
+}
+
+.privacy {
+  display: grid;
+  justify-items: center;
+  gap: var(--s-4);
+}
+
+.shield {
+  display: grid;
+  place-items: center;
+  width: 72px;
+  height: 72px;
+  border-radius: 24px;
+  background: var(--accent);
+  color: var(--on-accent);
+  box-shadow: 0 0 0 8px rgb(203 242 102 / 0.12);
+}
+
+.shield > svg {
+  width: 36px;
+  height: 36px;
+}
+
+.points {
+  display: grid;
+  gap: var(--s-2);
+}
+
+.point {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  font: var(--text-caption);
+  font-weight: 550;
+  color: var(--balance-card-ink);
+}
+
+.point > svg {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  color: var(--accent);
+}
+
+/* ---------- Recurring ---------- */
+
+.recurring {
+  display: grid;
+  width: min(100%, 340px);
+  padding: var(--s-1) var(--s-4);
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-md);
+}
+
+.bill {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  min-height: 56px;
+}
+
+.bill + .bill {
+  border-top: 1px solid var(--line);
+}
+
+.billText {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.billTitle {
+  display: flex;
+  align-items: center;
+  gap: var(--s-1);
+  font-weight: 600;
+}
+
+.repeat {
+  width: 12px;
+  height: 12px;
+  color: var(--ink-3);
+}
+
+.splitNow {
+  padding: var(--s-1) var(--s-3);
+  border-radius: var(--r-pill);
+  background: var(--accent);
+  color: var(--on-accent);
+  font: var(--text-micro);
+  white-space: nowrap;
+}
+
+/* ---------- Insights ---------- */
+
+.insights {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-5);
+}
+
+.donut {
+  flex: none;
+  width: 148px;
+}
+
+.legend {
+  display: grid;
+  gap: var(--s-2);
+  min-width: 160px;
+}
+
+.legendRow {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  font: var(--text-caption);
+}
+
+.dot {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scanLine {
+    animation: none;
+    top: 46%;
+  }
+}

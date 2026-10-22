@@ -1,0 +1,314 @@
+/*
+ * The hero phone. The device itself is ink in both themes (it's hardware); its screen follows the
+ * page theme. Floating cards (the "Just say it" bubble, the UPI notification) appear only where
+ * there's room beside the phone.
+ */
+.demo {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  width: 100%;
+  margin: 0;
+  padding-block: var(--s-4);
+}
+
+.phone {
+  position: relative;
+  width: min(344px, 100%);
+  padding: 10px;
+  border-radius: 50px;
+  background: linear-gradient(150deg, #2a2e35, #0e1013 40%);
+  box-shadow:
+    0 0 0 1px var(--line-strong),
+    inset 0 0 0 1.5px rgb(255 255 255 / 0.1),
+    0 40px 80px -32px rgb(14 16 19 / 0.45),
+    0 18px 36px -18px rgb(14 16 19 / 0.3);
+  animation: float 7s var(--ease-in-out) infinite alternate;
+}
+
+.screen {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  padding: var(--s-3) var(--s-3) var(--s-4);
+  border-radius: 40px;
+  background: var(--bg);
+  overflow: hidden;
+}
+
+.island {
+  width: 88px;
+  height: 24px;
+  margin: 0 auto var(--s-1);
+  border-radius: var(--r-pill);
+  background: #0e1013;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+}
+
+.headText {
+  min-width: 0;
+}
+
+.title {
+  font: var(--text-label);
+  font-weight: 650;
+  color: var(--ink);
+}
+
+.sub {
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
+.amount {
+  padding-block: var(--s-1) var(--s-2);
+  text-align: center;
+}
+
+/* Four modes on a phone-width track: tighter segments so "Equally" stays on one line. */
+.modes button {
+  padding-inline: var(--s-1);
+  white-space: nowrap;
+}
+
+.caption {
+  margin-top: calc(-1 * var(--s-1));
+  font: var(--text-caption);
+  color: var(--ink-2);
+  text-align: center;
+}
+
+.rowsCard {
+  padding: var(--s-1) var(--s-3);
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+}
+
+.rows {
+  display: flex;
+  flex-direction: column;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  min-height: 48px;
+}
+
+.row + .row {
+  border-top: 1px solid var(--line);
+}
+
+.name {
+  flex: 1 1 auto;
+  min-width: 0;
+  font: var(--text-label);
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hint {
+  flex: none;
+  padding: 2px var(--s-2);
+  border-radius: var(--r-pill);
+  background: var(--surface-2);
+  font: var(--text-micro);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-2);
+}
+
+.share {
+  flex: none;
+  min-width: 4.5em;
+  text-align: end;
+  animation: pop var(--dur-3) var(--ease-spring);
+}
+
+.status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-1);
+  font: var(--text-caption);
+  font-weight: 600;
+  color: var(--positive);
+}
+
+.status > svg {
+  width: 14px;
+  height: 14px;
+}
+
+.fakeAction {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  min-height: 48px;
+  border-radius: var(--r-pill);
+  background: var(--primary);
+  color: var(--on-primary);
+  font: var(--text-label);
+  font-weight: 600;
+}
+
+.fakeAction > svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* ---------- Floating cards (wide screens only) ---------- */
+
+.sayIt,
+.toast {
+  display: none;
+}
+
+@media (min-width: 1040px) {
+  .sayIt,
+  .toast {
+    position: absolute;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: var(--s-3);
+    border-radius: var(--r-lg);
+    background: var(--surface);
+    box-shadow: var(--shadow-md);
+  }
+
+  .sayIt {
+    top: 0;
+    left: 0;
+    max-width: 236px;
+    padding: var(--s-3) var(--s-4) var(--s-3) var(--s-3);
+    animation: drift 6s var(--ease-in-out) infinite alternate;
+  }
+
+  .demo {
+    padding-bottom: var(--s-12);
+  }
+
+  .toast {
+    right: 0;
+    bottom: 4px;
+    padding: var(--s-3);
+    animation: drift 6.5s var(--ease-in-out) -3s infinite alternate;
+  }
+}
+
+.sparkle {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--r-pill);
+  background: var(--pro-gradient);
+  color: var(--on-pro);
+}
+
+.sparkle > svg {
+  width: 16px;
+  height: 16px;
+}
+
+.sayText {
+  font: var(--text-caption);
+  font-weight: 550;
+  color: var(--ink);
+}
+
+.caret {
+  display: inline-block;
+  width: 2px;
+  height: 1.05em;
+  margin-inline-start: 2px;
+  vertical-align: -0.15em;
+  background: var(--ink);
+  animation: blink 1s steps(1) infinite;
+}
+
+.toastText {
+  display: flex;
+  flex-direction: column;
+}
+
+.toastTitle {
+  font: var(--text-label);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.toastSub {
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
+.toastCheck {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--r-pill);
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.toastCheck > svg {
+  width: 15px;
+  height: 15px;
+}
+
+@keyframes float {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes drift {
+  from {
+    transform: translateY(4px);
+  }
+  to {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+@keyframes pop {
+  from {
+    opacity: 0.2;
+    transform: translateY(3px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .phone,
+  .sayIt,
+  .toast,
+  .caret,
+  .share {
+    animation: none;
+  }
+}

@@ -1,0 +1,94 @@
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--s-4);
+}
+
+@media (min-width: 680px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1040px) {
+  .grid {
+    grid-template-columns: repeat(6, 1fr);
+    gap: var(--s-5);
+  }
+
+  .wide {
+    grid-column: span 3;
+  }
+
+  .regular {
+    grid-column: span 2;
+  }
+}
+
+.tile {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-5);
+  padding: var(--s-3) var(--s-3) var(--s-6);
+  border-radius: var(--radius-sheet);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+}
+
+/* Side-by-side tiles get stages of one height, so their titles line up. */
+@media (min-width: 680px) {
+  .tile > :first-child {
+    height: 300px;
+  }
+}
+
+@media (min-width: 1040px) {
+  .regular > :first-child {
+    height: 280px;
+  }
+}
+
+.text {
+  display: grid;
+  gap: var(--s-2);
+  padding-inline: var(--s-3);
+}
+
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  font: var(--text-caption);
+  font-weight: 650;
+  color: var(--accent-ink);
+}
+
+.title {
+  font: var(--text-headline);
+  font-weight: 650;
+  letter-spacing: var(--tracking-tight);
+  color: var(--ink);
+}
+
+.body {
+  font: var(--text-body);
+  color: var(--ink-2);
+}
+
+/* Tiles rise in as they scroll into view (where the browser can tie animation to scrolling). */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .tile {
+      animation: rise linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 40%;
+    }
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(28px) scale(0.98);
+  }
+}

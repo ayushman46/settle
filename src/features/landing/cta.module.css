@@ -1,0 +1,168 @@
+/*
+ * Link-shaped calls to action for the public pages, drawn like the design system's Button (an
+ * ink pill, the lime accent pill, an outlined pill) but as real links, so "open in new tab",
+ * long-press and crawlers all work.
+ */
+.cta {
+  --cta-bg: var(--primary);
+  --cta-fg: var(--on-primary);
+  --cta-border: transparent;
+  --cta-icon: var(--s-5);
+
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  min-width: 0;
+  max-width: 100%;
+  border: 1px solid var(--cta-border);
+  border-radius: var(--r-pill);
+  background: var(--cta-bg);
+  color: var(--cta-fg);
+  font-weight: 600;
+  text-align: center;
+  text-decoration: none;
+  text-wrap: balance;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  isolation: isolate;
+  transition:
+    transform var(--dur-2) var(--ease-spring),
+    background-color var(--dur-2) var(--ease-out),
+    border-color var(--dur-2) var(--ease-out),
+    box-shadow var(--dur-2) var(--ease-out);
+}
+
+.cta:focus-visible {
+  outline-offset: 3px;
+}
+
+.cta::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  z-index: -1;
+  border-radius: inherit;
+  background: currentColor;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--dur-2) var(--ease-out);
+}
+
+.cta:active {
+  transform: scale(0.97);
+  transition-duration: var(--dur-1);
+}
+
+.cta:active::before {
+  opacity: 0.1;
+  transition-duration: var(--dur-1);
+}
+
+.icon {
+  display: inline-flex;
+  flex: none;
+}
+
+.icon > svg {
+  width: var(--cta-icon);
+  height: var(--cta-icon);
+}
+
+/* The arrow nudges forward on hover — a small "go" cue. */
+.iconEnd > svg {
+  transition: transform var(--dur-2) var(--ease-spring);
+}
+
+/* ---------- Sizes (heights are minimums so enlarged text grows the pill) ---------- */
+
+.lg {
+  min-height: var(--btn-h);
+  padding: var(--s-2) var(--s-6);
+  font-size: 1rem;
+  letter-spacing: -0.011em;
+}
+
+.md {
+  min-height: var(--tap);
+  padding: var(--s-2) var(--s-5);
+  font-size: 0.9375rem;
+}
+
+.sm {
+  --cta-icon: var(--s-4);
+
+  min-height: 36px;
+  padding: var(--s-1) var(--s-4);
+  font-size: 0.875rem;
+}
+
+/* 44px touch target around the compact pill. */
+.sm::after {
+  content: '';
+  position: absolute;
+  inset: -4px 0;
+}
+
+.block {
+  display: flex;
+  width: 100%;
+}
+
+/* ---------- Variants ---------- */
+
+.primary {
+  background-image: linear-gradient(to bottom, rgb(255 255 255 / 0.09), transparent 55%);
+  box-shadow: var(--shadow-sm);
+}
+
+.accent {
+  --cta-bg: var(--accent);
+  --cta-fg: var(--on-accent);
+
+  box-shadow: var(--shadow-sm);
+}
+
+.secondary {
+  --cta-bg: var(--surface);
+  --cta-fg: var(--ink);
+  --cta-border: var(--line-strong);
+}
+
+.ghost {
+  --cta-bg: transparent;
+  --cta-fg: var(--ink);
+}
+
+/* On the dark balance-card panel (both themes): a quiet outlined pill. */
+.onDark {
+  --cta-bg: transparent;
+  --cta-fg: var(--balance-card-ink);
+  --cta-border: rgb(255 255 255 / 0.28);
+}
+
+@media (hover: hover) {
+  .primary:hover {
+    --cta-bg: var(--primary-hover);
+  }
+
+  .accent:hover {
+    --cta-bg: var(--accent-hover);
+  }
+
+  .secondary:hover,
+  .ghost:hover {
+    --cta-bg: var(--surface-2);
+  }
+
+  .onDark:hover {
+    --cta-bg: rgb(255 255 255 / 0.08);
+  }
+
+  .cta:hover .iconEnd > svg {
+    transform: translateX(3px);
+  }
+}

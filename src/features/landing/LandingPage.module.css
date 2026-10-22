@@ -1,0 +1,444 @@
+/*
+ * The landing page: full-width and responsive (the app's phone column doesn't apply here).
+ * Section styles at the bottom are shared by the section components.
+ */
+.page {
+  --content-max: 1160px;
+  --header-h: 64px;
+
+  position: relative;
+  display: flex;
+  flex: 1 0 auto;
+  flex-direction: column;
+  width: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--bg);
+  color: var(--ink);
+}
+
+/* ---------- Skip link ---------- */
+
+.skip {
+  position: fixed;
+  top: var(--s-2);
+  left: var(--s-2);
+  z-index: 30;
+  padding: var(--s-3) var(--s-4);
+  border-radius: var(--r-pill);
+  background: var(--primary);
+  color: var(--on-primary);
+  font: var(--text-label);
+  text-decoration: none;
+  transform: translateY(-200%);
+}
+
+.skip:focus-visible {
+  transform: none;
+}
+
+/* ---------- Header ---------- */
+
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  padding-top: var(--safe-top);
+  border-bottom: 1px solid transparent;
+  background: var(--header-bg);
+  -webkit-backdrop-filter: saturate(1.6) blur(16px);
+  backdrop-filter: saturate(1.6) blur(16px);
+}
+
+/* A hairline appears once the page has scrolled under the header (where scroll timelines exist). */
+@supports (animation-timeline: scroll()) {
+  .header {
+    animation: hairline linear both;
+    animation-timeline: scroll();
+    animation-range: 0 64px;
+  }
+}
+
+@keyframes hairline {
+  to {
+    border-bottom-color: var(--line);
+  }
+}
+
+.headerInner {
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+  max-width: var(--content-max);
+  min-height: var(--header-h);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+.brandLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap);
+  margin-inline-start: calc(-1 * var(--s-1));
+  padding-inline: var(--s-1);
+  border-radius: var(--r-md);
+  text-decoration: none;
+}
+
+.nav {
+  display: none;
+}
+
+@media (min-width: 820px) {
+  .nav {
+    display: flex;
+    gap: var(--s-1);
+    margin-inline: auto;
+  }
+}
+
+.navLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap);
+  padding-inline: var(--s-3);
+  border-radius: var(--r-pill);
+  font: var(--text-label);
+  color: var(--ink-2);
+  text-decoration: none;
+  transition:
+    color var(--dur-2) var(--ease-out),
+    background-color var(--dur-2) var(--ease-out);
+}
+
+@media (hover: hover) {
+  .navLink:hover {
+    background: var(--surface-2);
+    color: var(--ink);
+  }
+}
+
+.headerCta {
+  margin-inline-start: auto;
+}
+
+@media (min-width: 820px) {
+  .headerCta {
+    margin-inline-start: 0;
+  }
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Section jumps land below the sticky header. */
+.main [id] {
+  scroll-margin-top: calc(var(--header-h) + var(--safe-top) + var(--s-4));
+}
+
+/* ---------- Hero ---------- */
+
+.hero {
+  position: relative;
+  isolation: isolate;
+  overflow: clip;
+  padding: var(--s-8) var(--gutter) var(--s-10);
+}
+
+/* A soft lime dawn behind the phone, and a faint dot grid. */
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: -20% -10% auto;
+  z-index: -1;
+  height: 120%;
+  background:
+    radial-gradient(42% 46% at 78% 34%, var(--accent-soft), transparent 70%),
+    radial-gradient(36% 40% at 12% 8%, color-mix(in srgb, var(--pro-3) 22%, transparent), transparent 70%);
+  pointer-events: none;
+}
+
+.hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-image: radial-gradient(circle, var(--desk-dot) 1px, transparent 1.5px);
+  background-size: 22px 22px;
+  -webkit-mask-image: linear-gradient(to bottom, #000, transparent 85%);
+  mask-image: linear-gradient(to bottom, #000, transparent 85%);
+  pointer-events: none;
+}
+
+.heroInner {
+  display: grid;
+  align-items: center;
+  gap: var(--s-8);
+  max-width: var(--content-max);
+  margin-inline: auto;
+}
+
+@media (min-width: 960px) {
+  .heroInner {
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: var(--s-12);
+    min-height: min(720px, calc(100dvh - var(--header-h) - 120px));
+  }
+}
+
+.heroCopy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--s-5);
+  animation: enter var(--dur-4) var(--ease-out) both;
+}
+
+.kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  padding: var(--s-1) var(--s-3) var(--s-1) var(--s-2);
+  border-radius: var(--r-pill);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+  font: var(--text-caption);
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.kicker > svg {
+  width: 22px;
+  height: 22px;
+  padding: 4px;
+  border-radius: 50%;
+  background: var(--pro-gradient);
+  color: var(--on-pro);
+}
+
+.h1 {
+  font-size: clamp(2.375rem, 9.6vw, 5rem);
+  font-weight: 700;
+  line-height: 1.02;
+  letter-spacing: -0.045em;
+  text-wrap: balance;
+}
+
+/*
+ * "Settle in a tap." is printed on a lime fill (lime is always a fill with ink text), drawn in
+ * like a highlighter. Works in both themes and wraps cleanly line by line.
+ */
+.highlight {
+  display: inline-block;
+  margin-top: 0.06em;
+  padding: 0 0.12em 0.02em;
+  margin-inline: -0.04em;
+  border-radius: 0.16em;
+  background: linear-gradient(var(--accent), var(--accent)) no-repeat left / 100% 100%;
+  color: var(--on-accent);
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  animation: draw 640ms var(--ease-out) 200ms both;
+}
+
+.sub {
+  max-width: 34rem;
+  font-size: clamp(1.0625rem, 2.4vw, 1.25rem);
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+
+.ctas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-3);
+}
+
+@media (max-width: 479px) {
+  .heroCopy .ctas {
+    align-self: stretch;
+  }
+
+  .heroCopy .ctas > * {
+    flex: 1 1 100%;
+  }
+}
+
+/* "On a computer? Scan to open on your phone" — only where it makes sense. */
+.qrCard {
+  display: none;
+}
+
+@media (hover: hover) and (pointer: fine) and (min-width: 960px) {
+  .qrCard {
+    display: flex;
+    align-items: center;
+    gap: var(--s-4);
+    margin-top: var(--s-2);
+    padding: var(--s-2) var(--s-5) var(--s-2) var(--s-2);
+    border-radius: var(--r-xl);
+    background: var(--surface);
+    box-shadow: var(--shadow-card);
+  }
+}
+
+.qrText {
+  max-width: 22ch;
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
+.qrText strong {
+  display: block;
+  font-weight: 650;
+  color: var(--ink);
+}
+
+/* ---------- Trust strip ---------- */
+
+.trust {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--s-2) var(--s-3);
+  max-width: var(--content-max);
+  margin: var(--s-10) auto 0;
+}
+
+.trustItem {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-height: 40px;
+  padding: var(--s-2) var(--s-4);
+  border-radius: var(--r-pill);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+  font: var(--text-label);
+  color: var(--ink);
+}
+
+.trustItem > svg {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  color: var(--accent-ink);
+}
+
+/* ---------- Shared section styles ---------- */
+
+.section {
+  width: 100%;
+  max-width: calc(var(--content-max) + 2 * var(--gutter));
+  margin-inline: auto;
+  padding: var(--s-16) var(--gutter) 0;
+}
+
+@media (min-width: 820px) {
+  .section {
+    padding-top: calc(var(--s-16) + var(--s-8));
+  }
+}
+
+.sectionHead {
+  display: grid;
+  justify-items: center;
+  gap: var(--s-3);
+  max-width: 44rem;
+  margin: 0 auto var(--s-10);
+  text-align: center;
+}
+
+.eyebrow {
+  font: var(--text-label);
+  font-weight: 650;
+  color: var(--accent-ink);
+}
+
+.h2 {
+  font-size: clamp(2rem, 5.4vw, 3.25rem);
+  font-weight: 700;
+  line-height: 1.06;
+  letter-spacing: -0.04em;
+}
+
+.lede {
+  font-size: 1.125rem;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+
+/* ---------- Final call to action ---------- */
+
+.final {
+  padding: calc(var(--s-16) + var(--s-8)) var(--gutter) var(--s-16);
+}
+
+.finalCard {
+  display: grid;
+  justify-items: center;
+  gap: var(--s-4);
+  max-width: var(--content-max);
+  margin-inline: auto;
+  padding: var(--s-12) var(--s-6);
+  border-radius: calc(var(--radius-sheet) + 8px);
+  background: var(--balance-card-gradient);
+  color: var(--balance-card-ink);
+  text-align: center;
+  box-shadow: var(--shadow-lg);
+}
+
+@media (min-width: 820px) {
+  .finalCard {
+    padding-block: var(--s-16);
+  }
+}
+
+.finalTitle {
+  max-width: 16ch;
+  font-size: clamp(2rem, 5.4vw, 3.5rem);
+  font-weight: 700;
+  line-height: 1.04;
+  letter-spacing: -0.04em;
+}
+
+.finalText {
+  max-width: 34ch;
+  font-size: 1.125rem;
+  color: var(--balance-card-ink-2);
+}
+
+.finalCard .ctas {
+  justify-content: center;
+  margin-top: var(--s-2);
+}
+
+/* ---------- Motion ---------- */
+
+@keyframes enter {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+}
+
+@keyframes draw {
+  from {
+    background-size: 0% 100%;
+    color: var(--ink);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .heroCopy,
+  .highlight,
+  .header {
+    animation: none;
+  }
+
+  .header {
+    border-bottom-color: var(--line);
+  }
+}
