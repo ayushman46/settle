@@ -68,8 +68,9 @@ export default defineConfig({
   retries: ci ? 1 : 0,
   // Few workers: the machine also runs benchmarks, and phones-on-a-laptop are CPU hungry.
   workers: process.env.E2E_WORKERS ? Number(process.env.E2E_WORKERS) : ci ? 2 : 3,
-  timeout: 60_000,
-  expect: { timeout: 10_000 },
+  timeout: target === 'dev' && !external ? 120_000 : 60_000,
+  // The dev server compiles each module on first request: give it longer.
+  expect: { timeout: target === 'dev' && !external ? 20_000 : 10_000 },
   reporter: ci ? [['github'], ['list'], ['html', { open: 'never' }]] : [['list'], ['html', { open: 'never' }]],
   use: {
     baseURL,
