@@ -1,0 +1,98 @@
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+}
+
+.modes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+/* A choice card: icon, title and what it does, with a radio dot at the end. */
+.mode {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  width: 100%;
+  padding: var(--s-3) var(--s-4);
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+  color: var(--ink);
+  text-align: start;
+  transition:
+    box-shadow var(--dur-2) var(--ease-out),
+    background-color var(--dur-2) var(--ease-out),
+    transform var(--dur-2) var(--ease-spring);
+}
+
+.mode:active {
+  transform: scale(0.985);
+  transition-duration: var(--dur-1);
+}
+
+.checked {
+  background: var(--accent-soft);
+  box-shadow: inset 0 0 0 2px var(--ink);
+}
+
+.modeIcon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+  color: var(--ink);
+}
+
+.checked .modeIcon {
+  background: var(--surface);
+}
+
+.modeIcon > svg {
+  width: 20px;
+  height: 20px;
+}
+
+.modeText {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.modeTitle {
+  font: var(--text-body);
+  font-weight: 600;
+}
+
+.modeBody {
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
+.radio {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 2px var(--ink-3);
+  transition: box-shadow var(--dur-2) var(--ease-out);
+}
+
+.checked .radio {
+  box-shadow:
+    inset 0 0 0 2px var(--ink),
+    inset 0 0 0 6px var(--surface),
+    inset 0 0 0 12px var(--ink);
+}
+
+.fresh {
+  font: var(--text-body);
+  color: var(--ink-2);
+}

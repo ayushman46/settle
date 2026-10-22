@@ -1,0 +1,39 @@
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+}
+
+.backup {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--s-3);
+  padding: var(--s-4);
+  border-radius: var(--r-lg);
+  background: var(--surface-2);
+}
+
+.backupText {
+  font: var(--text-label);
+  font-weight: 450;
+  color: var(--ink);
+}
+
+.footer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+/*
+ * The one irreversible action: a solid red pill. --on-primary on --negative is AA in both themes
+ * (white on red in light, ink on soft red in dark). Scoped under .footer to outrank the danger
+ * variant's own hover and press fills; the press state layer still gives feedback.
+ */
+.footer .clear,
+.footer .clear:hover:not(:disabled),
+.footer .clear:active:not(:disabled) {
+  --btn-bg: var(--negative);
+  --btn-fg: var(--on-primary);
+}
