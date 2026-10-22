@@ -208,7 +208,7 @@ export function ShareSheet({ expense, open, onClose, onUpgrade }: ShareSheetProp
   }
 
   return (
-    <BottomSheet open={open} onClose={onClose} eyebrow={expense.title} title="Share split" description={description} size="tall">
+    <BottomSheet open={open} onClose={onClose} eyebrow={expense.title} title="Share split" description={description}>
       <div className={styles.body}>
         {upiMissing && (payer || fromPayee) && (
           <section className={styles.upi} aria-label="UPI ID">
