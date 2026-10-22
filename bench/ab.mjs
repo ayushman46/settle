@@ -5,7 +5,7 @@
  *
  *   node bench/ab.mjs --a node_modules/.cache/settle-bench/dist-baseline --b dist --only warm,cold --profile low
  *                     [--data heavy|empty|all] [--runs 5] [--label fix-name] [--port 4100]
- *   scenarios: cold, warm, nav, scroll (with --scroll activity:jump,…)
+ *   scenarios: cold, warm, nav (with --journey full|group|activity), scroll (with --scroll activity:jump,…)
  *
  * Ports: A server <port>, B server <port>+3, browser <port>+1, proxies <port>+2 and <port>+4.
  */
@@ -16,7 +16,7 @@ import { launchBrowser } from './lib/cdp.mjs'
 import { closeAppModules } from './lib/appModules.mjs'
 import { PROFILES } from './lib/page.mjs'
 import { BENCH_DIR, CACHE_DIR } from './lib/paths.mjs'
-import { coldVisit, navigationRun, scrollRun, warmVisit } from './lib/scenarios.mjs'
+import { coldVisit, JOURNEYS, navigationRun, scrollRun, warmVisit } from './lib/scenarios.mjs'
 import { startServer } from './lib/server.mjs'
 import { fmtMs, summarize } from './lib/stats.mjs'
 import { startThrottle } from './lib/throttle.mjs'
@@ -33,6 +33,7 @@ const { values: args } = parseArgs({
     label: { type: 'string', default: 'ab' },
     port: { type: 'string', default: '4100' },
     scroll: { type: 'string', default: 'activity:jump,group:fling' },
+    journey: { type: 'string', default: 'full' },
   },
 })
 
@@ -53,7 +54,11 @@ function scenarios() {
       }
       if (datasets.includes('heavy')) list.push(['cold /app (heavy)', (env, p) => coldVisit(env, p, { data: 'heavy', target: 'app' })])
     } else if (m === 'warm') list.push(['warm Home (heavy)', (env, p) => warmVisit(env, p)])
-    else if (m === 'nav') list.push(['screen opens', (env, p) => navigationRun(env, p)])
+    else if (m === 'nav') {
+      const journey = JOURNEYS[args.journey]
+      if (!journey) throw new Error(`Unknown journey ${args.journey} (use ${Object.keys(JOURNEYS).join(', ')})`)
+      list.push(['screen opens', (env, p) => navigationRun(env, p, { journey })])
+    }
     else if (m === 'scroll') {
       for (const spec of args.scroll.split(',')) {
         const [which, mode] = spec.split(':')

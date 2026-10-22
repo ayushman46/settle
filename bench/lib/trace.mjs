@@ -11,6 +11,8 @@ const CATEGORIES = [
   'blink',
   'loading',
   'blink.user_timing',
+  // V8 parsing and compiling (BENCH_TRACE_V8=1): where module evaluation time goes.
+  ...(process.env.BENCH_TRACE_V8 ? ['v8', 'disabled-by-default-v8.compile'] : []),
 ]
 
 export async function startTrace(session) {

@@ -253,8 +253,25 @@ export const JOURNEY = [
   ['You → Home (tab)', TAP.tab('/app'), READY.home],
 ]
 
+/**
+ * Shorter journeys for checking one fix quickly (`bench/ab.mjs --journey group`): the same steps
+ * and readiness checks as the full journey, from Home.
+ */
+export const JOURNEYS = {
+  full: JOURNEY,
+  group: [
+    ['Home → Groups (tab)', TAP.tab('/app/groups'), READY.groups],
+    ['Groups → Group detail (300)', TAP.ariaPrefix('Flat 302, Koramangala,'), READY.groupDetail],
+  ],
+  activity: [
+    ['Home → Activity (tab)', TAP.tab('/app/activity'), READY.activity],
+    ['Activity → Expense (bill)', TAP.ariaPrefix('Dinner at Toit Brewpub,'), READY.expenseBill],
+    ['back', null, READY.activity],
+  ],
+}
+
 /** One pass through the journey on a freshly opened app (heavy data), after it settles. */
-export async function navigationRun(env, profile) {
+export async function navigationRun(env, profile, { journey = JOURNEY } = {}) {
   const page = await freshPage(env, profile, { data: 'heavy', watchers: { home: READY.home } })
   const s = page.session
   try {
@@ -262,7 +279,7 @@ export async function navigationRun(env, profile) {
     await load(s, `${env.origin}/app`, 'home')
     await waitSettled(s, requests, { quiet: 1000 })
     const out = {}
-    for (const [label, tap, ready] of JOURNEY) {
+    for (const [label, tap, ready] of journey) {
       if (label === 'back') {
         await back(s, ready)
       } else {
