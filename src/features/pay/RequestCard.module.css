@@ -1,0 +1,82 @@
+.card {
+  display: grid;
+  justify-items: center;
+  gap: var(--s-2);
+  padding: var(--s-6) var(--s-5) var(--s-5);
+  border-radius: var(--radius-sheet);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+  text-align: center;
+}
+
+/* The category tile with the payee's avatar tucked on its corner. */
+.icons {
+  position: relative;
+  margin-bottom: var(--s-2);
+}
+
+.payee {
+  position: absolute;
+  right: -14px;
+  bottom: -10px;
+  box-shadow: 0 0 0 3px var(--surface);
+}
+
+.title {
+  display: grid;
+  gap: var(--s-1);
+}
+
+.by {
+  font: var(--text-label);
+  font-weight: 500;
+  color: var(--ink-2);
+}
+
+.what {
+  font: var(--text-title);
+  letter-spacing: var(--tracking-tight);
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.meta {
+  font: var(--text-caption);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-2);
+}
+
+.note {
+  max-width: 36ch;
+  font: var(--text-caption);
+  font-style: italic;
+  color: var(--ink-2);
+}
+
+.progress {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  margin-top: var(--s-3);
+  padding: var(--s-2) var(--s-4) var(--s-2) var(--s-2);
+  border-radius: var(--r-pill);
+  background: var(--surface-2);
+  text-align: start;
+}
+
+.progressText {
+  display: grid;
+}
+
+.collected {
+  font: var(--text-label);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+
+.count {
+  font: var(--text-caption);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-2);
+}

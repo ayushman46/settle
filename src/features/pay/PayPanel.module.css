@@ -1,0 +1,259 @@
+.panel {
+  display: grid;
+  gap: var(--s-5);
+  scroll-margin-top: calc(72px + var(--safe-top));
+  animation: enter var(--dur-3) var(--ease-out) both;
+}
+
+.change {
+  display: inline-flex;
+  align-items: center;
+  justify-self: start;
+  gap: var(--s-1);
+  min-height: var(--tap);
+  padding-inline: var(--s-2) var(--s-3);
+  border-radius: var(--r-pill);
+  font: var(--text-label);
+  font-weight: 600;
+  color: var(--ink-2);
+  transition: background-color var(--dur-2) var(--ease-out);
+}
+
+.change > svg {
+  width: 18px;
+  height: 18px;
+}
+
+.change:active {
+  background: var(--surface-2);
+}
+
+@media (hover: hover) {
+  .change:hover {
+    background: var(--surface-2);
+    color: var(--ink);
+  }
+}
+
+/* ---------- The share, big ---------- */
+
+.hero {
+  display: grid;
+  justify-items: center;
+  gap: var(--s-2);
+  text-align: center;
+}
+
+.parties {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  margin-bottom: var(--s-2);
+}
+
+.arrow {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.arrow > svg {
+  width: 16px;
+  height: 16px;
+}
+
+.heading {
+  font: var(--text-label);
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.amount {
+  font: var(--text-display-lg);
+  letter-spacing: var(--tracking-display);
+}
+
+.words {
+  max-width: 34ch;
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
+/* ---------- Already paid ---------- */
+
+.paid {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: var(--s-2) var(--s-4);
+  padding: var(--s-4) var(--s-5);
+  border-radius: var(--radius-card);
+  background: var(--positive-soft);
+}
+
+.paidTitle {
+  font: var(--text-section);
+  color: var(--ink);
+}
+
+.paidText {
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
+.reveal {
+  grid-column: 1 / -1;
+  justify-self: center;
+}
+
+/* ---------- Paying ---------- */
+
+.pay {
+  display: grid;
+  justify-items: center;
+  gap: var(--s-3);
+}
+
+.caption {
+  max-width: 34ch;
+  font: var(--text-caption);
+  color: var(--ink-2);
+  text-align: center;
+}
+
+.qr {
+  display: grid;
+  justify-items: center;
+  gap: var(--s-3);
+  padding: var(--s-4);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+  animation: enter var(--dur-3) var(--ease-out) both;
+}
+
+.payee {
+  display: grid;
+  gap: var(--s-3);
+  width: 100%;
+  margin-top: var(--s-2);
+  padding: var(--s-4);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+}
+
+.payeeLabel {
+  font: var(--text-micro);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+
+.payeeRow {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+}
+
+.payeeText {
+  display: grid;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.payeeName {
+  font: var(--text-body);
+  font-weight: 650;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+/* The UPI ID is read character by character: mono, never truncated. */
+.vpa {
+  font: var(--text-label);
+  font-family: var(--font-mono);
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.copyFailed {
+  font: var(--text-caption);
+  color: var(--negative);
+}
+
+.safety {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-2);
+  padding-top: var(--s-3);
+  border-top: 1px solid var(--line);
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
+.safety > svg {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin-top: 1px;
+  color: var(--positive);
+}
+
+.safety strong {
+  font-weight: 650;
+  color: var(--ink);
+}
+
+/* ---------- Tell them ---------- */
+
+.tell {
+  display: grid;
+  gap: var(--s-2);
+}
+
+.tellTitle {
+  padding-inline: var(--s-2);
+  font: var(--text-label);
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.tellStatus {
+  min-height: 1.35em;
+  font: var(--text-caption);
+  color: var(--ink-2);
+  text-align: center;
+}
+
+/* ---------- What's in it ---------- */
+
+.breakdown {
+  display: grid;
+  gap: var(--s-3);
+}
+
+.breakdownTitle {
+  padding-inline: var(--s-2);
+  font: var(--text-section);
+}
+
+.line {
+  display: grid;
+}
+
+.lineDetail {
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
+@keyframes enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
