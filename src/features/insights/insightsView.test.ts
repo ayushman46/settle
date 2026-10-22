@@ -34,6 +34,15 @@ describe('insightsView', () => {
     expect(v.otherCurrencyCount).toBe(0)
   })
 
+  it('rounds the biggest category the way the chart legend does', () => {
+    // 84.497% of the spend: plain rounding says 84, but the legend's percents must add up to 100 → 85.
+    const rent = saveExpense(draft({ category: 'rent', total: 1066667, date: '2026-10-02' }))
+    const food = saveExpense(draft({ category: 'food', total: 92200, date: '2026-10-03' }))
+    const groceries = saveExpense(draft({ category: 'groceries', total: 61500, date: '2026-10-04' }))
+    const cab = saveExpense(draft({ category: 'transport', total: 42000, date: '2026-10-05' }))
+    expect(view([rent, food, groceries, cab], 'this_month').top).toEqual({ category: 'rent', percent: 85 })
+  })
+
   it('averages longer ranges per month in whole rupees, empty months included', () => {
     const july = saveExpense(draft({ total: 100000, date: '2026-07-10', with: [riya] }))
     const oct = saveExpense(draft({ total: 50001, date: '2026-10-01', with: [riya] }))

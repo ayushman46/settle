@@ -3,6 +3,7 @@
  * extras around them (the biggest category, a monthly average, expenses in other currencies).
  */
 import type { CategoryId, Expense, Minor } from '../../domain/types'
+import { wholePercents } from '../../components/chartMath'
 import { insights, insightsRange, type Insights, type InsightsRange } from '../../engine/insights'
 import { currencyDigits } from '../../lib/money'
 
@@ -54,8 +55,10 @@ export function insightsView(
   const bounds = insightsRange(range, today)
   const data = insights(expenses, { meId, currency, ...bounds })
 
+  // The same whole percents the category chart's legend shows (they add up to exactly 100).
   const biggest = data.byCategory[0]
-  const top = biggest && data.spent > 0 ? { category: biggest.category, percent: Math.round((biggest.amount * 100) / data.spent) } : null
+  const percent = wholePercents(data.byCategory.map((c) => c.amount))[0] ?? 0
+  const top = biggest && data.spent > 0 ? { category: biggest.category, percent } : null
 
   const unit = 10 ** currencyDigits(currency)
   const monthCount = data.byMonth.length
