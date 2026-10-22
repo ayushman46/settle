@@ -2,6 +2,7 @@ import { act, render } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { updateProfile } from '../data'
 import { installPro, resetProScreens, testSigner } from '../features/pro/testing'
+import { haptic, hapticsEnabled, resetHapticsForTests } from '../lib/haptics'
 import { applyAppearance, applyStoredAppearance, clearAppearance, effectiveAccent, THEME_COLORS } from './appearance'
 import { ThemeSync } from './ThemeSync'
 
@@ -116,5 +117,42 @@ describe('ThemeSync', () => {
     view.unmount()
     expect(root.hasAttribute('data-theme')).toBe(false)
     expect(themeColors()).toEqual([THEME_COLORS.light, THEME_COLORS.dark])
+  })
+})
+
+describe('haptics', () => {
+  afterEach(() => {
+    Reflect.deleteProperty(navigator, 'vibrate')
+    resetHapticsForTests()
+  })
+
+  it('silences every cue while the Haptics switch is off, and brings them back', () => {
+    vi.stubGlobal('matchMedia', vi.fn((query: string) => ({ matches: false, media: query })))
+    const vibrate = vi.fn(() => true)
+    Object.defineProperty(navigator, 'vibrate', { value: vibrate, configurable: true })
+    resetHapticsForTests()
+    const view = render(<ThemeSync />)
+    haptic('tap')
+    expect(vibrate).toHaveBeenCalledTimes(1)
+
+    act(() => {
+      updateProfile({ haptics: false })
+    })
+    expect(hapticsEnabled()).toBe(false)
+    haptic('success')
+    expect(vibrate).toHaveBeenCalledTimes(1)
+
+    act(() => {
+      updateProfile({ haptics: true })
+    })
+    haptic('success')
+    expect(vibrate).toHaveBeenCalledTimes(2)
+
+    // Turned off, then unmounted (tests, a remount): cues are on again rather than stuck off.
+    act(() => {
+      updateProfile({ haptics: false })
+    })
+    view.unmount()
+    expect(hapticsEnabled()).toBe(true)
   })
 })

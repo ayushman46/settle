@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { haptic, HAPTIC_PATTERNS, resetHapticsForTests } from './haptics'
+import { haptic, HAPTIC_PATTERNS, hapticsEnabled, resetHapticsForTests, setHapticsEnabled } from './haptics'
 
 function mockReducedMotion(reduce: boolean) {
   vi.stubGlobal(
@@ -29,6 +29,19 @@ describe('haptic', () => {
     haptic('error')
     expect(vibrate.mock.calls).toEqual([[8], [12], [[12, 60, 24]], [[20, 40, 20]], [[40, 60, 40]]])
     expect(HAPTIC_PATTERNS.success).toEqual([12, 60, 24])
+  })
+
+  it('stays silent while turned off, and plays again once back on', () => {
+    mockReducedMotion(false)
+    const vibrate = vi.fn(() => true)
+    Object.defineProperty(navigator, 'vibrate', { value: vibrate, configurable: true })
+    setHapticsEnabled(false)
+    expect(hapticsEnabled()).toBe(false)
+    haptic('success')
+    expect(vibrate).not.toHaveBeenCalled()
+    setHapticsEnabled(true)
+    haptic('tap')
+    expect(vibrate).toHaveBeenCalledWith(8)
   })
 
   it('stays silent under reduced motion', () => {

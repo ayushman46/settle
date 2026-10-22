@@ -1,6 +1,7 @@
 /**
  * Tiny vibration cues for touch devices (Android browsers; iOS Safari has no Vibration API).
- * Silent wherever vibration isn't available and for people who prefer reduced motion.
+ * Silent wherever vibration isn't available, for people who prefer reduced motion, and while
+ * the person has turned haptics off (You → Preferences; kept in step by `src/app/ThemeSync`).
  */
 
 export type HapticKind = 'tap' | 'select' | 'success' | 'warning' | 'error'
@@ -15,6 +16,17 @@ export const HAPTIC_PATTERNS: Readonly<Record<HapticKind, number | readonly numb
 }
 
 let reducedMotion: MediaQueryList | null | undefined
+let enabled = true
+
+/** Turns every cue on or off (the profile's "Haptics" switch). On by default. */
+export function setHapticsEnabled(on: boolean): void {
+  enabled = on
+}
+
+/** Whether cues are on (the "Haptics" setting). */
+export function hapticsEnabled(): boolean {
+  return enabled
+}
 
 function prefersReducedMotion(): boolean {
   if (reducedMotion === undefined) {
@@ -32,6 +44,7 @@ function prefersReducedMotion(): boolean {
 
 /** Plays a short vibration for `kind`. Never throws. */
 export function haptic(kind: HapticKind): void {
+  if (!enabled) return
   try {
     if (typeof navigator === 'undefined' || typeof navigator.vibrate !== 'function') return
     if (prefersReducedMotion()) return
@@ -42,7 +55,8 @@ export function haptic(kind: HapticKind): void {
   }
 }
 
-/** Forgets the cached media query (tests). */
+/** Forgets the cached media query and turns cues back on (tests). */
 export function resetHapticsForTests(): void {
   reducedMotion = undefined
+  enabled = true
 }
