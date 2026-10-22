@@ -25,7 +25,7 @@ export {
   type RowStatus,
   type RowTone,
 } from './expenseLabels'
-export { FINE_POINTER, useMediaQuery } from './media'
+export { DARK_SCHEME, FINE_POINTER, TOUCH_FIRST, useMediaQuery } from './media'
 export { COUNT_UP_MS, motionAllowed, useCountUp, type CountUpOptions } from './motion'
 export { NudgeSheet, type NudgeChannel, type NudgeSheetProps } from './NudgeSheet'
 export { ShareList, type ShareListProps } from './ShareList'
@@ -42,3 +42,5 @@ export { ShareSheet, type ShareSheetProps } from './ShareSheet'
 export { TransferRow, type TransferRowProps } from './TransferRow'
 export { UPI_ID_ERROR, UpiIdForm, type UpiIdFormProps } from './UpiIdForm'
 export { UpiPaySheet, type UpiPayee, type UpiPayer, type UpiPaySheetProps } from './UpiPaySheet'
+export { upiPaymentForShare, upiPaymentForTransfer, type UpiPayment } from './upiPayment'
+export { usePayLink, type PayLink, type PayLinkOptions } from './usePayLink'
