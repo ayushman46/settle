@@ -152,6 +152,9 @@ describe('simplifyDebts', () => {
 
   it('property: settles random balances exactly with at most n − 1 transfers', () => {
     const next = rng(99)
+    // Every rule is checked on every run; violations are collected and asserted once, so 2000
+    // runs stay fast even on a busy machine (an `expect` per check made this the slowest test).
+    const violations: string[] = []
     for (let run = 0; run < 2000; run++) {
       const n = 2 + Math.floor(next() * 14)
       const balances: Record<string, number> = {}
@@ -163,22 +166,23 @@ describe('simplifyDebts', () => {
       }
       balances[`f${n - 1}`] = rest
       const transfers = simplifyDebts(balances)
+      const fail = (rule: string) => violations.push(`run ${run}: ${rule} — ${JSON.stringify(balances)}`)
       const nonZero = Object.values(balances).filter((v) => v !== 0).length
-      expect(transfers.length).toBeLessThanOrEqual(Math.max(0, nonZero - 1))
+      if (transfers.length > Math.max(0, nonZero - 1)) fail(`${transfers.length} transfers for ${nonZero} people`)
       const after = { ...balances }
       for (const t of transfers) {
-        expect(t.amount).toBeGreaterThan(0)
-        expect(Number.isSafeInteger(t.amount)).toBe(true)
-        expect(t.fromId).not.toBe(t.toId)
+        if (!(t.amount > 0) || !Number.isSafeInteger(t.amount)) fail(`bad amount ${t.amount}`)
+        if (t.fromId === t.toId) fail(`${t.fromId} pays themself`)
         // A debtor pays: their balance rises toward zero; a creditor's falls toward zero.
-        expect(after[t.fromId]).toBeLessThan(0)
-        expect(after[t.toId]).toBeGreaterThan(0)
+        if (!((after[t.fromId] ?? 0) < 0)) fail(`${t.fromId} pays without owing`)
+        if (!((after[t.toId] ?? 0) > 0)) fail(`${t.toId} is paid without being owed`)
         after[t.fromId] = (after[t.fromId] ?? 0) + t.amount
         after[t.toId] = (after[t.toId] ?? 0) - t.amount
       }
-      for (const v of Object.values(after)) expect(v).toBe(0)
-      expect(simplifyDebts({ ...balances })).toEqual(transfers)
+      if (Object.values(after).some((v) => v !== 0)) fail(`left over ${JSON.stringify(after)}`)
+      if (JSON.stringify(simplifyDebts({ ...balances })) !== JSON.stringify(transfers)) fail('not deterministic')
     }
+    expect(violations).toEqual([])
   })
 })
 
