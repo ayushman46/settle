@@ -1,0 +1,173 @@
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-5);
+  padding-top: var(--s-1);
+}
+
+/* ---------- No UPI ID yet ---------- */
+
+.upi {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-4);
+  border-radius: var(--radius-card);
+  background: var(--accent-soft);
+}
+
+.upiText {
+  flex: 1 1 14rem;
+  min-width: 0;
+  font: var(--text-label);
+  color: var(--ink);
+}
+
+/* ---------- The link ---------- */
+
+.link {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-width: 0;
+  min-height: var(--tap);
+  padding: var(--s-2) var(--s-4);
+  border-radius: var(--r-pill);
+  background: var(--surface-2);
+}
+
+.linkIcon {
+  flex: none;
+  width: var(--s-5);
+  height: var(--s-5);
+  color: var(--ink-2);
+}
+
+.linkText {
+  min-width: 0;
+  overflow: hidden;
+  font: var(--text-caption);
+  font-family: var(--font-mono);
+  color: var(--ink-2);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.linkPending {
+  display: flex;
+  flex: 1;
+  align-items: center;
+}
+
+.actions {
+  margin-block: calc(var(--s-1) * -1);
+}
+
+/* ---------- The image ---------- */
+
+.image {
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+  padding: var(--s-3);
+  border-radius: var(--radius-card);
+  background: var(--surface-2);
+}
+
+/* The card is 1080×1350 (4:5): a thumbnail that reads as a receipt. */
+.preview {
+  position: relative;
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 112px;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  border-radius: var(--r-md);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+  transform: rotate(-2deg);
+}
+
+.previewImage {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  animation: image-in var(--dur-4) var(--ease-spring) backwards;
+}
+
+.previewFailed {
+  padding: var(--s-2);
+  font: var(--text-micro);
+  color: var(--ink-2);
+  text-align: center;
+}
+
+.imageText {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--s-2);
+  min-width: 0;
+}
+
+.imageTitle {
+  margin: 0;
+  font: var(--text-section);
+  color: var(--ink);
+}
+
+.imageSub {
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
+/* A quiet text link, never a nag. */
+.upgrade {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--tap);
+  padding: 0;
+  color: var(--ink-2);
+  font: var(--text-caption);
+  font-weight: 550;
+}
+
+.upgrade > svg {
+  width: var(--s-4);
+  height: var(--s-4);
+}
+
+@media (hover: hover) {
+  .upgrade:hover {
+    color: var(--ink);
+  }
+}
+
+/* 320px phones: the thumbnail goes on top. */
+@media (max-width: 359px) {
+  .image {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .preview {
+    align-self: center;
+  }
+}
+
+@keyframes image-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .previewImage {
+    animation: none;
+  }
+}
