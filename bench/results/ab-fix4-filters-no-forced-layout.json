@@ -1,0 +1,141 @@
+{
+ "label": "fix4-filters-no-forced-layout",
+ "date": "2026-10-22T23:37:22.688Z",
+ "a": "C:\\Users\\Ayush\\Downloads\\Billsplit-AI\\node_modules\\.cache\\settle-bench\\dist-fix4-A",
+ "b": "C:\\Users\\Ayush\\Downloads\\Billsplit-AI\\node_modules\\.cache\\settle-bench\\dist-fix4-B",
+ "runs": 5,
+ "results": {
+  "mid · screen opens": {
+   "A": [
+    {
+     "Home → Activity (tab)": 216.89999997615814,
+     "Home → Activity (tab) · long tasks ms": 195,
+     "Activity → Expense (bill)": 164.59999999403954,
+     "Activity → Expense (bill) · long tasks ms": 150
+    },
+    {
+     "Home → Activity (tab)": 329.7000000178814,
+     "Home → Activity (tab) · long tasks ms": 295,
+     "Activity → Expense (bill)": 243.69999998807907,
+     "Activity → Expense (bill) · long tasks ms": 218
+    },
+    {
+     "Home → Activity (tab)": 271.5,
+     "Home → Activity (tab) · long tasks ms": 238,
+     "Activity → Expense (bill)": 193.59999999403954,
+     "Activity → Expense (bill) · long tasks ms": 176
+    },
+    {
+     "Home → Activity (tab)": 201.59999999403954,
+     "Home → Activity (tab) · long tasks ms": 178,
+     "Activity → Expense (bill)": 130.09999999403954,
+     "Activity → Expense (bill) · long tasks ms": 119
+    },
+    {
+     "Home → Activity (tab)": 232.09999999403954,
+     "Home → Activity (tab) · long tasks ms": 211,
+     "Activity → Expense (bill)": 117,
+     "Activity → Expense (bill) · long tasks ms": 105
+    }
+   ],
+   "B": [
+    {
+     "Home → Activity (tab)": 251.19999998807907,
+     "Home → Activity (tab) · long tasks ms": 230,
+     "Activity → Expense (bill)": 196.69999998807907,
+     "Activity → Expense (bill) · long tasks ms": 178
+    },
+    {
+     "Home → Activity (tab)": 278.19999998807907,
+     "Home → Activity (tab) · long tasks ms": 227,
+     "Activity → Expense (bill)": 196.90000000596046,
+     "Activity → Expense (bill) · long tasks ms": 178
+    },
+    {
+     "Home → Activity (tab)": 217.90000000596046,
+     "Home → Activity (tab) · long tasks ms": 197,
+     "Activity → Expense (bill)": 175.40000000596046,
+     "Activity → Expense (bill) · long tasks ms": 163
+    },
+    {
+     "Home → Activity (tab)": 180,
+     "Home → Activity (tab) · long tasks ms": 158,
+     "Activity → Expense (bill)": 164.2000000178814,
+     "Activity → Expense (bill) · long tasks ms": 151
+    },
+    {
+     "Home → Activity (tab)": 171.30000001192093,
+     "Home → Activity (tab) · long tasks ms": 153,
+     "Activity → Expense (bill)": 133.10000002384186,
+     "Activity → Expense (bill) · long tasks ms": 123
+    }
+   ]
+  },
+  "low · screen opens": {
+   "A": [
+    {
+     "Home → Activity (tab)": 2172.2999999821186,
+     "Home → Activity (tab) · long tasks ms": 2121,
+     "Activity → Expense (bill)": 1799.7999999821186,
+     "Activity → Expense (bill) · long tasks ms": 1809
+    },
+    {
+     "Home → Activity (tab)": 1504.5,
+     "Home → Activity (tab) · long tasks ms": 1508,
+     "Activity → Expense (bill)": 1279.5,
+     "Activity → Expense (bill) · long tasks ms": 1285
+    },
+    {
+     "Home → Activity (tab)": 2257.199999988079,
+     "Home → Activity (tab) · long tasks ms": 2152,
+     "Activity → Expense (bill)": 1343.5999999940395,
+     "Activity → Expense (bill) · long tasks ms": 1339
+    },
+    {
+     "Home → Activity (tab)": 1775.5,
+     "Home → Activity (tab) · long tasks ms": 1744,
+     "Activity → Expense (bill)": 1121.800000011921,
+     "Activity → Expense (bill) · long tasks ms": 1125
+    },
+    {
+     "Home → Activity (tab)": 1724.300000011921,
+     "Home → Activity (tab) · long tasks ms": 1695,
+     "Activity → Expense (bill)": 1220.0999999940395,
+     "Activity → Expense (bill) · long tasks ms": 1210
+    }
+   ],
+   "B": [
+    {
+     "Home → Activity (tab)": 1899.5999999940395,
+     "Home → Activity (tab) · long tasks ms": 1864,
+     "Activity → Expense (bill)": 1515.4000000059605,
+     "Activity → Expense (bill) · long tasks ms": 1524
+    },
+    {
+     "Home → Activity (tab)": 1825.5999999940395,
+     "Home → Activity (tab) · long tasks ms": 1816,
+     "Activity → Expense (bill)": 1572.5,
+     "Activity → Expense (bill) · long tasks ms": 1579
+    },
+    {
+     "Home → Activity (tab)": 1884.9000000059605,
+     "Home → Activity (tab) · long tasks ms": 1829,
+     "Activity → Expense (bill)": 1815.9000000059605,
+     "Activity → Expense (bill) · long tasks ms": 1757
+    },
+    {
+     "Home → Activity (tab)": 1676.9000000059605,
+     "Home → Activity (tab) · long tasks ms": 1652,
+     "Activity → Expense (bill)": 1226.5,
+     "Activity → Expense (bill) · long tasks ms": 1222
+    },
+    {
+     "Home → Activity (tab)": 1467.6000000238419,
+     "Home → Activity (tab) · long tasks ms": 1457,
+     "Activity → Expense (bill)": 1252,
+     "Activity → Expense (bill) · long tasks ms": 1249
+    }
+   ]
+  }
+ }
+}
