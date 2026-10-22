@@ -41,13 +41,12 @@ export function UpgradeScreen() {
   const offer = useProOffer(setCelebrate)
   const perks = proPerks(offer.proAiPerDay)
   const openRedeem = (): void => setRedeem((current) => ({ ...current, open: true }))
-  const selling = !pro.isPro || celebrate !== null
 
   return (
     <Screen
       header={<TopBar onBack={() => goBack('/app/you')} />}
       footer={
-        selling ? (
+        !pro.isPro ? (
           <ActionBar hint={offer.selected && !offer.checkoutOff ? checkoutNote(offer.selected) : undefined}>
             <BuyButton offer={offer} onRedeem={openRedeem} />
           </ActionBar>
