@@ -3,13 +3,24 @@
  * object until something it depends on actually changes, so they're safe as memo/effect deps.
  */
 import { useCallback, useMemo } from 'react'
-import { ME_ID, type CategoryId, type Expense, type Friend, type Group, type Minor, type Profile, type RecurringTemplate } from '../domain/types'
+import {
+  ME_ID,
+  type CategoryId,
+  type ClaimRound,
+  type Expense,
+  type Friend,
+  type Group,
+  type Minor,
+  type Pool,
+  type Profile,
+  type RecurringTemplate,
+} from '../domain/types'
 import { groupBalances, overallSummary, type OverallSummary } from '../engine/balances'
 import { today } from '../engine/dates'
 import { dueRecurring, type RecurringDue } from '../engine/recurring'
 import { measured } from '../lib/perfMarks'
 import { memoizeLast, shallowArrayEqual, useStore } from './store'
-import { expensesStore, friendsStore, groupsStore, profileStore, recurringStore } from './stores'
+import { claimsStore, expensesStore, friendsStore, groupsStore, poolsStore, profileStore, recurringStore } from './stores'
 
 function identity<T>(value: T): T {
   return value
@@ -148,6 +159,43 @@ export function useRecurring(): RecurringTemplate[] {
 export function useDueRecurring(day: string = today()): RecurringDue[] {
   const templates = useStore(recurringStore, identity)
   return useMemo(() => dueRecurring(templates, day), [templates, day])
+}
+
+/* ------------------------------------------------------------------ pools & claims */
+
+/** Open collections first, then the most recently changed. */
+export const sortPools = memoizeLast((pools: readonly Pool[]): Pool[] =>
+  [...pools].sort((a, b) => Number(a.closedAt !== null) - Number(b.closedAt !== null) || b.updatedAt - a.updatedAt || a.title.localeCompare(b.title)),
+)
+
+/** Every collection, open first, then by last change. */
+export function usePools(): Pool[] {
+  return useStore(poolsStore, sortPools)
+}
+
+export function usePool(id: string | null | undefined): Pool | null {
+  const select = useCallback((pools: Pool[]) => (id ? (pools.find((p) => p.id === id) ?? null) : null), [id])
+  return useStore(poolsStore, select)
+}
+
+export function useClaimRound(id: string | null | undefined): ClaimRound | null {
+  const select = useCallback((rounds: ClaimRound[]) => (id ? (rounds.find((r) => r.id === id) ?? null) : null), [id])
+  return useStore(claimsStore, select)
+}
+
+/** The newest round for one expense, or null. */
+export function latestClaimRound(rounds: readonly ClaimRound[], expenseId: string): ClaimRound | null {
+  let best: ClaimRound | null = null
+  for (const r of rounds) {
+    if (r.expenseId === expenseId && (best === null || r.createdAt > best.createdAt)) best = r
+  }
+  return best
+}
+
+/** The newest claim round sent for an expense, or null. */
+export function useClaimRoundForExpense(expenseId: string | null | undefined): ClaimRound | null {
+  const select = useCallback((rounds: ClaimRound[]) => (expenseId ? latestClaimRound(rounds, expenseId) : null), [expenseId])
+  return useStore(claimsStore, select)
 }
 
 /* ------------------------------------------------------------------ balances */

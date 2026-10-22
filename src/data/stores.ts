@@ -1,12 +1,14 @@
-/** The five persisted collections. One localStorage key each, versioned. */
+/** The persisted collections. One localStorage key each, versioned. */
 import * as z from 'zod/mini'
-import type { Expense, Friend, Group, Profile, RecurringTemplate } from '../domain/types'
+import type { ClaimRound, Expense, Friend, Group, Pool, Profile, RecurringTemplate } from '../domain/types'
 import {
+  claimRoundsSchema,
   defaultProfile,
   expensesSchema,
   friendsSchema,
   groupsSchema,
   meFriend,
+  poolsSchema,
   profileSchema,
   recurringListSchema,
   withMe,
@@ -21,6 +23,8 @@ export const STORAGE_KEYS = {
   expenses: 'settle.v3.expenses',
   groups: 'settle.v3.groups',
   recurring: 'settle.v3.recurring',
+  claims: 'settle.v4.claims',
+  pools: 'settle.v4.pools',
 } as const
 
 /** Accepts a bare, un-enveloped value (e.g. hand-edited storage) when the schema can read it. */
@@ -69,4 +73,22 @@ export const recurringStore = createStore<RecurringTemplate[]>({
   initial: () => [],
   version: STORAGE_VERSION,
   migrate: bare(recurringListSchema),
+})
+
+/** Claim rounds ("Claim your items" links sent for a bill). */
+export const claimsStore = createStore<ClaimRound[]>({
+  key: STORAGE_KEYS.claims,
+  schema: claimRoundsSchema,
+  initial: () => [],
+  version: STORAGE_VERSION,
+  migrate: bare(claimRoundsSchema),
+})
+
+/** Collections (chanda / pools). */
+export const poolsStore = createStore<Pool[]>({
+  key: STORAGE_KEYS.pools,
+  schema: poolsSchema,
+  initial: () => [],
+  version: STORAGE_VERSION,
+  migrate: bare(poolsSchema),
 })

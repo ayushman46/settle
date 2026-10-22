@@ -18,6 +18,12 @@ const HEADER = [
   'Split',
   'People',
   'Note',
+  // split / bill / loan (money lent, not spent).
+  'Kind',
+  // Trip currency: what was actually paid, in which currency, at what rate (blank when not converted).
+  'Paid amount',
+  'Paid currency',
+  'Rate',
 ] as const
 
 const MODE_LABEL: Readonly<Record<Expense['mode'], string>> = {
@@ -68,6 +74,10 @@ export function exportCsv(
       MODE_LABEL[e.mode],
       people,
       e.note ?? '',
+      e.kind,
+      e.fx ? toInputString(e.fx.amount, e.fx.currency) : '',
+      e.fx?.currency ?? '',
+      e.fx?.rate ?? '',
     ])
   }
   return rows.map((row) => row.map(csvField).join(',')).join('\r\n') + '\r\n'

@@ -6,27 +6,42 @@
 import * as z from 'zod/mini'
 import {
   CATEGORY_IDS,
+  FX_SOURCES,
+  LANGUAGE_CODES,
   ME_ID,
+  POOL_OCCASIONS,
   type BillSnapshot,
   type CategoryId,
+  type ClaimDecision,
+  type ClaimPick,
+  type ClaimReply,
+  type ClaimRound,
+  type Contribution,
   type Expense,
+  type ExpenseKind,
   type ExpenseSource,
   type Friend,
+  type FxSnapshot,
   type Group,
   type GroupKind,
+  type LanguageCode,
   type Participant,
+  type Pool,
+  type PoolOccasion,
   type Profile,
   type RecurringTemplate,
   type Settlement,
 } from '../domain/types'
 import { CATEGORY_META } from '../engine/categories'
 import { isIsoDate, isPeriod, toIsoDate, today } from '../engine/dates'
+import { isValidRate } from '../engine/fx'
 import { expenseShares, isValidTotal, uniqueParticipants } from '../engine/split'
 import { defaultCurrency, isKnownCurrency } from '../lib/currencies'
+import { randomB64u } from '../lib/ids'
 import { MAX_MINOR } from '../lib/money'
 import { graphemes, normalizeName } from '../lib/people'
 import { isValidUpiId, normalizeUpiId } from '../lib/upi'
-import { AVATAR_COLORS, type BillItem, type BillMeta } from '../types'
+import { AVATAR_COLORS, BILL_FEE_KINDS, type BillFee, type BillFeeKind, type BillItem, type BillMeta, type FeeSplit } from '../types'
 import type { ZodType } from './store'
 
 /* ------------------------------------------------------------------ limits */
@@ -39,8 +54,46 @@ export const MAX_PARTICIPANTS = 100
 export const MAX_GROUP_MEMBERS = 100
 
 export const GROUP_KINDS: readonly GroupKind[] = ['trip', 'home', 'couple', 'event', 'other']
-export const EXPENSE_SOURCES: readonly ExpenseSource[] = ['manual', 'scan', 'describe', 'sample', 'recurring']
+export const EXPENSE_SOURCES: readonly ExpenseSource[] = ['manual', 'scan', 'describe', 'sample', 'recurring', 'sms', 'voice']
+export const EXPENSE_KINDS: readonly ExpenseKind[] = ['split', 'bill', 'loan']
+export const FEE_SPLITS: readonly FeeSplit[] = ['proportional', 'equal']
 export const DEFAULT_GROUP_EMOJI = '👥'
+
+/** Delivery-app fees kept on one bill, and the longest fee label. */
+export const MAX_BILL_FEES = 15
+export const MAX_FEE_LABEL_LENGTH = 40
+
+/** Claim rounds kept, and replies kept per round. */
+export const MAX_CLAIM_ROUNDS = 200
+export const MAX_CLAIM_REPLIES = 100
+/** Largest denominator (and assign weight) in a claim: "1 of 99". */
+export const MAX_CLAIM_DEN = 99
+
+/** Collections kept, people per collection, contributions per collection. */
+export const MAX_POOLS = 200
+export const MAX_POOL_MEMBERS = 200
+export const MAX_POOL_CONTRIBUTIONS = 500
+export const MAX_POOL_TITLE_LENGTH = 60
+export const MAX_POOL_NOTE_LENGTH = 140
+export const MAX_CONTRIBUTOR_NAME_LENGTH = 40
+
+/** A 22-character base64url secret (16 random bytes) that signs replies to a shared link. */
+export const LINK_SECRET_PATTERN = /^[A-Za-z0-9_-]{22}$/
+const ITEMS_HASH_PATTERN = /^[0-9a-f]{12}$/
+
+/** Each occasion's emoji and the title used when none was typed. */
+export const POOL_OCCASION_DEFAULTS: Readonly<Record<PoolOccasion, { emoji: string; title: string }>> = {
+  birthday: { emoji: '🎂', title: 'Birthday gift' },
+  farewell: { emoji: '👋', title: 'Farewell' },
+  diwali: { emoji: '🪔', title: 'Diwali party' },
+  shagun: { emoji: '💍', title: 'Wedding shagun' },
+  office: { emoji: '🏢', title: 'Office collection' },
+  puja: { emoji: '🙏', title: 'Puja chanda' },
+  trip: { emoji: '✈️', title: 'Trip advance' },
+  party: { emoji: '🎉', title: 'Party' },
+  sports: { emoji: '🏏', title: 'Turf or sports' },
+  other: { emoji: '✨', title: 'Collection' },
+}
 
 /* ------------------------------------------------------------------ cleaners (shared with actions) */
 
@@ -190,6 +243,7 @@ const profileShape = z.object({
   haptics: z.catch(z.boolean(), true),
   onboarded: z.catch(z.boolean(), false),
   createdAt: timestamp,
+  language: z.catch(z.nullable(z.enum(LANGUAGE_CODES as readonly LanguageCode[])), null),
 })
 
 export function defaultProfile(): Profile {
@@ -202,7 +256,13 @@ export function defaultProfile(): Profile {
     haptics: true,
     onboarded: false,
     createdAt: Date.now(),
+    language: null,
   }
+}
+
+/** A language code, or null (automatic) for anything else. */
+export function cleanLanguage(value: unknown): LanguageCode | null {
+  return typeof value === 'string' && (LANGUAGE_CODES as readonly string[]).includes(value) ? (value as LanguageCode) : null
 }
 
 export const profileSchema: ZodType<Profile> = repaired(profileShape, (p) => ({
@@ -214,6 +274,7 @@ export const profileSchema: ZodType<Profile> = repaired(profileShape, (p) => ({
   haptics: p.haptics,
   onboarded: p.onboarded,
   createdAt: cleanTimestamp(p.createdAt) || Date.now(),
+  language: p.language,
 }))
 
 /* ------------------------------------------------------------------ friends */
@@ -281,7 +342,7 @@ const billItemShape: ZodType<BillItem> = z.object({
   amount: z.int(),
 })
 
-const billMetaShape: ZodType<BillMeta> = z.object({
+const billMetaShape = z.object({
   merchant: nullableText,
   date: nullableText,
   subtotal: nullableMinor,
@@ -290,14 +351,95 @@ const billMetaShape: ZodType<BillMeta> = z.object({
   discount: nullableMinor,
   tip: nullableMinor,
   total: nullableMinor,
+  fees: z.optional(z.unknown()),
 })
 
-const billShape: ZodType<BillSnapshot> = z.object({
-  meta: billMetaShape,
-  items: z.array(billItemShape),
-  assignments: z.record(z.string(), z.record(z.string(), z.number())),
-  warnings: z.catch(z.array(z.string()), []),
-})
+const BILL_FEE_KIND_SET: ReadonlySet<unknown> = new Set(BILL_FEE_KINDS)
+
+/**
+ * A bill's delivery-app fees, cleaned: at most 15, unique ids, labels tidied to 40 characters
+ * (blank → "Fee"), amounts whole and 1…MAX_MINOR, unknown kinds → 'other'. Bad entries are dropped.
+ */
+export function cleanBillFees(raw: unknown): BillFee[] {
+  if (!Array.isArray(raw)) return []
+  const out: BillFee[] = []
+  const seen = new Set<string>()
+  for (const fee of raw as unknown[]) {
+    if (out.length >= MAX_BILL_FEES) break
+    if (typeof fee !== 'object' || fee === null) continue
+    const f = fee as Record<string, unknown>
+    if (!isIdText(f.id) || seen.has(f.id)) continue
+    if (!Number.isSafeInteger(f.amount) || (f.amount as number) < 1 || (f.amount as number) > MAX_MINOR) continue
+    seen.add(f.id)
+    out.push({
+      id: f.id,
+      kind: BILL_FEE_KIND_SET.has(f.kind) ? (f.kind as BillFeeKind) : 'other',
+      label: (typeof f.label === 'string' ? cleanText(f.label, MAX_FEE_LABEL_LENGTH) : '') || 'Fee',
+      amount: f.amount as number,
+    })
+  }
+  return out
+}
+
+/** `'proportional' | 'equal'`, or undefined for anything else (older bills have none). */
+function cleanFeeSplit(value: unknown): FeeSplit | undefined {
+  return value === 'proportional' || value === 'equal' ? value : undefined
+}
+
+const billShape: ZodType<BillSnapshot> = z.pipe(
+  z.object({
+    meta: billMetaShape,
+    items: z.array(billItemShape),
+    assignments: z.record(z.string(), z.record(z.string(), z.number())),
+    warnings: z.catch(z.array(z.string()), []),
+    feeSplit: z.optional(z.unknown()),
+  }),
+  z.transform((b): BillSnapshot => {
+    const { fees: rawFees, ...printed } = b.meta
+    const fees = cleanBillFees(rawFees)
+    const meta: BillMeta = fees.length > 0 ? { ...printed, fees } : printed
+    const feeSplit = cleanFeeSplit(b.feeSplit)
+    const bill: BillSnapshot = { meta, items: b.items, assignments: b.assignments, warnings: b.warnings }
+    if (feeSplit !== undefined) bill.feeSplit = feeSplit
+    return bill
+  }),
+)
+
+/* ------------------------------------------------------------------ trip currency */
+
+/**
+ * A usable `fx` snapshot for an expense in `currency`, or null: the paid currency must be known
+ * and differ from the expense's, the amount a valid total, the rate a positive decimal string
+ * (`RATE_PATTERN`) and the source known. A malformed rate date becomes null.
+ */
+export function cleanFx(raw: unknown, currency: string): FxSnapshot | null {
+  if (typeof raw !== 'object' || raw === null) return null
+  const fx = raw as Record<string, unknown>
+  if (typeof fx.currency !== 'string' || !CURRENCY_CODE.test(fx.currency) || !isKnownCurrency(fx.currency) || fx.currency === currency) return null
+  if (!isValidTotal(fx.amount) || !isValidRate(fx.rate) || !FX_SOURCE_SET.has(fx.source)) return null
+  return {
+    amount: fx.amount,
+    currency: fx.currency,
+    rate: fx.rate,
+    rateDate: isIsoDate(fx.rateDate) ? fx.rateDate : null,
+    source: fx.source as FxSnapshot['source'],
+  }
+}
+
+/** Exactly one participant, and it isn't the payer: a 1:1 entry ("I lent Riya", "Sam paid my auto"). */
+export function isOneToOne(e: Pick<Expense, 'participants' | 'payerId'>): boolean {
+  const people = uniqueParticipants(e.participants)
+  return people.length === 1 && people[0]?.friendId !== e.payerId
+}
+
+/**
+ * The stored kind: 'loan' only for a 1:1 entry without a bill; 'bill' only with a snapshot;
+ * anything else is a plain split (how older versions read a loan — balances stay right).
+ */
+export function cleanExpenseKind(kind: unknown, e: Pick<Expense, 'participants' | 'payerId' | 'bill'>): ExpenseKind {
+  if (kind === 'loan') return !e.bill && isOneToOne(e) ? 'loan' : 'split'
+  return kind === 'bill' && e.bill ? 'bill' : 'split'
+}
 
 function cleanParticipants(list: readonly Participant[]): Participant[] {
   return uniqueParticipants(list)
@@ -327,7 +469,7 @@ export function settledShares(e: Pick<Expense, 'total' | 'currency' | 'mode' | '
 
 const expenseShape = z.object({
   id,
-  kind: z.catch(z.enum(['split', 'bill']), 'split'),
+  kind: z.catch(z.enum(EXPENSE_KINDS as readonly ExpenseKind[]), 'split'),
   title: z.catch(z.string(), ''),
   category,
   currency: z.string().check(z.regex(/^[A-Z]{3}$/)),
@@ -346,6 +488,7 @@ const expenseShape = z.object({
   paidBack: z.catch(z.record(z.string(), z.number()), {}),
   recurringId: z.catch(z.nullable(id), null),
   source: z.catch(z.enum(EXPENSE_SOURCES as readonly ExpenseSource[]), 'manual'),
+  fx: z.optional(z.unknown()),
 })
 
 export const expenseSchema: ZodType<Expense> = repaired(expenseShape, (e) => {
@@ -370,9 +513,10 @@ export const expenseSchema: ZodType<Expense> = repaired(expenseShape, (e) => {
   }
   const title = cleanText(e.title, MAX_TITLE_LENGTH)
   const note = e.note === null ? null : cleanMultiline(e.note, MAX_NOTE_LENGTH) || null
-  return {
+  const fx = cleanFx(e.fx, e.currency)
+  const out: Expense = {
     id: e.id,
-    kind: e.bill ? e.kind : 'split',
+    kind: cleanExpenseKind(e.kind, { participants, payerId: e.payerId, bill: e.bill }),
     title: title || fallbackTitle(e.category),
     category: e.category,
     currency: e.currency,
@@ -392,6 +536,9 @@ export const expenseSchema: ZodType<Expense> = repaired(expenseShape, (e) => {
     recurringId: e.recurringId,
     source: e.source,
   }
+  // Stored only when set, so plain expenses (and everything saved before trip currency) keep their shape.
+  if (fx) out.fx = fx
+  return out
 })
 
 /* ------------------------------------------------------------------ expenses: the fast path */
@@ -427,9 +574,12 @@ const EXPENSE_KEYS: readonly (keyof Expense)[] = [
 const BILL_KEYS: readonly (keyof BillSnapshot)[] = ['meta', 'items', 'assignments', 'warnings']
 const META_KEYS: readonly (keyof BillMeta)[] = ['merchant', 'date', 'subtotal', 'tax', 'serviceCharge', 'discount', 'tip', 'total']
 const ITEM_KEYS: readonly (keyof BillItem)[] = ['id', 'name', 'quantity', 'amount']
+const FEE_KEYS: readonly (keyof BillFee)[] = ['id', 'kind', 'label', 'amount']
+const FX_KEYS: readonly (keyof FxSnapshot)[] = ['amount', 'currency', 'rate', 'rateDate', 'source']
 const PARTICIPANT_KEYS: readonly (keyof Participant)[] = ['friendId', 'input']
 const CATEGORY_SET: ReadonlySet<unknown> = new Set(CATEGORY_IDS)
 const SOURCE_SET: ReadonlySet<unknown> = new Set(EXPENSE_SOURCES)
+const FX_SOURCE_SET: ReadonlySet<unknown> = new Set(FX_SOURCES)
 const MODE_SET: ReadonlySet<unknown> = new Set(['equal', 'exact', 'percent', 'shares', 'items'])
 const CURRENCY_CODE = /^[A-Z]{3}$/
 
@@ -442,12 +592,35 @@ function isPlain(value: unknown): value is Plain {
   return (proto === Object.prototype || proto === null) && !Object.hasOwn(value, '__proto__')
 }
 
-/** A plain object with exactly `keys` (no more, none missing). */
-function hasExactly(value: unknown, keys: readonly string[]): value is Plain {
+/** A plain object with exactly `keys` (no more, none missing), plus `optional` when present. */
+function hasExactly(value: unknown, keys: readonly string[], optional?: string): value is Plain {
   if (!isPlain(value)) return false
-  if (Object.keys(value).length !== keys.length) return false
+  const extra = optional !== undefined && Object.hasOwn(value, optional) ? 1 : 0
+  if (Object.keys(value).length !== keys.length + extra) return false
   for (const key of keys) if (!Object.hasOwn(value, key)) return false
   return true
+}
+
+/** Fees exactly as `cleanBillFees` leaves them, and at least one (none is stored as no `fees` key). */
+function isCanonicalFees(value: unknown): value is BillFee[] {
+  if (!Array.isArray(value) || value.length === 0 || value.length > MAX_BILL_FEES) return false
+  const seen = new Set<string>()
+  for (const fee of value as unknown[]) {
+    if (!hasExactly(fee, FEE_KEYS) || !isIdText(fee.id) || seen.has(fee.id)) return false
+    seen.add(fee.id)
+    if (!BILL_FEE_KIND_SET.has(fee.kind)) return false
+    if (typeof fee.label !== 'string' || fee.label === '' || cleanText(fee.label, MAX_FEE_LABEL_LENGTH) !== fee.label) return false
+    if (!Number.isSafeInteger(fee.amount) || (fee.amount as number) < 1 || (fee.amount as number) > MAX_MINOR) return false
+  }
+  return true
+}
+
+/** An `fx` snapshot exactly as `cleanFx` returns it for an expense in `currency`. */
+function isCanonicalFx(value: unknown, currency: string): value is FxSnapshot {
+  if (!hasExactly(value, FX_KEYS)) return false
+  if (typeof value.currency !== 'string' || !CURRENCY_CODE.test(value.currency) || !isKnownCurrency(value.currency) || value.currency === currency) return false
+  if (!isValidTotal(value.amount) || !isValidRate(value.rate) || !FX_SOURCE_SET.has(value.source)) return false
+  return value.rateDate === null || isIsoDate(value.rateDate)
 }
 
 function isIdText(value: unknown): value is string {
@@ -470,9 +643,11 @@ function isNumberRecord(value: unknown): value is Record<string, number> {
 }
 
 function isCanonicalBill(value: unknown): value is BillSnapshot {
-  if (!hasExactly(value, BILL_KEYS)) return false
+  if (!hasExactly(value, BILL_KEYS, 'feeSplit')) return false
   const { meta, items, assignments, warnings } = value
-  if (!hasExactly(meta, META_KEYS)) return false
+  if (Object.hasOwn(value, 'feeSplit') && cleanFeeSplit(value.feeSplit) === undefined) return false
+  if (!hasExactly(meta, META_KEYS, 'fees')) return false
+  if (Object.hasOwn(meta, 'fees') && !isCanonicalFees(meta.fees)) return false
   for (const key of META_KEYS) {
     const v = meta[key]
     if (v === null) continue
@@ -492,7 +667,7 @@ function isCanonicalBill(value: unknown): value is BillSnapshot {
 
 /** True when `raw` is exactly what `expenseSchema` would return for it (so it can skip the schema). */
 export function isCanonicalExpense(raw: unknown): raw is Expense {
-  if (!hasExactly(raw, EXPENSE_KEYS)) return false
+  if (!hasExactly(raw, EXPENSE_KEYS, 'fx')) return false
   const e = raw
   if (!isIdText(e.id) || !isIdText(e.payerId)) return false
   if (typeof e.currency !== 'string' || !CURRENCY_CODE.test(e.currency)) return false
@@ -504,10 +679,11 @@ export function isCanonicalExpense(raw: unknown): raw is Expense {
   if (!isCleanTimestamp(e.createdAt) || !isCleanTimestamp(e.updatedAt) || e.updatedAt < e.createdAt) return false
   if (!isIsoDate(e.date)) return false
 
-  // Bills: `kind` is "split" without a snapshot, and item-by-item needs one.
+  // Bills: `kind` is "split" without a snapshot, and item-by-item needs one. Trip currency: `fx`
+  // is only stored when set.
   if (e.bill !== null && !isCanonicalBill(e.bill)) return false
-  if (e.kind !== 'split' && !(e.kind === 'bill' && e.bill !== null)) return false
   if (e.mode === 'items' && e.bill === null) return false
+  if (Object.hasOwn(e, 'fx') && !isCanonicalFx(e.fx, e.currency)) return false
 
   // Text exactly as the cleaners leave it.
   if (typeof e.title !== 'string' || e.title === '' || cleanText(e.title, MAX_TITLE_LENGTH) !== e.title) return false
@@ -522,6 +698,11 @@ export function isCanonicalExpense(raw: unknown): raw is Expense {
     if (p.input !== null && !isFiniteNumber(p.input)) return false
     seen.add(p.friendId)
   }
+
+  // Kind: a loan is 1:1 with no bill; a bill needs its snapshot.
+  if (e.kind === 'loan') {
+    if (e.bill !== null || participants.length !== 1 || (participants[0] as Plain).friendId === e.payerId) return false
+  } else if (e.kind !== 'split' && !(e.kind === 'bill' && e.bill !== null)) return false
 
   // Shares that add up (so they're kept as they are), and paid-back ticks the schema keeps.
   const shares = e.shares
@@ -575,7 +756,14 @@ const groupShape = z.object({
   createdAt: timestamp,
   updatedAt: timestamp,
   archived: z.catch(z.boolean(), false),
+  travelCurrency: nullableText,
+  roundSize: nullableMinor,
 })
+
+/** A known currency other than the group's own, else null ("Spending in" the group's currency is no trip currency). */
+export function cleanTravelCurrency(value: unknown, currency: string): string | null {
+  return typeof value === 'string' && CURRENCY_CODE.test(value) && isKnownCurrency(value) && value !== currency ? value : null
+}
 
 export const groupSchema: ZodType<Group> = repaired(groupShape, (g) => {
   const createdAt = cleanTimestamp(g.createdAt)
@@ -590,6 +778,8 @@ export const groupSchema: ZodType<Group> = repaired(groupShape, (g) => {
     createdAt,
     updatedAt: Math.max(cleanTimestamp(g.updatedAt), createdAt),
     archived: g.archived,
+    travelCurrency: cleanTravelCurrency(g.travelCurrency, g.currency),
+    roundSize: isValidTotal(g.roundSize) ? g.roundSize : null,
   }
 })
 
@@ -634,3 +824,224 @@ export const recurringSchema: ZodType<RecurringTemplate> = repaired(recurringSha
 })
 
 export const recurringListSchema: ZodType<RecurringTemplate[]> = records(recurringSchema, (r) => r.id)
+
+/* ------------------------------------------------------------------ claims (claim your items) */
+
+function isWholeIn(value: unknown, min: number, max: number): value is number {
+  return Number.isSafeInteger(value) && (value as number) >= min && (value as number) <= max
+}
+
+/**
+ * Claim picks: `item` an index below `itemCount`, `1 ≤ num ≤ den ≤ 99`; one pick per item (the
+ * first wins). Anything else is dropped.
+ */
+export function cleanClaimPicks(raw: unknown, itemCount: number): ClaimPick[] {
+  if (!Array.isArray(raw)) return []
+  const out: ClaimPick[] = []
+  const seen = new Set<number>()
+  for (const pick of raw as unknown[]) {
+    if (typeof pick !== 'object' || pick === null) continue
+    const { item, num, den } = pick as Record<string, unknown>
+    if (!isWholeIn(item, 0, itemCount - 1) || !isWholeIn(den, 1, MAX_CLAIM_DEN) || !isWholeIn(num, 1, den) || seen.has(item)) continue
+    seen.add(item)
+    out.push({ item, num, den })
+  }
+  return out
+}
+
+/** A decision the organiser can have made; null when it's malformed (or an `assign` with no valid weights). */
+export function cleanClaimDecision(raw: unknown): ClaimDecision | null {
+  if (typeof raw !== 'object' || raw === null) return null
+  const d = raw as Record<string, unknown>
+  if (d.kind === 'as_claimed' || d.kind === 'scale_up' || d.kind === 'rest_everyone') return { kind: d.kind }
+  if (d.kind !== 'assign' || typeof d.shares !== 'object' || d.shares === null || Array.isArray(d.shares)) return null
+  const shares: Record<string, number> = {}
+  for (const [friendId, weight] of Object.entries(d.shares as Record<string, unknown>)) {
+    if (isIdText(friendId) && isWholeIn(weight, 1, MAX_CLAIM_DEN)) shares[friendId] = weight
+  }
+  return Object.keys(shares).length > 0 ? { kind: 'assign', shares } : null
+}
+
+const claimReplyShape = z.object({
+  id,
+  personIndex: z.catch(z.nullable(z.int()), null),
+  name: z.catch(z.string(), ''),
+  friendId: id,
+  picks: z.catch(z.array(z.unknown()), []),
+  nothing: z.catch(z.boolean(), false),
+  paid: nullableMinor,
+  sentAt: timestamp,
+  receivedAt: timestamp,
+  state: z.catch(z.enum(['active', 'replaced']), 'active'),
+})
+
+/** Unique, non-empty id strings, at most `max` (`skip` left out). */
+function cleanIdList(raw: readonly unknown[], max: number, skip?: string): string[] {
+  const out: string[] = []
+  const seen = new Set<string>()
+  for (const value of raw) {
+    if (out.length >= max) break
+    if (!isIdText(value) || value === skip || seen.has(value)) continue
+    seen.add(value)
+    out.push(value)
+  }
+  return out
+}
+
+const claimRoundShape = z.object({
+  id,
+  secret: z.string().check(z.regex(LINK_SECRET_PATTERN)),
+  expenseId: id,
+  itemIds: z.array(z.unknown()),
+  itemsHash: z.string().check(z.regex(ITEMS_HASH_PATTERN)),
+  peopleIds: z.array(z.unknown()),
+  fixedItemIds: z.catch(z.array(z.unknown()), []),
+  ownPicks: z.catch(z.array(z.unknown()), []),
+  replies: z.catch(z.array(z.unknown()), []),
+  decisions: z.catch(z.record(z.string(), z.unknown()), {}),
+  createdAt: timestamp,
+  updatedAt: timestamp,
+  appliedAt: z.catch(z.nullable(z.number()), null),
+})
+
+/** Bill items one claim link can carry. */
+export const MAX_CLAIM_ITEMS = 500
+
+export const claimRoundSchema: ZodType<ClaimRound> = repaired(claimRoundShape, (r) => {
+  // Picks point into `itemIds` and `peopleIds` by position, so a damaged list can't be repaired.
+  const itemIds = cleanIdList(r.itemIds, MAX_CLAIM_ITEMS)
+  const peopleIds = cleanIdList(r.peopleIds, MAX_PARTICIPANTS)
+  if (itemIds.length === 0 || itemIds.length !== r.itemIds.length) return null
+  if (peopleIds.length === 0 || peopleIds.length !== r.peopleIds.length) return null
+  const items = new Set(itemIds)
+  const replies: ClaimReply[] = []
+  const seen = new Set<string>()
+  for (const raw of r.replies) {
+    if (replies.length >= MAX_CLAIM_REPLIES) break
+    const parsed = z.safeParse(claimReplyShape, raw)
+    if (!parsed.success || seen.has(parsed.data.id)) continue
+    const reply = parsed.data
+    seen.add(reply.id)
+    replies.push({
+      id: reply.id,
+      personIndex: isWholeIn(reply.personIndex, 0, peopleIds.length - 1) ? reply.personIndex : null,
+      name: normalizeName(reply.name) || 'Someone',
+      friendId: reply.friendId,
+      picks: cleanClaimPicks(reply.picks, itemIds.length),
+      nothing: reply.nothing,
+      paid: isValidTotal(reply.paid) ? reply.paid : null,
+      sentAt: cleanTimestamp(reply.sentAt),
+      receivedAt: cleanTimestamp(reply.receivedAt),
+      state: reply.state,
+    })
+  }
+  const decisions: Record<string, ClaimDecision> = {}
+  for (const [itemId, raw] of Object.entries(r.decisions)) {
+    const decision = items.has(itemId) ? cleanClaimDecision(raw) : null
+    if (decision) decisions[itemId] = decision
+  }
+  const createdAt = cleanTimestamp(r.createdAt)
+  return {
+    id: r.id,
+    secret: r.secret,
+    expenseId: r.expenseId,
+    itemIds,
+    itemsHash: r.itemsHash,
+    peopleIds,
+    fixedItemIds: cleanIdList(r.fixedItemIds, MAX_CLAIM_ITEMS).filter((itemId) => items.has(itemId)),
+    ownPicks: cleanClaimPicks(r.ownPicks, itemIds.length),
+    replies,
+    decisions,
+    createdAt,
+    updatedAt: Math.max(cleanTimestamp(r.updatedAt), createdAt),
+    appliedAt: r.appliedAt === null ? null : cleanTimestamp(r.appliedAt) || null,
+  }
+})
+
+export const claimRoundsSchema: ZodType<ClaimRound[]> = records(claimRoundSchema, (r) => r.id, MAX_CLAIM_ROUNDS)
+
+/* ------------------------------------------------------------------ pools (collections) */
+
+const contributionShape = z.object({
+  id,
+  friendId: z.catch(z.nullable(id), null),
+  name: z.catch(z.string(), ''),
+  amount: z.int(),
+  date: z.catch(z.string(), ''),
+  method: z.catch(z.enum(['upi', 'cash', 'other']), 'other'),
+  via: z.catch(z.enum(['tick', 'reply']), 'tick'),
+  replyId: z.catch(z.nullable(id), null),
+  createdAt: timestamp,
+})
+
+export const contributionSchema: ZodType<Contribution> = repaired(contributionShape, (c) => {
+  if (!isValidTotal(c.amount)) return null
+  const createdAt = cleanTimestamp(c.createdAt)
+  return {
+    id: c.id,
+    friendId: c.friendId === ME_ID ? null : c.friendId,
+    name: cleanText(c.name, MAX_CONTRIBUTOR_NAME_LENGTH) || 'Someone',
+    amount: c.amount,
+    date: cleanDate(c.date, createdAt),
+    method: c.method,
+    via: c.via,
+    replyId: c.via === 'reply' ? c.replyId : null,
+    createdAt,
+  }
+})
+
+/** A pool's emoji: the first character typed, else the occasion's. */
+function cleanPoolEmoji(value: string, occasion: PoolOccasion): string {
+  const first = graphemes(value.trim())[0]
+  return first && /\S/u.test(first) ? first : POOL_OCCASION_DEFAULTS[occasion].emoji
+}
+
+const poolShape = z.object({
+  id,
+  title: z.catch(z.string(), ''),
+  occasion: z.catch(z.enum(POOL_OCCASIONS as readonly PoolOccasion[]), 'other'),
+  emoji: z.catch(z.string(), ''),
+  currency: z.catch(z.string(), ''),
+  mode: z.catch(z.enum(['fixed', 'target']), 'target'),
+  perPerson: nullableMinor,
+  target: nullableMinor,
+  memberIds: z.catch(z.array(z.unknown()), []),
+  expectedCount: z.catch(z.nullable(z.number()), null),
+  deadline: nullableText,
+  note: nullableText,
+  showAmounts: z.catch(z.nullable(z.boolean()), null),
+  contributions: z.catch(records(contributionSchema, (c) => c.id, MAX_POOL_CONTRIBUTIONS), []),
+  secret: z.catch(z.string(), ''),
+  createdAt: timestamp,
+  updatedAt: timestamp,
+  closedAt: z.catch(z.nullable(z.number()), null),
+})
+
+export const poolSchema: ZodType<Pool> = repaired(poolShape, (p) => {
+  // "Same for everyone" needs an amount; without one the pool becomes "pay what you want".
+  const fixed = p.mode === 'fixed' && isValidTotal(p.perPerson)
+  const createdAt = cleanTimestamp(p.createdAt)
+  return {
+    id: p.id,
+    title: cleanText(p.title, MAX_POOL_TITLE_LENGTH) || POOL_OCCASION_DEFAULTS[p.occasion].title,
+    occasion: p.occasion,
+    emoji: cleanPoolEmoji(p.emoji, p.occasion),
+    currency: cleanCurrency(p.currency, defaultCurrency()),
+    mode: fixed ? 'fixed' : 'target',
+    perPerson: fixed ? p.perPerson : null,
+    target: !fixed && isValidTotal(p.target) ? p.target : null,
+    memberIds: cleanIdList(p.memberIds, MAX_POOL_MEMBERS, ME_ID),
+    expectedCount: isWholeIn(p.expectedCount, 2, 500) ? p.expectedCount : null,
+    deadline: isIsoDate(p.deadline) ? p.deadline : null,
+    note: p.note === null ? null : cleanText(p.note, MAX_POOL_NOTE_LENGTH) || null,
+    // Amounts given freely stay private unless the organiser says otherwise.
+    showAmounts: p.showAmounts ?? fixed,
+    contributions: p.contributions,
+    secret: LINK_SECRET_PATTERN.test(p.secret) ? p.secret : randomB64u(16),
+    createdAt,
+    updatedAt: Math.max(cleanTimestamp(p.updatedAt), createdAt),
+    closedAt: p.closedAt === null ? null : cleanTimestamp(p.closedAt) || null,
+  }
+})
+
+export const poolsSchema: ZodType<Pool[]> = records(poolSchema, (p) => p.id, MAX_POOLS)

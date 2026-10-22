@@ -116,12 +116,36 @@ const percent = {
   updatedAt: 0,
 }
 
-const BASES = [split, bill, percent]
+const THB_FX = { amount: 125000, currency: 'THB', rate: '2.410751226', rateDate: '2026-10-21', source: 'ecb' }
+
+/** v4: a cash loan (1:1, no bill). */
+const loan = {
+  ...split,
+  id: 'e4',
+  kind: 'loan',
+  title: 'Cash',
+  participants: [{ friendId: 'a', input: null }],
+  shares: { a: 1000 },
+  paidBack: {},
+}
+
+/** v4: a trip expense paid in baht, settled in rupees. */
+const abroad = { ...split, id: 'e5', total: 301344, shares: { [ME_ID]: 150672, a: 150672 }, paidBack: {}, fx: THB_FX }
+
+const FEES = [
+  { id: 'f1', kind: 'delivery', label: 'Delivery partner fee', amount: 35 },
+  { id: 'f2', kind: 'platform', label: 'Platform fee', amount: 10 },
+]
+
+/** v4: a delivery order with fees shared equally. */
+const delivery = { ...bill, id: 'e6', bill: { ...bill.bill, feeSplit: 'equal', meta: { ...bill.bill.meta, fees: FEES } } }
+
+const BASES = [split, bill, percent, loan, abroad, delivery]
 
 /** One change at a time: kept-valid edits and every way a field can be off. */
 const VARIANTS: Record<string, readonly unknown[]> = {
   id: ['', 'x'.repeat(200), 'x'.repeat(201), 7, null],
-  kind: ['bill', 'split', 'other', null, undefined],
+  kind: ['bill', 'split', 'loan', 'other', null, undefined],
   title: ['', ' Dinner', 'Dinner ', 'Din  ner', 'Din\tner', 'Din ner', 'Café', 'Café', 'x'.repeat(80), 'x'.repeat(81), 'a​b', 'a‍b', 'Line\nbreak', 7, null],
   category: ['food', 'travel', 'nope', null],
   currency: ['USD', 'inr', 'IN', 'INRR', 7],
@@ -158,7 +182,37 @@ const VARIANTS: Record<string, readonly unknown[]> = {
     { ...bill.bill, extra: true },
     { ...bill.bill, meta: { ...bill.bill.meta, tax: 1.5 } },
     { ...bill.bill, meta: { ...bill.bill.meta, merchant: 7 } },
+    { ...bill.bill, feeSplit: 'equal' },
+    { ...bill.bill, feeSplit: 'proportional' },
+    { ...bill.bill, feeSplit: 'half' },
+    { ...bill.bill, feeSplit: null },
+    { ...bill.bill, meta: { ...bill.bill.meta, fees: FEES } },
+    { ...bill.bill, meta: { ...bill.bill.meta, fees: [] } },
+    { ...bill.bill, meta: { ...bill.bill.meta, fees: null } },
+    { ...bill.bill, meta: { ...bill.bill.meta, fees: [{ ...FEES[0], kind: 'rain' }] } },
+    { ...bill.bill, meta: { ...bill.bill.meta, fees: [{ ...FEES[0], label: ' Delivery' }] } },
+    { ...bill.bill, meta: { ...bill.bill.meta, fees: [{ ...FEES[0], label: '' }] } },
+    { ...bill.bill, meta: { ...bill.bill.meta, fees: [{ ...FEES[0], amount: 0 }] } },
+    { ...bill.bill, meta: { ...bill.bill.meta, fees: [FEES[0], FEES[0]] } },
+    { ...bill.bill, meta: { ...bill.bill.meta, fees: [{ ...FEES[0], extra: 1 }] } },
+    { ...bill.bill, meta: { ...bill.bill.meta, fees: Array.from({ length: 16 }, (_, i) => ({ ...FEES[0], id: `f${i}` })) } },
     'bill',
+  ],
+  fx: [
+    THB_FX,
+    { ...THB_FX, source: 'manual_total', rateDate: null },
+    { ...THB_FX, currency: 'INR' },
+    { ...THB_FX, currency: 'XYZ' },
+    { ...THB_FX, amount: 0 },
+    { ...THB_FX, rate: '1e3' },
+    { ...THB_FX, rate: '0' },
+    { ...THB_FX, rate: 2.41 },
+    { ...THB_FX, rateDate: 'yesterday' },
+    { ...THB_FX, source: 'guess' },
+    { ...THB_FX, extra: 1 },
+    null,
+    undefined,
+    'fx',
   ],
   paidBack: [{}, { a: 1 }, { [ME_ID]: 1 }, { b: 1 }, { a: Number.NaN }, { a: '1' }, { constructor: 1 }, null],
   recurringId: ['r2', '', null, 7],
@@ -192,7 +246,7 @@ describe('isCanonicalExpense (the loading fast path)', () => {
       expect(isCanonicalExpense(JSON.parse(JSON.stringify(base).replace('"id"', '"__proto__":1,"id"')))).toBe(false)
     }
     // Both kinds of answer happen (the test isn't vacuous).
-    expect(accepted).toBeGreaterThan(30)
+    expect(accepted).toBeGreaterThan(60)
     expect(checked - accepted).toBeGreaterThan(200)
   })
 
@@ -233,9 +287,11 @@ describe('isCanonicalExpense (the loading fast path)', () => {
       saveExpense(draft({ with: ['a', 'b'] }))
       saveExpense(draft({ with: ['a'], title: '  Chai   & samosa ', note: ' Paid in cash \n\n\n thanks ', mode: 'shares', participants: [{ friendId: ME_ID, input: 2 }, { friendId: 'a', input: 1 }] }))
       saveExpense(draft({ with: ['a', 'b'], mode: 'exact', total: 999, participants: [{ friendId: ME_ID, input: 333 }, { friendId: 'a', input: 333 }, { friendId: 'b', input: 333 }], roundedToWhole: true }))
+      saveExpense(draft({ kind: 'loan', participants: [{ friendId: 'a', input: null }] }))
+      saveExpense(draft({ with: ['a'], fx: { amount: 125000, currency: 'THB', rate: '2.410751226', rateDate: '2026-10-21', source: 'ecb' } }))
       expensesStore.flush()
       const stored = JSON.parse(window.localStorage.getItem(STORAGE_KEYS.expenses) ?? '{}') as { data: unknown[] }
-      expect(stored.data).toHaveLength(3)
+      expect(stored.data).toHaveLength(5)
       for (const record of stored.data) expect(expectSafe(record)).toBe(true)
     })
   })

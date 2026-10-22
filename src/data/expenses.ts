@@ -2,13 +2,16 @@
 import type { Expense, SplitMode } from '../domain/types'
 import { categoryFromText, isCategoryId } from '../engine/categories'
 import { isIsoDate, today } from '../engine/dates'
+import { convertMinor } from '../engine/fx'
 import { expenseShares, isValidTotal, splitAmount, uniqueParticipants, type SplitIssue } from '../engine/split'
 import { newId } from '../lib/ids'
 import { ExpenseError, type ExpenseErrorCode } from './errors'
 import { touchFriends } from './friends'
 import {
   cleanCurrency,
+  cleanFx,
   cleanMultiline,
+  isOneToOne,
   cleanText,
   EXPENSE_SOURCES,
   fallbackTitle,
@@ -40,19 +43,26 @@ function normalizeDraft(draft: ExpenseDraft): NormalizedDraft {
     .slice(0, MAX_PARTICIPANTS)
     .map((p) => ({ friendId: p.friendId, input: typeof p.input === 'number' && Number.isFinite(p.input) ? p.input : null }))
   if (participants.length === 0) throw new ExpenseError('no_people')
-  if (!isValidTotal(draft.total)) throw new ExpenseError('bad_total')
-  if (!draft.payerId || !friendsStore.get().some((f) => f.id === draft.payerId)) throw new ExpenseError('payer_missing')
 
   const currency = cleanCurrency(draft.currency, profile.currency)
-  const bill = draft.bill ?? null
-  const mode: SplitMode = draft.mode === 'items' && !bill ? 'equal' : draft.mode
-  const roundedToWhole = draft.roundedToWhole === true
+  // Trip currency: for a rate, the total is always the converted amount (never a mismatched one);
+  // for "what your bank charged" the typed total stands. An unusable snapshot is dropped.
+  const fx = cleanFx(draft.fx, currency)
+  const total = fx && fx.source !== 'manual_total' ? convertMinor(fx.amount, fx.currency, currency, fx.rate) : draft.total
+  if (!isValidTotal(total)) throw new ExpenseError('bad_total')
+  if (!draft.payerId || !friendsStore.get().some((f) => f.id === draft.payerId)) throw new ExpenseError('payer_missing')
+
+  // A loan is 1:1 (one person who isn't the payer), split equally, never a bill.
+  const loan = draft.kind === 'loan' && isOneToOne({ participants, payerId: draft.payerId })
+  const bill = loan ? null : (draft.bill ?? null)
+  const mode: SplitMode = loan ? 'equal' : draft.mode === 'items' && !bill ? 'equal' : draft.mode
+  const roundedToWhole = !loan && draft.roundedToWhole === true
 
   let shares: Record<string, number>
   if (mode === 'items') {
-    shares = expenseShares({ total: draft.total, currency, mode, participants, payerId: draft.payerId, roundedToWhole, bill })
+    shares = expenseShares({ total, currency, mode, participants, payerId: draft.payerId, roundedToWhole, bill })
   } else {
-    const result = splitAmount({ total: draft.total, currency, mode, participants, payerId: draft.payerId, roundToWhole: roundedToWhole })
+    const result = splitAmount({ total, currency, mode, participants, payerId: draft.payerId, roundToWhole: roundedToWhole })
     const issue = result.issues[0]
     if (issue) throw new ExpenseError(ISSUE_TO_CODE[issue])
     shares = result.shares
@@ -63,12 +73,12 @@ function normalizeDraft(draft: ExpenseDraft): NormalizedDraft {
   const note = typeof draft.note === 'string' ? cleanMultiline(draft.note, MAX_NOTE_LENGTH) || null : null
   const groupId = draft.groupId && groupsStore.get().some((g) => g.id === draft.groupId) ? draft.groupId : null
 
-  return {
-    kind: bill && draft.kind === 'bill' ? 'bill' : 'split',
+  const out: NormalizedDraft = {
+    kind: loan ? 'loan' : bill && draft.kind === 'bill' ? 'bill' : 'split',
     title: title || fallbackTitle(category),
     category,
     currency,
-    total: draft.total,
+    total,
     date: isIsoDate(draft.date) ? draft.date : today(),
     payerId: draft.payerId,
     mode,
@@ -81,6 +91,9 @@ function normalizeDraft(draft: ExpenseDraft): NormalizedDraft {
     recurringId: draft.recurringId ?? null,
     source: EXPENSE_SOURCES.includes(draft.source) ? draft.source : 'manual',
   }
+  // Stored only when set (see `Expense.fx`).
+  if (fx) out.fx = fx
+  return out
 }
 
 /** Keeps "paid back" marks only for people (not the payer) who still owe something. */
@@ -221,5 +234,6 @@ export function duplicateExpenseDraft(id: string): ExpenseDraft {
     bill: e.bill,
     recurringId: null,
     source: 'manual',
+    ...(e.fx ? { fx: e.fx } : {}),
   }
 }

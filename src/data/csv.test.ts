@@ -70,9 +70,9 @@ describe('exportCsv', () => {
     expect(csv.endsWith('\r\n')).toBe(true)
     expect(csv.startsWith(CSV_BOM)).toBe(false)
     const rows = parseCsv(csv)
-    expect(rows[0]).toEqual(['Date', 'Title', 'Category', 'Group', 'Total', 'Currency', 'Paid by', 'Your share', 'Split', 'People', 'Note'])
-    expect(rows[1]).toEqual(['2026-10-21', 'Dinner "Toit"', 'Food & drinks', 'Goa, 2026', '1234.50', 'INR', 'You', '617.25', 'Equally', 'You 617.25; Riya 617.25 (paid)', 'Line one\nLine two'])
-    expect(rows[2]).toEqual(['2026-10-21', 'Solo', 'Food & drinks', '', '50.00', 'INR', 'Riya', '10.00', 'Shares', 'You 10.00; Riya 40.00', ''])
+    expect(rows[0]).toEqual(['Date', 'Title', 'Category', 'Group', 'Total', 'Currency', 'Paid by', 'Your share', 'Split', 'People', 'Note', 'Kind', 'Paid amount', 'Paid currency', 'Rate'])
+    expect(rows[1]).toEqual(['2026-10-21', 'Dinner "Toit"', 'Food & drinks', 'Goa, 2026', '1234.50', 'INR', 'You', '617.25', 'Equally', 'You 617.25; Riya 617.25 (paid)', 'Line one\nLine two', 'split', '', '', ''])
+    expect(rows[2]).toEqual(['2026-10-21', 'Solo', 'Food & drinks', '', '50.00', 'INR', 'Riya', '10.00', 'Shares', 'You 10.00; Riya 40.00', '', 'split', '', '', ''])
   })
 
   it('names people who are no longer friends and handles zero-decimal currencies', () => {
@@ -82,7 +82,24 @@ describe('exportCsv', () => {
     expect(rows[1]?.[9]).toBe('You 501; Someone 500')
   })
 
+  it('writes the kind and, for converted expenses, what was paid and at what rate', () => {
+    const riya = addFriend({ name: 'Riya' })
+    const loan = saveExpense(draft({ kind: 'loan', title: 'Cash', total: 50000, participants: [{ friendId: riya.id, input: null }] }))
+    const trip = saveExpense(
+      draft({
+        title: 'Tuk-tuk',
+        total: 1,
+        with: [riya.id],
+        fx: { amount: 125000, currency: 'THB', rate: '2.410751226', rateDate: '2026-10-21', source: 'ecb' },
+      }),
+    )
+    const rows = parseCsv(exportCsv([loan, trip], byId(friendsStore.get()) as Record<string, Friend>))
+    expect(rows[1]?.slice(11)).toEqual(['loan', '', '', ''])
+    expect(rows[2]?.slice(4, 6)).toEqual(['3013.44', 'INR'])
+    expect(rows[2]?.slice(11)).toEqual(['split', '1250.00', 'THB', '2.410751226'])
+  })
+
   it('is just the header for no expenses', () => {
-    expect(exportCsv([], {})).toBe('Date,Title,Category,Group,Total,Currency,Paid by,Your share,Split,People,Note\r\n')
+    expect(exportCsv([], {})).toBe('Date,Title,Category,Group,Total,Currency,Paid by,Your share,Split,People,Note,Kind,Paid amount,Paid currency,Rate\r\n')
   })
 })

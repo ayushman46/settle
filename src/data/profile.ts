@@ -1,7 +1,7 @@
 /** The device owner's profile and settings. The owner's friend entry (ME) mirrors name and UPI ID. */
 import { ME_ID, type AccentId, type Profile, type ThemePref } from '../domain/types'
 import { normalizeName } from '../lib/people'
-import { cleanCurrency, cleanUpiId } from './schemas'
+import { cleanCurrency, cleanLanguage, cleanUpiId } from './schemas'
 import { friendsStore, profileStore } from './stores'
 
 const THEMES: readonly ThemePref[] = ['system', 'light', 'dark']
@@ -44,6 +44,8 @@ export function updateProfile(patch: Partial<Profile>): Profile {
     haptics: typeof patch.haptics === 'boolean' ? patch.haptics : prev.haptics,
     onboarded: typeof patch.onboarded === 'boolean' ? patch.onboarded : prev.onboarded,
     createdAt: prev.createdAt,
+    // null = automatic (the phone's language); anything that isn't one of ours keeps what was there.
+    language: patch.language === undefined ? (prev.language ?? null) : patch.language === null ? null : (cleanLanguage(patch.language) ?? prev.language ?? null),
   }
   const same = (Object.keys(next) as Array<keyof Profile>).every((k) => Object.is(next[k], prev[k]))
   if (same) return prev

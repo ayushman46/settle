@@ -1,30 +1,33 @@
 /**
  * Backup & restore: everything Settle keeps, as one JSON file the owner controls. Restoring can
- * replace what's here or merge into it (people matched by name, newer edits win).
+ * replace what's here or merge into it (people matched by name, newer edits win). Files are
+ * version 4 (collections and claim rounds added); version 3 files still restore.
  */
 import * as z from 'zod/mini'
-import { ME_ID, type Expense, type Friend, type Group, type Profile, type RecurringTemplate } from '../domain/types'
+import { ME_ID, type ClaimRound, type Expense, type Friend, type Group, type Pool, type Profile, type RecurringTemplate } from '../domain/types'
 import { nameKey } from '../lib/people'
 import { clearSplitPrefill } from './handoff'
 import { syncMeFriend } from './profile'
 import {
+  claimRoundsSchema,
   expensesSchema,
   friendsSchema,
   groupsSchema,
   MAX_FRIENDS,
+  poolsSchema,
   profileSchema,
   recurringListSchema,
   withMe,
 } from './schemas'
 import { flushAllStores, localStore, unreadableKey } from './store'
-import { expensesStore, friendsStore, groupsStore, profileStore, recurringStore, STORAGE_KEYS } from './stores'
+import { claimsStore, expensesStore, friendsStore, groupsStore, poolsStore, profileStore, recurringStore, STORAGE_KEYS } from './stores'
 import { LEGACY_KEYS } from './legacy'
 
-export const BACKUP_VERSION = 3
+export const BACKUP_VERSION = 4
 
 export interface BackupFile {
   app: 'settle'
-  version: 3
+  version: 4
   /** ISO 8601 timestamp. */
   exportedAt: string
   profile: Profile
@@ -32,17 +35,24 @@ export interface BackupFile {
   expenses: Expense[]
   groups: Group[]
   recurring: RecurringTemplate[]
+  /** Collections (chanda). Absent in version 3 files. */
+  pools: Pool[]
+  /** Claim rounds ("Claim your items" links). Absent in version 3 files. */
+  claims: ClaimRound[]
 }
 
 const backupSchema = z.object({
   app: z.literal('settle'),
-  version: z.literal(BACKUP_VERSION),
+  // 3: before collections and claims (they restore as none).
+  version: z.union([z.literal(3), z.literal(BACKUP_VERSION)]),
   exportedAt: z.catch(z.string(), ''),
   profile: profileSchema,
   friends: z.catch(friendsSchema, []),
   expenses: z.catch(expensesSchema, []),
   groups: z.catch(groupsSchema, []),
   recurring: z.catch(recurringListSchema, []),
+  pools: z.catch(poolsSchema, []),
+  claims: z.catch(claimRoundsSchema, []),
 })
 
 export function exportBackup(): BackupFile {
@@ -55,6 +65,8 @@ export function exportBackup(): BackupFile {
     expenses: expensesStore.get(),
     groups: groupsStore.get(),
     recurring: recurringStore.get(),
+    pools: poolsStore.get(),
+    claims: claimsStore.get(),
   }
 }
 
@@ -80,6 +92,8 @@ export function parseBackup(json: unknown): BackupFile | null {
     expenses: data.expenses,
     groups: data.groups,
     recurring: data.recurring,
+    pools: data.pools,
+    claims: data.claims,
   }
 }
 
@@ -125,6 +139,35 @@ function remapRecurring(r: RecurringTemplate, map: IdMap): RecurringTemplate {
   return { ...r, payerId: id(r.payerId), participants: r.participants.map((p) => ({ ...p, friendId: id(p.friendId) })) }
 }
 
+function remapPool(p: Pool, map: IdMap): Pool {
+  if (map.size === 0) return p
+  const id = (x: string) => map.get(x) ?? x
+  return {
+    ...p,
+    memberIds: [...new Set(p.memberIds.map(id))],
+    contributions: p.contributions.map((c) => (c.friendId === null ? c : { ...c, friendId: id(c.friendId) })),
+  }
+}
+
+function remapClaimRound(r: ClaimRound, map: IdMap): ClaimRound {
+  if (map.size === 0) return r
+  const id = (x: string) => map.get(x) ?? x
+  const decisions: ClaimRound['decisions'] = {}
+  for (const [itemId, d] of Object.entries(r.decisions)) decisions[itemId] = d.kind === 'assign' ? { kind: 'assign', shares: remapRecord(d.shares, map) } : d
+  return {
+    ...r,
+    peopleIds: r.peopleIds.map(id),
+    replies: r.replies.map((reply) => ({ ...reply, friendId: id(reply.friendId) })),
+    decisions,
+  }
+}
+
+/** Combines two copies of one list by id: `local` order first, then what only `incoming` has. */
+function unionById<T extends { id: string }>(local: readonly T[], incoming: readonly T[]): T[] {
+  const known = new Set(local.map((x) => x.id))
+  return [...local, ...incoming.filter((x) => !known.has(x.id))]
+}
+
 /** Upserts by id; an incoming record replaces the local one only when `isNewer` says so. */
 function mergeById<T extends { id: string }>(
   local: readonly T[],
@@ -164,9 +207,17 @@ export function importBackup(file: BackupFile, mode: 'merge' | 'replace'): { add
     expensesStore.set([...file.expenses])
     groupsStore.set([...file.groups])
     recurringStore.set([...file.recurring])
+    poolsStore.set([...file.pools])
+    claimsStore.set([...file.claims])
     clearSplitPrefill()
     flushAllStores()
-    const added = file.friends.filter((f) => f.id !== ME_ID).length + file.expenses.length + file.groups.length + file.recurring.length
+    const added =
+      file.friends.filter((f) => f.id !== ME_ID).length +
+      file.expenses.length +
+      file.groups.length +
+      file.recurring.length +
+      file.pools.length +
+      file.claims.length
     return { added, updated: 0 }
   }
 
@@ -233,16 +284,34 @@ export function importBackup(file: BackupFile, mode: 'merge' | 'replace'): { add
   )
   recurringStore.set(recurring.list)
 
+  // Collections: the newer edit wins, and contributions recorded on either copy are all kept.
+  const pools = mergeById(poolsStore.get(), file.pools.map((p) => remapPool(p, idMap)), (inc, loc) => {
+    const contributions = unionById(loc.contributions, inc.contributions)
+    if (inc.updatedAt <= loc.updatedAt && contributions.length === loc.contributions.length) return null
+    const base = inc.updatedAt > loc.updatedAt ? inc : loc
+    return { ...base, contributions: unionById(base.contributions, contributions) }
+  })
+  poolsStore.set(pools.list)
+
+  // Claim rounds: the newer edit wins, and replies received on either copy are all kept.
+  const claims = mergeById(claimsStore.get(), file.claims.map((r) => remapClaimRound(r, idMap)), (inc, loc) => {
+    const replies = unionById(loc.replies, inc.replies)
+    if (inc.updatedAt <= loc.updatedAt && replies.length === loc.replies.length) return null
+    const base = inc.updatedAt > loc.updatedAt ? inc : loc
+    return { ...base, replies: unionById(base.replies, replies) }
+  })
+  claimsStore.set(claims.list)
+
   flushAllStores()
   return {
-    added: added + expenses.added + groups.added + recurring.added,
-    updated: updated + expenses.updated + groups.updated + recurring.updated,
+    added: added + expenses.added + groups.added + recurring.added + pools.added + claims.added,
+    updated: updated + expenses.updated + groups.updated + recurring.updated + pools.updated + claims.updated,
   }
 }
 
 /**
  * Wipes everything Settle keeps on this device: profile, people, expenses, groups, recurring
- * splits, and the leftovers of the old BillSplit app. The Pro license (src/pro) and the bill
+ * splits, collections, claim rounds, and the leftovers of the old BillSplit app. The Pro license (src/pro) and the bill
  * draft (src/features/bill) belong to their own modules and are not touched here.
  */
 export function clearAllData(): void {
@@ -255,6 +324,6 @@ export function clearAllData(): void {
       // Blocked storage — the in-memory reset below still applies.
     }
   }
-  for (const store of [profileStore, friendsStore, expensesStore, groupsStore, recurringStore]) store.reload()
+  for (const store of [profileStore, friendsStore, expensesStore, groupsStore, recurringStore, poolsStore, claimsStore]) store.reload()
   clearSplitPrefill()
 }

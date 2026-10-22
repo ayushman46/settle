@@ -38,7 +38,7 @@ describe('exportBackup / parseBackup', () => {
   it('round-trips everything through JSON', () => {
     seed()
     const file = exportBackup()
-    expect(file).toMatchObject({ app: 'settle', version: 3 })
+    expect(file).toMatchObject({ app: 'settle', version: 4 })
     expect(new Date(file.exportedAt).toString()).not.toBe('Invalid Date')
     expect(parseBackup(roundTrip(file))).toEqual(file)
     expect(parseBackup(JSON.stringify(file))).toEqual(file)

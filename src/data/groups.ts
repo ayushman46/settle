@@ -6,7 +6,8 @@ import { newId } from '../lib/ids'
 import { allocate, currencyDigits, MAX_MINOR, rescaleMinor } from '../lib/money'
 import { DataError } from './errors'
 import { touchFriends } from './friends'
-import { cleanCurrency, cleanEmoji, cleanMemberIds, cleanText, GROUP_KINDS, MAX_GROUP_NAME_LENGTH } from './schemas'
+import { isValidTotal } from '../engine/split'
+import { cleanCurrency, cleanEmoji, cleanMemberIds, cleanText, cleanTravelCurrency, GROUP_KINDS, MAX_GROUP_NAME_LENGTH } from './schemas'
 import { expensesStore, groupsStore, profileStore, recurringStore } from './stores'
 
 export interface GroupSnapshot {
@@ -31,27 +32,46 @@ function replaceGroup(next: Group): Group {
   return next
 }
 
-export function createGroup(input: { name: string; emoji: string; kind: GroupKind; currency: string; memberIds: string[] }): Group {
+export function createGroup(input: {
+  name: string
+  emoji: string
+  kind: GroupKind
+  currency: string
+  memberIds: string[]
+  /** "Spending in" (trip currency); ignored when it's the group's own currency. */
+  travelCurrency?: string | null
+}): Group {
   const now = Date.now()
+  const currency = cleanCurrency(input.currency, profileStore.get().currency)
   const group: Group = {
     id: newId(),
     name: cleanText(input.name ?? '', MAX_GROUP_NAME_LENGTH) || 'New group',
     emoji: cleanEmoji(input.emoji),
     kind: cleanKind(input.kind, 'other'),
-    currency: cleanCurrency(input.currency, profileStore.get().currency),
+    currency,
     memberIds: cleanMemberIds(input.memberIds ?? []),
     settlements: [],
     createdAt: now,
     updatedAt: now,
     archived: false,
+    travelCurrency: cleanTravelCurrency(input.travelCurrency, currency),
+    roundSize: null,
   }
   groupsStore.update((groups) => [group, ...groups])
   touchFriends(group.memberIds, now)
   return group
 }
 
-/** Re-expresses a group expense in another currency (same major amounts; exact to the minor unit). */
+/**
+ * Re-expresses a group expense in another currency (same major amounts; exact to the minor unit).
+ * A converted expense loses its `fx`: its rate was into the old currency.
+ */
 function reprice(e: Expense, from: string, to: string): Expense {
+  if (Object.hasOwn(e, 'fx')) {
+    const rest: Expense = { ...e }
+    delete rest.fx
+    return reprice(rest, from, to)
+  }
   if (currencyDigits(from) === currencyDigits(to)) return { ...e, currency: to }
   const total = Math.max(1, rescaleMinor(e.total, from, to))
   const ids = Object.keys(e.shares)
@@ -82,8 +102,13 @@ function reprice(e: Expense, from: string, to: string): Expense {
 /**
  * Edits a group. Changing the currency relabels its expenses and payments (fixing a wrong pick:
  * "500" stays 500 in the new currency). People with money outstanding stay members.
+ * `travelCurrency`: null (or the group's own currency) clears it. `roundSize`: null clears it; an
+ * invalid amount is ignored.
  */
-export function updateGroup(id: string, patch: Partial<Pick<Group, 'name' | 'emoji' | 'kind' | 'currency' | 'memberIds'>>): Group {
+export function updateGroup(
+  id: string,
+  patch: Partial<Pick<Group, 'name' | 'emoji' | 'kind' | 'currency' | 'memberIds' | 'travelCurrency' | 'roundSize'>>,
+): Group {
   const prev = requireGroup(id)
   const now = Date.now()
   const currency = patch.currency === undefined ? prev.currency : cleanCurrency(patch.currency, prev.currency)
@@ -102,6 +127,15 @@ export function updateGroup(id: string, patch: Partial<Pick<Group, 'name' | 'emo
     kind: cleanKind(patch.kind, prev.kind),
     currency,
     memberIds,
+    travelCurrency: cleanTravelCurrency(patch.travelCurrency === undefined ? prev.travelCurrency : patch.travelCurrency, currency),
+    roundSize:
+      patch.roundSize === undefined
+        ? (prev.roundSize ?? null)
+        : patch.roundSize === null
+          ? null
+          : isValidTotal(patch.roundSize)
+            ? patch.roundSize
+            : (prev.roundSize ?? null),
     settlements:
       currency === prev.currency
         ? prev.settlements
