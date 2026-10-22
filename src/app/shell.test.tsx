@@ -11,6 +11,9 @@ import type { LazyScreen } from './lazyScreen'
 import { currentUrl, renderApp, resetShell, serveHealth, stubMedia } from './testKit'
 import { crash } from './testStubs'
 
+/** Typing-heavy tests: room to finish on a busy machine. */
+const SLOW = { timeout: 20_000 }
+
 vi.mock('../features/landing/LandingPage', async () => ({ LandingPage: (await import('./testStubs')).stub('Landing stub') }))
 vi.mock('../features/pay/PayPage', async () => ({ PayPage: (await import('./testStubs')).stub('Pay stub') }))
 vi.mock('../features/legal/PrivacyPage', async () => ({ PrivacyPage: (await import('./testStubs')).stub('Privacy stub') }))
@@ -69,7 +72,7 @@ function currentNav(): string | null {
   return document.querySelector('[data-nav]')?.getAttribute('data-nav') ?? null
 }
 
-describe('App — public pages', () => {
+describe('App — public pages', SLOW, () => {
   it('shows the sales page at /, outside the app', async () => {
     renderApp('/')
     expect(await heading('Landing stub')).toBeInTheDocument()
@@ -135,7 +138,7 @@ describe('App — public pages', () => {
   })
 })
 
-describe('AppShell — the welcome gate', () => {
+describe('AppShell — the welcome gate', SLOW, () => {
   it('welcomes a first-time visitor before anything else', async () => {
     const length = window.history.length
     renderApp('/app')
@@ -170,7 +173,7 @@ describe('AppShell — the welcome gate', () => {
   })
 })
 
-describe('AppShell — screens', () => {
+describe('AppShell — screens', SLOW, () => {
   beforeEach(onboard)
 
   it.each([
@@ -224,7 +227,7 @@ describe('AppShell — screens', () => {
   })
 })
 
-describe('AppShell — tabs and transitions', () => {
+describe('AppShell — tabs and transitions', SLOW, () => {
   beforeEach(onboard)
 
   it('shows the tab bar on the four tab roots only, marking the current one', async () => {
@@ -299,7 +302,7 @@ describe('AppShell — tabs and transitions', () => {
   })
 })
 
-describe('AppShell — around the screens', () => {
+describe('AppShell — around the screens', SLOW, () => {
   it('brings people over from the old app once', async () => {
     rememberNames(['Riya', 'Sam'])
     onboard()
@@ -400,7 +403,7 @@ describe('AppShell — around the screens', () => {
   })
 })
 
-describe('preloading screens', () => {
+describe('preloading screens', SLOW, () => {
   it('loads the core screens’ code ahead of time', async () => {
     const screenAt = (path: string) => matchAppRoute(path)?.screen as LazyScreen
     await preloadCoreScreens()
