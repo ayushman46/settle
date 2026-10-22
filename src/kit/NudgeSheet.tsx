@@ -30,10 +30,18 @@ export interface NudgeSheetProps {
   onSent?: (channel: NudgeChannel) => void
 }
 
+// The emoji sits inside the label (one unbreakable line) and steps aside on 320px phones.
 const TONE_OPTIONS: ReadonlyArray<SegmentedOption<NudgeTone>> = NUDGE_TONES.map((t) => ({
   value: t.tone,
-  label: t.label,
-  icon: <span className={styles.toneEmoji}>{t.emoji}</span>,
+  label: (
+    <span className={styles.tone}>
+      <span className={styles.toneEmoji} aria-hidden="true">
+        {t.emoji}
+      </span>
+      {t.label}
+    </span>
+  ),
+  'aria-label': t.label,
 }))
 
 /**

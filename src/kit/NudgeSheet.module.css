@@ -5,9 +5,22 @@
   padding-top: var(--s-1);
 }
 
+.tone {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
 .toneEmoji {
   font-size: 1rem;
   line-height: 1;
+}
+
+@media (max-width: 359px) {
+  .toneEmoji {
+    display: none;
+  }
 }
 
 /* ---------- The message, as a chat bubble ---------- */
