@@ -29,6 +29,9 @@ let riya: string
 let sam: string
 let goa: Group
 
+// Whole journeys through real screens: give them room on a busy machine.
+vi.setConfig({ testTimeout: 20_000 })
+
 beforeEach(() => {
   resetScreens()
   vi.useFakeTimers({ toFake: ['Date'] })

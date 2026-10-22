@@ -203,7 +203,6 @@
   display: flex;
   flex-direction: column;
   margin: 0;
-  padding: var(--s-1) 0;
 }
 
 .person {
@@ -252,7 +251,7 @@
 .shareBar,
 .paidBar {
   display: block;
-  width: max(4px, var(--w));
+  width: var(--w);
   height: 6px;
   border-radius: var(--r-pill);
   transform-origin: left center;

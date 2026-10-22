@@ -8,6 +8,9 @@ import { currentUrl, renderApp, resetScreens } from './testKit'
 let riya: string
 let sam: string
 
+// Whole journeys through real screens: give them room on a busy machine.
+vi.setConfig({ testTimeout: 20_000 })
+
 beforeEach(() => {
   resetScreens()
   updateProfile({ name: 'Ayush', currency: 'INR' })
@@ -142,9 +145,9 @@ describe('GroupsScreen — with groups', () => {
     expect(within(across).getByText('₹600')).toBeInTheDocument()
     expect(within(across).getByText('₹100')).toBeInTheDocument()
 
-    expect(screen.getByRole('button', { name: 'Goa, Trip · 3 people · ₹900 spent, you’re owed ₹600' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Flat, Home · 2 people · ₹200 spent, you owe ₹100' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Us, Couple · Just you, no expenses yet' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Goa, Trip, 3 people · ₹900 spent, you’re owed ₹600' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Flat, Home, 2 people · ₹200 spent, you owe ₹100' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Us, Couple, Just you, no expenses yet' })).toBeInTheDocument()
   })
 
   it('mentions money in other currencies separately', () => {

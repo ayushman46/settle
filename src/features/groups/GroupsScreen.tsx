@@ -142,15 +142,16 @@ export function GroupsScreen() {
 
 function GroupRow({ row }: { row: Row }) {
   const { group, standing } = row
-  const meta = kindMeta(group.kind)
   const label = standingLabel(standing.mine, group.currency, standing.expenseCount > 0)
   const spent = standing.expenseCount > 0 ? `${formatMoney(standing.spent, group.currency, { trimZeros: true })} spent` : null
-  const subtitle = [meta.label, membersLabel(group.memberIds.length), spent].filter(Boolean).join(' · ')
+  // The emoji tile already says what kind of group it is; the kind is spoken, not printed.
+  const subtitle = [membersLabel(group.memberIds.length), spent].filter(Boolean).join(' · ')
+  const spoken = [kindMeta(group.kind).label, subtitle].join(', ')
   return (
     <ListRow
       className={styles.row}
       onClick={() => navigate(groupPath(group.id))}
-      aria-label={`${group.name}, ${subtitle}, ${label.spoken}`}
+      aria-label={`${group.name}, ${spoken}, ${label.spoken}`}
       leading={<GroupEmoji emoji={group.emoji} kind={group.kind} />}
       title={group.name}
       subtitle={subtitle}

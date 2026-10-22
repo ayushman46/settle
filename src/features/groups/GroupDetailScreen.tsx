@@ -104,7 +104,9 @@ function GroupDetail({ group, onLeaving }: { group: Group; onLeaving: (group: Gr
   const [payment, setPayment] = useState<Settlement | null>(null)
   const meta = kindMeta(group.kind)
 
-  const people = group.memberIds.map((id) => ({ id, name: friendLabel(id, friendsById[id] ?? null), color: friendsById[id]?.color ?? 0 }))
+  // Discs show everyone's own initials (yours too); the spoken list says "You".
+  const people = group.memberIds.map((id) => ({ id, name: friendsById[id]?.name ?? '?', color: friendsById[id]?.color ?? 0 }))
+  const memberNames = group.memberIds.map((id) => friendLabel(id, friendsById[id] ?? null))
   const addExpense = (): void => navigate(newSplitPath({ group: group.id }))
 
   const archive = (archived: boolean): void => {
@@ -155,7 +157,7 @@ function GroupDetail({ group, onLeaving }: { group: Group; onLeaving: (group: Gr
           type="button"
           className={styles.members}
           onClick={() => setSheet('members')}
-          aria-label={`Members: ${people.map((p) => p.name).join(', ')}. Manage members`}
+          aria-label={`Members: ${memberNames.join(', ')}. Manage members`}
         >
           <AvatarStack people={people} max={5} size="sm" />
           <span className={styles.membersLabel} aria-hidden="true">
@@ -231,7 +233,7 @@ function StandingCard({ group, standing, onShare }: { group: Group; standing: Gr
               Settle up
             </Button>
           ) : (
-            <Button variant="secondary" size="md" iconStart={<Share2 />} onClick={onShare}>
+            <Button variant="tonal" size="md" iconStart={<Share2 />} onClick={onShare}>
               Share summary
             </Button>
           )}
@@ -301,7 +303,7 @@ function TimelineRow({ entry, group, onPayment }: { entry: TimelineEntry; group:
         </span>
       }
       title={sentence}
-      subtitle={`${METHOD_LABELS[s.method]} · payment`}
+      subtitle={`Payment · ${METHOD_LABELS[s.method]}`}
       trailing={
         <Money
           value={mine === 'out' ? -s.amount : s.amount}
@@ -421,8 +423,8 @@ function TotalsTab({ group }: { group: Group }) {
                       <Money value={p.share} currency={group.currency} trimZeros strong />
                     </div>
                     <div className={styles.bars} aria-hidden="true">
-                      <span className={styles.shareBar} style={{ '--w': `${(p.share / top) * 100}%` } as CSSProperties} />
-                      <span className={styles.paidBar} style={{ '--w': `${(p.paid / top) * 100}%` } as CSSProperties} />
+                      <span className={styles.shareBar} style={barWidth(p.share, top)} />
+                      <span className={styles.paidBar} style={barWidth(p.paid, top)} />
                     </div>
                     <span className={styles.personSub}>
                       <span className="visually-hidden">Share {money(p.share)}, </span>
@@ -446,6 +448,12 @@ function TotalsTab({ group }: { group: Group }) {
       )}
     </div>
   )
+}
+
+/** A bar's width as a share of the longest: a sliver for anything above zero, nothing for zero. */
+function barWidth(value: number, top: number): CSSProperties {
+  const pct = value > 0 ? Math.max(2, (value / top) * 100) : 0
+  return { '--w': `${pct}%` } as CSSProperties
 }
 
 /* ------------------------------------------------------------------ sheets */
