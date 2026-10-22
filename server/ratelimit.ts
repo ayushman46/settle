@@ -5,7 +5,9 @@
  */
 import { getConnInfo } from '@hono/node-server/conninfo'
 import type { Context, MiddlewareHandler } from 'hono'
+import { createHash, timingSafeEqual } from 'node:crypto'
 import type { RateLimitConfig } from './config'
+import { CLIENT_IP_HEADER, PROXY_SECRET_HEADER } from './edgeProxy'
 
 export interface RateLimitDecision {
   allowed: boolean
@@ -69,18 +71,45 @@ export function createRateLimiter(config: RateLimitConfig, now: () => number = D
 /** IPv4 / IPv6 (optionally bracketed, with port) — rejects junk like "unknown". */
 const PLAUSIBLE_ADDRESS = /^[0-9a-f:.[\]]{2,64}$/i
 
+/** Which proxies in front of us may say who the client is (see `ServerConfig`). */
+export interface ProxyTrust {
+  /** How many proxies append to `X-Forwarded-For` in front of us. */
+  trustProxy: number
+  /** Shared with the Cloudflare Pages Function, or null. */
+  proxySecret: string | null
+}
+
+const digest = (text: string) => createHash('sha256').update(text, 'utf8').digest()
+
+/** True when the request carries our edge proxy's secret (compared in constant time). */
+export function fromTrustedEdge(c: Context, proxySecret: string | null): boolean {
+  const given = c.req.header(PROXY_SECRET_HEADER)
+  if (!proxySecret || !given) return false
+  return timingSafeEqual(digest(given.trim()), digest(proxySecret))
+}
+
 /**
  * The client's address, else "anon". IPv6 clients are grouped by /64, since one subscriber
  * usually owns a whole /64.
  *
- * `trustProxy` is how many proxies we run behind. With 0 the socket's address is used and
- * `X-Forwarded-For` is ignored: anyone can send that header. With N, we take the entry N
+ * Through our Cloudflare Pages Function (a matching `X-Settle-Proxy-Secret`), the address it
+ * read from Cloudflare (`X-Settle-Client-IP`) wins: nobody else knows the secret.
+ *
+ * Otherwise `trustProxy` is how many proxies we run behind. With 0 the socket's address is used
+ * and `X-Forwarded-For` is ignored: anyone can send that header. With N, we take the entry N
  * hops from the END of the header, which is the address our outermost trusted proxy saw.
  * Proxies append to whatever the client sent, so the entries further left are unverified.
  */
-export function clientKey(c: Context, trustProxy = 0): string {
-  const address = forwardedAddress(c.req.header('x-forwarded-for'), trustProxy) ?? socketAddress(c)
+export function clientKey(c: Context, trust: number | ProxyTrust = 0): string {
+  const { trustProxy, proxySecret } = typeof trust === 'number' ? { trustProxy: trust, proxySecret: null } : trust
+  const address = edgeAddress(c, proxySecret) ?? forwardedAddress(c.req.header('x-forwarded-for'), trustProxy) ?? socketAddress(c)
   return address ? normalizeAddress(address) : 'anon'
+}
+
+function edgeAddress(c: Context, proxySecret: string | null): string | undefined {
+  if (!fromTrustedEdge(c, proxySecret)) return undefined
+  const address = c.req.header(CLIENT_IP_HEADER)?.trim()
+  return address && PLAUSIBLE_ADDRESS.test(address) ? address : undefined
 }
 
 function forwardedAddress(header: string | undefined, trustProxy: number): string | undefined {

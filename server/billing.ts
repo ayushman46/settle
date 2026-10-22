@@ -66,7 +66,7 @@ export function registerBilling(app: Hono, { config, log, now, ownPageOnly }: Bi
   }
   const limited = rateLimit(config.billing.rateLimit, {
     now,
-    keyFor: (c) => clientKey(c, config.trustProxy),
+    keyFor: (c) => clientKey(c, config),
     onLimited: (c) => fail(c, 'rate_limited', { message: BILLING_MESSAGES.tooMany }),
   })
   const nowSeconds = () => Math.floor(now() / 1000)

@@ -54,6 +54,12 @@ export interface ServerConfig {
    * the end of `X-Forwarded-For`; 0 ignores the header and uses the socket's address.
    */
   trustProxy: number
+  /**
+   * Shared with the Cloudflare Pages Function in front of this server (`PROXY_SECRET` on both).
+   * A request carrying it may name the visitor's address in `X-Settle-Client-IP`, however many
+   * proxies sit in between. Null when unset (or too short to be safe).
+   */
+  proxySecret: string | null
   /** AI requests handled at the same time; any more get an immediate 429. 0 = no limit. */
   maxConcurrentScans: number
   billing: BillingSettings
@@ -108,6 +114,7 @@ export function loadConfig(env: Env): ServerConfig {
     },
     proAiPerDay: parseInteger(env.PRO_AI_PER_DAY, DEFAULT_PRO_AI_PER_DAY, 0),
     trustProxy: parseInteger(env.TRUST_PROXY, 0, 0, MAX_TRUST_PROXY),
+    proxySecret: parseProxySecret(env.PROXY_SECRET, warnings),
     maxConcurrentScans: parseInteger(env.MAX_CONCURRENT_SCANS, DEFAULT_MAX_CONCURRENT_SCANS, 0),
     billing: {
       razorpay: parseRazorpay(env.RAZORPAY_KEY_ID, env.RAZORPAY_KEY_SECRET, warnings),
@@ -159,6 +166,21 @@ function parseRazorpay(rawId: string | undefined, rawSecret: string | undefined,
     return null
   }
   return { keyId, keySecret }
+}
+
+/** Shorter than this, a shared secret could be guessed; Render's generated values are far longer. */
+export const MIN_PROXY_SECRET_LENGTH = 24
+
+function parseProxySecret(raw: string | undefined, warnings: string[]): string | null {
+  const secret = unquote(raw ?? '')
+  if (secret === '' || PLACEHOLDER_SECRET.test(secret)) return null
+  if (secret.length < MIN_PROXY_SECRET_LENGTH || /\s/.test(secret)) {
+    warnings.push(
+      `PROXY_SECRET is ignored: use at least ${MIN_PROXY_SECRET_LENGTH} characters with no spaces (Render's "Generate" button makes a good one).`,
+    )
+    return null
+  }
+  return secret
 }
 
 function parseModels(raw: string | undefined, defaults: readonly string[]): string[] {

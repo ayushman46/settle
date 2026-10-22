@@ -84,7 +84,7 @@ const ScanRequestSchema = z.object({ image: z.string().min(1) })
 export function createApp(config: ServerConfig, options: AppOptions = {}): Hono {
   const log = options.logger ?? console
   const now = options.now ?? Date.now
-  const redact = (text: string) => redactSecrets(text, config.apiKey, config.billing.razorpay?.keySecret)
+  const redact = (text: string) => redactSecrets(text, config.apiKey, config.billing.razorpay?.keySecret, config.proxySecret)
   const app = new Hono()
 
   /** When NVIDIA last rejected the key; /api/health reports AI as off for a while after (until a call works again). */
@@ -102,7 +102,7 @@ export function createApp(config: ServerConfig, options: AppOptions = {}): Hono 
     return c.json(body)
   })
 
-  const guard = ownPageOnly({ trustProxy: config.trustProxy, log })
+  const guard = ownPageOnly({ trustProxy: config.trustProxy, proxySecret: config.proxySecret, log })
 
   /* ---------------------------------------------------------------- AI allowances */
 
@@ -124,7 +124,7 @@ export function createApp(config: ServerConfig, options: AppOptions = {}): Hono 
       choose: (c): LimitChoice<'free' | 'pro'> | null => {
         const licenseId = proLicenseId(c)
         if (licenseId !== null) return proLimiter && { limiter: proLimiter, key: `license:${licenseId}`, tier: 'pro' }
-        return ipLimiter && { limiter: ipLimiter, key: clientKey(c, config.trustProxy), tier: 'free' }
+        return ipLimiter && { limiter: ipLimiter, key: clientKey(c, config), tier: 'free' }
       },
       onLimited: (c, _retryAfter, tier) => fail(c, 'rate_limited', { message: tier === 'pro' ? PRO_DAILY_LIMIT : route.messages.rate_limited }),
     })

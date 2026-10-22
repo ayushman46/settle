@@ -30,6 +30,7 @@ describe('loadConfig', () => {
       rateLimit: { max: 30, windowMs: 600_000 },
       proAiPerDay: 200,
       trustProxy: 0,
+      proxySecret: null,
       maxConcurrentScans: 8,
       billing: {
         razorpay: null,
@@ -143,6 +144,22 @@ describe('loadConfig', () => {
     ['', 0],
   ])('reads TRUST_PROXY=%j as %i (0–5 hops, anything else is ignored)', (raw, expected) => {
     expect(loadConfig({ TRUST_PROXY: raw }).trustProxy).toBe(expected)
+  })
+
+  it('reads PROXY_SECRET, trimmed and unquoted', () => {
+    const secret = 'Zx8-render-generated-value-0123456789'
+    expect(loadConfig({ PROXY_SECRET: `  "${secret}" ` })).toMatchObject({ proxySecret: secret, warnings: [] })
+  })
+
+  it.each(['', '   ', 'changeme', 'your-proxy-secret', '<secret>'])('treats placeholder PROXY_SECRET %j as unset', (raw) => {
+    expect(loadConfig({ PROXY_SECRET: raw })).toMatchObject({ proxySecret: null, warnings: [] })
+  })
+
+  it.each(['short-secret', 'twenty-three-characters', 'has spaces in the middle of it ok'])('ignores a weak PROXY_SECRET %j, with a warning', (raw) => {
+    const config = loadConfig({ PROXY_SECRET: raw })
+    expect(config.proxySecret).toBeNull()
+    expect(config.warnings).toEqual([expect.stringMatching(/^PROXY_SECRET is ignored: use at least 24 characters/)])
+    expect(config.warnings.join(' ')).not.toContain(raw)
   })
 
   it('returns a fresh models array each time', () => {

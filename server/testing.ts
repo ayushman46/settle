@@ -49,6 +49,7 @@ export function testConfig(overrides: Partial<ServerConfig> = {}): ServerConfig 
     rateLimit: { max: 0, windowMs: 60_000 },
     proAiPerDay: 0,
     trustProxy: 0,
+    proxySecret: null,
     maxConcurrentScans: 0,
     billing: testBilling(),
     license: TEST_LICENSE_KEYS,
