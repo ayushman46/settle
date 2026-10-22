@@ -87,6 +87,7 @@ export function SessionProvider({ children, initialSession, persist = true }: Se
     if (persist && saveSession(fresh)) lastSaved.current = JSON.stringify(fresh)
     dispatch({ type: 'load', session: fresh })
   }, [persist])
+
   useEffect(() => {
     if (!persist) return
     const timer = setTimeout(() => {
