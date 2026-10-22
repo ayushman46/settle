@@ -5,10 +5,15 @@ import './styles/global.css'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { App } from './App'
+import { applyStoredAppearance } from './app/appearance'
+import { BRAND } from './domain/types'
 import { trackKeyboardInset } from './lib/keyboardInset'
 
 const container = document.getElementById('root')
-if (!container) throw new Error('BillSplit: #root element is missing from index.html.')
+if (!container) throw new Error(`${BRAND.name}: #root element is missing from index.html.`)
+
+// The saved theme and accent go on before the first paint: no flash of the wrong look.
+applyStoredAppearance()
 
 // iOS keeps sticky bottom actions under the on-screen keyboard; this lets them ride above it.
 trackKeyboardInset()

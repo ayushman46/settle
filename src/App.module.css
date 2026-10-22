@@ -1,4 +1,5 @@
-/* Crash fallback (error boundary) — calm, centred, with a clear way forward. */
+/* ---------- Crash page (a screen's error boundary): calm, centred, with a clear way forward ---------- */
+
 .crash {
   display: flex;
   flex: 1 0 auto;
@@ -12,4 +13,39 @@
   display: flex;
   flex-direction: column;
   gap: var(--s-2);
+}
+
+/* ---------- "This phone isn't saving" notice, above the screen ---------- */
+
+.notice {
+  padding: calc(var(--safe-top) + var(--s-3)) var(--gutter) 0;
+}
+
+/* ---------- Loading a screen's code: a skeleton that only fades in if it takes a moment ---------- */
+
+.fallback {
+  display: flex;
+  flex: 1 0 auto;
+  flex-direction: column;
+  gap: var(--s-4);
+  padding: calc(var(--safe-top) + var(--s-4)) var(--gutter) var(--s-8);
+  animation: appear var(--dur-3) var(--ease-out) 180ms both;
+}
+
+.fallbackTop {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.publicFallback {
+  flex: 1 0 auto;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--bg);
+}
+
+@keyframes appear {
+  from {
+    opacity: 0;
+  }
 }
