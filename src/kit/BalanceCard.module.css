@@ -153,14 +153,18 @@
   flex: none;
 }
 
+/* Up to two lines beside the faces, so "Riya, Sam and 2 others owe you" isn't cut to "Riya, Sa…" at 390px. */
 .peopleText {
+  display: -webkit-box;
   min-width: 0;
   overflow: hidden;
   font: var(--text-caption);
   font-weight: 550;
   color: var(--balance-card-ink-2);
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: break-word;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
 }
 
 .settle {

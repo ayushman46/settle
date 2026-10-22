@@ -228,6 +228,17 @@
   flex: none;
 }
 
+/* 320px phones: the avatar indent would push "UPI QR" and "Nudge" onto two lines — use the full width. */
+@media (max-width: 359px) {
+  .more {
+    padding-inline-start: 0;
+  }
+
+  .items {
+    margin-inline-start: 0;
+  }
+}
+
 .extras {
   padding-top: 6px;
   border-top: 1px dashed var(--line-strong);
