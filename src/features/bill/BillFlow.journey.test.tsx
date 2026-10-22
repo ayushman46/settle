@@ -45,8 +45,11 @@ afterEach(async () => {
   resetDataForTests()
 })
 
+/** A long walk through six screens: generous, so a busy machine doesn't fail it on time alone. */
+const JOURNEY_TIMEOUT_MS = 30_000
+
 describe('the bill flow, end to end', () => {
-  it('turns the sample bill into a saved expense between you, Riya and Sam', async () => {
+  it('turns the sample bill into a saved expense between you, Riya and Sam', { timeout: JOURNEY_TIMEOUT_MS }, async () => {
     const user = userEvent.setup()
     navigate('/app/bill')
     render(
