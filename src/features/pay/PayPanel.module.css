@@ -257,3 +257,10 @@
     transform: translateY(10px);
   }
 }
+
+/* The narrowest phones: the payee's avatar gives its room to their name and the Copy button. */
+@media (max-width: 359px) {
+  .payeeRow > :first-child {
+    display: none;
+  }
+}
