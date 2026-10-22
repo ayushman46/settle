@@ -13,3 +13,18 @@ export { friendLabel, friendObjectLabel, ME_LABEL, UNKNOWN_FRIEND_LABEL } from '
 export { PayerPicker, type PayerPickerProps } from './PayerPicker'
 export { PeoplePicker, type PeoplePickerProps } from './PeoplePicker'
 export { alphabetical, exactPerson, newPersonName, searchPeople } from './peopleSearch'
+export { SplitEditor, type SplitEditorProps } from './SplitEditor'
+export {
+  clearedInputs,
+  cleanPercentText,
+  formatBps,
+  parsePercentText,
+  percentText,
+  restoreInputs,
+  restPreview,
+  roundingCover,
+  splitStatus,
+  type SplitStatus,
+  type SplitStatusInput,
+  type SplitStatusTone,
+} from './splitInputs'

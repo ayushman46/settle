@@ -1,0 +1,292 @@
+.editor {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  min-width: 0;
+}
+
+/* ---------- People rows ---------- */
+
+.rows {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: var(--s-1) var(--s-4);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+  list-style: none;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  min-height: calc(var(--s-16) + var(--s-1));
+  padding-block: var(--s-2);
+  animation: row-in var(--dur-3) var(--ease-out) backwards;
+  transition: opacity var(--dur-2) var(--ease-out);
+}
+
+.row + .row {
+  box-shadow: inset 0 1px 0 var(--line);
+}
+
+/* Zero shares: still listed, clearly not paying. */
+.out {
+  opacity: 0.55;
+}
+
+.who {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.name {
+  overflow: hidden;
+  font: var(--text-body);
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sub {
+  color: var(--ink-2);
+  font: var(--text-caption);
+  font-variant-numeric: tabular-nums;
+}
+
+.control {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 0;
+}
+
+.share {
+  font-size: 1.0625rem;
+}
+
+.dash {
+  color: var(--ink-3);
+  font: var(--text-headline);
+}
+
+/* ---------- Compact amount / percentage fields ---------- */
+
+.cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  width: 8.5rem;
+  max-width: 40vw;
+  height: var(--tap);
+  padding-inline: var(--s-3);
+  border-radius: var(--radius-field);
+  background: var(--field-bg);
+  box-shadow: inset 0 0 0 1px var(--field-border);
+  cursor: text;
+  transition:
+    background-color var(--dur-2) var(--ease-out),
+    box-shadow var(--dur-2) var(--ease-out);
+}
+
+.percentCell {
+  width: 6.5rem;
+}
+
+.cell:focus-within {
+  background: var(--surface);
+  box-shadow: inset 0 0 0 2px var(--ink);
+  outline: 2px solid transparent;
+}
+
+.affix {
+  flex: none;
+  color: var(--ink-2);
+  font: var(--text-body);
+  font-weight: 550;
+}
+
+.cellInput {
+  flex: 1 1 auto;
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font: var(--text-body);
+  /* Never below 16px — iOS zooms into smaller fields. */
+  font-size: max(16px, 1rem);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-align: end;
+  caret-color: var(--ink);
+  outline: none;
+  appearance: none;
+}
+
+.cellInput::placeholder {
+  color: var(--ink-placeholder);
+  font-weight: 500;
+  opacity: 1;
+}
+
+.cellInput::selection {
+  background: var(--amount-selection);
+  color: var(--on-accent);
+}
+
+/* ---------- Sticky status ---------- */
+
+/*
+ * Rides the bottom of the viewport while the rows scroll — above the screen's own action bar
+ * (its height arrives as --split-footer-gap) and the iOS keyboard.
+ */
+.status {
+  position: sticky;
+  bottom: calc(var(--keyboard-inset, 0px) + var(--split-footer-gap, 0px) + var(--s-2));
+  z-index: 1;
+  overflow: clip;
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-md);
+  transition: box-shadow var(--dur-2) var(--ease-out);
+}
+
+.meter {
+  display: block;
+  height: 4px;
+  background: var(--surface-3);
+}
+
+.meterFill {
+  display: block;
+  height: 100%;
+  background: var(--warning);
+  transform-origin: left center;
+  transition:
+    transform var(--dur-3) var(--ease-spring),
+    background-color var(--dur-2) var(--ease-out);
+}
+
+:global([dir='rtl']) .meterFill {
+  transform-origin: right center;
+}
+
+.ok .meterFill {
+  background: var(--positive);
+}
+
+.over .meterFill {
+  background: var(--negative);
+}
+
+.statusRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2) var(--s-3);
+  min-height: calc(var(--s-12) + var(--s-2));
+  padding: var(--s-2) var(--s-3) var(--s-2) var(--s-4);
+}
+
+.statusIcon {
+  flex: none;
+  width: var(--s-5);
+  height: var(--s-5);
+  color: var(--ink-2);
+}
+
+.ok .statusIcon {
+  color: var(--positive);
+  animation: ok-pop var(--dur-4) var(--ease-spring);
+}
+
+.pending .statusIcon {
+  color: var(--warning-ink);
+}
+
+.over .statusIcon {
+  color: var(--negative);
+}
+
+.statusText {
+  flex: 1 1 10rem;
+  min-width: 0;
+  font: var(--text-label);
+  font-variant-numeric: tabular-nums;
+}
+
+.message {
+  font-weight: 650;
+}
+
+.pending .message {
+  color: var(--warning-ink);
+}
+
+.over .message {
+  color: var(--negative);
+}
+
+.detail {
+  color: var(--ink-2);
+  font-weight: 500;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  margin-inline-start: auto;
+}
+
+.empty {
+  padding: var(--s-4);
+  border-radius: var(--radius-card);
+  background: var(--surface-2);
+  color: var(--ink-2);
+  font: var(--text-caption);
+  text-align: center;
+}
+
+.round {
+  margin-top: var(--s-1);
+}
+
+@media (forced-colors: active) {
+  .rows,
+  .status,
+  .cell {
+    border: 1px solid CanvasText;
+  }
+
+  .meterFill {
+    forced-color-adjust: none;
+    background: Highlight;
+  }
+}
+
+@keyframes row-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--s-1));
+  }
+}
+
+@keyframes ok-pop {
+  0% {
+    transform: scale(0.6);
+  }
+
+  60% {
+    transform: scale(1.15);
+  }
+}
