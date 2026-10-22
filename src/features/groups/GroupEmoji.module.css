@@ -1,0 +1,38 @@
+.tile {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  border-radius: var(--radius-tile);
+  background: var(--group-tint, var(--surface-3));
+  /* A hairline keeps the tile's edge on pale surfaces in both themes. */
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.04);
+}
+
+.glyph {
+  line-height: 1;
+  /* Emoji fonts sit a touch high; nudge them onto the optical centre. */
+  transform: translateY(0.04em);
+}
+
+.sm {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  font-size: 1.125rem;
+}
+
+.md {
+  width: 48px;
+  height: 48px;
+  font-size: 1.5rem;
+}
+
+.lg {
+  width: 76px;
+  height: 76px;
+  border-radius: 26px;
+  font-size: 2.5rem;
+  box-shadow:
+    inset 0 0 0 1px rgb(0 0 0 / 0.04),
+    var(--shadow-sm);
+}

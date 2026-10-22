@@ -1,0 +1,193 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-6);
+  min-width: 0;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  min-width: 0;
+}
+
+.overline {
+  font: var(--text-label);
+  color: var(--ink);
+}
+
+.note {
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
+/* ---------- Name + icon ---------- */
+
+.identity {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  min-width: 0;
+}
+
+.nameRow {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--s-3);
+  min-width: 0;
+}
+
+.nameField {
+  flex: 1;
+  min-width: 0;
+}
+
+/* The icon tile is its own button; a small chevron badge says it can be changed. */
+.emojiButton {
+  position: relative;
+  flex: none;
+  /* Line the 48px tile up with the 52px field next to it. */
+  margin-bottom: 2px;
+  border-radius: var(--radius-tile);
+  transition: transform var(--dur-2) var(--ease-spring);
+}
+
+.emojiButton:active {
+  transform: scale(0.94);
+  transition-duration: var(--dur-1);
+}
+
+.emojiEdit {
+  position: absolute;
+  right: -4px;
+  bottom: -4px;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--primary);
+  box-shadow: 0 0 0 2px var(--surface);
+  color: var(--on-primary);
+  transition: transform var(--dur-2) var(--ease-spring);
+}
+
+.emojiEdit svg {
+  width: 12px;
+  height: 12px;
+  transform: rotate(90deg);
+}
+
+.emojiButton[aria-expanded='true'] .emojiEdit {
+  transform: rotate(180deg);
+}
+
+.picker {
+  padding: var(--s-3);
+  border-radius: var(--radius-card);
+  background: var(--surface-2);
+  animation: picker-in var(--dur-3) var(--ease-out) backwards;
+}
+
+/* ---------- Kind ---------- */
+
+.kinds {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+.kindEmoji {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+/* ---------- Currency ---------- */
+
+.currency {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  width: 100%;
+  min-height: calc(var(--s-12) + var(--s-2));
+  padding: var(--s-2) var(--s-3);
+  border-radius: var(--radius-field);
+  background: var(--surface-2);
+  color: var(--ink);
+  text-align: start;
+  transition:
+    background-color var(--dur-2) var(--ease-out),
+    transform var(--dur-2) var(--ease-spring);
+}
+
+.currency:active {
+  transform: scale(0.985);
+  transition-duration: var(--dur-1);
+}
+
+@media (hover: hover) {
+  .currency:hover {
+    background: var(--surface-3);
+  }
+}
+
+.currencySymbol {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: var(--s-10);
+  height: var(--s-10);
+  border-radius: 50%;
+  background: var(--surface);
+  font: var(--text-label);
+  font-weight: 650;
+}
+
+.currencyText {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.currencyLabel {
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
+.currencyName {
+  overflow: hidden;
+  font: var(--text-label);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chevron {
+  flex: none;
+  width: var(--s-5);
+  height: var(--s-5);
+  color: var(--ink-2);
+}
+
+/* ---------- Footer ---------- */
+
+.footer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+.footerHint {
+  min-height: 1lh;
+  font: var(--text-caption);
+  color: var(--ink-2);
+  text-align: center;
+}
+
+@keyframes picker-in {
+  from {
+    opacity: 0;
+    transform: translateY(calc(var(--s-2) * -1));
+  }
+}
