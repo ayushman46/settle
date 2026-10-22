@@ -222,7 +222,7 @@ describe('PayPage — paying', () => {
     expect(within(items).getByText('2 of 3 shares')).toBeInTheDocument()
     expect(within(items).getByText('₹210.00')).toBeInTheDocument()
     expect(within(items).getByText('₹720.00')).toBeInTheDocument()
-    expect(within(items).getByText('Tax, service and round-off')).toBeInTheDocument()
+    expect(within(items).getByText('Tax, fees & round-off')).toBeInTheDocument()
     expect(within(items).getByText('₹70.00')).toBeInTheDocument()
     expect(within(items).getByText('Your share')).toBeInTheDocument()
   })

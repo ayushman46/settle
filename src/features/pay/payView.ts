@@ -69,7 +69,7 @@ export interface BreakdownLine extends PayLinkItemLine {
 
 export interface ItemBreakdown {
   lines: BreakdownLine[]
-  /** Share minus the item lines: tax, service and round-off (negative for discounts). */
+  /** Share minus the item lines: tax, service, delivery fees and round-off (negative for discounts). */
   extras: Minor
   share: Minor
 }
@@ -92,6 +92,11 @@ export function itemBreakdown(payload: PayLinkPayload, index: number): ItemBreak
     extras: person.a - itemsTotal,
     share: person.a,
   }
+}
+
+/** The receipt line for `extras`: what was added on top of the items, or taken off. */
+export function extrasLabel(extras: Minor): string {
+  return extras > 0 ? 'Tax, fees & round-off' : 'Discounts and round-off'
 }
 
 /** "Hi Ayush! Just paid you ₹691.50 for Friday dinner ✓" — for the group chat, once they've paid. */

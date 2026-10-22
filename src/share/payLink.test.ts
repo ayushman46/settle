@@ -451,6 +451,30 @@ describe('payLinkFromExpense', () => {
     expect(payLinkFromExpense(e, FRIENDS, profile).items).toBeUndefined()
   })
 
+  it('omits items for a bill paid in another currency, and says what was paid in the title', () => {
+    const e = makeExpense({
+      kind: 'bill',
+      mode: 'items',
+      currency: 'INR',
+      fx: { amount: 125_000, currency: 'THB', rate: '2.410751226', rateDate: '2026-10-21', source: 'ecb' },
+      bill: {
+        meta: { merchant: null, date: null, subtotal: null, tax: null, serviceCharge: null, discount: null, tip: null, total: null },
+        items: [{ id: 'i1', name: 'Pad thai', quantity: 1, amount: 125_000 }],
+        assignments: {},
+        warnings: [],
+      },
+    })
+    const link = payLinkFromExpense(e, FRIENDS, profile)
+    expect(link.items).toBeUndefined()
+    expect(link.t).toBe('Dinner at Toit (฿1,250)')
+    expect(link.c).toBe('INR')
+    // Too long to add without going over the title cap: left as it was.
+    const long = 'x'.repeat(55)
+    expect(payLinkFromExpense({ ...e, title: long }, FRIENDS, profile).t).toBe(long)
+    // Plain expenses keep their title.
+    expect(payLinkFromExpense(makeExpense(), FRIENDS, profile).t).toBe('Dinner at Toit')
+  })
+
   it('keeps the payer and the people who still owe when a split is too big for one link', () => {
     const ids = Array.from({ length: 70 }, (_, i) => `f${i}`)
     const friends = Object.fromEntries(ids.map((id) => [id, makeFriend(id, id.toUpperCase())]))

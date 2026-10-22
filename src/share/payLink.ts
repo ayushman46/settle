@@ -8,11 +8,11 @@
  */
 import * as z from 'zod/mini'
 import { CATEGORY_IDS, ME_ID, type CategoryId, type Expense, type Friend, type Minor, type Profile } from '../domain/types'
-import { allocate, MAX_MINOR } from '../lib/money'
+import { allocate, formatMoney, MAX_MINOR } from '../lib/money'
+import { graphemes } from '../lib/people'
 import { buildUpiLink, isValidUpiId, normalizeUpiId } from '../lib/upi'
-import { base64UrlToBytes, bytesToBase64Url } from './base64url'
 import { categoryLabel } from './categories'
-import { inflateRaw } from './inflate'
+import { decodeFragment, encodeFragment } from './fragment'
 import { outsideName } from './names'
 import { cleanText, utf8Length } from './text'
 
@@ -76,7 +76,6 @@ export const PAY_LINK_LIMITS = {
 
 /** Shown when the payee's name can't be shared (e.g. the owner never set one). */
 export const PAYEE_FALLBACK = 'Your friend'
-const JSON_PREFIX = 'j.'
 
 /* ------------------------------------------------------------------ validation */
 
@@ -192,67 +191,6 @@ function normalizePayload(raw: PayLinkPayload): PayLinkPayload {
   return payload
 }
 
-/* ------------------------------------------------------------------ compression */
-
-interface ByteTransform {
-  readable: ReadableStream<Uint8Array>
-  writable: WritableStream<BufferSource>
-}
-
-function noop(): void {}
-
-/** Runs bytes through a (de)compression stream, giving up past `maxOutput` bytes. */
-async function pump(bytes: Uint8Array, stream: ByteTransform, maxOutput: number): Promise<Uint8Array> {
-  const writer = stream.writable.getWriter()
-  const reader = stream.readable.getReader()
-  // Not awaited: the readable side must be drained concurrently or the writer stalls.
-  writer.write(bytes as Uint8Array<ArrayBuffer>).catch(noop)
-  writer.close().catch(noop)
-  const chunks: Uint8Array[] = []
-  let total = 0
-  for (;;) {
-    const { done, value } = await reader.read()
-    if (done) break
-    total += value.byteLength
-    if (total > maxOutput) {
-      reader.cancel().catch(noop)
-      throw new RangeError('Too large')
-    }
-    chunks.push(value)
-  }
-  const out = new Uint8Array(total)
-  let offset = 0
-  for (const chunk of chunks) {
-    out.set(chunk, offset)
-    offset += chunk.byteLength
-  }
-  return out
-}
-
-async function deflate(bytes: Uint8Array): Promise<Uint8Array | null> {
-  if (typeof CompressionStream !== 'function') return null
-  try {
-    return await pump(bytes, new CompressionStream('deflate-raw'), Number.MAX_SAFE_INTEGER)
-  } catch {
-    return null
-  }
-}
-
-async function inflate(bytes: Uint8Array, maxOutput: number): Promise<Uint8Array | null> {
-  if (typeof DecompressionStream === 'function') {
-    try {
-      return await pump(bytes, new DecompressionStream('deflate-raw'), maxOutput)
-    } catch {
-      // Unsupported format (older Safari) or corrupt data — the JS decoder settles which.
-    }
-  }
-  try {
-    return inflateRaw(bytes, maxOutput)
-  } catch {
-    return null
-  }
-}
-
 /* ------------------------------------------------------------------ encode / decode */
 
 function serialize(payload: PayLinkPayload): string {
@@ -292,34 +230,7 @@ function defaultOrigin(): string {
  */
 export async function encodePayLink(payload: PayLinkPayload, origin?: string): Promise<string> {
   const base = (origin ?? defaultOrigin()).replace(/\/+$/, '')
-  const bytes = new TextEncoder().encode(fittedJson(payload))
-  const plain = JSON_PREFIX + bytesToBase64Url(bytes)
-  const packed = await deflate(bytes)
-  const compact = packed ? bytesToBase64Url(packed) : null
-  const fragment = compact !== null && compact.length < plain.length ? compact : plain
-  return `${base}${PAY_PATH}#${fragment}`
-}
-
-/**
- * The payload part of a hash or URL: what follows "#", up to the first character that can't be
- * in a link (chat apps glue on ")", ".", "?utm=…", spaces…).
- */
-function fragmentOf(input: string): string | null {
-  // Generous for percent-encoding, but never scan megabytes of pasted text.
-  if (input.length > L.maxFragmentLength * 3 + 2_048) return null
-  let text = input.trim()
-  const hashAt = text.indexOf('#')
-  if (hashAt !== -1) text = text.slice(hashAt + 1)
-  if (text.includes('%')) {
-    try {
-      text = decodeURIComponent(text)
-    } catch {
-      return null
-    }
-  }
-  const fragment = /^(?:j\.)?[A-Za-z0-9_\-+/]+/.exec(text)?.[0] ?? ''
-  if (!fragment || fragment.length > L.maxFragmentLength) return null
-  return fragment
+  return `${base}${PAY_PATH}#${await encodeFragment(fittedJson(payload))}`
 }
 
 /**
@@ -329,19 +240,9 @@ function fragmentOf(input: string): string | null {
  */
 export async function decodePayLink(hash: string): Promise<PayLinkPayload | null> {
   try {
-    if (typeof hash !== 'string') return null
-    const fragment = fragmentOf(hash)
-    if (!fragment) return null
-    let bytes: Uint8Array | null
-    if (fragment.startsWith(JSON_PREFIX)) {
-      bytes = base64UrlToBytes(fragment.slice(JSON_PREFIX.length))
-      if (bytes && bytes.length > L.maxDecodedBytes) return null
-    } else {
-      const packed = base64UrlToBytes(fragment)
-      bytes = packed && packed.length > 0 ? await inflate(packed, L.maxDecodedBytes) : null
-    }
-    if (!bytes || bytes.length === 0) return null
-    const parsed = payloadSchema.safeParse(JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes)))
+    const json = await decodeFragment(hash, L.maxDecodedBytes)
+    if (json === null) return null
+    const parsed = payloadSchema.safeParse(JSON.parse(json))
     return parsed.success ? normalizePayload(parsed.data) : null
   } catch {
     return null
@@ -365,6 +266,8 @@ function keptParticipants(e: Expense): string[] {
 
 function billItems(e: Expense, ids: readonly string[]): PayLinkItem[] | undefined {
   const bill = e.bill
+  // A converted bill's items are priced in what was paid (฿), its shares in the settle currency (₹).
+  if (e.fx) return undefined
   if (e.kind !== 'bill' || !bill || bill.items.length === 0 || bill.items.length > L.items) return undefined
   return bill.items.map((item) => {
     const shares = bill.assignments[item.id] ?? {}
@@ -383,10 +286,17 @@ function billItems(e: Expense, ids: readonly string[]): PayLinkItem[] | undefine
   })
 }
 
+/** The title, plus what was paid abroad ("Dinner (฿1,250)") when that still fits the title cap. */
+function titleWithPaid(e: Expense): string {
+  if (!e.fx) return e.title
+  const titled = `${e.title} (${formatMoney(e.fx.amount, e.fx.currency, { trimZeros: true })})`
+  return graphemes(titled).length <= L.title.graphemes && titled.length <= L.title.units ? titled : e.title
+}
+
 /**
  * The pay-link payload for an expense. The payer is `to` (UPI ID from their friend record, or
  * the profile when the payer is the owner); everyone in the split is in `p` with their share
- * and paid-back state; bills carry their items (up to 40).
+ * and paid-back state; bills carry their items (up to 40, none when paid in another currency).
  */
 export function payLinkFromExpense(
   e: Expense,
@@ -403,7 +313,7 @@ export function payLinkFromExpense(
   const upi = e.payerId === ME_ID ? (profile.upiId ?? friendsById[ME_ID]?.upiId ?? null) : (friendsById[e.payerId]?.upiId ?? null)
   const payload: PayLinkPayload = {
     v: 1,
-    t: e.title,
+    t: titleWithPaid(e),
     cat: e.category,
     c: e.currency,
     d: e.date,

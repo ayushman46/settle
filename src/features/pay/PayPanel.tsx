@@ -19,7 +19,7 @@ import { copyText, shareResult } from '../../lib/share'
 import type { PayLinkPayload, PayLinkUpiRequest } from '../../share/payLink'
 import { firstName } from '../../share/text'
 import { ctaClassName, ctaParts } from '../landing/cta'
-import { itemBreakdown, paidMessage, payeeColor, payOption, type PayPerson } from './payView'
+import { extrasLabel, itemBreakdown, paidMessage, payeeColor, payOption, type PayPerson } from './payView'
 import { useTouchFirst } from './useTouchFirst'
 import styles from './PayPanel.module.css'
 
@@ -138,7 +138,7 @@ export function PayPanel({ payload, person, onChangePerson, headingRef }: PayPan
             ))}
             {breakdown.extras !== 0 && (
               <ReceiptRow
-                label={breakdown.extras > 0 ? 'Tax, service and round-off' : 'Discounts and round-off'}
+                label={extrasLabel(breakdown.extras)}
                 value={<Money value={breakdown.extras} currency={payload.c} />}
                 emphasis="muted"
               />
