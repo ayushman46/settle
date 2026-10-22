@@ -1,0 +1,319 @@
+.content {
+  gap: var(--s-6);
+  padding-bottom: var(--s-6);
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+
+/* ---------- Greeting ---------- */
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  min-width: 0;
+}
+
+.greeting {
+  min-width: 0;
+}
+
+.hello {
+  color: var(--ink-2);
+  font: var(--text-label);
+}
+
+.title {
+  font: var(--text-title);
+  letter-spacing: var(--tracking-tight);
+  overflow-wrap: anywhere;
+}
+
+.headerEnd {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.goPro {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--tap);
+  padding-inline: var(--s-3) var(--s-4);
+  border-radius: var(--r-pill);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+  color: var(--ink);
+  font: 600 0.875rem/1 var(--font-sans);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: transform var(--dur-1) var(--ease-out);
+}
+
+.goProIcon {
+  width: 16px;
+  height: 16px;
+  color: var(--accent-ink);
+}
+
+.proLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap);
+  border-radius: var(--r-pill);
+  text-decoration: none;
+}
+
+.avatarLink {
+  display: inline-grid;
+  place-items: center;
+  width: var(--tap);
+  height: var(--tap);
+  border-radius: 50%;
+  text-decoration: none;
+  transition: transform var(--dur-1) var(--ease-out);
+}
+
+.goPro:active,
+.avatarLink:active,
+.person:active,
+.draft:active {
+  transform: scale(0.97);
+}
+
+/* The hero field sits close under the greeting. */
+.say {
+  margin-top: calc(-1 * var(--s-2));
+}
+
+/* ---------- Bill in progress ---------- */
+
+.draft {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  width: 100%;
+  padding: var(--s-3) var(--s-4) var(--s-3) var(--s-3);
+  border-radius: var(--radius-card);
+  background: var(--accent-soft);
+  color: var(--ink);
+  text-align: start;
+  transition: transform var(--dur-1) var(--ease-out);
+}
+
+.draftIcon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-tile);
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.draftIcon > svg {
+  width: 22px;
+  height: 22px;
+}
+
+.draftText {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.draftTitle {
+  font: 650 0.9375rem/1.3 var(--font-sans);
+}
+
+.draftLine {
+  color: var(--ink-2);
+  font: var(--text-caption);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.draftChevron {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  color: var(--ink-2);
+}
+
+/* ---------- First run ---------- */
+
+.firstRun {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-6) var(--s-5) var(--s-5);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+  text-align: center;
+}
+
+.firstRunArt {
+  margin-bottom: var(--s-1);
+}
+
+.firstRunTitle {
+  font: var(--text-headline);
+  letter-spacing: var(--tracking-tight);
+}
+
+.firstRunText {
+  max-width: 34ch;
+  color: var(--ink-2);
+}
+
+.firstRunActions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  width: 100%;
+  margin-top: var(--s-2);
+}
+
+/* ---------- Due recurring splits ---------- */
+
+.dueList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+.dueCard {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-3) var(--s-4) var(--s-3) var(--s-3);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+}
+
+.dueText {
+  flex: 1;
+  min-width: 0;
+}
+
+.dueTitle {
+  font: 650 0.9375rem/1.3 var(--font-sans);
+  overflow-wrap: anywhere;
+}
+
+.dueMeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-1) var(--s-2);
+  margin-top: var(--s-1);
+}
+
+.dueAmount {
+  color: var(--ink-2);
+  font: var(--text-caption);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* ---------- People ---------- */
+
+.people {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--s-4) var(--s-1);
+}
+
+.personCell {
+  display: flex;
+  justify-content: center;
+  min-width: 0;
+}
+
+.person {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  max-width: 84px;
+  min-width: 0;
+  padding: 2px 0;
+  border-radius: var(--r-lg);
+  color: var(--ink);
+  text-decoration: none;
+  transition: transform var(--dur-1) var(--ease-out);
+}
+
+.personName {
+  max-width: 100%;
+  overflow: hidden;
+  font: var(--text-caption);
+  font-weight: 550;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.personBalance {
+  margin-top: -4px;
+  font: var(--text-micro);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.owed {
+  color: var(--positive);
+}
+
+.owe {
+  color: var(--negative);
+}
+
+.addDisc {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border: 1.5px dashed var(--ink-3);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.addDisc > svg {
+  width: 22px;
+  height: 22px;
+}
+
+/* ---------- Footer note ---------- */
+
+.trust {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding-top: var(--s-2);
+  color: var(--ink-2);
+  font: var(--text-caption);
+  text-align: center;
+}
+
+.trustIcon {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  color: var(--positive);
+}

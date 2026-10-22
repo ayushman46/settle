@@ -1,0 +1,257 @@
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+  padding-bottom: var(--s-2);
+}
+
+.pill {
+  width: 100%;
+}
+
+/* ---------- Allowance ---------- */
+
+.quota {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-1) var(--s-2);
+  margin-top: calc(-1 * var(--s-1));
+  padding-inline: var(--s-2);
+  color: var(--ink-2);
+  font: var(--text-caption);
+}
+
+.quotaOut {
+  color: var(--warning-ink);
+}
+
+.quotaLink {
+  min-height: var(--tap);
+  margin-block: calc((var(--tap) - 1.35em) / -2);
+  padding-inline: var(--s-1);
+  color: var(--accent-ink);
+  font: 650 0.8125rem/1.35 var(--font-sans);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+}
+
+/* ---------- Examples ---------- */
+
+.examples {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+.examplesLabel {
+  padding-inline: var(--s-2);
+  color: var(--ink-2);
+  font: var(--text-micro);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.exampleList {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--s-2);
+}
+
+.exampleList > li {
+  max-width: 100%;
+}
+
+/* Long examples wrap inside their chip rather than running off a 320px screen. */
+.exampleList button {
+  max-width: 100%;
+  height: auto;
+  min-height: 36px;
+  white-space: normal;
+  text-align: start;
+}
+
+/* ---------- Status: reading, errors, the draft ---------- */
+
+.status:empty {
+  display: none;
+}
+
+.errorActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+.reading {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+  padding: var(--s-5);
+  border-radius: var(--radius-card);
+  background: var(--surface-2);
+}
+
+.readingTop {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+}
+
+.readingLines {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+.readingAmount {
+  align-self: center;
+}
+
+.readingText {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  color: var(--ink-2);
+  font: var(--text-label);
+}
+
+.readingSpark {
+  width: 18px;
+  height: 18px;
+  color: var(--accent-ink);
+  animation: twinkle 1.2s var(--ease-in-out) infinite;
+}
+
+@keyframes twinkle {
+  50% {
+    transform: scale(0.8) rotate(12deg);
+    opacity: 0.6;
+  }
+}
+
+/* The draft: a little receipt of what was understood. */
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+  padding: var(--s-5);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+  animation: card-in var(--dur-3) var(--ease-spring) backwards;
+}
+
+@keyframes card-in {
+  from {
+    transform: translateY(8px) scale(0.98);
+    opacity: 0;
+  }
+}
+
+.cardTop {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  min-width: 0;
+}
+
+.cardHeading {
+  min-width: 0;
+}
+
+.cardTitle {
+  font: var(--text-headline);
+  letter-spacing: var(--tracking-tight);
+  overflow-wrap: anywhere;
+}
+
+.cardMeta {
+  color: var(--ink-2);
+  font: var(--text-caption);
+}
+
+.amountBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-2);
+  padding-block: var(--s-1);
+  text-align: center;
+}
+
+.amount {
+  max-width: 100%;
+}
+
+.noAmount {
+  color: var(--ink-2);
+  font: var(--text-label);
+}
+
+.howLine {
+  padding: var(--s-1) var(--s-3);
+  border-radius: var(--r-pill);
+  background: var(--surface-2);
+  color: var(--ink-2);
+  font: var(--text-caption);
+}
+
+.people {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--line);
+}
+
+.person {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  min-height: 48px;
+  padding-block: var(--s-2);
+  border-bottom: 1px solid var(--line);
+}
+
+.personName {
+  display: inline-flex;
+  flex: 1;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2);
+  min-width: 0;
+  font: var(--text-label);
+  overflow-wrap: anywhere;
+}
+
+.newBadge {
+  flex: none;
+}
+
+.personShare {
+  display: inline-flex;
+  flex: none;
+  align-items: baseline;
+  gap: var(--s-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.personDetail {
+  color: var(--ink-2);
+  font: var(--text-caption);
+  font-variant-numeric: tabular-nums;
+}
+
+.cardNote {
+  color: var(--ink-2);
+  font: var(--text-caption);
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+}
