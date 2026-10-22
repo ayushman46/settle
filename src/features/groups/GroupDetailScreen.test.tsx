@@ -226,7 +226,7 @@ describe('GroupDetailScreen — options', () => {
     await user.click(within(await screen.findByRole('dialog', { name: 'Group options' })).getByRole('button', { name: /^Edit group/ }))
     const sheet = await screen.findByRole('dialog', { name: 'Edit group' })
     await user.click(within(sheet).getByRole('button', { name: /^Currency:/ }))
-    await user.click(within(await screen.findByRole('dialog', { name: 'Currency' })).getByRole('button', { name: /Euro/ }))
+    await user.click(within(await screen.findByRole('dialog', { name: 'Group currency' })).getByRole('button', { name: /Euro/ }))
     expect(within(sheet).getByText('Amounts keep their numbers — only the currency changes.')).toBeInTheDocument()
     await user.click(within(sheet).getByRole('button', { name: 'Save' }))
     expect(group()?.currency).toBe('EUR')

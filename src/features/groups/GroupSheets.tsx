@@ -158,13 +158,15 @@ function Members({ draft, onChange }: { draft: Draft; onChange: (patch: Partial<
   )
 }
 
-/** Opens the shared currency picker over a sheet and applies the pick. */
-function useCurrencyPicker(currency: string, onPick: (code: string) => void) {
+/** Opens the shared currency picker over a sheet and applies the pick; `description` says what picking does here. */
+function useCurrencyPicker(currency: string, description: string, onPick: (code: string) => void) {
   const [open, setOpen] = useState(false)
   const sheet = (
     <CurrencySheet
       open={open}
       currency={currency}
+      title="Group currency"
+      description={description}
       onClose={() => setOpen(false)}
       onSelect={(code) => {
         onPick(code)
@@ -206,7 +208,9 @@ export function CreateGroupSheet({ open, onClose, onCreated, initialKind = 'trip
     if (open) setDraft(blankDraft(initialKind, profile.currency))
   }
   const patch = (next: Partial<Draft>) => setDraft((d) => ({ ...d, ...next }))
-  const currency = useCurrencyPicker(draft.currency, (code) => patch({ currency: code }))
+  const currency = useCurrencyPicker(draft.currency, 'The group’s expenses and settle-ups are in this currency.', (code) =>
+    patch({ currency: code }),
+  )
   const ready = draft.name.trim() !== ''
 
   const create = (): void => {
@@ -298,7 +302,9 @@ export function EditGroupSheet({ group, open, onClose, section }: EditGroupSheet
     if (open) setDraft(draftOf(group))
   }
   const patch = (next: Partial<Draft>) => setDraft((d) => ({ ...d, ...next }))
-  const currency = useCurrencyPicker(draft.currency, (code) => patch({ currency: code }))
+  const currency = useCurrencyPicker(draft.currency, 'Its expenses and payments move to this currency — the numbers stay the same.', (code) =>
+    patch({ currency: code }),
+  )
   const details = section === 'details'
   const ready = !details || draft.name.trim() !== ''
 

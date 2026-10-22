@@ -153,6 +153,8 @@ function Preferences() {
       <CurrencySheet
         open={currencyOpen}
         currency={code}
+        title="Default currency"
+        description="New splits start in this currency. Existing ones keep theirs."
         onClose={() => setCurrencyOpen(false)}
         onSelect={(next) => {
           setCurrencyOpen(false)

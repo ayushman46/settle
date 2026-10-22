@@ -64,9 +64,9 @@ describe('CreateGroupSheet', () => {
     expect(within(sheet).getByText('3 people · INR')).toBeInTheDocument()
 
     await user.click(within(sheet).getByRole('button', { name: /^Currency:/ }))
-    const currencies = await screen.findByRole('dialog', { name: 'Currency' })
+    const currencies = await screen.findByRole('dialog', { name: 'Group currency' })
     await user.click(within(currencies).getByRole('button', { name: /US Dollar/ }))
-    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Currency' })).not.toBeInTheDocument())
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Group currency' })).not.toBeInTheDocument())
     expect(within(sheet).getByText('3 people · USD')).toBeInTheDocument()
 
     await user.click(within(sheet).getByRole('button', { name: 'Create group' }))
