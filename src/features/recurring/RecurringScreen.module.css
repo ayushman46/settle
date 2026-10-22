@@ -1,0 +1,157 @@
+/* Room under the last row for the floating "New recurring split" button. */
+.content {
+  padding-bottom: calc(var(--fab-size) + var(--s-12));
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  min-width: 0;
+}
+
+/* ---------- Due now ---------- */
+
+.dueList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+
+.dueCard {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  min-width: 0;
+  padding: var(--s-4);
+  overflow: clip;
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+  animation: due-in var(--dur-4) var(--ease-out) backwards;
+}
+
+.dueCard + .dueCard {
+  animation-delay: 60ms;
+}
+
+/* A thin accent bar on the leading edge marks it as needing attention. */
+.dueCard::before {
+  content: '';
+  position: absolute;
+  inset: var(--s-4) auto var(--s-4) 0;
+  width: 4px;
+  border-radius: 0 4px 4px 0;
+  background: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent-edge);
+}
+
+.dueTop {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  min-width: 0;
+}
+
+.dueText {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--s-1);
+  min-width: 0;
+}
+
+.dueTitle {
+  overflow: hidden;
+  font: var(--text-section);
+  color: var(--ink);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dueWhen {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2);
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
+.dueAmount {
+  flex: none;
+}
+
+.dueLine {
+  font: var(--text-label);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+
+.dueActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+/* ---------- Empty ---------- */
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.presets {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--s-2);
+  max-width: 360px;
+}
+
+/* ---------- Locked: the sketch behind the card ---------- */
+
+.sketch {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  padding: var(--s-2) 0;
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+}
+
+.sketchRow {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-3) var(--s-4);
+}
+
+.sketchText {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sketchTitle {
+  font: var(--text-label);
+  color: var(--ink);
+}
+
+.sketchWhen {
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
+@keyframes due-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--s-3));
+  }
+}
