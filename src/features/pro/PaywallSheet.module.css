@@ -1,0 +1,63 @@
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+}
+
+.lead {
+  font: var(--text-body);
+  color: var(--ink-2);
+}
+
+/* "Also in Pro": two tidy columns of ticks. */
+.perks {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s-2) var(--s-3);
+  margin: 0;
+}
+
+.perk {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-2);
+  min-width: 0;
+  font: var(--text-label);
+  color: var(--ink);
+}
+
+.check {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin-top: 1px;
+  padding: 3px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.free {
+  font: var(--text-caption);
+  color: var(--ink-2);
+  text-align: center;
+}
+
+.footer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+}
+
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0 var(--s-2);
+}
+
+@media (max-width: 340px) {
+  .perks {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

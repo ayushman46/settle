@@ -1,0 +1,95 @@
+.lock {
+  position: relative;
+  display: grid;
+  min-width: 0;
+}
+
+/* Preview and panel share one grid cell: the card floats over the blurred sketch. */
+.withPreview > * {
+  grid-area: 1 / 1;
+}
+
+.preview {
+  min-width: 0;
+  filter: blur(7px) saturate(0.9);
+  opacity: 0.7;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+  mask-image: linear-gradient(to bottom, #000 40%, transparent 100%);
+}
+
+.panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-3);
+  min-width: 0;
+  padding: var(--s-6) var(--s-5);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  box-shadow: var(--shadow-md);
+  text-align: center;
+  animation: panel-in var(--dur-4) var(--ease-spring) backwards;
+}
+
+.withPreview .panel {
+  align-self: center;
+  margin: var(--s-10) var(--s-2) var(--s-4);
+}
+
+.badges {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.lockIcon {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: var(--on-primary);
+}
+
+.lockIcon > svg {
+  width: 16px;
+  height: 16px;
+}
+
+.title {
+  font: var(--text-headline);
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+
+.text {
+  max-width: 34ch;
+  font: var(--text-body);
+  color: var(--ink-2);
+}
+
+.ended {
+  font: var(--text-label);
+  color: var(--warning-ink);
+}
+
+.note {
+  font: var(--text-label);
+  color: var(--ink);
+}
+
+.price {
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
+@keyframes panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--s-4)) scale(0.97);
+  }
+}
