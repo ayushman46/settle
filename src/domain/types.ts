@@ -8,6 +8,7 @@
  * finishes, it is saved here as an `Expense` with `kind: 'bill'` and a `bill` snapshot.
  */
 
+import type { LicensePayload } from '../../shared/api'
 import type { CategoryId } from '../../shared/categories'
 import type { BillItem, BillMeta, Minor, Shares } from '../types'
 
@@ -177,18 +178,11 @@ export interface Profile {
 
 /* ------------------------------------------------------------------ Pro licensing */
 
-export type PlanId = 'pro_monthly' | 'pro_yearly' | 'pro_lifetime'
+// The plans and the signed license payload are part of the wire contract (shared/api.ts).
+export type { PlanId } from '../../shared/api'
 
-/** Decoded, signature-verified license (see src/pro). */
-export interface License {
-  /** Opaque license id (payment id or promo code id). */
-  id: string
-  plan: PlanId
-  /** Issued at, epoch seconds. */
-  iat: number
-  /** Expires at, epoch seconds; null = lifetime. */
-  exp: number | null
-}
+/** Decoded, signature-verified license (see src/pro): `{ id, plan, iat, exp }`, exp null = lifetime. */
+export type License = LicensePayload
 
 /** Features that need Pro. Anything not listed is free forever. */
 export type ProFeature =

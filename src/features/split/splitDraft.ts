@@ -6,7 +6,7 @@
  */
 import * as z from 'zod/mini'
 import { CATEGORY_IDS, type CategoryId, type ExpenseSource } from '../../domain/types'
-import { EXPENSE_SOURCES } from '../../data/schemas'
+import { EXPENSE_SOURCES } from '../../data'
 import { MAX_MINOR } from '../../lib/money'
 import type { SplitForm } from './splitForm'
 

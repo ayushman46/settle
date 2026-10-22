@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import * as kit from './index'
 import * as kitA from './index-a'
 import * as kitB from './index-b'
 
@@ -32,5 +33,9 @@ describe('kit part B', () => {
   it('shares no names with part A, so one kit index can re-export both', () => {
     const clashes = Object.keys(kitB).filter((name) => Object.hasOwn(kitA, name))
     expect(clashes).toEqual([])
+  })
+
+  it('is re-exported, with part A, from the kit index', () => {
+    expect(Object.keys(kit).sort()).toEqual([...Object.keys(kitA), ...Object.keys(kitB)].sort())
   })
 })

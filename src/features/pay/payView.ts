@@ -5,6 +5,7 @@
 import type { Minor } from '../../domain/types'
 import { formatMoney } from '../../lib/money'
 import {
+  PAYEE_FALLBACK,
   payLinkDebtors,
   payLinkItemLines,
   payLinkUpiRequest,
@@ -93,12 +94,9 @@ export function itemBreakdown(payload: PayLinkPayload, index: number): ItemBreak
   }
 }
 
-/** The share kit's stand-in when a link's payee has no name (`payLink.ts`). */
-const UNNAMED_PAYEE = 'Your friend'
-
 /** "Hi Ayush! Just paid you ₹691.50 for Friday dinner ✓" — for the group chat, once they've paid. */
 export function paidMessage(payload: PayLinkPayload, person: Pick<PayPerson, 'amount'>): string {
   const amount = formatMoney(person.amount, payload.c, { trimZeros: true })
-  const greeting = payload.to.n === UNNAMED_PAYEE ? 'Hi!' : `Hi ${firstName(payload.to.n)}!`
+  const greeting = payload.to.n === PAYEE_FALLBACK ? 'Hi!' : `Hi ${firstName(payload.to.n)}!`
   return `${greeting} Just paid you ${amount} for ${payload.t} ✓`
 }

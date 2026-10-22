@@ -75,7 +75,7 @@ export const PAY_LINK_LIMITS = {
 } as const
 
 /** Shown when the payee's name can't be shared (e.g. the owner never set one). */
-const PAYEE_FALLBACK = 'Your friend'
+export const PAYEE_FALLBACK = 'Your friend'
 const JSON_PREFIX = 'j.'
 
 /* ------------------------------------------------------------------ validation */

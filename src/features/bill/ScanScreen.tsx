@@ -20,6 +20,7 @@ import {
   Button,
   Card,
   IconButton,
+  lastInputModality,
   PageTitle,
   Receipt,
   Screen,
@@ -36,7 +37,6 @@ import { consumeAiQuota, useAiQuota, usePro } from '../../pro'
 import { openPaywall } from '../pro/paywall'
 import { cx } from '../../lib/cx'
 import { haptic } from '../../lib/haptics'
-import { lastInputModality } from '../../components/overlayStack'
 import { ImageError, isImageFile, prepareImage, type PreparedImage } from '../../lib/image'
 import { formatMoney } from '../../lib/money'
 import { useBackClose } from '../../state/backStack'

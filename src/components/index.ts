@@ -24,6 +24,7 @@ export { Illustration, type IllustrationName, type IllustrationProps } from './I
 export { followLink, isPlainLeftClick, setLinkNavigator, type LinkNavigator } from './links'
 export { List, ListRow, type ListProps, type ListRowProps } from './ListRow'
 export { Money, type MoneyProps } from './Money'
+export { lastInputModality, type InputModality } from './overlayStack'
 export { PageTitle, type PageTitleProps } from './PageTitle'
 export { PersonToggle, type PersonToggleProps } from './PersonToggle'
 export { Progress, type ProgressProps } from './Progress'

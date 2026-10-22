@@ -7,6 +7,7 @@ export {
   encodePayLink,
   PAY_LINK_LIMITS,
   PAY_PATH,
+  PAYEE_FALLBACK,
   payLinkDebtors,
   payLinkFromExpense,
   payLinkItemLines,

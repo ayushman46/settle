@@ -82,10 +82,12 @@ export {
 } from './handoff'
 export {
   DEFAULT_GROUP_EMOJI,
+  EXPENSE_SOURCES,
   GROUP_KINDS,
   MAX_FRIENDS,
   MAX_GROUP_NAME_LENGTH,
   MAX_NOTE_LENGTH,
+  MAX_PARTICIPANTS,
   MAX_TITLE_LENGTH,
   cleanPhone,
   cleanUpiId,
