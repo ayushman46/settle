@@ -1,0 +1,58 @@
+.content {
+  gap: var(--s-6);
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  min-width: 0;
+}
+
+.topActions {
+  display: inline-flex;
+  align-items: center;
+}
+
+.note {
+  padding: var(--s-4);
+}
+
+.noteText {
+  font: var(--text-body);
+  color: var(--ink);
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.small {
+  font: var(--text-caption);
+  color: var(--ink-2);
+  text-align: center;
+}
+
+/* Main action + a round Share beside it. */
+.footerRow {
+  display: flex;
+  gap: var(--s-2);
+  min-width: 0;
+}
+
+.footerRow > :first-child {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.shareButton {
+  width: var(--btn-h);
+  padding: 0;
+}
+
+.shareButton svg {
+  width: var(--s-5);
+  height: var(--s-5);
+}
+
+.gone {
+  align-self: flex-start;
+}

@@ -1,0 +1,94 @@
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  min-width: 0;
+}
+
+.receipt {
+  min-width: 0;
+}
+
+.items {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+
+.item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--s-4);
+  min-width: 0;
+}
+
+.itemText {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.itemName {
+  font: var(--text-label);
+  font-weight: 550;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.qty {
+  color: var(--ink-2);
+  font-weight: 450;
+  font-variant-numeric: tabular-nums;
+}
+
+.who {
+  align-self: flex-start;
+}
+
+.everyone {
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
+.itemAmount {
+  flex: none;
+  font: var(--text-label);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.more {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+  min-height: var(--tap, 44px);
+  margin-top: var(--s-2);
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font: var(--text-label);
+  font-weight: 650;
+  text-decoration: underline;
+  text-decoration-color: var(--line-strong);
+  text-underline-offset: 4px;
+  cursor: pointer;
+}
+
+.more > svg {
+  width: var(--s-4);
+  height: var(--s-4);
+}
+
+.more:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+  border-radius: var(--s-1);
+}
+
+.totals {
+  display: flex;
+  flex-direction: column;
+}

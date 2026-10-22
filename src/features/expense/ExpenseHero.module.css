@@ -1,0 +1,130 @@
+.hero {
+  min-width: 0;
+  animation: hero-in calc(var(--dur-3) * 1.4) var(--ease-out) backwards;
+}
+
+/* Centred like a pay screen: icon, what, when, how much, who paid, where you stand. */
+.paper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-2);
+  text-align: center;
+}
+
+.title {
+  max-width: 100%;
+  margin-top: var(--s-2);
+  font: var(--text-headline);
+  font-weight: 650;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.title:focus {
+  outline: none;
+}
+
+.meta {
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
+.group {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  min-height: var(--tap);
+  padding-inline: var(--s-3);
+  border-radius: var(--radius-pill);
+  color: var(--ink);
+  font: var(--text-label);
+  font-weight: 600;
+  text-decoration: none;
+  /* A 32px pill inside the 44px touch target. */
+  background:
+    linear-gradient(var(--surface-2), var(--surface-2)) center / 100% 32px no-repeat;
+  transition: transform var(--dur-2) var(--ease-spring);
+}
+
+.group:active {
+  transform: scale(0.97);
+}
+
+.group:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: -4px;
+}
+
+.groupName {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.amount {
+  margin-block: var(--s-2) var(--s-1);
+  text-align: center;
+}
+
+.payer {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  font: var(--text-label);
+  color: var(--ink-2);
+}
+
+.standing {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+  margin-top: var(--s-2);
+  padding: 6px var(--s-3);
+  border-radius: var(--radius-pill);
+  font: var(--text-label);
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+
+.positive {
+  background: var(--positive-soft);
+  color: var(--positive);
+}
+
+.negative {
+  background: var(--negative-soft);
+  color: var(--negative);
+}
+
+.neutral {
+  background: var(--surface-2);
+  color: var(--ink-2);
+}
+
+.standingIcon {
+  width: var(--s-4);
+  height: var(--s-4);
+}
+
+@media (forced-colors: active) {
+  .standing,
+  .group {
+    border: 1px solid CanvasText;
+  }
+}
+
+@keyframes hero-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--s-3)) scale(0.985);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero {
+    animation: none;
+  }
+}
