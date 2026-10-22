@@ -23,6 +23,7 @@ import { assignedCount, firstUnassignedIndex, stepProgress, unassignedItems } fr
 import { useFlow, useSession } from '../../state/store'
 import type { Shares } from '../../types'
 import { AssignSheet, type AssignDirection } from './AssignSheet'
+import { withOwnerAvatar, useOwnerAvatarName } from './ownerAvatar'
 import { ASSIGNMENT_KEYS, restoreAssignments } from './undoMerge'
 import styles from './AssignScreen.module.css'
 
@@ -32,6 +33,7 @@ export function AssignScreen() {
   const flow = useFlow()
   const toast = useToast()
   const { items, people, currency } = session
+  const ownerName = useOwnerAvatarName()
 
   const sessionRef = useRef(session)
   useLayoutEffect(() => {
@@ -201,7 +203,7 @@ export function AssignScreen() {
                     trailing={
                       on.length > 0 ? (
                         <AvatarStack
-                          people={on}
+                          people={withOwnerAvatar(on, ownerName)}
                           size="sm"
                           label={all ? 'Everyone' : undefined}
                         />

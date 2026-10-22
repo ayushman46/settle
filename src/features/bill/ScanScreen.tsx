@@ -45,6 +45,7 @@ import { setPhoto } from '../../state/photo'
 import { effectivePaid, hasProgress } from '../../state/selectors'
 import { useFlow, useSession } from '../../state/store'
 import { EMPTY_META } from '../../types'
+import { useOwnerAvatarName, withOwnerAvatar } from './ownerAvatar'
 import { QUICK_SPLIT_PATH, scanPrefill } from './scanPrefill'
 import { focusScreenHeading, plural, revokeUrl } from './screenUtils'
 import styles from './ScanScreen.module.css'
@@ -161,6 +162,7 @@ export function ScanScreen() {
   const online = useOnline()
   const pro = usePro()
   const quota = useAiQuota()
+  const ownerName = useOwnerAvatarName()
   const [phase, setPhase] = useState<Phase>({ kind: 'idle', problem: null })
   const [confirmDiscard, setConfirmDiscard] = useState(false)
   /** A new bill waiting for "Start new bill" (it would replace the one in progress). */
@@ -513,7 +515,7 @@ export function ScanScreen() {
       </div>
       <div className={styles.resumeBottom}>
         {session.people.length > 0 ? (
-          <AvatarStack people={session.people} size="sm" max={4} />
+          <AvatarStack people={withOwnerAvatar(session.people, ownerName)} size="sm" max={4} />
         ) : (
           <span className={styles.resumeHint}>No one added yet</span>
         )}

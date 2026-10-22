@@ -10,6 +10,7 @@ import { MAX_WEIGHT } from '../../state/reducer'
 import { isAssigned } from '../../state/selectors'
 import { useSession } from '../../state/store'
 import type { Session, Shares } from '../../types'
+import { useOwnerAvatarName } from './ownerAvatar'
 import styles from './AssignSheet.module.css'
 
 /** Past this many items the "Item 3 of 8" dots would get too small; the text stays. */
@@ -63,6 +64,7 @@ export function AssignSheet({
 }: AssignSheetProps) {
   const { session, dispatch } = useSession()
   const { items, people, currency } = session
+  const ownerName = useOwnerAvatarName()
   const [unevenItemId, setUnevenItemId] = useState<string | null>(null)
   const anchorRef = useRef<HTMLDivElement>(null)
 
@@ -220,6 +222,7 @@ export function AssignSheet({
             <PersonToggle
               key={person.id}
               name={person.name}
+              avatarName={person.id === ME_ID ? (ownerName ?? undefined) : undefined}
               color={person.color}
               selected={on}
               meta={on && amount !== undefined ? formatMoney(amount, currency) : undefined}

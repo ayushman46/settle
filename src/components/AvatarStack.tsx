@@ -5,7 +5,10 @@ import styles from './AvatarStack.module.css'
 
 export interface AvatarStackPerson {
   id: string
+  /** Spoken in the stack's label ("You" for the owner). */
   name: string
+  /** Name the initials come from when it differs from `name` (the owner keeps their own initials). */
+  avatarName?: string
   color: number
 }
 
@@ -32,7 +35,7 @@ export function AvatarStack({ people, max = 4, size = 'sm', label, className }: 
   return (
     <span role="img" aria-label={text} className={cx(styles.stack, styles[size], className)}>
       {visible.map((person) => (
-        <Avatar key={person.id} name={person.name} color={person.color} size={size} className={styles.item} />
+        <Avatar key={person.id} name={person.avatarName ?? person.name} color={person.color} size={size} className={styles.item} />
       ))}
       {overflow && (
         <span className={cx(styles.item, styles.more)} aria-hidden="true">

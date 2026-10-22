@@ -6,6 +6,8 @@ import styles from './PersonToggle.module.css'
 
 export interface PersonToggleProps {
   name: string
+  /** Name the avatar's initials come from, when it differs from the label (the owner reads "You" but keeps their own initials). */
+  avatarName?: string
   /** Palette index (`Person.color`). */
   color: number
   selected: boolean
@@ -23,6 +25,7 @@ export interface PersonToggleProps {
 /** Big tappable person card with a pressed state (avatar check + highlighter fill). */
 export function PersonToggle({
   name,
+  avatarName,
   color,
   selected,
   onToggle,
@@ -45,7 +48,7 @@ export function PersonToggle({
           onToggle()
         }}
       >
-        <Avatar name={name} color={color} size="md" selected={selected} />
+        <Avatar name={avatarName ?? name} color={color} size="md" selected={selected} />
         <span className={styles.text}>
           <span className={styles.name}>{name}</span>
           {meta != null && (
