@@ -78,6 +78,7 @@
   max-width: 32ch;
   color: var(--ink-2);
   font: var(--text-body);
+  text-wrap: balance;
 }
 
 .dots {

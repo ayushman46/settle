@@ -164,6 +164,8 @@ export function AboutYouStep({ onBack, onDone, onSkip }: AboutYouStepProps) {
       <CurrencySheet
         open={picking}
         currency={currency}
+        title="Your currency"
+        description="New splits start in this currency. You can pick another for any split."
         onClose={() => setPicking(false)}
         onSelect={(code) => {
           setCurrency(code)

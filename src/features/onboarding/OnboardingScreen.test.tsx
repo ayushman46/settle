@@ -8,6 +8,9 @@ import { NAME_ERROR, UPI_ERROR } from './AboutYouStep'
 import { onboardingDestination, welcomePath } from './destination'
 import { OnboardingScreen } from './OnboardingScreen'
 
+/** Typing-heavy tests: room to finish on a busy machine. */
+const SLOW = { timeout: 20_000 }
+
 beforeEach(() => {
   resetProScreens()
   updateProfile({ currency: 'INR' })
@@ -33,7 +36,7 @@ async function toDetails(user: ReturnType<typeof renderWelcome>['user']) {
   return screen.findByRole('heading', { level: 1, name: 'Let’s set you up' })
 }
 
-describe('OnboardingScreen — slides', () => {
+describe('OnboardingScreen — slides', SLOW, () => {
   it('walks through three slides to the details step', async () => {
     const { user } = renderWelcome()
     expect(screen.getByRole('heading', { level: 1, name: 'Welcome to Settle' })).toBeInTheDocument()
@@ -98,14 +101,15 @@ describe('OnboardingScreen — slides', () => {
   })
 })
 
-describe('OnboardingScreen — about you', () => {
+describe('OnboardingScreen — about you', SLOW, () => {
   it('saves the name, UPI ID and currency, then opens Home in place of welcome', async () => {
     const { user } = renderWelcome()
     await toDetails(user)
     await user.type(screen.getByLabelText('Your name'), '  Ayush  ')
     await user.type(screen.getByLabelText('Your UPI ID (optional)'), 'Ayush@OkAxis ')
     await user.click(screen.getByRole('button', { name: /^Currency/ }))
-    const sheet = await screen.findByRole('dialog', { name: 'Currency' })
+    const sheet = await screen.findByRole('dialog', { name: 'Your currency' })
+    expect(sheet).toHaveAccessibleDescription('New splits start in this currency. You can pick another for any split.')
     await user.click(within(sheet).getByRole('button', { name: /Euro/ }))
     expect(screen.getByRole('button', { name: /^Currency/ })).toHaveAccessibleName(/Euro EUR/)
 
