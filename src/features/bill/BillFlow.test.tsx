@@ -1,18 +1,20 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { App } from './App'
-import { resetFlowHistory } from './state/backStack'
-import { resetHealthForTests } from './state/health'
-import { createSession } from './state/reducer'
-import { historyIdle, sampleSession } from './screens/screenTestKit'
+import { ToastProvider } from '../../components'
+import { resetFlowHistory } from '../../state/backStack'
+import { resetHealthForTests } from '../../state/health'
+import { createSession } from '../../state/reducer'
+import type { Session } from '../../types'
+import { BillFlow } from './BillFlow'
+import { historyIdle, sampleSession } from './screenTestKit'
 
 const stubs = vi.hoisted(() => ({
   crashPeople: false,
   /** A minimal step screen: title, Back, and Next. */
   async make(title: string) {
-    const { ActionBar, Button, PageTitle, Screen, TopBar } = await import('./components')
-    const { useFlow } = await import('./state/store')
+    const { ActionBar, Button, PageTitle, Screen, TopBar } = await import('../../components')
+    const { useFlow } = await import('../../state/store')
     return function StubStep() {
       const flow = useFlow()
       return (
@@ -32,7 +34,7 @@ const stubs = vi.hoisted(() => ({
 }))
 
 // The People / Assign / Result screens have their own tests; here they are simple stand-ins.
-vi.mock('./screens/PeopleScreen', async () => {
+vi.mock('./PeopleScreen', async () => {
   const Stub = await stubs.make("Who's splitting?")
   return {
     PeopleScreen: () => {
@@ -41,14 +43,22 @@ vi.mock('./screens/PeopleScreen', async () => {
     },
   }
 })
-vi.mock('./screens/AssignScreen', async () => ({ AssignScreen: await stubs.make('Who had what?') }))
-vi.mock('./screens/ResultScreen', async () => ({ ResultScreen: await stubs.make("Here's the split") }))
+vi.mock('./AssignScreen', async () => ({ AssignScreen: await stubs.make('Who had what?') }))
+vi.mock('./ResultScreen', async () => ({ ResultScreen: await stubs.make("Here's the split") }))
 
 const navOf = () => document.querySelector('[data-nav]')?.getAttribute('data-nav')
 
+function renderFlow(session: Session) {
+  return render(
+    <ToastProvider>
+      <BillFlow initialSession={session} persist={false} />
+    </ToastProvider>,
+  )
+}
+
 beforeEach(() => {
   resetFlowHistory()
-  window.history.replaceState(null, '')
+  window.history.replaceState(null, '', '/app/bill')
   resetHealthForTests()
   stubs.crashPeople = false
   vi.stubGlobal(
@@ -69,27 +79,27 @@ afterEach(async () => {
   vi.restoreAllMocks()
 })
 
-describe('App', () => {
-  it('opens on the home screen and checks whether scanning is available', async () => {
-    render(<App initialSession={createSession('INR')} persist={false} />)
+describe('BillFlow', () => {
+  it('opens on the scan step and checks whether scanning is available', async () => {
+    renderFlow(createSession('INR'))
 
     expect(screen.getByRole('heading', { level: 1, name: 'Split any bill in seconds' })).toBeInTheDocument()
-    expect(document.title).toBe('BillSplit — split any bill in seconds')
+    expect(document.title).toBe('Scan a bill · Settle')
     expect(navOf()).toBe('none')
     await waitFor(() => expect(fetch).toHaveBeenCalledWith('/api/health', expect.anything()))
     expect(await screen.findByRole('button', { name: 'Scan a bill' })).toBeInTheDocument()
   })
 
-  it('slides screens in the direction of travel and keeps the tab title in step', async () => {
+  it('slides steps in the direction of travel and keeps the tab title in step', async () => {
     const user = userEvent.setup()
-    render(<App initialSession={sampleSession('review')} persist={false} />)
-    expect(navOf()).toBe('none') // the first screen just rises in
-    expect(document.title).toBe('Check the items · BillSplit')
+    renderFlow(sampleSession('review'))
+    expect(navOf()).toBe('none') // the first step takes the page's own entrance
+    expect(document.title).toBe('Check the items · Settle')
 
     await user.click(screen.getByRole('button', { name: 'Looks good' }))
     expect(screen.getByRole('heading', { level: 1, name: 'What did you actually pay?' })).toBeInTheDocument()
     expect(navOf()).toBe('forward')
-    expect(document.title).toBe('What you paid · BillSplit')
+    expect(document.title).toBe('What you paid · Settle')
 
     await user.click(screen.getByRole('button', { name: "Next: who's splitting" }))
     expect(screen.getByRole('heading', { level: 1, name: "Who's splitting?" })).toBeInTheDocument()
@@ -109,15 +119,15 @@ describe('App', () => {
       push(...args)
     })
     // A fresh tab resuming on review rebuilds review's entry, then Next adds paid's.
-    render(<App initialSession={sampleSession('review')} persist={false} />)
+    renderFlow(sampleSession('review'))
     await user.click(screen.getByRole('button', { name: 'Looks good' }))
     await historyIdle()
-    expect(titles).toEqual(['Check the items · BillSplit', 'What you paid · BillSplit'])
+    expect(titles).toEqual(['Check the items · Settle', 'What you paid · Settle'])
   })
 
   it('a toast from one step does not follow the person to the next', async () => {
     const user = userEvent.setup()
-    render(<App initialSession={sampleSession('review')} persist={false} />)
+    renderFlow(sampleSession('review'))
     await user.click(screen.getByRole('button', { name: /^Edit Paneer Tikka/ }))
     await user.click(await screen.findByRole('button', { name: 'Delete' }))
     expect(await screen.findByRole('button', { name: /^Undo/ })).toBeInTheDocument()
@@ -129,7 +139,7 @@ describe('App', () => {
 
   it('the system Back button walks back through the steps', async () => {
     const user = userEvent.setup()
-    render(<App initialSession={sampleSession('review')} persist={false} />)
+    renderFlow(sampleSession('review'))
     await user.click(screen.getByRole('button', { name: 'Looks good' }))
     await historyIdle()
 
@@ -144,14 +154,29 @@ describe('App', () => {
     vi.stubGlobal('reportError', reportError)
     vi.spyOn(console, 'error').mockImplementation(() => {})
     stubs.crashPeople = true
-    render(<App initialSession={sampleSession('people')} persist={false} />)
+    renderFlow(sampleSession('people'))
 
     expect(screen.getByRole('heading', { name: 'Something went wrong' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Start over' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Start a fresh bill' })).toBeInTheDocument()
     expect(reportError).toHaveBeenCalledWith(expect.objectContaining({ message: 'People screen exploded' }))
 
     stubs.crashPeople = false
     await user.click(screen.getByRole('button', { name: 'Try again' }))
     expect(screen.getByRole('heading', { level: 1, name: "Who's splitting?" })).toBeInTheDocument()
+  })
+
+  it('"Start a fresh bill" after a crash drops the saved draft and starts over on the scan step', async () => {
+    const user = userEvent.setup()
+    vi.stubGlobal('reportError', vi.fn())
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    window.localStorage.setItem('billsplit.session.v1', JSON.stringify(sampleSession('people')))
+    stubs.crashPeople = true
+    renderFlow(sampleSession('people'))
+    expect(screen.getByRole('heading', { name: 'Something went wrong' })).toBeInTheDocument()
+
+    stubs.crashPeople = false
+    await user.click(screen.getByRole('button', { name: 'Start a fresh bill' }))
+    expect(window.localStorage.getItem('billsplit.session.v1')).toBeNull()
+    expect(await screen.findByRole('heading', { level: 1, name: 'Split any bill in seconds' })).toBeInTheDocument()
   })
 })

@@ -1,11 +1,11 @@
 import { useRef, useState, type KeyboardEvent } from 'react'
 import { Plus, Trash2 } from 'lucide-react'
-import { ActionBar, AmountInput, BottomSheet, Button, Stepper, TextField } from '../components'
-import { formatQuantity } from '../lib/format'
-import { haptic } from '../lib/haptics'
-import { cleanAmountText, formatMoney, parseMoneyInput, toInputString } from '../lib/money'
-import { MAX_ITEM_NAME } from '../state/reducer'
-import type { BillItem, Minor } from '../types'
+import { ActionBar, AmountInput, BottomSheet, Button, Stepper, TextField } from '../../components'
+import { formatQuantity } from '../../lib/format'
+import { haptic } from '../../lib/haptics'
+import { cleanAmountText, formatMoney, parseMoneyInput, toInputString } from '../../lib/money'
+import { MAX_ITEM_NAME } from '../../state/reducer'
+import type { BillItem, Minor } from '../../types'
 import styles from './ItemEditorSheet.module.css'
 
 /** What the editor hands back: a clean name, a quantity > 0 and a line amount. */

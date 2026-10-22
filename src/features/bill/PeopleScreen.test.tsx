@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { screen, within } from '@testing-library/react'
-import { getRecentNames, rememberNames } from '../lib/recent'
-import { resetFlowHistory } from '../state/backStack'
-import type { Person, Session, Shares } from '../types'
+import { getRecentNames, rememberNames } from '../../lib/recent'
+import { resetFlowHistory } from '../../state/backStack'
+import type { Person, Session, Shares } from '../../types'
 import { PeopleScreen } from './PeopleScreen'
 import { AISHA, BEN, CHEN, historyIdle, renderScreen, sampleSession } from './screenTestKit'
 

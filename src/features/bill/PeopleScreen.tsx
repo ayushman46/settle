@@ -23,14 +23,14 @@ import {
   TextField,
   TopBar,
   useToast,
-} from '../components'
-import { haptic } from '../lib/haptics'
-import { newId } from '../lib/ids'
-import { graphemes, isDuplicateName, MAX_NAME_LENGTH, MAX_PEOPLE, nameKey, nextColor, normalizeName } from '../lib/people'
-import { getRecentNames, rememberNames } from '../lib/recent'
-import { stepProgress } from '../state/selectors'
-import { useFlow, useSession } from '../state/store'
-import type { Person } from '../types'
+} from '../../components'
+import { haptic } from '../../lib/haptics'
+import { newId } from '../../lib/ids'
+import { graphemes, isDuplicateName, MAX_NAME_LENGTH, MAX_PEOPLE, nameKey, nextColor, normalizeName } from '../../lib/people'
+import { getRecentNames, rememberNames } from '../../lib/recent'
+import { stepProgress } from '../../state/selectors'
+import { useFlow, useSession } from '../../state/store'
+import type { Person } from '../../types'
 import { plural, revealElement } from './screenUtils'
 import { PERSON_KEYS, restorePerson } from './undoMerge'
 import styles from './PeopleScreen.module.css'

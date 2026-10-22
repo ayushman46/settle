@@ -14,14 +14,14 @@ import {
   Screen,
   TopBar,
   useToast,
-} from '../components'
-import { formatQuantity } from '../lib/format'
-import { haptic } from '../lib/haptics'
-import { formatMoney } from '../lib/money'
-import { validShares } from '../lib/split'
-import { assignedCount, firstUnassignedIndex, stepProgress, unassignedItems } from '../state/selectors'
-import { useFlow, useSession } from '../state/store'
-import type { Shares } from '../types'
+} from '../../components'
+import { formatQuantity } from '../../lib/format'
+import { haptic } from '../../lib/haptics'
+import { formatMoney } from '../../lib/money'
+import { validShares } from '../../lib/split'
+import { assignedCount, firstUnassignedIndex, stepProgress, unassignedItems } from '../../state/selectors'
+import { useFlow, useSession } from '../../state/store'
+import type { Shares } from '../../types'
 import { AssignSheet, type AssignDirection } from './AssignSheet'
 import { ASSIGNMENT_KEYS, restoreAssignments } from './undoMerge'
 import styles from './AssignScreen.module.css'

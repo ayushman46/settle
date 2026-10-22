@@ -3,10 +3,10 @@
  * back to a snapshot (which would also throw away anything done since), they merge just the undone
  * change into the CURRENT session, ready for `dispatch({ type: 'restore', session, keys })`.
  */
-import { rescaleMinor } from '../lib/money'
-import { isDuplicateName, MAX_PEOPLE } from '../lib/people'
-import { MAX_ITEMS, reducer } from '../state/reducer'
-import type { Session, Shares } from '../types'
+import { rescaleMinor } from '../../lib/money'
+import { isDuplicateName, MAX_PEOPLE } from '../../lib/people'
+import { MAX_ITEMS, reducer } from '../../state/reducer'
+import type { Session, Shares } from '../../types'
 
 /** Fields `restoreItem` touches — pass as the `restore` action's `keys`. */
 export const ITEM_KEYS = ['items', 'assignments'] as const

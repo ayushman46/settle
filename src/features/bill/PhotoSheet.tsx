@@ -1,7 +1,7 @@
 import { useLayoutEffect, useRef, useState, type MouseEvent } from 'react'
 import { ImageOff } from 'lucide-react'
-import { BottomSheet, EmptyState } from '../components'
-import { cx } from '../lib/cx'
+import { BottomSheet, EmptyState } from '../../components'
+import { cx } from '../../lib/cx'
 import styles from './PhotoSheet.module.css'
 
 export interface PhotoSheetProps {

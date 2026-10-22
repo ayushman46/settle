@@ -1,0 +1,15 @@
+/* Crash fallback (error boundary) — calm, centred, with a clear way forward. */
+.crash {
+  display: flex;
+  flex: 1 0 auto;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--s-6);
+  padding: calc(var(--safe-top) + var(--s-8)) var(--gutter) max(var(--s-8), var(--safe-bottom));
+}
+
+.crashActions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}

@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react'
-import { ActionBar, BottomSheet, Button, TextField } from '../components'
-import { haptic } from '../lib/haptics'
-import { MAX_MERCHANT } from '../state/reducer'
+import { ActionBar, BottomSheet, Button, TextField } from '../../components'
+import { haptic } from '../../lib/haptics'
+import { MAX_MERCHANT } from '../../state/reducer'
 
 export interface MerchantSheetProps {
   open: boolean

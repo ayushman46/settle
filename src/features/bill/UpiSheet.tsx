@@ -1,11 +1,11 @@
 import { useRef } from 'react'
 import { ArrowRight, Copy, ExternalLink, Share2 } from 'lucide-react'
-import { ActionBar, Avatar, BottomSheet, Button, IconButton, Money, QrCode, useToast } from '../components'
-import { haptic } from '../lib/haptics'
-import { formatMoney } from '../lib/money'
-import { copyText, shareResult } from '../lib/share'
-import { buildUpiLink, buildUpiRequestText } from '../lib/upi'
-import type { Minor, Person } from '../types'
+import { ActionBar, Avatar, BottomSheet, Button, IconButton, Money, QrCode, useToast } from '../../components'
+import { haptic } from '../../lib/haptics'
+import { formatMoney } from '../../lib/money'
+import { copyText, shareResult } from '../../lib/share'
+import { buildUpiLink, buildUpiRequestText } from '../../lib/upi'
+import type { Minor, Person } from '../../types'
 import styles from './UpiSheet.module.css'
 
 /** One person paying the payer back over UPI. */

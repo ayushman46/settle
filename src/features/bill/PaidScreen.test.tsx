@@ -1,9 +1,9 @@
 import { act, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { resetFlowHistory } from '../state/backStack'
-import { useFlow } from '../state/store'
-import { EMPTY_META } from '../types'
+import { resetFlowHistory } from '../../state/backStack'
+import { useFlow } from '../../state/store'
+import { EMPTY_META } from '../../types'
 import { PaidScreen } from './PaidScreen'
 import { historyIdle, renderScreen, sampleSession } from './screenTestKit'
 

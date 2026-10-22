@@ -1,10 +1,10 @@
 import { useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
 import { ArrowRight, ChevronDown, Equal, PiggyBank, Scale } from 'lucide-react'
-import { ActionBar, AmountInput, Button, Card, Chip, Money, PageTitle, Screen, TopBar } from '../components'
-import { currencyName } from '../lib/currencies'
-import { cx } from '../lib/cx'
-import { formatPercent } from '../lib/format'
-import { cleanAmountText, formatMoney, parseMoneyInput, toInputString } from '../lib/money'
+import { ActionBar, AmountInput, Button, Card, Chip, Money, PageTitle, Screen, TopBar } from '../../components'
+import { currencyName } from '../../lib/currencies'
+import { cx } from '../../lib/cx'
+import { formatPercent } from '../../lib/format'
+import { cleanAmountText, formatMoney, parseMoneyInput, toInputString } from '../../lib/money'
 import {
   billBreakdown,
   canContinue,
@@ -14,9 +14,9 @@ import {
   itemsTotal,
   stepProgress,
   type BreakdownRow,
-} from '../state/selectors'
-import { useFlow, useSession } from '../state/store'
-import type { Minor } from '../types'
+} from '../../state/selectors'
+import { useFlow, useSession } from '../../state/store'
+import type { Minor } from '../../types'
 import { revealElement, TINY_RATE } from './screenUtils'
 import styles from './PaidScreen.module.css'
 

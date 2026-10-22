@@ -8,9 +8,9 @@ import {
   type ChangeEvent,
 } from 'react'
 import { ArrowRight, Camera, ImageUp, Keyboard, ReceiptText, Sparkles, WifiOff, X } from 'lucide-react'
-import { OFFLINE_MESSAGE, SCANS_BUSY_MESSAGE, ScanError, scanBill } from '../api/client'
-import { scanToBill } from '../api/mapScan'
-import { SAMPLE_SCAN } from '../api/sample'
+import { OFFLINE_MESSAGE, SCANS_BUSY_MESSAGE, ScanError, scanBill } from '../../api/client'
+import { scanToBill } from '../../api/mapScan'
+import { SAMPLE_SCAN } from '../../api/sample'
 import {
   ActionBar,
   Avatar,
@@ -26,18 +26,18 @@ import {
   Skeleton,
   SkeletonRows,
   useToast,
-} from '../components'
-import { cx } from '../lib/cx'
-import { haptic } from '../lib/haptics'
-import { lastInputModality } from '../components/overlayStack'
-import { ImageError, isImageFile, prepareImage, type PreparedImage } from '../lib/image'
-import { formatMoney } from '../lib/money'
-import { useBackClose } from '../state/backStack'
-import { markScanningUnavailable, useHealth } from '../state/health'
-import { setPhoto } from '../state/photo'
-import { effectivePaid, hasProgress } from '../state/selectors'
-import { useFlow, useSession } from '../state/store'
-import { EMPTY_META } from '../types'
+} from '../../components'
+import { cx } from '../../lib/cx'
+import { haptic } from '../../lib/haptics'
+import { lastInputModality } from '../../components/overlayStack'
+import { ImageError, isImageFile, prepareImage, type PreparedImage } from '../../lib/image'
+import { formatMoney } from '../../lib/money'
+import { useBackClose } from '../../state/backStack'
+import { markScanningUnavailable, useHealth } from '../../state/health'
+import { setPhoto } from '../../state/photo'
+import { effectivePaid, hasProgress } from '../../state/selectors'
+import { useFlow, useSession } from '../../state/store'
+import { EMPTY_META } from '../../types'
 import { focusScreenHeading, plural, revokeUrl } from './screenUtils'
 import styles from './ScanScreen.module.css'
 

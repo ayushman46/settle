@@ -3,13 +3,13 @@
 import { useLayoutEffect, type ReactElement } from 'react'
 import { render } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { SAMPLE_SCAN } from '../api/sample'
-import { scanToBill } from '../api/mapScan'
-import { ToastProvider } from '../components'
-import { flowHistory } from '../state/backStack'
-import { createSession } from '../state/reducer'
-import { SessionProvider, useSession } from '../state/store'
-import type { Person, Session, Shares, StepId } from '../types'
+import { SAMPLE_SCAN } from '../../api/sample'
+import { scanToBill } from '../../api/mapScan'
+import { ToastProvider } from '../../components'
+import { flowHistory } from '../../state/backStack'
+import { createSession } from '../../state/reducer'
+import { SessionProvider, useSession } from '../../state/store'
+import type { Person, Session, Shares, StepId } from '../../types'
 
 export const AISHA: Person = { id: 'a', name: 'Aisha', color: 0 }
 export const BEN: Person = { id: 'b', name: 'Ben', color: 1 }

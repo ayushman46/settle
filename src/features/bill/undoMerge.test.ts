@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { reducer } from '../state/reducer'
-import type { Person, Session } from '../types'
+import { reducer } from '../../state/reducer'
+import type { Person, Session } from '../../types'
 import {
   CURRENCY_KEYS,
   ITEM_KEYS,

@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { screen, within } from '@testing-library/react'
-import { resetFlowHistory } from '../state/backStack'
-import type { Session } from '../types'
+import { resetFlowHistory } from '../../state/backStack'
+import type { Session } from '../../types'
 import { AssignScreen } from './AssignScreen'
 import { AISHA, assignAll, BEN, CHEN, historyIdle, renderScreen, sampleSession } from './screenTestKit'
 

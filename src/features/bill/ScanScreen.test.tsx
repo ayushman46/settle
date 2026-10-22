@@ -1,19 +1,19 @@
 import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { ScanResponse } from '../../shared/api'
-import { ImageError, prepareImage, type PreparedImage } from '../lib/image'
-import type * as ImageModule from '../lib/image'
-import { getRecentNames } from '../lib/recent'
-import { readEntry, resetFlowHistory } from '../state/backStack'
-import { resetHealthForTests } from '../state/health'
-import { getPhoto, setPhoto } from '../state/photo'
-import { useFlow } from '../state/store'
-import { createSession } from '../state/reducer'
+import type { ScanResponse } from '../../../shared/api'
+import { ImageError, prepareImage, type PreparedImage } from '../../lib/image'
+import type * as ImageModule from '../../lib/image'
+import { getRecentNames } from '../../lib/recent'
+import { readEntry, resetFlowHistory } from '../../state/backStack'
+import { resetHealthForTests } from '../../state/health'
+import { getPhoto, setPhoto } from '../../state/photo'
+import { useFlow } from '../../state/store'
+import { createSession } from '../../state/reducer'
 import { ReviewScreen } from './ReviewScreen'
 import { ScanScreen } from './ScanScreen'
 import { AISHA, assignAll, BEN, historyIdle, renderScreen, sampleSession } from './screenTestKit'
 
-vi.mock('../lib/image', async (importOriginal) => {
+vi.mock('../../lib/image', async (importOriginal) => {
   const actual: typeof ImageModule = await importOriginal()
   return { ...actual, prepareImage: vi.fn() }
 })
@@ -42,6 +42,7 @@ const SCANNED: ScanResponse = {
   discount: null,
   tip: null,
   total: 688,
+  category: 'food',
   warnings: [],
   model: 'test-model',
 }

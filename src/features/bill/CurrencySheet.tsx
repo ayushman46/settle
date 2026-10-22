@@ -1,10 +1,10 @@
 import { useId, useMemo, useState } from 'react'
 import { Check, Search, SearchX } from 'lucide-react'
-import { BottomSheet, EmptyState, TextField } from '../components'
-import { COMMON_CURRENCIES, currencyName, isKnownCurrency } from '../lib/currencies'
-import { cx } from '../lib/cx'
-import { haptic } from '../lib/haptics'
-import { currencySymbol } from '../lib/money'
+import { BottomSheet, EmptyState, TextField } from '../../components'
+import { COMMON_CURRENCIES, currencyName, isKnownCurrency } from '../../lib/currencies'
+import { cx } from '../../lib/cx'
+import { haptic } from '../../lib/haptics'
+import { currencySymbol } from '../../lib/money'
 import styles from './CurrencySheet.module.css'
 
 export interface CurrencySheetProps {
