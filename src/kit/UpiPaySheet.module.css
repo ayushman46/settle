@@ -1,0 +1,129 @@
+.body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-4);
+  padding-top: var(--s-1);
+  text-align: center;
+}
+
+.parties {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+}
+
+.partiesArrow {
+  width: var(--s-5);
+  height: var(--s-5);
+  color: var(--ink-3);
+}
+
+/* Money xl fills the sheet's width and shrinks long amounts to fit it. */
+.amount {
+  margin-top: calc(-1 * var(--s-2));
+}
+
+.qr {
+  max-width: 100%;
+  animation: qr-in var(--dur-4) var(--ease-spring) var(--dur-1) backwards;
+}
+
+.caption {
+  max-width: 32ch;
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
+.vpa {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  max-width: 100%;
+  min-height: var(--tap);
+  padding: var(--s-1) var(--s-1) var(--s-1) var(--s-4);
+  border-radius: var(--r-lg);
+  background: var(--surface-2);
+}
+
+.vpaLabel {
+  flex: none;
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
+/* An ID is read character by character (mono), and always shown in full — wrapping if it must. */
+.vpaId {
+  min-width: 0;
+  font: var(--text-label);
+  font-family: var(--font-mono);
+  color: var(--ink);
+  text-align: start;
+  overflow-wrap: anywhere;
+}
+
+.missing,
+.notice {
+  width: 100%;
+  text-align: start;
+}
+
+.missing {
+  padding: var(--s-4);
+  border-radius: var(--radius-card);
+  background: var(--surface-2);
+}
+
+/* The main action on a phone: an ink pill that hands over to the UPI app (GPay, PhonePe…). */
+.openApp {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  width: 100%;
+  min-height: var(--btn-h);
+  padding: var(--s-2) var(--s-6);
+  border-radius: var(--r-pill);
+  background: var(--primary);
+  color: var(--on-primary);
+  font: var(--text-body);
+  font-weight: 600;
+  letter-spacing: -0.011em;
+  text-align: center;
+  text-decoration: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  transition:
+    transform var(--dur-2) var(--ease-spring),
+    background-color var(--dur-2) var(--ease-out);
+}
+
+.openApp > svg {
+  flex: none;
+  width: var(--s-5);
+  height: var(--s-5);
+}
+
+.openApp:focus-visible {
+  outline-offset: 3px;
+}
+
+.openApp:active {
+  background: var(--primary-hover);
+  transform: scale(0.97);
+  transition-duration: var(--dur-1);
+}
+
+@keyframes qr-in {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .qr {
+    animation: none;
+  }
+}

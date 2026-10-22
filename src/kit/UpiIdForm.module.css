@@ -1,0 +1,13 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  width: 100%;
+  min-width: 0;
+  text-align: start;
+}
+
+.lead {
+  font: var(--text-label);
+  color: var(--ink);
+}
