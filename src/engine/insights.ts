@@ -1,6 +1,7 @@
 /**
  * Where my money goes. "Spent" is always MY share of each expense — what the expense really
- * cost me — never the whole bill I happened to pay for.
+ * cost me — never the whole bill I happened to pay for. Loans (money lent or borrowed, not
+ * spent) are left out entirely.
  */
 import { CATEGORY_IDS, type CategoryId, type Expense, type Minor } from '../domain/types'
 import { addMonths, isIsoDate, periodOf, periodsBetween } from './dates'
@@ -42,6 +43,8 @@ export function insights(expenses: readonly Expense[], opts: InsightsOptions): I
   const friends = new Map<string, { amount: Minor; count: number }>()
 
   for (const e of expenses) {
+    // Handing someone cash isn't spending: it shows in balances, never in insights.
+    if (e.kind === 'loan') continue
     if (e.currency !== currency) continue
     if ((from && e.date < from) || (to && e.date > to)) continue
     const raw = e.shares[meId]

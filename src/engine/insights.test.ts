@@ -100,3 +100,25 @@ describe('insights', () => {
     expect(insights(data, { meId: 'me', currency: 'INR', from: 'yesterday' }).spent).toBe(1800)
   })
 })
+
+describe('insights and loans', () => {
+  it('leaves loans out entirely: cash handed over is not spending', () => {
+    const cash: Expense = { ...expense(50000, ['a'], 'me', '2026-10-10', 'other'), kind: 'loan' }
+    const auto = expense(12000, ['me', 'a'], 'me', '2026-10-11', 'transport')
+    const withLoan = insights([cash, auto], { meId: 'me', currency: 'INR' })
+    const without = insights([auto], { meId: 'me', currency: 'INR' })
+    expect(withLoan).toEqual(without)
+    expect(withLoan.paidOut).toBe(12000)
+    expect(withLoan.count).toBe(1)
+    // The same entry as a plain split would count (the reference: paidOut 50000 → 0, count 2 → 1).
+    const asSplit = insights([{ ...cash, kind: 'split' }, auto], { meId: 'me', currency: 'INR' })
+    expect(asSplit.paidOut).toBe(62000)
+    expect(asSplit.count).toBe(2)
+  })
+
+  it('leaves out a loan I borrowed too', () => {
+    const borrowed: Expense = { ...expense(200000, ['me'], 'a', '2026-10-12', 'other'), kind: 'loan' }
+    const r = insights([borrowed], { meId: 'me', currency: 'INR' })
+    expect(r).toMatchObject({ spent: 0, paidOut: 0, count: 0, byCategory: [], topFriends: [] })
+  })
+})

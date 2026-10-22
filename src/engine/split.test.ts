@@ -238,6 +238,21 @@ describe('expenseShares', () => {
     expect(expenseShares({ total: 100, currency: 'INR', mode: 'items', participants: people('a', 'b'), payerId: 'a', roundedToWhole: false, bill: null })).toEqual({ a: 50, b: 50 })
   })
 
+  it('shares delivery fees by the bill’s fee split', () => {
+    // a had ₹300 and b ₹500 of items; ₹100 of fees; ₹900 paid.
+    const fees = [
+      { id: 'f1', kind: 'delivery' as const, label: 'Delivery fee', amount: 6000 },
+      { id: 'f2', kind: 'platform' as const, label: 'Platform fee', amount: 4000 },
+    ]
+    const withFees = { ...bill, meta: { ...bill.meta, fees } }
+    const input = { total: 90000, currency: 'INR', mode: 'items' as const, participants: people('a', 'b'), payerId: 'a', roundedToWhole: false }
+    // Proportional (and older bills without a fee split): 900 × 3/8, 900 × 5/8.
+    expect(expenseShares({ ...input, bill: withFees })).toEqual({ a: 33750, b: 56250 })
+    expect(expenseShares({ ...input, bill: { ...withFees, feeSplit: 'proportional' } })).toEqual({ a: 33750, b: 56250 })
+    // Equal: ₹50 of fees each, the other ₹800 by items (300 / 500).
+    expect(expenseShares({ ...input, bill: { ...withFees, feeSplit: 'equal' } })).toEqual({ a: 35000, b: 55000 })
+  })
+
   it('uses splitAmount for amount modes', () => {
     expect(expenseShares({ total: 300, currency: 'INR', mode: 'shares', participants: withInputs({ a: 2, b: 1 }), payerId: 'a', roundedToWhole: false, bill: null })).toEqual({ a: 200, b: 100 })
   })

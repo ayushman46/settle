@@ -252,7 +252,7 @@ describe('YouScreen — CSV export', () => {
     const bytes = new Uint8Array(await file!.blob.arrayBuffer())
     expect([...bytes.slice(0, 3)]).toEqual([0xef, 0xbb, 0xbf])
     const lines = new TextDecoder().decode(bytes.slice(3)).trim().split('\r\n')
-    expect(lines[0]).toBe('Date,Title,Category,Group,Total,Currency,Paid by,Your share,Split,People,Note')
+    expect(lines[0]).toBe('Date,Title,Category,Group,Total,Currency,Paid by,Your share,Split,People,Note,Kind,Paid amount,Paid currency,Rate')
     expect(lines[1]).toMatch(/^2026-10-21,Villa,Food & drinks,Goa,1000\.00,INR,You,500\.00,/)
     expect(lines[2]).toMatch(/^2026-10-01,Chai,/)
   })

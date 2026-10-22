@@ -2,10 +2,12 @@
  * How an expense reads in a list, from the owner's side: who paid, what it means for me, and
  * whether it's still open. Pure, so rows, filters and their tests agree to the paisa.
  */
+import { friendsStore } from '../data/stores'
 import { ME_ID, type Expense, type Group, type Minor } from '../domain/types'
 import { expenseStanding } from '../engine/balances'
 import { uniqueParticipants } from '../engine/split'
-import { formatMoney } from '../lib/money'
+import { currencyDigits, formatMoney } from '../lib/money'
+import { friendLabel } from './friendName'
 
 /** "1 person", "4 people", "2 pending" — `many` defaults to `one` + "s". */
 export function plural(count: number, one: string, many = `${one}s`): string {
@@ -53,6 +55,28 @@ export interface ExpenseRowViewInput {
   group: Group | null
   /** Name the group instead of counting people (default true). */
   showGroup?: boolean
+  /**
+   * The other person's name in a 1:1 entry ("You lent Riya", "You paid for Riya"). Defaults to
+   * their name in your people (or "Someone" when they're gone).
+   */
+  otherName?: string
+}
+
+/** The one participant of a 1:1 entry (one person who isn't the payer), or null. */
+export function oneToOneOther(e: Pick<Expense, 'participants' | 'payerId'>): string | null {
+  const people = uniqueParticipants(e.participants)
+  const only = people.length === 1 ? people[0]?.friendId : undefined
+  return only !== undefined && only !== e.payerId ? only : null
+}
+
+/**
+ * A converted amount for a list: whole units from 100 up (₹3,013 for ₹3,013.44), exact below
+ * (₹99.50) — the exact figure is on the expense page.
+ */
+function roughMoney(minor: Minor, currency: string): string {
+  const unit = 10 ** currencyDigits(currency)
+  const whole = minor >= 100 * unit ? Math.round(minor / unit) * unit : minor
+  return formatMoney(whole, currency, { trimZeros: true })
 }
 
 interface RightSide {
@@ -72,17 +96,27 @@ const right = (amount: Minor, tone: RowTone, phrase: string, extra: Partial<Pick
 })
 
 /** The row's words and numbers for `e` (see `ExpenseRowView`). */
-export function expenseRowView(e: Expense, { payerName, group, showGroup = true }: ExpenseRowViewInput): ExpenseRowView {
+export function expenseRowView(e: Expense, { payerName, group, showGroup = true, otherName }: ExpenseRowViewInput): ExpenseRowView {
   const money = (minor: Minor) => formatMoney(minor, e.currency, { trimZeros: true })
   const standing = expenseStanding(e, ME_ID, group ? [group] : [])
   const people = uniqueParticipants(e.participants)
   const { net, myShare, outstanding, pending, role } = standing
 
-  const paidPart = `${e.payerId === ME_ID ? 'You' : payerName} paid ${money(e.total)}`
-  const justMe = people.length === 1 && people[0]?.friendId === ME_ID
-  const context =
-    showGroup && group && e.groupId === group.id ? group.name : justMe ? 'just you' : plural(people.length, 'person', 'people')
-  const subtitle = `${paidPart} · ${context}`
+  const payer = e.payerId === ME_ID ? 'You' : payerName
+  const groupName = showGroup && group && e.groupId === group.id ? group.name : null
+  const otherId = oneToOneOther(e)
+  let subtitle: string
+  if (otherId !== null) {
+    // 1:1: "You lent Riya · cash", "Kabir lent you · cash", "You paid for Riya · Auto".
+    const other = otherId === ME_ID ? 'you' : (otherName ?? friendLabel(otherId, friendsStore.get().find((f) => f.id === otherId)))
+    subtitle = e.kind === 'loan' ? `${payer} lent ${other} · cash` : `${payer} paid for ${other} · ${groupName ?? e.title}`
+  } else {
+    // Paid abroad: "You paid ฿1,250 (₹3,013)".
+    const paid = e.fx ? `${formatMoney(e.fx.amount, e.fx.currency, { trimZeros: true })} (${roughMoney(e.total, e.currency)})` : money(e.total)
+    const justMe = people.length === 1 && people[0]?.friendId === ME_ID
+    const context = groupName ?? (justMe ? 'just you' : plural(people.length, 'person', 'people'))
+    subtitle = `${payer} paid ${paid} · ${context}`
+  }
 
   let side: RightSide
   if (role === 'none') {

@@ -5,8 +5,10 @@
  *    (largest-remainder, so every paisa is accounted for). Unassigned items go to everyone.
  * 2. What was actually paid (tax, tips, discounts, round-off included) is then divided in
  *    proportion to each person's item subtotal. Totals always add up to exactly `paid`.
+ * 3. Delivery-app fees (part of `paid`) follow the bill's fee split: in proportion (the default,
+ *    same totals as step 2) or equally between the people who had anything.
  */
-import type { BillItem, Minor, Person, Shares } from '../types'
+import type { BillItem, FeeSplit, Minor, Person, Shares } from '../types'
 import { allocate } from './money'
 
 export interface SplitLine {
@@ -34,6 +36,8 @@ export interface PersonSplit {
   /** `total - itemsSubtotal`: their part of tax/charges (+) or discounts (−). */
   adjustment: Minor
   total: Minor
+  /** Their part of the delivery-app fees (included in `total`; for display). */
+  fees: Minor
 }
 
 export interface SplitResult {
@@ -48,6 +52,8 @@ export interface SplitResult {
   unassignedItemIds: string[]
   /** Σ person totals — always equals `paid` when anyone is splitting. */
   check: Minor
+  /** The fees that were shared: `fees` clamped to 0…max(0, paid). */
+  fees: Minor
 }
 
 export interface SplitInput {
@@ -55,6 +61,10 @@ export interface SplitInput {
   people: readonly Person[]
   assignments: Readonly<Record<string, Shares>>
   paid: Minor
+  /** Σ of the bill's delivery-app fees (part of `paid`). Default 0. */
+  fees?: Minor
+  /** How the fees are shared. Default 'proportional'. */
+  feeSplit?: FeeSplit
 }
 
 function toInt(value: number): number {
@@ -113,6 +123,8 @@ export function computeSplit(input: SplitInput): SplitResult {
   const itemsTotal = amounts.reduce((a, b) => a + b, 0)
   const adjustment = paid - itemsTotal
   const adjustmentRate = itemsTotal !== 0 ? adjustment / itemsTotal : 0
+  // A coupon can't make the fees more than what was paid.
+  const fees = Math.min(Math.max(0, toInt(input.fees ?? 0)), Math.max(0, paid))
 
   if (people.length === 0) {
     return {
@@ -123,6 +135,7 @@ export function computeSplit(input: SplitInput): SplitResult {
       adjustmentRate,
       unassignedItemIds: items.map((item) => item.id),
       check: 0,
+      fees,
     }
   }
 
@@ -159,7 +172,19 @@ export function computeSplit(input: SplitInput): SplitResult {
     (linesByPerson.get(p.id) ?? []).reduce((sum, line) => sum + line.amount, 0),
   )
   // allocate() splits equally when every subtotal is 0 (e.g. only free items).
-  const totals = allocate(paid, subtotals)
+  let totals: Minor[]
+  let feeParts: Minor[]
+  if (input.feeSplit === 'equal' && fees > 0) {
+    // Fees shared equally by everyone who had something (everyone, if nobody did); the rest of
+    // what was paid in proportion to what each person had.
+    const had = subtotals.map((subtotal) => (subtotal > 0 ? 1 : 0))
+    feeParts = allocate(fees, had.some((x) => x > 0) ? had : subtotals.map(() => 1))
+    const rest = allocate(paid - fees, subtotals)
+    totals = rest.map((part, i) => part + (feeParts[i] ?? 0))
+  } else {
+    totals = allocate(paid, subtotals)
+    feeParts = allocate(fees, subtotals)
+  }
 
   const result: PersonSplit[] = people.map((person, i) => {
     const itemsSubtotal = subtotals[i] ?? 0
@@ -170,6 +195,7 @@ export function computeSplit(input: SplitInput): SplitResult {
       itemsSubtotal,
       adjustment: total - itemsSubtotal,
       total,
+      fees: feeParts[i] ?? 0,
     }
   })
 
@@ -181,6 +207,7 @@ export function computeSplit(input: SplitInput): SplitResult {
     adjustmentRate,
     unassignedItemIds,
     check: totals.reduce((a, b) => a + b, 0),
+    fees,
   }
 }
 

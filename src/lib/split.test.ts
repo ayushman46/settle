@@ -282,3 +282,101 @@ describe('computeSplit — properties', () => {
     }
   })
 })
+
+describe('computeSplit — delivery fees (spec 08 §4.1)', () => {
+  const people = ['riya', 'sam', 'ayush', 'kabir'].map((id) => person(id))
+  const items: BillItem[] = [
+    item('biryani', 34900, 'Chicken Biryani'),
+    item('pbm', 28900, 'Paneer Butter Masala'),
+    { ...item('naan', 12000, 'Garlic Naan'), quantity: 2 },
+    item('gj', 9900, 'Gulab Jamun (2 pcs)'),
+  ]
+  const assignments: Record<string, Shares> = { biryani: { riya: 1 }, pbm: { sam: 1 }, naan: { riya: 1, sam: 1 }, gj: { ayush: 1 } }
+  // Items 85700 + tax 4285 + fees 9000 − coupon 10000.
+  const paid = 88985
+  const fees = 3500 + 1000 + 2500 + 2000
+  const totals = (r: ReturnType<typeof computeSplit>) => r.people.map((p) => p.total)
+  const feeParts = (r: ReturnType<typeof computeSplit>) => r.people.map((p) => p.fees)
+
+  it('proportional: the same totals as before, with each person’s fees shown', () => {
+    const r = computeSplit({ items, people, assignments, paid, fees, feeSplit: 'proportional' })
+    expect(r.people.map((p) => p.itemsSubtotal)).toEqual([40900, 34900, 9900, 0])
+    expect(totals(r)).toEqual([42468, 36238, 10279, 0])
+    expect(feeParts(r)).toEqual([4295, 3665, 1040, 0])
+    expect(r.check).toBe(paid)
+    expect(r.fees).toBe(9000)
+    expect(totals(r)).toEqual(totals(computeSplit({ items, people, assignments, paid })))
+  })
+
+  it('equal: fees shared by the three who had something, the rest by what they had', () => {
+    const r = computeSplit({ items, people, assignments, paid, fees, feeSplit: 'equal' })
+    expect(totals(r)).toEqual([41172, 35573, 12240, 0])
+    expect(feeParts(r)).toEqual([3000, 3000, 3000, 0])
+    // Tax, charges & offers: total − items − fees.
+    expect(r.people.map((p) => p.total - p.itemsSubtotal - p.fees)).toEqual([-2728, -2327, -660, 0])
+    expect(r.people.map((p) => p.adjustment)).toEqual([41172 - 40900, 35573 - 34900, 12240 - 9900, 0])
+    expect(r.check).toBe(paid)
+  })
+
+  it('caps fees at what was paid (a huge coupon)', () => {
+    const r = computeSplit({ items, people, assignments, paid: 5000, fees, feeSplit: 'equal' })
+    expect(r.fees).toBe(5000)
+    expect(totals(r)).toEqual([1667, 1667, 1666, 0])
+    expect(r.check).toBe(5000)
+  })
+
+  it('without fees both policies match the old split', () => {
+    const old = computeSplit({ items, people, assignments, paid })
+    for (const feeSplit of ['proportional', 'equal'] as const) {
+      const r = computeSplit({ items, people, assignments, paid, fees: 0, feeSplit })
+      expect(totals(r)).toEqual(totals(old))
+      expect(feeParts(r)).toEqual([0, 0, 0, 0])
+    }
+    expect(old.fees).toBe(0)
+  })
+
+  it('ignores negative or fractional fee totals safely', () => {
+    expect(computeSplit({ items, people, assignments, paid, fees: -500, feeSplit: 'equal' }).fees).toBe(0)
+    expect(computeSplit({ items, people, assignments, paid, fees: 1000.4, feeSplit: 'equal' }).fees).toBe(1000)
+    expect(computeSplit({ items, people, assignments, paid: -100, fees: 1000, feeSplit: 'equal' }).fees).toBe(0)
+  })
+
+  it('makes everyone a fee sharer when an item is unassigned (it goes to everyone)', () => {
+    const r = computeSplit({ items, people, assignments: { ...assignments, gj: {} }, paid, fees, feeSplit: 'equal' })
+    expect(feeParts(r)).toEqual([2250, 2250, 2250, 2250])
+    expect(r.check).toBe(paid)
+  })
+
+  it('holds on 1,000 random bills: totals add up, people with nothing pay nothing (equal), proportional unchanged', () => {
+    const rand = rng(808)
+    const int = (lo: number, hi: number) => lo + Math.floor(rand() * (hi - lo + 1))
+    for (let n = 0; n < 1000; n++) {
+      const crowd = Array.from({ length: int(2, 8) }, (_, i) => person(`p${i}`))
+      const bill = Array.from({ length: int(1, 12) }, (_, i) => item(`i${i}`, int(0, 60000)))
+      const assign: Record<string, Shares> = {}
+      for (const it of bill) {
+        const shares: Shares = {}
+        for (const p of crowd) if (rand() < 0.4) shares[p.id] = int(1, 3)
+        assign[it.id] = shares
+      }
+      const itemsTotal = bill.reduce((s, it) => s + it.amount, 0)
+      const feeTotal = int(0, 20000)
+      const discount = int(0, 30000)
+      const paidOut = rand() < 0.1 ? int(0, 5000) : Math.max(0, itemsTotal + feeTotal + int(0, 5000) - discount)
+      const label = `bill ${n}`
+      const equal = computeSplit({ items: bill, people: crowd, assignments: assign, paid: paidOut, fees: feeTotal, feeSplit: 'equal' })
+      const proportional = computeSplit({ items: bill, people: crowd, assignments: assign, paid: paidOut, fees: feeTotal, feeSplit: 'proportional' })
+      const old = computeSplit({ items: bill, people: crowd, assignments: assign, paid: paidOut })
+      expect(equal.check, label).toBe(paidOut)
+      expect(proportional.check, label).toBe(paidOut)
+      expect(totals(proportional), label).toEqual(totals(old))
+      expect(equal.people.reduce((s, p) => s + p.fees, 0), label).toBe(equal.fees)
+      expect(proportional.people.reduce((s, p) => s + p.fees, 0), label).toBe(proportional.fees)
+      expect(equal.fees, label).toBe(Math.min(feeTotal, paidOut))
+      if (equal.people.some((p) => p.itemsSubtotal > 0)) {
+        for (const p of equal.people) if (p.itemsSubtotal === 0) expect(p.total, label).toBe(0)
+      }
+      for (const p of equal.people) expect(p.total, label).toBeGreaterThanOrEqual(0)
+    }
+  })
+})

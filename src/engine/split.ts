@@ -164,14 +164,23 @@ export function splitAmount(input: AmountSplitInput): AmountSplitResult {
 
 /**
  * The final shares of a saved (or about-to-be-saved) expense. Itemized bills divide the bill
- * snapshot item by item (`lib/split` `computeSplit`); everything else goes through `splitAmount`.
+ * snapshot item by item (`lib/split` `computeSplit`, delivery fees by the bill's fee split);
+ * everything else goes through `splitAmount`.
  */
 export function expenseShares(
   e: Pick<Expense, 'total' | 'currency' | 'mode' | 'participants' | 'payerId' | 'roundedToWhole' | 'bill'>,
 ): Record<string, Minor> {
   if (e.mode === 'items' && e.bill) {
     const people = uniqueParticipants(e.participants).map((p) => ({ id: p.friendId, name: p.friendId, color: 0 }))
-    const result = computeSplit({ items: e.bill.items, people, assignments: e.bill.assignments, paid: e.total })
+    const fees = (e.bill.meta.fees ?? []).reduce((sum, fee) => sum + fee.amount, 0)
+    const result = computeSplit({
+      items: e.bill.items,
+      people,
+      assignments: e.bill.assignments,
+      paid: e.total,
+      fees,
+      feeSplit: e.bill.feeSplit ?? 'proportional',
+    })
     const shares: Record<string, Minor> = {}
     for (const p of result.people) shares[p.person.id] = p.total
     return e.roundedToWhole ? roundSharesToWhole(shares, e.payerId, e.currency) : shares
