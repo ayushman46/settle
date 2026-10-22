@@ -281,6 +281,12 @@ export function createApp(config: ServerConfig, options: AppOptions = {}): Hono 
 
 function describeUpstream(error: UpstreamError, redact: (text: string) => string): string {
   const parts = [error.message]
-  if (error.detail) parts.push(`upstream said: ${error.detail.replace(/\s+/g, ' ').slice(0, 300)}`)
+  // A reply that isn't the JSON we asked for can echo someone's bill or sentence: never log it.
+  // NVIDIA's own error messages (HTTP failures) are kept for the operator.
+  if (error.kind === 'bad_output') {
+    if (error.detail) parts.push('the reply itself is not logged (it may quote the user)')
+  } else if (error.detail) {
+    parts.push(`upstream said: ${error.detail.replace(/\s+/g, ' ').slice(0, 300)}`)
+  }
   return redact(parts.join(' · '))
 }

@@ -249,6 +249,14 @@ describe('POST /api/scan — upstream failures', () => {
     await expectError(await postScan(makeApp(), { image: JPEG_DATA_URL }), 422, 'unreadable')
   })
 
+  it("never logs what a malformed reply said (it can echo someone's bill or sentence)", async () => {
+    fetchMock.mockResolvedValue(chatResponse('Riya Sharma owes 840 for the cab to 221B Baker Street'))
+    await expectError(await postScan(makeApp(), { image: JPEG_DATA_URL }), 422, 'unreadable')
+    await expectError(await postDescribe(makeApp(), { text: 'Cab 840 with Riya Sharma' }), 422, 'unreadable')
+    expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('the reply itself is not logged'))
+    expect(allLogs()).not.toMatch(/Riya|Sharma|Baker/)
+  })
+
   it('answers not_a_bill when the model says so', async () => {
     fetchMock.mockResolvedValueOnce(chatResponse({ isBill: false, merchant: null, items: [], total: null }))
     const body = await expectError(await postScan(makeApp(), { image: JPEG_DATA_URL }), 422, 'not_a_bill')
