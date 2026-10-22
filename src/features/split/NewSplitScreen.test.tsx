@@ -253,6 +253,13 @@ describe('NewSplitScreen — starting points', SCREEN, () => {
     expect(expensesStore.get()[0]).toMatchObject({ title: 'BESCOM', category: 'utilities', date: '2026-10-05', source: 'scan', total: 184_000 })
   })
 
+  it('tells where a hand-off came from by the address when it doesn’t say', () => {
+    setSplitPrefill({ title: 'Airtel', total: 99_900 })
+    renderApp('/app/split/new?from=scan')
+    expect(screen.getByText('Filled in from your bill')).toBeInTheDocument()
+    expect(screen.getByLabelText("What's it for?")).toHaveValue('Airtel')
+  })
+
   it('copies an expense, dated today and with nobody paid', async () => {
     const original = seedExpense({ date: '2026-09-30', note: 'Corner table' })
     const { user } = renderApp(`/app/split/new?from=duplicate&of=${original.id}`)

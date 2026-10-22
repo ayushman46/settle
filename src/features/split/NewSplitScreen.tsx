@@ -145,7 +145,9 @@ function startFrom(editing: Expense | null, query: URLSearchParams, ctx: StartCo
   if (from) {
     const prefill = takeSplitPrefill()
     if (prefill) {
-      const origin = (prefill.source && HAND_OFF_ORIGINS[prefill.source]) ?? 'new'
+      // Where it came from: the hand-off says, else the address does (`from=scan`).
+      const said = prefill.source ? HAND_OFF_ORIGINS[prefill.source] : undefined
+      const origin = said ?? (Object.hasOwn(HAND_OFF_ORIGINS, from) ? HAND_OFF_ORIGINS[from as ExpenseSource] : undefined) ?? 'new'
       return { form: withPrefill(form, prefill, ctx), prefilled: true, origin, copyOf: null }
     }
   }
