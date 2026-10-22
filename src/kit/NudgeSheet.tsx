@@ -8,6 +8,7 @@ import { haptic } from '../lib/haptics'
 import { formatMoney } from '../lib/money'
 import { copyText } from '../lib/share'
 import { normalizePhone, NUDGE_TONES, nudgeText, nudgeVariantCount, smsUrl, whatsappUrl, type NudgeTone } from '../share'
+import { firstName } from '../share/text'
 import { friendLabel } from './friendName'
 import styles from './NudgeSheet.module.css'
 
@@ -45,14 +46,17 @@ export function NudgeSheet({ open, onClose, friend, amount, currency, title, lin
   const toast = useToast()
   const profile = useProfile()
   const [tone, setTone] = useState<NudgeTone>('friendly')
-  // Null: the wording picked for these inputs. A number: the one "Try another" moved to.
-  const [variant, setVariant] = useState<number | null>(null)
+  // "Try another" moves off the wording picked for these inputs — for this person and tone only.
+  const wordingKey = `${friend?.id ?? ''}\u0000${tone}`
+  const [shuffled, setShuffled] = useState<{ key: string; variant: number } | null>(null)
+  const variant = shuffled !== null && shuffled.key === wordingKey ? shuffled.variant : null
 
   const name = friendLabel(friend?.id ?? null, friend)
-  const first = name.split(/\s+/)[0] || name
+  const first = firstName(name)
   const input = {
     tone,
-    toName: name,
+    // Someone who was removed is greeted "Hey there" rather than "Hey Someone".
+    toName: friend ? name : '',
     amount,
     currency,
     title,
@@ -67,14 +71,9 @@ export function NudgeSheet({ open, onClose, friend, amount, currency, title, lin
   const text = variant === null ? natural : nudgeText({ ...input, variant })
   const phone = normalizePhone(friend?.phone)
 
-  const chooseTone = (next: NudgeTone): void => {
-    setTone(next)
-    setVariant(null)
-  }
-
   const another = (): void => {
     haptic('tap')
-    setVariant((current + 1) % count)
+    setShuffled({ key: wordingKey, variant: (current + 1) % count })
   }
 
   const sent = (channel: NudgeChannel): void => {
@@ -124,7 +123,7 @@ export function NudgeSheet({ open, onClose, friend, amount, currency, title, lin
       }
     >
       <div className={styles.body}>
-        <SegmentedControl options={TONE_OPTIONS} value={tone} onChange={chooseTone} ariaLabel="Tone" />
+        <SegmentedControl options={TONE_OPTIONS} value={tone} onChange={setTone} ariaLabel="Tone" />
 
         <figure className={styles.preview} aria-labelledby={previewId}>
           <figcaption id={previewId} className={styles.previewLabel}>

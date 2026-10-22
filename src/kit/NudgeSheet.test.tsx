@@ -152,5 +152,29 @@ describe('NudgeSheet', () => {
     const text = screen.getByRole('figure', { name: 'Message to Someone' }).textContent
     expect(text).not.toContain('UPI')
     expect(text).not.toContain('http')
+    // Greeted as "there", never "Someone".
+    const message = screen.getByRole('figure', { name: 'Message to Someone' }).querySelector('p')?.textContent
+    expect(message).not.toContain('Someone')
+    expect(message).toContain('there')
+  })
+
+  it('starts each person on their own wording', async () => {
+    const user = userEvent.setup()
+    const props = { open: true, onClose: () => {}, amount: 69_150, currency: 'INR', title: 'Dinner at Toit', link: LINK }
+    const { rerender } = render(
+      <ToastProvider>
+        <NudgeSheet {...props} friend={friend('riya')} />
+      </ToastProvider>,
+    )
+    await user.click(screen.getByRole('button', { name: 'Try another' }))
+    expect(bubble().textContent).not.toBe(expected('friendly'))
+
+    rerender(
+      <ToastProvider>
+        <NudgeSheet {...props} friend={friend('sam')} />
+      </ToastProvider>,
+    )
+    const sams = screen.getByRole('figure', { name: 'Message to Sam' }).querySelector('p')
+    expect(sams?.textContent).toBe(expected('friendly', undefined, 'Sam'))
   })
 })
