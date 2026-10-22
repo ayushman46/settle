@@ -6,7 +6,7 @@ import { addFriend, friendsStore, MAX_FRIENDS, removeFriend, resetDataForTests, 
 import { ME_ID, type Friend } from '../domain/types'
 import { resetHapticsForTests } from '../lib/haptics'
 import { PeoplePicker, type PeoplePickerProps } from './PeoplePicker'
-import { alphabetical, exactPerson, newPersonName, searchPeople } from './peopleSearch'
+import { alphabetical, exactPerson, newPersonName, searchPeople, soleMatch } from './peopleSearch'
 
 const vibrate = vi.fn<(pattern: VibratePattern) => boolean>(() => true)
 
@@ -54,6 +54,16 @@ describe('peopleSearch', () => {
     expect(exactPerson(people, 'Me')?.id).toBe(ME_ID)
     expect(exactPerson(people, 'riy')).toBeNull()
     expect(exactPerson(people, '')).toBeNull()
+  })
+
+  it('finds the one person a query clearly means, if there is one', () => {
+    expect(soleMatch(people, 'jos')?.name).toBe('José Mathew')
+    expect(soleMatch(people, 'mathew')?.name).toBe('José Mathew')
+    expect(soleMatch(people, 'me')?.id).toBe(ME_ID)
+    // Two people start with "riya"; "rit" only turns up inside a name; blank means nobody.
+    expect(soleMatch(people, 'riya')).toBeNull()
+    expect(soleMatch(people, 'rit')).toBeNull()
+    expect(soleMatch(people, ' ')).toBeNull()
   })
 
   it('only offers real names for new people', () => {
@@ -171,6 +181,33 @@ describe('PeoplePicker', () => {
     expect(search()).toHaveFocus()
   })
 
+  it('picks the one person a first name clearly means on Enter, instead of adding a twin', async () => {
+    const user = userEvent.setup()
+    const [riya] = seed(['Riya Sharma', 'Sam'])
+    render(<Harness initial={[ME_ID]} />)
+    await user.type(search(), 'Riya')
+    // Enter's pick is listed first; adding a new "Riya" waits underneath.
+    const rows = within(allList()).getAllByRole('listitem')
+    expect(rows[0]).toHaveTextContent('Riya Sharma')
+    expect(rows[1]).toHaveTextContent('Add “Riya”')
+    await user.keyboard('{Enter}')
+    expect(picked()).toEqual([ME_ID, riya?.id])
+    expect(friendsStore.get().filter((f) => f.name === 'Riya')).toHaveLength(0)
+    expect(search()).toHaveValue('')
+  })
+
+  it('adds the name on Enter when it could mean more than one person', async () => {
+    const user = userEvent.setup()
+    seed(['Riya Sharma', 'Riya Kapoor'])
+    render(<Harness initial={[ME_ID]} />)
+    await user.type(search(), 'Riya')
+    expect(within(allList()).getAllByRole('listitem')[0]).toHaveTextContent('Add “Riya”')
+    await user.keyboard('{Enter}')
+    const added = friendsStore.get().find((f) => f.name === 'Riya')
+    expect(added).toBeDefined()
+    expect(picked()).toEqual([ME_ID, added?.id])
+  })
+
   it('picks the only result on Enter when adding is off', async () => {
     const user = userEvent.setup()
     const [riya] = seed(['Riya', 'Sam'])
@@ -267,7 +304,11 @@ describe('PeoplePicker', () => {
     const user = userEvent.setup()
     for (let i = 0; i < MAX_FRIENDS; i++) addFriend({ name: `Person ${i}` })
     render(<Harness />)
-    await user.type(search(), 'One more{Enter}')
+    // Pasted in one go: typing it letter by letter re-renders all 200 rows ("o", "on" match
+    // "Person") and made this test time out on a busy machine.
+    await user.click(search())
+    await user.paste('One more')
+    await user.keyboard('{Enter}')
     expect(screen.getByText(/reached the limit/)).toBeInTheDocument()
     expect(picked()).toEqual([])
   })

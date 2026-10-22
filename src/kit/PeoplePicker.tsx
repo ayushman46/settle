@@ -1,9 +1,7 @@
 import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent } from 'react'
 import { Check, Search, UserPlus, X } from 'lucide-react'
-import { IconButton, TextField } from '../components'
-import { lastInputModality } from '../components/overlayStack'
-import { addFriend, DataError, useFriends, useFriendsById } from '../data'
-import { MAX_PARTICIPANTS } from '../data/schemas'
+import { IconButton, lastInputModality, TextField } from '../components'
+import { addFriend, DataError, MAX_PARTICIPANTS, useFriends, useFriendsById } from '../data'
 import { BRAND, ME_ID, type Friend } from '../domain/types'
 import { cx } from '../lib/cx'
 import { haptic } from '../lib/haptics'
@@ -11,7 +9,7 @@ import { nameKey } from '../lib/people'
 import { FriendAvatar } from './FriendAvatar'
 import { FriendChip } from './FriendChip'
 import { friendLabel } from './friendName'
-import { alphabetical, exactPerson, newPersonName, searchPeople } from './peopleSearch'
+import { alphabetical, exactPerson, newPersonName, searchPeople, soleMatch } from './peopleSearch'
 import styles from './PeoplePicker.module.css'
 
 export interface PeoplePickerProps {
@@ -87,6 +85,11 @@ export function PeoplePicker({
   const results = useMemo(() => searchPeople(pool, query), [pool, query])
   const exact = searching ? exactPerson(pool, query) : null
   const addName = allowAdd && searching && !exact ? newPersonName(query) : null
+  // What Enter picks: the person with exactly this name, else the only one it clearly means
+  // ("riya" → Riya Sharma, rather than a second "Riya"), else the only result when adding is off.
+  const enterPick = searching
+    ? (exact ?? soleMatch(pool, query) ?? (results.length === 1 && !addName ? (results[0] ?? null) : null))
+    : null
 
   // The quick row: the group's members, or the people you split with most (only once the list is long).
   const quick = useMemo<Friend[]>(() => {
@@ -195,9 +198,8 @@ export function PeoplePicker({
     if (event.key === 'Enter') {
       event.preventDefault()
       if (!searching) return
-      const match = exact ?? (results.length === 1 && !addName ? results[0] : undefined)
-      if (match) {
-        if (select(match.id)) {
+      if (enterPick) {
+        if (select(enterPick.id)) {
           haptic('tap')
           setQuery('')
         }
@@ -245,6 +247,20 @@ export function PeoplePicker({
   }
 
   const listed = searching ? results : alphabetical(pool)
+  // Offered first, unless Enter would pick someone already here — then it waits below them.
+  const addRow = addName ? (
+    <li>
+      <button type="button" className={cx(styles.row, styles.addRow)} onClick={() => addPerson(addName)}>
+        <span className={styles.addIcon} aria-hidden="true">
+          <UserPlus strokeWidth={2.25} />
+        </span>{' '}
+        <span className={styles.rowText}>
+          <span className={styles.rowName}>Add “{addName}”</span>{' '}
+          <span className={styles.rowSub}>New to your people — they don't need {BRAND.name}</span>
+        </span>
+      </button>
+    </li>
+  ) : null
   const onlyMe = pool.every((f) => f.id === ME_ID)
 
   return (
@@ -334,19 +350,7 @@ export function PeoplePicker({
           {searching ? 'Search results' : 'All people'}
         </p>
         <ul ref={listRef} className={styles.list} role="list" onKeyDown={onListKeyDown}>
-          {addName && (
-            <li>
-              <button type="button" className={cx(styles.row, styles.addRow)} onClick={() => addPerson(addName)}>
-                <span className={styles.addIcon} aria-hidden="true">
-                  <UserPlus strokeWidth={2.25} />
-                </span>{' '}
-                <span className={styles.rowText}>
-                  <span className={styles.rowName}>Add “{addName}”</span>{' '}
-                  <span className={styles.rowSub}>New to your people — they don't need {BRAND.name}</span>
-                </span>
-              </button>
-            </li>
-          )}
+          {!enterPick && addRow}
           {listed.map((friend) => {
             const on = selected.has(friend.id)
             const member = memberSet?.has(friend.id) === true
@@ -377,6 +381,7 @@ export function PeoplePicker({
               </li>
             )
           })}
+          {enterPick && addRow}
         </ul>
         {searching && listed.length === 0 && !addName && (
           <p className={styles.empty}>No one called “{query.trim()}” in your people.</p>

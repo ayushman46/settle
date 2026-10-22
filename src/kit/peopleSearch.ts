@@ -64,6 +64,24 @@ export function exactPerson(friends: readonly Friend[], query: string): Friend |
   return friends.find((f) => keysOf(f).includes(key)) ?? null
 }
 
+/**
+ * The one person `query` clearly means without being their whole name: the only one whose name
+ * (or a word in it) starts with it — "riya" → Riya Sharma. Null when nobody or several people do,
+ * or when the query only turns up inside a name ("ya").
+ */
+export function soleMatch(friends: readonly Friend[], query: string): Friend | null {
+  const key = nameKey(query)
+  if (!key) return null
+  let found: Friend | null = null
+  for (const friend of friends) {
+    const rank = rankFriend(friend, key)
+    if (rank === -1 || rank > 2) continue
+    if (found) return null
+    found = friend
+  }
+  return found
+}
+
 /** The name a new person would be saved under, or null when `query` can't be a new person's name. */
 export function newPersonName(query: string): string | null {
   const name = normalizeName(query)
