@@ -1,10 +1,14 @@
 /*
- * BillSplit service worker: lets the app open offline after one visit (typing a bill in and the
- * sample work without a connection; scanning needs the network).
+ * Settle service worker: lets the app open offline after one visit (splitting, groups, people,
+ * activity and the sample bill all work without a connection; AI, pay-link previews and checkout
+ * need the network).
  *
  * - Page loads: network first (always the latest deploy), falling back to the cached app shell.
- * - /assets/* (hashed, immutable build files): stale-while-revalidate.
- * - /api/*: never touched — scans and health checks always go to the server.
+ *   Every page — `/`, `/app/...` (the installed app starts at `/app`), `/pay#...`, `/privacy`,
+ *   `/terms` — is the same single-page shell, so one cached copy opens any of them offline.
+ * - /assets/* (hashed, immutable build files, including each screen's code-split chunk — the app
+ *   preloads the main ones while idle): stale-while-revalidate.
+ * - /api/*: never touched — AI, billing and health checks always go to the server.
  *
  * It fails open: Cache Storage can be broken or full (damaged profiles, quota, some private
  * modes), so every cache step is best effort, cache writes never hold up a response, and if
@@ -12,9 +16,11 @@
  *
  * Registered from src/main.tsx in production builds only. Bump VERSION to drop old caches.
  */
-const VERSION = 'v2'
-const SHELL_CACHE = `billsplit-shell-${VERSION}`
-const ASSET_CACHE = `billsplit-assets-${VERSION}`
+const VERSION = 'v3'
+const SHELL_CACHE = `settle-shell-${VERSION}`
+const ASSET_CACHE = `settle-assets-${VERSION}`
+/** Caches this worker manages (older ones, including BillSplit's, are dropped on activate). */
+const CACHE_PREFIXES = ['settle-', 'billsplit-']
 const SHELL_KEY = '/'
 /** Small same-origin files kept for offline use (outside /assets/): the manifest and its icons. */
 const EXTRAS = [
@@ -25,8 +31,8 @@ const EXTRAS = [
   '/icon-512.png',
   '/icon-maskable-512.png',
 ]
-/** Old builds' assets are trimmed beyond this many entries (oldest first). */
-const MAX_ASSETS = 80
+/** Old builds' assets are trimmed beyond this many entries (oldest first): room for a whole code-split build and then some. */
+const MAX_ASSETS = 160
 /** On a crawling connection, show the cached shell after this long instead of waiting. */
 const NAVIGATION_TIMEOUT_MS = 4000
 /** Paths that name a file ("/icon.svg") rather than an app route; mirrors server/web.ts. */
@@ -67,15 +73,19 @@ function inBackground(event, work) {
   event.waitUntil(work.catch(() => undefined))
 }
 
-/** Last resort when there is no network and nothing cached yet. */
+/** Last resort when there is no network and nothing cached yet (in the app's colours, light or dark). */
 function offlinePage() {
   const html =
     '<!doctype html><html lang="en"><meta charset="utf-8">' +
     '<meta name="viewport" content="width=device-width, initial-scale=1">' +
-    '<title>BillSplit</title>' +
-    '<body style="margin:0;display:grid;place-items:center;min-height:100vh;font:16px/1.5 system-ui,sans-serif;background:#F5F3EE;color:#141413;text-align:center;padding:24px">' +
-    '<div><h1 style="font-size:22px;margin:0 0 8px">You’re offline</h1>' +
-    '<p style="margin:0">Connect to the internet and open BillSplit again.</p></div></body></html>'
+    '<meta name="color-scheme" content="light dark">' +
+    '<title>You’re offline · Settle</title>' +
+    '<style>body{margin:0;display:grid;place-items:center;min-height:100vh;padding:24px;box-sizing:border-box;' +
+    'font:16px/1.5 system-ui,sans-serif;text-align:center;background:#F5F6F8;color:#0E1013}' +
+    'h1{font-size:22px;margin:0 0 8px}p{margin:0;color:#4B515A}' +
+    '@media (prefers-color-scheme:dark){body{background:#0B0C0E;color:#F3F5F7}p{color:#A9B0BA}}</style>' +
+    '<body><main><h1>You’re offline</h1>' +
+    '<p>Connect to the internet and open Settle again.</p></main></body></html>'
   return new Response(html, { status: 503, headers: { 'Content-Type': 'text/html; charset=utf-8' } })
 }
 
@@ -183,9 +193,8 @@ self.addEventListener('activate', (event) => {
       try {
         const keep = new Set([SHELL_CACHE, ASSET_CACHE])
         const names = await caches.keys()
-        await Promise.all(
-          names.filter((name) => name.startsWith('billsplit-') && !keep.has(name)).map((name) => caches.delete(name)),
-        )
+        const ours = (name) => CACHE_PREFIXES.some((prefix) => name.startsWith(prefix))
+        await Promise.all(names.filter((name) => ours(name) && !keep.has(name)).map((name) => caches.delete(name)))
       } catch {
         // Old caches stay behind; taking control matters more.
       }

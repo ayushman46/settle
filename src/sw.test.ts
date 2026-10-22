@@ -6,7 +6,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import source from '../public/sw.js?raw'
 
-const ORIGIN = 'https://billsplit.test'
+const ORIGIN = 'https://settle.test'
 
 const SHELL_HTML = `<!doctype html><html><head>
 <script type="module" crossorigin src="/assets/index-abc123.js"></script>
@@ -160,8 +160,10 @@ afterEach(() => {
   vi.useRealTimers()
 })
 
-const SHELL = 'billsplit-shell-v2'
-const ASSETS = 'billsplit-assets-v2'
+const SHELL = 'settle-shell-v3'
+const ASSETS = 'settle-assets-v3'
+/** Asset cache size limit (mirrors MAX_ASSETS in sw.js). */
+const MAX_ASSETS = 160
 
 /** The deployed build: its shell and every file the shell loads. */
 const BUILD = {
@@ -217,15 +219,17 @@ describe('service worker', () => {
     expect(sw.scope.skipWaiting).toHaveBeenCalled()
   })
 
-  it('drops old BillSplit caches on activate, keeps others, and takes control', async () => {
+  it('drops old Settle and BillSplit caches on activate, keeps others, and takes control', async () => {
     const sw = boot()
     await sw.caches.open('billsplit-shell-v1')
-    await sw.caches.open('billsplit-assets-v1')
+    await sw.caches.open('billsplit-assets-v2')
+    await sw.caches.open('settle-shell-v2')
     await sw.caches.open(SHELL)
+    await sw.caches.open(ASSETS)
     await sw.caches.open('someone-else')
     await sw.lifecycle('activate')
 
-    expect((await sw.caches.keys()).sort()).toEqual([SHELL, 'someone-else'].sort())
+    expect((await sw.caches.keys()).sort()).toEqual([ASSETS, SHELL, 'someone-else'].sort())
     expect(sw.scope.clients.claim).toHaveBeenCalled()
     expect(sw.scope.registration.navigationPreload.enable).toHaveBeenCalled()
   })
@@ -253,7 +257,10 @@ describe('service worker', () => {
     const sw = boot()
     const first = await sw.get('/', { mode: 'navigate' })
     expect(first.response?.status).toBe(503)
-    expect(await first.response?.text()).toContain('offline')
+    const page = (await first.response?.text()) ?? ''
+    expect(page).toContain('You’re offline')
+    expect(page).toContain('open Settle again')
+    expect(page).toContain('prefers-color-scheme:dark')
 
     await (await sw.caches.open(SHELL)).put('/', basic('cached shell', 'text/html'))
     const second = await sw.get('/review', { mode: 'navigate' })
@@ -305,10 +312,10 @@ describe('service worker', () => {
   it('keeps the asset cache bounded', async () => {
     const sw = boot()
     network = () => basic('x')
-    for (let i = 0; i < 85; i++) await sw.get(`/assets/chunk-${i}.js`)
+    for (let i = 0; i < MAX_ASSETS + 5; i++) await sw.get(`/assets/chunk-${i}.js`)
     const assets = await sw.caches.open(ASSETS)
     const keys = await assets.keys()
-    expect(keys).toHaveLength(80)
+    expect(keys).toHaveLength(MAX_ASSETS)
     expect(keys[0]?.url).toBe(`${ORIGIN}/assets/chunk-5.js`)
   })
 
@@ -406,5 +413,22 @@ describe('service worker', () => {
     expect(await (await sw.get('/manifest.webmanifest')).response?.text()).toBe('{}')
     network = null
     await expect(sw.request('/manifest.webmanifest').response).rejects.toThrow('Failed to fetch')
+  })
+
+  it('opens every page of the app from the one cached shell when offline', async () => {
+    const sw = boot()
+    await (await sw.caches.open(SHELL)).put('/', basic('cached shell', 'text/html'))
+    for (const path of ['/app', '/app/groups/g1', '/app/split/new?category=rent', '/pay', '/privacy', '/terms', '/']) {
+      const { response } = await sw.get(path, { mode: 'navigate' })
+      expect(await response?.text(), path).toBe('cached shell')
+    }
+  })
+
+  it('refreshes the cached shell from the installed app’s start page, /app', async () => {
+    const sw = boot()
+    online({ ...BUILD, '/app': BUILD['/'] })
+    const { response } = await sw.get('/app', { mode: 'navigate' })
+    expect(await response?.text()).toBe(SHELL_HTML)
+    expect(await (await (await sw.caches.open(SHELL)).match('/'))?.text()).toBe(SHELL_HTML)
   })
 })
