@@ -1,13 +1,17 @@
 /**
- * From bill draft to saved expense: an itemized bill is saved as an `Expense` with
- * `kind: 'bill'`, split `items`, its people as participants and a snapshot of the bill (enough to
- * show who had what, or to re-open it in the flow).
+ * From bill draft to saved expense and back: an itemized bill is saved as an `Expense` with
+ * `kind: 'bill'`, split `items`, its people as participants and a snapshot of the bill — enough to
+ * show who had what, or to re-open it in the flow to fix something.
  */
-import type { ExpenseDraft } from '../../data'
-import { ME_ID, type ExpenseSource } from '../../domain/types'
+import { friendsStore, type ExpenseDraft } from '../../data'
+import { ME_ID, type Expense, type ExpenseSource, type Friend } from '../../domain/types'
+import { uniqueParticipants } from '../../engine/split'
+import { UNKNOWN_FRIEND_LABEL } from '../../kit/index-a'
 import { validShares } from '../../lib/split'
-import { billCategory, billDate, effectivePaid } from '../../state/selectors'
-import type { BillSource, Session, Shares } from '../../types'
+import { createSession, repairSession, sanitizeItem } from '../../state/reducer'
+import { billCategory, billDate, clampStep, effectivePaid } from '../../state/selectors'
+import { EMPTY_META, type BillSource, type Person, type Session, type Shares } from '../../types'
+import { personById } from './billPeople'
 
 const SOURCES: Readonly<Record<BillSource, ExpenseSource>> = { scan: 'scan', manual: 'manual', sample: 'sample' }
 
@@ -56,3 +60,36 @@ export function billExpenseDraft(session: Session, today: string): ExpenseDraft 
     source: session.source ? SOURCES[session.source] : 'manual',
   }
 }
+
+/**
+ * A saved bill back as a draft, on its last step, for fixing who had what (or anything else):
+ * saving it then updates the same expense. Someone removed from your people since shows as
+ * "Someone". Null for an expense that isn't an itemized bill.
+ */
+export function billSessionFromExpense(expense: Expense, friends: readonly Friend[] = friendsStore.get()): Session | null {
+  const { bill } = expense
+  if (expense.kind !== 'bill' || !bill || bill.items.length === 0) return null
+  const people: Person[] = uniqueParticipants(expense.participants).map(
+    ({ friendId }) => personById(friendId, friends) ?? { id: friendId, name: UNKNOWN_FRIEND_LABEL, color: 0 },
+  )
+  const fresh = createSession(expense.currency)
+  const source: BillSource = expense.source === 'scan' || expense.source === 'sample' ? expense.source : 'manual'
+  const session = repairSession({
+    ...fresh,
+    step: 'result',
+    source,
+    meta: { ...EMPTY_META, ...bill.meta },
+    warnings: [],
+    items: bill.items.map(sanitizeItem),
+    paid: expense.total,
+    people,
+    assignments: bill.assignments,
+    payerId: expense.payerId,
+    category: expense.category,
+    date: expense.date,
+    groupId: expense.groupId,
+    expenseId: expense.id,
+  })
+  return { ...session, step: clampStep(session, 'result') }
+}
+

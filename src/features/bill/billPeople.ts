@@ -5,7 +5,7 @@
  */
 import { addFriend, DataError, findFriendByName, friendsStore } from '../../data'
 import { ME_ID, type Friend } from '../../domain/types'
-import { friendLabel } from '../../kit/index-a'
+import { friendLabel, UNKNOWN_FRIEND_LABEL } from '../../kit/index-a'
 import { nameKey } from '../../lib/people'
 import type { Person } from '../../types'
 
@@ -33,7 +33,8 @@ function isOwnerName(name: string, ownerName: string): boolean {
  * - anyone else — people on a bill started before v3, or someone removed from your people since —
  *   is matched by name ("you" when it's the owner's own name) or added to your people.
  * Empty when everyone is already in step. Someone who can't be added (your people are full)
- * stays as they are.
+ * stays as they are, and so does someone removed from your people before a saved bill was
+ * re-opened (shown as "Someone": their name went with them).
  */
 export function linkToFriends(
   people: readonly Person[],
@@ -48,7 +49,7 @@ export function linkToFriends(
       if (current.name !== person.name || current.color !== person.color) links[person.id] = current
       continue
     }
-    if (person.id === ME_ID) continue
+    if (person.id === ME_ID || person.name === UNKNOWN_FRIEND_LABEL) continue
     if (isOwnerName(person.name, ownerName)) {
       links[person.id] = personById(ME_ID) ?? { id: ME_ID, name: friendLabel(ME_ID, null), color: person.color }
       continue

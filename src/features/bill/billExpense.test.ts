@@ -1,10 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { addFriend, expensesStore, resetDataForTests, saveExpense, setPaidBack } from '../../data'
+import { addFriend, expensesStore, friendsStore, resetDataForTests, saveExpense, setPaidBack } from '../../data'
 import { ME_ID } from '../../domain/types'
 import { computeSplit } from '../../lib/split'
 import { effectivePaid } from '../../state/selectors'
 import type { Person, Session } from '../../types'
-import { billExpenseDraft, billPayer, payerCandidates } from './billExpense'
+import { billExpenseDraft, billPayer, billSessionFromExpense, payerCandidates } from './billExpense'
 import { personById, personFor } from './billPeople'
 import { assignAll, sampleSession } from './screenTestKit'
 
@@ -130,5 +130,69 @@ describe('billPayer / payerCandidates', () => {
     expect(billPayer({ ...session, payerId: sam.id })).toBe(sam.id)
     expect(payerCandidates(session)).toEqual([riya.id, sam.id, ME_ID])
     expect(payerCandidates({ ...session, people: [me(), riya] })).toEqual([ME_ID, riya.id])
+  })
+})
+
+describe('billSessionFromExpense', () => {
+  it('turns a saved bill back into a draft on its last step, saving which round-trips', () => {
+    const session = readyBill({ payerId: null, category: 'food', date: '2026-10-19', meta: { ...sampleSession('result').meta } })
+    const saved = saveExpense(billExpenseDraft(session, TODAY))
+    const draft = billSessionFromExpense(saved)
+    if (!draft) throw new Error('no draft')
+    expect(draft).toMatchObject({
+      step: 'result',
+      source: 'sample',
+      currency: 'INR',
+      paid: 229900,
+      payerId: ME_ID,
+      category: 'food',
+      date: '2026-10-19',
+      groupId: null,
+      expenseId: saved.id,
+    })
+    expect(draft.people).toEqual(session.people)
+    expect(draft.items).toEqual(session.items)
+    expect(draft.assignments).toEqual(saved.bill?.assignments)
+    expect(draft.id).not.toBe(session.id)
+
+    const again = saveExpense(billExpenseDraft(draft, TODAY))
+    expect(again.id).toBe(saved.id)
+    expect(again.shares).toEqual(saved.shares)
+    expect(expensesStore.get()).toHaveLength(1)
+  })
+
+  it('shows someone removed from your people since as "Someone"', () => {
+    const session = readyBill()
+    const saved = saveExpense(billExpenseDraft(session, TODAY))
+    const sam = session.people[2]
+    if (!sam) throw new Error('sam missing')
+    friendsStore.set(friendsStore.get().filter((f) => f.id !== sam.id))
+    const draft = billSessionFromExpense(saved)
+    expect(draft?.people[2]).toEqual({ id: sam.id, name: 'Someone', color: 0 })
+  })
+
+  it('is null for an expense that isn’t an itemized bill', () => {
+    const riya = addFriend({ name: 'Riya' })
+    const split = saveExpense({
+      kind: 'split',
+      title: 'Cab',
+      category: 'transport',
+      currency: 'INR',
+      total: 84000,
+      date: TODAY,
+      payerId: ME_ID,
+      mode: 'equal',
+      participants: [
+        { friendId: ME_ID, input: null },
+        { friendId: riya.id, input: null },
+      ],
+      roundedToWhole: false,
+      note: null,
+      groupId: null,
+      bill: null,
+      recurringId: null,
+      source: 'manual',
+    })
+    expect(billSessionFromExpense(split)).toBeNull()
   })
 })

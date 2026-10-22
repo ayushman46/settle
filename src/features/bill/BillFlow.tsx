@@ -1,8 +1,10 @@
 /**
- * The itemized bill flow, mounted at `/app/bill`: scan → review → paid → people → assign → result.
- * Its steps live in history state (the URL stays `/app/bill`), so Back walks back through them
- * and then returns to the screen the flow was opened from. The draft bill is saved on the device,
- * so a reload (or coming back later) picks up where the person left off.
+ * The itemized bill flow, mounted at `/app/bill`: scan → review → paid → people → assign → result,
+ * where the bill is saved as an expense. Its steps live in history state (the URL stays
+ * `/app/bill`), so Back walks back through them and then returns to the screen the flow was opened
+ * from. The draft bill is saved on the device, so a reload (or coming back later) picks up where
+ * the person left off. Other screens open it through `./launch` (not this module), so the flow
+ * stays in its own chunk.
  */
 import { Component, useEffect, useLayoutEffect, useState, type ComponentType, type ReactNode } from 'react'
 import { RotateCcw } from 'lucide-react'
@@ -15,11 +17,13 @@ import { SessionProvider, useFlow, useSession } from '../../state/store'
 import type { Session, StepId } from '../../types'
 import { AssignScreen } from './AssignScreen'
 import { linkToFriends } from './billPeople'
+import { bootFlow } from './boot'
 import { PaidScreen } from './PaidScreen'
 import { PeopleScreen } from './PeopleScreen'
 import { ResultScreen } from './ResultScreen'
 import { ReviewScreen } from './ReviewScreen'
 import { ScanScreen } from './ScanScreen'
+import { StartIntent } from './StartIntent'
 import styles from './BillFlow.module.css'
 
 const SCREENS: Readonly<Record<StepId, ComponentType>> = {
@@ -98,6 +102,7 @@ export interface BillFlowProps {
 export function BillFlow({ initialSession, persist = true }: BillFlowProps) {
   // Generation of the draft provider: "Start a fresh bill" after a crash remounts it.
   const [generation, setGeneration] = useState(0)
+  const [boot] = useState(() => bootFlow(initialSession))
 
   useEffect(() => {
     // Ask early whether scanning is available, so the scan step never flickers.
@@ -120,9 +125,10 @@ export function BillFlow({ initialSession, persist = true }: BillFlowProps) {
 
   return (
     <BillErrorBoundary onStartOver={() => setGeneration((g) => g + 1)}>
-      <SessionProvider key={generation} initialSession={generation === 0 ? initialSession : undefined} persist={persist}>
+      <SessionProvider key={generation} initialSession={generation === 0 ? boot.session : undefined} persist={persist}>
         <PeopleSync />
         <CurrentStep />
+        {generation === 0 && boot.ask && <StartIntent start={boot.ask} />}
       </SessionProvider>
     </BillErrorBoundary>
   )

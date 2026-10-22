@@ -1,16 +1,22 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { navigate } from '../../app/router'
 import { ToastProvider } from '../../components'
-import { resetDataForTests } from '../../data'
+import { addFriend, resetDataForTests, saveExpense } from '../../data'
+import { ME_ID } from '../../domain/types'
 import { resetQuotaForTests } from '../../pro/quota'
 import { resetProModulesForTests } from '../../pro/testKit'
 import { resetFlowHistory } from '../../state/backStack'
 import { resetHealthForTests } from '../../state/health'
+import { SESSION_KEY } from '../../state/persist'
 import { createSession } from '../../state/reducer'
 import type { Session } from '../../types'
+import { billExpenseDraft } from './billExpense'
+import { personById, personFor } from './billPeople'
 import { BillFlow } from './BillFlow'
-import { historyIdle, sampleSession } from './screenTestKit'
+import { openBill, resetBillLaunchForTests } from './launch'
+import { assignAll, historyIdle, sampleSession } from './screenTestKit'
 
 const stubs = vi.hoisted(() => ({
   crashPeople: false,
@@ -51,7 +57,7 @@ vi.mock('./ResultScreen', async () => ({ ResultScreen: await stubs.make("Here's 
 
 const navOf = () => document.querySelector('[data-nav]')?.getAttribute('data-nav')
 
-function renderFlow(session: Session) {
+function renderFlow(session?: Session) {
   return render(
     <ToastProvider>
       <BillFlow initialSession={session} persist={false} />
@@ -59,8 +65,25 @@ function renderFlow(session: Session) {
   )
 }
 
+/** A bill between you and Riya with every item shared, saved on the device as the draft. */
+function savedDraft(overrides: Partial<Session> = {}): Session {
+  const me = personById(ME_ID)
+  if (!me) throw new Error('you are always one of your people')
+  const riya = personFor(addFriend({ name: 'Riya' }))
+  const base = sampleSession('assign', { people: [me, riya], ...overrides })
+  const session = { ...base, assignments: assignAll(base, { [ME_ID]: 1, [riya.id]: 1 }) }
+  window.localStorage.setItem(SESSION_KEY, JSON.stringify(session))
+  return session
+}
+
+/** The app on Home, then the flow opened over it. */
+function fromHome(): void {
+  window.history.replaceState(null, '', '/app')
+}
+
 beforeEach(() => {
   resetDataForTests()
+  resetBillLaunchForTests()
   resetQuotaForTests()
   resetProModulesForTests()
   resetFlowHistory()
@@ -186,3 +209,111 @@ describe('BillFlow', () => {
     expect(await screen.findByRole('heading', { level: 1, name: 'Scan a bill' })).toBeInTheDocument()
   })
 })
+
+describe('BillFlow — arriving', () => {
+  it('opened from elsewhere, it lands on the scan step with the bill in progress waiting', async () => {
+    const user = userEvent.setup()
+    savedDraft()
+    fromHome()
+    navigate('/app/bill')
+    renderFlow()
+
+    expect(screen.getByRole('heading', { level: 1, name: 'Scan a bill' })).toBeInTheDocument()
+    expect(screen.getByText('Pick up where you left off')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Continue' }))
+    expect(screen.getByRole('heading', { level: 1, name: 'Who had what?' })).toBeInTheDocument()
+  })
+
+  it('a reload keeps the step it was on', () => {
+    savedDraft({ step: 'paid' })
+    window.history.replaceState({ settle: 1, depth: 3, bill: 'paid' }, '', '/app/bill')
+    renderFlow()
+    expect(screen.getByRole('heading', { level: 1, name: 'What did you actually pay?' })).toBeInTheDocument()
+  })
+
+  it('openBill({ kind: "sample" }) opens straight onto the sample bill', async () => {
+    fromHome()
+    openBill({ kind: 'sample' })
+    renderFlow()
+    expect(screen.getByRole('heading', { level: 1, name: 'Check the items' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^Edit Paneer Tikka/ })).toBeInTheDocument()
+    await historyIdle()
+    // Back goes to the scan step first, then out to where the flow was opened from.
+    window.history.back()
+    await screen.findByRole('heading', { level: 1, name: 'Scan a bill' })
+  })
+
+  it('openBill({ kind: "manual" }) opens an empty bill with the item editor ready', () => {
+    fromHome()
+    openBill({ kind: 'manual' })
+    renderFlow()
+    expect(screen.getByRole('dialog', { name: 'Add an item' })).toBeInTheDocument()
+  })
+
+  it('asks before the sample replaces a bill in progress, and "Keep my bill" keeps it', async () => {
+    const user = userEvent.setup()
+    savedDraft()
+    fromHome()
+    openBill({ kind: 'sample' })
+    renderFlow()
+
+    const sheet = screen.getByRole('dialog', { name: 'Start a new bill?' })
+    expect(sheet).toHaveAccessibleDescription('Saffron Table (8 items) will be replaced. The people you added stay.')
+    await user.click(within(sheet).getByRole('button', { name: 'Keep my bill' }))
+    expect(screen.getByText('Pick up where you left off')).toBeInTheDocument()
+  })
+
+  it('"Try the sample" replaces the bill in progress once confirmed', async () => {
+    const user = userEvent.setup()
+    savedDraft({ meta: { ...sampleSession('scan').meta, merchant: 'Old place' } })
+    fromHome()
+    openBill({ kind: 'sample' })
+    renderFlow()
+    await user.click(screen.getByRole('button', { name: 'Try the sample' }))
+    expect(screen.getByRole('heading', { level: 1, name: 'Check the items' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Rename bill, Saffron Table' })).toBeInTheDocument()
+  })
+})
+
+describe('BillFlow — fixing a saved bill', () => {
+  function savedBill() {
+    const me = personById(ME_ID)
+    if (!me) throw new Error('you are always one of your people')
+    const riya = personFor(addFriend({ name: 'Riya' }))
+    const base = sampleSession('result', { people: [me, riya] })
+    const session: Session = { ...base, assignments: assignAll(base, { [ME_ID]: 1, [riya.id]: 1 }), category: 'food' }
+    return saveExpense(billExpenseDraft(session, '2026-10-22'))
+  }
+
+  it('opens a saved bill on its last step, with the steps beneath it', async () => {
+    const expense = savedBill()
+    window.history.replaceState(null, '', `/app/expense/${expense.id}`)
+    openBill({ kind: 'edit', expenseId: expense.id })
+    renderFlow()
+    expect(screen.getByRole('heading', { level: 1, name: "Here's the split" })).toBeInTheDocument()
+    await historyIdle()
+    window.history.back()
+    await screen.findByRole('heading', { level: 1, name: 'Who had what?' })
+  })
+
+  it('asks before replacing a different bill in progress', async () => {
+    const user = userEvent.setup()
+    const expense = savedBill()
+    savedDraft({ meta: { ...sampleSession('scan').meta, merchant: 'Corner Cafe' } })
+    openBill({ kind: 'edit', expenseId: expense.id })
+    renderFlow()
+
+    const sheet = screen.getByRole('dialog', { name: 'Edit Saffron Table instead?' })
+    expect(sheet).toHaveAccessibleDescription("Corner Cafe (8 items) isn't saved yet — editing Saffron Table replaces it.")
+    await user.click(within(sheet).getByRole('button', { name: 'Edit Saffron Table' }))
+    expect(await screen.findByRole('heading', { level: 1, name: "Here's the split" })).toBeInTheDocument()
+  })
+
+  it('a bill that is gone just opens the flow', () => {
+    openBill({ kind: 'edit', expenseId: 'deleted' })
+    renderFlow()
+    expect(screen.getByRole('heading', { level: 1, name: 'Scan a bill' })).toBeInTheDocument()
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+})
+

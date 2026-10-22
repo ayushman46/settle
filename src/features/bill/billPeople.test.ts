@@ -64,6 +64,11 @@ describe('linkToFriends', () => {
     expect(links['gone-id']?.id).toBe(kabir?.id)
   })
 
+  it('leaves a removed friend on a re-opened bill as "Someone" instead of adding a "Someone"', () => {
+    expect(linkToFriends([v2('removed-id', 'Someone')], byId(), 'Ayush')).toEqual({})
+    expect(friendsStore.get().some((f) => f.name === 'Someone')).toBe(false)
+  })
+
   it('keeps someone as they are when your people list is full', () => {
     for (let i = 0; i < MAX_FRIENDS; i++) addFriend({ name: `Friend ${i}` })
     expect(linkToFriends([v2('old', 'One Too Many')], byId(), 'Ayush')).toEqual({})
