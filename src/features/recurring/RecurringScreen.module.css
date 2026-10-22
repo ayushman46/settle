@@ -71,13 +71,16 @@
   white-space: nowrap;
 }
 
+.dueMonth {
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
 .dueWhen {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--s-2);
-  font: var(--text-caption);
-  color: var(--ink-2);
 }
 
 .dueAmount {

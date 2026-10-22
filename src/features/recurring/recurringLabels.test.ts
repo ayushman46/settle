@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { ME_ID, type RecurringTemplate } from '../../domain/types'
 import {
+  dueBadgeLabel,
   dueLabel,
   firstDueDate,
   monthName,
@@ -69,6 +70,11 @@ describe('dates', () => {
     expect(dueLabel({ dueDate: '2026-10-22', daysUntil: 0, overdue: false })).toBe('Due today')
     expect(dueLabel({ dueDate: '2026-10-23', daysUntil: 1, overdue: false })).toBe('Due tomorrow')
     expect(dueLabel({ dueDate: '2026-10-25', daysUntil: 3, overdue: false })).toBe('Due in 3 days')
+  })
+
+  it('keeps list badges short', () => {
+    expect(dueBadgeLabel({ dueDate: '2026-10-05', daysUntil: -17, overdue: true })).toBe('Overdue')
+    expect(dueBadgeLabel({ dueDate: '2026-10-25', daysUntil: 3, overdue: false })).toBe('Due in 3 days')
   })
 
   it('names the next split of a template', () => {

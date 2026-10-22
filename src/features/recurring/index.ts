@@ -4,6 +4,7 @@ export { RecurringEditorScreen } from './RecurringEditorScreen'
 export { DayOfMonthPicker, LAST_DAY, type DayOfMonthPickerProps } from './DayOfMonthPicker'
 export { presetById, RECURRING_PRESETS, type RecurringPreset } from './presets'
 export {
+  dueBadgeLabel,
   dueLabel,
   firstDueDate,
   monthName,

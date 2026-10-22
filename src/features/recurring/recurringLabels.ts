@@ -66,6 +66,11 @@ export function dueLabel(due: Pick<RecurringDue, 'dueDate' | 'daysUntil' | 'over
   return `Due in ${due.daysUntil} days`
 }
 
+/** The same, short enough for a list row's badge: "Overdue", "Due today", "Due in 3 days". */
+export function dueBadgeLabel(due: Pick<RecurringDue, 'dueDate' | 'daysUntil' | 'overdue'>): string {
+  return due.overdue ? 'Overdue' : dueLabel(due)
+}
+
 /** "Next: 1 Nov" — for templates that aren't due yet. */
 export function nextLabel(template: RecurringTemplate, today: string): string {
   return `Next: ${shortDate(nextRecurringPeriod(template, today).dueDate)}`

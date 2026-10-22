@@ -128,8 +128,11 @@ describe('RecurringScreen — Pro', () => {
     expect(within(due).queryByRole('article', { name: 'Netflix' })).not.toBeInTheDocument()
 
     const all = screen.getByRole('region', { name: 'All recurring splits' })
+    const wifi = within(all).getByRole('button', { name: /Wi-Fi/ })
+    expect(wifi).toHaveTextContent('Overdue')
+    expect(wifi).not.toHaveTextContent('Overdue since')
     const netflix = within(all).getByRole('button', { name: /Netflix/ })
-    expect(netflix).toHaveTextContent('₹649 · every month on the 1st · 3 people')
+    expect(netflix).toHaveTextContent('₹649 · on the 1st · 3 people')
     expect(netflix).toHaveTextContent(/Next: .*Nov/)
 
     const paused = screen.getByRole('region', { name: 'Paused' })

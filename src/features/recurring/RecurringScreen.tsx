@@ -28,7 +28,7 @@ import { openPaywall, withPro } from '../pro/paywall'
 import { PaywallHost } from '../pro/PaywallSheet'
 import { ProLock } from '../pro/ProLock'
 import { RECURRING_PRESETS } from './presets'
-import { dueLabel, monthName, nextLabel, repeatsLabel, standingLine, templateStanding } from './recurringLabels'
+import { dueBadgeLabel, dueLabel, monthName, nextLabel, ordinal, standingLine, templateStanding } from './recurringLabels'
 import { useSplitNow } from './useSplitNow'
 import styles from './RecurringScreen.module.css'
 
@@ -140,13 +140,13 @@ function DueCard({ due, today: day, onSplit }: { due: RecurringDue; today: strin
           <h3 id={titleId} className={styles.dueTitle}>
             {template.title}
           </h3>
-          <p className={styles.dueWhen}>
-            <Badge tone={due.overdue ? 'negative' : 'warning'}>{dueLabel(due)}</Badge>
-            <span>{month}</span>
-          </p>
+          <p className={styles.dueMonth}>{month}</p>
         </div>
         <Money value={template.total} currency={template.currency} size="lg" strong trimZeros className={styles.dueAmount} />
       </div>
+      <p className={styles.dueWhen}>
+        <Badge tone={due.overdue ? 'negative' : 'warning'}>{dueLabel(due)}</Badge>
+      </p>
       {line && <p className={styles.dueLine}>{line}</p>}
       <div className={styles.dueActions}>
         <Button variant="accent" size="md" onClick={onSplit} aria-label={`Split ${template.title} for ${month} now`}>
@@ -165,7 +165,7 @@ function TemplateRow({ template, today: day, due }: { template: RecurringTemplat
   const status = !template.active ? (
     <Badge>Paused</Badge>
   ) : due ? (
-    <Badge tone={due.overdue ? 'negative' : 'warning'}>{dueLabel(due)}</Badge>
+    <Badge tone={due.overdue ? 'negative' : 'warning'}>{dueBadgeLabel(due)}</Badge>
   ) : (
     <Badge>{nextLabel(template, day)}</Badge>
   )
@@ -173,7 +173,7 @@ function TemplateRow({ template, today: day, due }: { template: RecurringTemplat
     <ListRow
       leading={<CategoryIcon category={template.category} size="md" />}
       title={template.title}
-      subtitle={`${amount} · ${repeatsLabel(template.dayOfMonth).toLowerCase()} · ${peopleCount(template)}`}
+      subtitle={`${amount} · on the ${ordinal(template.dayOfMonth)} · ${peopleCount(template)}`}
       trailing={status}
       onClick={() => navigate(editorPath(template.id))}
       chevron
