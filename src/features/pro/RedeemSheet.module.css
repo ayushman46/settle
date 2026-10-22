@@ -1,0 +1,23 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+
+/* Codes are read character by character: mono, like UPI IDs. */
+.code {
+  font-family: var(--font-mono);
+  letter-spacing: 0;
+}
+
+.key {
+  width: 18px;
+  height: 18px;
+  color: var(--ink-3);
+}
+
+.note {
+  margin-top: var(--s-4);
+  font: var(--text-caption);
+  color: var(--ink-2);
+}

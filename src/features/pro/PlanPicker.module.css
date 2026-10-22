@@ -1,0 +1,206 @@
+.plans {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.legend {
+  margin-bottom: var(--s-2);
+  font: var(--text-section);
+  color: var(--ink);
+}
+
+.plan {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--s-3);
+  min-height: 76px;
+  padding: var(--s-4);
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+  color: var(--ink);
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    box-shadow var(--dur-2) var(--ease-out),
+    transform var(--dur-2) var(--ease-spring),
+    background-color var(--dur-2) var(--ease-out);
+}
+
+.compact .plan {
+  min-height: 68px;
+  padding: var(--s-3) var(--s-4);
+}
+
+.checked {
+  background: color-mix(in srgb, var(--accent-soft) 45%, var(--surface));
+  box-shadow:
+    inset 0 0 0 2px var(--ink),
+    var(--shadow-sm);
+}
+
+.plan:active:not(.placeholder) {
+  transform: scale(0.985);
+  transition-duration: var(--dur-1);
+}
+
+@media (hover: hover) {
+  .plan:not(.checked, .placeholder):hover {
+    box-shadow: inset 0 0 0 1px var(--ink-3);
+  }
+}
+
+.plans:disabled .plan {
+  cursor: default;
+}
+
+.plans:disabled .plan:not(.checked) {
+  opacity: 0.6;
+}
+
+/* The native radio stays in the tab order and accessibility tree; the card draws its state. */
+.input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: inherit;
+}
+
+.plan:has(.input:focus-visible) {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.dot {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 2px var(--ink-3);
+  transition:
+    background-color var(--dur-2) var(--ease-out),
+    box-shadow var(--dur-2) var(--ease-out);
+}
+
+.checked .dot {
+  background: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent-edge);
+}
+
+.tick {
+  width: 14px;
+  height: 14px;
+  color: var(--on-accent);
+  opacity: 0;
+  transform: scale(0.4);
+  transition:
+    opacity var(--dur-1) var(--ease-out),
+    transform var(--dur-3) var(--ease-spring);
+}
+
+.checked .tick {
+  opacity: 1;
+  transform: none;
+}
+
+.text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.nameRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2);
+  min-width: 0;
+}
+
+.name {
+  font: var(--text-label);
+  font-weight: 650;
+}
+
+.badge {
+  max-width: 100%;
+}
+
+.detail {
+  font: var(--text-caption);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-2);
+}
+
+.priceBox {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--s-1);
+}
+
+.price {
+  font: var(--text-headline);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+}
+
+.save {
+  white-space: nowrap;
+}
+
+/* 320px phones: the price and saving tuck under the plan name instead of squeezing it. */
+@media (max-width: 360px) {
+  .plan {
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas:
+      'dot text'
+      '. price';
+    row-gap: var(--s-1);
+  }
+
+  .dot {
+    grid-area: dot;
+  }
+
+  .text {
+    grid-area: text;
+  }
+
+  .priceBox {
+    grid-area: price;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .placeholder {
+    grid-template-areas: none;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+}
+
+@media (forced-colors: active) {
+  .checked {
+    outline: 2px solid Highlight;
+  }
+
+  .checked .dot {
+    background: Highlight;
+  }
+}

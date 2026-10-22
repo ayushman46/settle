@@ -1,0 +1,241 @@
+.content {
+  gap: var(--s-8);
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  min-width: 0;
+}
+
+/* ---------- Hero: the premium dark card (both themes), brand gradient as the jewel ---------- */
+
+.hero {
+  --ink: var(--balance-card-ink);
+  --ink-2: var(--balance-card-ink-2);
+  --focus-ring: var(--balance-card-ink);
+
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--s-3);
+  min-width: 0;
+  padding: var(--s-6) var(--s-5) var(--s-6);
+  overflow: clip;
+  border-radius: var(--radius-card);
+  background: var(--balance-card-gradient);
+  color: var(--balance-card-ink);
+  box-shadow: var(--shadow-md);
+  animation: hero-in var(--dur-4) var(--ease-out) backwards;
+}
+
+/* A soft wash of the Pro gradient across the top corner, and rings drifting off it. */
+.hero::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: -40% -30% auto auto;
+  width: 90%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--pro-gradient);
+  opacity: 0.16;
+  filter: blur(36px);
+  pointer-events: none;
+}
+
+.hero::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  top: -88px;
+  right: -64px;
+  width: 200px;
+  aspect-ratio: 1;
+  border: 1px solid var(--balance-card-line);
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 28px rgb(255 255 255 / 0.018),
+    0 0 0 29px var(--balance-card-line),
+    0 0 0 60px rgb(255 255 255 / 0.012);
+  pointer-events: none;
+}
+
+.gem {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-tile);
+  background: var(--pro-gradient);
+  color: var(--on-pro);
+  box-shadow:
+    inset 0 0 0 1px rgb(255 255 255 / 0.4),
+    0 10px 28px -10px rgb(169 212 255 / 0.55);
+  animation: gem-in var(--dur-4) var(--ease-spring) 80ms backwards;
+}
+
+.gem > svg {
+  width: 28px;
+  height: 28px;
+}
+
+.title {
+  font: var(--text-display);
+  font-size: clamp(2.25rem, 11vw, 3rem);
+  letter-spacing: var(--tracking-display);
+  color: var(--balance-card-ink);
+}
+
+/* The light end of the brand gradient as text on the dark card (well above AA). */
+.gradientText {
+  background: var(--pro-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@media (forced-colors: active) {
+  .gradientText {
+    color: CanvasText;
+    background: none;
+  }
+}
+
+.lede {
+  max-width: 34ch;
+  font: var(--text-body);
+  color: var(--balance-card-ink-2);
+}
+
+.status {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--s-2);
+}
+
+.status .lede {
+  color: var(--balance-card-ink);
+}
+
+.small {
+  font: var(--text-caption);
+  color: var(--balance-card-ink-2);
+}
+
+/* ---------- Cards ---------- */
+
+.freeCard {
+  padding: var(--s-4) var(--s-5);
+}
+
+.freeText {
+  font: var(--text-caption);
+  color: var(--ink-2);
+  text-align: center;
+}
+
+.redeemCard,
+.moveCard,
+.lifetimeCard {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-4);
+  padding: var(--s-5);
+}
+
+.lifetimeCard {
+  background:
+    linear-gradient(var(--surface), var(--surface)) padding-box,
+    var(--pro-gradient) border-box;
+  border: 1.5px solid transparent;
+}
+
+.cardIcon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: var(--surface-2);
+  color: var(--ink);
+}
+
+.lifetimeCard .cardIcon {
+  background: var(--pro-gradient);
+  color: var(--on-pro);
+}
+
+.cardIcon > svg {
+  width: 22px;
+  height: 22px;
+}
+
+.cardText {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--s-2);
+  min-width: 0;
+}
+
+.cardTitle {
+  font: var(--text-section);
+  color: var(--ink);
+}
+
+.cardBody {
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
+.cardAction {
+  margin-top: var(--s-2);
+}
+
+.cardActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  margin-top: var(--s-2);
+}
+
+.legal {
+  font: var(--text-caption);
+  color: var(--ink-2);
+  text-align: center;
+}
+
+.legal a {
+  color: var(--ink);
+  font-weight: 550;
+}
+
+@media (max-width: 360px) {
+  .redeemCard,
+  .moveCard,
+  .lifetimeCard {
+    flex-direction: column;
+    padding: var(--s-4);
+  }
+}
+
+@keyframes hero-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--s-3)) scale(0.98);
+  }
+}
+
+@keyframes gem-in {
+  from {
+    opacity: 0;
+    transform: scale(0.6) rotate(-12deg);
+  }
+}
