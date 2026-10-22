@@ -1,6 +1,7 @@
 /** Who still has to pay the payer back on an expense, and how that reads. Pure, for cards, lists and their tests. */
 import type { Expense } from '../domain/types'
 import { describePeople } from '../components/helpers'
+import { firstName } from '../share/text'
 import { splitPeopleIds } from './expenseLabels'
 
 /** Everyone who owes the payer something on `e` (share > 0, not paid back yet), in split order. */
@@ -18,6 +19,6 @@ export function paidCountLabel(paidCount: number, peopleCount: number): string {
 /** "Waiting on Sam", "Waiting on you and Sam", "Waiting on Sam, Neha and 2 others" (first names), or null. */
 export function waitingOnLabel(names: readonly string[]): string | null {
   if (names.length === 0) return null
-  const first = names.map((n) => n.trim().split(/\s+/)[0] || n)
+  const first = names.map((n) => firstName(n) || n)
   return `Waiting on ${describePeople(first, 2)}`
 }

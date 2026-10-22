@@ -7,6 +7,7 @@ import { isSettledInGroup } from '../engine/balances'
 import { cx } from '../lib/cx'
 import { haptic } from '../lib/haptics'
 import { formatMoney } from '../lib/money'
+import { firstName } from '../share/text'
 import { plural } from './expenseLabels'
 import { FriendAvatar } from './FriendAvatar'
 import { friendLabel, friendObjectLabel } from './friendName'
@@ -64,10 +65,6 @@ interface ShareRowProps extends Omit<ShareListProps, 'className'> {
   friend: Friend | null
   payer: Friend | null
   groupName: string | null
-}
-
-function firstName(name: string): string {
-  return name.trim().split(/\s+/)[0] || name
 }
 
 /** What the line says under the name. */

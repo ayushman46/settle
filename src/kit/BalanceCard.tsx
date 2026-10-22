@@ -5,6 +5,7 @@ import { useFriendsById } from '../data'
 import type { OverallSummary } from '../engine/balances'
 import { cx } from '../lib/cx'
 import { currencyDigits, formatMoney } from '../lib/money'
+import { firstName } from '../share/text'
 import { balanceHeadline, otherCurrenciesLine, peopleLine, topBalances } from './balanceLabels'
 import { friendLabel } from './friendName'
 import { useCountUp } from './motion'
@@ -52,7 +53,7 @@ export function BalanceCard({ summary, onSettle, settleLabel = 'Settle up', clas
   })
   const line = peopleLine(
     top,
-    faces.map((f) => f.name.split(/\s+/)[0] || f.name),
+    faces.map((f) => firstName(f.name)),
   )
   const money = (minor: number) => formatMoney(minor, headline.currency, { trimZeros: true })
 
