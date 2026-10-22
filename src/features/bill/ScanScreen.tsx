@@ -391,9 +391,10 @@ export function ScanScreen() {
     setConfirmDiscard(false)
     dropRetry()
     setPhase({ kind: 'idle', problem: null })
+    const changes = latest.current.expenseId !== null
     flow.startOver()
     haptic('warning')
-    toast('Bill discarded')
+    toast(changes ? 'Changes discarded' : 'Bill discarded')
     // The resume card (and its ✕) is gone: keep focus on the page's heading, not the body.
     focusScreenHeading()
   }
@@ -486,6 +487,8 @@ export function ScanScreen() {
   const { problem } = phase
   const showResume = hasProgress(session)
   const billName = session.meta.merchant ?? 'Your last bill'
+  // Changes to a bill that is already saved: discarding them leaves the saved bill as it was.
+  const changingSaved = session.expenseId !== null
 
   const resumeCard = (
     <Card padding="none" className={styles.resume}>
@@ -494,13 +497,17 @@ export function ScanScreen() {
           <ReceiptText />
         </span>
         <div className={styles.resumeText}>
-          <p className={styles.resumeEyebrow}>Pick up where you left off</p>
+          <p className={styles.resumeEyebrow}>{changingSaved ? 'Finish changing a saved bill' : 'Pick up where you left off'}</p>
           <p className={styles.resumeTitle}>{billName}</p>
           <p className={styles.resumeMeta}>
             {plural(session.items.length, 'item')} · {formatMoney(effectivePaid(session), session.currency)}
           </p>
         </div>
-        <IconButton label="Discard this bill" size="sm" onClick={() => setConfirmDiscard(true)}>
+        <IconButton
+          label={changingSaved ? 'Discard your changes' : 'Discard this bill'}
+          size="sm"
+          onClick={() => setConfirmDiscard(true)}
+        >
           <X />
         </IconButton>
       </div>
@@ -649,9 +656,13 @@ export function ScanScreen() {
         open={pendingNew !== null}
         onClose={() => setPendingNew(null)}
         title="Start a new bill?"
-        description={`${billName} (${plural(session.items.length, 'item')}) will be replaced.${
-          session.people.length > 0 ? ' The people you added stay.' : ''
-        }`}
+        description={
+          changingSaved
+            ? `Your changes to ${billName} will be dropped — the saved bill stays as it was.`
+            : `${billName} (${plural(session.items.length, 'item')}) will be replaced.${
+                session.people.length > 0 ? ' The people you added stay.' : ''
+              }`
+        }
         footer={
           <ActionBar>
             <Button block onClick={confirmNewBill}>
@@ -667,12 +678,16 @@ export function ScanScreen() {
       <BottomSheet
         open={confirmDiscard}
         onClose={() => setConfirmDiscard(false)}
-        title="Discard this bill?"
-        description="Its items and split will be cleared. The people stay in your people list."
+        title={changingSaved ? 'Discard your changes?' : 'Discard this bill?'}
+        description={
+          changingSaved
+            ? 'The saved bill stays as it was.'
+            : 'Its items and split will be cleared. The people stay in your people list.'
+        }
         footer={
           <ActionBar>
             <Button block variant="primary" onClick={discard}>
-              Discard bill
+              {changingSaved ? 'Discard changes' : 'Discard bill'}
             </Button>
             <Button block variant="ghost" onClick={() => setConfirmDiscard(false)}>
               Keep it

@@ -756,3 +756,29 @@ describe('ScanScreen — v3', () => {
   })
 })
 
+describe('ScanScreen — changing a saved bill', () => {
+  it('says the bill in progress is changes to a saved bill, and discarding drops only the changes', async () => {
+    mockApi()
+    const { user, probe } = renderScreen(<ScanScreen />, sampleSession('scan', { expenseId: 'e1' }))
+    expect(screen.getByText('Finish changing a saved bill')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Discard your changes' }))
+    const dialog = screen.getByRole('dialog', { name: 'Discard your changes?' })
+    expect(dialog).toHaveAccessibleDescription('The saved bill stays as it was.')
+    await user.click(within(dialog).getByRole('button', { name: 'Discard changes' }))
+    expect(probe.current.items).toEqual([])
+    expect(probe.current.expenseId).toBeNull()
+    expect(screen.getByText('Changes discarded')).toBeInTheDocument()
+  })
+
+  it('starting something new warns that the changes will be dropped', async () => {
+    mockApi()
+    const { user } = renderScreen(<ScanScreen />, sampleSession('scan', { expenseId: 'e1' }))
+    await healthLoaded()
+    await user.click(screen.getByRole('button', { name: 'Try a sample' }))
+    expect(screen.getByRole('dialog', { name: 'Start a new bill?' })).toHaveAccessibleDescription(
+      'Your changes to Saffron Table will be dropped — the saved bill stays as it was.',
+    )
+  })
+})
+
