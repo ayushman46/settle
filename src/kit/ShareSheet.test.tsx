@@ -9,7 +9,7 @@ import { decodePayLink } from '../share'
 import type * as ShareKit from '../share'
 import { makeExpense } from '../share/testing'
 import { ShareSheet } from './ShareSheet'
-import { seedPeople } from './testPeople'
+import { seedGroup, seedPeople } from './testPeople'
 
 const mocks = vi.hoisted(() => ({
   features: { clean_cards: false, themes: false } as Record<string, boolean>,
@@ -157,16 +157,33 @@ describe('ShareSheet', () => {
     expect(mocks.renderShareCard).toHaveBeenCalledOnce()
   })
 
-  it('shares the image with the message and says when it was saved instead', async () => {
+  it('saves the image on a computer, with the message alongside', async () => {
     const user = userEvent.setup()
     render(<Harness />)
     await payLink()
     await screen.findByRole('img', { name: 'Share card for Dinner at Toit' })
-    await user.click(screen.getByRole('button', { name: 'Share image' }))
+    await user.click(screen.getByRole('button', { name: 'Save image' }))
     expect(mocks.shareFile).toHaveBeenCalledWith(CARD, 'settle-dinner-at-toit.png', expect.stringContaining('/pay#'), {
       title: 'Dinner at Toit',
     })
     expect(await screen.findByText('Image saved')).toBeInTheDocument()
+  })
+
+  it('shares the image from a phone', async () => {
+    const user = userEvent.setup()
+    vi.stubGlobal('matchMedia', (query: string) => ({
+      matches: query.includes('pointer: coarse'),
+      media: query,
+      addEventListener: () => undefined,
+      removeEventListener: () => undefined,
+    }))
+    mocks.shareFile.mockResolvedValue('shared')
+    render(<Harness />)
+    await payLink()
+    await screen.findByRole('img', { name: 'Share card for Dinner at Toit' })
+    await user.click(screen.getByRole('button', { name: 'Share image' }))
+    expect(mocks.shareFile).toHaveBeenCalledOnce()
+    expect(screen.queryByText('Image saved')).not.toBeInTheDocument()
   })
 
   it('offers Pro to drop the footer, and draws clean cards in your theme and accent on Pro', async () => {
@@ -191,7 +208,37 @@ describe('ShareSheet', () => {
     mocks.renderShareCard.mockRejectedValue(new Error('no canvas'))
     render(<Harness />)
     expect(await screen.findByText('This browser couldn’t draw the image. The link works everywhere.')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Share image' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Save image' })).toBeDisabled()
+  })
+
+  it('shares a group expense for the record only: no pay link, nothing asking to be paid', async () => {
+    const user = userEvent.setup()
+    const group = seedGroup()
+    seedPeople({ upiId: null })
+    render(<Harness expense={makeExpense({ groupId: group.id, paidBack: {} })} />)
+    const sheet = screen.getByRole('dialog', { name: 'Share split' })
+    expect(
+      within(sheet).getByText('It settles with Goa 2026, so friends pay from the group’s settle up. Share it for the record.'),
+    ).toBeInTheDocument()
+    // Paying from a link would count the money twice.
+    expect(screen.queryByText('Making the pay link…')).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Copy link' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Add UPI ID' })).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Copy text' }))
+    expect(await screen.findByText('Summary copied')).toBeInTheDocument()
+    const text = await navigator.clipboard.readText()
+    expect(text).toMatch(/^🧾 Dinner at Toit · 18 Oct 2026\n/)
+    expect(text).not.toMatch(/UPI|\/pay#|Pay /)
+
+    await screen.findByRole('img', { name: 'Share card for Dinner at Toit' })
+    await user.click(screen.getByRole('button', { name: 'Save image' }))
+    expect(mocks.shareFile).toHaveBeenCalledWith(CARD, 'settle-dinner-at-toit.png', undefined, { title: 'Dinner at Toit' })
+  })
+
+  it('puts what is being shared above the title', () => {
+    render(<Harness />)
+    expect(within(screen.getByRole('dialog', { name: 'Share split' })).getByText('Dinner at Toit')).toBeInTheDocument()
   })
 
   it('asks for your UPI ID first when you have none, then puts it in the link', async () => {

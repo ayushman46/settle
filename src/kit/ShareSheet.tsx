@@ -9,14 +9,13 @@ import {
   Skeleton,
   useToast,
 } from '../components'
-import { updateFriend, useFriendsById, useProfile } from '../data'
-import { ME_ID, type AccentId, type Expense } from '../domain/types'
+import { updateFriend, useFriendsById, useGroup, useProfile } from '../data'
+import { BRAND, ME_ID, type AccentId, type Expense } from '../domain/types'
+import { isSettledInGroup } from '../engine/balances'
 import { haptic } from '../lib/haptics'
 import { useHasFeature } from '../pro'
 import {
   copyText,
-  encodePayLink,
-  payLinkFromExpense,
   payLinkMessage,
   payLinkProgress,
   renderShareCard,
@@ -26,12 +25,13 @@ import {
   shareResult,
   summaryText,
   whatsappUrl,
-  type PayLinkPayload,
   type ShareCardInput,
 } from '../share'
+import { firstName } from '../share/text'
 import { friendLabel } from './friendName'
-import { useMediaQuery } from './media'
+import { DARK_SCHEME, TOUCH_FIRST, useMediaQuery } from './media'
 import { UpiIdForm } from './UpiIdForm'
+import { usePayLink } from './usePayLink'
 import styles from './ShareSheet.module.css'
 
 export interface ShareSheetProps {
@@ -40,23 +40,6 @@ export interface ShareSheetProps {
   onClose: () => void
   /** Opens the Pro upsell from the card's footer note (shown on the free plan only). */
   onUpgrade?: () => void
-}
-
-/** The pay link for `payload`, made once the sheet opens (null while it's being made). */
-function usePayLink(open: boolean, payload: PayLinkPayload): string | null {
-  const key = JSON.stringify(payload)
-  const [made, setMade] = useState<{ key: string; url: string } | null>(null)
-  useEffect(() => {
-    if (!open) return
-    let live = true
-    void encodePayLink(payload).then((url) => {
-      if (live) setMade({ key, url })
-    })
-    return () => {
-      live = false
-    }
-  }, [open, key, payload])
-  return made?.key === key ? made.url : null
 }
 
 type CardState = { key: string; status: 'ready'; blob: Blob; preview: string | null } | { key: string; status: 'failed' }
@@ -114,20 +97,24 @@ function useShareCard(open: boolean, input: ShareCardInput, opts: CardOptions): 
  * Everything that gets a split out to the group: one pay link (friends tap their name and pay by
  * UPI), sent on WhatsApp or any app, copied, or as a full text summary — and a receipt-style
  * image of the split (clean on Pro, with a small "Made with Settle" line on the free plan).
- * When whoever's collecting has no UPI ID yet, it offers to add one first.
+ * When whoever's collecting has no UPI ID yet, it offers to add one first. Group expenses settle
+ * through the group's balances, so they're shared for the record, without a pay link (paying
+ * from one would count the money twice).
  */
 export function ShareSheet({ expense, open, onClose, onUpgrade }: ShareSheetProps) {
   const imageHeadingId = useId()
   const toast = useToast()
   const profile = useProfile()
   const friendsById = useFriendsById()
+  const group = useGroup(expense.groupId)
   const cleanCards = useHasFeature('clean_cards')
   const themes = useHasFeature('themes')
-  const systemDark = useMediaQuery('(prefers-color-scheme: dark)')
+  const systemDark = useMediaQuery(DARK_SCHEME)
+  const touch = useMediaQuery(TOUCH_FIRST)
   const [addingUpi, setAddingUpi] = useState(false)
 
-  const payload = useMemo(() => payLinkFromExpense(expense, friendsById, profile), [expense, friendsById, profile])
-  const link = usePayLink(open, payload)
+  const settlesIn = group !== null && isSettledInGroup(expense, [group]) ? group : null
+  const { payload, link } = usePayLink(expense, { enabled: open && settlesIn === null })
   const cardInput = useMemo(() => shareCardInputFromExpense(expense, friendsById, profile), [expense, friendsById, profile])
   const theme = profile.theme === 'system' ? (systemDark ? 'dark' : 'light') : profile.theme
   const cardOpts = useMemo<CardOptions>(
@@ -138,13 +125,18 @@ export function ShareSheet({ expense, open, onClose, onUpgrade }: ShareSheetProp
 
   const fromPayee = expense.payerId === ME_ID
   const payer = friendsById[expense.payerId] ?? null
-  const payerFirst = friendLabel(expense.payerId, payer).split(/\s+/)[0] ?? ''
-  const owing = payLinkProgress(payload).outstanding > 0
+  const payerFirst = firstName(friendLabel(expense.payerId, payer))
+  const owing = settlesIn === null && payLinkProgress(payload).outstanding > 0
   const rupees = payload.c === 'INR'
   const upiMissing = owing && rupees && payload.to.u === null
-  const message = link ? payLinkMessage(payload, link, { fromPayee }) : null
+  // For the record only: no UPI ID and no link, so the text never asks anyone to pay.
+  const record = useMemo(() => summaryText({ ...payload, to: { ...payload.to, u: null } }), [payload])
+  const summary = settlesIn ? record : link ? summaryText(payload, link) : null
+  const message = settlesIn ? record : link ? payLinkMessage(payload, link, { fromPayee }) : null
 
-  const description = !owing
+  const description = settlesIn
+    ? `It settles with ${settlesIn.name}, so friends pay from the group’s settle up. Share it for the record.`
+    : !owing
     ? 'Everyone’s settled. Share it for the record.'
     : payload.to.u && rupees
       ? fromPayee
@@ -190,14 +182,16 @@ export function ShareSheet({ expense, open, onClose, onUpgrade }: ShareSheetProp
   }
 
   const copySummary = async (): Promise<void> => {
-    if (!link) return
-    if (await copyText(summaryText(payload, link))) done('Summary copied')
+    if (!summary) return
+    if (await copyText(summary)) done('Summary copied')
     else oops('Couldn’t copy the summary.')
   }
 
   const shareImage = async (): Promise<void> => {
     if (card?.status !== 'ready') return
-    const outcome = await shareFile(card.blob, shareCardFilename(expense.title), message ?? undefined, { title: expense.title })
+    // With the pay link along as the caption, where the app takes one (WhatsApp does).
+    const caption = settlesIn ? undefined : (message ?? undefined)
+    const outcome = await shareFile(card.blob, shareCardFilename(expense.title), caption, { title: expense.title })
     if (outcome === 'shared') haptic('success')
     else if (outcome === 'downloaded') done('Image saved')
     else if (outcome === 'failed') oops('Couldn’t share the image.')
@@ -214,7 +208,7 @@ export function ShareSheet({ expense, open, onClose, onUpgrade }: ShareSheetProp
   }
 
   return (
-    <BottomSheet open={open} onClose={onClose} title="Share split" description={description} size="tall">
+    <BottomSheet open={open} onClose={onClose} eyebrow={expense.title} title="Share split" description={description} size="tall">
       <div className={styles.body}>
         {upiMissing && (payer || fromPayee) && (
           <section className={styles.upi} aria-label="UPI ID">
@@ -241,23 +235,25 @@ export function ShareSheet({ expense, open, onClose, onUpgrade }: ShareSheetProp
           </section>
         )}
 
-        <div className={styles.link} aria-live="polite">
-          <Link2 aria-hidden="true" className={styles.linkIcon} strokeWidth={2.25} />
-          {link ? (
-            <span className={styles.linkText}>{link.replace(/^https?:\/\//, '')}</span>
-          ) : (
-            <span className={styles.linkPending}>
-              <span className="visually-hidden">Making the pay link…</span>
-              <Skeleton width="70%" />
-            </span>
-          )}
-        </div>
+        {settlesIn === null && (
+          <div className={styles.link} aria-live="polite">
+            <Link2 aria-hidden="true" className={styles.linkIcon} strokeWidth={2.25} />
+            {link ? (
+              <span className={styles.linkText}>{link.replace(/^https?:\/\//, '')}</span>
+            ) : (
+              <span className={styles.linkPending}>
+                <span className="visually-hidden">Making the pay link…</span>
+                <Skeleton width="70%" />
+              </span>
+            )}
+          </div>
+        )}
 
-        <QuickActionGrid label="Share the pay link" className={styles.actions}>
+        <QuickActionGrid label={settlesIn ? 'Share the split' : 'Share the pay link'} className={styles.actions}>
           <QuickAction tone="groceries" icon={<MessageCircle />} label="WhatsApp" onClick={sendWhatsApp} disabled={!message} />
           <QuickAction tone="travel" icon={<Share2 />} label="More apps" onClick={shareElsewhere} disabled={!message} />
-          <QuickAction tone="ink" icon={<Copy />} label="Copy link" onClick={copyLink} disabled={!link} />
-          <QuickAction tone="entertainment" icon={<FileText />} label="Copy text" onClick={copySummary} disabled={!link} />
+          {settlesIn === null && <QuickAction tone="ink" icon={<Copy />} label="Copy link" onClick={copyLink} disabled={!link} />}
+          <QuickAction tone="entertainment" icon={<FileText />} label="Copy text" onClick={copySummary} disabled={!summary} />
         </QuickActionGrid>
 
         <section className={styles.image} aria-labelledby={imageHeadingId}>
@@ -281,8 +277,9 @@ export function ShareSheet({ expense, open, onClose, onUpgrade }: ShareSheetProp
                   ? 'This browser couldn’t draw the image. The link works everywhere.'
                   : cleanCards
                     ? 'A clean receipt of the split for the group chat.'
-                    : 'A receipt of the split, with a small “Made with Settle” line.'}
+                    : `A receipt of the split, with a small “Made with ${BRAND.name}” line.`}
             </p>
+            {/* Phones hand the image to the share sheet; computers download it. */}
             <Button
               size="sm"
               variant="secondary"
@@ -290,7 +287,7 @@ export function ShareSheet({ expense, open, onClose, onUpgrade }: ShareSheetProp
               onClick={shareImage}
               disabled={card?.status !== 'ready'}
             >
-              Share image
+              {touch ? 'Share image' : 'Save image'}
             </Button>
             {!cleanCards && onUpgrade && (
               <button type="button" className={styles.upgrade} onClick={onUpgrade}>
