@@ -1,33 +1,46 @@
-import { useState, type FormEvent } from 'react'
+import { useState, type FormEvent, type ReactNode } from 'react'
 import { Button, TextField } from '../components'
+import { ME_ID } from '../domain/types'
 import { cx } from '../lib/cx'
 import { isValidUpiId, normalizeUpiId } from '../lib/upi'
 import styles from './UpiIdForm.module.css'
 
 export interface UpiIdFormProps {
-  /** Names the field: "Your UPI ID", "UPI ID for Riya". */
-  label: string
+  /** Whose ID it is: `ME_ID` for you, a friend's id, or null for someone who isn't one of your people. */
+  ownerId: string | null
+  /** Their name, for the field's label ("UPI ID for Riya"). */
+  ownerName: string
   /** Called with a valid ID, normalized ("Riya@OkAxis " → "riya@okaxis"). */
   onSave: (upiId: string) => void
-  /** Helper text under the field. */
-  hint?: string
-  /** Default "Save". */
+  /** One line above the field ("Riya hasn't added a UPI ID yet…"). */
+  lead?: ReactNode
+  /** Default "Save UPI ID". */
   submitLabel?: string
   autoFocus?: boolean
   className?: string
 }
 
-export const UPI_ID_ERROR = 'That doesn’t look like a UPI ID. It’s usually like name@okaxis.'
+export const UPI_ID_ERROR = 'That doesn’t look like a UPI ID. It’s like name@bank.'
 
 /**
- * Adds a UPI ID in place (a sheet that needs one, a card asking for yours): one field and a
- * Save button. Only a valid ID is saved; a wrong one gets a friendly hint, after a first try.
+ * Adds a UPI ID in place, where one is missing (a pay sheet, a share sheet asking for yours):
+ * one field and a Save button. Only a valid ID is saved; a wrong one gets a friendly hint once
+ * they've tried.
  */
-export function UpiIdForm({ label, onSave, hint, submitLabel = 'Save', autoFocus = false, className }: UpiIdFormProps) {
+export function UpiIdForm({
+  ownerId,
+  ownerName,
+  onSave,
+  lead,
+  submitLabel = 'Save UPI ID',
+  autoFocus = false,
+  className,
+}: UpiIdFormProps) {
   const [text, setText] = useState('')
   const [tried, setTried] = useState(false)
+  const mine = ownerId === ME_ID
   const valid = isValidUpiId(text)
-  const error = tried && text.trim() !== '' && !valid ? UPI_ID_ERROR : undefined
+  const error = tried && text !== '' && !valid ? UPI_ID_ERROR : undefined
 
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -37,28 +50,26 @@ export function UpiIdForm({ label, onSave, hint, submitLabel = 'Save', autoFocus
 
   return (
     <form className={cx(styles.form, className)} onSubmit={submit} noValidate>
+      {lead != null && <p className={styles.lead}>{lead}</p>}
       <TextField
-        label={label}
+        label={mine ? 'Your UPI ID' : `UPI ID for ${ownerName}`}
         placeholder="name@okaxis"
         value={text}
         onChange={(event) => setText(event.target.value.replace(/\s+/g, ''))}
         onBlur={() => {
-          if (text.trim() !== '') setTried(true)
+          if (text !== '') setTried(true)
         }}
         error={error}
-        hint={hint}
+        hint={mine ? 'Friends pay you here. It stays on this phone.' : ownerId ? `Saved to ${ownerName} for next time.` : undefined}
         inputMode="email"
         autoComplete="off"
         autoCapitalize="none"
         autoCorrect="off"
         spellCheck={false}
         enterKeyHint="done"
-        // eslint-disable-next-line jsx-a11y/no-autofocus -- opened on purpose to type the ID
         autoFocus={autoFocus}
-        containerClassName={styles.field}
-        className={styles.input}
       />
-      <Button type="submit" size="md" disabled={text.trim() === ''} className={styles.save}>
+      <Button type="submit" size="md" block disabled={text === ''}>
         {submitLabel}
       </Button>
     </form>
