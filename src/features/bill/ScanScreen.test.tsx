@@ -3,6 +3,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { ScanResponse } from '../../../shared/api'
 import { ImageError, prepareImage, type PreparedImage } from '../../lib/image'
 import type * as ImageModule from '../../lib/image'
+import { navigate } from '../../app/router'
+import { peekSplitPrefill, resetDataForTests } from '../../data'
+import { aiUsedToday, AI_USAGE_KEY, localDay, resetQuotaForTests } from '../../pro/quota'
+import { resetProModulesForTests } from '../../pro/testKit'
 import { readEntry, resetFlowHistory } from '../../state/backStack'
 import { resetHealthForTests } from '../../state/health'
 import { getPhoto, setPhoto } from '../../state/photo'
@@ -105,6 +109,9 @@ const revoked: string[] = []
 const originalRevoke = URL.revokeObjectURL
 
 beforeEach(() => {
+  resetDataForTests()
+  resetQuotaForTests()
+  resetProModulesForTests()
   resetFlowHistory()
   window.history.replaceState(null, '')
   resetHealthForTests()
@@ -130,7 +137,7 @@ describe('ScanScreen — home', () => {
     renderScreen(<ScanScreen />, createSession('INR'))
     await healthLoaded()
 
-    expect(screen.getByRole('heading', { level: 1, name: 'Split any bill in seconds' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 1, name: 'Scan a bill' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Scan a bill' })).toBeEnabled()
     expect(screen.getByRole('button', { name: 'Upload a photo' })).toBeEnabled()
     expect(screen.getByRole('button', { name: 'Type it in' })).toBeInTheDocument()
@@ -180,9 +187,9 @@ describe('ScanScreen — home', () => {
     expect(screen.getByRole('button', { name: 'Try a sample bill' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Scan a bill' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Upload a photo' })).not.toBeInTheDocument()
-    // The pitch matches what's on offer: no "snap the bill" without a camera button.
-    expect(screen.getByText('Type in the items, tap who ate what. Tax, tips and discounts are shared fairly.')).toBeInTheDocument()
-    expect(screen.queryByText(/Snap the bill/)).not.toBeInTheDocument()
+    // The pitch matches what's on offer: no "snap it" without a camera button.
+    expect(screen.getByText('Type the items in, tap who had what — tax, tips and discounts are shared fairly.')).toBeInTheDocument()
+    expect(screen.queryByText(/Snap it/)).not.toBeInTheDocument()
   })
 
   it('a returning visitor whose server can’t scan gets the typing-first layout on the first paint', async () => {
@@ -386,7 +393,7 @@ describe('ScanScreen — scanning', () => {
     expect(alert).toHaveTextContent("We couldn't open that image.")
   })
 
-  it('a result with no usable items counts as unreadable', async () => {
+  it('a result with no usable items and no total counts as unreadable', async () => {
     const { scans } = mockApi()
     prepareMock.mockResolvedValue(preparedImage())
     const { probe } = renderScreen(<ScanScreen />, createSession('INR'))
@@ -395,7 +402,7 @@ describe('ScanScreen — scanning', () => {
     choosePhoto()
     await waitFor(() => expect(scans).toHaveLength(1))
     await act(async () => {
-      scans[0]?.respond(json({ ...SCANNED, items: [{ name: '   ', quantity: 1, amount: 10 }] }))
+      scans[0]?.respond(json({ ...SCANNED, items: [{ name: '   ', quantity: 1, amount: 10 }], total: null }))
     })
     expect(await screen.findByRole('alert')).toHaveTextContent("Couldn't read that bill")
     expect(probe.current.step).toBe('scan')
@@ -411,7 +418,7 @@ describe('ScanScreen — scanning', () => {
     await waitFor(() => expect(scans).toHaveLength(1))
     await user.click(screen.getByRole('button', { name: 'Cancel' }))
 
-    expect(screen.getByRole('heading', { level: 1, name: 'Split any bill in seconds' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 1, name: 'Scan a bill' })).toBeInTheDocument()
     expect(scans[0]?.signal?.aborted).toBe(true)
     expect(screen.queryByRole('alert')).not.toBeInTheDocument()
     expect(probe.current.step).toBe('scan')
@@ -433,7 +440,7 @@ describe('ScanScreen — scanning', () => {
       window.history.back()
       await historyIdle()
     })
-    await screen.findByRole('heading', { level: 1, name: 'Split any bill in seconds' })
+    await screen.findByRole('heading', { level: 1, name: 'Scan a bill' })
     expect(scans[0]?.signal?.aborted).toBe(true)
     expect(readEntry(window.history.state)).toEqual({ step: 'scan', depth: 0, sheet: false })
   })
@@ -505,7 +512,7 @@ describe('ScanScreen — desktop', () => {
     choosePhoto()
     await waitFor(() => expect(scans).toHaveLength(1))
     await user.keyboard('{Escape}')
-    expect(screen.getByRole('heading', { level: 1, name: 'Split any bill in seconds' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 1, name: 'Scan a bill' })).toBeInTheDocument()
     expect(scans[0]?.signal?.aborted).toBe(true)
   })
 })
@@ -583,10 +590,10 @@ describe('ScanScreen — starting over a bill in progress', () => {
   it('puts the bill in progress first, instead of the illustration', async () => {
     mockApi()
     renderScreen(<ScanScreen />, busySession())
-    // Wordmark, then straight to the bill in progress, then the title.
-    const [, second, third] = Array.from(screen.getByRole('main').children)
-    expect(second).toHaveTextContent('Pick up where you left off')
-    expect(third).toContainElement(screen.getByRole('heading', { level: 1 }))
+    // Straight to the bill in progress, then the title.
+    const [first, second] = Array.from(screen.getByRole('main').children)
+    expect(first).toHaveTextContent('Pick up where you left off')
+    expect(second).toContainElement(screen.getByRole('heading', { level: 1 }))
   })
 })
 
@@ -622,3 +629,129 @@ describe('ScanScreen — resume card', () => {
     expect(screen.getByText('Bill discarded')).toBeInTheDocument()
   })
 })
+
+describe('ScanScreen — v3', () => {
+  /** The flow opened from Home: `/app`, then `/app/bill` pushed over it. */
+  function openFromHome(): void {
+    window.history.replaceState(null, '', '/app')
+    navigate('/app/bill')
+  }
+
+  it('the back arrow leaves the flow for the screen it was opened from', async () => {
+    mockApi()
+    openFromHome()
+    const { user, probe } = renderScreen(<ScanScreen />, sampleSession('scan'))
+    await user.click(screen.getByRole('button', { name: 'Back' }))
+    await historyIdle()
+    expect(window.location.pathname).toBe('/app')
+    // The bill in progress is kept for later.
+    expect(probe.current.items).toHaveLength(8)
+  })
+
+  it('keeps the category the scan read on the bill', async () => {
+    const { scans } = mockApi()
+    prepareMock.mockResolvedValue(preparedImage())
+    const { probe } = renderScreen(<Flow />, createSession('INR'))
+    await healthLoaded()
+    choosePhoto()
+    await waitFor(() => expect(scans).toHaveLength(1))
+    await act(async () => {
+      scans[0]?.respond(json({ ...SCANNED, category: 'groceries' }))
+    })
+    await screen.findByRole('heading', { level: 1, name: 'Check the items' })
+    expect(probe.current.category).toBe('groceries')
+  })
+
+  it('a bill with just a total becomes a prefilled quick split, leaving the bill in progress alone', async () => {
+    const { scans } = mockApi()
+    prepareMock.mockResolvedValue(preparedImage())
+    openFromHome()
+    const before = createSession('INR')
+    const { probe } = renderScreen(<ScanScreen />, before)
+    await healthLoaded()
+
+    choosePhoto()
+    await waitFor(() => expect(scans).toHaveLength(1))
+    await act(async () => {
+      scans[0]?.respond(
+        json({
+          ...SCANNED,
+          merchant: 'BESCOM',
+          date: '2026-10-05',
+          items: [],
+          subtotal: null,
+          tax: null,
+          total: 1847,
+          category: 'utilities',
+        }),
+      )
+    })
+    await historyIdle()
+
+    expect(window.location.pathname + window.location.search).toBe('/app/split/new?from=scan')
+    expect(peekSplitPrefill()).toEqual({
+      title: 'BESCOM',
+      total: 184700,
+      currency: 'INR',
+      category: 'utilities',
+      date: '2026-10-05',
+      source: 'scan',
+    })
+    expect(probe.current).toBe(before)
+    expect(revoked).toContain('blob:test-photo-1')
+    expect(getPhoto()).toBeNull()
+    expect(aiUsedToday()).toBe(1)
+    // Back from the quick split returns to Home: the scan step was replaced.
+    window.history.back()
+    await waitFor(() => expect(window.location.pathname).toBe('/app'))
+  })
+
+  it('counts each successful scan against the free daily AI allowance, and says how many are left', async () => {
+    const { scans } = mockApi()
+    prepareMock.mockResolvedValue(preparedImage())
+    renderScreen(<Flow />, createSession('INR'))
+    await healthLoaded()
+    expect(await screen.findByText('3 of 3 free AI splits left today')).toBeInTheDocument()
+
+    choosePhoto()
+    await waitFor(() => expect(scans).toHaveLength(1))
+    await act(async () => {
+      scans[0]?.respond(json(SCANNED))
+    })
+    await screen.findByRole('heading', { level: 1, name: 'Check the items' })
+    expect(aiUsedToday()).toBe(1)
+  })
+
+  it('a scan that fails costs nothing', async () => {
+    const { scans } = mockApi()
+    prepareMock.mockResolvedValue(preparedImage())
+    renderScreen(<ScanScreen />, createSession('INR'))
+    await healthLoaded()
+    choosePhoto()
+    await waitFor(() => expect(scans).toHaveLength(1))
+    await act(async () => {
+      scans[0]?.respond(json({ error: { code: 'not_a_bill', message: 'x' } }, 422))
+    })
+    await screen.findByRole('alert')
+    expect(aiUsedToday()).toBe(0)
+    expect(screen.getByText('3 of 3 free AI splits left today')).toBeInTheDocument()
+  })
+
+  it('out of free AI splits for today: offers Pro, and typing the bill in', async () => {
+    mockApi()
+    window.localStorage.setItem(AI_USAGE_KEY, JSON.stringify({ day: localDay(), used: 3 }))
+    resetQuotaForTests()
+    openFromHome()
+    const { user } = renderScreen(<ScanScreen />, createSession('INR'))
+    await healthLoaded()
+
+    expect(screen.getByText("That's today's free AI splits")).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Scan a bill' })).not.toBeInTheDocument()
+    expect(screen.queryByText(/free AI splits left today/)).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Type the items in' })).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Get unlimited with Pro' }))
+    expect(window.location.pathname).toBe('/app/pro')
+  })
+})
+

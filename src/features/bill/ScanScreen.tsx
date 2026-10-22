@@ -7,7 +7,7 @@ import {
   useSyncExternalStore,
   type ChangeEvent,
 } from 'react'
-import { ArrowRight, Camera, ImageUp, Keyboard, ReceiptText, Sparkles, WifiOff, X } from 'lucide-react'
+import { ArrowRight, Camera, Crown, ImageUp, Keyboard, ReceiptText, Sparkles, WifiOff, X } from 'lucide-react'
 import { OFFLINE_MESSAGE, SCANS_BUSY_MESSAGE, ScanError, scanBill } from '../../api/client'
 import { scanToBill } from '../../api/mapScan'
 import { SAMPLE_SCAN } from '../../api/sample'
@@ -25,8 +25,14 @@ import {
   Screen,
   Skeleton,
   SkeletonRows,
+  TopBar,
   useToast,
 } from '../../components'
+import { navigate } from '../../app/router'
+import { setSplitPrefill } from '../../data'
+import { FREE_AI_PER_DAY } from '../../domain/types'
+import { today } from '../../engine/dates'
+import { consumeAiQuota, useAiQuota, usePro } from '../../pro'
 import { cx } from '../../lib/cx'
 import { haptic } from '../../lib/haptics'
 import { lastInputModality } from '../../components/overlayStack'
@@ -38,6 +44,7 @@ import { setPhoto } from '../../state/photo'
 import { effectivePaid, hasProgress } from '../../state/selectors'
 import { useFlow, useSession } from '../../state/store'
 import { EMPTY_META } from '../../types'
+import { QUICK_SPLIT_PATH, scanPrefill } from './scanPrefill'
 import { focusScreenHeading, plural, revokeUrl } from './screenUtils'
 import styles from './ScanScreen.module.css'
 
@@ -140,13 +147,19 @@ interface ScanJob {
   retry: PreparedImage | null
 }
 
-/** Home: snap or upload a bill (the AI reads it), type it in, or try a sample. */
+/**
+ * The bill flow's first step: snap or upload a bill (the AI reads it), type it in, or try a
+ * sample. Restaurant bills go on item by item; a bill with just a total (a cab, the electricity)
+ * becomes a prefilled quick split.
+ */
 export function ScanScreen() {
   const { session, dispatch } = useSession()
   const flow = useFlow()
   const toast = useToast()
   const health = useHealth()
   const online = useOnline()
+  const pro = usePro()
+  const quota = useAiQuota()
   const [phase, setPhase] = useState<Phase>({ kind: 'idle', problem: null })
   const [confirmDiscard, setConfirmDiscard] = useState(false)
   /** A new bill waiting for "Start new bill" (it would replace the one in progress). */
@@ -166,7 +179,10 @@ export function ScanScreen() {
   })
 
   const scanningDown = health !== 'loading' && health !== null && !health.configured
-  const canScan = !scanningDown && online
+  // Free AI reads are counted per day; Pro is unlimited. (While Pro is still loading, don't block.)
+  const quotaKnown = pro.status !== 'loading'
+  const outOfScans = quotaKnown && !quota.canUse
+  const canScan = !scanningDown && online && !outOfScans
   const busy = phase.kind === 'busy'
 
   // Scanning just went away (no service, or offline): the photo buttons vanish. A keyboard
@@ -219,12 +235,28 @@ export function ScanScreen() {
         const response = await scanBill(image.dataUrl, signal)
         if (signal.aborted) throw new ScanError('aborted')
         const bill = scanToBill(response, latest.current.currency)
+
+        // A bill with just a total (a cab, the electricity): a quick split, prefilled. The bill in
+        // progress (if any) stays as it was.
+        const prefill = scanPrefill(bill, today())
+        if (prefill) {
+          job.retry = null
+          job.controller = null
+          revokeUrl(image.previewUrl)
+          consumeAiQuota()
+          haptic('success')
+          setPhase({ kind: 'idle', problem: null })
+          setSplitPrefill(prefill)
+          navigate(QUICK_SPLIT_PATH, { replace: true })
+          return
+        }
         if (bill.items.length === 0) throw new ScanError('unreadable')
 
         // Success: the photo now belongs to the review screen ("View photo").
         job.retry = null
         job.controller = null
         setPhoto({ previewUrl: image.previewUrl })
+        consumeAiQuota()
         haptic('success')
         dispatch({ type: 'loadBill', source: 'scan', ...bill })
       } catch (error) {
@@ -484,13 +516,18 @@ export function ScanScreen() {
     </Card>
   )
 
+  // "2 of 3 free AI splits left today" while there are some; Pro needs no counting.
+  const quotaHint =
+    canScan && quotaKnown && !pro.isPro ? `${quota.remaining} of ${quota.limit} free AI splits left today` : undefined
+
   return (
     <>
       <Screen
         key="idle"
+        header={<TopBar onBack={flow.exit} />}
         contentClassName={styles.content}
         footer={
-          <ActionBar>
+          <ActionBar hint={quotaHint}>
             {canScan ? (
               <>
                 <Button block iconStart={<Camera />} onClick={() => startNewBill({ kind: 'photo', source: 'camera' })}>
@@ -526,22 +563,15 @@ export function ScanScreen() {
           </ActionBar>
         }
       >
-        <div className={styles.brand}>
-          <span className={styles.brandMark} aria-hidden="true">
-            <ReceiptText strokeWidth={2.25} />
-          </span>
-          <span className={styles.brandName}>BillSplit</span>
-        </div>
-
         {/* A bill in progress comes first (above the fold, clear of the actions); no illustration then. */}
-        {showResume ? resumeCard : !problem && <BillArt scanning={!scanningDown} />}
+        {showResume ? resumeCard : !problem && <BillArt scanning={canScan} />}
 
         <PageTitle
-          title="Split any bill in seconds"
+          title="Scan a bill"
           subtitle={
-            scanningDown
-              ? 'Type in the items, tap who ate what. Tax, tips and discounts are shared fairly.'
-              : 'Snap the bill, tap who ate what. Tax, tips and discounts are shared fairly.'
+            canScan
+              ? 'Snap it, tap who had what — tax, tips and discounts are shared fairly. A cab or power bill becomes a quick split.'
+              : 'Type the items in, tap who had what — tax, tips and discounts are shared fairly.'
           }
         />
 
@@ -583,6 +613,23 @@ export function ScanScreen() {
 
         {online && scanningDown && !problem && (
           <Banner tone="info">{SCANNING_OFF}</Banner>
+        )}
+
+        {online && !scanningDown && outOfScans && !problem && (
+          <Banner
+            tone="info"
+            icon={<Crown />}
+            title="That's today's free AI splits"
+            actions={
+              <div className={styles.problemActions}>
+                <Button size="sm" variant="accent" onClick={() => navigate('/app/pro')}>
+                  Get unlimited with Pro
+                </Button>
+              </div>
+            }
+          >
+            {`You get ${FREE_AI_PER_DAY} a day, and they're back tomorrow. Typing this one in takes about a minute.`}
+          </Banner>
         )}
       </Screen>
 

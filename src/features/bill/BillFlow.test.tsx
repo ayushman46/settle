@@ -2,6 +2,9 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ToastProvider } from '../../components'
+import { resetDataForTests } from '../../data'
+import { resetQuotaForTests } from '../../pro/quota'
+import { resetProModulesForTests } from '../../pro/testKit'
 import { resetFlowHistory } from '../../state/backStack'
 import { resetHealthForTests } from '../../state/health'
 import { createSession } from '../../state/reducer'
@@ -57,6 +60,9 @@ function renderFlow(session: Session) {
 }
 
 beforeEach(() => {
+  resetDataForTests()
+  resetQuotaForTests()
+  resetProModulesForTests()
   resetFlowHistory()
   window.history.replaceState(null, '', '/app/bill')
   resetHealthForTests()
@@ -83,7 +89,7 @@ describe('BillFlow', () => {
   it('opens on the scan step and checks whether scanning is available', async () => {
     renderFlow(createSession('INR'))
 
-    expect(screen.getByRole('heading', { level: 1, name: 'Split any bill in seconds' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 1, name: 'Scan a bill' })).toBeInTheDocument()
     expect(document.title).toBe('Scan a bill · Settle')
     expect(navOf()).toBe('none')
     await waitFor(() => expect(fetch).toHaveBeenCalledWith('/api/health', expect.anything()))
@@ -177,6 +183,6 @@ describe('BillFlow', () => {
     stubs.crashPeople = false
     await user.click(screen.getByRole('button', { name: 'Start a fresh bill' }))
     expect(window.localStorage.getItem('billsplit.session.v1')).toBeNull()
-    expect(await screen.findByRole('heading', { level: 1, name: 'Split any bill in seconds' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { level: 1, name: 'Scan a bill' })).toBeInTheDocument()
   })
 })
