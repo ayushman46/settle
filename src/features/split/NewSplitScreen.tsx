@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { CircleCheck, Copy, Info, Plane, Repeat, ScanLine, Sparkles, UsersRound } from 'lucide-react'
 import { goBack, navigate, useBackClose, useLocation, useRoute, useSearchParams } from '../../app/router'
 import {
@@ -33,7 +33,7 @@ import {
   useGroups,
   useProfile,
 } from '../../data'
-import { ME_ID, type Expense, type ExpenseSource, type Group } from '../../domain/types'
+import { BRAND, ME_ID, type Expense, type ExpenseSource, type Group } from '../../domain/types'
 import { categoryFromText } from '../../engine/categories'
 import { today } from '../../engine/dates'
 import { AmountHero, CategoryPicker, DateField, friendLabel, PayerPicker, PeoplePicker, SplitEditor } from '../../kit/index-a'
@@ -197,6 +197,7 @@ function SplitScreen({ editing, url }: SplitScreenProps) {
   const [hidden, setHidden] = useState<ReadonlySet<'origin' | 'rent' | 'trip'>>(() => new Set())
   const saving = useRef(false)
   const opened = useRef(false)
+  const categoriesRef = useRef<HTMLDivElement>(null)
 
   const group = useGroup(form.groupId)
   const isNew = editing === null
@@ -226,6 +227,13 @@ function SplitScreen({ editing, url }: SplitScreenProps) {
     else clearSplitDraft()
   }, [url, base, form, dirty, leaving, saved, initial.prefilled, initial.origin])
   useEffect(() => clearSplitDraft, [])
+
+  // A split with no category yet opens on the first categories, not scrolled to "Other" at the end.
+  useLayoutEffect(() => {
+    if (initial.form.category !== 'other' || initial.form.categoryPicked) return
+    const row = categoriesRef.current?.querySelector<HTMLElement>('[role="radiogroup"]')
+    if (row) row.scrollLeft = 0
+  }, [initial.form.category, initial.form.categoryPicked])
 
   const change = (patch: Partial<SplitForm>): void => setForm((current) => ({ ...current, ...patch }))
 
@@ -354,11 +362,13 @@ function SplitScreen({ editing, url }: SplitScreenProps) {
             change(form.categoryPicked ? { title: text } : { title: text, category: categoryFromText(text) ?? 'other' })
           }}
         />
-        <CategoryPicker
-          value={form.category}
-          suggested={suggested}
-          onChange={(category) => change({ category, categoryPicked: true })}
-        />
+        <div ref={categoriesRef}>
+          <CategoryPicker
+            value={form.category}
+            suggested={suggested}
+            onChange={(category) => change({ category, categoryPicked: true })}
+          />
+        </div>
         <div className={styles.chips}>
           <DateField value={form.date} onChange={(date) => change({ date })} max={form.date > day ? form.date : undefined} />
           <GroupPicker value={form.groupId} onChange={pickGroup} />
@@ -379,7 +389,7 @@ function SplitScreen({ editing, url }: SplitScreenProps) {
           <div className={styles.tipText}>
             <p className={styles.tipTitle}>Splitting a whole trip?</p>
             <p className={styles.tipBody}>
-              Put it in a group: every expense adds up, and Settle works out the fewest payments at the end.
+              Put it in a group: every expense adds up, and {BRAND.name} works out the fewest payments at the end.
             </p>
             <div className={styles.tipActions}>
               <Button size="sm" variant="accent" iconStart={<UsersRound />} onClick={() => leave(() => navigate('/app/groups?new=1'))}>
@@ -401,7 +411,12 @@ function SplitScreen({ editing, url }: SplitScreenProps) {
             editing={editing}
             onEditItems={editing ? () => leave(() => openBill({ kind: 'edit', expenseId: editing.id })) : undefined}
           />
-          <PayerPicker value={form.payerId} onChange={(payerId) => change({ payerId })} candidates={payerCandidates(form)} />
+          <PayerPicker
+            className={styles.payer}
+            value={form.payerId}
+            onChange={(payerId) => change({ payerId })}
+            candidates={payerCandidates(form)}
+          />
         </section>
       ) : (
         <>
@@ -416,7 +431,12 @@ function SplitScreen({ editing, url }: SplitScreenProps) {
 
           <section className={styles.section} aria-labelledby="split-how">
             <SectionHeader id="split-how" title="How to split" />
-            <PayerPicker value={form.payerId} onChange={(payerId) => change({ payerId })} candidates={payerCandidates(form)} />
+            <PayerPicker
+              className={styles.payer}
+              value={form.payerId}
+              onChange={(payerId) => change({ payerId })}
+              candidates={payerCandidates(form)}
+            />
             {showRentTip && (
               <Banner
                 tone="info"

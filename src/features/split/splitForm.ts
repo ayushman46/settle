@@ -249,8 +249,10 @@ export function outcomeLine(input: OutcomeInput, nameOf: (friendId: string) => s
     const amounts = debtors.map(([, share]) => share)
     const first = amounts[0] ?? 0
     if (debtors.length === 1) return future ? `${names[0]} will owe you ${money(first)}` : `${names[0]} owes you ${money(first)}`
-    if (debtors.length <= 3 && amounts.every((a) => a === first)) {
-      return `${describePeople(names, 3)} ${future ? 'will owe' : 'owe'} you ${money(first)} each`
+    if (debtors.length <= 3) {
+      const who = describePeople(names, 3)
+      if (amounts.every((a) => a === first)) return `${who} ${future ? 'will owe' : 'owe'} you ${money(first)} each`
+      return future ? `You’ll get back ${money(owedTotal)} from ${who}` : `${who} owe you ${money(owedTotal)} in all`
     }
     return future
       ? `You’ll get back ${money(owedTotal)} from ${debtors.length} people`

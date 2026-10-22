@@ -229,7 +229,7 @@ describe('NewSplitScreen — starting points', () => {
     expect(amountField()).toHaveValue('840')
     expect(screen.getByLabelText("What's it for?")).toHaveValue('Cab to airport')
     expect(screen.getByRole('radio', { name: 'Shares' })).toHaveAttribute('aria-checked', 'true')
-    expect(screen.getByText('You’ll get back ₹630 from 2 people')).toBeInTheDocument()
+    expect(screen.getByText('You’ll get back ₹630 from Riya and Sam')).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Back' }))
     expect(await screen.findByRole('dialog', { name: 'Discard this split?' })).toBeInTheDocument()

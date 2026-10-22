@@ -302,13 +302,14 @@ describe('outcomeLine', () => {
     expect(line(ME_ID, { [ME_ID]: 80_000, riya: 80_000 })).toBe('Riya will owe you ₹800')
     expect(line(ME_ID, { [ME_ID]: 80_000, riya: 80_000, sam: 80_000 })).toBe('Riya and Sam will owe you ₹800 each')
     expect(line(ME_ID, { [ME_ID]: 80_000, riya: 80_000, sam: 80_000 }, 'now')).toBe('Riya and Sam owe you ₹800 each')
-    expect(line(ME_ID, { [ME_ID]: 1, riya: 2, sam: 3 })).toBe('You’ll get back ₹0.05 from 2 people')
-    expect(line(ME_ID, { [ME_ID]: 1, riya: 2, sam: 3 }, 'now')).toBe('2 people owe you ₹0.05')
+    expect(line(ME_ID, { [ME_ID]: 1, riya: 2, sam: 3 })).toBe('You’ll get back ₹0.05 from Riya and Sam')
+    expect(line(ME_ID, { [ME_ID]: 1, riya: 2, sam: 3 }, 'now')).toBe('Riya and Sam owe you ₹0.05 in all')
   })
 
   it('counts big tables instead of naming everyone', () => {
     const shares = { [ME_ID]: 100, riya: 100, sam: 100, neha: 100, x: 100 }
     expect(line(ME_ID, shares)).toBe('You’ll get back ₹4 from 4 people')
+    expect(line(ME_ID, shares, 'now')).toBe('4 people owe you ₹4')
   })
 
   it('says when it is all on you', () => {
