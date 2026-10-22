@@ -86,6 +86,25 @@ describe('FriendsScreen', () => {
     await user.click(screen.getByRole('button', { name: 'Back' }))
     await waitFor(() => expect(currentUrl()).toBe('/app/you'))
   })
+
+  it('opens the add sheet from ?new=1 (Home’s “Add”) and drops it once closed', async () => {
+    const { user } = renderApp('/app/friends?new=1', SCREENS)
+    const sheet = await screen.findByRole('dialog', { name: 'Add a person' })
+    await user.click(within(sheet).getByRole('button', { name: 'Close' }))
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Add a person' })).not.toBeInTheDocument())
+    await waitFor(() => expect(currentUrl()).toBe('/app/friends'))
+    expect(people()).toEqual([])
+  })
+
+  it('lands on the list with the new person after adding from ?new=1', async () => {
+    const { user } = renderApp('/app/friends?new=1', SCREENS)
+    const sheet = await screen.findByRole('dialog', { name: 'Add a person' })
+    await user.type(within(sheet).getByRole('textbox', { name: 'Name' }), 'Riya')
+    await user.click(within(sheet).getByRole('button', { name: 'Add person' }))
+    await waitFor(() => expect(currentUrl()).toBe('/app/friends'))
+    expect(people().map((f) => f.name)).toEqual(['Riya'])
+    expect(within(screen.getByRole('list', { name: 'Your people' })).getByRole('button', { name: /Riya/ })).toBeInTheDocument()
+  })
 })
 
 describe('FriendSheet', () => {

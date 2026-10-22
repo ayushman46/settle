@@ -25,6 +25,8 @@ export interface FriendSheetProps {
   initialName?: string
   /** After saving: the saved person, and whether they're new. */
   onSaved?: (friend: Friend, created: boolean) => void
+  /** After the sheet has left the screen. */
+  onExited?: () => void
 }
 
 interface Form {
@@ -52,7 +54,7 @@ function formFor(friend: Friend | null | undefined, initialName: string): Form {
  * can pay them in a tap) and a phone number for WhatsApp and SMS reminders — both optional — and
  * the colour of their avatar. Names stay unique; a clash says who it clashes with.
  */
-export function FriendSheet({ open, onClose, friend, initialName = '', onSaved }: FriendSheetProps) {
+export function FriendSheet({ open, onClose, friend, initialName = '', onSaved, onExited }: FriendSheetProps) {
   const toast = useToast()
   const friends = useFriends()
   const upiRef = useRef<HTMLInputElement>(null)
@@ -105,6 +107,7 @@ export function FriendSheet({ open, onClose, friend, initialName = '', onSaved }
     <BottomSheet
       open={open}
       onClose={onClose}
+      onExited={onExited}
       title={editing ? `Edit ${friend.name}` : 'Add a person'}
       description={editing ? undefined : 'They don’t need the app — just a name to split with.'}
       footer={

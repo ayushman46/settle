@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Search, UserPlus, X } from 'lucide-react'
-import { goBack, navigate } from '../../app/router'
+import { goBack, navigate, useSearchParams } from '../../app/router'
 import {
   Button,
   Card,
@@ -21,7 +21,7 @@ import { alphabetical, FriendAvatar, newPersonName, searchPeople } from '../../k
 import { cx } from '../../lib/cx'
 import { formatMoney } from '../../lib/money'
 import { nameKey } from '../../lib/people'
-import { friendPath, YOU_PATH } from '../groups/paths'
+import { FRIENDS_PATH, friendPath, YOU_PATH } from '../groups/paths'
 import { FriendSheet } from './FriendSheet'
 import styles from './FriendsScreen.module.css'
 
@@ -35,13 +35,14 @@ function personLine(friend: Friend, balance: Minor, currency: string): { text: s
 /**
  * `/app/friends` — everyone you split with, A–Z, with where you stand with each. Search as you
  * type; a name that isn't here yet can be added straight from the search. Tap someone for
- * everything you share.
+ * everything you share. `?new=1` (Home's "Add") opens the add sheet straight away.
  */
 export function FriendsScreen() {
   const friends = useFriends()
   const summary = useSummary()
+  const fromQuery = useSearchParams().get('new') === '1'
   const [query, setQuery] = useState('')
-  const [adding, setAdding] = useState<{ name: string } | null>(null)
+  const [adding, setAdding] = useState<{ name: string } | null>(() => (fromQuery ? { name: '' } : null))
 
   const people = useMemo(() => friends.filter((f) => f.id !== ME_ID), [friends])
   const searching = nameKey(query) !== ''
@@ -132,7 +133,15 @@ export function FriendsScreen() {
         initialName={adding?.name ?? ''}
         onClose={() => setAdding(null)}
         onSaved={() => setQuery('')}
+        // Added or not: drop `?new=1`, so a reload or Back doesn't open the sheet again.
+        onExited={dropNewQuery}
       />
     </Screen>
   )
+}
+
+/** Swaps `/app/friends?new=1` for `/app/friends` — only while that is the page on show. */
+function dropNewQuery(): void {
+  const { pathname, search } = window.location
+  if (pathname === FRIENDS_PATH && new URLSearchParams(search).get('new') === '1') navigate(FRIENDS_PATH, { replace: true })
 }
