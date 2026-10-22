@@ -21,6 +21,11 @@ env:
   CI: "true"
   # Never call the real AI from CI, whatever the environment holds.
   NVIDIA_API_KEY: ""
+  # Run like an Indian phone: Node's Intl falls back to this locale (Indian digit grouping,
+  # "18 Oct 2026"), and dates roll over at Indian midnight. The suite assumes both.
+  LANG: en_IN.UTF-8
+  LC_ALL: en_IN.UTF-8
+  TZ: Asia/Kolkata
 
 jobs:
   check:
