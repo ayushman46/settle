@@ -1,43 +1,24 @@
-import { useEffect, useId, useState, type Ref } from 'react'
-import { ArrowRight, Check, ChevronLeft, Copy, ExternalLink, QrCode as QrIcon, Send, ShieldCheck } from 'lucide-react'
+import { useId, useState, type Ref } from 'react'
+import { ArrowRight, ChevronLeft, Send } from 'lucide-react'
 import {
   Avatar,
   Banner,
   Button,
   Money,
-  QrCode,
   Receipt,
   ReceiptDivider,
   ReceiptRow,
   SuccessCheck,
 } from '../../components'
-import { BRAND } from '../../domain/types'
 import { amountInWords } from '../../kit/amountWords'
 import { haptic } from '../../lib/haptics'
 import { formatMoney } from '../../lib/money'
-import { copyText, shareResult } from '../../lib/share'
+import { shareResult } from '../../lib/share'
 import type { PayLinkPayload, PayLinkUpiRequest } from '../../share/payLink'
 import { firstName } from '../../share/text'
-import { ctaClassName, ctaParts } from '../landing/cta'
 import { extrasLabel, itemBreakdown, paidMessage, payeeColor, payOption, type PayPerson } from './payView'
-import { useTouchFirst } from './useTouchFirst'
+import { UpiPayBlock } from './UpiPayBlock'
 import styles from './PayPanel.module.css'
-
-/** How long "Copied" / "Message copied" stay up. */
-const FEEDBACK_MS = 2400
-
-type Feedback = 'idle' | 'done' | 'failed'
-
-/** A status that falls back to idle after FEEDBACK_MS. */
-function useFeedback(): [Feedback, (next: Feedback) => void] {
-  const [state, setState] = useState<{ value: Feedback; at: number }>({ value: 'idle', at: 0 })
-  useEffect(() => {
-    if (state.value === 'idle') return
-    const timer = setTimeout(() => setState({ value: 'idle', at: Date.now() }), FEEDBACK_MS)
-    return () => clearTimeout(timer)
-  }, [state])
-  return [state.value, (value) => setState({ value, at: Date.now() })]
-}
 
 export interface PayPanelProps {
   payload: PayLinkPayload
@@ -156,85 +137,9 @@ export function PayPanel({ payload, person, onChangePerson, headingRef }: PayPan
   )
 }
 
-/** The ways to pay by UPI, led by what this device is good at, and who the money goes to. */
+/** The ways to pay this request by UPI (see `UpiPayBlock`). */
 function UpiPay({ payload, request }: { payload: PayLinkPayload; request: PayLinkUpiRequest }) {
-  const touch = useTouchFirst()
-  const [qrOnTouch, setQrOnTouch] = useState(false)
-  const [copied, setCopied] = useFeedback()
-  const amount = formatMoney(request.amount, payload.c, { trimZeros: true })
-  const showQr = !touch || qrOnTouch
-
-  const copy = async () => {
-    const ok = await copyText(request.vpa)
-    haptic(ok ? 'success' : 'error')
-    setCopied(ok ? 'done' : 'failed')
-  }
-
-  return (
-    <div className={styles.pay}>
-      {touch && (
-        <>
-          <a href={request.uri} className={ctaClassName({ block: true })} onClick={() => haptic('tap')}>
-            <span>Pay {amount} with any UPI app</span>
-            <span className={ctaParts.iconEnd} aria-hidden="true">
-              <ExternalLink strokeWidth={2.25} />
-            </span>
-          </a>
-          <p className={styles.caption}>Opens GPay, PhonePe, Paytm or BHIM with everything filled in.</p>
-          <Button
-            variant="ghost"
-            size="md"
-            iconStart={<QrIcon />}
-            aria-expanded={qrOnTouch}
-            onClick={() => setQrOnTouch((open) => !open)}
-          >
-            {qrOnTouch ? 'Hide the QR code' : 'Pay from another phone'}
-          </Button>
-        </>
-      )}
-      {showQr && (
-        <div className={styles.qr}>
-          <QrCode value={request.uri} size={224} label={`UPI QR code to pay ${amount} to ${payload.to.n}`} />
-          <p className={styles.caption}>
-            {touch
-              ? 'Scan it with the UPI app on the other phone.'
-              : 'Scan with any UPI app on your phone — GPay, PhonePe, Paytm, BHIM.'}
-          </p>
-        </div>
-      )}
-
-      <div className={styles.payee}>
-        <p className={styles.payeeLabel}>Paying to</p>
-        <div className={styles.payeeRow}>
-          <Avatar name={payload.to.n} color={payeeColor(payload)} size="md" />
-          <div className={styles.payeeText}>
-            <span className={styles.payeeName}>{payload.to.n}</span>
-            <span className={styles.vpa}>{request.vpa}</span>
-          </div>
-          <Button
-            variant="tonal"
-            size="sm"
-            iconStart={copied === 'done' ? <Check /> : <Copy />}
-            aria-label={copied === 'done' ? 'Copied UPI ID' : 'Copy UPI ID'}
-            onClick={copy}
-          >
-            {copied === 'done' ? 'Copied' : 'Copy'}
-          </Button>
-        </div>
-        {copied === 'failed' && <p className={styles.copyFailed}>Couldn’t copy — press and hold the ID to copy it.</p>}
-        <p className={styles.safety}>
-          <ShieldCheck aria-hidden="true" strokeWidth={2.25} />
-          <span>
-            Check that your UPI app shows <strong>{payload.to.n}</strong> before you pay. {BRAND.name} never touches
-            your money.
-          </span>
-        </p>
-      </div>
-      <p className="visually-hidden" role="status">
-        {copied === 'done' ? 'UPI ID copied' : ''}
-      </p>
-    </div>
-  )
+  return <UpiPayBlock payeeName={payload.to.n} vpa={request.vpa} amount={request.amount} note={payload.t} currency={payload.c} color={payeeColor(payload)} />
 }
 
 /** "Paid? Let them know" — a ready message for the group chat (share sheet on phones, clipboard elsewhere). */

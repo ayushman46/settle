@@ -1,14 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
-import { ArrowRight, Link2Off } from 'lucide-react'
-import { Link, useBackClose, useLocation } from '../../app/router'
+import { useBackClose, useLocation } from '../../app/router'
 import { Skeleton } from '../../components'
 import { BRAND } from '../../domain/types'
 import type { PayLinkPayload } from '../../share/payLink'
-import { BrandMark } from '../landing/BrandMark'
-import { CtaLink } from '../landing/CtaLink'
 import { usePageMeta } from '../landing/pageMeta'
 import { PayPanel } from './PayPanel'
 import { payPeople } from './payView'
+import { PublicProblem, PublicShell } from './PublicShell'
 import { RequestCard } from './RequestCard'
 import { usePayLink } from './usePayLink'
 import { WhoAreYou } from './WhoAreYou'
@@ -82,20 +80,13 @@ function PayRequest({ payload }: { payload: PayLinkPayload }) {
 }
 
 function Problem({ kind }: { kind: 'empty' | 'invalid' }) {
-  return (
-    <section className={styles.problem} aria-labelledby="pay-problem-title">
-      <span className={styles.problemIcon} aria-hidden="true">
-        <Link2Off strokeWidth={2} />
-      </span>
-      <h1 id="pay-problem-title" className={styles.problemTitle}>
-        {kind === 'invalid' ? 'This pay link doesn’t work' : 'No pay link here'}
-      </h1>
-      <p className={styles.problemText}>
-        {kind === 'invalid'
-          ? 'It may have been cut short when it was copied. Ask whoever sent it to share it again.'
-          : 'Open the link your friend shared — it has everything you need to pay them.'}
-      </p>
-    </section>
+  return kind === 'invalid' ? (
+    <PublicProblem
+      title="This pay link doesn’t work"
+      text="It may have been cut short when it was copied. Ask whoever sent it to share it again."
+    />
+  ) : (
+    <PublicProblem title="No pay link here" text="Open the link your friend shared — it has everything you need to pay them." />
   )
 }
 
@@ -130,45 +121,10 @@ export function PayPage() {
   })
 
   return (
-    <div className={styles.page}>
-      <header className={styles.bar}>
-        <div className={styles.barInner}>
-          <Link to="/" className={styles.brand} aria-label={`${BRAND.name} home`}>
-            <BrandMark size="sm" />
-          </Link>
-          <Link to="/" className={styles.what}>
-            What’s {BRAND.name}?
-          </Link>
-        </div>
-      </header>
-
-      <main className={styles.main}>
-        {link.status === 'loading' && <Loading />}
-        {(link.status === 'empty' || link.status === 'invalid') && <Problem kind={link.status} />}
-        {link.status === 'ok' && <PayRequest key={link.fragment} payload={link.payload} />}
-
-        <aside className={styles.pitch} aria-labelledby="pay-pitch-title">
-          <p id="pay-pitch-title" className={styles.pitchTitle}>
-            Splitting the bill next time?
-          </p>
-          <p className={styles.pitchText}>
-            Snap the bill, share one link like this, and get paid back by UPI. No sign-up, no ads.
-          </p>
-          <CtaLink to="/" variant="accent" size="md" block iconEnd={<ArrowRight strokeWidth={2.25} />}>
-            Split your own bills with {BRAND.name} — free
-          </CtaLink>
-        </aside>
-      </main>
-
-      <footer className={styles.footer}>
-        <Link to="/privacy" className={styles.footerLink}>
-          Privacy
-        </Link>
-        <span aria-hidden="true">·</span>
-        <Link to="/terms" className={styles.footerLink}>
-          Terms
-        </Link>
-      </footer>
-    </div>
+    <PublicShell>
+      {link.status === 'loading' && <Loading />}
+      {(link.status === 'empty' || link.status === 'invalid') && <Problem kind={link.status} />}
+      {link.status === 'ok' && <PayRequest key={link.fragment} payload={link.payload} />}
+    </PublicShell>
   )
 }
