@@ -45,6 +45,22 @@ export const AVATAR_COLORS = 8
  */
 export type Shares = Record<string, number>
 
+/** Kinds of delivery-app fee (Swiggy, Zomato, Blinkit, Zepto…), kept apart from a restaurant's service charge. */
+export type BillFeeKind = 'delivery' | 'platform' | 'packaging' | 'surge' | 'small_order' | 'tip' | 'donation' | 'fee_tax' | 'other'
+export const BILL_FEE_KINDS: readonly BillFeeKind[] = ['delivery', 'platform', 'packaging', 'surge', 'small_order', 'tip', 'donation', 'fee_tax', 'other']
+
+export interface BillFee {
+  id: string
+  kind: BillFeeKind
+  /** As printed ("Delivery partner fee"). */
+  label: string
+  /** Minor, > 0. */
+  amount: Minor
+}
+
+/** How fees are shared: in proportion to what each person had (default), or equally between people who had anything. */
+export type FeeSplit = 'proportional' | 'equal'
+
 /** What the printed bill says (from the scan). All amounts Minor or null when not printed. */
 export interface BillMeta {
   merchant: string | null
@@ -56,6 +72,8 @@ export interface BillMeta {
   discount: Minor | null
   tip: Minor | null
   total: Minor | null
+  /** Delivery-app fees, kept apart from `serviceCharge`. Absent on older bills (and when there are none). */
+  fees?: BillFee[]
 }
 
 export type BillSource = 'scan' | 'manual' | 'sample'
@@ -90,6 +108,8 @@ export interface Session {
   groupId: string | null
   /** The expense this bill is saved as (once saved, or when an expense is re-opened): saving again updates it. */
   expenseId: string | null
+  /** How delivery-app fees are shared. Absent = 'proportional'. */
+  feeSplit?: FeeSplit
 }
 
 export const EMPTY_META: BillMeta = {

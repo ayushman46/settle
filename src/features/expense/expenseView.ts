@@ -106,6 +106,8 @@ const SOURCE_LABELS: Readonly<Record<ExpenseSource, string | null>> = {
   describe: 'with “Just say it”',
   sample: 'from the sample bill',
   recurring: 'from a recurring split',
+  sms: 'from a bank SMS',
+  voice: 'by voice',
 }
 
 function formatter(options: Intl.DateTimeFormatOptions): Intl.DateTimeFormat | null {

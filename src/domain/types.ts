@@ -10,9 +10,9 @@
 
 import type { LicensePayload } from '../../shared/api'
 import type { CategoryId } from '../../shared/categories'
-import type { BillItem, BillMeta, Minor, Shares } from '../types'
+import type { BillItem, BillMeta, FeeSplit, Minor, Shares } from '../types'
 
-export type { Minor } from '../types'
+export type { BillFee, BillFeeKind, FeeSplit, Minor } from '../types'
 
 export const BRAND = {
   name: 'Settle',
@@ -69,13 +69,49 @@ export interface BillSnapshot {
   /** itemId -> Shares keyed by friendId. */
   assignments: Record<string, Shares>
   warnings: string[]
+  /** How the bill's delivery-app fees (`meta.fees`) are shared. Absent = 'proportional' (older bills). */
+  feeSplit?: FeeSplit
 }
 
-export type ExpenseSource = 'manual' | 'scan' | 'describe' | 'sample' | 'recurring'
+export type ExpenseSource = 'manual' | 'scan' | 'describe' | 'sample' | 'recurring' | 'sms' | 'voice'
+
+/**
+ * - split: an amount divided between people.
+ * - bill: an itemized bill (`bill` snapshot present).
+ * - loan: money handed over (cash or a transfer) — not spending. Always one participant who is
+ *   not the payer: the payer lent, the participant borrowed. Excluded from insights and spend totals.
+ */
+export type ExpenseKind = 'split' | 'bill' | 'loan'
+
+/* ------------------------------------------------------------------ trip currency */
+
+/**
+ * Where a foreign-currency expense's rate came from: the ECB reference rate, a currency pegged to
+ * one the ECB publishes, a rate typed by hand, or the total the bank actually charged.
+ */
+export type FxSource = 'ecb' | 'pegged' | 'manual_rate' | 'manual_total'
+export const FX_SOURCES: readonly FxSource[] = ['ecb', 'pegged', 'manual_rate', 'manual_total']
+
+/**
+ * A foreign-currency expense converted into its settle currency. `Expense.currency/total` are the
+ * settled values (source of truth for balances); this records what was actually paid and the
+ * frozen rate.
+ */
+export interface FxSnapshot {
+  /** What was paid, in `currency`'s minor units (฿1,250 → 125000). */
+  amount: Minor
+  /** ISO 4217 of what was paid (THB). Never equal to the expense's own currency. */
+  currency: string
+  /** Settle-currency units per 1 unit of `currency`, decimal string, ≥ 10 significant digits ("2.410751226"). */
+  rate: string
+  /** The rate's day (YYYY-MM-DD; the ECB business day at or before the expense date), or null for manual. */
+  rateDate: string | null
+  source: FxSource
+}
 
 export interface Expense {
   id: string
-  kind: 'split' | 'bill'
+  kind: ExpenseKind
   title: string
   category: CategoryId
   currency: string
@@ -103,6 +139,11 @@ export interface Expense {
   paidBack: Record<string, number>
   recurringId: string | null
   source: ExpenseSource
+  /**
+   * Paid in another currency and converted (trip currency). Absent or null = paid in `currency`.
+   * Stored only when set: plain expenses (and every older record) have no `fx` key.
+   */
+  fx?: FxSnapshot | null
 }
 
 /* ------------------------------------------------------------------ groups */
@@ -133,6 +174,125 @@ export interface Group {
   createdAt: number
   updatedAt: number
   archived: boolean
+  /** "Spending in": the currency spent abroad on this trip; never equal to `currency`. Absent = null. */
+  travelCurrency?: string | null
+  /** The usual round for "Next round's on you", set in the rotation sheet; null = worked out from recent expenses. Absent = null. */
+  roundSize?: Minor | null
+}
+
+/* ------------------------------------------------------------------ claims (claim your items) */
+
+/** One person's claim on one item: `num/den` of the whole line (1/2 = shared by two, 1/4 = one of four naans). */
+export interface ClaimPick {
+  /** Index into the round's `itemIds`. */
+  item: number
+  num: number
+  den: number
+}
+
+/** What the organiser decided for an item whose claims don't add up (or nobody claimed). */
+export type ClaimDecision =
+  | { kind: 'as_claimed' } // over-claimed: split in proportion to the claims
+  | { kind: 'scale_up' } // partly claimed: the claimers had all of it
+  | { kind: 'rest_everyone' } // partly claimed: the rest is shared by everyone at the table
+  | { kind: 'assign'; shares: Record<string, number> } // the organiser's own pick (friendId → weight)
+
+export interface ClaimReply {
+  /** `replyId()` of the reply link (dedupe key): base64url of the first 12 bytes of SHA-256(canonical + '|' + m) — 16 chars. */
+  id: string
+  /** Index into the round's `peopleIds`, or null for someone who typed their own name. */
+  personIndex: number | null
+  /** As they sent it. */
+  name: string
+  /** Who it is here: their friend id (resolved when added; a new name becomes a new friend). */
+  friendId: string
+  picks: ClaimPick[]
+  /** They said they had nothing. */
+  nothing: boolean
+  /** What they say they paid (minor units), or null. */
+  paid: Minor | null
+  /** Their device's time (epoch ms) — orders two replies from the same person. */
+  sentAt: number
+  receivedAt: number
+  /** 'active' = counted; 'replaced' = superseded by a newer reply from the same person. */
+  state: 'active' | 'replaced'
+}
+
+export interface ClaimRound {
+  /** 10-char base64url id, also in the links. */
+  id: string
+  /** 22-char base64url (16 random bytes): HMAC key for replies. Also inside the claim link. */
+  secret: string
+  expenseId: string
+  /** Bill item ids in link order (index → item), frozen when the link was made. */
+  itemIds: string[]
+  /** `itemsHash()` of the items as sent (detects a bill edited after the link went out). */
+  itemsHash: string
+  /** People in link order (friend ids, the organiser first). */
+  peopleIds: string[]
+  /** Item ids the organiser had already assigned when the link went out (read-only for friends). */
+  fixedItemIds: string[]
+  /** The organiser's own picks (made in the app). */
+  ownPicks: ClaimPick[]
+  replies: ClaimReply[]
+  /** itemId → decision. */
+  decisions: Record<string, ClaimDecision>
+  createdAt: number
+  updatedAt: number
+  /** When "Update the bill" last ran (null = never). */
+  appliedAt: number | null
+}
+
+/* ------------------------------------------------------------------ pools (chanda / collections) */
+
+export type PoolOccasion = 'birthday' | 'farewell' | 'diwali' | 'shagun' | 'office' | 'puja' | 'trip' | 'party' | 'sports' | 'other'
+export const POOL_OCCASIONS: readonly PoolOccasion[] = ['birthday', 'farewell', 'diwali', 'shagun', 'office', 'puja', 'trip', 'party', 'sports', 'other']
+/** fixed: everyone pays `perPerson`; target: pay what you want, towards an optional goal. */
+export type PoolMode = 'fixed' | 'target'
+
+export interface Contribution {
+  id: string
+  /** Your person, or null for someone who isn't (an office colleague who typed their name). */
+  friendId: string | null
+  /** As shown ("Sam", "Priya from HR"). */
+  name: string
+  amount: Minor
+  /** YYYY-MM-DD. */
+  date: string
+  method: 'upi' | 'cash' | 'other'
+  /** How it was recorded: ticked by you, or from their signed reply. */
+  via: 'tick' | 'reply'
+  /** The reply's id (dedupe), when via 'reply'. */
+  replyId: string | null
+  createdAt: number
+}
+
+export interface Pool {
+  id: string
+  title: string
+  occasion: PoolOccasion
+  emoji: string
+  currency: string
+  mode: PoolMode
+  /** fixed: what each person pays. */
+  perPerson: Minor | null
+  /** target: the goal (optional). */
+  target: Minor | null
+  /** People you expect (friend ids, never ME). */
+  memberIds: string[]
+  /** "About how many people" for an open list (no memberIds). */
+  expectedCount: number | null
+  /** YYYY-MM-DD or null. */
+  deadline: string | null
+  note: string | null
+  /** Show amounts per person on the link. */
+  showAmounts: boolean
+  contributions: Contribution[]
+  /** 22-char base64url secret that signs contributors' replies. */
+  secret: string
+  createdAt: number
+  updatedAt: number
+  closedAt: number | null
 }
 
 /* ------------------------------------------------------------------ recurring (Pro) */
@@ -158,6 +318,9 @@ export interface RecurringTemplate {
 /* ------------------------------------------------------------------ profile & settings */
 
 export type ThemePref = 'system' | 'light' | 'dark'
+/** The app's languages: English, Hindi, Bengali, Marathi, Tamil, Telugu, Kannada, Gujarati. */
+export type LanguageCode = 'en' | 'hi' | 'bn' | 'mr' | 'ta' | 'te' | 'kn' | 'gu'
+export const LANGUAGE_CODES: readonly LanguageCode[] = ['en', 'hi', 'bn', 'mr', 'ta', 'te', 'kn', 'gu']
 /** Accent palettes. 'lime' is free; the rest are Pro. */
 export type AccentId = 'lime' | 'mint' | 'sky' | 'violet' | 'coral'
 
@@ -174,6 +337,8 @@ export interface Profile {
   /** Finished (or skipped) onboarding. */
   onboarded: boolean
   createdAt: number
+  /** The app language; null (or absent) = automatic (the phone's language). */
+  language?: LanguageCode | null
 }
 
 /* ------------------------------------------------------------------ Pro licensing */
