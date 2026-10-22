@@ -1,0 +1,114 @@
+/* One settle-up payment: faces → names → amount, with its actions underneath. */
+.row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  min-width: 0;
+  padding: var(--s-4);
+}
+
+.main {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  min-width: 0;
+}
+
+/* Two overlapping faces joined by a small arrow badge. */
+.faces {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+}
+
+.toFace {
+  margin-inline-start: calc(var(--s-3) * -1);
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px var(--surface);
+}
+
+.arrowBadge {
+  position: absolute;
+  z-index: 1;
+  top: 50%;
+  left: 50%;
+  display: grid;
+  place-items: center;
+  width: var(--s-5);
+  height: var(--s-5);
+  border-radius: 50%;
+  background: var(--primary);
+  color: var(--on-primary);
+  box-shadow: 0 0 0 2px var(--surface);
+  transform: translate(-50%, -50%);
+}
+
+.arrowBadge > svg {
+  width: 12px;
+  height: 12px;
+}
+
+.text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.names {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  font: var(--text-label);
+  font-weight: 650;
+  color: var(--ink);
+}
+
+.name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.name:last-child {
+  flex: none;
+  max-width: 50%;
+}
+
+.inlineArrow {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  color: var(--ink-3);
+}
+
+.sentence {
+  overflow: hidden;
+  font: var(--text-caption);
+  color: var(--ink-2);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.amount {
+  flex: none;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  /* Line up with the names: two 40px faces overlapping by 12px, plus the 12px gap. */
+  padding-inline-start: calc(var(--s-10) * 2);
+}
+
+/* Narrow phones: actions use the full width. */
+@media (max-width: 359px) {
+  .actions {
+    padding-inline-start: 0;
+  }
+}
