@@ -33,8 +33,8 @@ export function ExpenseHero({ expense, payerName, group, standing }: ExpenseHero
         <time dateTime={expense.date} title={fullDateLabel(expense.date)}>
           {relativeDateLabel(expense.date)}
         </time>
-        {' · '}
-        {category.label}
+        {/* "Rent · Rent" says nothing twice: the category only shows when the title doesn't say it. */}
+        {category.label.toLocaleLowerCase() !== expense.title.trim().toLocaleLowerCase() && <> · {category.label}</>}
       </p>
       {group && (
         <Link to={`/app/groups/${encodeURIComponent(group.id)}`} className={styles.group} aria-label={`In the group ${group.name}`}>

@@ -58,6 +58,7 @@ describe('ExpenseDetailScreen — what it is', SCREEN, () => {
     expect(screen.getByRole('heading', { level: 1, name: 'Dinner at Toit' })).toBeInTheDocument()
     expect(screen.getByRole('img', { name: 'Food & drinks' })).toBeInTheDocument()
     expect(document.querySelector('time')).toHaveAttribute('dateTime', '2026-10-18')
+    expect(document.querySelector('time')?.parentElement).toHaveTextContent(/· Food & drinks$/)
     expect(screen.getByText('Paid by you')).toBeInTheDocument()
     expect(screen.getByText('You’re owed ₹1,383')).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: /691\.50.*collected/ })).toBeInTheDocument()
@@ -66,6 +67,12 @@ describe('ExpenseDetailScreen — what it is', SCREEN, () => {
     expect(screen.getByRole('button', { name: 'Share pay link' })).toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: 'The bill' })).not.toBeInTheDocument()
     expect(document.title).toBe(`Dinner at Toit · ${BRAND.name}`)
+  })
+
+  it('names the category only when the title doesn’t', () => {
+    seedExpense({ title: 'Rent', category: 'rent' })
+    renderApp('/app/expense/e1')
+    expect(document.querySelector('time')?.parentElement).toHaveTextContent(/^Oct 18$|^18 Oct$/)
   })
 
   it('shows the note with its line breaks', () => {
