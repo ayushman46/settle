@@ -54,6 +54,14 @@ describe('addFriend', () => {
     expect(friendsStore.get().map((f) => f.name)).toEqual(['Me', 'Riya', 'Sam'])
   })
 
+  it("never gives your first friends your own avatar colour (you're shown side by side)", () => {
+    const mine = me()?.color
+    const riya = addFriend({ name: 'Riya' })
+    const sam = addFriend({ name: 'Sam' })
+    expect(riya.color).not.toBe(mine)
+    expect(sam.color).not.toBe(mine)
+  })
+
   it('returns the existing friend for the same name, filling in missing details', () => {
     const jose = addFriend({ name: 'José' })
     const again = addFriend({ name: 'JOSE', upiId: 'jose@ybl', phone: 'abc' })

@@ -43,7 +43,9 @@ export function addFriend(input: { name: string; upiId?: string | null; phone?: 
   const friend: Friend = {
     id: newId(),
     name,
-    color: nextColor(friends.filter((f) => f.id !== ME_ID)),
+    // Counting the owner too: their avatar sits beside friends everywhere ("You → Riya"), so a
+    // new friend shouldn't get the same colour.
+    color: nextColor(friends),
     upiId,
     phone,
     createdAt: now,
