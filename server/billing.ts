@@ -8,6 +8,7 @@
  * it lives on the buyer's device.
  */
 import type { Context, Hono, MiddlewareHandler } from 'hono'
+import { bodyLimit } from 'hono/body-limit'
 import { randomBytes } from 'node:crypto'
 import { z } from 'zod'
 import type { BillingConfig, LicenseVerifyResponse, OrderResponse, VerifyResponse } from '../shared/api'
@@ -42,6 +43,12 @@ const VerifyRequestSchema = z.object({
 })
 const LicenseRequestSchema = z.object({ license: z.string().max(MAX_TOKEN_LENGTH * 2) })
 
+/**
+ * Billing bodies are a plan id, three Razorpay ids or one license token: a few hundred bytes.
+ * Anything bigger is refused before it is read, so nobody can fill the server's memory with it.
+ */
+export const MAX_BILLING_BODY_BYTES = 8 * 1024
+
 export interface BillingOptions {
   config: ServerConfig
   log: Logger
@@ -70,6 +77,10 @@ export function registerBilling(app: Hono, { config, log, now, ownPageOnly }: Bi
     onLimited: (c) => fail(c, 'rate_limited', { message: BILLING_MESSAGES.tooMany }),
   })
   const nowSeconds = () => Math.floor(now() / 1000)
+  const small = bodyLimit({
+    maxSize: MAX_BILLING_BODY_BYTES,
+    onError: (c) => fail(c, 'bad_request', { status: 413, message: BILLING_MESSAGES.malformed }),
+  })
 
   function razorpayFailure(c: Context, error: RazorpayError, action: string) {
     const summary = `${error.message}${error.detail ? ` · razorpay said: ${error.detail.replace(/\s+/g, ' ')}` : ''}`
@@ -89,7 +100,7 @@ export function registerBilling(app: Hono, { config, log, now, ownPageOnly }: Bi
 
   app.get('/api/billing/config', (c) => c.json(billingConfig))
 
-  app.post('/api/billing/order', ownPageOnly, limited, async (c) => {
+  app.post('/api/billing/order', ownPageOnly, limited, small, async (c) => {
     const json = await readJson(c)
     const body = json === NOT_JSON ? null : OrderRequestSchema.safeParse(json)
     if (!body?.success) return fail(c, 'bad_request', { message: BILLING_MESSAGES.malformed })
@@ -117,7 +128,7 @@ export function registerBilling(app: Hono, { config, log, now, ownPageOnly }: Bi
     }
   })
 
-  app.post('/api/billing/verify', ownPageOnly, limited, async (c) => {
+  app.post('/api/billing/verify', ownPageOnly, limited, small, async (c) => {
     const json = await readJson(c)
     const body = json === NOT_JSON ? null : VerifyRequestSchema.safeParse(json)
     if (!body?.success) return fail(c, 'bad_request', { message: BILLING_MESSAGES.malformed })
@@ -162,7 +173,7 @@ export function registerBilling(app: Hono, { config, log, now, ownPageOnly }: Bi
     return c.json(response)
   })
 
-  app.post('/api/license/verify', ownPageOnly, limited, async (c) => {
+  app.post('/api/license/verify', ownPageOnly, limited, small, async (c) => {
     const json = await readJson(c)
     const body = json === NOT_JSON ? null : LicenseRequestSchema.safeParse(json)
     if (!body?.success) return fail(c, 'bad_request', { message: BILLING_MESSAGES.malformed })

@@ -2,7 +2,7 @@ import { createHmac } from 'node:crypto'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { ApiErrorBody, ApiErrorCode, BillingConfig, LicenseVerifyResponse, OrderResponse, VerifyResponse } from '../shared/api'
 import { createApp, type AppOptions } from './app'
-import { BILLING_MESSAGES } from './billing'
+import { BILLING_MESSAGES, MAX_BILLING_BODY_BYTES } from './billing'
 import type { ServerConfig } from './config'
 import { NO_LICENSE_KEYS, signLicense, verifyLicense } from './license'
 import { fromSocket, OTHER_LICENSE_KEYS, silentLogger, TEST_LICENSE_KEYS, TEST_RAZORPAY, testBilling, testConfig } from './testing'
@@ -314,5 +314,34 @@ describe('billing guards', () => {
     await expectError(postConfig, 405, 'bad_request')
     expect(postConfig.headers.get('allow')).toBe('GET, HEAD')
     expect((await makeApp().request('/api/license/verify')).headers.get('allow')).toBe('POST')
+  })
+})
+
+/* ---------------------------------------------------------------- oversized bodies */
+
+describe('billing bodies', () => {
+  const huge = JSON.stringify({ plan: 'pro_yearly', padding: 'x'.repeat(MAX_BILLING_BODY_BYTES) })
+
+  it.each(['/api/billing/order', '/api/billing/verify', '/api/license/verify'])('%s refuses a body over 8 KB before reading it', async (path) => {
+    const response = await post(makeApp(), path, huge)
+    await expectError(response, 413, 'bad_request', BILLING_MESSAGES.malformed)
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it('refuses an oversized body sent without a Content-Length (chunked)', async () => {
+    const encoder = new TextEncoder()
+    const stream = new ReadableStream<Uint8Array>({
+      start(controller) {
+        for (let i = 0; i < 4; i++) controller.enqueue(encoder.encode('x'.repeat(4096)))
+        controller.close()
+      },
+    })
+    const response = await makeApp().request(
+      '/api/billing/order',
+      { method: 'POST', headers: { 'content-type': 'application/json' }, body: stream, duplex: 'half' } as RequestInit,
+      fromSocket('198.51.100.7'),
+    )
+    expect(response.status).toBe(413)
+    expect(fetchMock).not.toHaveBeenCalled()
   })
 })
