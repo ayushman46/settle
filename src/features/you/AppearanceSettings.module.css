@@ -1,0 +1,116 @@
+.appearance {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-5);
+  padding: var(--s-4);
+}
+
+.block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  min-width: 0;
+}
+
+.labelRow {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.label {
+  font: var(--text-body);
+  font-weight: 550;
+  color: var(--ink);
+}
+
+.note {
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
+/* ---------- Accent swatches: five equal columns, a 44px disc each, the name under it ---------- */
+
+.swatches {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: var(--s-1);
+}
+
+.swatch {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding-block: 2px;
+  border-radius: var(--r-md);
+}
+
+.swatch:focus-visible {
+  outline-offset: 2px;
+}
+
+.dot {
+  display: grid;
+  place-items: center;
+  width: var(--tap);
+  height: var(--tap);
+  border-radius: 50%;
+  background: var(--swatch);
+  /* The accent fills are always light: --on-accent ink reads on every one of them. */
+  color: var(--on-accent);
+  /* A hairline keeps pale fills distinct from a white card. */
+  box-shadow: inset 0 0 0 1px rgb(14 16 19 / 0.12);
+  transition:
+    transform var(--dur-2) var(--ease-spring),
+    box-shadow var(--dur-2) var(--ease-out);
+}
+
+.dot > svg {
+  width: 18px;
+  height: 18px;
+}
+
+.swatch:not(.selected) .dot > svg {
+  width: 15px;
+  height: 15px;
+  opacity: 0.75;
+}
+
+/* Selected: a ring around the disc, clear of it (works on light and dark cards). */
+.selected .dot {
+  box-shadow:
+    inset 0 0 0 1px rgb(14 16 19 / 0.12),
+    0 0 0 3px var(--surface),
+    0 0 0 5px var(--ink);
+}
+
+.selected .dot > svg {
+  animation: pop var(--dur-3) var(--ease-spring) backwards;
+}
+
+.swatch:active .dot {
+  transform: scale(0.94);
+  transition-duration: var(--dur-1);
+}
+
+.name {
+  max-width: 100%;
+  overflow: hidden;
+  font: var(--text-micro);
+  color: var(--ink-2);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.selected .name {
+  color: var(--ink);
+}
+
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+}

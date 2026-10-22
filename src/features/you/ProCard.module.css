@@ -1,0 +1,146 @@
+/*
+ * The premium dark card (both themes), like the balance card and the Pro hero: text and controls
+ * inside read the card's own inks (contrast checked in contrast.md for --balance-card-*).
+ */
+.card {
+  --ink: var(--balance-card-ink);
+  --ink-2: var(--balance-card-ink-2);
+  --focus-ring: var(--balance-card-ink);
+  /* The tonal "Manage Pro" button: a soft glass pill on the dark card. */
+  --surface-2: rgb(255 255 255 / 0.1);
+  --surface-3: rgb(255 255 255 / 0.16);
+
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+  min-width: 0;
+  padding: var(--s-5);
+  overflow: clip;
+  border-radius: var(--radius-card);
+  background: var(--balance-card-gradient);
+  color: var(--balance-card-ink);
+  box-shadow: var(--shadow-md);
+}
+
+/* A soft wash of the Pro gradient in the corner. */
+.card::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: -50% -35% auto auto;
+  width: 85%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--pro-gradient);
+  opacity: 0.14;
+  filter: blur(36px);
+  pointer-events: none;
+}
+
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-3);
+  min-width: 0;
+}
+
+.gem {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--r-md);
+  background: var(--pro-gradient);
+  color: var(--on-pro);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.4);
+}
+
+.gem > svg {
+  width: 20px;
+  height: 20px;
+}
+
+.title {
+  flex: 1 1 auto;
+  font: var(--text-headline);
+  letter-spacing: var(--tracking-tight);
+  color: var(--ink);
+}
+
+/* "Pro" in the brand gradient (large text on the dark card: AA for every stop). */
+.pro {
+  background: var(--pro-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@media (forced-colors: active) {
+  .pro {
+    color: CanvasText;
+  }
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+}
+
+.lede {
+  max-width: 34ch;
+  font: var(--text-body);
+  color: var(--ink);
+  text-wrap: pretty;
+}
+
+.small {
+  font: var(--text-caption);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-2);
+}
+
+.perks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.perk {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding-inline: 10px 12px;
+  border-radius: var(--radius-pill);
+  background: rgb(255 255 255 / 0.08);
+  box-shadow: inset 0 0 0 1px var(--balance-card-line);
+  font: var(--text-caption);
+  font-weight: 550;
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.perk > svg {
+  width: 14px;
+  height: 14px;
+  color: var(--accent);
+}
+
+.cta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-3);
+}
+
+.action {
+  align-self: flex-start;
+}
