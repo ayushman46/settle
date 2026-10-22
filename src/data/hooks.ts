@@ -7,6 +7,7 @@ import { ME_ID, type CategoryId, type Expense, type Friend, type Group, type Min
 import { groupBalances, overallSummary, type OverallSummary } from '../engine/balances'
 import { today } from '../engine/dates'
 import { dueRecurring, type RecurringDue } from '../engine/recurring'
+import { measured } from '../lib/perfMarks'
 import { memoizeLast, shallowArrayEqual, useStore } from './store'
 import { expensesStore, friendsStore, groupsStore, profileStore, recurringStore } from './stores'
 
@@ -37,7 +38,9 @@ export function compareExpensesNewestFirst(a: Expense, b: Expense): number {
   return b.createdAt - a.createdAt || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)
 }
 
-const sortExpenses = memoizeLast((expenses: readonly Expense[]): Expense[] => [...expenses].sort(compareExpensesNewestFirst))
+const sortExpenses = memoizeLast((expenses: readonly Expense[]): Expense[] =>
+  measured('derive:sortExpenses', () => [...expenses].sort(compareExpensesNewestFirst)),
+)
 
 /** Active groups first, then most recently active. */
 const sortGroups = memoizeLast((groups: readonly Group[]): Group[] =>
@@ -158,7 +161,7 @@ export function useSummary(): OverallSummary {
   const expenses = useStore(expensesStore, identity)
   const groups = useStore(groupsStore, identity)
   const currency = useStore(profileStore, selectCurrency)
-  return useMemo(() => overallSummary(expenses, groups, ME_ID, currency), [expenses, groups, currency])
+  return useMemo(() => measured('derive:summary', () => overallSummary(expenses, groups, ME_ID, currency)), [expenses, groups, currency])
 }
 
 const NO_BALANCES: Record<string, Minor> = Object.freeze({}) as Record<string, Minor>

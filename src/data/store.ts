@@ -7,6 +7,7 @@
  */
 import { useMemo, useState, useSyncExternalStore } from 'react'
 import * as z from 'zod/mini'
+import { measured } from '../lib/perfMarks'
 
 /** Any zod (classic or mini) schema whose output is `T`. */
 export type ZodType<T> = z.core.$ZodType<T>
@@ -130,12 +131,13 @@ export function createStore<T>(opts: CreateStoreOptions<T>): PersistedStore<T> {
     if (raw === null) return null
     let parsed: unknown
     try {
-      parsed = JSON.parse(raw)
+      parsed = measured(`load:parse:${key}`, () => JSON.parse(raw) as unknown)
     } catch {
       return null
     }
     if (isEnvelope(parsed) && parsed.v >= version) {
-      const result = z.safeParse(schema, parsed.data)
+      const data = parsed.data
+      const result = measured(`load:validate:${key}`, () => z.safeParse(schema, data))
       return result.success ? { value: result.data, persist: false } : null
     }
     if (migrate) {
