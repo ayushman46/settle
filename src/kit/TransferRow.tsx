@@ -30,6 +30,13 @@ function transferSentence(fromName: string, toName: string, fromId: string, toId
   return `${fromName} pays ${toName}`
 }
 
+/** The small line under the names: what this payment means, or where your money goes. */
+function transferDetail(direction: 'in' | 'out' | 'between', toName: string, toUpi: string | null): string {
+  if (direction === 'in') return 'Owes you'
+  if (direction === 'between') return `Owes ${toName}`
+  return toUpi ? `To ${toUpi}` : 'No UPI ID saved'
+}
+
 /**
  * One settle-up payment: "Riya → You ₹540" with both faces, the amount (green when it's coming
  * to you, red when it's yours to pay) and the actions that fit — each shown only when its
@@ -46,19 +53,18 @@ export function TransferRow({ transfer, currency, onPay, onRecord, onRemind, cla
   const amountText = formatMoney(amount, currency, { trimZeros: true })
   const sentence = transferSentence(fromName, toName, fromId, toId)
   const direction = toId === ME_ID ? 'in' : fromId === ME_ID ? 'out' : 'between'
+  const detail = transferDetail(direction, toName, to?.upiId ?? null)
   const hasActions = onPay !== undefined || onRecord !== undefined || onRemind !== undefined
 
   return (
     <div role="group" aria-labelledby={sentenceId} className={cx(styles.row, className)} data-direction={direction}>
       <p id={sentenceId} className="visually-hidden">
         {sentence} {amountText}
+        {direction === 'out' && to?.upiId ? `, to ${to.upiId}` : ''}
       </p>
       <div className={styles.main} aria-hidden="true">
         <span className={styles.faces}>
-          <FriendAvatar friend={from} friendId={fromId} size="md" className={styles.fromFace} />
-          <span className={styles.arrowBadge}>
-            <ArrowRight strokeWidth={2.75} />
-          </span>
+          <FriendAvatar friend={from} friendId={fromId} size="md" />
           <FriendAvatar friend={to} friendId={toId} size="md" className={styles.toFace} />
         </span>
         <span className={styles.text}>
@@ -67,7 +73,7 @@ export function TransferRow({ transfer, currency, onPay, onRecord, onRemind, cla
             <ArrowRight className={styles.inlineArrow} strokeWidth={2.5} />
             <span className={styles.name}>{toName}</span>
           </span>
-          <span className={styles.sentence}>{sentence}</span>
+          <span className={cx(styles.detail, direction === 'out' && to?.upiId && styles.upi)}>{detail}</span>
         </span>
         <Money
           value={amount}
@@ -108,7 +114,8 @@ export function TransferRow({ transfer, currency, onPay, onRecord, onRemind, cla
             <Button
               size="sm"
               variant={onPay || onRemind ? 'secondary' : 'tonal'}
-              iconStart={<Check />}
+              // No icon: the label has to fit half a 360px row.
+              iconStart={onPay || onRemind ? undefined : <Check />}
               onClick={onRecord}
               aria-label={`Record ${amountText} from ${friendObjectLabel(fromId, from)} to ${friendObjectLabel(toId, to)}`}
             >

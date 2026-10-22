@@ -20,8 +20,8 @@ describe('TransferRow', () => {
     render(<TransferRow transfer={{ fromId: 'riya', toId: ME_ID, amount: 54_000 }} currency="INR" />)
     const row = screen.getByRole('group', { name: 'Riya pays you ₹540' })
     expect(row).toHaveAttribute('data-direction', 'in')
-    // The visual chain ("Riya → You") is hidden from screen readers, which get the sentence.
-    expect(within(row).getByText('Riya pays you').closest('[aria-hidden="true"]')).not.toBeNull()
+    // The visual chain ("Riya → You", "Owes you") is hidden from screen readers, which get the sentence.
+    expect(within(row).getByText('Owes you').closest('[aria-hidden="true"]')).not.toBeNull()
     expect(within(row).getByText('You')).toBeInTheDocument()
     expect(within(row).queryByRole('button')).not.toBeInTheDocument()
   })
@@ -39,17 +39,28 @@ describe('TransferRow', () => {
   it('offers Pay via UPI for a payment you make', async () => {
     const onPay = vi.fn()
     render(<TransferRow transfer={{ fromId: ME_ID, toId: 'riya', amount: 54_000 }} currency="INR" onPay={onPay} onRecord={() => {}} />)
-    expect(screen.getByRole('group', { name: 'You pay Riya ₹540' })).toHaveAttribute('data-direction', 'out')
+    const row = screen.getByRole('group', { name: 'You pay Riya ₹540, to riya@okicici' })
+    expect(row).toHaveAttribute('data-direction', 'out')
+    // Where the money goes, in full.
+    expect(within(row).getByText('To riya@okicici')).toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: 'Pay Riya ₹540 via UPI' }))
     expect(onPay).toHaveBeenCalledOnce()
     expect(screen.getByRole('button', { name: 'Record ₹540 from you to Riya' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /Remind/ })).not.toBeInTheDocument()
   })
 
+  it('says when there is no UPI ID to pay to', () => {
+    render(<TransferRow transfer={{ fromId: ME_ID, toId: 'sam', amount: 10_000 }} currency="INR" onRecord={() => {}} />)
+    const row = screen.getByRole('group', { name: 'You pay Sam ₹100' })
+    expect(within(row).getByText('No UPI ID saved')).toBeInTheDocument()
+    expect(within(row).queryByRole('button', { name: /via UPI/ })).not.toBeInTheDocument()
+  })
+
   it('handles payments between two other people, and removed people', () => {
     render(<TransferRow transfer={{ fromId: 'neha', toId: 'gone', amount: 999 }} currency="USD" onRecord={() => {}} />)
     const row = screen.getByRole('group', { name: 'Neha Sharma pays Someone $9.99' })
     expect(row).toHaveAttribute('data-direction', 'between')
+    expect(within(row).getByText('Owes Someone')).toBeInTheDocument()
     expect(within(row).getByRole('button', { name: 'Record $9.99 from Neha Sharma to Someone' })).toBeInTheDocument()
   })
 })

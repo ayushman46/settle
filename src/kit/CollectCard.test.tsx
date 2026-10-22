@@ -54,8 +54,9 @@ describe('CollectCard', () => {
   it('shows what has come back to me, with a ring and who it is waiting on', () => {
     render(<CollectCard expense={dinner()} />)
     expect(card()).toHaveAttribute('data-state', 'collecting')
-    expect(screen.getByRole('heading', { name: '₹691.50 of ₹2,074.50 collected' })).toBeInTheDocument()
-    expect(screen.getByText('1 of 3 paid · Waiting on Sam and Neha')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '₹691.50 collected' })).toBeInTheDocument()
+    expect(screen.getByText('of ₹2,074.50 · 1 of 3 paid')).toBeInTheDocument()
+    expect(screen.getByText('Waiting on Sam and Neha')).toBeInTheDocument()
     const ring = screen.getByRole('progressbar', { name: 'Collected' })
     expect(ring).toHaveAttribute('aria-valuenow', '33')
     expect(within(ring).getByText('1/3')).toBeInTheDocument()
@@ -66,13 +67,15 @@ describe('CollectCard', () => {
     expect(card()).toHaveAttribute('data-state', 'done')
     expect(screen.getByRole('heading', { name: 'All ₹2,074.50 collected' })).toBeInTheDocument()
     expect(screen.getByText('All 3 paid')).toBeInTheDocument()
+    expect(screen.queryByText(/Waiting on/)).not.toBeInTheDocument()
     expect(screen.getByRole('progressbar', { name: 'Collected' })).toHaveAttribute('aria-valuenow', '100')
   })
 
   it('tells the story from the payer’s side when someone else paid', () => {
     render(<CollectCard expense={dinner({ payerId: 'riya', paidBack: { sam: 1 } })} />)
-    expect(screen.getByRole('heading', { name: '₹691.50 of ₹2,074.50 paid back to Riya' })).toBeInTheDocument()
-    expect(screen.getByText('1 of 3 paid · Waiting on you and Neha')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '₹691.50 back to Riya' })).toBeInTheDocument()
+    expect(screen.getByText('of ₹2,074.50 · 1 of 3 paid')).toBeInTheDocument()
+    expect(screen.getByText('Waiting on you and Neha')).toBeInTheDocument()
     expect(screen.getByRole('progressbar', { name: 'Paid back' })).toBeInTheDocument()
   })
 
@@ -107,11 +110,27 @@ describe('CollectCard', () => {
     const group = seedGroup()
     render(<CollectCard expense={dinner({ groupId: group.id, currency: 'USD' })} />)
     expect(card()).toHaveAttribute('data-state', 'collecting')
-    expect(screen.getByRole('heading', { name: '$691.50 of $2,074.50 collected' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '$691.50 collected' })).toBeInTheDocument()
+    expect(screen.getByText('of $2,074.50 · 1 of 3 paid')).toBeInTheDocument()
   })
 
   it('names people who were removed "Someone"', () => {
     render(<CollectCard expense={dinner({ paidBack: {}, participants: [ME_ID, 'gone'].map((friendId) => ({ friendId, input: null })), shares: { [ME_ID]: 100, gone: 100 } })} />)
-    expect(screen.getByText('Not paid yet · Waiting on Someone')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '₹1 to collect' })).toBeInTheDocument()
+    expect(screen.getByText('Not paid yet')).toBeInTheDocument()
+    expect(screen.getByText('Waiting on Someone')).toBeInTheDocument()
+  })
+
+  it('leads with what is still to come back before anyone has paid', () => {
+    render(<CollectCard expense={dinner({ paidBack: {} })} />)
+    expect(screen.getByRole('heading', { name: '₹2,074.50 to collect' })).toBeInTheDocument()
+    expect(screen.getByText("Nobody's paid yet")).toBeInTheDocument()
+    expect(screen.getByRole('progressbar', { name: 'Collected' })).toHaveAttribute('aria-valuenow', '0')
+  })
+
+  it('says what someone else is still owed before anyone has paid them', () => {
+    render(<CollectCard expense={dinner({ payerId: 'riya', paidBack: {} })} />)
+    expect(screen.getByRole('heading', { name: '₹2,074.50 owed to Riya' })).toBeInTheDocument()
+    expect(screen.getByText('Waiting on you, Sam and Neha')).toBeInTheDocument()
   })
 })

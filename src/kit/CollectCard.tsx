@@ -5,6 +5,7 @@ import { useFriendsById, useGroup } from '../data'
 import { ME_ID, type Expense } from '../domain/types'
 import { collectProgress, isSettledInGroup } from '../engine/balances'
 import { cx } from '../lib/cx'
+import { formatMoney } from '../lib/money'
 import { paidCountLabel, pendingIds, waitingOnLabel } from './collectLabels'
 import { friendLabel, friendObjectLabel } from './friendName'
 import styles from './CollectCard.module.css'
@@ -15,8 +16,8 @@ export interface CollectCardProps {
 }
 
 /**
- * How much of an expense has come back to whoever paid: a progress ring and
- * "₹1,383 of ₹2,074.50 collected · 1 of 3 paid · Waiting on Sam and Neha". Expenses settled
+ * How much of an expense has come back to whoever paid: a progress ring and "₹691.50 collected",
+ * "of ₹2,074.50 · 1 of 3 paid", "Waiting on Sam and Neha". Expenses settled
  * through their group's balances say so instead; a split with nobody to pay back says that.
  */
 export function CollectCard({ expense, className }: CollectCardProps) {
@@ -63,21 +64,31 @@ export function CollectCard({ expense, className }: CollectCardProps) {
   }
 
   const done = progress.outstanding === 0
+  const started = progress.collected > 0
   const fraction = progress.total > 0 ? progress.collected / progress.total : 0
   const waiting = waitingOnLabel(pendingIds(expense).map((id) => friendObjectLabel(id, friendsById[id] ?? null)))
-  const detail = [paidCountLabel(progress.paidCount, progress.peopleCount), waiting].filter(Boolean).join(' · ')
+  const counted = paidCountLabel(progress.paidCount, progress.peopleCount)
+  const totalText = formatMoney(progress.total, expense.currency, { trimZeros: true })
 
-  const title = !done ? (
+  // Short headline first ("₹691.50 collected"), the rest of the story underneath.
+  const title = done ? (
+    payerIsMe ? (
+      <>All {money(progress.total, true)} collected</>
+    ) : (
+      <>
+        {payerName} got back all {money(progress.total, true)}
+      </>
+    )
+  ) : started ? (
     <>
-      {money(progress.collected, true)} of {money(progress.total)} {payerIsMe ? 'collected' : `paid back to ${payerName}`}
+      {money(progress.collected, true)} {payerIsMe ? 'collected' : `back to ${payerName}`}
     </>
-  ) : payerIsMe ? (
-    <>All {money(progress.total, true)} collected</>
   ) : (
     <>
-      {payerName} got back all {money(progress.total, true)}
+      {money(progress.total, true)} {payerIsMe ? 'to collect' : `owed to ${payerName}`}
     </>
   )
+  const detail = !done && started ? `of ${totalText} · ${counted}` : counted
 
   return (
     <section aria-labelledby={titleId} className={cx(styles.card, className)} data-state={done ? 'done' : 'collecting'}>
@@ -95,6 +106,7 @@ export function CollectCard({ expense, className }: CollectCardProps) {
           {title}
         </h2>
         <p className={cx(styles.detail, done && styles.doneDetail)}>{detail}</p>
+        {waiting && <p className={styles.detail}>{waiting}</p>}
       </div>
     </section>
   )

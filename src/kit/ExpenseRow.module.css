@@ -3,6 +3,10 @@
   min-height: calc(var(--s-16) + var(--s-2));
 }
 
+.lastWord {
+  white-space: nowrap;
+}
+
 .recurring {
   display: inline-block;
   width: 14px;

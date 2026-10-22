@@ -42,14 +42,7 @@ export function ExpenseRow({ expense, onClick, showDate = false, hideGroup = fal
       onClick={onClick}
       aria-label={onClick ? label : undefined}
       leading={<CategoryIcon category={expense.category} size="md" />}
-      title={
-        <>
-          {expense.title}
-          {expense.recurringId !== null && (
-            <Repeat aria-hidden="true" className={styles.recurring} strokeWidth={2.5} />
-          )}
-        </>
-      }
+      title={expense.recurringId !== null ? <RecurringTitle title={expense.title} /> : expense.title}
       subtitle={subtitle}
       trailing={
         <span className={styles.side}>
@@ -77,5 +70,21 @@ export function ExpenseRow({ expense, onClick, showDate = false, hideGroup = fal
         </span>
       }
     />
+  )
+}
+
+/** The title with a small repeat glyph glued to its last word, so the glyph never wraps alone. */
+function RecurringTitle({ title }: { title: string }) {
+  const cut = title.trimEnd().lastIndexOf(' ')
+  const head = cut === -1 ? '' : title.slice(0, cut + 1)
+  const last = cut === -1 ? title : title.slice(cut + 1)
+  return (
+    <>
+      {head}
+      <span className={styles.lastWord}>
+        {last}
+        <Repeat aria-hidden="true" className={styles.recurring} strokeWidth={2.5} />
+      </span>
+    </>
   )
 }

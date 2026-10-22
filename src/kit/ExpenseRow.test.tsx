@@ -203,8 +203,16 @@ describe('ExpenseRow', () => {
     expect(screen.getByText('₹2,074.50')).toBeInTheDocument()
   })
 
-  it('marks recurring splits with a small repeat glyph', () => {
-    const { container } = render(<ExpenseRow expense={dinner({ recurringId: 'r1' })} />)
+  it('marks recurring splits with a small repeat glyph, glued to the last word', () => {
+    const { container } = render(<ExpenseRow expense={dinner({ recurringId: 'r1', title: 'October rent' })} />)
     expect(container.querySelector('svg.lucide-repeat')).not.toBeNull()
+    // The glyph wraps with "rent", never onto a line of its own.
+    expect(screen.getByText('rent').querySelector('svg.lucide-repeat')).not.toBeNull()
+    expect(container.textContent).toContain('October rent')
+  })
+
+  it('keeps a one-word recurring title whole', () => {
+    render(<ExpenseRow expense={dinner({ recurringId: 'r1', title: 'Netflix' })} />)
+    expect(screen.getByText('Netflix').querySelector('svg.lucide-repeat')).not.toBeNull()
   })
 })
