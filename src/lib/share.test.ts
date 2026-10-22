@@ -36,6 +36,10 @@ function session(overrides: Partial<Session> = {}): Session {
     assignments: { x: { a: 1 }, y: { b: 1 } },
     assignCursor: 0,
     payerId: null,
+    category: null,
+    date: null,
+    groupId: null,
+    expenseId: null,
     ...overrides,
   }
 }

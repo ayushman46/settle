@@ -72,6 +72,23 @@ describe('parseSession', () => {
     expect(parseSession(old)?.payerId).toBeNull()
   })
 
+  it('accepts v2 saves without the v3 fields, and round-trips them once set', () => {
+    const { category: _c, date: _d, groupId: _g, expenseId: _e, ...v2 } = valid()
+    expect(parseSession(v2)).toMatchObject({ category: null, date: null, groupId: null, expenseId: null })
+    const v3 = valid({ category: 'groceries', date: '2026-10-19', groupId: 'g1', expenseId: 'e1' })
+    expect(parseSession(JSON.parse(JSON.stringify(v3)))).toEqual(v3)
+  })
+
+  it('drops a bad v3 field without dropping the bill', () => {
+    const parsed = parseSession({ ...valid(), category: 'snacks', date: '19/10/2026', groupId: 42, expenseId: '  ' })
+    expect(parsed).toMatchObject({ category: null, date: null, groupId: null, expenseId: null })
+    expect(parsed?.items).toHaveLength(2)
+  })
+
+  it('keeps you as the payer even when you aren’t on the bill', () => {
+    expect(parseSession({ ...valid(), payerId: 'me' })?.payerId).toBe('me')
+  })
+
   it('repairs small inconsistencies', () => {
     const repaired = parseSession({
       ...valid(),

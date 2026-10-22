@@ -1,7 +1,10 @@
 /** Derived values for screens. Pure functions of the session. */
+import type { CategoryId } from '../../shared/categories'
+import { categoryFromText } from '../engine/categories'
 import { currencyDigits } from '../lib/money'
 import { validShares } from '../lib/split'
 import { STEPS, type BillItem, type Minor, type Session, type StepId } from '../types'
+import { isIsoDay } from './reducer'
 
 export function itemsTotal(s: Session): Minor {
   let total = 0
@@ -32,6 +35,26 @@ export function defaultPaid(s: Session): Minor {
 /** The amount being split. */
 export function effectivePaid(s: Session): Minor {
   return s.paid ?? defaultPaid(s)
+}
+
+/**
+ * The day the bill happened: the one picked, else the date printed on it when that reads as a
+ * real day that isn't in the future, else `today` (YYYY-MM-DD).
+ */
+export function billDate(s: Session, today: string): string {
+  if (s.date !== null) return s.date
+  const printed = s.meta.date?.trim() ?? ''
+  return isIsoDay(printed) && printed <= today ? printed : today
+}
+
+/** What the bill is for: the one picked (or the scan's guess), else what its name suggests, else food. */
+export function billCategory(s: Session): CategoryId {
+  return s.category ?? suggestedCategory(s)
+}
+
+/** What the bill's name suggests ("Blinkit" → groceries); a restaurant bill when it says nothing. */
+export function suggestedCategory(s: Session): CategoryId {
+  return categoryFromText(s.meta.merchant ?? '') ?? 'food'
 }
 
 /** True when someone (who still exists) is on the item. */

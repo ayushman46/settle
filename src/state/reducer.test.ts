@@ -1,6 +1,17 @@
 import { describe, expect, it } from 'vitest'
+import { ME_ID } from '../domain/types'
 import { EMPTY_META, type BillItem, type Person, type Session } from '../types'
-import { createSession, MAX_ITEMS, MAX_WEIGHT, reducer, repairSession, sanitizeItem, type Action } from './reducer'
+import {
+  createSession,
+  isCategory,
+  isIsoDay,
+  MAX_ITEMS,
+  MAX_WEIGHT,
+  reducer,
+  repairSession,
+  sanitizeItem,
+  type Action,
+} from './reducer'
 
 const item = (id: string, amount: number, name = id.toUpperCase(), quantity = 1): BillItem => ({ id, name, quantity, amount })
 const person = (id: string, name = id.toUpperCase(), color = 0): Person => ({ id, name, color })
@@ -37,6 +48,10 @@ describe('createSession', () => {
       assignments: {},
       assignCursor: 0,
       payerId: null,
+      category: null,
+      date: null,
+      groupId: null,
+      expenseId: null,
     })
     expect(s.id).toMatch(/^[0-9a-f-]{36}$/)
     expect(createSession('nope').currency).toMatch(/^[A-Z]{3}$/)
@@ -73,6 +88,19 @@ describe('reducer', () => {
       { type: 'setMerchant', merchant: '  ' },
       { type: 'restore', session: { ...base(), id: 'other' } },
       { type: 'addItem', item: item('x', 5) },
+      { type: 'setCategory', category: null },
+      { type: 'setCategory', category: 'nope' as never },
+      { type: 'setDate', date: null },
+      { type: 'setDate', date: '2026-02-30' },
+      { type: 'setDate', date: 'yesterday' },
+      { type: 'setGroup', groupId: null },
+      { type: 'setGroup', groupId: '' },
+      { type: 'setExpenseId', expenseId: null },
+      { type: 'linkPeople', links: {} },
+      { type: 'linkPeople', links: { ghost: person('z') } },
+      { type: 'linkPeople', links: { a: person('a', 'Aisha', 0) } },
+      { type: 'linkPeople', links: { a: person('', 'Nobody') } },
+      { type: 'linkPeople', links: { a: person('q', '   ') } },
     ]
     for (const action of noops) expect(reducer(s, action), action.type).toBe(s)
   })
@@ -119,6 +147,15 @@ describe('reducer', () => {
     ])
     expect(next.people).toBe(s.people)
     expect(next.id).not.toBe(s.id)
+  })
+
+  it('loadBill takes the scan’s category and forgets the last bill’s date and saved expense, keeping the group', () => {
+    const s = base({ category: 'gift', date: '2026-01-02', groupId: 'g1', expenseId: 'e1' })
+    const load = (category?: Session['category']): Session =>
+      reducer(s, { type: 'loadBill', source: 'scan', currency: 'INR', meta: EMPTY_META, items: [item('n', 100)], warnings: [], category })
+    expect(load('groceries')).toMatchObject({ category: 'groceries', date: null, groupId: 'g1', expenseId: null })
+    expect(load().category).toBeNull()
+    expect(load('bogus' as never).category).toBeNull()
   })
 
   it('loadBill keeps the current currency when given an unknown one and caps items', () => {
@@ -255,6 +292,59 @@ describe('reducer', () => {
     expect(reducer(s, { type: 'setPayer', personId: null }).payerId).toBeNull()
   })
 
+  it('setPayer also accepts you when you weren’t at the table', () => {
+    expect(reducer(base(), { type: 'setPayer', personId: ME_ID }).payerId).toBe(ME_ID)
+    // …and that survives a repair, while a stranger doesn't.
+    expect(repairSession(base({ payerId: ME_ID })).payerId).toBe(ME_ID)
+  })
+
+  it('setCategory / setDate / setGroup / setExpenseId', () => {
+    const s = base()
+    expect(reducer(s, { type: 'setCategory', category: 'travel' }).category).toBe('travel')
+    expect(reducer(base({ category: 'travel' }), { type: 'setCategory', category: null }).category).toBeNull()
+    expect(reducer(s, { type: 'setDate', date: '2024-02-29' }).date).toBe('2024-02-29')
+    expect(reducer(base({ date: '2024-02-29' }), { type: 'setDate', date: null }).date).toBeNull()
+    expect(reducer(s, { type: 'setGroup', groupId: 'g1' }).groupId).toBe('g1')
+    expect(reducer(s, { type: 'setExpenseId', expenseId: 'e1' }).expenseId).toBe('e1')
+  })
+
+  it('linkPeople re-points people at friends and carries their items and the payer along', () => {
+    const s = base({ assignments: { x: { a: 1, b: 2 }, y: { c: 1 } }, payerId: 'b' })
+    const next = reducer(s, {
+      type: 'linkPeople',
+      links: { a: person(ME_ID, 'You', 5), b: person('f-ben', '  Ben  K ', 9) },
+    })
+    expect(next.people).toEqual([
+      { id: ME_ID, name: 'You', color: 5 },
+      // An out-of-range colour keeps the old one.
+      { id: 'f-ben', name: 'Ben K', color: 1 },
+      { id: 'c', name: 'Cara', color: 2 },
+    ])
+    expect(next.assignments).toEqual({ x: { [ME_ID]: 1, 'f-ben': 2 }, y: { c: 1 } })
+    expect(next.payerId).toBe('f-ben')
+    expect(next.id).toBe(s.id)
+  })
+
+  it('linkPeople renames and recolours in place', () => {
+    const next = reducer(base(), { type: 'linkPeople', links: { a: person('a', 'Aisha R', 7) } })
+    expect(next.people[0]).toEqual({ id: 'a', name: 'Aisha R', color: 7 })
+  })
+
+  it('linkPeople merges two people who turn out to be the same friend', () => {
+    const s = base({ assignments: { x: { a: 1, b: 1 }, y: { b: 98 }, z: { a: 50, b: 60 } }, payerId: 'b' })
+    const next = reducer(s, { type: 'linkPeople', links: { a: person('f1', 'Aisha', 0), b: person('f1', 'Aisha', 0) } })
+    expect(next.people.map((p) => p.id)).toEqual(['f1', 'c'])
+    expect(next.assignments).toEqual({ x: { f1: 2 }, y: { f1: 98 }, z: { f1: MAX_WEIGHT } })
+    expect(next.payerId).toBe('f1')
+  })
+
+  it('restore never touches which expense the bill is saved as', () => {
+    const s = base({ expenseId: 'e1', category: 'food' })
+    const restored = reducer(s, { type: 'restore', session: { ...s, expenseId: null, category: 'gift' } })
+    expect(restored.expenseId).toBe('e1')
+    expect(restored.category).toBe('gift')
+  })
+
   it('restore brings back a snapshot without navigating', () => {
     const before = base({ assignments: { x: { b: 1 } }, payerId: 'b' })
     const removed = reducer(before, { type: 'removePerson', personId: 'b' })
@@ -304,5 +394,23 @@ describe('repairSession', () => {
   it('returns the same object when consistent', () => {
     const s = base({ assignments: { x: { a: 1, b: 2 } }, payerId: 'a', assignCursor: 1 })
     expect(repairSession(s)).toBe(s)
+  })
+})
+
+describe('isIsoDay / isCategory', () => {
+  it('accepts real calendar days only', () => {
+    expect(isIsoDay('2026-10-22')).toBe(true)
+    expect(isIsoDay('2024-02-29')).toBe(true)
+    expect(isIsoDay('2026-02-29')).toBe(false)
+    expect(isIsoDay('2026-13-01')).toBe(false)
+    expect(isIsoDay('22/10/2026')).toBe(false)
+    expect(isIsoDay(20261022)).toBe(false)
+  })
+
+  it('accepts the shared category ids only', () => {
+    expect(isCategory('food')).toBe(true)
+    expect(isCategory('subscription')).toBe(true)
+    expect(isCategory('Food')).toBe(false)
+    expect(isCategory(null)).toBe(false)
   })
 })

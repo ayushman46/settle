@@ -3,7 +3,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { ScanResponse } from '../../../shared/api'
 import { ImageError, prepareImage, type PreparedImage } from '../../lib/image'
 import type * as ImageModule from '../../lib/image'
-import { getRecentNames } from '../../lib/recent'
 import { readEntry, resetFlowHistory } from '../../state/backStack'
 import { resetHealthForTests } from '../../state/health'
 import { getPhoto, setPhoto } from '../../state/photo'
@@ -605,7 +604,7 @@ describe('ScanScreen — resume card', () => {
     expect(probe.current.step).toBe('review')
   })
 
-  it('discarding asks first, then clears the bill and remembers the names', async () => {
+  it('discarding asks first, then clears the bill', async () => {
     mockApi()
     const { user, probe } = renderScreen(<ScanScreen />, sampleSession('scan', { people: [AISHA, BEN] }))
 
@@ -619,7 +618,6 @@ describe('ScanScreen — resume card', () => {
     await user.click(screen.getByRole('button', { name: 'Discard bill' }))
     expect(probe.current.items).toEqual([])
     expect(probe.current.people).toEqual([])
-    expect(getRecentNames()).toEqual(['Aisha', 'Ben'])
     expect(screen.queryByText('Pick up where you left off')).not.toBeInTheDocument()
     expect(screen.getByText('Bill discarded')).toBeInTheDocument()
   })

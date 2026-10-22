@@ -7,6 +7,8 @@ import { newId } from '../lib/ids'
 import { MAX_MINOR, rescaleMinor } from '../lib/money'
 import { MAX_PEOPLE, nextColor, normalizeName } from '../lib/people'
 import { validShares } from '../lib/split'
+import { CATEGORY_IDS, type CategoryId } from '../../shared/categories'
+import { ME_ID } from '../domain/types'
 import {
   AVATAR_COLORS,
   EMPTY_META,
@@ -24,9 +26,23 @@ import {
 export type Action =
   /** Fresh session at 'scan'. Keeps the current currency unless one is given. */
   | { type: 'reset'; currency?: string }
+  /** Swaps in another draft wholesale (a fresh one once a bill is saved, or a saved bill re-opened). Repaired first. */
+  | { type: 'load'; session: Session }
   | { type: 'goTo'; step: StepId }
-  /** Replaces the bill (new session id), clears paid/assignments/cursor/payer, KEEPS people, step → 'review'. */
-  | { type: 'loadBill'; source: BillSource; currency: string; meta: BillMeta; items: BillItem[]; warnings: string[] }
+  /**
+   * Replaces the bill (new session id), clears paid/assignments/cursor/payer/date and the saved
+   * expense link, KEEPS people and the group, step → 'review'.
+   */
+  | {
+      type: 'loadBill'
+      source: BillSource
+      currency: string
+      meta: BillMeta
+      items: BillItem[]
+      warnings: string[]
+      /** What the bill is for, when known (a scan's guess). */
+      category?: CategoryId | null
+    }
   /** Rescales every amount by 10^(newDigits − oldDigits), rounding (USD 12.34 → JPY 12). */
   | { type: 'setCurrency'; currency: string }
   | { type: 'setMerchant'; merchant: string }
@@ -48,16 +64,31 @@ export type Action =
   | { type: 'setEveryone'; itemId: string; on: boolean }
   /** Clamped to [0, items.length − 1]. */
   | { type: 'setAssignCursor'; index: number }
-  /** Who paid the bill (null = nobody chosen). Ignored for unknown people. */
+  /**
+   * Who paid the bill (null = nobody chosen). Anyone on the bill, or you (`ME_ID`) — you can pay
+   * for a table you didn't eat at. Ignored for anyone else.
+   */
   | { type: 'setPayer'; personId: string | null }
+  | { type: 'setCategory'; category: CategoryId | null }
+  /** YYYY-MM-DD, or null for the default (the bill's printed date, else today). Ignored when malformed. */
+  | { type: 'setDate'; date: string | null }
+  | { type: 'setGroup'; groupId: string | null }
+  /** The expense this bill is saved as (null: not saved yet). */
+  | { type: 'setExpenseId'; expenseId: string | null }
+  /**
+   * Re-points people at your people: each `links[oldId]` replaces that person (new id, name,
+   * colour), and their items and the payer follow. Two people who turn out to be the same friend
+   * become one, sharing what both had.
+   */
+  | { type: 'linkPeople'; links: Readonly<Record<string, Person>> }
   /**
    * Undo: puts back a snapshot of this same session (ignored for a different session id).
    * Restores only `keys` when given, else every field except `step` — undo never navigates.
    */
   | { type: 'restore'; session: Session; keys?: ReadonlyArray<RestorableKey> }
 
-/** Fields an undo may restore. */
-export type RestorableKey = Exclude<keyof Session, 'v' | 'id' | 'createdAt' | 'step'>
+/** Fields an undo may restore (never the step, nor which expense the bill is saved as). */
+export type RestorableKey = Exclude<keyof Session, 'v' | 'id' | 'createdAt' | 'step' | 'expenseId'>
 
 /** Most items one bill can hold. */
 export const MAX_ITEMS = 300
@@ -81,6 +112,9 @@ const RESTORABLE_KEYS: readonly RestorableKey[] = [
   'assignments',
   'assignCursor',
   'payerId',
+  'category',
+  'date',
+  'groupId',
 ]
 
 export function createSession(currency?: string): Session {
@@ -99,7 +133,30 @@ export function createSession(currency?: string): Session {
     assignments: {},
     assignCursor: 0,
     payerId: null,
+    category: null,
+    date: null,
+    groupId: null,
+    expenseId: null,
   }
+}
+
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/
+
+/** A real calendar day written as YYYY-MM-DD. */
+export function isIsoDay(value: unknown): value is string {
+  if (typeof value !== 'string' || !ISO_DATE.test(value)) return false
+  const [year, month, day] = value.split('-').map(Number) as [number, number, number]
+  const date = new Date(Date.UTC(year, month - 1, day))
+  return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day
+}
+
+export function isCategory(value: unknown): value is CategoryId {
+  return typeof value === 'string' && (CATEGORY_IDS as readonly string[]).includes(value)
+}
+
+/** The payer may be anyone on the bill — or you, even when you weren't at the table. */
+function isPayerCandidate(state: Session, personId: string): boolean {
+  return personId === ME_ID || state.people.some((p) => p.id === personId)
 }
 
 function collapse(text: string, max: number): string {
@@ -193,16 +250,53 @@ export function repairSession(state: Session): Session {
     if (!sameShares(shares, clean)) changed = true
     assignments[itemId] = sameShares(shares, clean) ? shares : clean
   }
-  const payerId = state.payerId !== null && state.people.some((p) => p.id === state.payerId) ? state.payerId : null
+  const payerId = state.payerId !== null && isPayerCandidate(state, state.payerId) ? state.payerId : null
   const assignCursor = clampCursor(state.assignCursor, state.items)
   if (!changed && payerId === state.payerId && assignCursor === state.assignCursor) return state
   return { ...state, assignments: changed ? assignments : state.assignments, payerId, assignCursor }
+}
+
+/** Applies `linkPeople` (see the action). Same object when nothing changes. */
+function linkPeople(state: Session, links: Readonly<Record<string, Person>>): Session {
+  const idFor = new Map<string, string>()
+  const people: Person[] = []
+  let changed = false
+  for (const person of state.people) {
+    const link = Object.hasOwn(links, person.id) ? links[person.id] : undefined
+    let next = person
+    if (link && typeof link.id === 'string' && link.id !== '') {
+      const name = normalizeName(link.name)
+      const color = Number.isInteger(link.color) && link.color >= 0 && link.color < AVATAR_COLORS ? link.color : person.color
+      if (name) next = { id: link.id, name, color }
+    }
+    if (next.id !== person.id || next.name !== person.name || next.color !== person.color) changed = true
+    idFor.set(person.id, next.id)
+    // Already on the bill under that id: they become one person.
+    if (people.some((p) => p.id === next.id)) continue
+    people.push(next)
+  }
+  if (!changed) return state
+
+  const assignments: Record<string, Shares> = {}
+  for (const [itemId, shares] of Object.entries(state.assignments)) {
+    const merged: Shares = {}
+    for (const [personId, weight] of Object.entries(shares)) {
+      const id = idFor.get(personId) ?? personId
+      merged[id] = Math.min((merged[id] ?? 0) + weight, MAX_WEIGHT)
+    }
+    assignments[itemId] = merged
+  }
+  const payerId = state.payerId === null ? null : (idFor.get(state.payerId) ?? state.payerId)
+  return repairSession({ ...state, people, assignments, payerId })
 }
 
 export function reducer(state: Session, action: Action): Session {
   switch (action.type) {
     case 'reset':
       return createSession(action.currency ?? state.currency)
+
+    case 'load':
+      return action.session === state ? state : repairSession(action.session)
 
     case 'goTo':
       if (state.step === action.step || !STEPS.includes(action.step)) return state
@@ -231,6 +325,9 @@ export function reducer(state: Session, action: Action): Session {
         assignments: {},
         assignCursor: 0,
         payerId: null,
+        category: isCategory(action.category) ? action.category : null,
+        date: null,
+        expenseId: null,
       }
     }
 
@@ -360,9 +457,32 @@ export function reducer(state: Session, action: Action): Session {
 
     case 'setPayer': {
       const { personId } = action
-      if (personId !== null && !state.people.some((p) => p.id === personId)) return state
+      if (personId !== null && !isPayerCandidate(state, personId)) return state
       return personId === state.payerId ? state : { ...state, payerId: personId }
     }
+
+    case 'setCategory': {
+      const category = isCategory(action.category) ? action.category : null
+      return category === state.category ? state : { ...state, category }
+    }
+
+    case 'setDate': {
+      if (action.date !== null && !isIsoDay(action.date)) return state
+      return action.date === state.date ? state : { ...state, date: action.date }
+    }
+
+    case 'setGroup': {
+      const groupId = typeof action.groupId === 'string' && action.groupId !== '' ? action.groupId : null
+      return groupId === state.groupId ? state : { ...state, groupId }
+    }
+
+    case 'setExpenseId': {
+      const expenseId = typeof action.expenseId === 'string' && action.expenseId !== '' ? action.expenseId : null
+      return expenseId === state.expenseId ? state : { ...state, expenseId }
+    }
+
+    case 'linkPeople':
+      return linkPeople(state, action.links)
 
     case 'restore': {
       const snapshot = action.session

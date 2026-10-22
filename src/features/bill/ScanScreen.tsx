@@ -620,7 +620,7 @@ export function ScanScreen() {
         open={confirmDiscard}
         onClose={() => setConfirmDiscard(false)}
         title="Discard this bill?"
-        description="Its items and split will be cleared. Names you added stay as quick picks for next time."
+        description="Its items and split will be cleared. The people stay in your people list."
         footer={
           <ActionBar>
             <Button block variant="primary" onClick={discard}>

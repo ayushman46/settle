@@ -8,7 +8,7 @@ import { isKnownCurrency } from '../lib/currencies'
 import { MAX_MINOR } from '../lib/money'
 import { MAX_PEOPLE, nextColor, normalizeName } from '../lib/people'
 import { AVATAR_COLORS, type BillItem, type Person, type Session } from '../types'
-import { createSession, MAX_ITEMS, repairSession, sanitizeItem } from './reducer'
+import { createSession, isCategory, isIsoDay, MAX_ITEMS, repairSession, sanitizeItem } from './reducer'
 import { clampStep } from './selectors'
 
 export const SESSION_KEY = 'billsplit.session.v1'
@@ -54,6 +54,11 @@ const sessionSchema = z.object({
   assignCursor: z.int(),
   // Added after the first release of v1 — older saves don't have it.
   payerId: z.optional(z.nullable(z.string())),
+  // Added in Settle v3. Checked leniently: a bad value is dropped, never the whole bill.
+  category: z.optional(z.unknown()),
+  date: z.optional(z.unknown()),
+  groupId: z.optional(z.unknown()),
+  expenseId: z.optional(z.unknown()),
 })
 
 function storage(): Storage | null {
@@ -88,6 +93,11 @@ function cleanPeople(people: readonly Person[]): Person[] {
   return out
 }
 
+/** A non-empty string id, else null. */
+function cleanId(value: unknown): string | null {
+  return typeof value === 'string' && value.trim() !== '' ? value : null
+}
+
 function cleanAmount(value: number | null): number | null {
   return value === null ? null : Math.min(Math.abs(value), MAX_MINOR)
 }
@@ -115,6 +125,10 @@ export function parseSession(value: unknown): Session | null {
     paid: data.paid === null || data.paid < 0 ? null : Math.min(data.paid, MAX_MINOR),
     people: cleanPeople(data.people),
     payerId: data.payerId ?? null,
+    category: isCategory(data.category) ? data.category : null,
+    date: isIsoDay(data.date) ? data.date : null,
+    groupId: cleanId(data.groupId),
+    expenseId: cleanId(data.expenseId),
   }
   const repaired = repairSession(session)
   const step = clampStep(repaired, repaired.step)

@@ -1,11 +1,12 @@
 /* eslint-disable react-refresh/only-export-components -- the provider and its hooks are one unit; an edit here just reloads the page in dev. */
 /**
- * The app's single source of truth: the in-progress `Session` (persisted to localStorage),
- * navigation between steps (kept in step with browser history, see `backStack.ts`) and the
+ * The bill flow's single source of truth: the draft `Session` (persisted to localStorage),
+ * navigation between its steps (kept in step with browser history, see `backStack.ts`) and the
  * derived split.
  */
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useLayoutEffect,
@@ -15,14 +16,14 @@ import {
   type Dispatch,
   type ReactNode,
 } from 'react'
-import { rememberNames } from '../lib/recent'
+import { goBack, navigate } from '../app/router'
 import { computeSplit, type SplitResult } from '../lib/split'
 import type { Session, StepId } from '../types'
 import { flowHistory } from './backStack'
 import { appReducer, initAppState, type AppState, type NavDirection } from './nav'
 import { loadSession, saveSession } from './persist'
 import { setPhoto } from './photo'
-import type { Action } from './reducer'
+import { createSession, type Action } from './reducer'
 import { clampStep, effectivePaid, nextStep, prevStep, resumeStep } from './selectors'
 
 export type { NavDirection } from './nav'
@@ -33,6 +34,8 @@ export const SAVE_DEBOUNCE_MS = 200
 interface StoreValue {
   state: AppState
   dispatch: Dispatch<Action>
+  /** Replaces the draft with a fresh one, saved at once (the bill was just saved as an expense). */
+  startFresh: () => void
 }
 
 const StoreContext = createContext<StoreValue | null>(null)
@@ -75,6 +78,15 @@ export function SessionProvider({ children, initialSession, persist = true }: Se
 
   // Persistence: debounced writes, plus a final write whenever the page may go away.
   const lastSaved = useRef<string | null>(null)
+
+  // Saved straight away and made the latest: the flow is usually unmounting in this same update,
+  // so neither the debounced save nor the final flush must write the finished bill back.
+  const startFresh = useCallback(() => {
+    const fresh = createSession(sessionRef.current.currency)
+    sessionRef.current = fresh
+    if (persist && saveSession(fresh)) lastSaved.current = JSON.stringify(fresh)
+    dispatch({ type: 'load', session: fresh })
+  }, [persist])
   useEffect(() => {
     if (!persist) return
     const timer = setTimeout(() => {
@@ -103,7 +115,7 @@ export function SessionProvider({ children, initialSession, persist = true }: Se
     }
   }, [persist])
 
-  const value = useMemo<StoreValue>(() => ({ state, dispatch }), [state])
+  const value = useMemo<StoreValue>(() => ({ state, dispatch, startFresh }), [state, startFresh])
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>
 }
 
@@ -135,19 +147,26 @@ export interface Flow {
   resumeStep: StepId
   /** The next step in order (no-op on the last one). */
   next(): void
-  /** The previous step (no-op on the home screen). History follows, so the system Back button stays in sync. */
+  /** The previous step (no-op on the first). History follows, so the system Back button stays in sync. */
   back(): void
   /** Any step, forwards or backwards. History gets one entry per step in between. */
   goTo(step: StepId): void
-  /** "Continue" from the home screen. */
+  /** "Continue" from the scan step. */
   resume(): void
-  /** Remembers the people's names for next time, clears the photo, and starts a fresh bill at home. */
+  /** Clears the photo and starts a fresh bill on the scan step. */
   startOver(): void
+  /** Leaves the flow for the screen it was opened from (or Home); the draft stays saved for later. */
+  exit(): void
+  /**
+   * The bill was saved as an expense: shows `to` in place of the whole flow (Back then skips it)
+   * and clears the draft, so the next bill starts fresh.
+   */
+  finish(to: string): void
 }
 
 /** Navigation between steps, integrated with browser history (Android Back steps back). */
 export function useFlow(): Flow {
-  const { state, dispatch } = useStore()
+  const { state, dispatch, startFresh } = useStore()
   const stateRef = useRef(state)
   useLayoutEffect(() => {
     stateRef.current = state
@@ -170,12 +189,18 @@ export function useFlow(): Flow {
         goTo(resumeStep(session, furthest))
       },
       startOver: () => {
-        rememberNames(stateRef.current.session.people.map((p) => p.name))
         setPhoto(null)
         dispatch({ type: 'reset' })
       },
+      exit: () => goBack('/app'),
+      finish: (to: string) => {
+        setPhoto(null)
+        // Leave first: the fresh draft's step change then has no flow left to rewind.
+        navigate(to, { replace: true })
+        startFresh()
+      },
     }
-  }, [dispatch])
+  }, [dispatch, startFresh])
 
   return useMemo(
     () => ({ step, direction: state.direction, resumeStep: resume, ...actions }),

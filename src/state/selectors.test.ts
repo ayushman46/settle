@@ -4,6 +4,8 @@ import { createSession } from './reducer'
 import {
   assignedCount,
   billBreakdown,
+  billCategory,
+  billDate,
   canContinue,
   clampStep,
   computedBillTotal,
@@ -19,6 +21,7 @@ import {
   resumeStep,
   stepIndex,
   stepProgress,
+  suggestedCategory,
   unassignedItems,
 } from './selectors'
 
@@ -229,5 +232,31 @@ describe('billBreakdown', () => {
   it('uses the currency for the round-off threshold', () => {
     const jpy = session({ currency: 'JPY', items: [item('x', 1000)], meta: { ...EMPTY_META, total: 1001 } })
     expect(billBreakdown(jpy).find((r) => r.key === 'roundoff')).toMatchObject({ label: 'Other charges', kind: 'other' })
+  })
+})
+
+describe('billDate', () => {
+  const today = '2026-10-22'
+  it('uses the day picked, else the printed date, else today', () => {
+    expect(billDate(session({ date: '2026-10-01' }), today)).toBe('2026-10-01')
+    expect(billDate(session({ meta: { ...EMPTY_META, date: '2026-10-19' } }), today)).toBe('2026-10-19')
+    expect(billDate(session({ meta: { ...EMPTY_META, date: ' 2026-10-19 ' } }), today)).toBe('2026-10-19')
+    expect(billDate(session(), today)).toBe(today)
+  })
+
+  it('ignores a printed date that isn’t a real day or is in the future', () => {
+    expect(billDate(session({ meta: { ...EMPTY_META, date: '19 Oct' } }), today)).toBe(today)
+    expect(billDate(session({ meta: { ...EMPTY_META, date: '2026-02-30' } }), today)).toBe(today)
+    expect(billDate(session({ meta: { ...EMPTY_META, date: '2026-12-25' } }), today)).toBe(today)
+  })
+})
+
+describe('billCategory / suggestedCategory', () => {
+  it('prefers the category on the bill, then what its name says, then food', () => {
+    expect(billCategory(session({ category: 'travel' }))).toBe('travel')
+    expect(billCategory(session({ meta: { ...EMPTY_META, merchant: 'Blinkit' } }))).toBe('groceries')
+    expect(suggestedCategory(session({ meta: { ...EMPTY_META, merchant: 'Blinkit' } }))).toBe('groceries')
+    expect(billCategory(session({ meta: { ...EMPTY_META, merchant: 'Saffron Table' } }))).toBe('food')
+    expect(billCategory(session())).toBe('food')
   })
 })

@@ -3,6 +3,7 @@ import { StrictMode, type ReactNode } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { SAMPLE_SCAN } from '../api/sample'
 import { scanToBill } from '../api/mapScan'
+import { navigate } from '../app/router'
 import { getRecentNames } from '../lib/recent'
 import { EMPTY_META, type Session, type Shares } from '../types'
 import { flowHistory, readEntry, resetFlowHistory, useBackClose } from './backStack'
@@ -209,7 +210,7 @@ describe('useFlow', () => {
     expect(result.current.flow.step).toBe('paid')
   })
 
-  it('startOver remembers names, clears the photo and goes home without leaving history behind', async () => {
+  it('startOver clears the photo and goes back to the scan step without leaving history behind', async () => {
     setPhoto({ previewUrl: 'data:image/png;base64,AAAA' })
     const { result } = setup(readySession('review'))
     act(() => result.current.flow.goTo('result'))
@@ -218,7 +219,8 @@ describe('useFlow', () => {
     expect(result.current.session.step).toBe('scan')
     expect(result.current.session.items).toEqual([])
     expect(result.current.session.people).toEqual([])
-    expect(getRecentNames()).toEqual(['Aisha', 'Ben'])
+    // People live in your people list now, not in v2's recent names.
+    expect(getRecentNames()).toEqual([])
     expect(getPhoto()).toBeNull()
     expect(entry()).toEqual({ step: 'scan', depth: 0, sheet: false })
   })
@@ -246,8 +248,10 @@ describe('useFlow', () => {
 
   it('returns stable callbacks', () => {
     const { result, rerender } = setup()
-    const { next, back, goTo, startOver, resume } = result.current.flow
+    const { next, back, goTo, startOver, resume, exit, finish } = result.current.flow
     rerender()
+    expect(result.current.flow.exit).toBe(exit)
+    expect(result.current.flow.finish).toBe(finish)
     expect(result.current.flow.next).toBe(next)
     expect(result.current.flow.back).toBe(back)
     expect(result.current.flow.goTo).toBe(goTo)
@@ -274,6 +278,69 @@ describe('useFlow', () => {
     act(() => result.current.dispatch({ type: 'restore', session: snapshot }))
     expect(result.current.session.people).toHaveLength(2)
     expect(result.current.session.step).toBe('assign')
+  })
+})
+
+describe('leaving the flow', () => {
+  /** The app on `/app`, then the flow opened over it at `/app/bill`. */
+  function openFlowFromHome(session: Session = readySession('review')) {
+    window.history.replaceState(null, '', '/app')
+    navigate('/app/bill')
+    return setup(session)
+  }
+
+  it('exit() returns to the screen the flow was opened from, keeping the draft', async () => {
+    const view = openFlowFromHome()
+    act(() => view.result.current.flow.next())
+    await act(idle)
+    act(() => view.result.current.flow.exit())
+    await act(idle)
+    expect(window.location.pathname).toBe('/app')
+    expect(view.result.current.session.items).toHaveLength(8)
+  })
+
+  it('exit() from a flow opened straight from a link goes Home instead of leaving the app', async () => {
+    window.history.replaceState(null, '', '/app/bill')
+    const view = setup(readySession('review'))
+    act(() => view.result.current.flow.exit())
+    await act(idle)
+    expect(window.location.pathname).toBe('/app')
+    expect(window.history.state).toMatchObject({ settle: 1, depth: 0 })
+  })
+
+  it('finish() shows the saved expense in place of the whole flow and starts a fresh draft', async () => {
+    setPhoto({ previewUrl: 'data:image/png;base64,AAAA' })
+    const view = openFlowFromHome()
+    act(() => view.result.current.flow.goTo('result'))
+    await act(idle)
+    const old = view.result.current.session
+
+    act(() => view.result.current.flow.finish('/app/expense/e1'))
+    await act(idle)
+    expect(window.location.pathname).toBe('/app/expense/e1')
+    expect(window.history.state).toMatchObject({ settle: 1, depth: 1 })
+    expect(getPhoto()).toBeNull()
+
+    // Saved at once — and the finished bill is never written back, not even when the flow unmounts.
+    const saved = JSON.parse(window.localStorage.getItem(SESSION_KEY) ?? 'null') as Session
+    expect(saved).toMatchObject({ step: 'scan', items: [], people: [], currency: old.currency })
+    expect(saved.id).not.toBe(old.id)
+    view.unmount()
+    expect((JSON.parse(window.localStorage.getItem(SESSION_KEY) ?? 'null') as Session).id).toBe(saved.id)
+
+    // Back skips the flow's steps: it returns to where the flow was opened from.
+    await act(systemBack)
+    expect(window.location.pathname).toBe('/app')
+  })
+
+  it('finish() keeps the fresh draft in memory too, should the flow stay on screen', async () => {
+    const view = openFlowFromHome(readySession('result'))
+    await act(idle)
+    act(() => view.result.current.flow.finish('/app/expense/e1'))
+    await act(idle)
+    expect(view.result.current.session.items).toEqual([])
+    expect(view.result.current.session.step).toBe('scan')
+    expect(window.location.pathname).toBe('/app/expense/e1')
   })
 })
 

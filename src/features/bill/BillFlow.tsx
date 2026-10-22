@@ -7,12 +7,14 @@
 import { Component, useEffect, useLayoutEffect, useState, type ComponentType, type ReactNode } from 'react'
 import { RotateCcw } from 'lucide-react'
 import { Button, EmptyState, ScreenTransition, useDismissToast, type NavDirection } from '../../components'
+import { useFriendsById, useProfile } from '../../data'
 import { BRAND } from '../../domain/types'
 import { prefetchHealth } from '../../state/health'
 import { SESSION_KEY } from '../../state/persist'
-import { SessionProvider, useFlow } from '../../state/store'
+import { SessionProvider, useFlow, useSession } from '../../state/store'
 import type { Session, StepId } from '../../types'
 import { AssignScreen } from './AssignScreen'
+import { linkToFriends } from './billPeople'
 import { PaidScreen } from './PaidScreen'
 import { PeopleScreen } from './PeopleScreen'
 import { ResultScreen } from './ResultScreen'
@@ -69,6 +71,22 @@ function CurrentStep() {
   )
 }
 
+/**
+ * Keeps the bill's people in line with your people: renames and new avatar colours show up on the
+ * draft, and a bill started before v3 (people typed in by name) is linked to your people once.
+ */
+function PeopleSync() {
+  const { session, dispatch } = useSession()
+  const friendsById = useFriendsById()
+  const { name: ownerName } = useProfile()
+  const { people } = session
+  useEffect(() => {
+    const links = linkToFriends(people, friendsById, ownerName)
+    if (Object.keys(links).length > 0) dispatch({ type: 'linkPeople', links })
+  }, [people, friendsById, ownerName, dispatch])
+  return null
+}
+
 export interface BillFlowProps {
   /** Start from this bill instead of the saved one (tests, previews). */
   initialSession?: Session
@@ -103,6 +121,7 @@ export function BillFlow({ initialSession, persist = true }: BillFlowProps) {
   return (
     <BillErrorBoundary onStartOver={() => setGeneration((g) => g + 1)}>
       <SessionProvider key={generation} initialSession={generation === 0 ? initialSession : undefined} persist={persist}>
+        <PeopleSync />
         <CurrentStep />
       </SessionProvider>
     </BillErrorBoundary>

@@ -2,7 +2,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { screen, within } from '@testing-library/react'
 import { formatBillDate } from '../../lib/format'
 import { formatMoney } from '../../lib/money'
-import { getRecentNames } from '../../lib/recent'
 import { computeSplit } from '../../lib/split'
 import { buildUpiLink, buildUpiRequestText, getSavedUpiId, saveUpiId } from '../../lib/upi'
 import { resetFlowHistory } from '../../state/backStack'
@@ -311,7 +310,6 @@ describe('ResultScreen', () => {
     await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Start new bill' }))
     expect(probe.current.step).toBe('scan')
     expect(probe.current.items).toEqual([])
-    expect(getRecentNames()).toEqual(['Aisha', 'Ben', 'Chen'])
   })
 
   it('explains unassigned items and links back to assign them', async () => {
