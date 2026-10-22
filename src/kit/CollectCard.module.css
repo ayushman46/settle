@@ -1,0 +1,86 @@
+/* A surface card: progress ring (or a quiet icon) beside two lines of text. */
+.card {
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+  min-width: 0;
+  padding: var(--s-4);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+}
+
+.ring {
+  flex: none;
+}
+
+.count {
+  font: var(--text-label);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+/* Everyone's paid: the check pops in as the ring closes. */
+.doneCheck {
+  color: var(--positive);
+  animation: pop var(--dur-4) var(--ease-spring) var(--dur-2) backwards;
+}
+
+.icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: var(--s-12);
+  height: var(--s-12);
+  border-radius: 50%;
+  background: var(--surface-2);
+  color: var(--ink-2);
+}
+
+.icon > svg {
+  width: var(--s-6);
+  height: var(--s-6);
+}
+
+.text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.title {
+  margin: 0;
+  font: var(--text-section);
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+/* Amounts keep their digits together; the sentence wraps around them. */
+.money {
+  letter-spacing: -0.01em;
+}
+
+.detail {
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
+.doneDetail {
+  color: var(--positive);
+  font-weight: 550;
+}
+
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .doneCheck {
+    animation: none;
+  }
+}
