@@ -216,12 +216,14 @@ function ExpenseDetail({ expense, onDeleting }: ExpenseDetailProps) {
           title="Everyone’s share"
           action={canMarkAll ? { label: 'Mark all paid', onClick: markAllPaid } : undefined}
         />
-        <ShareList
-          expense={expense}
-          onTogglePaid={togglePaid}
-          onPayUpi={(friendId) => setUpi({ friendId, open: true })}
-          onNudge={(friendId) => setNudge({ friendId, open: true })}
-        />
+        <Card padding="none">
+          <ShareList
+            expense={expense}
+            onTogglePaid={togglePaid}
+            onPayUpi={(friendId) => setUpi({ friendId, open: true })}
+            onNudge={(friendId) => setNudge({ friendId, open: true })}
+          />
+        </Card>
       </section>
 
       <BillBreakdown expense={expense} />

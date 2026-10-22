@@ -1,6 +1,6 @@
 import { useId, useState } from 'react'
 import { ChevronDown } from 'lucide-react'
-import { AvatarStack, Money, Receipt, ReceiptDivider, ReceiptRow, SectionHeader } from '../../components'
+import { AvatarStack, describePeople, Money, Receipt, ReceiptDivider, ReceiptRow, SectionHeader } from '../../components'
 import { useFriendsById } from '../../data'
 import type { Expense } from '../../domain/types'
 import { friendLabel } from '../../kit/index-a'
@@ -42,9 +42,12 @@ export function BillBreakdown({ expense }: BillBreakdownProps) {
       <Receipt padding="lg" className={styles.receipt}>
         <ul id={listId} role="list" className={styles.items} aria-label="Items">
           {items.map((item) => {
-            const who = Object.entries(bill.assignments[item.id] ?? {})
+            const ids = Object.entries(bill.assignments[item.id] ?? {})
               .filter(([, weight]) => weight > 0)
-              .map(([id]) => ({ id, name: friendLabel(id, friendsById[id] ?? null), color: friendsById[id]?.color ?? 0 }))
+              .map(([id]) => id)
+            // Discs show each person's own initials (yours too); the label says "You".
+            const who = ids.map((id) => ({ id, name: friendsById[id]?.name ?? '', color: friendsById[id]?.color ?? 0 }))
+            const label = describePeople(ids.map((id) => friendLabel(id, friendsById[id] ?? null)), 3)
             return (
               <li key={item.id} className={styles.item}>
                 <span className={styles.itemText}>
@@ -53,7 +56,7 @@ export function BillBreakdown({ expense }: BillBreakdownProps) {
                     {item.quantity !== 1 && <span className={styles.qty}> × {formatQuantity(item.quantity)}</span>}
                   </span>
                   {who.length > 0 ? (
-                    <AvatarStack people={who} size="xs" max={5} className={styles.who} />
+                    <AvatarStack people={who} label={label} size="xs" max={5} className={styles.who} />
                   ) : (
                     <span className={styles.everyone}>Shared by everyone</span>
                   )}
