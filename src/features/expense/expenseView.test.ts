@@ -13,7 +13,7 @@ describe('standingPill', () => {
 
   it('says when it has all come back', () => {
     const all = makeExpense({ paidBack: { riya: 1, sam: 1, neha: 1 } })
-    expect(standingPill(all, 'You', [])).toEqual({ label: 'All collected', tone: 'positive', done: true })
+    expect(standingPill(all, 'You', [])).toEqual({ label: 'Settled', tone: 'positive', done: true })
   })
 
   it('stays quiet when it was just you', () => {

@@ -29,7 +29,7 @@ export function standingPill(e: Expense, payerName: string, groups: readonly Gro
   }
   if (s.role === 'paid') {
     if (s.outstanding > 0) return { label: `You’re owed ${money(s.outstanding)}`, tone: 'positive', done: false }
-    if (s.net > 0) return { label: 'All collected', tone: 'positive', done: true }
+    if (s.net > 0) return { label: 'Settled', tone: 'positive', done: true }
     return null
   }
   if (s.outstanding < 0) return { label: `You owe ${payerName} ${money(-s.outstanding)}`, tone: 'negative', done: false }
