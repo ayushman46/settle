@@ -1,0 +1,262 @@
+/* Everyone's share, one block per person, hairlines between (inset like ListRow). */
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item {
+  position: relative;
+  padding: var(--s-3) var(--s-4);
+  animation: row-in var(--dur-3) var(--ease-out) backwards;
+}
+
+.item:nth-child(2) { animation-delay: 30ms; }
+.item:nth-child(3) { animation-delay: 60ms; }
+.item:nth-child(4) { animation-delay: 90ms; }
+.item:nth-child(5) { animation-delay: 120ms; }
+.item:nth-child(n + 6) { animation-delay: 150ms; }
+
+.item + .item::before {
+  content: '';
+  position: absolute;
+  inset: 0 var(--s-4) auto;
+  height: 1px;
+  background: var(--line);
+  pointer-events: none;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  min-height: var(--s-12);
+}
+
+.text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.name {
+  font: var(--text-body);
+  font-weight: 600;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
+.statusIcon {
+  flex: none;
+  width: 13px;
+  height: 13px;
+}
+
+[data-state='paid'] .status,
+[data-state='payer'] .status {
+  color: var(--positive);
+  font-weight: 550;
+}
+
+.amount {
+  flex: none;
+  letter-spacing: -0.015em;
+}
+
+/* Settled: still legible, quieter than what's open. */
+.paidAmount {
+  color: var(--ink-2);
+}
+
+/* The tick: a 44px target around a 28px ring that fills green when they've paid. */
+.tick {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: var(--tap);
+  height: var(--tap);
+  margin: calc(-1 * var(--s-2)) calc(-1 * var(--s-2)) calc(-1 * var(--s-2)) 0;
+  border-radius: 50%;
+  color: transparent;
+}
+
+.tickMark {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 2px solid var(--field-border);
+  border-radius: 50%;
+  background: var(--surface);
+  transition:
+    background-color var(--dur-2) var(--ease-out),
+    border-color var(--dur-2) var(--ease-out),
+    transform var(--dur-2) var(--ease-spring);
+}
+
+.tickMark > svg {
+  width: 16px;
+  height: 16px;
+  transform: scale(0.4);
+  opacity: 0;
+  transition:
+    transform var(--dur-3) var(--ease-spring),
+    opacity var(--dur-2) var(--ease-out);
+}
+
+.tick[aria-pressed='true'] .tickMark {
+  border-color: var(--positive);
+  background: var(--positive);
+  color: var(--surface);
+}
+
+.tick[aria-pressed='true'] .tickMark > svg {
+  transform: none;
+  opacity: 1;
+}
+
+.tick:active .tickMark {
+  transform: scale(0.9);
+  transition-duration: var(--dur-1);
+}
+
+@media (hover: hover) {
+  .tick:hover .tickMark {
+    border-color: var(--ink-2);
+  }
+
+  .tick[aria-pressed='true']:hover .tickMark {
+    border-color: var(--positive);
+  }
+}
+
+/* Under the name: the items toggle on the left, the actions on the right. */
+.more {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2);
+  margin-top: var(--s-2);
+  padding-inline-start: calc(40px + var(--s-3));
+}
+
+.disclose {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: var(--tap);
+  margin-block: calc(-1 * var(--s-2));
+  padding-inline: var(--s-1);
+  margin-inline-start: calc(-1 * var(--s-1));
+  border-radius: var(--r-md);
+  color: var(--ink-2);
+  font: var(--text-caption);
+  font-weight: 600;
+}
+
+.disclose:active {
+  background: var(--surface-2);
+}
+
+.chevron {
+  width: 16px;
+  height: 16px;
+  transition: transform var(--dur-2) var(--ease-out);
+}
+
+.disclose[aria-expanded='true'] .chevron {
+  transform: rotate(180deg);
+}
+
+.actions {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  margin-inline-start: auto;
+}
+
+/* The items: a quiet receipt under the person. */
+.items {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: var(--s-3) 0 var(--s-1);
+  margin-inline-start: calc(40px + var(--s-3));
+  padding: var(--s-3);
+  border-radius: var(--r-lg);
+  background: var(--surface-2);
+  list-style: none;
+}
+
+.items[hidden] {
+  display: none;
+}
+
+.line {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-3);
+  font: var(--text-caption);
+  color: var(--ink);
+}
+
+.lineName {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.portion {
+  color: var(--ink-2);
+}
+
+.lineAmount {
+  flex: none;
+}
+
+.extras {
+  padding-top: 6px;
+  border-top: 1px dashed var(--line-strong);
+  color: var(--ink-2);
+}
+
+@keyframes row-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .item {
+    animation: none;
+  }
+
+  .tickMark,
+  .tickMark > svg,
+  .chevron {
+    transition: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .tick[aria-pressed='true'] .tickMark {
+    border-color: Highlight;
+    background: Highlight;
+    color: HighlightText;
+  }
+}
