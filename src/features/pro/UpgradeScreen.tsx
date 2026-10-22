@@ -100,12 +100,11 @@ export function UpgradeScreen() {
       )}
 
       <RedeemSheet
-        key={redeem.code}
         open={redeem.open}
         initialCode={redeem.code}
         onClose={() => setRedeem((current) => ({ ...current, open: false }))}
         onRedeemed={(license) => {
-          setRedeem({ open: false, code: '' })
+          setRedeem((current) => ({ ...current, open: false }))
           setCelebrate(license)
         }}
       />
