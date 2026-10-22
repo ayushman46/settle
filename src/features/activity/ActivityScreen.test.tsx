@@ -273,6 +273,39 @@ describe('ActivityScreen — memory and long lists', () => {
     expect(rememberedActivityView().limit).toBe(ACTIVITY_PAGE * 2)
   })
 
+  it('keeps rows already shown when the next page loads, and updates the one that changed', async () => {
+    const saved = Array.from({ length: ACTIVITY_PAGE + 5 }, (_, i) =>
+      saveExpense(draft({ title: `Chai ${i + 1}`, date: '2026-10-01' })),
+    )
+    const { user } = renderActivity()
+    const chaiRows = () => screen.getAllByRole('button', { name: /^Chai \d+, / })
+    const before = chaiRows()
+    await user.click(screen.getByRole('button', { name: 'Show 5 more' }))
+    expect(chaiRows().slice(0, ACTIVITY_PAGE)).toEqual(before)
+    // A change to one expense still reaches its (memoised) row; the others stay put.
+    const target = saved.find((e) => before[0]?.getAttribute('aria-label')?.startsWith(`${e.title},`))
+    expect(target).toBeDefined()
+    act(() => {
+      saveExpense({ ...draft({ title: 'Masala chai', date: '2026-10-01' }), id: target?.id })
+    })
+    expect(screen.getAllByRole('button', { name: /^Masala chai, / })).toHaveLength(1)
+    expect(chaiRows()).toHaveLength(ACTIVITY_PAGE + 4)
+    expect(chaiRows().slice(0, ACTIVITY_PAGE - 1)).toEqual(before.slice(1))
+  })
+
+  it('moves "Today" on to "Yesterday" at midnight', async () => {
+    saveExpense(draft({ title: 'Chai', date: '2026-10-22' }))
+    saveExpense(draft({ title: 'Coffee', date: '2026-10-21' }))
+    const { user } = renderActivity()
+    expect(screen.getByRole('button', { name: /^Chai, / })).toHaveTextContent(/^Chai\s*Today/)
+    vi.setSystemTime(new Date(2026, 9, 23, 0, 5))
+    // Any re-render of the screen (here: a filter) picks up the new day.
+    await user.click(chip('Settled'))
+    await user.click(chip('All'))
+    expect(screen.getByRole('button', { name: /^Chai, / })).toHaveTextContent(/^Chai\s*Yesterday/)
+    expect(screen.getByRole('button', { name: /^Coffee, / })).not.toHaveTextContent(/Yesterday/)
+  })
+
   it('starts a new filter from the first page', async () => {
     for (let i = 0; i < ACTIVITY_PAGE + 5; i += 1) saveExpense(draft({ title: `Chai ${i + 1}`, date: '2026-10-01' }))
     const { user } = renderActivity()

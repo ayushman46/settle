@@ -31,8 +31,3 @@
   letter-spacing: -0.012em;
   color: var(--ink);
 }
-
-.more {
-  display: flex;
-  justify-content: center;
-}

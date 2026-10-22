@@ -1,4 +1,4 @@
-import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
+import { memo, useDeferredValue, useEffect, useMemo, useState } from 'react'
 import { Plus, ScanLine } from 'lucide-react'
 import { navigate, useSearchParams } from '../../app/router'
 import {
@@ -18,6 +18,7 @@ import { useExpenses, useFriendsById, useGroups, useProfile } from '../../data'
 import { BRAND, type Expense, type Group } from '../../domain/types'
 import { today } from '../../engine/dates'
 import { ExpenseRow } from '../../kit/index-b'
+import { LoadMore } from '../../kit/LoadMore'
 import { formatMoney } from '../../lib/money'
 import { BILL_PATH } from '../bill/launch'
 import { GroupEmoji } from '../groups/GroupEmoji'
@@ -149,7 +150,7 @@ export function ActivityScreen() {
                 <Card padding="none">
                   <List>
                     {section.expenses.map((e: Expense) => (
-                      <ExpenseRow key={e.id} expense={e} showDate onClick={() => navigate(expensePath(e.id))} />
+                      <ActivityRow key={e.id} expense={e} day={day} />
                     ))}
                   </List>
                 </Card>
@@ -158,8 +159,9 @@ export function ActivityScreen() {
           )}
 
           {matches.length > view.limit && (
-            <MoreRows
+            <LoadMore
               remaining={matches.length - view.limit}
+              page={ACTIVITY_PAGE}
               onMore={() => setView((prev) => ({ ...prev, limit: prev.limit + ACTIVITY_PAGE }))}
             />
           )}
@@ -170,6 +172,15 @@ export function ActivityScreen() {
     </Screen>
   )
 }
+
+/**
+ * One expense in the list. Memoised: loading the next page (or typing a search) re-renders only
+ * the rows that changed, not the hundreds already on screen. `day` is today's date, so "Today" /
+ * "Yesterday" labels move on at midnight.
+ */
+const ActivityRow = memo(function ActivityRow({ expense }: { expense: Expense; day: string }) {
+  return <ExpenseRow expense={expense} showDate onClick={() => navigate(expensePath(expense.id))} />
+})
 
 /** Nothing split yet: what this tab is for, and two ways to start. */
 function FirstRun() {
@@ -271,38 +282,5 @@ function GroupCards({ cards, filter }: { cards: readonly GroupStanding[]; filter
         </List>
       </Card>
     </section>
-  )
-}
-
-/**
- * The rest of a long list, a page at a time: loads by itself as you near the end (where the
- * browser can tell), with a button for everyone else.
- */
-function MoreRows({ remaining, onMore }: { remaining: number; onMore: () => void }) {
-  const sentinel = useRef<HTMLDivElement>(null)
-  const more = useRef(onMore)
-  useEffect(() => {
-    more.current = onMore
-  })
-
-  useEffect(() => {
-    const node = sentinel.current
-    if (!node || typeof IntersectionObserver !== 'function') return
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries.some((entry) => entry.isIntersecting)) more.current()
-      },
-      { rootMargin: '0px 0px 600px 0px' },
-    )
-    observer.observe(node)
-    return () => observer.disconnect()
-  }, [remaining])
-
-  return (
-    <div ref={sentinel} className={styles.more}>
-      <Button variant="tonal" size="md" onClick={onMore}>
-        Show {Math.min(remaining, ACTIVITY_PAGE)} more
-      </Button>
-    </div>
   )
 }

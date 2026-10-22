@@ -1,0 +1,221 @@
+{
+ "label": "fix3-activity-memo-rows",
+ "date": "2026-10-22T23:19:28.668Z",
+ "a": "C:\\Users\\Ayush\\Downloads\\Billsplit-AI\\node_modules\\.cache\\settle-bench\\dist-fix3-A",
+ "b": "C:\\Users\\Ayush\\Downloads\\Billsplit-AI\\node_modules\\.cache\\settle-bench\\dist-fix3-B",
+ "runs": 5,
+ "results": {
+  "low · screen opens": {
+   "A": [
+    {
+     "Home → Activity (tab)": 2612.5999999940395,
+     "Home → Activity (tab) · long tasks ms": 2525,
+     "Activity → Expense (bill)": 1643.300000011921,
+     "Activity → Expense (bill) · long tasks ms": 1642
+    },
+    {
+     "Home → Activity (tab)": 1204.2999999821186,
+     "Home → Activity (tab) · long tasks ms": 1207,
+     "Activity → Expense (bill)": 927.9000000059605,
+     "Activity → Expense (bill) · long tasks ms": 893
+    },
+    {
+     "Home → Activity (tab)": 3045.600000023842,
+     "Home → Activity (tab) · long tasks ms": 2978,
+     "Activity → Expense (bill)": 2049.5,
+     "Activity → Expense (bill) · long tasks ms": 2063
+    },
+    {
+     "Home → Activity (tab)": 2530,
+     "Home → Activity (tab) · long tasks ms": 2504,
+     "Activity → Expense (bill)": 2086.9000000059605,
+     "Activity → Expense (bill) · long tasks ms": 2078
+    },
+    {
+     "Home → Activity (tab)": 2785.5,
+     "Home → Activity (tab) · long tasks ms": 2730,
+     "Activity → Expense (bill)": 1919.6000000238419,
+     "Activity → Expense (bill) · long tasks ms": 1916
+    }
+   ],
+   "B": [
+    {
+     "Home → Activity (tab)": 2896.9000000059605,
+     "Home → Activity (tab) · long tasks ms": 2874,
+     "Activity → Expense (bill)": 1857.800000011921,
+     "Activity → Expense (bill) · long tasks ms": 1869
+    },
+    {
+     "Home → Activity (tab)": 1553.5999999940395,
+     "Home → Activity (tab) · long tasks ms": 1494,
+     "Activity → Expense (bill)": 1597.800000011921,
+     "Activity → Expense (bill) · long tasks ms": 1571
+    },
+    {
+     "Home → Activity (tab)": 2925.2999999821186,
+     "Home → Activity (tab) · long tasks ms": 2868,
+     "Activity → Expense (bill)": 2154.800000011921,
+     "Activity → Expense (bill) · long tasks ms": 2134
+    },
+    {
+     "Home → Activity (tab)": 2880.5,
+     "Home → Activity (tab) · long tasks ms": 2804,
+     "Activity → Expense (bill)": 1922.2000000178814,
+     "Activity → Expense (bill) · long tasks ms": 1911
+    },
+    {
+     "Home → Activity (tab)": 2978.699999988079,
+     "Home → Activity (tab) · long tasks ms": 2901,
+     "Activity → Expense (bill)": 1593.300000011921,
+     "Activity → Expense (bill) · long tasks ms": 1598
+    }
+   ]
+  },
+  "low · scroll activity:jump": {
+   "A": [
+    {
+     "reached": true,
+     "timeToOldest": 175235.39999999403,
+     "frames": 138,
+     "longFrames": 131,
+     "droppedFrames": 10377,
+     "p50Frame": 283.20000000001164,
+     "p95Frame": 5799,
+     "maxFrame": 6748.899999999994,
+     "longTasks": 144,
+     "longTaskMs": 172916,
+     "stalledMs": 164239.39999999994,
+     "domNodes": 26023
+    },
+    {
+     "reached": true,
+     "timeToOldest": 168545.80000000595,
+     "frames": 137,
+     "longFrames": 125,
+     "droppedFrames": 9977,
+     "p50Frame": 249.89999999999418,
+     "p95Frame": 5815.700000000012,
+     "maxFrame": 7898.700000000012,
+     "longTasks": 140,
+     "longTaskMs": 166594,
+     "stalledMs": 159073.90000000002,
+     "domNodes": 26023
+    },
+    {
+     "reached": true,
+     "timeToOldest": 164885.20000000595,
+     "frames": 129,
+     "longFrames": 119,
+     "droppedFrames": 9765,
+     "p50Frame": 233.30000000001746,
+     "p95Frame": 6199,
+     "maxFrame": 11514.799999999988,
+     "longTasks": 138,
+     "longTaskMs": 162745,
+     "stalledMs": 150376.19999999998,
+     "domNodes": 26023
+    },
+    {
+     "reached": true,
+     "timeToOldest": 136908.5,
+     "frames": 138,
+     "longFrames": 133,
+     "droppedFrames": 8077,
+     "p50Frame": 183.1999999999971,
+     "p95Frame": 4382.600000000006,
+     "maxFrame": 8781.899999999994,
+     "longTasks": 136,
+     "longTaskMs": 134593,
+     "stalledMs": 127562.40000000005,
+     "domNodes": 26023
+    },
+    {
+     "reached": true,
+     "timeToOldest": 140541.8999999881,
+     "frames": 137,
+     "longFrames": 133,
+     "droppedFrames": 8296,
+     "p50Frame": 199.90000000000146,
+     "p95Frame": 4982.399999999994,
+     "maxFrame": 8048.700000000012,
+     "longTasks": 145,
+     "longTaskMs": 138600,
+     "stalledMs": 132394.89999999997,
+     "domNodes": 26023
+    }
+   ],
+   "B": [
+    {
+     "reached": true,
+     "timeToOldest": 75136.2,
+     "frames": 138,
+     "longFrames": 132,
+     "droppedFrames": 4370,
+     "p50Frame": 250,
+     "p95Frame": 1749.7999999999956,
+     "maxFrame": 2149.5999999999913,
+     "longTasks": 142,
+     "longTaskMs": 72691,
+     "stalledMs": 67838.89999999998,
+     "domNodes": 26023
+    },
+    {
+     "reached": true,
+     "timeToOldest": 68601.2,
+     "frames": 132,
+     "longFrames": 122,
+     "droppedFrames": 3984,
+     "p50Frame": 266.59999999999854,
+     "p95Frame": 1766,
+     "maxFrame": 2449.600000000006,
+     "longTasks": 130,
+     "longTaskMs": 66258,
+     "stalledMs": 64022.39999999997,
+     "domNodes": 26023
+    },
+    {
+     "reached": true,
+     "timeToOldest": 65064.09999999404,
+     "frames": 135,
+     "longFrames": 124,
+     "droppedFrames": 3769,
+     "p50Frame": 200,
+     "p95Frame": 1616.5,
+     "maxFrame": 2133,
+     "longTasks": 135,
+     "longTaskMs": 62888,
+     "stalledMs": 60273.50000000001,
+     "domNodes": 26023
+    },
+    {
+     "reached": true,
+     "timeToOldest": 58887.299999988085,
+     "frames": 130,
+     "longFrames": 119,
+     "droppedFrames": 3403,
+     "p50Frame": 216.6999999999971,
+     "p95Frame": 1499.800000000003,
+     "maxFrame": 2049.699999999997,
+     "longTasks": 135,
+     "longTaskMs": 57011,
+     "stalledMs": 53791.199999999975,
+     "domNodes": 26023
+    },
+    {
+     "reached": true,
+     "timeToOldest": 66143.2,
+     "frames": 143,
+     "longFrames": 139,
+     "droppedFrames": 3826,
+     "p50Frame": 216.59999999999127,
+     "p95Frame": 1999.7000000000007,
+     "maxFrame": 2283,
+     "longTasks": 149,
+     "longTaskMs": 63975,
+     "stalledMs": 61673.399999999994,
+     "domNodes": 26023
+    }
+   ]
+  }
+ }
+}
