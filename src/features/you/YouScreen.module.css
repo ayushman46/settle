@@ -1,0 +1,25 @@
+.content {
+  gap: var(--s-6);
+}
+
+/* ---------- Footer ---------- */
+
+.footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-1);
+  padding-block: var(--s-4) var(--s-2);
+  text-align: center;
+}
+
+.tagline {
+  margin-top: var(--s-1);
+  font: var(--text-label);
+  color: var(--ink);
+}
+
+.small {
+  font: var(--text-caption);
+  color: var(--ink-2);
+}

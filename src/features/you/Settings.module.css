@@ -1,0 +1,58 @@
+/* Shared by the You tab's sections: headings, settings cards, the small print. */
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  min-width: 0;
+}
+
+.sectionTitle {
+  padding-inline: var(--s-1);
+  font: var(--text-section);
+  letter-spacing: -0.012em;
+  color: var(--ink);
+}
+
+/* Blocks inside one settings card, separated by an inset hairline like list rows. */
+.divided {
+  position: relative;
+}
+
+.divided::before {
+  content: '';
+  position: absolute;
+  inset: 0 var(--s-4) auto;
+  height: 1px;
+  background: var(--line);
+}
+
+.switch {
+  padding-inline: var(--s-4);
+}
+
+.symbol {
+  min-width: 2ch;
+  font: var(--text-label);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-2);
+  text-align: end;
+}
+
+.danger {
+  color: var(--negative);
+}
+
+.footnote {
+  padding-inline: var(--s-1);
+  font: var(--text-caption);
+  color: var(--ink-2);
+  text-wrap: pretty;
+}
+
+.footnote a {
+  color: var(--ink);
+  font-weight: 550;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}

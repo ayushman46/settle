@@ -37,7 +37,7 @@ import {
 import { ClearDataSheet } from './ClearDataSheet'
 import { RestoreSheet, type RestoreMode } from './RestoreSheet'
 import { SettingIcon } from './SettingIcon'
-import styles from './YouScreen.module.css'
+import styles from './Settings.module.css'
 
 const WELCOME_PATH = '/app/welcome'
 const YOU_PATH = '/app/you'
