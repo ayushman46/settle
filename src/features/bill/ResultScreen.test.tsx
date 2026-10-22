@@ -231,7 +231,9 @@ describe('ResultScreen — saving', () => {
     first.unmount()
 
     const again = renderScreen(<ResultScreen />, { ...session, expenseId: id, payerId: t.riya.id })
-    await again.user.click(screen.getByRole('button', { name: 'Save split' }))
+    expect(screen.getByText('Change anything, then save — it updates the saved bill.')).toBeInTheDocument()
+    await again.user.click(screen.getByRole('button', { name: 'Save changes' }))
+    expect(screen.getByRole('dialog', { name: 'Changes saved' })).toBeInTheDocument()
     expect(expensesStore.get()).toHaveLength(1)
     expect(expensesStore.get()[0]).toMatchObject({ id, payerId: t.riya.id })
   })

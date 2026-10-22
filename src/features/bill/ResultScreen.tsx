@@ -81,11 +81,14 @@ export function ResultScreen() {
   const progress = useEntranceProgress()
   const [expanded, setExpanded] = useState<ReadonlySet<string>>(() => new Set())
   const [nameSheet, setNameSheet] = useState({ key: 0, open: false })
-  const [saved, setSaved] = useState<Expense | null>(null)
+  /** The expense just saved, and whether that updated one saved before (for the success moment's words). */
+  const [saved, setSaved] = useState<{ expense: Expense; updated: boolean } | null>(null)
   const saving = useRef(false)
   const opened = useRef(false)
 
   const day = today()
+  // A bill that is already saved (re-opened to fix, or saved and come back to): saving updates it.
+  const updating = session.expenseId !== null
   const payerId = billPayer(session)
   const payerName = friendLabel(payerId, friendsById[payerId] ?? null)
   const category = billCategory(session)
@@ -115,7 +118,7 @@ export function ResultScreen() {
       const expense = saveExpense(draft)
       // Going back now and saving again updates this expense rather than adding another.
       dispatch({ type: 'setExpenseId', expenseId: expense.id })
-      setSaved(expense)
+      setSaved({ expense, updated: updating })
     } catch (error) {
       saving.current = false
       if (!(error instanceof ExpenseError)) throw error
@@ -127,7 +130,7 @@ export function ResultScreen() {
   const open = () => {
     if (!saved || opened.current) return
     opened.current = true
-    flow.finish(`/app/expense/${saved.id}`)
+    flow.finish(`/app/expense/${saved.expense.id}`)
   }
 
   // Back during the success moment just finishes it (the expense is already saved).
@@ -164,12 +167,15 @@ export function ResultScreen() {
       footer={
         <ActionBar hint={adds ? 'Next: share a pay link and see who has paid' : undefined}>
           <Button block iconStart={<CircleCheck />} disabled={!adds} onClick={save}>
-            Save split
+            {updating ? 'Save changes' : 'Save split'}
           </Button>
         </ActionBar>
       }
     >
-      <PageTitle title="Here's the split" subtitle="Check it, say who paid, and save." />
+      <PageTitle
+        title="Here's the split"
+        subtitle={updating ? 'Change anything, then save — it updates the saved bill.' : 'Check it, say who paid, and save.'}
+      />
 
       {unassigned > 0 && (
         <Banner tone="info" action={{ label: 'Assign', onAction: () => flow.goTo('assign') }}>
@@ -278,8 +284,8 @@ export function ResultScreen() {
 
       {saved && (
         <SuccessBurst
-          title="Split saved"
-          amount={<Money value={saved.total} currency={saved.currency} size="xl" />}
+          title={saved.updated ? 'Changes saved' : 'Split saved'}
+          amount={<Money value={saved.expense.total} currency={saved.expense.currency} size="xl" />}
           subtitle={outcomeLine(split, payerId, payerName, currency)}
           onDone={open}
         />
