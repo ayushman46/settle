@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { CheckCheck, EllipsisVertical, Pencil, QrCode, Share2, UsersRound } from 'lucide-react'
 import { goBack, navigate, useRoute } from '../../app/router'
 import { ActionBar, Button, Card, IconButton, PageTitle, Screen, SectionHeader, TopBar, useToast } from '../../components'
@@ -12,7 +12,7 @@ import {
   useGroup,
   useGroups,
 } from '../../data'
-import { ME_ID, type Expense } from '../../domain/types'
+import { BRAND, ME_ID, type Expense } from '../../domain/types'
 import { collectProgress } from '../../engine/balances'
 import { friendLabel } from '../../kit/index-a'
 import { CollectCard, NudgeSheet, ShareList, ShareSheet, upiPaymentForShare, UpiPaySheet, usePayLink } from '../../kit/index-b'
@@ -21,7 +21,6 @@ import { formatMoney } from '../../lib/money'
 import { firstName } from '../../share/text'
 import { openBill } from '../bill/launch'
 import { openPaywall } from '../pro/paywall'
-import { PaywallHost } from '../pro/PaywallSheet'
 import { BillBreakdown } from './BillBreakdown'
 import { ExpenseActionsSheet } from './ExpenseActionsSheet'
 import { ExpenseHero } from './ExpenseHero'
@@ -89,6 +88,11 @@ function ExpenseDetail({ expense, onDeleting }: ExpenseDetailProps) {
   const back = group ? `/app/groups/${encodeURIComponent(group.id)}` : '/app/activity'
   const { link } = usePayLink(expense, { enabled: nudge?.open === true })
   const payment = upi ? upiPaymentForShare(expense, upi.friendId, friendsById) : null
+
+  // The tab names the expense ("Dinner at Toit · Settle"), after the shell's generic title.
+  useEffect(() => {
+    document.title = `${expense.title} · ${BRAND.name}`
+  }, [expense.title])
 
   /** Ticks `friendId` off (or back on), with Undo — and a cheer when the last one comes in. */
   const togglePaid = (friendId: string, paid: boolean): void => {
@@ -272,8 +276,6 @@ function ExpenseDetail({ expense, onDeleting }: ExpenseDetailProps) {
         onMarkAllPaid={canMarkAll ? markAllPaid : undefined}
         onDelete={remove}
       />
-
-      <PaywallHost />
     </Screen>
   )
 }

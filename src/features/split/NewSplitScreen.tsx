@@ -236,6 +236,12 @@ function SplitScreen({ editing, url }: SplitScreenProps) {
     if (row) row.scrollLeft = 0
   }, [initial.form.category, initial.form.categoryPicked])
 
+  // Editing names the expense in the tab ("Edit Dinner at Toit · Settle").
+  const editingTitle = editing?.title ?? null
+  useEffect(() => {
+    if (editingTitle !== null) document.title = `Edit ${editingTitle} · ${BRAND.name}`
+  }, [editingTitle])
+
   const change = (patch: Partial<SplitForm>): void => setForm((current) => ({ ...current, ...patch }))
 
   /** Leaves the screen — after "Discard changes?" when there's unsaved work. */

@@ -2,13 +2,16 @@ import { act, screen, waitFor, within } from '@testing-library/react'
 import type { UserEvent } from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { expensesStore, setSplitPrefill } from '../../data'
-import { ME_ID, type BillSnapshot } from '../../domain/types'
+import { BRAND, ME_ID, type BillSnapshot } from '../../domain/types'
 import { EMPTY_META } from '../../types'
 import { takeBillStart } from '../bill/launch'
 import { SPLIT_DRAFT_KEY } from './splitDraft'
 import { currentUrl, renderApp, resetSplitScreens, seedExpense, seedGroup, seedPeople } from './testing'
 
 const OCT_22 = new Date(2026, 9, 22, 12)
+
+/** Whole-screen tests type a lot; give them room on a busy machine. */
+const SCREEN = { timeout: 30_000 }
 
 beforeEach(() => {
   resetSplitScreens()
@@ -40,7 +43,7 @@ const BILL: BillSnapshot = {
   warnings: [],
 }
 
-describe('NewSplitScreen — a new split', () => {
+describe('NewSplitScreen — a new split', SCREEN, () => {
   it('splits an amount end to end, celebrates, then opens it', async () => {
     const { user } = renderApp('/app/split/new')
     expect(screen.getByRole('heading', { level: 1, name: 'New split' })).toBeInTheDocument()
@@ -78,7 +81,7 @@ describe('NewSplitScreen — a new split', () => {
     await waitFor(() => expect(currentUrl()).toBe(`/app/expense/${saved!.id}`))
     expect(await screen.findByRole('heading', { level: 1, name: 'Dinner at Toit' })).toBeInTheDocument()
     expect(window.sessionStorage.getItem(SPLIT_DRAFT_KEY)).toBeNull()
-  }, 20_000)
+  })
 
   it('keeps Save off with the exact reason until the amounts add up', async () => {
     const { user } = renderApp('/app/split/new')
@@ -165,7 +168,7 @@ describe('NewSplitScreen — a new split', () => {
   })
 })
 
-describe('NewSplitScreen — starting points', () => {
+describe('NewSplitScreen — starting points', SCREEN, () => {
   it('starts with the whole group, filed under it', async () => {
     seedGroup()
     const { user } = renderApp('/app/split/new?group=g1')
@@ -268,7 +271,7 @@ describe('NewSplitScreen — starting points', () => {
   })
 })
 
-describe('NewSplitScreen — unsaved work', () => {
+describe('NewSplitScreen — unsaved work', SCREEN, () => {
   it('asks before throwing away what was typed, and Back again keeps editing', async () => {
     const { user } = renderApp('/app/split/new')
     await user.type(amountField(), '500')
@@ -324,11 +327,12 @@ describe('NewSplitScreen — unsaved work', () => {
   })
 })
 
-describe('NewSplitScreen — editing', () => {
+describe('NewSplitScreen — editing', SCREEN, () => {
   it('saves changes and says who owes again', async () => {
     seedExpense()
     const { user } = renderApp('/app/split/e1/edit')
     expect(screen.getByRole('heading', { level: 1, name: 'Edit Dinner at Toit' })).toBeInTheDocument()
+    expect(document.title).toBe(`Edit Dinner at Toit · ${BRAND.name}`)
     expect(amountField()).toHaveValue('2,766')
     expect(saveButton()).toHaveTextContent('Save changes')
     await user.clear(amountField())

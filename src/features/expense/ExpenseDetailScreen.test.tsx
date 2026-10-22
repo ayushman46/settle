@@ -1,13 +1,16 @@
 import { screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { expensesStore } from '../../data'
-import { ME_ID, type BillSnapshot, type Expense } from '../../domain/types'
+import { BRAND, ME_ID, type BillSnapshot, type Expense } from '../../domain/types'
 import { EMPTY_META } from '../../types'
 import { takeBillStart } from '../bill/launch'
 import { paywallState } from '../pro/paywall'
 import { currentUrl, renderApp, resetSplitScreens, seedExpense, seedGroup, seedPeople } from '../split/testing'
 
 const OCT_22 = new Date(2026, 9, 22, 12)
+
+/** Whole-screen tests type a lot; give them room on a busy machine. */
+const SCREEN = { timeout: 30_000 }
 
 beforeEach(() => {
   resetSplitScreens()
@@ -49,7 +52,7 @@ function seedBill(itemCount = 2, extra: Partial<Expense> = {}): Expense {
   })
 }
 
-describe('ExpenseDetailScreen — what it is', () => {
+describe('ExpenseDetailScreen — what it is', SCREEN, () => {
   it('shows what it was, who paid, where you stand and how much has come back', () => {
     renderApp('/app/expense/e1')
     expect(screen.getByRole('heading', { level: 1, name: 'Dinner at Toit' })).toBeInTheDocument()
@@ -62,6 +65,7 @@ describe('ExpenseDetailScreen — what it is', () => {
     expect(screen.getByText(/^Added /)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Share pay link' })).toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: 'The bill' })).not.toBeInTheDocument()
+    expect(document.title).toBe(`Dinner at Toit · ${BRAND.name}`)
   })
 
   it('shows the note with its line breaks', () => {
@@ -109,7 +113,7 @@ describe('ExpenseDetailScreen — what it is', () => {
   })
 })
 
-describe('ExpenseDetailScreen — collecting', () => {
+describe('ExpenseDetailScreen — collecting', SCREEN, () => {
   it('ticks someone off as paid, with an undo', async () => {
     const { user } = renderApp('/app/expense/e1')
     const tick = screen.getByRole('button', { name: 'Sam paid you back' })
@@ -172,7 +176,7 @@ describe('ExpenseDetailScreen — collecting', () => {
   })
 })
 
-describe('ExpenseDetailScreen — when you owe', () => {
+describe('ExpenseDetailScreen — when you owe', SCREEN, () => {
   it('pays the payer over UPI and says so once paid', async () => {
     seedExpense({ payerId: 'riya', paidBack: {} })
     const { user } = renderApp('/app/expense/e1')
@@ -201,7 +205,7 @@ describe('ExpenseDetailScreen — when you owe', () => {
   })
 })
 
-describe('ExpenseDetailScreen — in a group', () => {
+describe('ExpenseDetailScreen — in a group', SCREEN, () => {
   it('sends you to the group’s settle up', async () => {
     seedGroup()
     seedExpense({ groupId: 'g1' })
@@ -215,7 +219,7 @@ describe('ExpenseDetailScreen — in a group', () => {
   })
 })
 
-describe('ExpenseDetailScreen — changing it', () => {
+describe('ExpenseDetailScreen — changing it', SCREEN, () => {
   it('edits a split on the split screen', async () => {
     const { user } = renderApp('/app/expense/e1')
     await user.click(screen.getByRole('button', { name: 'Edit Dinner at Toit' }))
