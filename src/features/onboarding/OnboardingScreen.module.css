@@ -1,0 +1,214 @@
+/* ---------- Intro: brand, slides, dots ---------- */
+
+.topRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  min-height: 56px;
+  padding: var(--s-1) var(--s-2) var(--s-1) var(--gutter);
+}
+
+.introContent {
+  justify-content: center;
+  padding-top: 0;
+  padding-bottom: var(--s-2);
+}
+
+/* Full-bleed, native swipe with snap points; the scrollbar stays out of sight. */
+.track {
+  display: flex;
+  flex: 1 0 auto;
+  margin-inline: calc(-1 * var(--gutter));
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  border-radius: var(--radius-card);
+}
+
+.track::-webkit-scrollbar {
+  display: none;
+}
+
+.track:focus-visible {
+  outline-offset: -4px;
+}
+
+.slide {
+  display: flex;
+  flex: 0 0 100%;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-3);
+  min-width: 0;
+  padding: var(--s-4) var(--gutter);
+  text-align: center;
+  scroll-snap-align: center;
+  scroll-snap-stop: always;
+}
+
+/* The illustration sits in a soft accent halo — the brand's lime glow. */
+.stage {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: min(296px, 78vw);
+  aspect-ratio: 1;
+  margin-bottom: var(--s-3);
+  border-radius: 50%;
+  background:
+    radial-gradient(closest-side, var(--accent-soft), transparent 100%),
+    radial-gradient(closest-side at 70% 30%, color-mix(in srgb, var(--pro-3) 22%, transparent), transparent 100%);
+}
+
+.art {
+  width: 84%;
+  height: auto;
+}
+
+.slideTitle {
+  font: var(--text-title);
+  letter-spacing: var(--tracking-tight);
+}
+
+.slideText {
+  max-width: 32ch;
+  color: var(--ink-2);
+  font: var(--text-body);
+}
+
+.dots {
+  display: flex;
+  justify-content: center;
+  gap: var(--s-1);
+  margin-bottom: var(--s-2);
+}
+
+/* 24×24 targets around small marks; the current one stretches into an ink pill. */
+.dot {
+  display: grid;
+  place-items: center;
+  min-width: 24px;
+  height: 24px;
+  border-radius: var(--r-pill);
+}
+
+.dotMark {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--r-pill);
+  background: var(--ink-3);
+  transition:
+    width var(--dur-3) var(--ease-spring),
+    background-color var(--dur-2) var(--ease-out);
+}
+
+.dotActive .dotMark {
+  width: 24px;
+  background: var(--ink);
+}
+
+/* ---------- About you ---------- */
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-5);
+}
+
+/* UPI IDs are read character by character: mono (two classes, so it wins over the field's own font). */
+.form .mono {
+  font-family: var(--font-mono);
+}
+
+.currencyField {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+.fieldLabel {
+  font: var(--text-label);
+  color: var(--ink);
+}
+
+.currencyButton {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  min-height: 52px;
+  padding: var(--s-2) var(--s-3) var(--s-2) var(--s-2);
+  border: 1px solid var(--field-border);
+  border-radius: var(--radius-field);
+  background: var(--field-bg);
+  color: var(--ink);
+  transition:
+    transform var(--dur-1) var(--ease-out),
+    border-color var(--dur-2) var(--ease-out);
+}
+
+.currencyButton:active {
+  transform: scale(0.99);
+}
+
+.currencySymbol {
+  display: grid;
+  flex: none;
+  place-items: center;
+  min-width: 36px;
+  height: 36px;
+  padding-inline: var(--s-1);
+  border-radius: var(--r-sm);
+  background: var(--accent);
+  color: var(--on-accent);
+  font: 650 1rem/1 var(--font-sans);
+  font-variant-numeric: tabular-nums;
+}
+
+.currencyText {
+  flex: 1 1 auto;
+  min-width: 0;
+  font: var(--text-body);
+  overflow-wrap: anywhere;
+}
+
+.currencyCode {
+  color: var(--ink-2);
+}
+
+.currencyChange {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 2px;
+  color: var(--ink-2);
+  font: var(--text-label);
+}
+
+.currencyChange > svg {
+  width: 18px;
+  height: 18px;
+}
+
+.privacy {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-2);
+  margin-top: auto;
+  padding: var(--s-3) var(--s-4);
+  border-radius: var(--r-lg);
+  background: var(--surface-2);
+  color: var(--ink-2);
+  font: var(--text-caption);
+}
+
+.privacyIcon {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin-top: 1px;
+  color: var(--positive);
+}
