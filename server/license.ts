@@ -84,6 +84,11 @@ export function spkiBase64(publicKey: KeyObject): string {
   return publicKey.export({ type: 'spki', format: 'der' }).toString('base64')
 }
 
+/** Blank, or what people type into a hosting dashboard's required field for "not yet" ("none", "-"…). */
+function isUnset(raw: string | undefined): boolean {
+  return /^\s*(?:|["']{2}|none|null|undefined|n\/a|na|-+|todo|skip|later|changeme)\s*$/i.test(raw ?? '')
+}
+
 /**
  * Reads `LICENSE_PRIVATE_KEY` / `LICENSE_PUBLIC_KEY`. The public key is derived from the
  * private one when absent — and when the two don't match, since only the derived one can
@@ -93,11 +98,11 @@ export function spkiBase64(publicKey: KeyObject): string {
 export function loadLicenseKeys(privateRaw: string | undefined, publicRaw: string | undefined): { keys: LicenseKeys; problems: string[] } {
   const problems: string[] = []
   const privateKey = parsePrivateKey(privateRaw)
-  if (privateKey === null && (privateRaw ?? '').trim() !== '') {
+  if (privateKey === null && !isUnset(privateRaw)) {
     problems.push('LICENSE_PRIVATE_KEY is not an Ed25519 private key (PKCS#8 PEM or base64 DER) — run "npm run license keygen".')
   }
   let publicKey = parsePublicKey(publicRaw)
-  if (publicKey === null && (publicRaw ?? '').trim() !== '') {
+  if (publicKey === null && !isUnset(publicRaw)) {
     problems.push('LICENSE_PUBLIC_KEY is not an Ed25519 public key (SPKI base64 or PEM).')
   }
   if (privateKey !== null) {

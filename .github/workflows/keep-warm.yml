@@ -1,0 +1,25 @@
+# Optional back-up keep-alive for the Render free plan (which sleeps after 15 idle minutes and
+# takes about a minute to wake). Does nothing until you add a repository variable:
+#   GitHub → Settings → Secrets and variables → Actions → Variables → New repository variable
+#   Name: KEEP_WARM_URL   Value: https://<your-service>.onrender.com/api/health
+# GitHub runs schedules on a best-effort basis (they can be late), so an uptime monitor such as
+# UptimeRobot (DEPLOY.md, step 4) is the main keep-alive; this only covers its gaps.
+name: Keep warm
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  ping:
+    if: ${{ vars.KEEP_WARM_URL != '' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Ping the health check
+        env:
+          URL: ${{ vars.KEEP_WARM_URL }}
+        run: curl -fsS --retry 3 --retry-delay 20 --max-time 90 "$URL"

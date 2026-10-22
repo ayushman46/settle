@@ -180,6 +180,10 @@ describe('keys', () => {
     expect(verifyLicense(signLicense(YEARLY, PRIVATE), keys.publicKey!, NOW).active).toBe(true)
   })
 
+  it.each(['none', 'NONE', ' - ', 'n/a', 'null', '""', 'later'])('treats %j (typed into a required dashboard field) as not set, quietly', (raw) => {
+    expect(loadLicenseKeys(raw, raw)).toEqual({ keys: { privateKey: null, publicKey: null, publicKeySpki: null }, problems: [] })
+  })
+
   it('explains bad keys without echoing them', () => {
     const { keys, problems } = loadLicenseKeys('secret-garbage-123', 'public-garbage-456')
     expect(keys).toEqual({ privateKey: null, publicKey: null, publicKeySpki: null })

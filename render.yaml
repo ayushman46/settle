@@ -1,0 +1,47 @@
+# Render Blueprint for Settle's Node server: the API (AI bill reading, "Just say it", Pro
+# checkout and codes) plus a complete copy of the app. Free plan, Singapore (closest to India).
+#
+# Render → New → Blueprint → pick this repository → fill in the secrets it asks for → Apply.
+# Step by step, with the Cloudflare Pages front door and a custom domain: DEPLOY.md.
+services:
+  - type: web
+    name: settle-api
+    runtime: node
+    plan: free
+    region: singapore
+    branch: main
+    # Dev dependencies are build tools (TypeScript, Vite), so install them even if NODE_ENV is set.
+    buildCommand: npm ci --include=dev && npm run build
+    # node directly (not npm start), so Render's SIGTERM reaches the server and in-flight scans finish.
+    startCommand: node dist/server/index.js
+    healthCheckPath: /api/health
+    # Deploy a push to main only once GitHub Actions (typecheck, lint, tests, E2E) are green.
+    autoDeployTrigger: checksPass
+    # Docs, tests and the Pages-only files don't need a new server build.
+    buildFilter:
+      ignoredPaths:
+        - "**/*.md"
+        - e2e/**
+        - bench/**
+        - functions/**
+        - .github/**
+        - public/_headers
+        - public/_redirects
+    envVars:
+      # Node version: .node-version in the repository (22.14.0).
+      # Render's load balancer sits in front of the server: one proxy.
+      - key: TRUST_PROXY
+        value: "1"
+      # Shared with the Cloudflare Pages project, so the server knows each visitor behind the proxy.
+      # Render generates it; copy it into Cloudflare (DEPLOY.md, step 2).
+      - key: PROXY_SECRET
+        generateValue: true
+      # Secrets: Render asks for these when you create the Blueprint. Leave any you don't use empty.
+      - key: NVIDIA_API_KEY
+        sync: false
+      - key: LICENSE_PRIVATE_KEY
+        sync: false
+      - key: RAZORPAY_KEY_ID
+        sync: false
+      - key: RAZORPAY_KEY_SECRET
+        sync: false

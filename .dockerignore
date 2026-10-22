@@ -5,6 +5,16 @@ coverage
 *.tsbuildinfo
 .vite
 
+# End-to-end tests, their output and local Cloudflare emulation: not part of the server image
+.e2e-build
+test-results
+playwright-report
+blob-report
+e2e
+.wrangler
+.dev.vars
+.github
+
 # Secrets never go into an image — pass NVIDIA_API_KEY at run time
 .env
 .env.*
