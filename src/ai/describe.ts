@@ -6,11 +6,15 @@
 import {
   DESCRIBE_BUDGET_MS,
   DESCRIBE_LIMITS,
+  DESCRIBE_SOURCES,
   isCategoryId,
   LICENSE_HEADER,
+  VOICE_LANGS,
   type DescribedPerson,
   type DescribeRequest,
   type DescribeResponse,
+  type DescribeSource,
+  type VoiceLang,
 } from '../../shared/api'
 import type { DescribedSplit } from '../domain/types'
 import { callApi, isOffline, isRecord, PRO_ALLOWANCE_MIN_WAIT_SECONDS, waitPhrase, type CallResult } from '../api/http'
@@ -181,6 +185,10 @@ export interface DescribeHints {
   people: string[]
   /** The user's local date (YYYY-MM-DD), for "yesterday" and weekdays. */
   today: string
+  /** The language it was written or spoken in (the voice language, or the app's for typed text). */
+  lang?: VoiceLang
+  /** How it arrived (typed by default). */
+  source?: DescribeSource
 }
 
 /** Known names for the server: tidied, de-duplicated, within its limits. */
@@ -206,6 +214,8 @@ export function describeRequest(text: string, ctx: DescribeHints): DescribeReque
   const people = hintNames(ctx.people)
   if (people.length > 0) body.people = people
   if (isIsoDate(ctx.today)) body.today = ctx.today
+  if (ctx.lang !== undefined && (VOICE_LANGS as readonly string[]).includes(ctx.lang)) body.lang = ctx.lang
+  if (ctx.source !== undefined && (DESCRIBE_SOURCES as readonly string[]).includes(ctx.source)) body.source = ctx.source
   return body
 }
 

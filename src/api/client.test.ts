@@ -279,12 +279,34 @@ describe('parseScanResponse', () => {
       subtotal: null,
       tax: null,
       serviceCharge: null,
+      // An older server sends no fees: none.
+      fees: [],
       discount: null,
       tip: null,
       total: null,
       warnings: ['ok'],
       model: 'unknown',
     })
+  })
+
+  it('reads delivery-app fees, dropping ones without a positive amount', () => {
+    const parsed = parseScanResponse({
+      items: [],
+      fees: [
+        { label: 'Delivery partner fee', kind: 'delivery', amount: 35 },
+        { label: 'Rain fee', kind: 'weather', amount: 20 },
+        { label: 'Free delivery', kind: 'delivery', amount: 0 },
+        { label: 'Broken', kind: 'tip', amount: 'x' },
+        'junk',
+        { kind: 'platform', amount: 10 },
+      ],
+    })
+    expect(parsed?.fees).toEqual([
+      { label: 'Delivery partner fee', kind: 'delivery', amount: 35 },
+      { label: 'Rain fee', kind: 'other', amount: 20 },
+      { label: '', kind: 'platform', amount: 10 },
+    ])
+    expect(parseScanResponse({ items: [], fees: 'none' })?.fees).toEqual([])
   })
 
   it('keeps a known category and drops anything else', () => {

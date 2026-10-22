@@ -6,7 +6,7 @@
  */
 import * as z from 'zod/mini'
 import { CATEGORY_IDS, type CategoryId, type ExpenseSource } from '../../domain/types'
-import { EXPENSE_SOURCES } from '../../data'
+import { EXPENSE_SOURCES, PREFILL_BANNER_ICONS, type PrefillBanner } from '../../data'
 import { MAX_MINOR } from '../../lib/money'
 import type { SplitForm } from './splitForm'
 
@@ -16,9 +16,9 @@ export const SPLIT_DRAFT_KEY = 'settle.v3.split-draft'
 const MAX_AGE_MS = 12 * 60 * 60 * 1000
 
 /** How the form started — for the banner that asks for a second look at a prefilled split. */
-export type SplitOrigin = 'new' | 'edit' | 'describe' | 'scan' | 'recurring' | 'duplicate'
+export type SplitOrigin = 'new' | 'edit' | 'describe' | 'scan' | 'recurring' | 'duplicate' | 'sms' | 'voice' | 'rotation' | 'loan'
 
-const ORIGINS: readonly SplitOrigin[] = ['new', 'edit', 'describe', 'scan', 'recurring', 'duplicate']
+const ORIGINS: readonly SplitOrigin[] = ['new', 'edit', 'describe', 'scan', 'recurring', 'duplicate', 'sms', 'voice', 'rotation', 'loan']
 
 /** The form minus the bill snapshot, which always comes back from the expense itself. */
 export type StoredForm = Omit<SplitForm, 'bill'>
@@ -32,6 +32,8 @@ export interface SplitDraft {
   /** It started from a hand-off or a copy, so leaving it unsaved always asks first. */
   prefilled: boolean
   origin: SplitOrigin
+  /** The hand-off's own banner, kept across a reload. */
+  banner?: PrefillBanner | null
   savedAt: number
 }
 
@@ -60,6 +62,18 @@ const draftSchema = z.object({
   form: formSchema,
   prefilled: z.boolean(),
   origin: z.enum(ORIGINS),
+  banner: z.optional(
+    z.catch(
+      z.nullable(
+        z.object({
+          icon: z.enum(PREFILL_BANNER_ICONS),
+          title: z.string().check(z.minLength(1), z.maxLength(80)),
+          body: z.string().check(z.maxLength(160)),
+        }),
+      ),
+      null,
+    ),
+  ),
   savedAt: z.number(),
 })
 

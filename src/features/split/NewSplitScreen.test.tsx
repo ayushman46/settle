@@ -260,6 +260,44 @@ describe('NewSplitScreen — starting points', SCREEN, () => {
     expect(screen.getByLabelText("What's it for?")).toHaveValue('Airtel')
   })
 
+  it('shows a hand-off’s own banner instead of the origin’s, and keeps it after a reload', async () => {
+    setSplitPrefill({
+      title: 'Swiggy',
+      total: 25_000,
+      source: 'sms',
+      banner: { icon: 'message', title: 'Filled in from your SMS', body: 'Add who’s in, check it, then save.' },
+    })
+    const first = renderApp('/app/split/new?from=sms')
+    expect(screen.getByText('Filled in from your SMS')).toBeInTheDocument()
+    expect(screen.getByText('Add who’s in, check it, then save.')).toBeInTheDocument()
+    await first.user.type(screen.getByLabelText("What's it for?"), ' order')
+    const stored = window.sessionStorage.getItem(SPLIT_DRAFT_KEY)
+    first.unmount()
+    window.sessionStorage.setItem(SPLIT_DRAFT_KEY, stored ?? '')
+    renderApp('/app/split/new?from=sms')
+    expect(screen.getByText('Filled in from your SMS')).toBeInTheDocument()
+    expect(screen.getByLabelText("What's it for?")).toHaveValue('Swiggy order')
+  })
+
+  it.each([
+    ['sms', { source: 'sms' as const }, 'Filled in from your SMS'],
+    ['voice', { source: 'voice' as const }, 'Filled in from what you said'],
+    ['rotation', {}, 'The next round'],
+    ['sms', {}, 'Filled in from your SMS'],
+  ])('names a from=%s hand-off', (from, extra, title) => {
+    setSplitPrefill({ title: 'Dinner', total: 120_000, ...extra })
+    renderApp(`/app/split/new?from=${from}`)
+    expect(screen.getByText(title)).toBeInTheDocument()
+  })
+
+  it('saves an SMS hand-off with its source', async () => {
+    setSplitPrefill({ title: 'Swiggy', category: 'food', total: 25_000, source: 'sms' })
+    const { user } = renderApp('/app/split/new?from=sms')
+    await pickPerson(user, 'Neha')
+    await user.click(saveButton())
+    expect(expensesStore.get()[0]).toMatchObject({ title: 'Swiggy', source: 'sms', total: 25_000 })
+  })
+
   it('copies an expense, dated today and with nobody paid', async () => {
     const original = seedExpense({ date: '2026-09-30', note: 'Corner table' })
     const { user } = renderApp(`/app/split/new?from=duplicate&of=${original.id}`)

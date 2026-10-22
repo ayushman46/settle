@@ -15,6 +15,19 @@ export interface ScanRequest {
   image: string
 }
 
+/** Kinds of delivery-app fee (Swiggy, Zomato, Blinkit, Zepto…). */
+export type ScannedFeeKind = 'delivery' | 'platform' | 'packaging' | 'surge' | 'small_order' | 'tip' | 'donation' | 'fee_tax' | 'other'
+export const SCANNED_FEE_KINDS: readonly ScannedFeeKind[] = ['delivery', 'platform', 'packaging', 'surge', 'small_order', 'tip', 'donation', 'fee_tax', 'other']
+
+/** One delivery-app fee line ("Delivery partner fee ₹35"). */
+export interface ScannedFee {
+  /** As printed. */
+  label: string
+  kind: ScannedFeeKind
+  /** MAJOR units, > 0. */
+  amount: number
+}
+
 /** One printed line of the bill. Amounts are in MAJOR units (e.g. rupees), as decimals. */
 export interface ScannedItem {
   name: string
@@ -44,8 +57,10 @@ export interface ScanResponse {
   subtotal: number | null
   /** All taxes combined (GST, CGST+SGST, VAT, sales tax...). */
   tax: number | null
-  /** Service charge / service fee. */
+  /** Restaurant service charge only — delivery-app fees are in `fees`. */
   serviceCharge: number | null
+  /** Delivery-app fees, each on its own (never also in serviceCharge). Older servers send none. */
+  fees: ScannedFee[]
   /** All discounts combined, as a POSITIVE number. */
   discount: number | null
   /** Tip / gratuity, if printed. */
@@ -92,6 +107,14 @@ export interface DescribedSplit {
   date?: string | null
 }
 
+/** Languages "Speak to split" listens in (and the describe endpoint understands), as BCP-47 tags. */
+export const VOICE_LANGS = ['en-IN', 'hi-IN', 'bn-IN', 'mr-IN', 'ta-IN', 'te-IN', 'kn-IN', 'gu-IN'] as const
+export type VoiceLang = (typeof VOICE_LANGS)[number]
+
+/** How a description arrived: typed, spoken (speech recognition) or a pasted bank SMS. */
+export const DESCRIBE_SOURCES = ['typed', 'voice', 'sms'] as const
+export type DescribeSource = (typeof DESCRIBE_SOURCES)[number]
+
 /** Request body for `POST /api/describe`. */
 export interface DescribeRequest {
   /** What the user typed, e.g. "Cab 840 with Riya and Sam, Sam pays double". */
@@ -102,6 +125,10 @@ export interface DescribeRequest {
   people?: string[]
   /** The user's local date, YYYY-MM-DD, to resolve "yesterday" and weekdays. */
   today?: string
+  /** The language the text was written or spoken in, when known (BCP-47). */
+  lang?: VoiceLang
+  /** How the text arrived: typed, spoken (speech recognition) or a pasted bank SMS. */
+  source?: DescribeSource
 }
 
 /** Successful response of `POST /api/describe`. */
@@ -243,6 +270,31 @@ export type ApiErrorCode =
   | 'timeout' // NVIDIA took too long
   | 'upstream_error' // any other NVIDIA/network failure
   | 'billing_unavailable' // checkout / licensing isn't set up on this server
+  | 'rates_unavailable' // no exchange rate for that day (GET /api/rates)
+
+/* ------------------------------------------------------------------ exchange rates */
+
+/** Response of `GET /api/rates?date=YYYY-MM-DD` (date optional = latest). */
+export interface RatesResponse {
+  /** The ECB business day used (≤ the asked date). */
+  date: string
+  base: 'EUR'
+  /** Units per 1 EUR, EUR included, plus pegged currencies derived exactly. */
+  rates: Record<string, number>
+  /** Currencies derived from a peg: code → the currency it's pegged to and the peg. */
+  pegged: Record<string, { to: string; peg: number }>
+}
+
+/** Currencies the ECB doesn't publish but that are pegged to one it does: code → [base, units per base]. */
+export const PEGS = {
+  AED: ['USD', 3.6725],
+  SAR: ['USD', 3.75],
+  QAR: ['USD', 3.64],
+  OMR: ['USD', 0.3845],
+  BHD: ['USD', 0.376],
+  NPR: ['INR', 1.6],
+  BTN: ['INR', 1],
+} as const satisfies Record<string, readonly [string, number]>
 
 /** Body of every non-2xx response from `/api/*`. `message` is safe to show to end users. */
 export interface ApiErrorBody {

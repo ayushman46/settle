@@ -281,3 +281,19 @@ describe('parseDescribeResponse', () => {
     expect(parseDescribeResponse({ title: 'x' })).toBeNull()
   })
 })
+
+describe('describeRequest — language and source hints (spec 03 §5.1)', () => {
+  const base = { currency: 'INR', people: ['Riya'], today: '2026-10-21' }
+
+  it('sends the language and how the text arrived', () => {
+    expect(describeRequest('dhai hazaar dinner', { ...base, lang: 'hi-IN', source: 'voice' })).toMatchObject({ lang: 'hi-IN', source: 'voice' })
+    expect(describeRequest('Swiggy 250', { ...base, source: 'sms' })).toMatchObject({ source: 'sms' })
+  })
+
+  it('leaves them out when unknown or not given', () => {
+    const body = describeRequest('Cab 840', { ...base, lang: 'fr-FR' as never, source: 'fax' as never })
+    expect(body).not.toHaveProperty('lang')
+    expect(body).not.toHaveProperty('source')
+    expect(describeRequest('Cab 840', base)).toEqual({ text: 'Cab 840', currency: 'INR', people: ['Riya'], today: '2026-10-21' })
+  })
+})

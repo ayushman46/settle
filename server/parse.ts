@@ -807,6 +807,7 @@ export function normalize(extraction: Extraction, model: string): ScanResponse {
     category: extraction.category ?? inferCategory(merchant) ?? inferCategory(items.map((item) => item.name).join(' · ')),
     items,
     ...totals,
+    fees: [],
     warnings: warnings.slice(0, 2),
     model,
   }

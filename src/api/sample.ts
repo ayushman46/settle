@@ -21,6 +21,7 @@ export const SAMPLE_SCAN: ScanResponse = {
   ],
   subtotal: 2305,
   tax: 109.49,
+  fees: [],
   serviceCharge: 115.25,
   discount: 230.5,
   tip: null,

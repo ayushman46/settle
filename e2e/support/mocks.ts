@@ -52,6 +52,7 @@ const ERROR_STATUS: Record<ApiErrorCode, number> = {
   timeout: 504,
   upstream_error: 502,
   billing_unavailable: 503,
+  rates_unavailable: 503,
 }
 
 export const MOCK_MODEL = 'e2e/mock-model'
@@ -71,6 +72,7 @@ export const SAMPLE_SCAN: ScanResponse = {
   subtotal: 1100,
   tax: 55,
   serviceCharge: null,
+  fees: [],
   discount: null,
   tip: null,
   total: 1155,

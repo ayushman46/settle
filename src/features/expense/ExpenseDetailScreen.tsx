@@ -24,6 +24,8 @@ import { openPaywall } from '../pro/paywall'
 import { BillBreakdown } from './BillBreakdown'
 import { ExpenseActionsSheet } from './ExpenseActionsSheet'
 import { ExpenseHero } from './ExpenseHero'
+import { extensionEditPath, extraExpenseActions } from './extensionActions'
+import { ExpenseExtensions } from './extensions'
 import { addedLine, owingIds, primaryAction, standingPill } from './expenseView'
 import styles from './ExpenseDetailScreen.module.css'
 
@@ -129,7 +131,9 @@ function ExpenseDetail({ expense, onDeleting }: ExpenseDetailProps) {
 
   const edit = (): void => {
     setMoreOpen(false)
-    if (expense.kind === 'bill' && expense.bill && expense.bill.items.length > 0) openBill({ kind: 'edit', expenseId: expense.id })
+    const elsewhere = extensionEditPath(expense)
+    if (elsewhere) navigate(elsewhere)
+    else if (expense.kind === 'bill' && expense.bill && expense.bill.items.length > 0) openBill({ kind: 'edit', expenseId: expense.id })
     else navigate(`/app/split/${encodeURIComponent(expense.id)}/edit`)
   }
 
@@ -212,6 +216,8 @@ function ExpenseDetail({ expense, onDeleting }: ExpenseDetailProps) {
     >
       <ExpenseHero expense={expense} payerName={payerName} group={group} standing={standing} />
 
+      <ExpenseExtensions expense={expense} />
+
       <CollectCard expense={expense} />
 
       <section className={styles.section} aria-labelledby="expense-shares">
@@ -275,6 +281,7 @@ function ExpenseDetail({ expense, onDeleting }: ExpenseDetailProps) {
         onDuplicate={duplicate}
         onMarkAllPaid={canMarkAll ? markAllPaid : undefined}
         onDelete={remove}
+        extra={extraExpenseActions(expense, { close: () => setMoreOpen(false) })}
       />
     </Screen>
   )

@@ -12,6 +12,7 @@ const base: ScanResponse = {
   subtotal: null,
   tax: null,
   serviceCharge: null,
+  fees: [],
   discount: null,
   tip: null,
   total: null,
@@ -104,5 +105,34 @@ describe('resolveCurrency', () => {
     expect(resolveCurrency(' eur ', 'INR')).toBe('EUR')
     expect(resolveCurrency(null, 'GBP')).toBe('GBP')
     expect(resolveCurrency('???', 'bad')).toBe('INR')
+  })
+})
+
+describe('scanToBill — delivery fees', () => {
+  it('keeps fees in minor units with new ids, labels tidied, zero fees dropped', () => {
+    const bill = scanToBill(
+      {
+        ...SAMPLE_SCAN,
+        currency: 'INR',
+        fees: [
+          { label: '  Delivery   partner fee ', kind: 'delivery', amount: 35 },
+          { label: 'Platform fee', kind: 'platform', amount: 10.5 },
+          { label: 'Free', kind: 'delivery', amount: 0 },
+          { label: '', kind: 'tip', amount: 20 },
+        ],
+      },
+      'INR',
+    )
+    expect(bill.meta.fees?.map(({ kind, label, amount }) => ({ kind, label, amount }))).toEqual([
+      { kind: 'delivery', label: 'Delivery partner fee', amount: 3500 },
+      { kind: 'platform', label: 'Platform fee', amount: 1050 },
+      { kind: 'tip', label: 'Fee', amount: 2000 },
+    ])
+    const ids = bill.meta.fees?.map((f) => f.id) ?? []
+    expect(new Set(ids).size).toBe(3)
+  })
+
+  it('adds no fees key for a restaurant bill', () => {
+    expect(Object.hasOwn(scanToBill(SAMPLE_SCAN, 'INR').meta, 'fees')).toBe(false)
   })
 })

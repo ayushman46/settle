@@ -6,8 +6,11 @@ import {
   isCategoryId,
   LICENSE_HEADER,
   SCAN_BUDGET_MS,
+  SCANNED_FEE_KINDS,
   type ApiErrorCode,
   type HealthResponse,
+  type ScannedFee,
+  type ScannedFeeKind,
   type ScanResponse,
   type ScannedItem,
 } from '../../shared/api'
@@ -15,7 +18,7 @@ import { licenseHeaders } from '../pro/store'
 import { callApi, isOffline, isRecord, PRO_ALLOWANCE_MIN_WAIT_SECONDS, waitPhrase, type CallResult } from './http'
 
 /** What can go wrong with a scan: the API's scan-related codes plus our own transport ones. */
-export type ScanErrorCode = Exclude<ApiErrorCode, 'not_a_split' | 'billing_unavailable'> | 'network' | 'aborted'
+export type ScanErrorCode = Exclude<ApiErrorCode, 'not_a_split' | 'billing_unavailable' | 'rates_unavailable'> | 'network' | 'aborted'
 
 /**
  * What we tell diners for every error. The server's own `message` is never shown: these are written
@@ -123,6 +126,22 @@ function stringOrNull(value: unknown): string | null {
   return typeof value === 'string' && value.trim() ? value : null
 }
 
+const FEE_KINDS: ReadonlySet<unknown> = new Set(SCANNED_FEE_KINDS)
+
+/** Delivery-app fees in a scan answer: objects with a label and a positive amount (older servers send none). */
+function parseFees(value: unknown): ScannedFee[] {
+  if (!Array.isArray(value)) return []
+  const fees: ScannedFee[] = []
+  for (const raw of value) {
+    if (!isRecord(raw)) continue
+    const amount = finiteOrNull(raw.amount)
+    if (amount === null || amount <= 0) continue
+    const label = typeof raw.label === 'string' ? raw.label : ''
+    fees.push({ label, kind: FEE_KINDS.has(raw.kind) ? (raw.kind as ScannedFeeKind) : 'other', amount })
+  }
+  return fees
+}
+
 /** Checks the 200 body really is a `ScanResponse`; tolerant of missing optional bits. */
 export function parseScanResponse(body: unknown): ScanResponse | null {
   if (!isRecord(body) || !Array.isArray(body.items)) return null
@@ -143,6 +162,7 @@ export function parseScanResponse(body: unknown): ScanResponse | null {
     subtotal: finiteOrNull(body.subtotal),
     tax: finiteOrNull(body.tax),
     serviceCharge: finiteOrNull(body.serviceCharge),
+    fees: parseFees(body.fees),
     discount: finiteOrNull(body.discount),
     tip: finiteOrNull(body.tip),
     total: finiteOrNull(body.total),

@@ -83,3 +83,28 @@ describe('split prefill hand-off', () => {
     expect(takeSplitPrefill()).toEqual({ title: 'Memory' })
   })
 })
+
+describe('v4 hand-offs: banners and SMS/voice sources', () => {
+  it('carries a valid banner and the sms / voice sources', () => {
+    const banner = { icon: 'message' as const, title: 'Filled in from your SMS', body: "Add who's in, check it, then save." }
+    setSplitPrefill({ ...prefill, source: 'sms', banner })
+    expect(takeSplitPrefill()).toEqual({ ...prefill, source: 'sms', banner })
+    setSplitPrefill({ title: 'Chai', source: 'voice', banner: { icon: 'mic', title: 'Filled in from what you said', body: '' } })
+    expect(peekSplitPrefill()).toMatchObject({ source: 'voice', banner: { icon: 'mic' } })
+  })
+
+  it('drops the whole hand-off when its banner is malformed (too long, unknown icon)', () => {
+    for (const banner of [
+      { icon: 'message', title: 'x'.repeat(81), body: '' },
+      { icon: 'message', title: 'Fine', body: 'x'.repeat(161) },
+      { icon: 'rocket', title: 'Fine', body: '' },
+      { icon: 'message', title: '', body: '' },
+    ]) {
+      setSplitPrefill({ title: 'Cab', banner } as unknown as SplitPrefill)
+      expect(peekSplitPrefill(), JSON.stringify(banner)).toBeNull()
+    }
+    // At the limits it's kept.
+    setSplitPrefill({ title: 'Cab', banner: { icon: 'wallet', title: 'x'.repeat(80), body: 'y'.repeat(160) } })
+    expect(peekSplitPrefill()?.banner?.title).toHaveLength(80)
+  })
+})

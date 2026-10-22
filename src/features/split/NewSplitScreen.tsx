@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
-import { CircleCheck, Copy, Info, Plane, Repeat, ScanLine, Sparkles, UsersRound } from 'lucide-react'
+import { CircleCheck, Copy, Info, MessageSquareText, Mic, Plane, Repeat, RotateCw, ScanLine, Sparkles, UsersRound, Wallet } from 'lucide-react'
 import { goBack, navigate, useBackClose, useLocation, useRoute, useSearchParams } from '../../app/router'
 import {
   ActionBar,
@@ -32,6 +32,8 @@ import {
   useGroup,
   useGroups,
   useProfile,
+  type PrefillBanner,
+  type PrefillBannerIcon,
 } from '../../data'
 import { BRAND, ME_ID, type Expense, type ExpenseSource, type Group } from '../../domain/types'
 import { categoryFromText } from '../../engine/categories'
@@ -73,7 +75,8 @@ const expensePath = (id: string) => `/app/expense/${encodeURIComponent(id)}`
  * reason until the split adds up, and says what saving will mean ("Riya will owe you ₹800").
  *
  * New splits start from the query (`group`, `friend`, `category` quick starts) and from a hand-off
- * (`from=describe|scan|recurring`, see `setSplitPrefill`) or a copy (`from=duplicate&of=<id>`).
+ * (`from=describe|scan|recurring|sms|voice|rotation`, see `setSplitPrefill`) or a copy
+ * (`from=duplicate&of=<id>`). A hand-off may bring its own banner.
  * Unsaved work is guarded on Back and survives a reload.
  */
 export function NewSplitScreen() {
@@ -105,6 +108,8 @@ interface Start {
   origin: SplitOrigin
   /** The original's title, for a copy. */
   copyOf: string | null
+  /** The hand-off's own banner (shown instead of the origin's), or null. */
+  banner: PrefillBanner | null
 }
 
 interface StartContext {
@@ -118,11 +123,23 @@ const HAND_OFF_ORIGINS: Partial<Record<ExpenseSource, SplitOrigin>> = {
   describe: 'describe',
   scan: 'scan',
   recurring: 'recurring',
+  sms: 'sms',
+  voice: 'voice',
+}
+
+/** `from=…` in the address, for hand-offs that don't say where they came from. */
+const FROM_ORIGINS: Readonly<Record<string, SplitOrigin>> = {
+  describe: 'describe',
+  scan: 'scan',
+  recurring: 'recurring',
+  sms: 'sms',
+  voice: 'voice',
+  rotation: 'rotation',
 }
 
 /** The form a fresh visit to `query` starts with (takes any waiting hand-off). */
 function startFrom(editing: Expense | null, query: URLSearchParams, ctx: StartContext): Start {
-  if (editing) return { form: formFromExpense(editing), prefilled: false, origin: 'edit', copyOf: null }
+  if (editing) return { form: formFromExpense(editing), prefilled: false, origin: 'edit', copyOf: null, banner: null }
 
   let form = blankForm(ctx.currency, ctx.today)
   const group = ctx.groups.find((g) => g.id === query.get('group')) ?? null
@@ -136,7 +153,7 @@ function startFrom(editing: Expense | null, query: URLSearchParams, ctx: StartCo
   if (from === 'duplicate' && of) {
     try {
       const copy = duplicateExpenseDraft(of)
-      return { form: { ...formFromExpense(copy), date: ctx.today }, prefilled: true, origin: 'duplicate', copyOf: copy.title }
+      return { form: { ...formFromExpense(copy), date: ctx.today }, prefilled: true, origin: 'duplicate', copyOf: copy.title, banner: null }
     } catch (error) {
       if (!(error instanceof ExpenseError)) throw error
       // The original is gone: start an empty split instead.
@@ -145,13 +162,14 @@ function startFrom(editing: Expense | null, query: URLSearchParams, ctx: StartCo
   if (from) {
     const prefill = takeSplitPrefill()
     if (prefill) {
-      // Where it came from: the hand-off says, else the address does (`from=scan`).
+      // Where it came from: the address says for a rotation, else the hand-off, else the address (`from=scan`).
       const said = prefill.source ? HAND_OFF_ORIGINS[prefill.source] : undefined
-      const origin = said ?? (Object.hasOwn(HAND_OFF_ORIGINS, from) ? HAND_OFF_ORIGINS[from as ExpenseSource] : undefined) ?? 'new'
-      return { form: withPrefill(form, prefill, ctx), prefilled: true, origin, copyOf: null }
+      const fromAddress = Object.hasOwn(FROM_ORIGINS, from) ? FROM_ORIGINS[from] : undefined
+      const origin = (fromAddress === 'rotation' ? fromAddress : (said ?? fromAddress)) ?? 'new'
+      return { form: withPrefill(form, prefill, ctx), prefilled: true, origin, copyOf: null, banner: prefill.banner ?? null }
     }
   }
-  return { form, prefilled: false, origin: 'new', copyOf: null }
+  return { form, prefilled: false, origin: 'new', copyOf: null, banner: null }
 }
 
 /** Serialized for "has anything changed?". */
@@ -185,7 +203,7 @@ function SplitScreen({ editing, url }: SplitScreenProps) {
     // A reload brings back what was being typed — unless a new hand-off is waiting.
     const draft = handedOff ? null : loadSplitDraft(url, base)
     const restored = draft
-      ? { ...start, form: { ...draft.form, bill: start.form.bill }, prefilled: draft.prefilled, origin: draft.origin }
+      ? { ...start, form: { ...draft.form, bill: start.form.bill }, prefilled: draft.prefilled, origin: draft.origin, banner: draft.banner ?? null }
       : start
     return { ...restored, pristine: formKey(start.form), restored: draft !== null }
   })
@@ -226,9 +244,9 @@ function SplitScreen({ editing, url }: SplitScreenProps) {
   // What's typed survives a reload, and is forgotten once the screen closes.
   useEffect(() => {
     if (leaving || saved) return
-    if (dirty) saveSplitDraft({ url, base, form, prefilled: initial.prefilled, origin: initial.origin })
+    if (dirty) saveSplitDraft({ url, base, form, prefilled: initial.prefilled, origin: initial.origin, banner: initial.banner })
     else clearSplitDraft()
-  }, [url, base, form, dirty, leaving, saved, initial.prefilled, initial.origin])
+  }, [url, base, form, dirty, leaving, saved, initial.prefilled, initial.origin, initial.banner])
   useEffect(() => clearSplitDraft, [])
 
   // A split with no category yet opens on the first categories, not scrolled to "Other" at the end.
@@ -345,7 +363,9 @@ function SplitScreen({ editing, url }: SplitScreenProps) {
         {isNew ? 'New split' : `Edit ${editing.title}`}
       </h1>
 
-      {!hidden.has('origin') && <OriginBanner origin={initial.origin} copyOf={initial.copyOf} title={form.title} onDismiss={() => hide('origin')} />}
+      {!hidden.has('origin') && (
+        <OriginBanner origin={initial.origin} banner={initial.banner} copyOf={initial.copyOf} title={form.title} onDismiss={() => hide('origin')} />
+      )}
 
       <AmountHero
         value={form.total}
@@ -523,13 +543,31 @@ function SplitScreen({ editing, url }: SplitScreenProps) {
 
 interface OriginBannerProps {
   origin: SplitOrigin
+  /** The hand-off's own banner, shown instead of the origin's. */
+  banner: PrefillBanner | null
   copyOf: string | null
   title: string
   onDismiss: () => void
 }
 
+const BANNER_ICONS: Readonly<Record<PrefillBannerIcon, ReactNode>> = {
+  sparkles: <Sparkles />,
+  message: <MessageSquareText />,
+  mic: <Mic />,
+  scan: <ScanLine />,
+  rotate: <RotateCw />,
+  wallet: <Wallet />,
+}
+
 /** Where a prefilled split came from, so it gets a second look before saving. */
-function OriginBanner({ origin, copyOf, title, onDismiss }: OriginBannerProps) {
+function OriginBanner({ origin, banner, copyOf, title, onDismiss }: OriginBannerProps) {
+  if (banner) {
+    return (
+      <Banner tone="info" icon={BANNER_ICONS[banner.icon]} title={banner.title} onDismiss={onDismiss}>
+        {banner.body}
+      </Banner>
+    )
+  }
   switch (origin) {
     case 'describe':
       return (
@@ -553,6 +591,24 @@ function OriginBanner({ origin, copyOf, title, onDismiss }: OriginBannerProps) {
       return (
         <Banner tone="info" icon={<Copy />} title={copyOf ? `A copy of ${copyOf}` : 'A copy'} onDismiss={onDismiss}>
           Dated today, and nobody is marked as paid yet.
+        </Banner>
+      )
+    case 'sms':
+      return (
+        <Banner tone="info" icon={<MessageSquareText />} title="Filled in from your SMS" onDismiss={onDismiss}>
+          Add who’s in, check it, then save.
+        </Banner>
+      )
+    case 'voice':
+      return (
+        <Banner tone="info" icon={<Mic />} title="Filled in from what you said" onDismiss={onDismiss}>
+          Check the amount and who’s in, then save.
+        </Banner>
+      )
+    case 'rotation':
+      return (
+        <Banner tone="info" icon={<RotateCw />} title="The next round" onDismiss={onDismiss}>
+          Check the amount and who’s in, then save.
         </Banner>
       )
     default:

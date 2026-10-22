@@ -5,7 +5,7 @@ import { useFriendsById } from '../../data'
 import type { Expense } from '../../domain/types'
 import { friendLabel } from '../../kit/index-a'
 import { formatQuantity } from '../../lib/format'
-import { billExtraLines } from './expenseView'
+import { billExtraLines, feesByPerson } from './expenseView'
 import styles from './BillBreakdown.module.css'
 
 export interface BillBreakdownProps {
@@ -35,6 +35,7 @@ export function BillBreakdown({ expense }: BillBreakdownProps) {
   const money = (value: number, opts: { sign?: 'always' } = {}) => (
     <Money value={value} currency={expense.currency} trimZeros sign={opts.sign} />
   )
+  const fees = feesByPerson(expense)
 
   return (
     <section aria-labelledby={headingId} className={styles.section}>
@@ -75,13 +76,24 @@ export function BillBreakdown({ expense }: BillBreakdownProps) {
         <ReceiptDivider />
         <div className={styles.totals}>
           <ReceiptRow label="Items" value={money(itemsTotal)} emphasis="muted" />
-          {extras.map((line) => (
-            <ReceiptRow key={line.key} label={line.label} value={money(line.amount, { sign: 'always' })} emphasis="muted" />
+          {extras.map((line, i) => (
+            <ReceiptRow key={`${line.key}-${i}`} label={line.label} value={money(line.amount, { sign: 'always' })} emphasis="muted" />
           ))}
         </div>
         <ReceiptDivider />
         <ReceiptRow label="Total paid" value={money(expense.total)} emphasis="strong" />
+        {fees.length > 0 && (
+          <>
+            <ReceiptDivider />
+            <div className={styles.totals} role="group" aria-label={expense.bill?.feeSplit === 'equal' ? 'Fees, shared equally' : 'Fees, by what each had'}>
+              {fees.map(({ id, amount }) => (
+                <ReceiptRow key={id} label={`Fees · ${friendLabel(id, friendsById[id] ?? null)}`} value={money(amount)} emphasis="muted" />
+              ))}
+            </div>
+          </>
+        )}
       </Receipt>
     </section>
   )
 }
+

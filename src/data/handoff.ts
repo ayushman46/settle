@@ -1,12 +1,25 @@
 /**
- * One-shot prefill hand-off between screens ("Just say it", a scanned cab bill, a recurring rent)
- * → the new-split screen. Kept in memory and in sessionStorage, so it survives a reload between
+ * One-shot prefill hand-off between screens ("Just say it", a scanned cab bill, a recurring rent,
+ * a bank SMS, a spoken split, the next round of a rotation) → the new-split screen. Kept in memory and in sessionStorage, so it survives a reload between
  * hand-off and pick-up, and is gone once taken.
  */
 import * as z from 'zod/mini'
 import { CATEGORY_IDS, type CategoryId, type ExpenseSource, type Minor, type Participant, type SplitMode } from '../domain/types'
 import { MAX_MINOR } from '../lib/money'
 import { EXPENSE_SOURCES } from './schemas'
+
+/** Icons a hand-off banner can show (mapped to Lucide icons by the split screen). */
+export type PrefillBannerIcon = 'sparkles' | 'message' | 'mic' | 'scan' | 'rotate' | 'wallet'
+export const PREFILL_BANNER_ICONS: readonly PrefillBannerIcon[] = ['sparkles', 'message', 'mic', 'scan', 'rotate', 'wallet']
+
+/** The banner the split screen shows above a handed-off form, instead of its own origin banner. */
+export interface PrefillBanner {
+  icon: PrefillBannerIcon
+  /** At most 80 characters. */
+  title: string
+  /** At most 160 characters. */
+  body: string
+}
 
 export interface SplitPrefill {
   title?: string
@@ -21,6 +34,8 @@ export interface SplitPrefill {
   note?: string | null
   source?: ExpenseSource
   recurringId?: string | null
+  /** Shown above the form instead of the screen's own "Filled in from…" banner. */
+  banner?: PrefillBanner
 }
 
 export const HANDOFF_KEY = 'settle.v3.handoff'
@@ -41,6 +56,13 @@ const prefillSchema = z.object({
   note: z.optional(z.nullable(z.string())),
   source: z.optional(z.enum(EXPENSE_SOURCES as readonly ExpenseSource[])),
   recurringId: z.optional(z.nullable(z.string())),
+  banner: z.optional(
+    z.object({
+      icon: z.enum(PREFILL_BANNER_ICONS),
+      title: z.string().check(z.minLength(1), z.maxLength(80)),
+      body: z.string().check(z.maxLength(160)),
+    }),
+  ),
 })
 
 let pending: SplitPrefill | null = null

@@ -15,9 +15,12 @@ export interface ExpenseActionsSheetProps {
   /** Ticks everyone who still owes you; omit when nobody does. */
   onMarkAllPaid?: () => void
   onDelete: () => void
+  /** Actions features add (e.g. "Let friends claim items"), listed just above Delete. */
+  extra?: readonly ExpenseActionDef[]
 }
 
-interface Action {
+/** One entry in the ⋮ menu. */
+export interface ExpenseActionDef {
   key: string
   icon: ReactNode
   label: string
@@ -26,9 +29,15 @@ interface Action {
   danger?: boolean
 }
 
-/** The ⋮ menu of an expense: edit, duplicate, mark everyone as paid, delete (with undo). */
-export function ExpenseActionsSheet({ open, onClose, title, itemized, onEdit, onDuplicate, onMarkAllPaid, onDelete }: ExpenseActionsSheetProps) {
-  const actions: Action[] = [
+/** What an added action can do to the menu itself. */
+export interface ExpenseActionContext {
+  /** Closes the ⋮ menu (call before navigating away). */
+  close: () => void
+}
+
+/** The ⋮ menu of an expense: edit, duplicate, mark everyone as paid, what features add, delete (with undo). */
+export function ExpenseActionsSheet({ open, onClose, title, itemized, onEdit, onDuplicate, onMarkAllPaid, onDelete, extra = [] }: ExpenseActionsSheetProps) {
+  const actions: ExpenseActionDef[] = [
     {
       key: 'edit',
       icon: <Pencil />,
@@ -41,6 +50,7 @@ export function ExpenseActionsSheet({ open, onClose, title, itemized, onEdit, on
   if (onMarkAllPaid) {
     actions.push({ key: 'paid', icon: <CheckCheck />, label: 'Mark everyone as paid', detail: 'When it’s all come back', onSelect: onMarkAllPaid })
   }
+  actions.push(...extra)
   actions.push({ key: 'delete', icon: <Trash2 />, label: 'Delete', detail: 'You can undo it straight after', onSelect: onDelete, danger: true })
 
   return (

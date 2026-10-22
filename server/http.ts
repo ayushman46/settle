@@ -33,6 +33,7 @@ export const ERROR_MESSAGES: Record<ApiErrorCode, string> = {
   timeout: 'Reading the bill took too long. Try again with a sharper, closer photo.',
   upstream_error: "Couldn't reach the AI service. Please try again.",
   billing_unavailable: "Checkout isn't set up yet — you can still redeem a code.",
+  rates_unavailable: 'No exchange rate for that day — enter it yourself.',
 }
 
 export const ERROR_STATUS: Record<ApiErrorCode, ContentfulStatusCode> = {
@@ -48,6 +49,7 @@ export const ERROR_STATUS: Record<ApiErrorCode, ContentfulStatusCode> = {
   timeout: 504,
   upstream_error: 502,
   billing_unavailable: 503,
+  rates_unavailable: 503,
 }
 
 /** Route-specific wording for some codes. */

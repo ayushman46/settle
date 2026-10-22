@@ -1,5 +1,6 @@
 /** Converts a scan (major-unit decimals) into domain data (integer minor units, new ids). */
 import { isCategoryId, type CategoryId, type ScanResponse } from '../../shared/api'
+import { BILL_FEE_KINDS, type BillFee, type BillFeeKind } from '../types'
 import { isKnownCurrency } from '../lib/currencies'
 import { newId } from '../lib/ids'
 import { MAX_MINOR, toMinor } from '../lib/money'
@@ -17,6 +18,25 @@ export interface MappedBill {
 
 /** Most warnings shown for one bill. */
 const MAX_WARNINGS = 3
+
+/** Most fees kept for one bill, and the longest fee label (as the stored bill keeps them). */
+const MAX_FEES = 15
+const MAX_FEE_LABEL = 40
+
+const FEE_KINDS: ReadonlySet<unknown> = new Set(BILL_FEE_KINDS)
+
+/** The scan's delivery-app fees in minor units, with new ids; zero or unreadable fees are dropped. */
+function scanFees(res: ScanResponse, currency: string): BillFee[] {
+  const fees: BillFee[] = []
+  for (const raw of res.fees ?? []) {
+    if (fees.length >= MAX_FEES) break
+    const amount = amountOrNull(raw.amount, currency)
+    if (amount === null || amount <= 0) continue
+    const kind: BillFeeKind = FEE_KINDS.has(raw.kind) ? raw.kind : 'other'
+    fees.push({ id: newId(), kind, label: textOrNull(raw.label, MAX_FEE_LABEL) ?? 'Fee', amount })
+  }
+  return fees
+}
 
 /** Non-negative amount in minor units (sign dropped, capped), or null when absent/invalid. */
 function amountOrNull(major: number | null | undefined, code: string): Minor | null {
@@ -59,6 +79,8 @@ export function scanToBill(res: ScanResponse, fallbackCurrency: string): MappedB
     tip: amountOrNull(res.tip, currency),
     total: amountOrNull(res.total, currency),
   }
+  const fees = scanFees(res, currency)
+  if (fees.length > 0) meta.fees = fees
 
   const warnings = res.warnings
     .map((w) => textOrNull(w, 200))

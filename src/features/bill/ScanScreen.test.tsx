@@ -43,6 +43,7 @@ const SCANNED: ScanResponse = {
   subtotal: 655,
   tax: 32.75,
   serviceCharge: null,
+  fees: [],
   discount: null,
   tip: null,
   total: 688,

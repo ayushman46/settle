@@ -6,6 +6,7 @@
 import { ME_ID, type Expense, type ExpenseSource, type Group, type Minor } from '../../domain/types'
 import { collectProgress, expenseStanding, isSettledInGroup } from '../../engine/balances'
 import { currencyDigits, formatMoney } from '../../lib/money'
+import { computeSplit } from '../../lib/split'
 
 export type StandingTone = 'positive' | 'negative' | 'neutral'
 
@@ -67,16 +68,17 @@ export function owingIds(e: Pick<Expense, 'payerId' | 'shares' | 'paidBack'>): s
 /* ------------------------------------------------------------------ the bill */
 
 export interface BillExtraLine {
-  key: 'tax' | 'service' | 'tip' | 'discount' | 'other'
+  /** `fee` lines (delivery-app fees) can repeat: one per fee. */
+  key: 'tax' | 'service' | 'fee' | 'tip' | 'discount' | 'other'
   label: string
   /** Signed: + adds to the bill, − takes off. */
   amount: Minor
 }
 
 /**
- * The lines between the items and the total: tax, service charge, tip and discount as printed,
- * then whatever is left to reach what was actually paid (a round-off, or charges the bill didn't
- * name) — so the receipt always adds up to the paisa.
+ * The lines between the items and the total: tax, service charge, each delivery-app fee, tip and
+ * discount as printed, then whatever is left to reach what was actually paid (a round-off, or
+ * charges the bill didn't name) — so the receipt always adds up to the paisa.
  */
 export function billExtraLines(e: Pick<Expense, 'total' | 'currency' | 'bill'>): BillExtraLine[] {
   const bill = e.bill
@@ -88,6 +90,7 @@ export function billExtraLines(e: Pick<Expense, 'total' | 'currency' | 'bill'>):
   }
   add('tax', 'Tax', bill.meta.tax)
   add('service', 'Service charge', bill.meta.serviceCharge)
+  for (const fee of bill.meta.fees ?? []) add('fee', fee.label, fee.amount)
   add('tip', 'Tip', bill.meta.tip)
   add('discount', 'Discount', bill.meta.discount, -1)
   const rest = e.total - itemsTotal - lines.reduce((sum, line) => sum + line.amount, 0)
@@ -138,4 +141,21 @@ export function addedLine(e: Pick<Expense, 'createdAt' | 'updatedAt' | 'source'>
   if (source) parts.push(source)
   if (e.updatedAt - e.createdAt > EDIT_GRACE_MS) parts.push(`last changed ${stamp(e.updatedAt, now)}`)
   return parts.join(' · ')
+}
+
+/** Each person's part of the bill's delivery-app fees (people with none left out), from the saved split. */
+export function feesByPerson(expense: Pick<Expense, 'bill' | 'participants' | 'total'>): Array<{ id: string; amount: number }> {
+  const bill = expense.bill
+  const feeTotal = (bill?.meta.fees ?? []).reduce((sum, fee) => sum + fee.amount, 0)
+  if (!bill || feeTotal <= 0) return []
+  const ids = [...new Set(expense.participants.map((p) => p.friendId))]
+  const split = computeSplit({
+    items: bill.items,
+    people: ids.map((id) => ({ id, name: id, color: 0 })),
+    assignments: bill.assignments,
+    paid: expense.total,
+    fees: feeTotal,
+    feeSplit: bill.feeSplit ?? 'proportional',
+  })
+  return split.people.filter((p) => p.fees > 0).map((p) => ({ id: p.person.id, amount: p.fees }))
 }

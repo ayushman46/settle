@@ -92,8 +92,11 @@ export {
   clearSplitPrefill,
   HANDOFF_KEY,
   peekSplitPrefill,
+  PREFILL_BANNER_ICONS,
   setSplitPrefill,
   takeSplitPrefill,
+  type PrefillBanner,
+  type PrefillBannerIcon,
   type SplitPrefill,
 } from './handoff'
 export {
