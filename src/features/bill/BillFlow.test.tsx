@@ -243,6 +243,21 @@ describe('BillFlow — arriving', () => {
     await screen.findByRole('heading', { level: 1, name: 'Scan a bill' })
   })
 
+  it('openBill({ kind: "resume" }) goes straight back to where the bill was left', () => {
+    savedDraft({ step: 'people' })
+    fromHome()
+    openBill({ kind: 'resume' })
+    renderFlow()
+    expect(screen.getByRole('heading', { level: 1, name: "Who's splitting?" })).toBeInTheDocument()
+  })
+
+  it('openBill({ kind: "resume" }) without a bill in progress opens the scan step', () => {
+    fromHome()
+    openBill({ kind: 'resume' })
+    renderFlow()
+    expect(screen.getByRole('heading', { level: 1, name: 'Scan a bill' })).toBeInTheDocument()
+  })
+
   it('openBill({ kind: "manual" }) opens an empty bill with the item editor ready', () => {
     fromHome()
     openBill({ kind: 'manual' })

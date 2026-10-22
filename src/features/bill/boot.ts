@@ -17,10 +17,13 @@ import { EMPTY_META, type Session } from '../../types'
 import { billSessionFromExpense } from './billExpense'
 import { takeBillStart, type BillStart } from './launch'
 
+/** A start that replaces the bill in progress (so the flow may need to ask first). */
+export type ReplacingStart = Exclude<BillStart, { kind: 'resume' }>
+
 export interface Boot {
   session: Session
   /** A start that would replace the bill in progress: the flow asks first. */
-  ask: BillStart | null
+  ask: ReplacingStart | null
 }
 
 /** The `loadBill` action for starting the sample bill or an empty typed-in one. */
@@ -48,6 +51,7 @@ export function bootFlow(initial?: Session): Boot {
   const arriving = initial === undefined && flowHistory().current() === null
   const landing: Session = arriving && saved.step !== 'scan' ? { ...saved, step: 'scan' } : saved
 
+  if (start?.kind === 'resume') return { session: hasProgress(saved) ? saved : landing, ask: null }
   if (start?.kind === 'edit') {
     // Already fixing this very bill: carry on where it was left.
     if (saved.expenseId === start.expenseId && hasProgress(saved)) return { session: saved, ask: null }

@@ -4,13 +4,12 @@ import { useExpense } from '../../data'
 import { haptic } from '../../lib/haptics'
 import { setPhoto } from '../../state/photo'
 import { useSession } from '../../state/store'
-import { editingSession, newBillAction } from './boot'
-import type { BillStart } from './launch'
+import { editingSession, newBillAction, type ReplacingStart } from './boot'
 import { plural } from './screenUtils'
 
 export interface StartIntentProps {
   /** What `openBill` asked for, which would replace the bill in progress. */
-  start: BillStart
+  start: ReplacingStart
 }
 
 /**

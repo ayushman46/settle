@@ -4,6 +4,7 @@
  * to fix who had what; read the draft in progress (for a "Continue your bill" card); clear it.
  *
  *   openBill()                                   // the scan step ("Scan bill")
+ *   openBill({ kind: 'resume' })                 // "Continue your bill": where it was left
  *   openBill({ kind: 'sample' })                 // "Try a sample bill"
  *   openBill({ kind: 'edit', expenseId: e.id })  // an itemized expense's "Edit"
  *
@@ -26,6 +27,8 @@ export type BillStart =
   | { kind: 'manual' }
   /** A saved itemized bill, back in the flow on its last step; saving updates it. */
   | { kind: 'edit'; expenseId: string }
+  /** The bill in progress, right where it was left (the scan step when there is none). */
+  | { kind: 'resume' }
 
 /** A second `take` this soon after the first returns the same value (React StrictMode double renders). */
 const RETAKE_GRACE_MS = 1000
