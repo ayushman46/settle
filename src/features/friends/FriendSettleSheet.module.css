@@ -5,11 +5,18 @@
 }
 
 .source {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-  gap: var(--s-3);
+  gap: var(--s-2) var(--s-3);
   min-width: 0;
   padding-block: var(--s-3);
+}
+
+/* The action sits under the words, so long group names never get squeezed. */
+.action {
+  grid-column: 2 / -1;
+  justify-self: start;
 }
 
 .source + .source {
@@ -53,10 +60,3 @@
   color: var(--ink-2);
 }
 
-.side {
-  display: flex;
-  flex: none;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: var(--s-1);
-}

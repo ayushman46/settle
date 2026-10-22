@@ -194,7 +194,8 @@
 
 /* ---------- Groups together ---------- */
 
-.groups {
+/* Bleeds to the screen edges, scrolling sideways (beats the global `ul[role=list]` reset). */
+.section > .groups {
   display: flex;
   gap: var(--s-2);
   margin: 0 calc(var(--gutter) * -1);

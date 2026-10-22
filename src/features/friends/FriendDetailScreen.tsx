@@ -362,7 +362,7 @@ function StandingCard({
               Pay via UPI
             </Button>
           )}
-          <Button variant="secondary" size="md" onClick={onSettle}>
+          <Button variant="tonal" size="md" onClick={onSettle}>
             Settle up
           </Button>
         </div>

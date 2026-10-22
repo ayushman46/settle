@@ -90,30 +90,29 @@ export function FriendSettleSheet({ friend, balance, open, onClose, onSettledAll
               </span>
               <span className={styles.sub}>{sourceDirection(source, name)}</span>
             </span>
-            <span className={styles.side}>
-              <Money
-                value={Math.abs(source.amount)}
-                currency={source.currency}
-                trimZeros
-                strong
-                tone={source.amount > 0 ? 'positive' : source.amount < 0 ? 'negative' : 'default'}
-              />
-              {source.kind === 'group' ? (
-                <Button
-                  size="sm"
-                  variant="tonal"
-                  iconEnd={<ChevronRight />}
-                  onClick={() => navigate(settleUpPath(source.group.id))}
-                  aria-label={`Settle up in ${source.group.name}`}
-                >
-                  Settle in group
-                </Button>
-              ) : (
-                <Button size="sm" variant="tonal" onClick={() => markSplits(source)}>
-                  Mark as settled
-                </Button>
-              )}
-            </span>
+            <Money
+              value={Math.abs(source.amount)}
+              currency={source.currency}
+              trimZeros
+              strong
+              tone={source.amount > 0 ? 'positive' : source.amount < 0 ? 'negative' : 'default'}
+            />
+            {source.kind === 'group' ? (
+              <Button
+                size="sm"
+                variant="tonal"
+                iconEnd={<ChevronRight />}
+                className={styles.action}
+                onClick={() => navigate(settleUpPath(source.group.id))}
+                aria-label={`Settle up in ${source.group.name}`}
+              >
+                Settle in group
+              </Button>
+            ) : (
+              <Button size="sm" variant="tonal" className={styles.action} onClick={() => markSplits(source)}>
+                Mark as settled
+              </Button>
+            )}
           </li>
         ))}
       </ul>

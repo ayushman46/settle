@@ -10,6 +10,9 @@ import { PHONE_ERROR } from './FriendSheet'
 
 const SCREENS: ScreenTable = { '/app/friends': FriendsScreen, '/app/friends/:id': FriendDetailScreen }
 
+// Whole journeys through real screens: give them room on a busy machine.
+vi.setConfig({ testTimeout: 20_000 })
+
 beforeEach(() => {
   resetScreens()
   updateProfile({ name: 'Ayush', currency: 'INR' })

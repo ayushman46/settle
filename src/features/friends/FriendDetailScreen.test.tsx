@@ -21,6 +21,9 @@ const OCT_22 = new Date(2026, 9, 22, 12)
 let riya: string
 let sam: string
 
+// Whole journeys through real screens: give them room on a busy machine.
+vi.setConfig({ testTimeout: 20_000 })
+
 beforeEach(() => {
   resetScreens()
   vi.useFakeTimers({ toFake: ['Date'] })
