@@ -33,6 +33,7 @@ import { setSplitPrefill } from '../../data'
 import { FREE_AI_PER_DAY } from '../../domain/types'
 import { today } from '../../engine/dates'
 import { consumeAiQuota, useAiQuota, usePro } from '../../pro'
+import { openPaywall } from '../pro/paywall'
 import { cx } from '../../lib/cx'
 import { haptic } from '../../lib/haptics'
 import { lastInputModality } from '../../components/overlayStack'
@@ -622,7 +623,7 @@ export function ScanScreen() {
             title="That's today's free AI splits"
             actions={
               <div className={styles.problemActions}>
-                <Button size="sm" variant="accent" onClick={() => navigate('/app/pro')}>
+                <Button size="sm" variant="accent" onClick={() => openPaywall('unlimited_ai')}>
                   Get unlimited with Pro
                 </Button>
               </div>

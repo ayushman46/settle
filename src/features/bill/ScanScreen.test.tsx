@@ -7,6 +7,7 @@ import { navigate } from '../../app/router'
 import { peekSplitPrefill, resetDataForTests } from '../../data'
 import { aiUsedToday, AI_USAGE_KEY, localDay, resetQuotaForTests } from '../../pro/quota'
 import { resetProModulesForTests } from '../../pro/testKit'
+import { paywallState, resetPaywallForTests } from '../pro/paywall'
 import { readEntry, resetFlowHistory } from '../../state/backStack'
 import { resetHealthForTests } from '../../state/health'
 import { getPhoto, setPhoto } from '../../state/photo'
@@ -112,6 +113,7 @@ beforeEach(() => {
   resetDataForTests()
   resetQuotaForTests()
   resetProModulesForTests()
+  resetPaywallForTests()
   resetFlowHistory()
   window.history.replaceState(null, '')
   resetHealthForTests()
@@ -741,7 +743,6 @@ describe('ScanScreen — v3', () => {
     mockApi()
     window.localStorage.setItem(AI_USAGE_KEY, JSON.stringify({ day: localDay(), used: 3 }))
     resetQuotaForTests()
-    openFromHome()
     const { user } = renderScreen(<ScanScreen />, createSession('INR'))
     await healthLoaded()
 
@@ -751,7 +752,7 @@ describe('ScanScreen — v3', () => {
     expect(screen.getByRole('button', { name: 'Type the items in' })).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Get unlimited with Pro' }))
-    expect(window.location.pathname).toBe('/app/pro')
+    expect(paywallState()).toMatchObject({ open: true, request: { feature: 'unlimited_ai' } })
   })
 })
 
