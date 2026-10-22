@@ -1,0 +1,69 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+  min-width: 0;
+}
+
+/* Who pays → who's paid, like a payments app's transfer header. */
+.faces {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: var(--s-3);
+  padding-top: var(--s-2);
+}
+
+.arrow {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  margin-top: 12px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent-edge);
+  color: var(--on-accent);
+  animation: nudge 1.6s var(--ease-in-out) 0.4s 2;
+}
+
+.arrow svg {
+  width: 18px;
+  height: 18px;
+}
+
+.note {
+  margin-top: calc(var(--s-2) * -1);
+  font: var(--text-caption);
+  color: var(--ink-2);
+  text-align: center;
+}
+
+.noteShown {
+  color: var(--warning-ink);
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2) var(--s-3);
+  min-width: 0;
+}
+
+.rowLabel {
+  font: var(--text-label);
+  color: var(--ink-2);
+}
+
+.methods {
+  flex: 1 1 15rem;
+  max-width: 20rem;
+}
+
+@keyframes nudge {
+  50% {
+    transform: translateX(3px);
+  }
+}

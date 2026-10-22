@@ -1,0 +1,78 @@
+.content {
+  gap: var(--s-6);
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  min-width: 0;
+}
+
+/* Payments stack with hairlines between them, each easing in after the last. */
+.rows > * + * {
+  border-top: 1px solid var(--line);
+}
+
+.rows > * {
+  animation: rise var(--dur-4) var(--ease-out) backwards;
+}
+
+.rows > :nth-child(2) {
+  animation-delay: 50ms;
+}
+
+.rows > :nth-child(n + 3) {
+  animation-delay: 100ms;
+}
+
+.hint {
+  font: var(--text-caption);
+  color: var(--ink-2);
+  text-align: center;
+}
+
+/* ---------- Everyone's square ---------- */
+
+.square {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-8) var(--s-4);
+  border-radius: var(--radius-card);
+  background:
+    radial-gradient(120% 80% at 50% 0%, var(--accent-soft), transparent 70%),
+    var(--surface);
+  box-shadow: var(--shadow-card);
+  text-align: center;
+  animation: rise var(--dur-4) var(--ease-out) backwards;
+}
+
+.squareTitle {
+  font: var(--text-headline);
+  color: var(--ink);
+}
+
+.squareText {
+  max-width: 28ch;
+  font: var(--text-body);
+  color: var(--ink-2);
+}
+
+.squareActions {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--s-2);
+  width: 100%;
+  max-width: 320px;
+  margin-top: var(--s-2);
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(var(--s-2));
+  }
+}

@@ -1,0 +1,184 @@
+/* Room under the last row for the floating "New group" button. */
+.content {
+  padding-bottom: calc(var(--fab-size) + var(--s-12));
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  min-width: 0;
+}
+
+/* ---------- Across your groups ---------- */
+
+.across {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  padding: var(--s-4) var(--s-5);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+  animation: rise var(--dur-4) var(--ease-out) backwards;
+}
+
+.acrossTitle {
+  font: var(--text-caption);
+  font-weight: 550;
+  color: var(--ink-2);
+}
+
+.totals {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s-3);
+  margin: 0;
+}
+
+.total {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+/* A hairline between the two halves. */
+.total + .total {
+  padding-inline-start: var(--s-3);
+  border-inline-start: 1px solid var(--line);
+}
+
+.total dt {
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
+.total dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.acrossMore {
+  font: var(--text-caption);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-2);
+}
+
+/* ---------- Rows ---------- */
+
+.row {
+  animation: rise var(--dur-4) var(--ease-out) backwards;
+}
+
+:global(li):nth-child(2) > .row {
+  animation-delay: 40ms;
+}
+
+:global(li):nth-child(3) > .row {
+  animation-delay: 80ms;
+}
+
+:global(li):nth-child(n + 4) > .row {
+  animation-delay: 120ms;
+}
+
+.side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  text-align: end;
+}
+
+.caption {
+  font: var(--text-caption);
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+
+.positive {
+  color: var(--positive);
+}
+
+.negative {
+  color: var(--negative);
+}
+
+.muted {
+  color: var(--ink-2);
+}
+
+/* ---------- Archived ---------- */
+
+.fold {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  gap: var(--s-2);
+  min-height: var(--tap);
+  padding-inline: var(--s-3);
+  border-radius: var(--r-pill);
+  background: var(--surface-2);
+  color: var(--ink);
+  font: var(--text-label);
+  transition: transform var(--dur-2) var(--ease-spring);
+}
+
+.fold:active {
+  transform: scale(0.97);
+  transition-duration: var(--dur-1);
+}
+
+.fold svg {
+  width: 18px;
+  height: 18px;
+}
+
+.foldChevron {
+  transition: transform var(--dur-2) var(--ease-out);
+}
+
+.open {
+  transform: rotate(180deg);
+}
+
+/* Archived groups read as put away. */
+.archived {
+  opacity: 0.86;
+  animation: rise var(--dur-3) var(--ease-out) backwards;
+}
+
+.allArchived {
+  font: var(--text-body);
+  color: var(--ink-2);
+}
+
+/* ---------- Empty ---------- */
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.quick {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--s-2);
+  max-width: 360px;
+}
+
+.quickEmoji {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(var(--s-2));
+  }
+}
