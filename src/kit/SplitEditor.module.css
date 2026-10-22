@@ -5,6 +5,12 @@
   min-width: 0;
 }
 
+/* Mode labels stay whole words on 320px phones (four columns leave ~60px each). */
+.modes button {
+  padding-inline: var(--s-1);
+  white-space: nowrap;
+}
+
 /* ---------- People rows ---------- */
 
 .rows {

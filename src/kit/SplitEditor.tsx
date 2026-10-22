@@ -266,7 +266,7 @@ export function SplitEditor({
 
   return (
     <div className={cx(styles.editor, className)}>
-      <SegmentedControl options={MODE_OPTIONS} value={mode} onChange={switchMode} ariaLabel="How to split" />
+      <SegmentedControl className={styles.modes} options={MODE_OPTIONS} value={mode} onChange={switchMode} ariaLabel="How to split" />
 
       {people.length > 0 ? (
         <ul className={styles.rows} aria-label="Everyone's share" data-split-rows="">
