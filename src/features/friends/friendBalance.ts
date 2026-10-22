@@ -43,6 +43,14 @@ export interface FriendBalance {
   totals: Array<{ currency: string; amount: Minor }>
 }
 
+/** `first` before everything else, then A–Z. */
+function byCurrency(a: string, b: string, first: string): number {
+  if (a === b) return 0
+  if (a === first) return -1
+  if (b === first) return 1
+  return a < b ? -1 : 1
+}
+
 function newestFirst(a: Expense, b: Expense): number {
   if (a.date !== b.date) return a.date < b.date ? 1 : -1
   return b.createdAt - a.createdAt
@@ -82,7 +90,7 @@ export function friendBalance(
   }
 
   const sources: FriendSource[] = []
-  for (const [code, slot] of splits) {
+  for (const [code, slot] of [...splits.entries()].sort(([a], [b]) => byCurrency(a, b, currency))) {
     if (slot.amount === 0 && slot.marks.length === 0) continue
     sources.push({
       kind: 'splits',
@@ -103,13 +111,15 @@ export function friendBalance(
     }
     if (amount !== 0) sources.push({ kind: 'group', key: `group:${group.id}`, group, currency: group.currency, amount })
   }
+  // Money in the asked-for currency first; within a currency, splits outside groups, then groups.
+  sources.sort((a, b) => byCurrency(a.currency, b.currency, currency) || (a.kind === b.kind ? 0 : a.kind === 'splits' ? -1 : 1))
 
-  const byCurrency = new Map<string, Minor>()
-  for (const s of sources) byCurrency.set(s.currency, (byCurrency.get(s.currency) ?? 0) + s.amount)
-  const totals = [...byCurrency.entries()]
+  const nets = new Map<string, Minor>()
+  for (const s of sources) nets.set(s.currency, (nets.get(s.currency) ?? 0) + s.amount)
+  const totals = [...nets.entries()]
     .filter(([, amount]) => amount !== 0)
     .map(([code, amount]) => ({ currency: code, amount }))
-    .sort((a, b) => (a.currency === currency ? -1 : b.currency === currency ? 1 : a.currency < b.currency ? -1 : 1))
+    .sort((a, b) => byCurrency(a.currency, b.currency, currency))
   return { sources, totals }
 }
 
@@ -209,4 +219,26 @@ export function removalBlockers(
     splits,
     recurring: recurring.filter((r) => r.active && (r.payerId === friendId || r.participants.some((p) => p.friendId === friendId))),
   }
+}
+
+/** Why someone can't be removed yet, and what to do about it. */
+export function blockedText(name: string, blockers: RemovalBlockers | null): string {
+  const money: string[] = []
+  if (blockers && blockers.groups.length > 0) money.push(`in ${blockers.groups.map((g) => g.name).join(', ')}`)
+  if (blockers && blockers.splits > 0) money.push(`on ${blockers.splits} ${blockers.splits === 1 ? 'split' : 'splits'} outside groups`)
+  const recurring = blockers?.recurring ?? []
+  const parts: string[] = []
+  if (money.length > 0) parts.push(`${name} still has money to settle ${money.join(' and ')}.`)
+  if (recurring.length > 0) {
+    const titles = recurring.map((r) => `“${r.title}”`).join(', ')
+    parts.push(`${name} is in your recurring ${recurring.length === 1 ? 'split' : 'splits'} ${titles}.`)
+  }
+  if (parts.length === 0) parts.push(`${name} still has money to settle.`)
+  parts.push(money.length > 0 || recurring.length === 0 ? 'Settle up first, then they can go.' : 'Take them out of it first, then they can go.')
+  return parts.join(' ')
+}
+
+/** "Riya pays you", "You pay Riya" — for one source of money between you. */
+export function sourceDirection(source: FriendSource, name: string): string {
+  return source.amount > 0 ? `${name} pays you` : source.amount < 0 ? `You pay ${name}` : 'Evens out'
 }

@@ -12,9 +12,9 @@ import {
   setPaidBack,
 } from '../../data'
 import { draft, everyone } from '../../data/testKit'
-import { ME_ID } from '../../domain/types'
+import { ME_ID, type RecurringTemplate } from '../../domain/types'
 import { overallSummary } from '../../engine/balances'
-import { friendBalance, netIn, removalBlockers, settleWithFriend, sourcesTitle } from './friendBalance'
+import { blockedText, friendBalance, netIn, removalBlockers, settleWithFriend, sourceDirection, sourcesTitle } from './friendBalance'
 
 let riya: string
 let sam: string
@@ -80,6 +80,16 @@ describe('friendBalance', () => {
     expect(balanceOf(riya, 'USD').totals.map((t) => t.currency)).toEqual(['USD', 'EUR', 'INR'])
   })
 
+  it('orders sources by currency, splits before groups', () => {
+    const nyc = createGroup({ name: 'NYC', emoji: '🗽', kind: 'trip', currency: 'USD', memberIds: [ME_ID, riya] })
+    const goa = createGroup({ name: 'Goa', emoji: '🏖️', kind: 'trip', currency: 'INR', memberIds: [ME_ID, riya] })
+    saveExpense(draft({ total: 4000, currency: 'USD', groupId: nyc.id, with: [riya] }))
+    saveExpense(draft({ total: 6000, currency: 'USD', with: [riya] }))
+    saveExpense(draft({ total: 50000, groupId: goa.id, with: [riya] }))
+    saveExpense(draft({ total: 2000, with: [riya] }))
+    expect(balanceOf(riya).sources.map((s) => s.key)).toEqual(['splits:INR', `group:${goa.id}`, 'splits:USD', `group:${nyc.id}`])
+  })
+
   it('never lists the owner against themselves', () => {
     saveExpense(draft({ total: 2000, with: [riya] }))
     expect(balanceOf(ME_ID)).toEqual({ sources: [], totals: [] })
@@ -133,6 +143,52 @@ describe('sourcesTitle', () => {
     expect(sourcesTitle(balanceOf(sam).sources)).toBe('Movie night')
     saveExpense(draft({ title: 'Dinner', total: 10000, with: [riya] }))
     expect(sourcesTitle(balanceOf(riya).sources)).toBe('our splits')
+  })
+})
+
+describe('sourceDirection', () => {
+  it('says who pays whom', () => {
+    const base = { kind: 'splits' as const, key: 'splits:INR', currency: 'INR', count: 1, titles: [], marks: [] }
+    expect(sourceDirection({ ...base, amount: 100 }, 'Riya')).toBe('Riya pays you')
+    expect(sourceDirection({ ...base, amount: -100 }, 'Riya')).toBe('You pay Riya')
+    expect(sourceDirection({ ...base, amount: 0 }, 'Riya')).toBe('Evens out')
+  })
+})
+
+describe('blockedText', () => {
+  const group = (name: string) => createGroup({ name, emoji: '👥', kind: 'other', currency: 'INR', memberIds: [ME_ID] })
+
+  const template = (title: string): RecurringTemplate => ({
+    id: title,
+    title,
+    category: 'rent',
+    currency: 'INR',
+    total: 100,
+    payerId: ME_ID,
+    mode: 'equal',
+    participants: [],
+    dayOfMonth: 1,
+    groupId: null,
+    lastCreatedPeriod: null,
+    active: true,
+    createdAt: 0,
+  })
+
+  it('names the money and the recurring splits, and what to do', () => {
+    const rent = template('Rent')
+    expect(blockedText('Riya', { groups: [group('Goa')], splits: 2, recurring: [] })).toBe(
+      'Riya still has money to settle in Goa and on 2 splits outside groups. Settle up first, then they can go.',
+    )
+    expect(blockedText('Riya', { groups: [], splits: 1, recurring: [rent] })).toBe(
+      'Riya still has money to settle on 1 split outside groups. Riya is in your recurring split “Rent”. Settle up first, then they can go.',
+    )
+    expect(blockedText('Riya', { groups: [], splits: 0, recurring: [rent, template('Wi-Fi')] })).toBe(
+      'Riya is in your recurring splits “Rent”, “Wi-Fi”. Take them out of it first, then they can go.',
+    )
+  })
+
+  it('falls back to a general reason', () => {
+    expect(blockedText('Riya', null)).toBe('Riya still has money to settle. Settle up first, then they can go.')
   })
 })
 
