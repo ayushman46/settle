@@ -1,0 +1,55 @@
+/* A pill on the canvas, like the home screen's "Just say it" — lighter, for filtering. */
+.search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-height: var(--s-12);
+  padding-inline: var(--s-4) var(--s-1);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+  transition: box-shadow var(--dur-2) var(--ease-out);
+}
+
+.search:focus-within {
+  box-shadow:
+    var(--shadow-card),
+    inset 0 0 0 2px var(--focus-ring);
+}
+
+.icon {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  color: var(--ink-2);
+}
+
+.input {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: var(--s-12);
+  padding: 0 var(--s-2) 0 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  /* 16px: no zoom on focus in iOS Safari. */
+  font: var(--text-body);
+  outline: none;
+  appearance: none;
+}
+
+.input::placeholder {
+  color: var(--ink-placeholder);
+  opacity: 1;
+}
+
+/* Our own ✕ replaces the browser's (which differs per engine). */
+.input::-webkit-search-cancel-button,
+.input::-webkit-search-decoration {
+  appearance: none;
+}
+
+.clear {
+  flex: none;
+}

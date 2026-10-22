@@ -1,0 +1,33 @@
+/* Edge to edge: chips glide under the screen's edges instead of stopping at the gutter. */
+.filters {
+  position: relative;
+  display: flex;
+  gap: var(--s-2);
+  min-width: 0;
+  margin-inline: calc(var(--gutter) * -1);
+  /* Room for the 44px touch targets and the focus ring, inside the scroll box. */
+  padding: var(--s-1) var(--gutter);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-padding-inline: var(--gutter);
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.filters::-webkit-scrollbar {
+  display: none;
+}
+
+/* "To collect 3": a small ink bubble that reads on the plain and the selected (accent) chip. */
+.count {
+  display: inline-grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  padding-inline: 6px;
+  border-radius: var(--radius-pill);
+  background: var(--primary);
+  color: var(--on-primary);
+  font: var(--text-micro);
+  font-variant-numeric: tabular-nums;
+}
