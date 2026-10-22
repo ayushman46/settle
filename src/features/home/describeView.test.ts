@@ -42,10 +42,10 @@ describe('describeView', () => {
       addsUp: true,
     })
     expect(view.people).toEqual([
-      { id: ME_ID, name: 'You', color: 0, isMe: true, isNew: false, share: 80000, detail: null },
-      { id: 'riya', name: 'Riya', color: 2, isMe: false, isNew: false, share: 80000, detail: null },
+      { id: ME_ID, name: 'You', avatarName: 'Ayush', color: 0, isMe: true, isNew: false, share: 80000, detail: null },
+      { id: 'riya', name: 'Riya', avatarName: 'Riya', color: 2, isMe: false, isNew: false, share: 80000, detail: null },
       // "Sam" is the one friend it can mean.
-      { id: 'sam', name: 'Sam Kapoor', color: 3, isMe: false, isNew: false, share: 80000, detail: null },
+      { id: 'sam', name: 'Sam Kapoor', avatarName: 'Sam Kapoor', color: 3, isMe: false, isNew: false, share: 80000, detail: null },
     ])
   })
 
@@ -59,7 +59,7 @@ describe('describeView', () => {
   it('marks new people without adding them anywhere', () => {
     const view = describeView(draft({ people: [{ name: 'Me', value: null }, { name: 'Neha', value: null }] }), CTX)
     const neha = view.people[1]
-    expect(neha).toMatchObject({ name: 'Neha', isNew: true, share: 120000 })
+    expect(neha).toMatchObject({ name: 'Neha', avatarName: 'Neha', isNew: true, share: 120000 })
     expect(neha?.id).not.toBe('neha')
     expect(FRIENDS).toHaveLength(3)
   })

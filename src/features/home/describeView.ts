@@ -17,7 +17,10 @@ const NEW_PREFIX = 'new-person:'
 export interface DescribePerson {
   /** A friend id, or a stand-in for someone new. */
   id: string
+  /** As shown: "You" for the owner. */
   name: string
+  /** The name their avatar's initials come from (the owner's own name, not "You"). */
+  avatarName: string
   color: number
   isMe: boolean
   /** Not in your people yet — added when the draft is used. */
@@ -128,6 +131,7 @@ export function describeView(d: DescribedSplit, ctx: DescribeViewContext): Descr
   const people: DescribePerson[] = participants.map(({ friendId, input }) => ({
     id: friendId,
     name: personName(friendId, ctx.meId, byId),
+    avatarName: byId.get(friendId)?.name ?? personName(friendId, ctx.meId, byId),
     color: byId.get(friendId)?.color ?? 0,
     isMe: friendId === ctx.meId,
     isNew: friendId.startsWith(NEW_PREFIX),

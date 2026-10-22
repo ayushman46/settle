@@ -321,7 +321,7 @@ function DraftCard({ view }: { view: DescribeView }) {
         <ul role="list" className={styles.people} aria-label="Who’s in">
           {view.people.map((person) => (
             <li key={person.id} className={styles.person}>
-              <Avatar name={person.isMe ? 'You' : person.name} color={person.color} size="sm" />
+              <Avatar name={person.avatarName} color={person.color} size="sm" />
               <span className={styles.personName}>
                 {person.name}
                 {person.isNew && (
