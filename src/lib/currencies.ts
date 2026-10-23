@@ -123,18 +123,28 @@ export function isKnownCurrency(code: string): boolean {
   }
 }
 
-const displayNames: Intl.DisplayNames | null = (() => {
-  try {
-    return new Intl.DisplayNames(undefined, { type: 'currency' })
-  } catch {
-    return null
+/**
+ * Created on first use, not at import: building it loads the browser's currency-name data
+ * (~90 ms of main thread on a budget phone), and most starts never show a currency name.
+ * `undefined` = not tried yet, `null` = this browser can't.
+ */
+let displayNames: Intl.DisplayNames | null | undefined
+
+function currencyNames(): Intl.DisplayNames | null {
+  if (displayNames === undefined) {
+    try {
+      displayNames = new Intl.DisplayNames(undefined, { type: 'currency' })
+    } catch {
+      displayNames = null
+    }
   }
-})()
+  return displayNames
+}
 
 /** Human name for a currency ("Indian Rupee"), localised when the browser can. */
 export function currencyName(code: string): string {
   try {
-    const name = displayNames?.of(code)
+    const name = currencyNames()?.of(code)
     if (name && name !== code) return name
   } catch {
     // fall through

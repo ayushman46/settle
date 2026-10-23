@@ -70,3 +70,30 @@ describe('currencyName', () => {
     expect(currencyName('ZZZ')).toBe('ZZZ')
   })
 })
+
+describe('currency names load lazily', () => {
+  it('builds Intl.DisplayNames on the first name asked for, once, not at import', async () => {
+    vi.resetModules()
+    const spy = vi.spyOn(Intl, 'DisplayNames')
+    const fresh = await import('./currencies')
+    expect(fresh.isKnownCurrency('INR')).toBe(true)
+    expect(fresh.defaultCurrency()).toMatch(/^[A-Z]{3}$/)
+    expect(spy).not.toHaveBeenCalled()
+    expect(fresh.currencyName('INR')).toMatch(/rupee/i)
+    expect(fresh.currencyName('EUR')).toMatch(/euro/i)
+    expect(spy).toHaveBeenCalledTimes(1)
+  })
+
+  it('falls back to the built-in names when the browser has no DisplayNames', async () => {
+    vi.resetModules()
+    const spy = vi.spyOn(Intl, 'DisplayNames').mockImplementation(() => {
+      throw new RangeError('unsupported')
+    })
+    const fresh = await import('./currencies')
+    expect(fresh.currencyName('INR')).toBe('Indian Rupee')
+    expect(fresh.currencyName('THB')).toBe('Thai Baht')
+    expect(fresh.currencyName('ZZZ')).toBe('ZZZ')
+    // A browser that can't build it isn't asked again on every call.
+    expect(spy).toHaveBeenCalledTimes(1)
+  })
+})
