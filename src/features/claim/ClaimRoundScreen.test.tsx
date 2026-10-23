@@ -1,4 +1,4 @@
-import { cleanup, render, screen, within } from '@testing-library/react'
+import { cleanup, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { resetNavForTests, useLocation } from '../../app/router'
@@ -79,6 +79,22 @@ afterEach(() => {
 })
 
 describe('ClaimRoundScreen', () => {
+  it('arriving to share without a UPI ID asks for it, and the sheet stays open while the address is tidied', async () => {
+    updateProfile({ upiId: null })
+    window.history.replaceState(null, '', `/app/claims/${round.id}?share=1`)
+    resetNavForTests()
+    const user = userEvent.setup()
+    render(<Harness />)
+    await waitFor(() => expect(window.location.search).toBe(''))
+    // The replace has settled (it closes sheets open before it): the sheet is still there.
+    await new Promise((resolve) => setTimeout(resolve, 100))
+    const sheet = await screen.findByRole('dialog', { name: 'Add your UPI ID' })
+    await user.type(within(sheet).getByRole('textbox', { name: 'Your UPI ID' }), 'ayush@okicici')
+    await user.click(within(sheet).getByRole('button', { name: 'Save and continue' }))
+    expect(profileStore.get().upiId).toBe('ayush@okicici')
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Add your UPI ID' })).not.toBeInTheDocument())
+  })
+
   it('shows the share card and everyone waiting', async () => {
     open()
     expect(screen.getByRole('heading', { level: 1, name: 'Who had what?' })).toBeInTheDocument()

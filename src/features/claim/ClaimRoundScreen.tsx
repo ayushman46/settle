@@ -83,7 +83,8 @@ export function ClaimRoundScreen() {
 
   const [linkUrl, setLinkUrl] = useState<string | null>(null)
   const wantsShare = search.get('share') === '1'
-  // Arriving from "Let everyone pick their own" (`?share=1`) without a UPI ID: ask for it first.
+  // Arriving from "Let everyone pick their own" (`?share=1`) without a UPI ID: ask for it first —
+  // once the address has lost `?share=1` (below), since a navigation closes any sheet already open.
   const [upiOpen, setUpiOpen] = useState(() => wantsShare && !!expense && expense.currency === 'INR' && expense.payerId === ME_ID && !profile.upiId)
   const [pasteOpen, setPasteOpen] = useState(false)
   const [ownOpen, setOwnOpen] = useState(false)
@@ -428,7 +429,7 @@ export function ClaimRoundScreen() {
         />
       </BottomSheet>
 
-      <BottomSheet open={upiOpen} onClose={() => setUpiOpen(false)} title={t('claim.upi.title')} description={t('claim.upi.text')}>
+      <BottomSheet open={upiOpen && !wantsShare} onClose={() => setUpiOpen(false)} title={t('claim.upi.title')} description={t('claim.upi.text')}>
         <UpiIdForm
           ownerId={ME_ID}
           ownerName={organiser}
