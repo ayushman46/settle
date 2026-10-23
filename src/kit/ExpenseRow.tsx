@@ -2,6 +2,7 @@ import { Check, Repeat } from 'lucide-react'
 import { Badge, CategoryIcon, ListRow, Money } from '../components'
 import { useFriend, useGroup } from '../data'
 import type { Expense } from '../domain/types'
+import { useLang } from '../i18n'
 import { cx } from '../lib/cx'
 import { fullDateLabel, relativeDateLabel } from './dateLabel'
 import { expenseRowView, oneToOneOther } from './expenseLabels'
@@ -24,6 +25,7 @@ export interface ExpenseRowProps {
  * for you (+ you're owed, − you owe) with a "Settled" / "2 pending" pill. Put rows in a `List`.
  */
 export function ExpenseRow({ expense, onClick, showDate = false, hideGroup = false, className }: ExpenseRowProps) {
+  useLang()
   const payer = useFriend(expense.payerId)
   const group = useGroup(expense.groupId)
   // The other side of a 1:1 entry ("You lent Riya"), subscribed so a rename reaches the row.

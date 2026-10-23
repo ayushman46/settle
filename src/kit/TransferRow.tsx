@@ -3,6 +3,7 @@ import { ArrowRight, BellRing, Check, QrCode } from 'lucide-react'
 import { Button, Money } from '../components'
 import { useFriendsById } from '../data'
 import { ME_ID } from '../domain/types'
+import { t, useT } from '../i18n'
 import type { Transfer } from '../engine/balances'
 import { cx } from '../lib/cx'
 import { formatMoney } from '../lib/money'
@@ -25,16 +26,16 @@ export interface TransferRowProps {
 
 /** "Riya pays you", "You pay Riya", "Riya pays Sam". */
 function transferSentence(fromName: string, toName: string, fromId: string, toId: string): string {
-  if (fromId === ME_ID) return `You pay ${toName}`
-  if (toId === ME_ID) return `${fromName} pays you`
-  return `${fromName} pays ${toName}`
+  if (fromId === ME_ID) return t('kit.transfer.youPay', { name: toName })
+  if (toId === ME_ID) return t('kit.transfer.paysYou', { name: fromName })
+  return t('kit.transfer.pays', { from: fromName, to: toName })
 }
 
 /** The small line under the names: what this payment means, or where your money goes. */
 function transferDetail(direction: 'in' | 'out' | 'between', toName: string, toUpi: string | null): string {
-  if (direction === 'in') return 'Owes you'
-  if (direction === 'between') return `Owes ${toName}`
-  return toUpi ? `To ${toUpi}` : 'No UPI ID saved'
+  if (direction === 'in') return t('kit.transfer.owesYou')
+  if (direction === 'between') return t('kit.transfer.owes', { name: toName })
+  return toUpi ? t('kit.transfer.toUpi', { upi: toUpi }) : t('kit.transfer.noUpi')
 }
 
 /**
@@ -43,6 +44,7 @@ function transferDetail(direction: 'in' | 'out' | 'between', toName: string, toU
  * handler is given.
  */
 export function TransferRow({ transfer, currency, onPay, onRecord, onRemind, className }: TransferRowProps) {
+  useT()
   const sentenceId = useId()
   const friendsById = useFriendsById()
   const { fromId, toId, amount } = transfer
@@ -59,8 +61,9 @@ export function TransferRow({ transfer, currency, onPay, onRecord, onRemind, cla
   return (
     <div role="group" aria-labelledby={sentenceId} className={cx(styles.row, className)} data-direction={direction}>
       <p id={sentenceId} className="visually-hidden">
-        {sentence} {amountText}
-        {direction === 'out' && to?.upiId ? `, to ${to.upiId}` : ''}
+        {direction === 'out' && to?.upiId
+          ? t('kit.transfer.spoken.upi', { sentence, amount: amountText, upi: to.upiId })
+          : t('kit.transfer.spoken', { sentence, amount: amountText })}
       </p>
       <div className={styles.main} aria-hidden="true">
         <span className={styles.faces}>
@@ -94,9 +97,9 @@ export function TransferRow({ transfer, currency, onPay, onRecord, onRemind, cla
               variant="accent"
               iconStart={<QrCode />}
               onClick={onPay}
-              aria-label={`Pay ${friendObjectLabel(toId, to)} ${amountText} via UPI`}
+              aria-label={t('kit.transfer.pay.aria', { name: friendObjectLabel(toId, to), amount: amountText })}
             >
-              Pay via UPI
+              {t('kit.transfer.pay.cta')}
             </Button>
           )}
           {onRemind && (
@@ -105,9 +108,9 @@ export function TransferRow({ transfer, currency, onPay, onRecord, onRemind, cla
               variant="tonal"
               iconStart={<BellRing />}
               onClick={onRemind}
-              aria-label={`Remind ${friendObjectLabel(fromId, from)} about ${amountText}`}
+              aria-label={t('kit.transfer.remind.aria', { name: friendObjectLabel(fromId, from), amount: amountText })}
             >
-              Remind
+              {t('kit.transfer.remind.cta')}
             </Button>
           )}
           {onRecord && (
@@ -117,9 +120,9 @@ export function TransferRow({ transfer, currency, onPay, onRecord, onRemind, cla
               // No icon: the label has to fit half a 360px row.
               iconStart={onPay || onRemind ? undefined : <Check />}
               onClick={onRecord}
-              aria-label={`Record ${amountText} from ${friendObjectLabel(fromId, from)} to ${friendObjectLabel(toId, to)}`}
+              aria-label={t('kit.transfer.record.aria', { amount: amountText, from: friendObjectLabel(fromId, from), to: friendObjectLabel(toId, to) })}
             >
-              Record payment
+              {t('kit.transfer.record.cta')}
             </Button>
           )}
         </div>

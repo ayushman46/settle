@@ -1,6 +1,7 @@
 /** Reading an `OverallSummary` in words: what the balance card (and anything summing up balances) says. */
 import { describePeople } from '../components/helpers'
 import type { Minor } from '../domain/types'
+import { t } from '../i18n'
 import type { OverallSummary } from '../engine/balances'
 import { formatMoney } from '../lib/money'
 
@@ -60,10 +61,10 @@ export function balanceHeadline(summary: OverallSummary): BalanceHeadline {
   const net = owedToMe - iOwe
   const mixed = owedToMe > 0 && iOwe > 0
   const base = { currency, owedToMe, iOwe, mixed }
-  if (owedToMe === 0 && iOwe === 0) return { ...base, mood: 'settled', label: 'All settled up', amount: 0 }
-  if (net === 0) return { ...base, mood: 'even', label: "Overall, you're even", amount: 0 }
-  if (net > 0) return { ...base, mood: 'owed', label: mixed ? "Overall, you're owed" : "You're owed", amount: net }
-  return { ...base, mood: 'owe', label: mixed ? 'Overall, you owe' : 'You owe', amount: -net }
+  if (owedToMe === 0 && iOwe === 0) return { ...base, mood: 'settled', label: t('kit.balance.settled'), amount: 0 }
+  if (net === 0) return { ...base, mood: 'even', label: t('kit.balance.even'), amount: 0 }
+  if (net > 0) return { ...base, mood: 'owed', label: mixed ? t('kit.balance.owed.mixed') : t('kit.balance.owed'), amount: net }
+  return { ...base, mood: 'owe', label: mixed ? t('kit.balance.owe.mixed') : t('kit.balance.owe'), amount: -net }
 }
 
 /**
@@ -73,9 +74,9 @@ export function balanceHeadline(summary: OverallSummary): BalanceHeadline {
 export function peopleLine(top: ReadonlyArray<{ amount: Minor }>, names: readonly string[]): string | null {
   if (top.length === 0 || names.length === 0) return null
   const list = describePeople(names, 2)
-  if (top.every((t) => t.amount > 0)) return `${list} ${names.length === 1 ? 'owes' : 'owe'} you`
-  if (top.every((t) => t.amount < 0)) return `You owe ${list}`
-  return `With ${list}`
+  if (top.every((b) => b.amount > 0)) return t('kit.balance.people.oweYou', { names: list, count: names.length })
+  if (top.every((b) => b.amount < 0)) return t('kit.balance.people.youOwe', { names: list })
+  return t('kit.balance.people.mixed', { names: list })
 }
 
 /**
@@ -88,10 +89,10 @@ export function otherCurrenciesLine(summary: OverallSummary, shown: string = sum
     ...Object.entries(summary.otherCurrencies),
   ]
   const parts: string[] = []
-  for (const [code, t] of totals) {
+  for (const [code, total] of totals) {
     if (code === shown) continue
-    if (t.owedToMe > 0) parts.push(`${formatMoney(t.owedToMe, code, { trimZeros: true })} owed to you`)
-    if (t.iOwe > 0) parts.push(`${formatMoney(t.iOwe, code, { trimZeros: true })} you owe`)
+    if (total.owedToMe > 0) parts.push(t('kit.balance.other.owedToYou', { amount: formatMoney(total.owedToMe, code, { trimZeros: true }) }))
+    if (total.iOwe > 0) parts.push(t('kit.balance.other.youOwe', { amount: formatMoney(total.iOwe, code, { trimZeros: true }) }))
   }
-  return parts.length > 0 ? `Also ${parts.join(' · ')}` : null
+  return parts.length > 0 ? t('kit.balance.other.line', { parts: parts.join(' · ') }) : null
 }

@@ -2,9 +2,10 @@ import { useLayoutEffect, useRef, type KeyboardEvent } from 'react'
 import { Sparkles } from 'lucide-react'
 import { CategoryIcon } from '../components'
 import { CATEGORY_IDS, type CategoryId } from '../domain/types'
-import { CATEGORY_META } from '../engine/categories'
+import { useT } from '../i18n'
 import { cx } from '../lib/cx'
 import { haptic } from '../lib/haptics'
+import { categoryLabel } from '../share/categories'
 import styles from './CategoryPicker.module.css'
 
 export interface CategoryPickerProps {
@@ -50,7 +51,8 @@ function revealChip(scroller: HTMLElement, chip: HTMLElement, smooth: boolean): 
  * Category chips in one swipeable row (radiogroup): the tinted icon tile plus its name. Arrow
  * keys move the choice, Home/End jump to the ends, and the chosen one is always scrolled into view.
  */
-export function CategoryPicker({ value, onChange, suggested = null, label = 'Category', bleed = true, id, className }: CategoryPickerProps) {
+export function CategoryPicker({ value, onChange, suggested = null, label, bleed = true, id, className }: CategoryPickerProps) {
+  const t = useT()
   const scrollerRef = useRef<HTMLDivElement>(null)
   const refs = useRef<Array<HTMLButtonElement | null>>([])
   const mounted = useRef(false)
@@ -104,7 +106,7 @@ export function CategoryPicker({ value, onChange, suggested = null, label = 'Cat
       ref={scrollerRef}
       id={id}
       role="radiogroup"
-      aria-label={label}
+      aria-label={label ?? t('kit.category.label')}
       className={cx(styles.scroller, bleed && styles.bleed, className)}
       onKeyDown={onKeyDown}
     >
@@ -126,11 +128,11 @@ export function CategoryPicker({ value, onChange, suggested = null, label = 'Cat
             onClick={() => select(i, false)}
           >
             <CategoryIcon category={category} size="sm" className={styles.icon} />
-            <span className={styles.label}>{CATEGORY_META[category].label}</span>
+            <span className={styles.label}>{categoryLabel(category)}</span>
             {hinted && (
               <span className={styles.spark}>
                 <Sparkles aria-hidden="true" strokeWidth={2.5} />
-                <span className="visually-hidden">, suggested</span>
+                <span className="visually-hidden">{t('kit.category.suggested')}</span>
               </span>
             )}
           </button>

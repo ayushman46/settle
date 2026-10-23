@@ -1,6 +1,7 @@
 import { Avatar, type AvatarSize } from '../components'
 import { useFriend } from '../data'
 import type { Friend } from '../domain/types'
+import { useLang } from '../i18n'
 import { cx } from '../lib/cx'
 import { friendLabel } from './friendName'
 import styles from './FriendAvatar.module.css'
@@ -37,6 +38,7 @@ export function FriendAvatar({
   decorative = true,
   className,
 }: FriendAvatarProps) {
+  useLang()
   const stored = useFriend(friend === undefined ? friendId : null)
   const record = friend === undefined ? stored : friend
   const id = record?.id ?? friendId ?? null

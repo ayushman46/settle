@@ -2,6 +2,7 @@ import { useState, type ReactNode } from 'react'
 import { ChevronDown } from 'lucide-react'
 import { AmountInput } from '../components'
 import type { Minor } from '../domain/types'
+import { useT } from '../i18n'
 import { cx } from '../lib/cx'
 import { cleanAmountText, currencySymbol, MAX_MINOR, parseMoneyInput, toInputString } from '../lib/money'
 import { amountInWords } from './amountWords'
@@ -47,13 +48,14 @@ export function AmountHero({
   onChange,
   onCurrencyClick,
   autoFocus = false,
-  label = 'Amount',
+  label,
   hint,
   error,
   disabled = false,
   id,
   className,
 }: AmountHeroProps) {
+  const t = useT()
   const [text, setText] = useState(() => textFor(value, currency))
   const [textCurrency, setTextCurrency] = useState(currency)
 
@@ -77,7 +79,7 @@ export function AmountHero({
           type="button"
           className={styles.currency}
           disabled={disabled}
-          aria-label={`Currency: ${currency}. Change`}
+          aria-label={t('kit.amount.currency.aria', { currency })}
           onClick={onCurrencyClick}
         >
           {symbol !== currency && (
@@ -92,7 +94,7 @@ export function AmountHero({
       <AmountInput
         id={id}
         size="hero"
-        label={label}
+        label={label ?? t('kit.amount.label')}
         currency={currency}
         value={text}
         placeholder="0"

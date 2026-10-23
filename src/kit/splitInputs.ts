@@ -3,6 +3,7 @@
  * cover and the previews behind "Split the rest equally". Money maths comes from the engine.
  */
 import type { Minor, Participant } from '../domain/types'
+import { t } from '../i18n'
 import {
   FULL_PERCENT_BPS,
   isValidTotal,
@@ -93,49 +94,49 @@ function clamp01(value: number): number {
 export function splitStatus({ total, currency, mode, participants, result }: SplitStatusInput): SplitStatus {
   const people = uniqueParticipants(participants)
   if (people.length === 0) {
-    return { tone: 'idle', message: 'Pick people to split with', detail: null, progress: null, canSplitRest: false }
+    return { tone: 'idle', message: t('kit.split.status.pickPeople'), detail: null, progress: null, canSplitRest: false }
   }
   if (!isValidTotal(total)) {
-    return { tone: 'idle', message: 'Enter the amount first', detail: null, progress: null, canSplitRest: false }
+    return { tone: 'idle', message: t('kit.split.status.enterAmount'), detail: null, progress: null, canSplitRest: false }
   }
 
   switch (mode) {
     case 'exact': {
       const assigned = total - result.remainder
-      const detail = `${money(assigned, currency)} of ${money(total, currency)}`
+      const detail = t('kit.split.status.ofTotal', { assigned: money(assigned, currency), total: money(total, currency) })
       const progress = clamp01(assigned / total)
       if (result.remainder > 0) {
-        return { tone: 'pending', message: `${money(result.remainder, currency)} left to assign`, detail, progress, canSplitRest: true }
+        return { tone: 'pending', message: t('kit.split.status.left', { amount: money(result.remainder, currency) }), detail, progress, canSplitRest: true }
       }
       if (result.remainder < 0) {
-        return { tone: 'over', message: `${money(-result.remainder, currency)} more than the total`, detail, progress, canSplitRest: false }
+        return { tone: 'over', message: t('kit.split.status.over', { amount: money(-result.remainder, currency) }), detail, progress, canSplitRest: false }
       }
-      return { tone: 'ok', message: 'Adds up', detail, progress, canSplitRest: false }
+      return { tone: 'ok', message: t('kit.split.status.addsUp'), detail, progress, canSplitRest: false }
     }
     case 'percent': {
       const left = result.percentRemainder
       const progress = clamp01((FULL_PERCENT_BPS - left) / FULL_PERCENT_BPS)
       if (left > 0) {
-        return { tone: 'pending', message: `${formatBps(left)} left to assign`, detail: `${formatBps(FULL_PERCENT_BPS - left)} of 100%`, progress, canSplitRest: true }
+        return { tone: 'pending', message: t('kit.split.status.left', { amount: formatBps(left) }), detail: t('kit.split.status.percentOf', { percent: formatBps(FULL_PERCENT_BPS - left) }), progress, canSplitRest: true }
       }
       if (left < 0) {
-        return { tone: 'over', message: `${formatBps(-left)} over 100%`, detail: `${formatBps(FULL_PERCENT_BPS - left)} in total`, progress, canSplitRest: false }
+        return { tone: 'over', message: t('kit.split.status.percentOver', { percent: formatBps(-left) }), detail: t('kit.split.status.percentTotal', { percent: formatBps(FULL_PERCENT_BPS - left) }), progress, canSplitRest: false }
       }
-      return { tone: 'ok', message: 'Adds up to 100%', detail: null, progress, canSplitRest: false }
+      return { tone: 'ok', message: t('kit.split.status.addsUp100'), detail: null, progress, canSplitRest: false }
     }
     case 'shares': {
       if (result.issues.includes('zero_weights')) {
-        return { tone: 'pending', message: 'Give someone at least one share', detail: null, progress: null, canSplitRest: false }
+        return { tone: 'pending', message: t('kit.split.status.zeroShares'), detail: null, progress: null, canSplitRest: false }
       }
       // Same weights as the engine: empty = 1, anything unusable = 0.
       const count = people.reduce((sum, p) => sum + (p.input === null ? 1 : Number.isFinite(p.input) && p.input > 0 ? p.input : 0), 0)
       const perShare = total / count
-      const each = Number.isInteger(perShare) ? money(perShare, currency) : `about ${money(Math.round(perShare), currency)}`
+      const each = Number.isInteger(perShare) ? money(perShare, currency) : t('kit.split.status.about', { amount: money(Math.round(perShare), currency) })
       const shares = Number.isInteger(count) ? String(count) : count.toFixed(1)
       return {
         tone: 'ok',
-        message: 'Adds up',
-        detail: `${shares} ${count === 1 ? 'share' : 'shares'} · ${each} a share`,
+        message: t('kit.split.status.addsUp'),
+        detail: t('kit.split.status.shares', { shares, count, each }),
         progress: null,
         canSplitRest: false,
       }
@@ -147,8 +148,8 @@ export function splitStatus({ total, currency, mode, participants, result }: Spl
       const same = amounts.every((a) => a === low)
       return {
         tone: 'ok',
-        message: 'Adds up',
-        detail: same ? `${money(low, currency)} each` : `About ${money(low, currency)} each`,
+        message: t('kit.split.status.addsUp'),
+        detail: same ? t('kit.split.status.each', { amount: money(low, currency) }) : t('kit.split.status.aboutEach', { amount: money(low, currency) }),
         progress: null,
         canSplitRest: false,
       }

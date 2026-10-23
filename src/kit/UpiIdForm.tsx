@@ -1,6 +1,7 @@
 import { useState, type FormEvent, type ReactNode } from 'react'
 import { Button, TextField } from '../components'
 import { ME_ID } from '../domain/types'
+import { useT } from '../i18n'
 import { cx } from '../lib/cx'
 import { isValidUpiId, normalizeUpiId } from '../lib/upi'
 import styles from './UpiIdForm.module.css'
@@ -20,6 +21,7 @@ export interface UpiIdFormProps {
   className?: string
 }
 
+/** English only (kept for older callers): show `t('kit.upiForm.error')` instead. */
 export const UPI_ID_ERROR = 'That doesn’t look like a UPI ID. It’s like name@bank.'
 
 /**
@@ -32,15 +34,16 @@ export function UpiIdForm({
   ownerName,
   onSave,
   lead,
-  submitLabel = 'Save UPI ID',
+  submitLabel,
   autoFocus = false,
   className,
 }: UpiIdFormProps) {
+  const t = useT()
   const [text, setText] = useState('')
   const [tried, setTried] = useState(false)
   const mine = ownerId === ME_ID
   const valid = isValidUpiId(text)
-  const error = tried && text !== '' && !valid ? UPI_ID_ERROR : undefined
+  const error = tried && text !== '' && !valid ? t('kit.upiForm.error') : undefined
 
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -52,7 +55,7 @@ export function UpiIdForm({
     <form className={cx(styles.form, className)} onSubmit={submit} noValidate>
       {lead != null && <p className={styles.lead}>{lead}</p>}
       <TextField
-        label={mine ? 'Your UPI ID' : `UPI ID for ${ownerName}`}
+        label={mine ? t('kit.upiForm.label.mine') : t('kit.upiForm.label', { name: ownerName })}
         placeholder="name@okaxis"
         value={text}
         onChange={(event) => setText(event.target.value.replace(/\s+/g, ''))}
@@ -60,7 +63,7 @@ export function UpiIdForm({
           if (text !== '') setTried(true)
         }}
         error={error}
-        hint={mine ? 'Friends pay you here. It stays on this phone.' : ownerId ? `Saved to ${ownerName} for next time.` : undefined}
+        hint={mine ? t('kit.upiForm.hint.mine') : ownerId ? t('kit.upiForm.hint.saved', { name: ownerName }) : undefined}
         inputMode="email"
         autoComplete="off"
         autoCapitalize="none"
@@ -70,7 +73,7 @@ export function UpiIdForm({
         autoFocus={autoFocus}
       />
       <Button type="submit" size="md" block disabled={text === ''}>
-        {submitLabel}
+        {submitLabel ?? t('kit.upiForm.save.cta')}
       </Button>
     </form>
   )

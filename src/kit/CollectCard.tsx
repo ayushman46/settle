@@ -3,6 +3,7 @@ import { Check, Users } from 'lucide-react'
 import { Money, ProgressRing } from '../components'
 import { useFriendsById, useGroup } from '../data'
 import { ME_ID, type Expense } from '../domain/types'
+import { tx, useT, type MessageKey } from '../i18n'
 import { collectProgress, isSettledInGroup } from '../engine/balances'
 import { cx } from '../lib/cx'
 import { formatMoney } from '../lib/money'
@@ -21,6 +22,7 @@ export interface CollectCardProps {
  * through their group's balances say so instead; a split with nobody to pay back says that.
  */
 export function CollectCard({ expense, className }: CollectCardProps) {
+  const t = useT()
   const titleId = useId()
   const friendsById = useFriendsById()
   const group = useGroup(expense.groupId)
@@ -38,9 +40,9 @@ export function CollectCard({ expense, className }: CollectCardProps) {
         </span>
         <div className={styles.text}>
           <h2 id={titleId} className={styles.title}>
-            Settles in {group.name}
+            {t('kit.collect.group.title', { group: group.name })}
           </h2>
-          <p className={styles.detail}>It counts towards the group’s balances, so settle up from the group.</p>
+          <p className={styles.detail}>{t('kit.collect.group.body')}</p>
         </div>
       </section>
     )
@@ -55,9 +57,9 @@ export function CollectCard({ expense, className }: CollectCardProps) {
         </span>
         <div className={styles.text}>
           <h2 id={titleId} className={styles.title}>
-            {payerIsMe ? 'Nothing to collect' : 'Nothing to pay back'}
+            {payerIsMe ? t('kit.collect.none.mine.title') : t('kit.collect.none.theirs.title')}
           </h2>
-          <p className={styles.detail}>{payerIsMe ? 'It’s just you on this one.' : `${payerName} covered only themselves.`}</p>
+          <p className={styles.detail}>{payerIsMe ? t('kit.collect.none.mine.body') : t('kit.collect.none.theirs.body', { name: payerName })}</p>
         </div>
       </section>
     )
@@ -71,28 +73,18 @@ export function CollectCard({ expense, className }: CollectCardProps) {
   const totalText = formatMoney(progress.total, expense.currency, { trimZeros: true })
 
   // Short headline first ("₹691.50 collected"), the rest of the story underneath.
-  const title = done ? (
-    payerIsMe ? (
-      <>All {money(progress.total, true)} collected</>
-    ) : (
-      <>
-        {payerName} got back all {money(progress.total, true)}
-      </>
-    )
-  ) : started ? (
-    <>
-      {money(progress.collected, true)} {payerIsMe ? 'collected' : `back to ${payerName}`}
-    </>
-  ) : (
-    <>
-      {money(progress.total, true)} {payerIsMe ? 'to collect' : `owed to ${payerName}`}
-    </>
-  )
-  const detail = !done && started ? `of ${totalText} · ${counted}` : counted
+  const headline = (key: MessageKey, value: number) =>
+    tx(key, { amount: formatMoney(value, expense.currency, { trimZeros: true }), name: payerName }, { m: () => money(value, true) })
+  const title = done
+    ? headline(payerIsMe ? 'kit.collect.done.mine' : 'kit.collect.done.theirs', progress.total)
+    : started
+      ? headline(payerIsMe ? 'kit.collect.started.mine' : 'kit.collect.started.theirs', progress.collected)
+      : headline(payerIsMe ? 'kit.collect.open.mine' : 'kit.collect.open.theirs', progress.total)
+  const detail = !done && started ? t('kit.collect.detail.ofTotal', { total: totalText, counted }) : counted
 
   return (
     <section aria-labelledby={titleId} className={cx(styles.card, className)} data-state={done ? 'done' : 'collecting'}>
-      <ProgressRing value={fraction} size={64} stroke={7} label={payerIsMe ? 'Collected' : 'Paid back'} className={styles.ring}>
+      <ProgressRing value={fraction} size={64} stroke={7} label={payerIsMe ? t('kit.collect.ring.mine') : t('kit.collect.ring.theirs')} className={styles.ring}>
         {done ? (
           <Check strokeWidth={3} className={styles.doneCheck} />
         ) : (

@@ -3,6 +3,7 @@
  * itemized bills — what they had. Pure, so the list, the pay page and their tests agree to the paisa.
  */
 import { ME_ID, type Expense, type Minor } from '../domain/types'
+import { t } from '../i18n'
 import { uniqueParticipants } from '../engine/split'
 import { currencyDigits } from '../lib/money'
 import { computeSplit, shareLabel } from '../lib/split'
@@ -86,8 +87,8 @@ function billItemLines(e: Expense): Map<string, ShareItemLine[]> | null {
 
 /** "Tax & charges", "Discounts" or "Round-off" (up to one whole unit either way) for a bill's extras line. */
 export function extrasLabel(extras: Minor, currency: string): string {
-  if (Math.abs(extras) <= 10 ** currencyDigits(currency)) return 'Round-off'
-  return extras > 0 ? 'Tax & charges' : 'Discounts'
+  if (Math.abs(extras) <= 10 ** currencyDigits(currency)) return t('kit.shares.extras.roundOff')
+  return extras > 0 ? t('kit.shares.extras.charges') : t('kit.shares.extras.discounts')
 }
 
 /** Who can act on a line, from the owner's side. */

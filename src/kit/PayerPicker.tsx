@@ -2,6 +2,7 @@ import { useRef, useState, type KeyboardEvent } from 'react'
 import { ChevronDown } from 'lucide-react'
 import { BottomSheet } from '../components'
 import { useFriendsById } from '../data'
+import { useT } from '../i18n'
 import { cx } from '../lib/cx'
 import { haptic } from '../lib/haptics'
 import { FriendAvatar } from './FriendAvatar'
@@ -37,7 +38,9 @@ function payerOptions(candidates: readonly string[], value: string): string[] {
  * "Paid by You ▾" — a chip that opens a sheet of big avatars to pick who paid. With nobody else
  * to choose from it's a plain label.
  */
-export function PayerPicker({ value, onChange, candidates, label = 'Paid by', disabled = false, className }: PayerPickerProps) {
+export function PayerPicker({ value, onChange, candidates, label: labelProp, disabled = false, className }: PayerPickerProps) {
+  const t = useT()
+  const label = labelProp ?? t('kit.payer.label')
   const [open, setOpen] = useState(false)
   const friendsById = useFriendsById()
   const options = payerOptions(candidates, value)
@@ -112,11 +115,11 @@ export function PayerPicker({ value, onChange, candidates, label = 'Paid by', di
       <BottomSheet
         open={open}
         onClose={() => setOpen(false)}
-        title="Who paid?"
-        description="Everyone else pays them back."
+        title={t('kit.payer.sheet.title')}
+        description={t('kit.payer.sheet.description')}
         initialFocus={selectedRef}
       >
-        <div role="radiogroup" aria-label="Who paid" className={styles.grid} onKeyDown={onKeyDown}>
+        <div role="radiogroup" aria-label={t('kit.payer.sheet.aria')} className={styles.grid} onKeyDown={onKeyDown}>
           {options.map((id, i) => {
             const checked = id === value
             return (

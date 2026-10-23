@@ -2,6 +2,7 @@ import type { ReactNode, Ref } from 'react'
 import { X } from 'lucide-react'
 import { useFriend } from '../data'
 import type { Friend } from '../domain/types'
+import { useT } from '../i18n'
 import { cx } from '../lib/cx'
 import { haptic } from '../lib/haptics'
 import { FriendAvatar } from './FriendAvatar'
@@ -40,6 +41,7 @@ export function FriendChip({
   removeId,
   className,
 }: FriendChipProps) {
+  const t = useT()
   const stored = useFriend(friend === undefined ? friendId : null)
   const record = friend === undefined ? stored : friend
   const id = record?.id ?? friendId ?? null
@@ -76,7 +78,7 @@ export function FriendChip({
           id={removeId}
           type="button"
           className={styles.remove}
-          aria-label={`Remove ${label}`}
+          aria-label={t('kit.chip.remove.aria', { name: label })}
           onClick={() => {
             haptic('tap')
             onRemove()

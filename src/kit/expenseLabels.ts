@@ -5,6 +5,7 @@
 import { memoizeLast } from '../data/store'
 import { friendsStore } from '../data/stores'
 import { ME_ID, type Expense, type Friend, type Group, type Minor } from '../domain/types'
+import { t } from '../i18n'
 import { expenseStanding } from '../engine/balances'
 import { uniqueParticipants } from '../engine/split'
 import { currencyDigits, formatMoney } from '../lib/money'
@@ -106,45 +107,58 @@ export function expenseRowView(e: Expense, { payerName, group, showGroup = true,
   const people = uniqueParticipants(e.participants)
   const { net, myShare, outstanding, pending, role } = standing
 
-  const payer = e.payerId === ME_ID ? 'You' : payerName
+  const payerIsMe = e.payerId === ME_ID
   const groupName = showGroup && group && e.groupId === group.id ? group.name : null
   const otherId = oneToOneOther(e)
   let subtitle: string
   if (otherId !== null) {
     // 1:1: "You lent Riya · cash", "Kabir lent you · cash", "You paid for Riya · Auto".
-    const other = otherId === ME_ID ? 'you' : (otherName ?? friendLabel(otherId, friendIndex(friendsStore.get()).get(otherId)))
-    subtitle = e.kind === 'loan' ? `${payer} lent ${other} · cash` : `${payer} paid for ${other} · ${groupName ?? e.title}`
+    const other = otherId === ME_ID ? null : (otherName ?? friendLabel(otherId, friendIndex(friendsStore.get()).get(otherId)))
+    if (e.kind === 'loan') {
+      subtitle = payerIsMe
+        ? t('kit.row.loan.mine', { name: other ?? '' })
+        : other === null
+          ? t('kit.row.loan.toMe', { name: payerName })
+          : t('kit.row.loan.others', { payer: payerName, name: other })
+    } else {
+      const context = groupName ?? e.title
+      subtitle = payerIsMe
+        ? t('kit.row.paidFor.mine', { name: other ?? '', context })
+        : other === null
+          ? t('kit.row.paidFor.toMe', { name: payerName, context })
+          : t('kit.row.paidFor.others', { payer: payerName, name: other, context })
+    }
   } else {
     // Paid abroad: "You paid ฿1,250 (₹3,013)".
     const paid = e.fx ? `${formatMoney(e.fx.amount, e.fx.currency, { trimZeros: true })} (${roughMoney(e.total, e.currency)})` : money(e.total)
     const justMe = people.length === 1 && people[0]?.friendId === ME_ID
-    const context = groupName ?? (justMe ? 'just you' : plural(people.length, 'person', 'people'))
-    subtitle = `${payer} paid ${paid} · ${context}`
+    const context = groupName ?? (justMe ? t('kit.row.context.justYou') : t('kit.row.context.people', { count: people.length }))
+    subtitle = payerIsMe ? t('kit.row.paid.mine', { amount: paid, context }) : t('kit.row.paid.others', { payer: payerName, amount: paid, context })
   }
 
   let side: RightSide
   if (role === 'none') {
-    side = right(e.total, 'muted', "you're not in it", { caption: 'not involved' })
+    side = right(e.total, 'muted', t('kit.row.notIn'), { caption: t('kit.row.notIn.caption') })
   } else if (outstanding === null) {
     // Settled through the group's balances: show what this expense did to mine.
-    if (net > 0) side = right(net, 'positive', `you lent ${money(net)}`, { caption: 'you lent' })
-    else if (net < 0) side = right(net, 'negative', `you borrowed ${money(-net)}`, { caption: 'you borrowed' })
-    else side = right(e.total, 'muted', 'nothing to settle')
+    if (net > 0) side = right(net, 'positive', t('kit.row.lent', { amount: money(net) }), { caption: t('kit.row.lent.caption') })
+    else if (net < 0) side = right(net, 'negative', t('kit.row.borrowed', { amount: money(-net) }), { caption: t('kit.row.borrowed.caption') })
+    else side = right(e.total, 'muted', t('kit.row.nothingToSettle'))
   } else if (role === 'paid') {
     // What I paid for others: net = Σ their shares.
     if (outstanding > 0) {
-      side = right(outstanding, 'positive', `you're owed ${money(outstanding)}, ${pending} pending`, {
-        status: { tone: 'warning', label: `${pending} pending` },
+      side = right(outstanding, 'positive', t('kit.row.owed', { amount: money(outstanding), count: pending }), {
+        status: { tone: 'warning', label: t('kit.row.pending', { count: pending }) },
       })
     } else if (net > 0) {
-      side = right(net, 'muted', `you got back ${money(net)}, settled`, { status: { tone: 'positive', label: 'Settled' } })
+      side = right(net, 'muted', t('kit.row.gotBack', { amount: money(net) }), { status: { tone: 'positive', label: t('kit.row.settled') } })
     } else {
-      side = right(e.total, 'muted', 'nothing to collect')
+      side = right(e.total, 'muted', t('kit.row.nothingToCollect'))
     }
   } else if (outstanding < 0) {
-    side = right(outstanding, 'negative', `you owe ${money(-outstanding)}`, { caption: 'you owe' })
+    side = right(outstanding, 'negative', t('kit.row.owe', { amount: money(-outstanding) }), { caption: t('kit.row.owe.caption') })
   } else {
-    side = right(myShare, 'muted', `you paid back ${money(myShare)}, settled`, { status: { tone: 'positive', label: 'Settled' } })
+    side = right(myShare, 'muted', t('kit.row.paidBack', { amount: money(myShare) }), { status: { tone: 'positive', label: t('kit.row.settled') } })
   }
 
   return {
@@ -153,6 +167,6 @@ export function expenseRowView(e: Expense, { payerName, group, showGroup = true,
     tone: side.tone,
     caption: side.caption,
     status: side.status,
-    spoken: `${subtitle}, ${side.phrase}`,
+    spoken: t('kit.row.spoken', { subtitle, phrase: side.phrase }),
   }
 }

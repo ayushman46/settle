@@ -12,6 +12,7 @@ import {
 import { updateFriend, useFriendsById, useGroup, useProfile } from '../data'
 import { BRAND, ME_ID, type AccentId, type Expense } from '../domain/types'
 import { isSettledInGroup } from '../engine/balances'
+import { tx, useT } from '../i18n'
 import { haptic } from '../lib/haptics'
 import { useHasFeature } from '../pro'
 import {
@@ -102,6 +103,7 @@ function useShareCard(open: boolean, input: ShareCardInput, opts: CardOptions): 
  * from one would count the money twice).
  */
 export function ShareSheet({ expense, open, onClose, onUpgrade }: ShareSheetProps) {
+  const t = useT()
   const imageHeadingId = useId()
   const toast = useToast()
   const profile = useProfile()
@@ -135,14 +137,14 @@ export function ShareSheet({ expense, open, onClose, onUpgrade }: ShareSheetProp
   const message = settlesIn ? record : link ? payLinkMessage(payload, link, { fromPayee }) : null
 
   const description = settlesIn
-    ? `It settles with ${settlesIn.name}, so friends pay from the group’s settle up. Share it for the record.`
+    ? t('kit.share.description.group', { group: settlesIn.name })
     : !owing
-    ? 'Everyone’s settled. Share it for the record.'
+    ? t('kit.share.description.settled')
     : payload.to.u && rupees
       ? fromPayee
-        ? 'Friends tap their name and pay you with any UPI app.'
-        : `Friends tap their name and pay ${payerFirst} with any UPI app.`
-      : 'Friends tap their name to see what they owe.'
+        ? t('kit.share.description.payMe')
+        : t('kit.share.description.payThem', { name: payerFirst })
+      : t('kit.share.description.see')
 
   const done = (text: string) => {
     haptic('success')
@@ -161,9 +163,9 @@ export function ShareSheet({ expense, open, onClose, onUpgrade }: ShareSheetProp
       haptic('success')
     } else if (await copyText(message)) {
       // A blocked popup: hand over the message to paste instead.
-      done('Message copied. Paste it in WhatsApp.')
+      done(t('kit.share.whatsappCopied.toast'))
     } else {
-      oops('Couldn’t open WhatsApp. Try “More apps”.')
+      oops(t('kit.share.whatsappFailed.toast'))
     }
   }
 
@@ -171,20 +173,20 @@ export function ShareSheet({ expense, open, onClose, onUpgrade }: ShareSheetProp
     if (!message) return
     const outcome = await shareResult(message, { mode: 'share', title: expense.title })
     if (outcome === 'shared') haptic('success')
-    else if (outcome === 'copied') done('Message copied')
-    else if (outcome === 'failed') oops('Couldn’t share. Try copying the link.')
+    else if (outcome === 'copied') done(t('kit.share.copied.toast'))
+    else if (outcome === 'failed') oops(t('kit.share.failed.toast'))
   }
 
   const copyLink = async (): Promise<void> => {
     if (!link) return
-    if (await copyText(link)) done('Pay link copied')
-    else oops('Couldn’t copy. Try “More apps”.')
+    if (await copyText(link)) done(t('kit.share.linkCopied.toast'))
+    else oops(t('kit.share.copyFailed.toast'))
   }
 
   const copySummary = async (): Promise<void> => {
     if (!summary) return
-    if (await copyText(summary)) done('Summary copied')
-    else oops('Couldn’t copy the summary.')
+    if (await copyText(summary)) done(t('kit.share.summaryCopied.toast'))
+    else oops(t('kit.share.summaryFailed.toast'))
   }
 
   const shareImage = async (): Promise<void> => {
@@ -193,42 +195,42 @@ export function ShareSheet({ expense, open, onClose, onUpgrade }: ShareSheetProp
     const caption = settlesIn ? undefined : (message ?? undefined)
     const outcome = await shareFile(card.blob, shareCardFilename(expense.title), caption, { title: expense.title })
     if (outcome === 'shared') haptic('success')
-    else if (outcome === 'downloaded') done('Image saved')
-    else if (outcome === 'failed') oops('Couldn’t share the image.')
+    else if (outcome === 'downloaded') done(t('kit.share.imageSaved.toast'))
+    else if (outcome === 'failed') oops(t('kit.share.imageFailed.toast'))
   }
 
   const saveUpi = (upiId: string): void => {
     try {
       updateFriend(expense.payerId, { upiId })
       setAddingUpi(false)
-      done('UPI ID saved')
+      done(t('kit.share.upiSaved.toast'))
     } catch {
-      oops('Couldn’t save it. Try again.')
+      oops(t('kit.share.upiFailed.toast'))
     }
   }
 
   return (
-    <BottomSheet open={open} onClose={onClose} eyebrow={expense.title} title="Share split" description={description}>
+    <BottomSheet open={open} onClose={onClose} eyebrow={expense.title} title={t('kit.share.title')} description={description}>
       <div className={styles.body}>
         {upiMissing && (payer || fromPayee) && (
-          <section className={styles.upi} aria-label="UPI ID">
+          <section className={styles.upi} aria-label={t('kit.share.upi.aria')}>
             {addingUpi ? (
               <UpiIdForm
                 ownerId={expense.payerId}
                 ownerName={friendLabel(expense.payerId, payer)}
                 onSave={saveUpi}
                 autoFocus
-                lead={fromPayee ? 'Add your UPI ID so friends can pay you in a tap.' : `Add a UPI ID for ${payerFirst} so friends can pay from the link.`}
+                lead={fromPayee ? t('kit.share.upi.lead.mine') : t('kit.share.upi.lead.theirs', { name: payerFirst })}
               />
             ) : (
               <>
                 <p className={styles.upiText}>
                   {fromPayee
-                    ? 'Add your UPI ID and friends can pay you straight from the link.'
-                    : `${payerFirst} has no UPI ID here yet, so friends can see their share but not pay from the link.`}
+                    ? t('kit.share.upi.missing.mine')
+                    : t('kit.share.upi.missing.theirs', { name: payerFirst })}
                 </p>
                 <Button size="sm" variant="primary" onClick={() => setAddingUpi(true)}>
-                  Add UPI ID
+                  {t('kit.share.upi.add.cta')}
                 </Button>
               </>
             )}
@@ -242,42 +244,42 @@ export function ShareSheet({ expense, open, onClose, onUpgrade }: ShareSheetProp
               <span className={styles.linkText}>{link.replace(/^https?:\/\//, '')}</span>
             ) : (
               <span className={styles.linkPending}>
-                <span className="visually-hidden">Making the pay link…</span>
+                <span className="visually-hidden">{t('kit.share.link.pending')}</span>
                 <Skeleton width="70%" />
               </span>
             )}
           </div>
         )}
 
-        <QuickActionGrid label={settlesIn ? 'Share the split' : 'Share the pay link'} className={styles.actions}>
+        <QuickActionGrid label={settlesIn ? t('kit.share.actions.split') : t('kit.share.actions.link')} className={styles.actions}>
           <QuickAction tone="groceries" icon={<MessageCircle />} label="WhatsApp" onClick={sendWhatsApp} disabled={!message} />
-          <QuickAction tone="travel" icon={<Share2 />} label="More apps" onClick={shareElsewhere} disabled={!message} />
-          {settlesIn === null && <QuickAction tone="ink" icon={<Copy />} label="Copy link" onClick={copyLink} disabled={!link} />}
-          <QuickAction tone="entertainment" icon={<FileText />} label="Copy text" onClick={copySummary} disabled={!summary} />
+          <QuickAction tone="travel" icon={<Share2 />} label={t('kit.share.moreApps')} onClick={shareElsewhere} disabled={!message} />
+          {settlesIn === null && <QuickAction tone="ink" icon={<Copy />} label={t('kit.share.copyLink')} onClick={copyLink} disabled={!link} />}
+          <QuickAction tone="entertainment" icon={<FileText />} label={t('kit.share.copyText')} onClick={copySummary} disabled={!summary} />
         </QuickActionGrid>
 
         <section className={styles.image} aria-labelledby={imageHeadingId}>
           <div className={styles.preview}>
             {card?.status === 'ready' && card.preview ? (
-              <img src={card.preview} alt={`Share card for ${expense.title}`} className={styles.previewImage} />
+              <img src={card.preview} alt={t('kit.share.image.alt', { title: expense.title })} className={styles.previewImage} />
             ) : card?.status === 'failed' ? (
-              <span className={styles.previewFailed}>No preview</span>
+              <span className={styles.previewFailed}>{t('kit.share.image.noPreview')}</span>
             ) : (
               <Skeleton shape="md" width="100%" height="100%" />
             )}
           </div>
           <div className={styles.imageText}>
             <h3 id={imageHeadingId} className={styles.imageTitle}>
-              Share as image
+              {t('kit.share.image.title')}
             </h3>
             <p className={styles.imageSub} aria-live="polite">
               {card === null
-                ? 'Drawing your receipt…'
+                ? t('kit.share.image.drawing')
                 : card.status === 'failed'
-                  ? 'This browser couldn’t draw the image. The link works everywhere.'
+                  ? t('kit.share.image.failed')
                   : cleanCards
-                    ? 'A clean receipt of the split for the group chat.'
-                    : `A receipt of the split, with a small “Made with ${BRAND.name}” line.`}
+                    ? t('kit.share.image.clean')
+                    : t('kit.share.image.watermark', { brand: BRAND.name })}
             </p>
             {/* Phones hand the image to the share sheet; computers download it. */}
             <Button
@@ -287,13 +289,12 @@ export function ShareSheet({ expense, open, onClose, onUpgrade }: ShareSheetProp
               onClick={shareImage}
               disabled={card?.status !== 'ready'}
             >
-              {touch ? 'Share image' : 'Save image'}
+              {touch ? t('kit.share.image.share.cta') : t('kit.share.image.save.cta')}
             </Button>
             {!cleanCards && onUpgrade && (
               <button type="button" className={styles.upgrade} onClick={onUpgrade}>
                 <Sparkles aria-hidden="true" strokeWidth={2.25} />
-                Remove the line with{' '}
-                <Badge tone="pro">Pro</Badge>
+                {tx('kit.share.image.upgrade', {}, { pro: (chunk) => <Badge tone="pro">{chunk}</Badge> })}
               </button>
             )}
           </div>

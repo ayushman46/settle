@@ -3,6 +3,7 @@ import { ArrowRight, Check, Copy, ExternalLink, Share2 } from 'lucide-react'
 import { ActionBar, Avatar, Banner, BottomSheet, Button, IconButton, Money, QrCode, useToast } from '../components'
 import { updateFriend, useFriend, useFriendsById, useProfile } from '../data'
 import { ME_ID, type Minor } from '../domain/types'
+import { useT } from '../i18n'
 import { haptic } from '../lib/haptics'
 import { formatMoney } from '../lib/money'
 import { copyText, shareResult } from '../lib/share'
@@ -63,6 +64,7 @@ function firstValidUpi(ids: ReadonlyArray<string | null | undefined>): string | 
  * get an honest note instead of a code.
  */
 export function UpiPaySheet({ open, onClose, payee, payer, amount, currency, note, onMarkPaid }: UpiPaySheetProps) {
+  const t = useT()
   const toast = useToast()
   const busy = useRef(false)
   const computer = useMediaQuery(FINE_POINTER)
@@ -89,10 +91,22 @@ export function UpiPaySheet({ open, onClose, payee, payer, amount, currency, not
 
   const heading =
     perspective === 'paying'
-      ? { eyebrow: note ?? 'Your share', title: `Pay ${payee.name}`, description: 'Opens your UPI app with the amount filled in.' }
+      ? {
+          eyebrow: note ?? t('kit.upi.paying.eyebrow'),
+          title: t('kit.upi.paying.title', { name: payee.name }),
+          description: t('kit.upi.paying.description'),
+        }
       : perspective === 'collecting'
-        ? { eyebrow: `${payer.name} owes you`, title: `Collect from ${payer.name}`, description: 'Show them this code, or send the request.' }
-        : { eyebrow: `${payer.name} owes ${payee.name}`, title: `${payer.name} pays ${payee.name}`, description: 'Scan with any UPI app, or send the request.' }
+        ? {
+            eyebrow: t('kit.upi.collecting.eyebrow', { name: payer.name }),
+            title: t('kit.upi.collecting.title', { name: payer.name }),
+            description: t('kit.upi.collecting.description'),
+          }
+        : {
+            eyebrow: t('kit.upi.between.eyebrow', { from: payer.name, to: payee.name }),
+            title: t('kit.upi.between.title', { from: payer.name, to: payee.name }),
+            description: t('kit.upi.between.description'),
+          }
 
   const saveUpi = (upiId: string): void => {
     let saved = false
@@ -106,7 +120,7 @@ export function UpiPaySheet({ open, onClose, payee, payer, amount, currency, not
     }
     if (!saved) setTyped({ payeeKey, upiId })
     haptic('success')
-    toast(saved ? 'UPI ID saved' : 'UPI ID added', { tone: 'success' })
+    toast(saved ? t('kit.upi.saved.toast') : t('kit.upi.added.toast'), { tone: 'success' })
   }
 
   const share = async (): Promise<void> => {
@@ -121,12 +135,12 @@ export function UpiPaySheet({ open, onClose, payee, payer, amount, currency, not
         merchant: note,
         link,
       })
-      const outcome = await shareResult(text, { title: `Pay ${payeeOutside}` })
+      const outcome = await shareResult(text, { title: t('kit.upi.share.title', { name: payeeOutside }) })
       if (outcome === 'shared' || outcome === 'copied') haptic('success')
-      if (outcome === 'copied') toast('Payment request copied', { tone: 'success' })
+      if (outcome === 'copied') toast(t('kit.upi.requestCopied.toast'), { tone: 'success' })
       if (outcome === 'failed') {
         haptic('error')
-        toast('Couldn’t share the request. Try again.', { tone: 'error' })
+        toast(t('kit.upi.shareFailed.toast'), { tone: 'error' })
       }
     } finally {
       busy.current = false
@@ -137,10 +151,10 @@ export function UpiPaySheet({ open, onClose, payee, payer, amount, currency, not
     if (!vpa) return
     if (await copyText(vpa)) {
       haptic('success')
-      toast('UPI ID copied', { tone: 'success' })
+      toast(t('kit.upi.idCopied.toast'), { tone: 'success' })
     } else {
       haptic('error')
-      toast('Couldn’t copy. Long-press the ID instead.', { tone: 'error' })
+      toast(t('kit.upi.copyFailed.toast'), { tone: 'error' })
     }
   }
 
@@ -161,17 +175,17 @@ export function UpiPaySheet({ open, onClose, payee, payer, amount, currency, not
         {openApp && (
           <a className={styles.openApp} href={link}>
             <ExternalLink aria-hidden="true" strokeWidth={2.25} />
-            Pay {amount > 0 ? amountText : payee.name} in your UPI app
+            {t('kit.upi.openApp.cta', { what: amount > 0 ? amountText : payee.name })}
           </a>
         )}
         {sendRequest && (
           <Button block iconStart={<Share2 />} onClick={share}>
-            Send request
+            {t('kit.upi.sendRequest.cta')}
           </Button>
         )}
         {onMarkPaid && (
           <Button block variant={openApp || sendRequest ? 'secondary' : 'primary'} iconStart={<Check />} onClick={markPaid}>
-            {perspective === 'paying' ? 'I’ve paid' : 'Mark as paid'}
+            {perspective === 'paying' ? t('kit.upi.paid.cta') : t('kit.upi.markPaid.cta')}
           </Button>
         )}
       </ActionBar>
@@ -196,8 +210,8 @@ export function UpiPaySheet({ open, onClose, payee, payer, amount, currency, not
         <Money value={amount} currency={currency} size="xl" trimZeros className={styles.amount} />
 
         {!rupees ? (
-          <Banner tone="info" className={styles.notice} title="UPI works in rupees only">
-            Settle this one by bank transfer or cash, then mark it paid.
+          <Banner tone="info" className={styles.notice} title={t('kit.upi.rupeesOnly.title')}>
+            {t('kit.upi.rupeesOnly.body')}
           </Banner>
         ) : vpa === null ? (
           <div className={styles.missing}>
@@ -206,11 +220,11 @@ export function UpiPaySheet({ open, onClose, payee, payer, amount, currency, not
               ownerId={canSave ? (payee.id ?? null) : null}
               ownerName={payee.name}
               onSave={saveUpi}
-              submitLabel={canSave ? 'Save UPI ID' : 'Use this UPI ID'}
+              submitLabel={canSave ? t('kit.upiForm.save.cta') : t('kit.upi.useId.cta')}
               lead={
                 payee.id === ME_ID
-                  ? 'Add your UPI ID to get paid in a tap.'
-                  : `${payee.name} hasn’t added a UPI ID yet. Add it to get a QR code.`
+                  ? t('kit.upi.missing.mine')
+                  : t('kit.upi.missing.theirs', { name: payee.name })
               }
             />
           </div>
@@ -219,18 +233,18 @@ export function UpiPaySheet({ open, onClose, payee, payer, amount, currency, not
             <QrCode
               value={link}
               size={216}
-              label={`UPI QR code to pay ${amount > 0 ? `${amountText} ` : ''}to ${payeeOutside}`}
+              label={amount > 0 ? t('kit.upi.qr.aria', { amount: amountText, name: payeeOutside }) : t('kit.upi.qr.aria.noAmount', { name: payeeOutside })}
               className={styles.qr}
             />
             <p className={styles.caption}>
               {perspective === 'paying' && computer
-                ? 'Scan this with the UPI app on your phone.'
-                : 'Works with GPay, PhonePe, Paytm, BHIM and every UPI app.'}
+                ? t('kit.upi.qr.computer')
+                : t('kit.upi.qr.apps')}
             </p>
             <div className={styles.vpa}>
-              <span className={styles.vpaLabel}>To</span>
+              <span className={styles.vpaLabel}>{t('kit.upi.to')}</span>
               <span className={styles.vpaId}>{vpa}</span>
-              <IconButton label="Copy UPI ID" size="sm" onClick={copyId}>
+              <IconButton label={t('kit.upi.copy.aria')} size="sm" onClick={copyId}>
                 <Copy />
               </IconButton>
             </div>

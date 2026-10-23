@@ -4,7 +4,7 @@
  * identically; pass `variant` to offer "try another".
  */
 import type { Minor } from '../domain/types'
-import { t } from '../i18n'
+import { t, type MessageKey } from '../i18n'
 import { formatMoney } from '../lib/money'
 import { nameKey } from '../lib/people'
 import { isValidUpiId, normalizeUpiId } from '../lib/upi'
@@ -12,10 +12,29 @@ import { cleanText, ellipsize, firstName, hashString } from './text'
 
 export type NudgeTone = 'friendly' | 'funny' | 'firm'
 
-export const NUDGE_TONES: ReadonlyArray<{ tone: NudgeTone; label: string; emoji: string }> = [
-  { tone: 'friendly', label: 'Friendly', emoji: '🙂' },
-  { tone: 'funny', label: 'Funny', emoji: '😜' },
-  { tone: 'firm', label: 'Firm', emoji: '📌' },
+/** The tones, with their names in the UI language (read `label` when you show it, not at import). */
+export const NUDGE_TONES: ReadonlyArray<{ tone: NudgeTone; readonly label: string; emoji: string }> = [
+  {
+    tone: 'friendly',
+    get label() {
+      return t('share.nudge.tone.friendly')
+    },
+    emoji: '🙂',
+  },
+  {
+    tone: 'funny',
+    get label() {
+      return t('share.nudge.tone.funny')
+    },
+    emoji: '😜',
+  },
+  {
+    tone: 'firm',
+    get label() {
+      return t('share.nudge.tone.firm')
+    },
+    emoji: '📌',
+  },
 ]
 
 export interface NudgeInput {
@@ -87,28 +106,28 @@ function templatesFor(tone: NudgeTone, kind: NudgeInput['kind'], date: string): 
 
 const TEMPLATES: Readonly<Record<NudgeTone, readonly Template[]>> = {
   friendly: [
-    (w) => `Hey ${w.to}! 👋 Just a gentle reminder: your share for ${w.what} is ${w.amount}. No rush!`,
-    (w) => `Hi ${w.to} 🙂 Your share for ${w.what} comes to ${w.amount}. Settle whenever you get a sec!`,
-    (w) => `Hey ${w.to}, hope you're doing well! Quick one: ${w.amount} for ${w.what}. Thanks a ton 🙏`,
-    (w) => `${w.to}! A small nudge for ${w.what}: your bit is ${w.amount}. Thank you 😊`,
+    (w) => t('share.nudge.friendly.0', { ...w }),
+    (w) => t('share.nudge.friendly.1', { ...w }),
+    (w) => t('share.nudge.friendly.2', { ...w }),
+    (w) => t('share.nudge.friendly.3', { ...w }),
   ],
   funny: [
-    (w) => `Knock knock, ${w.to} 🚪 Who's there? ${w.amount}. ${w.amount} who? ${w.amount} for ${w.what} 😄`,
-    (w) => `Breaking news 📰 ${w.amount} for ${w.what} was last seen heading your way, ${w.to}. Help it find its way home 🏠`,
-    (w) => `${w.to}, my wallet keeps asking about you 👀 ${w.amount} for ${w.what}, whenever you're ready!`,
-    (w) => `Plot twist, ${w.to}: ${w.what} wasn't free 🍿 Your share is ${w.amount} 😅`,
+    (w) => t('share.nudge.funny.0', { ...w }),
+    (w) => t('share.nudge.funny.1', { ...w }),
+    (w) => t('share.nudge.funny.2', { ...w }),
+    (w) => t('share.nudge.funny.3', { ...w }),
   ],
   firm: [
-    (w) => `Hi ${w.to}, a reminder that ${w.amount} for ${w.what} is still pending. Please settle it today.`,
-    (w) => `Hi ${w.to}, your share of ${w.amount} for ${w.what} is due. Please pay at the earliest.`,
-    (w) => `${w.to}, following up on ${w.amount} for ${w.what}. Could you clear it today, please?`,
+    (w) => t('share.nudge.firm.0', { ...w }),
+    (w) => t('share.nudge.firm.1', { ...w }),
+    (w) => t('share.nudge.firm.2', { ...w }),
   ],
 }
 
-const LINK_LABEL: Readonly<Record<NudgeTone, string>> = {
-  friendly: 'Tap to pay',
-  funny: "One tap and we're square",
-  firm: 'Pay here',
+const LINK_LABEL: Readonly<Record<NudgeTone, MessageKey>> = {
+  friendly: 'share.nudge.link.friendly',
+  funny: 'share.nudge.link.funny',
+  firm: 'share.nudge.link.firm',
 }
 
 const FIRST_PERSON = new Set(['', 'you', 'me', 'myself', 'i'])
@@ -122,7 +141,7 @@ function upiLine(input: NudgeInput): string | null {
   if (input.currency !== 'INR' || !input.payeeUpi || !isValidUpiId(input.payeeUpi)) return null
   const upi = normalizeUpiId(input.payeeUpi)
   const payee = firstName(cleanText(input.payeeName, 24))
-  return FIRST_PERSON.has(nameKey(payee)) ? `My UPI: ${upi}` : `Pay ${payee} on UPI: ${upi}`
+  return FIRST_PERSON.has(nameKey(payee)) ? t('share.nudge.upi.mine', { upi }) : t('share.nudge.upi', { name: payee, upi })
 }
 
 /**
@@ -138,11 +157,11 @@ export function nudgeText(input: NudgeInput): string {
   const template = templates[((pick % templates.length) + templates.length) % templates.length] ?? templates[0]
   if (!template) return ''
 
-  const to = ellipsize(firstName(cleanText(input.toName, 24)), 16, 24) || 'there'
+  const to = ellipsize(firstName(cleanText(input.toName, 24)), 16, 24) || t('share.nudge.there')
   const amount = formatMoney(input.amount, input.currency, { trimZeros: true })
   const title = cleanText(input.title, 120)
   const link = input.link?.trim() || null
-  const linkLine = link ? `\n${LINK_LABEL[tone]}: ` : ''
+  const linkLine = link ? `\n${t(LINK_LABEL[tone])}: ` : ''
   const budget = NUDGE_MAX_LENGTH - linkLine.length
 
   // Shorten the title until it fits; an absurdly long UPI ID is dropped rather than the message.
@@ -150,7 +169,7 @@ export function nudgeText(input: NudgeInput): string {
   let body = ''
   for (const line of upi ? [upi, null] : [null]) {
     for (const titleLength of [40, 24, 12]) {
-      const what = title ? ellipsize(title, titleLength, titleLength * 2) : 'our split'
+      const what = title ? ellipsize(title, titleLength, titleLength * 2) : t('share.nudge.ourSplit')
       const lead = template({ to, amount, what })
       body = line ? `${lead}\n${line}` : lead
       if (body.length <= budget) return link ? `${body}${linkLine}${link}` : body

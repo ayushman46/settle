@@ -4,6 +4,7 @@ import { ActionBar, BottomSheet, Button, SegmentedControl, useToast, type Segmen
 import { useProfile } from '../data'
 import { shortDateLabel } from '../data/loans'
 import type { Friend, Minor } from '../domain/types'
+import { useT } from '../i18n'
 import { cx } from '../lib/cx'
 import { haptic } from '../lib/haptics'
 import { formatMoney } from '../lib/money'
@@ -36,18 +37,20 @@ export interface NudgeSheetProps {
 }
 
 // The emoji sits inside the label (one unbreakable line) and steps aside on 320px phones.
-const TONE_OPTIONS: ReadonlyArray<SegmentedOption<NudgeTone>> = NUDGE_TONES.map((t) => ({
-  value: t.tone,
-  label: (
-    <span className={styles.tone}>
-      <span className={styles.toneEmoji} aria-hidden="true">
-        {t.emoji}
+function toneOptions(): ReadonlyArray<SegmentedOption<NudgeTone>> {
+  return NUDGE_TONES.map((option) => ({
+    value: option.tone,
+    label: (
+      <span className={styles.tone}>
+        <span className={styles.toneEmoji} aria-hidden="true">
+          {option.emoji}
+        </span>
+        {option.label}
       </span>
-      {t.label}
-    </span>
-  ),
-  'aria-label': t.label,
-}))
+    ),
+    'aria-label': option.label,
+  }))
+}
 
 /**
  * A friendly reminder for someone who owes you: pick a tone (friendly, funny, firm), see the
@@ -55,6 +58,7 @@ const TONE_OPTIONS: ReadonlyArray<SegmentedOption<NudgeTone>> = NUDGE_TONES.map(
  * when you have their number — or copy it. The message carries your UPI ID and the pay link.
  */
 export function NudgeSheet({ open, onClose, friend, amount, currency, title, link, onSent, kind, date }: NudgeSheetProps) {
+  const t = useT()
   const previewId = useId()
   const toast = useToast()
   const profile = useProfile()
@@ -99,10 +103,10 @@ export function NudgeSheet({ open, onClose, friend, amount, currency, title, lin
   const copy = async (): Promise<void> => {
     if (await copyText(text)) {
       sent('copy')
-      toast('Reminder copied', { tone: 'success' })
+      toast(t('kit.nudge.copied.toast'), { tone: 'success' })
     } else {
       haptic('error')
-      toast('Couldn’t copy. Long-press the message instead.', { tone: 'error' })
+      toast(t('kit.nudge.copyFailed.toast'), { tone: 'error' })
     }
   }
 
@@ -110,9 +114,9 @@ export function NudgeSheet({ open, onClose, friend, amount, currency, title, lin
     <BottomSheet
       open={open}
       onClose={onClose}
-      eyebrow={`${formatMoney(amount, currency, { trimZeros: true })} for ${title}`}
-      title={`Nudge ${first}`}
-      description="Pick a tone. They’ll get exactly this."
+      eyebrow={t('kit.nudge.eyebrow', { amount: formatMoney(amount, currency, { trimZeros: true }), title })}
+      title={t('kit.nudge.title', { name: first })}
+      description={t('kit.nudge.description')}
       footer={
         <ActionBar>
           <a
@@ -123,26 +127,26 @@ export function NudgeSheet({ open, onClose, friend, amount, currency, title, lin
             onClick={() => sent('whatsapp')}
           >
             <MessageCircle aria-hidden="true" strokeWidth={2.25} />
-            Send on WhatsApp
+            {t('kit.nudge.whatsapp.cta')}
           </a>
           <div className={styles.more}>
             <a className={cx(styles.send, styles.secondary)} href={smsUrl(text, friend?.phone)} onClick={() => sent('sms')}>
               <MessageSquareText aria-hidden="true" strokeWidth={2.25} />
-              Text message
+              {t('kit.nudge.sms.cta')}
             </a>
             <Button variant="secondary" size="md" iconStart={<Copy />} onClick={copy}>
-              Copy
+              {t('kit.nudge.copy.cta')}
             </Button>
           </div>
         </ActionBar>
       }
     >
       <div className={styles.body}>
-        <SegmentedControl options={TONE_OPTIONS} value={tone} onChange={setTone} ariaLabel="Tone" />
+        <SegmentedControl options={toneOptions()} value={tone} onChange={setTone} ariaLabel={t('kit.nudge.tone.aria')} />
 
         <figure className={styles.preview} aria-labelledby={previewId}>
           <figcaption id={previewId} className={styles.previewLabel}>
-            Message to {first}
+            {t('kit.nudge.preview', { name: first })}
           </figcaption>
           <p className={styles.bubble} aria-live="polite">
             {/* Keyed so each new wording pops in. */}
@@ -155,11 +159,11 @@ export function NudgeSheet({ open, onClose, friend, amount, currency, title, lin
         <div className={styles.tools}>
           {count > 1 && (
             <Button variant="ghost" size="sm" iconStart={<Shuffle />} onClick={another}>
-              Try another
+              {t('kit.nudge.another.cta')}
             </Button>
           )}
           <p className={styles.phone}>
-            {phone ? `Opens your chat with ${first}.` : `No number saved for ${first}, so you’ll pick the chat.`}
+            {phone ? t('kit.nudge.phone', { name: first }) : t('kit.nudge.noPhone', { name: first })}
           </p>
         </div>
       </div>

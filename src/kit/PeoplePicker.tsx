@@ -3,6 +3,7 @@ import { Check, Search, UserPlus, X } from 'lucide-react'
 import { IconButton, lastInputModality, TextField } from '../components'
 import { addFriend, DataError, MAX_PARTICIPANTS, useFriends, useFriendsById } from '../data'
 import { BRAND, ME_ID, type Friend } from '../domain/types'
+import { useT } from '../i18n'
 import { cx } from '../lib/cx'
 import { haptic } from '../lib/haptics'
 import { nameKey } from '../lib/people'
@@ -54,10 +55,11 @@ export function PeoplePicker({
   includeMe = true,
   max,
   groupMemberIds,
-  label = 'Search or add people',
+  label,
   autoFocus = false,
   className,
 }: PeoplePickerProps) {
+  const t = useT()
   const friends = useFriends()
   const everyoneById = useFriendsById()
   const [query, setQuery] = useState('')
@@ -119,7 +121,7 @@ export function PeoplePicker({
 
   const nameOf = (id: string): string => friendLabel(id, everyoneById[id] ?? null)
 
-  const limitMessage = `You can split between up to ${limit} ${limit === 1 ? 'person' : 'people'}.`
+  const limitMessage = t('kit.people.limit', { count: limit })
 
   const select = (id: string): boolean => {
     if (selected.has(id)) return true
@@ -130,14 +132,14 @@ export function PeoplePicker({
     }
     setError(null)
     onChange([...picked, id])
-    announce(`${nameOf(id)} added`)
+    announce(t('kit.people.added', { name: nameOf(id) }))
     return true
   }
 
   const deselect = (id: string): void => {
     onChange(picked.filter((x) => x !== id))
     setError(null)
-    announce(`${nameOf(id)} removed`)
+    announce(t('kit.people.removed', { name: nameOf(id) }))
   }
 
   const toggle = (id: string): void => {
@@ -161,7 +163,7 @@ export function PeoplePicker({
       setQuery('')
       setError(null)
       if (!selected.has(friend.id)) onChange([...picked, friend.id])
-      announce(`Added ${friend.name}`)
+      announce(t('kit.people.addedNew', { name: friend.name }))
     } catch (caught) {
       if (!(caught instanceof DataError)) throw caught
       setError(caught.message)
@@ -183,14 +185,14 @@ export function PeoplePicker({
     if (allMembersIn) {
       const members = new Set(quick.map((f) => f.id))
       onChange(picked.filter((id) => !members.has(id)))
-      announce('Group members removed')
+      announce(t('kit.people.members.removed'))
       return
     }
     const missing = quick.map((f) => f.id).filter((id) => !selected.has(id))
     const room = limit - picked.length
     onChange([...picked, ...missing.slice(0, Math.max(0, room))])
     if (missing.length > room) setError(limitMessage)
-    announce('Everyone in the group added')
+    announce(t('kit.people.members.added'))
   }
 
   const onSearchKeyDown = (event: KeyboardEvent<HTMLInputElement>): void => {
@@ -255,8 +257,8 @@ export function PeoplePicker({
           <UserPlus strokeWidth={2.25} />
         </span>{' '}
         <span className={styles.rowText}>
-          <span className={styles.rowName}>Add “{addName}”</span>{' '}
-          <span className={styles.rowSub}>New to your people — they don't need {BRAND.name}</span>
+          <span className={styles.rowName}>{t('kit.people.add.name', { name: addName })}</span>{' '}
+          <span className={styles.rowSub}>{t('kit.people.add.hint', { brand: BRAND.name })}</span>
         </span>
       </button>
     </li>
@@ -266,7 +268,7 @@ export function PeoplePicker({
   return (
     <div className={cx(styles.picker, className)}>
       {picked.length > 0 && (
-        <ul className={styles.chips} aria-label={`Picked: ${picked.length} ${picked.length === 1 ? 'person' : 'people'}`}>
+        <ul className={styles.chips} aria-label={t('kit.people.picked.aria', { count: picked.length })}>
           {picked.map((id) => (
             <li key={id} className={styles.chipItem}>
               <FriendChip friendId={id} removeId={chipRemoveId(id)} onRemove={() => removeChip(id)} />
@@ -277,11 +279,11 @@ export function PeoplePicker({
 
       <TextField
         ref={inputRef}
-        label={label}
+        label={label ?? t('kit.people.label')}
         hideLabel
         type="text"
         value={query}
-        placeholder={allowAdd ? 'Search or add a name' : 'Search your people'}
+        placeholder={allowAdd ? t('kit.people.placeholder.add') : t('kit.people.placeholder')}
         autoFocus={autoFocus}
         autoComplete="off"
         autoCapitalize="words"
@@ -294,7 +296,7 @@ export function PeoplePicker({
         endAdornment={
           query ? (
             <IconButton
-              label="Clear search"
+              label={t('kit.people.clear.aria')}
               size="sm"
               onClick={() => {
                 setQuery('')
@@ -317,11 +319,11 @@ export function PeoplePicker({
         <section className={styles.quick} aria-labelledby={quickLabelId}>
           <div className={styles.quickHead}>
             <p id={quickLabelId} className={styles.overline}>
-              {groupMemberIds ? 'In this group' : 'Frequent'}
+              {groupMemberIds ? t('kit.people.quick.group') : t('kit.people.quick.frequent')}
             </p>
             {groupMemberIds && (
               <button type="button" className={styles.textAction} onClick={toggleMembers}>
-                {allMembersIn ? 'Clear all' : 'Select all'}
+                {allMembersIn ? t('kit.people.quick.clearAll') : t('kit.people.quick.selectAll')}
               </button>
             )}
           </div>
@@ -347,7 +349,7 @@ export function PeoplePicker({
 
       <section className={styles.all} aria-labelledby={listLabelId}>
         <p id={listLabelId} className={cx(styles.overline, searching && 'visually-hidden')}>
-          {searching ? 'Search results' : 'All people'}
+          {searching ? t('kit.people.list.results') : t('kit.people.list.all')}
         </p>
         <ul ref={listRef} className={styles.list} role="list" onKeyDown={onListKeyDown}>
           {!enterPick && addRow}
@@ -370,7 +372,7 @@ export function PeoplePicker({
                     {member && (
                       <>
                         {' '}
-                        <span className={styles.rowSub}>In this group</span>
+                        <span className={styles.rowSub}>{t('kit.people.list.member')}</span>
                       </>
                     )}
                   </span>
@@ -384,11 +386,11 @@ export function PeoplePicker({
           {enterPick && addRow}
         </ul>
         {searching && listed.length === 0 && !addName && (
-          <p className={styles.empty}>No one called “{query.trim()}” in your people.</p>
+          <p className={styles.empty}>{t('kit.people.noMatch', { query: query.trim() })}</p>
         )}
         {!searching && onlyMe && (
           <p className={styles.empty}>
-            {allowAdd ? `Type a name to add someone — they don't need ${BRAND.name}.` : 'No people yet.'}
+            {allowAdd ? t('kit.people.empty.add', { brand: BRAND.name }) : t('kit.people.empty')}
           </p>
         )}
       </section>

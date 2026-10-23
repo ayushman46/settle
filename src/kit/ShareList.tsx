@@ -2,13 +2,13 @@ import { useId, useState } from 'react'
 import { BellRing, Check, ChevronDown, QrCode } from 'lucide-react'
 import { Button, Money } from '../components'
 import { useFriendsById, useGroup } from '../data'
+import { t, useT } from '../i18n'
 import { ME_ID, type Expense, type Friend } from '../domain/types'
 import { isSettledInGroup } from '../engine/balances'
 import { cx } from '../lib/cx'
 import { haptic } from '../lib/haptics'
 import { formatMoney } from '../lib/money'
 import { firstName } from '../share/text'
-import { plural } from './expenseLabels'
 import { FriendAvatar } from './FriendAvatar'
 import { friendLabel, friendObjectLabel } from './friendName'
 import { extrasLabel, shareActions, shareLines, type ShareLine } from './shareLines'
@@ -71,19 +71,20 @@ interface ShareRowProps extends Omit<ShareListProps, 'className'> {
 function statusText(line: ShareLine, payerObject: string, groupName: string | null): string {
   switch (line.state) {
     case 'payer':
-      return 'Paid the bill'
+      return t('kit.shares.status.payer')
     case 'paid':
-      return `Paid ${payerObject} back`
+      return t('kit.shares.status.paid', { name: payerObject })
     case 'owes':
-      return line.friendId === ME_ID ? `You owe ${payerObject}` : `Owes ${payerObject}`
+      return line.friendId === ME_ID ? t('kit.shares.status.youOwe', { name: payerObject }) : t('kit.shares.status.owes', { name: payerObject })
     case 'zero':
-      return 'Nothing to pay'
+      return t('kit.shares.status.zero')
     case 'group':
-      return groupName ? `Settles in ${groupName}` : 'Settles in the group'
+      return groupName ? t('kit.shares.status.group', { group: groupName }) : t('kit.shares.status.groupUnnamed')
   }
 }
 
 function ShareRow({ line, expense, friend, payer, groupName, onTogglePaid, onPayUpi, onNudge }: ShareRowProps) {
+  useT()
   const itemsId = useId()
   const [open, setOpen] = useState(false)
   const id = line.friendId
@@ -127,7 +128,7 @@ function ShareRow({ line, expense, friend, payer, groupName, onTogglePaid, onPay
             type="button"
             className={styles.tick}
             aria-pressed={paid}
-            aria-label={`${name} paid ${payerObject} back`}
+            aria-label={t('kit.shares.tick.aria', { name, payer: payerObject })}
             onClick={toggle}
           >
             <span className={styles.tickMark} aria-hidden="true">
@@ -145,10 +146,10 @@ function ShareRow({ line, expense, friend, payer, groupName, onTogglePaid, onPay
               className={styles.disclose}
               aria-expanded={open}
               aria-controls={itemsId}
-              aria-label={`${plural(line.items.length, 'item')} ${id === ME_ID ? 'you' : name} had`}
+              aria-label={id === ME_ID ? t('kit.shares.items.mine.aria', { count: line.items.length }) : t('kit.shares.items.aria', { count: line.items.length, name })}
               onClick={() => setOpen((v) => !v)}
             >
-              {plural(line.items.length, 'item')}
+              {t('kit.shares.items.cta', { count: line.items.length })}
               <ChevronDown aria-hidden="true" strokeWidth={2.5} className={styles.chevron} />
             </button>
           )}
@@ -160,14 +161,14 @@ function ShareRow({ line, expense, friend, payer, groupName, onTogglePaid, onPay
                   variant={payingPayer ? 'accent' : 'tonal'}
                   iconStart={<QrCode />}
                   onClick={() => onPayUpi?.(id)}
-                  aria-label={payingPayer ? `Pay ${payerObject} ${amount} via UPI` : `Show a UPI QR for ${name} to pay ${amount}`}
+                  aria-label={payingPayer ? t('kit.shares.pay.aria', { name: payerObject, amount }) : t('kit.shares.qr.aria', { name, amount })}
                 >
-                  {payingPayer ? `Pay ${firstName(payerObject)}` : 'UPI QR'}
+                  {payingPayer ? t('kit.shares.pay.cta', { name: firstName(payerObject) }) : t('kit.shares.qr.cta')}
                 </Button>
               )}
               {canNudge && (
-                <Button size="sm" variant="tonal" iconStart={<BellRing />} onClick={() => onNudge?.(id)} aria-label={`Nudge ${name} about ${amount}`}>
-                  Nudge
+                <Button size="sm" variant="tonal" iconStart={<BellRing />} onClick={() => onNudge?.(id)} aria-label={t('kit.shares.nudge.aria', { name, amount })}>
+                  {t('kit.shares.nudge.cta')}
                 </Button>
               )}
             </span>
@@ -176,7 +177,7 @@ function ShareRow({ line, expense, friend, payer, groupName, onTogglePaid, onPay
       )}
 
       {hasItems && (
-        <ul id={itemsId} role="list" hidden={!open} className={styles.items} aria-label={id === ME_ID ? 'Your items' : `${name}’s items`}>
+        <ul id={itemsId} role="list" hidden={!open} className={styles.items} aria-label={id === ME_ID ? t('kit.shares.items.mine.list') : t('kit.shares.items.list', { name })}>
           {line.items.map((item) => (
             <li key={item.itemId} className={styles.line}>
               <span className={styles.lineName}>
@@ -184,7 +185,7 @@ function ShareRow({ line, expense, friend, payer, groupName, onTogglePaid, onPay
                 {(item.portion !== null || item.everyone) && (
                   <span className={styles.portion}>
                     {' · '}
-                    {[item.portion, item.everyone ? 'shared by all' : null].filter(Boolean).join(', ')}
+                    {[item.portion, item.everyone ? t('kit.shares.item.sharedByAll') : null].filter(Boolean).join(', ')}
                   </span>
                 )}
               </span>

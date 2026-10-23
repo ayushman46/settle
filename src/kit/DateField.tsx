@@ -1,6 +1,7 @@
 import type { KeyboardEvent, MouseEvent } from 'react'
 import { CalendarDays, ChevronDown } from 'lucide-react'
 import { isIsoDate, today } from '../engine/dates'
+import { useT } from '../i18n'
 import { cx } from '../lib/cx'
 import { haptic } from '../lib/haptics'
 import { fullDateLabel, relativeDateLabel } from './dateLabel'
@@ -36,12 +37,14 @@ function openPicker(input: HTMLInputElement): void {
  * A date chip — "Today", "Yesterday", "18 Oct" — that opens the phone's native date picker. The
  * real `<input type="date">` covers the chip, so taps, keyboards and screen readers all reach it.
  */
-export function DateField({ value, onChange, label = 'Date', max, min, disabled = false, id, className }: DateFieldProps) {
+export function DateField({ value, onChange, label: labelProp, max, min, disabled = false, id, className }: DateFieldProps) {
+  const t = useT()
+  const label = labelProp ?? t('kit.date.field.label')
   const now = today()
   const limit = max === undefined ? now : max
   const text = relativeDateLabel(value, now)
   const full = fullDateLabel(value)
-  const spoken = full && full !== text ? `${label}: ${text}, ${full}` : `${label}: ${text}`
+  const spoken = full && full !== text ? t('kit.date.field.aria.full', { label, text, full }) : t('kit.date.field.aria', { label, text })
 
   return (
     <span className={cx(styles.field, disabled && styles.disabled, className)}>

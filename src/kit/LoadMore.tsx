@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { Button } from '../components'
+import { useT } from '../i18n'
 import styles from './LoadMore.module.css'
 
 export interface LoadMoreProps {
@@ -17,6 +18,7 @@ export interface LoadMoreProps {
  * `remaining > 0`.
  */
 export function LoadMore({ remaining, page, onMore }: LoadMoreProps) {
+  const t = useT()
   const sentinel = useRef<HTMLDivElement>(null)
   const more = useRef(onMore)
   useEffect(() => {
@@ -39,7 +41,7 @@ export function LoadMore({ remaining, page, onMore }: LoadMoreProps) {
   return (
     <div ref={sentinel} className={styles.more}>
       <Button variant="tonal" size="md" onClick={onMore}>
-        Show {Math.min(remaining, page)} more
+        {t('kit.loadMore.cta', { count: Math.min(remaining, page) })}
       </Button>
     </div>
   )

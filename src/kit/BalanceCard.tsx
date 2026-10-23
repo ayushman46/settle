@@ -2,6 +2,7 @@ import { useEffect, useId, useState } from 'react'
 import { ArrowRight, Check } from 'lucide-react'
 import { AvatarStack, Button, Money, describePeople, type AvatarStackPerson } from '../components'
 import { useFriendsById } from '../data'
+import { useT } from '../i18n'
 import type { OverallSummary } from '../engine/balances'
 import { cx } from '../lib/cx'
 import { currencyDigits, formatMoney } from '../lib/money'
@@ -33,7 +34,8 @@ let introPlayed = false
  * With nothing outstanding it becomes a calm "All settled up" (screens may hide it instead — see
  * `hasOutstanding`).
  */
-export function BalanceCard({ summary, onSettle, settleLabel = 'Settle up', className }: BalanceCardProps) {
+export function BalanceCard({ summary, onSettle, settleLabel, className }: BalanceCardProps) {
+  const t = useT()
   const headingId = useId()
   const friendsById = useFriendsById()
   const headline = balanceHeadline(summary)
@@ -65,9 +67,9 @@ export function BalanceCard({ summary, onSettle, settleLabel = 'Settle up', clas
         </span>
         <div className={styles.calmText}>
           <h2 id={headingId} className={styles.calmTitle}>
-            All settled up
+            {t('kit.balance.settled')}
           </h2>
-          <p className={styles.calmSub}>No one owes anyone right now.</p>
+          <p className={styles.calmSub}>{t('kit.balance.settled.body')}</p>
         </div>
       </section>
     )
@@ -76,7 +78,7 @@ export function BalanceCard({ summary, onSettle, settleLabel = 'Settle up', clas
   return (
     <section aria-labelledby={headingId} className={cx(styles.card, className)} data-mood={headline.mood}>
       <h2 id={headingId} className="visually-hidden">
-        Your balance
+        {t('kit.balance.heading')}
       </h2>
 
       <div className={styles.top}>
@@ -104,7 +106,7 @@ export function BalanceCard({ summary, onSettle, settleLabel = 'Settle up', clas
           <div className={styles.total}>
             <dt className={styles.totalLabel}>
               <span className={cx(styles.dot, styles.dotOwed)} aria-hidden="true" />
-              You're owed
+              {t('kit.balance.owed')}
             </dt>
             <dd className={styles.totalValue}>
               <Money value={headline.owedToMe} currency={headline.currency} size="inherit" trimZeros />
@@ -113,7 +115,7 @@ export function BalanceCard({ summary, onSettle, settleLabel = 'Settle up', clas
           <div className={styles.total}>
             <dt className={styles.totalLabel}>
               <span className={cx(styles.dot, styles.dotOwe)} aria-hidden="true" />
-              You owe
+              {t('kit.balance.owe')}
             </dt>
             <dd className={styles.totalValue}>
               <Money value={headline.iOwe} currency={headline.currency} size="inherit" trimZeros />
@@ -141,7 +143,7 @@ export function BalanceCard({ summary, onSettle, settleLabel = 'Settle up', clas
           </span>
         )}
         <Button variant="accent" size="md" onClick={onSettle} iconEnd={<ArrowRight />} className={styles.settle}>
-          {settleLabel}
+          {settleLabel ?? t('kit.balance.settle.cta')}
         </Button>
       </div>
     </section>

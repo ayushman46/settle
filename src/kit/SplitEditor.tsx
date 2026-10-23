@@ -3,6 +3,7 @@ import { CircleAlert, CircleCheck, CircleDashed, RotateCcw, Wand2 } from 'lucide
 import { Button, Money, SegmentedControl, Stepper, Switch, type SegmentedOption } from '../components'
 import { useFriendsById } from '../data'
 import { ME_ID, type Minor, type Participant } from '../domain/types'
+import { t, useT } from '../i18n'
 import { isValidTotal, splitAmount, splitRestEqually, uniqueParticipants, type AmountSplitMode } from '../engine/split'
 import { cx } from '../lib/cx'
 import { haptic } from '../lib/haptics'
@@ -39,12 +40,14 @@ export interface SplitEditorProps {
   className?: string
 }
 
-const MODE_OPTIONS: readonly SegmentedOption<AmountSplitMode>[] = [
-  { value: 'equal', label: 'Equally' },
-  { value: 'exact', label: 'Exact' },
-  { value: 'percent', label: '%', 'aria-label': 'Percentages' },
-  { value: 'shares', label: 'Shares' },
-]
+function modeOptions(): readonly SegmentedOption<AmountSplitMode>[] {
+  return [
+    { value: 'equal', label: t('kit.split.mode.equal') },
+    { value: 'exact', label: t('kit.split.mode.exact') },
+    { value: 'percent', label: '%', 'aria-label': t('kit.split.mode.percent.aria') },
+    { value: 'shares', label: t('kit.split.mode.shares') },
+  ]
+}
 
 const MAX_SHARES = 99
 
@@ -211,6 +214,7 @@ export function SplitEditor({
   onRoundToWholeChange,
   className,
 }: SplitEditorProps) {
+  useT()
   const friendsById = useFriendsById()
   const statusRef = useRef<HTMLDivElement>(null)
   /** What was typed in each mode, by friendId — restored when coming back to that mode. */
@@ -257,19 +261,23 @@ export function SplitEditor({
   const payerName = nameOf(payerId)
   const payerIsYou = payerId === ME_ID
   const roundDescription = !roundToWhole
-    ? `Everyone else pays a whole amount; ${payerIsYou ? 'you cover' : `${payerName} covers`} the difference.`
+    ? payerIsYou
+      ? t('kit.split.round.off.mine')
+      : t('kit.split.round.off.theirs', { name: payerName })
     : cover > 0
-      ? `${payerIsYou ? 'You cover' : `${payerName} covers`} ${money(cover)} so everyone else pays a whole amount.`
-      : 'Everyone already pays a whole amount.'
+      ? payerIsYou
+        ? t('kit.split.round.cover.mine', { amount: money(cover) })
+        : t('kit.split.round.cover.theirs', { name: payerName, amount: money(cover) })
+      : t('kit.split.round.none')
 
   const StatusIcon = STATUS_ICONS[status.tone]
 
   return (
     <div className={cx(styles.editor, className)}>
-      <SegmentedControl className={styles.modes} options={MODE_OPTIONS} value={mode} onChange={switchMode} ariaLabel="How to split" />
+      <SegmentedControl className={styles.modes} options={modeOptions()} value={mode} onChange={switchMode} ariaLabel={t('kit.split.mode.aria')} />
 
       {people.length > 0 ? (
-        <ul className={styles.rows} aria-label="Everyone's share" data-split-rows="">
+        <ul className={styles.rows} aria-label={t('kit.split.rows.aria')} data-split-rows="">
           {people.map((p) => {
             const id = p.friendId
             const share = result.shares[id] ?? 0
@@ -278,7 +286,7 @@ export function SplitEditor({
             let sub: string | null = null
             if (validTotal) {
               if (mode === 'exact' && p.input !== null && p.input > 0) sub = formatBps(Math.round((p.input / (total ?? 1)) * 10_000))
-              else if (mode === 'percent' || mode === 'shares') sub = out ? 'Not paying' : money(share)
+              else if (mode === 'percent' || mode === 'shares') sub = out ? t('kit.split.notPaying') : money(share)
             }
             return (
               <li key={id} className={cx(styles.row, out && styles.out)}>
@@ -294,14 +302,14 @@ export function SplitEditor({
                     ) : (
                       <span className={styles.dash}>
                         <span aria-hidden="true">–</span>
-                        <span className="visually-hidden">No amount yet</span>
+                        <span className="visually-hidden">{t('kit.split.noAmount')}</span>
                       </span>
                     ))}
                   {mode === 'exact' && (
                     <MoneyCell
                       value={p.input}
                       currency={currency}
-                      label={`Amount for ${objectOf(id)}`}
+                      label={t('kit.split.amountFor', { name: objectOf(id) })}
                       placeholder={preview[id] !== undefined ? toInputString(preview[id], currency, { trimZeros: true }) : '0'}
                       onChange={(minor) => setInput(id, minor)}
                     />
@@ -309,7 +317,7 @@ export function SplitEditor({
                   {mode === 'percent' && (
                     <PercentCell
                       value={p.input}
-                      label={`Percentage for ${objectOf(id)}`}
+                      label={t('kit.split.percentFor', { name: objectOf(id) })}
                       placeholder={preview[id] !== undefined ? percentText(preview[id]) : '0'}
                       onChange={(bps) => setInput(id, bps)}
                     />
@@ -319,7 +327,7 @@ export function SplitEditor({
                       value={Math.round(weight)}
                       min={0}
                       max={MAX_SHARES}
-                      label={`Shares for ${objectOf(id)}`}
+                      label={t('kit.split.sharesFor', { name: objectOf(id) })}
                       onChange={(n) => setInput(id, n)}
                     />
                   )}
@@ -329,7 +337,7 @@ export function SplitEditor({
           })}
         </ul>
       ) : (
-        <p className={styles.empty}>Pick people above to see everyone's share.</p>
+        <p className={styles.empty}>{t('kit.split.empty')}</p>
       )}
 
       <div ref={statusRef} className={cx(styles.status, styles[status.tone])}>
@@ -353,12 +361,12 @@ export function SplitEditor({
             <span className={styles.actions}>
               {status.canSplitRest && (
                 <Button size="sm" variant="accent" iconStart={<Wand2 aria-hidden="true" />} onClick={splitRest}>
-                  Split the rest equally
+                  {t('kit.split.rest.cta')}
                 </Button>
               )}
               {canReset && (
                 <Button size="sm" variant="ghost" iconStart={<RotateCcw aria-hidden="true" />} onClick={reset}>
-                  Reset
+                  {t('kit.split.reset.cta')}
                 </Button>
               )}
             </span>
@@ -371,7 +379,7 @@ export function SplitEditor({
           className={styles.round}
           checked={roundToWhole}
           onChange={onRoundToWholeChange}
-          label={`Round to whole ${symbol}`}
+          label={t('kit.split.round.label', { symbol })}
           description={roundDescription}
         />
       )}
