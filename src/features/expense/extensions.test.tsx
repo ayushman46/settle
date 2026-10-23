@@ -1,8 +1,13 @@
 import { render } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { ME_ID, type Expense } from '../../domain/types'
 import { extensionEditPath, extraExpenseActions, isOneToOneEntry } from './extensionActions'
 import { ExpenseExtensions } from './extensions'
+
+// The switched-off contract, whatever the flags say today (extensions.on.test.tsx covers them on).
+vi.mock('../claim/enabled', () => ({ CLAIMS_ENABLED: false }))
+vi.mock('../lend/enabled', () => ({ LEND_ENABLED: false }))
+vi.mock('../trip/enabled', () => ({ TRIP_ENABLED: false }))
 
 const expense: Expense = {
   id: 'e1',
