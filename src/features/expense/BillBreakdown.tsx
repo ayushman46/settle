@@ -4,7 +4,9 @@ import { AvatarStack, describePeople, Money, Receipt, ReceiptDivider, ReceiptRow
 import { useFriendsById } from '../../data'
 import type { Expense } from '../../domain/types'
 import { friendLabel } from '../../kit/index-a'
+import { useT } from '../../i18n'
 import { formatQuantity } from '../../lib/format'
+import { currencySymbol } from '../../lib/money'
 import { billExtraLines, feesByPerson } from './expenseView'
 import styles from './BillBreakdown.module.css'
 
@@ -24,18 +26,22 @@ export function BillBreakdown({ expense }: BillBreakdownProps) {
   const headingId = useId()
   const listId = useId()
   const friendsById = useFriendsById()
+  const t = useT()
   const [expanded, setExpanded] = useState(false)
   const bill = expense.bill
   if (expense.kind !== 'bill' || !bill || bill.items.length === 0) return null
 
-  const extras = billExtraLines(expense)
+  // Paid abroad and converted: the bill stays as printed (฿), the total it settled at is in ₹.
+  const fx = expense.fx ?? null
+  const printed = fx ? { total: fx.amount, currency: fx.currency, bill } : expense
+  const extras = billExtraLines(printed)
   const itemsTotal = bill.items.reduce((sum, item) => sum + item.amount, 0)
   const folded = !expanded && bill.items.length > FOLD_AFTER + 1
   const items = folded ? bill.items.slice(0, FOLD_AFTER) : bill.items
   const money = (value: number, opts: { sign?: 'always' } = {}) => (
-    <Money value={value} currency={expense.currency} trimZeros sign={opts.sign} />
+    <Money value={value} currency={printed.currency} trimZeros sign={opts.sign} />
   )
-  const fees = feesByPerson(expense)
+  const fees = feesByPerson({ bill, participants: expense.participants, total: printed.total })
 
   return (
     <section aria-labelledby={headingId} className={styles.section}>
@@ -81,7 +87,14 @@ export function BillBreakdown({ expense }: BillBreakdownProps) {
           ))}
         </div>
         <ReceiptDivider />
-        <ReceiptRow label="Total paid" value={money(expense.total)} emphasis="strong" />
+        <ReceiptRow label="Total paid" value={money(printed.total)} emphasis="strong" />
+        {fx && (
+          <ReceiptRow
+            label={t('trip.bill.settled', { symbol: currencySymbol(expense.currency) })}
+            value={<Money value={expense.total} currency={expense.currency} trimZeros />}
+            emphasis="muted"
+          />
+        )}
         {fees.length > 0 && (
           <>
             <ReceiptDivider />

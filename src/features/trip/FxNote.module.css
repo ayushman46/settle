@@ -1,0 +1,21 @@
+.note {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-2);
+  min-width: 0;
+  padding: var(--s-3) var(--s-4);
+  border-radius: var(--radius-card);
+  background: color-mix(in srgb, var(--cat-travel-bg) 45%, var(--surface));
+  font: var(--text-caption);
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.icon {
+  flex: none;
+  width: var(--s-4);
+  height: var(--s-4);
+  margin-top: 2px;
+  color: var(--cat-travel-ink);
+}
