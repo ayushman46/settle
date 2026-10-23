@@ -21,7 +21,7 @@ import {
 import { removeFriend, useExpenses, useFriend, useGroups, useMe, useProfile, useRecurring } from '../../data'
 import { ME_ID, type Friend } from '../../domain/types'
 import { today } from '../../engine/dates'
-import { t } from '../../i18n'
+import { useT } from '../../i18n'
 import { FriendAvatar } from '../../kit/index-a'
 import { ExpenseRow, NudgeSheet, UpiPaySheet } from '../../kit/index-b'
 import { cx } from '../../lib/cx'
@@ -37,6 +37,7 @@ import {
   friendBalance,
   removalBlockers,
   settleWithFriend,
+  singleSourceTitle,
   sourceDirection,
   sourcesTitle,
   type FriendBalance,
@@ -70,11 +71,12 @@ export function FriendDetailScreen() {
 }
 
 function FriendGone() {
+  const t = useT()
   return (
     <Screen header={<TopBar onBack={() => goBack(FRIENDS_PATH)} />}>
-      <PageTitle title="This person isn’t here" subtitle="They may have been removed — on this phone or in another tab." />
+      <PageTitle title={t('friends.gone.title')} subtitle={t('friends.gone.subtitle')} />
       <Button className={styles.goneAction} onClick={() => navigate(FRIENDS_PATH, { replace: true })}>
-        See your people
+        {t('friends.gone.cta')}
       </Button>
     </Screen>
   )
@@ -83,6 +85,7 @@ function FriendGone() {
 type Sheet = 'edit' | 'settle' | 'remind' | 'pay' | 'remove' | 'blocked'
 
 function FriendDetail({ friend, onLeaving }: { friend: Friend; onLeaving: (friend: Friend) => void }) {
+  const t = useT()
   const toast = useToast()
   const profile = useProfile()
   const me = useMe()
@@ -110,9 +113,9 @@ function FriendDetail({ friend, onLeaving }: { friend: Friend; onLeaving: (frien
     if (!friend.upiId) return
     if (await copyText(friend.upiId)) {
       haptic('success')
-      toast('UPI ID copied', { tone: 'success' })
+      toast(t('friends.detail.upi.copied.toast'), { tone: 'success' })
     } else {
-      toast('Couldn’t copy. Long-press the UPI ID to copy it.', { tone: 'error' })
+      toast(t('friends.detail.upi.copy.error'), { tone: 'error' })
     }
   }
 
@@ -137,7 +140,7 @@ function FriendDetail({ friend, onLeaving }: { friend: Friend; onLeaving: (frien
     onLeaving(friend)
     haptic('success')
     goBack(FRIENDS_PATH)
-    toast(`${name} removed from your people`)
+    toast(t('friends.detail.removed.toast', { name }))
   }
 
   const paidByUpi = (): void => {
@@ -151,7 +154,7 @@ function FriendDetail({ friend, onLeaving }: { friend: Friend; onLeaving: (frien
         <TopBar
           onBack={() => goBack(FRIENDS_PATH)}
           right={
-            <IconButton label={`Edit ${name}`} onClick={() => setSheet('edit')}>
+            <IconButton label={t('friends.detail.edit.aria', { name })} onClick={() => setSheet('edit')}>
               <Pencil />
             </IconButton>
           }
@@ -163,7 +166,7 @@ function FriendDetail({ friend, onLeaving }: { friend: Friend; onLeaving: (frien
           {LEND_ENABLED ? (
             <div className={styles.footerRow}>
               <Button block iconStart={<Split />} onClick={() => navigate(newSplitPath({ friend: friend.id }))}>
-                Split with {first}
+                {t('friends.detail.split.cta', { name: first })}
               </Button>
               <Button
                 variant="secondary"
@@ -176,7 +179,7 @@ function FriendDetail({ friend, onLeaving }: { friend: Friend; onLeaving: (frien
             </div>
           ) : (
             <Button block iconStart={<Split />} onClick={() => navigate(newSplitPath({ friend: friend.id }))}>
-              Split with {first}
+              {t('friends.detail.split.cta', { name: first })}
             </Button>
           )}
         </ActionBar>
@@ -187,7 +190,7 @@ function FriendDetail({ friend, onLeaving }: { friend: Friend; onLeaving: (frien
         <PageTitle align="center" title={name} />
         <div className={styles.contact}>
           {friend.upiId ? (
-            <button type="button" className={styles.contactChip} onClick={copyUpi} aria-label={`UPI ID ${friend.upiId}. Copy`}>
+            <button type="button" className={styles.contactChip} onClick={copyUpi} aria-label={t('friends.detail.upi.aria', { upi: friend.upiId })}>
               <QrCode aria-hidden="true" />
               <span className={styles.upi}>{friend.upiId}</span>
               <Copy aria-hidden="true" className={styles.copy} />
@@ -195,11 +198,11 @@ function FriendDetail({ friend, onLeaving }: { friend: Friend; onLeaving: (frien
           ) : (
             <button type="button" className={cx(styles.contactChip, styles.missing)} onClick={() => setSheet('edit')}>
               <QrCode aria-hidden="true" />
-              <span>Add UPI ID</span>
+              <span>{t('friends.detail.upi.add')}</span>
             </button>
           )}
           {friend.phone && (
-            <a className={styles.contactChip} href={`tel:${friend.phone}`} aria-label={`Call ${first} on ${friend.phone}`}>
+            <a className={styles.contactChip} href={`tel:${friend.phone}`} aria-label={t('friends.detail.call.aria', { name: first, phone: friend.phone })}>
               <Phone aria-hidden="true" />
               <span>{friend.phone}</span>
             </a>
@@ -218,7 +221,7 @@ function FriendDetail({ friend, onLeaving }: { friend: Friend; onLeaving: (frien
 
       {balance.sources.length > 0 && (
         <section className={styles.section} aria-labelledby="friend-sources">
-          <SectionHeader id="friend-sources" title="Where it’s from" />
+          <SectionHeader id="friend-sources" title={t('friends.sources.title')} />
           <Card padding="none">
             <List>
               {balance.sources.map((source) => (
@@ -233,7 +236,7 @@ function FriendDetail({ friend, onLeaving }: { friend: Friend; onLeaving: (frien
                       </span>
                     )
                   }
-                  title={source.kind === 'group' ? source.group.name : `${source.count} ${source.count === 1 ? 'split' : 'splits'} outside groups`}
+                  title={source.kind === 'group' ? source.group.name : t('friends.sources.splits', { count: source.count })}
                   subtitle={sourceDirection(source, first)}
                   trailing={
                     <Money
@@ -255,7 +258,7 @@ function FriendDetail({ friend, onLeaving }: { friend: Friend; onLeaving: (frien
 
       {sharedGroups.length > 0 && (
         <section className={styles.section} aria-labelledby="friend-groups">
-          <SectionHeader id="friend-groups" title="Groups together" />
+          <SectionHeader id="friend-groups" title={t('friends.detail.groups.title')} />
           <ul role="list" className={styles.groups}>
             {sharedGroups.map((g) => (
               <li key={g.id}>
@@ -270,10 +273,16 @@ function FriendDetail({ friend, onLeaving }: { friend: Friend; onLeaving: (frien
       )}
 
       <section className={styles.section} aria-labelledby="friend-expenses">
-        <SectionHeader id="friend-expenses" title={`Expenses with ${first}`} />
+        <SectionHeader id="friend-expenses" title={t('friends.detail.expenses.title', { name: first })} />
         {shared.length === 0 ? (
           <Card>
-            <EmptyState size="sm" headingLevel={3} icon={<Split />} title="Nothing split yet" text={`Split a bill, a cab or the rent with ${first} — it shows up here.`} />
+            <EmptyState
+              size="sm"
+              headingLevel={3}
+              icon={<Split />}
+              title={t('friends.detail.expenses.empty.title')}
+              text={t('friends.detail.expenses.empty.body', { name: first })}
+            />
           </Card>
         ) : (
           <>
@@ -286,7 +295,7 @@ function FriendDetail({ friend, onLeaving }: { friend: Friend; onLeaving: (frien
             </Card>
             {shared.length > FIRST_EXPENSES && (
               <Button variant="ghost" size="md" onClick={() => setShowAll((v) => !v)} className={styles.more}>
-                {showAll ? 'Show fewer' : `Show all ${shared.length}`}
+                {showAll ? t('friends.detail.expenses.fewer.cta') : t('friends.detail.expenses.all.cta', { count: shared.length })}
               </Button>
             )}
           </>
@@ -294,7 +303,7 @@ function FriendDetail({ friend, onLeaving }: { friend: Friend; onLeaving: (frien
       </section>
 
       <Button variant="danger" size="md" iconStart={<UserMinus />} onClick={askRemove} className={styles.remove}>
-        Remove from your people
+        {t('friends.detail.remove.cta')}
       </Button>
 
       <FriendSheet open={sheet === 'edit'} friend={friend} onClose={close} />
@@ -312,30 +321,31 @@ function FriendDetail({ friend, onLeaving }: { friend: Friend; onLeaving: (frien
         open={sheet === 'pay'}
         onClose={close}
         payee={{ id: friend.id, name, upiId: friend.upiId, color: friend.color }}
-        payer={{ id: ME_ID, name: 'You', color: me.color }}
+        payer={{ id: ME_ID, name: t('common.people.you'), color: me.color }}
         amount={lead && lead.amount < 0 ? -lead.amount : 0}
         currency={lead?.currency ?? 'INR'}
-        note={sourcesTitle(leadSources) === 'our splits' ? 'Settle up' : sourcesTitle(leadSources)}
+        // The UPI note stays in English: banks and UPI apps show it as is.
+        note={singleSourceTitle(leadSources) ?? 'Settle up'}
         onMarkPaid={paidByUpi}
       />
       <BottomSheet
         open={sheet === 'remove'}
         onClose={close}
-        title={`Remove ${name}?`}
-        description={`${first} leaves your people and any groups. Past splits stay, showing them as “Someone”.`}
+        title={t('friends.remove.title', { name })}
+        description={t('friends.remove.body', { name: first })}
         footer={
           <div className={styles.sheetActions}>
             <Button block variant="danger" onClick={remove}>
-              Remove {first}
+              {t('friends.remove.cta', { name: first })}
             </Button>
             <Button block variant="ghost" onClick={close}>
-              Keep {first}
+              {t('friends.remove.keep.cta', { name: first })}
             </Button>
           </div>
         }
       />
       <BlockedSheet open={sheet === 'blocked'} name={first} blockers={blockers} onClose={close} onSettle={balance.sources.length > 0 ? () => setSheet('settle') : undefined} />
-      {celebrate && <SuccessBurst title={`All square with ${first}`} subtitle="Nothing left to settle." onDone={() => setCelebrate(false)} />}
+      {celebrate && <SuccessBurst title={t('friends.allSquare', { name: first })} subtitle={t('friends.allSquare.subtitle')} onDone={() => setCelebrate(false)} />}
     </Screen>
   )
 }
@@ -355,9 +365,18 @@ function StandingCard({
   onRemind: () => void
   onPay?: () => void
 }) {
+  const t = useT()
   const lead = balance.totals[0] ?? null
-  const headline = !lead ? `You and ${name} are square` : lead.amount > 0 ? `${name} owes you` : `You owe ${name}`
-  const extra = rest.map((t) => (t.amount > 0 ? `owes you ${formatMoney(t.amount, t.currency, { trimZeros: true })}` : `you owe ${formatMoney(-t.amount, t.currency, { trimZeros: true })}`))
+  const headline = !lead
+    ? t('friends.standing.square', { name })
+    : lead.amount > 0
+      ? t('friends.standing.owesYou', { name })
+      : t('friends.standing.youOwe', { name })
+  const extra = rest.map((total) =>
+    total.amount > 0
+      ? t('friends.line.owesYou', { amount: formatMoney(total.amount, total.currency, { trimZeros: true }) })
+      : t('friends.line.youOwe', { amount: formatMoney(-total.amount, total.currency, { trimZeros: true }) }),
+  )
   return (
     <section className={cx(styles.standing, lead ? styles.dark : styles.square)} aria-labelledby="friend-standing">
       <h2 id="friend-standing" className={styles.standingLabel}>
@@ -366,22 +385,22 @@ function StandingCard({
       {lead && (
         <Money value={Math.abs(lead.amount)} currency={lead.currency} size="xl" trimZeros className={cx(styles.standingAmount, lead.amount > 0 && styles.owed)} />
       )}
-      {extra.length > 0 && <p className={styles.standingLine}>Also {extra.join(' · ')}</p>}
-      {!lead && balance.sources.length === 0 && <p className={styles.standingLine}>Nothing to settle — nice.</p>}
+      {extra.length > 0 && <p className={styles.standingLine}>{t('friends.standing.also', { list: extra.join(' · ') })}</p>}
+      {!lead && balance.sources.length === 0 && <p className={styles.standingLine}>{t('friends.standing.nothing')}</p>}
       {lead && (
         <div className={styles.standingActions}>
           {lead.amount > 0 && (
             <Button variant="accent" size="md" iconStart={<BellRing />} onClick={onRemind}>
-              Remind
+              {t('friends.standing.remind.cta')}
             </Button>
           )}
           {lead.amount < 0 && onPay && (
             <Button variant="accent" size="md" iconStart={<QrCode />} onClick={onPay}>
-              Pay via UPI
+              {t('friends.standing.pay.cta')}
             </Button>
           )}
           <Button variant="tonal" size="md" onClick={onSettle}>
-            Settle up
+            {t('friends.settle.cta')}
           </Button>
         </div>
       )}
@@ -402,22 +421,23 @@ function BlockedSheet({
   onClose: () => void
   onSettle?: () => void
 }) {
+  const t = useT()
   const description = blockedText(name, blockers)
   return (
     <BottomSheet
       open={open}
       onClose={onClose}
-      title={`${name} can’t be removed yet`}
+      title={t('friends.blocked.title', { name })}
       description={description}
       footer={
         <div className={styles.sheetActions}>
           {onSettle && (
             <Button block onClick={onSettle}>
-              Settle up
+              {t('friends.settle.cta')}
             </Button>
           )}
           <Button block variant={onSettle ? 'ghost' : 'primary'} onClick={onClose}>
-            OK
+            {t('friends.blocked.ok.cta')}
           </Button>
         </div>
       }

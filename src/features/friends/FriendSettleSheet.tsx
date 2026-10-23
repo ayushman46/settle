@@ -4,6 +4,7 @@ import { navigate } from '../../app/router'
 import { BottomSheet, Button, Money, useToast } from '../../components'
 import type { Friend } from '../../domain/types'
 import { today } from '../../engine/dates'
+import { useT } from '../../i18n'
 import { friendLabel } from '../../kit/index-a'
 import { haptic } from '../../lib/haptics'
 import { formatMoney } from '../../lib/money'
@@ -29,6 +30,7 @@ export interface FriendSettleSheetProps {
  * each group.
  */
 export function FriendSettleSheet({ friend, balance, open, onClose, onSettledAll }: FriendSettleSheetProps) {
+  const t = useT()
   const toast = useToast()
   const name = firstName(friendLabel(friend.id, friend))
   // Keeps the last rows on show while the sheet slides away after everything was settled.
@@ -39,9 +41,9 @@ export function FriendSettleSheet({ friend, balance, open, onClose, onSettledAll
   const markSplits = (source: Extract<FriendSource, { kind: 'splits' }>): void => {
     const undo = settleWithFriend(friend.id, [source], { method: 'other', date: today() })
     haptic('success')
-    toast(`${source.count} ${source.count === 1 ? 'split' : 'splits'} marked as settled`, {
+    toast(t('friends.settle.marked.toast', { count: source.count }), {
       tone: 'success',
-      action: { label: 'Undo', onAction: undo },
+      action: { label: t('common.action.undo'), onAction: undo },
     })
     if (sources.length === 1) onClose()
   }
@@ -50,31 +52,31 @@ export function FriendSettleSheet({ friend, balance, open, onClose, onSettledAll
     const undo = settleWithFriend(friend.id, sources, { method: 'other', date: today() })
     onClose()
     onSettledAll()
-    toast(`All square with ${name}`, { tone: 'success', action: { label: 'Undo', onAction: undo } })
+    toast(t('friends.allSquare', { name }), { tone: 'success', action: { label: t('common.action.undo'), onAction: undo } })
   }
 
   const lead = balance.totals[0]
   const description = lead
     ? lead.amount > 0
-      ? `${name} owes you ${formatMoney(lead.amount, lead.currency, { trimZeros: true })} in all.`
-      : `You owe ${name} ${formatMoney(-lead.amount, lead.currency, { trimZeros: true })} in all.`
-    : `You and ${name} are square.`
+      ? t('friends.settle.owesYou', { name, amount: formatMoney(lead.amount, lead.currency, { trimZeros: true }) })
+      : t('friends.settle.youOwe', { name, amount: formatMoney(-lead.amount, lead.currency, { trimZeros: true }) })
+    : t('friends.settle.square', { name })
 
   return (
     <BottomSheet
       open={open}
       onClose={onClose}
-      title={`Settle up with ${name}`}
+      title={t('friends.settle.title', { name })}
       description={description}
       footer={
         sources.length > 1 ? (
           <Button block variant="secondary" onClick={settleAll}>
-            Settle everything
+            {t('friends.settle.all.cta')}
           </Button>
         ) : undefined
       }
     >
-      <ul role="list" className={styles.sources} aria-label="Where it’s from">
+      <ul role="list" className={styles.sources} aria-label={t('friends.sources.title')}>
         {sources.map((source) => (
           <li key={source.key} className={styles.source}>
             {source.kind === 'group' ? (
@@ -86,7 +88,7 @@ export function FriendSettleSheet({ friend, balance, open, onClose, onSettledAll
             )}
             <span className={styles.text}>
               <span className={styles.title}>
-                {source.kind === 'group' ? source.group.name : `${source.count} ${source.count === 1 ? 'split' : 'splits'} outside groups`}
+                {source.kind === 'group' ? source.group.name : t('friends.sources.splits', { count: source.count })}
               </span>
               <span className={styles.sub}>{sourceDirection(source, name)}</span>
             </span>
@@ -104,13 +106,13 @@ export function FriendSettleSheet({ friend, balance, open, onClose, onSettledAll
                 iconEnd={<ChevronRight />}
                 className={styles.action}
                 onClick={() => navigate(settleUpPath(source.group.id))}
-                aria-label={`Settle up in ${source.group.name}`}
+                aria-label={t('friends.settle.inGroup.aria', { name: source.group.name })}
               >
-                Settle in group
+                {t('friends.settle.inGroup.cta')}
               </Button>
             ) : (
               <Button size="sm" variant="tonal" className={styles.action} onClick={() => markSplits(source)}>
-                Mark as settled
+                {t('friends.settle.mark.cta')}
               </Button>
             )}
           </li>

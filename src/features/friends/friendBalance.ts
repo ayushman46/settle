@@ -7,6 +7,7 @@
 import { setPaidBack, recordSettlement, deleteSettlement } from '../../data'
 import { ME_ID, type Expense, type Group, type Minor, type RecurringTemplate, type Settlement } from '../../domain/types'
 import { groupBalances, isSettledInGroup, simplifyDebts } from '../../engine/balances'
+import { t } from '../../i18n'
 
 /** One share to tick off: `debtorId` paid back the payer of `expenseId`. */
 export interface PaidBackMark {
@@ -178,14 +179,19 @@ export function settleWithFriend(
   }
 }
 
-/** What a reminder says it's for: the one group or split, or "our splits" when there are several. */
-export function sourcesTitle(sources: readonly FriendSource[]): string {
+/** The one group or split the money is for, or null when there are several. */
+export function singleSourceTitle(sources: readonly FriendSource[]): string | null {
   if (sources.length === 1) {
     const only = sources[0]
     if (only?.kind === 'group') return only.group.name
-    if (only?.kind === 'splits' && only.titles.length === 1) return only.titles[0] ?? 'our splits'
+    if (only?.kind === 'splits' && only.titles.length === 1) return only.titles[0] ?? null
   }
-  return 'our splits'
+  return null
+}
+
+/** What a reminder says it's for: the one group or split, or "our splits" when there are several. */
+export function sourcesTitle(sources: readonly FriendSource[]): string {
+  return singleSourceTitle(sources) ?? t('friends.sources.ourSplits')
 }
 
 /** Why a friend can't be removed yet, for a precise explanation (removeFriend has the final say). */
@@ -223,22 +229,28 @@ export function removalBlockers(
 
 /** Why someone can't be removed yet, and what to do about it. */
 export function blockedText(name: string, blockers: RemovalBlockers | null): string {
-  const money: string[] = []
-  if (blockers && blockers.groups.length > 0) money.push(`in ${blockers.groups.map((g) => g.name).join(', ')}`)
-  if (blockers && blockers.splits > 0) money.push(`on ${blockers.splits} ${blockers.splits === 1 ? 'split' : 'splits'} outside groups`)
+  const groups = blockers?.groups.map((g) => g.name).join(', ') ?? ''
+  const splits = blockers?.splits ?? 0
   const recurring = blockers?.recurring ?? []
   const parts: string[] = []
-  if (money.length > 0) parts.push(`${name} still has money to settle ${money.join(' and ')}.`)
+  if (groups && splits > 0) parts.push(t('friends.blocked.money.both', { name, groups, count: splits }))
+  else if (groups) parts.push(t('friends.blocked.money.groups', { name, groups }))
+  else if (splits > 0) parts.push(t('friends.blocked.money.splits', { name, count: splits }))
+  const money = parts.length > 0
   if (recurring.length > 0) {
     const titles = recurring.map((r) => `“${r.title}”`).join(', ')
-    parts.push(`${name} is in your recurring ${recurring.length === 1 ? 'split' : 'splits'} ${titles}.`)
+    parts.push(t('friends.blocked.recurring', { name, count: recurring.length, titles }))
   }
-  if (parts.length === 0) parts.push(`${name} still has money to settle.`)
-  parts.push(money.length > 0 || recurring.length === 0 ? 'Settle up first, then they can go.' : 'Take them out of it first, then they can go.')
+  if (parts.length === 0) parts.push(t('friends.blocked.money', { name }))
+  parts.push(money || recurring.length === 0 ? t('friends.blocked.settleFirst') : t('friends.blocked.takeOut'))
   return parts.join(' ')
 }
 
 /** "Riya pays you", "You pay Riya" — for one source of money between you. */
 export function sourceDirection(source: FriendSource, name: string): string {
-  return source.amount > 0 ? `${name} pays you` : source.amount < 0 ? `You pay ${name}` : 'Evens out'
+  return source.amount > 0
+    ? t('friends.sources.paysYou', { name })
+    : source.amount < 0
+      ? t('friends.sources.youPay', { name })
+      : t('friends.sources.even')
 }

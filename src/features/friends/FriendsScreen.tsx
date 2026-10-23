@@ -17,6 +17,7 @@ import {
 } from '../../components'
 import { useFriends, useSummary } from '../../data'
 import { ME_ID, type Friend, type Minor } from '../../domain/types'
+import { t as translate, useT } from '../../i18n'
 import { alphabetical, FriendAvatar, newPersonName, searchPeople } from '../../kit/index-a'
 import { cx } from '../../lib/cx'
 import { formatMoney } from '../../lib/money'
@@ -27,9 +28,9 @@ import styles from './FriendsScreen.module.css'
 
 /** "owes you", "you owe", or how to reach them when you're square. */
 function personLine(friend: Friend, balance: Minor, currency: string): { text: string; tone: 'positive' | 'negative' | 'muted' } {
-  if (balance > 0) return { text: `owes you ${formatMoney(balance, currency, { trimZeros: true })}`, tone: 'positive' }
-  if (balance < 0) return { text: `you owe ${formatMoney(-balance, currency, { trimZeros: true })}`, tone: 'negative' }
-  return { text: friend.upiId ?? 'settled up', tone: 'muted' }
+  if (balance > 0) return { text: translate('friends.line.owesYou', { amount: formatMoney(balance, currency, { trimZeros: true }) }), tone: 'positive' }
+  if (balance < 0) return { text: translate('friends.line.youOwe', { amount: formatMoney(-balance, currency, { trimZeros: true }) }), tone: 'negative' }
+  return { text: friend.upiId ?? translate('friends.line.settled'), tone: 'muted' }
 }
 
 /**
@@ -38,6 +39,7 @@ function personLine(friend: Friend, balance: Minor, currency: string): { text: s
  * everything you share. `?new=1` (Home's "Add") opens the add sheet straight away.
  */
 export function FriendsScreen() {
+  const t = useT()
   const friends = useFriends()
   const summary = useSummary()
   const fromQuery = useSearchParams().get('new') === '1'
@@ -51,16 +53,16 @@ export function FriendsScreen() {
 
   return (
     <Screen header={<TopBar onBack={() => goBack(YOU_PATH)} />} contentClassName={styles.content}>
-      <PageTitle title="People" subtitle="Everyone you split with — they don’t need the app." />
+      <PageTitle title={t('friends.list.title')} subtitle={t('friends.list.subtitle')} />
 
       {people.length === 0 ? (
         <EmptyState
           illustration={<Illustration name="empty-groups" />}
-          title="No people yet"
-          text="Add the friends you split with. A name is enough — a UPI ID makes paying them a tap."
+          title={t('friends.list.empty.title')}
+          text={t('friends.list.empty.body')}
           action={
             <Button size="md" iconStart={<UserPlus />} onClick={() => setAdding({ name: '' })}>
-              Add a person
+              {t('friends.list.empty.cta')}
             </Button>
           }
         />
@@ -68,9 +70,9 @@ export function FriendsScreen() {
         <>
           <TextField
             type="search"
-            label="Search people"
+            label={t('friends.list.search.label')}
             hideLabel
-            placeholder="Search by name"
+            placeholder={t('friends.list.search.placeholder')}
             value={query}
             autoComplete="off"
             autoCorrect="off"
@@ -79,7 +81,7 @@ export function FriendsScreen() {
             startAdornment={<Search aria-hidden="true" className={styles.searchIcon} />}
             endAdornment={
               query ? (
-                <IconButton label="Clear search" size="sm" onClick={() => setQuery('')}>
+                <IconButton label={t('friends.list.search.clear.aria')} size="sm" onClick={() => setQuery('')}>
                   <X />
                 </IconButton>
               ) : undefined
@@ -89,7 +91,7 @@ export function FriendsScreen() {
 
           {(listed.length > 0 || addName) && (
             <Card padding="none">
-              <List aria-label={searching ? 'Search results' : 'Your people'}>
+              <List aria-label={searching ? t('friends.list.results.aria') : t('friends.list.all.aria')}>
                 {addName && (
                   <ListRow
                     leading={
@@ -97,8 +99,8 @@ export function FriendsScreen() {
                         <UserPlus strokeWidth={2.25} />
                       </span>
                     }
-                    title={`Add “${addName}”`}
-                    subtitle="New to your people"
+                    title={t('friends.list.add.title', { name: addName })}
+                    subtitle={t('friends.list.add.subtitle')}
                     onClick={() => setAdding({ name: addName })}
                   />
                 )}
@@ -118,16 +120,14 @@ export function FriendsScreen() {
               </List>
             </Card>
           )}
-          {searching && listed.length === 0 && !addName && <p className={styles.none}>No one called “{query.trim()}”.</p>}
+          {searching && listed.length === 0 && !addName && <p className={styles.none}>{t('friends.list.none', { query: query.trim() })}</p>}
           {!searching && (
-            <p className={styles.count}>
-              {people.length} {people.length === 1 ? 'person' : 'people'}
-            </p>
+            <p className={styles.count}>{t('friends.list.count', { count: people.length })}</p>
           )}
         </>
       )}
 
-      <Fab extended icon={<UserPlus strokeWidth={2.25} />} label="Add person" onClick={() => setAdding({ name: searching ? (newPersonName(query) ?? '') : '' })} />
+      <Fab extended icon={<UserPlus strokeWidth={2.25} />} label={t('friends.list.add.cta')} onClick={() => setAdding({ name: searching ? (newPersonName(query) ?? '') : '' })} />
       <FriendSheet
         open={adding !== null}
         initialName={adding?.name ?? ''}

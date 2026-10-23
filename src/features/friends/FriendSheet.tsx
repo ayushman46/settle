@@ -3,6 +3,7 @@ import { Check, Phone } from 'lucide-react'
 import { Avatar, BottomSheet, Button, TextField, useToast } from '../../components'
 import { addFriend, cleanPhone, DataError, findFriendByName, updateFriend, useFriends } from '../../data'
 import { ME_ID, type Friend } from '../../domain/types'
+import { useT, type MessageKey } from '../../i18n'
 import { UPI_ID_ERROR } from '../../kit/index-b'
 import { cx } from '../../lib/cx'
 import { haptic } from '../../lib/haptics'
@@ -12,8 +13,18 @@ import { AVATAR_COLORS } from '../../types'
 import styles from './FriendSheet.module.css'
 
 /** The avatar palette's names, in palette order (see `--avatar-N-bg`). */
-const COLOR_NAMES = ['Peach', 'Mint', 'Sky', 'Lilac', 'Lemon', 'Rose', 'Teal', 'Sand'] as const
+const COLOR_NAMES: readonly MessageKey[] = [
+  'friends.color.peach',
+  'friends.color.mint',
+  'friends.color.sky',
+  'friends.color.lilac',
+  'friends.color.lemon',
+  'friends.color.rose',
+  'friends.color.teal',
+  'friends.color.sand',
+]
 
+/** The phone-number error in English, as `friends.form.phone.error` has it (the sheet shows it in the current language). */
 export const PHONE_ERROR = 'That doesn’t look like a phone number. Use 7 to 15 digits, like 98765 43210.'
 
 export interface FriendSheetProps {
@@ -55,6 +66,7 @@ function formFor(friend: Friend | null | undefined, initialName: string): Form {
  * the colour of their avatar. Names stay unique; a clash says who it clashes with.
  */
 export function FriendSheet({ open, onClose, friend, initialName = '', onSaved, onExited }: FriendSheetProps) {
+  const t = useT()
   const toast = useToast()
   const friends = useFriends()
   const upiRef = useRef<HTMLInputElement>(null)
@@ -71,7 +83,7 @@ export function FriendSheet({ open, onClose, friend, initialName = '', onSaved, 
   const others = friends.filter((f) => f.id !== ME_ID)
   const name = normalizeName(form.name)
   const clash = name ? findFriendByName(name, friends) : null
-  const nameError = clash && clash.id !== friend?.id ? `${clash.name} is already in your people.` : null
+  const nameError = clash && clash.id !== friend?.id ? t('friends.form.name.taken', { name: clash.name }) : null
   const upiOk = form.upiId.trim() === '' || isValidUpiId(form.upiId)
   const phoneOk = form.phone.trim() === '' || cleanPhone(form.phone) !== null
   const color = form.color ?? friend?.color ?? nextColor(others)
@@ -93,7 +105,7 @@ export function FriendSheet({ open, onClose, friend, initialName = '', onSaved, 
         if (saved.color !== color) saved = updateFriend(saved.id, { color })
       }
       haptic('success')
-      toast(editing ? 'Saved' : `${saved.name} added`, { tone: 'success' })
+      toast(editing ? t('friends.form.saved.toast') : t('friends.form.added.toast', { name: saved.name }), { tone: 'success' })
       onSaved?.(saved, !editing)
       onClose()
     } catch (error) {
@@ -108,11 +120,11 @@ export function FriendSheet({ open, onClose, friend, initialName = '', onSaved, 
       open={open}
       onClose={onClose}
       onExited={onExited}
-      title={editing ? `Edit ${friend.name}` : 'Add a person'}
-      description={editing ? undefined : 'They don’t need the app — just a name to split with.'}
+      title={editing ? t('friends.form.edit.title', { name: friend.name }) : t('friends.form.add.title')}
+      description={editing ? undefined : t('friends.form.add.description')}
       footer={
         <Button block disabled={name === '' || nameError !== null} onClick={save}>
-          {editing ? 'Save' : 'Add person'}
+          {editing ? t('common.action.save') : t('friends.form.add.cta')}
         </Button>
       }
     >
@@ -128,9 +140,9 @@ export function FriendSheet({ open, onClose, friend, initialName = '', onSaved, 
           <Avatar name={name || '?'} color={color} size="lg" className={styles.previewAvatar} />
         </div>
         <TextField
-          label="Name"
+          label={t('friends.form.name.label')}
           value={form.name}
-          placeholder="Riya"
+          placeholder={t('friends.form.name.placeholder')}
           maxLength={MAX_NAME_LENGTH}
           autoFocus={!editing}
           autoComplete="off"
@@ -144,9 +156,9 @@ export function FriendSheet({ open, onClose, friend, initialName = '', onSaved, 
         />
         <TextField
           ref={upiRef}
-          label="UPI ID"
+          label={t('friends.form.upi.label')}
           value={form.upiId}
-          placeholder="name@okaxis"
+          placeholder="name@okaxis" // i18n-ignore: a UPI ID's shape
           inputMode="email"
           autoComplete="off"
           autoCapitalize="none"
@@ -154,7 +166,7 @@ export function FriendSheet({ open, onClose, friend, initialName = '', onSaved, 
           spellCheck={false}
           enterKeyHint="next"
           className={styles.mono}
-          hint="Optional — so they can be paid in a tap."
+          hint={t('friends.form.upi.hint')}
           error={form.touched.upiId && !upiOk ? UPI_ID_ERROR : undefined}
           onChange={(event) => patch({ upiId: event.currentTarget.value.replace(/\s+/g, '') })}
           onKeyDown={(event) => {
@@ -164,15 +176,15 @@ export function FriendSheet({ open, onClose, friend, initialName = '', onSaved, 
         />
         <TextField
           ref={phoneRef}
-          label="Phone"
+          label={t('friends.form.phone.label')}
           type="tel"
           value={form.phone}
           placeholder="98765 43210"
           inputMode="tel"
           autoComplete="off"
           enterKeyHint="done"
-          hint="Optional — for WhatsApp and SMS reminders."
-          error={form.touched.phone && !phoneOk ? PHONE_ERROR : undefined}
+          hint={t('friends.form.phone.hint')}
+          error={form.touched.phone && !phoneOk ? t('friends.form.phone.error') : undefined}
           startAdornment={<Phone aria-hidden="true" className={styles.icon} />}
           onChange={(event) => patch({ phone: event.currentTarget.value })}
           onKeyDown={(event) => {
@@ -197,6 +209,7 @@ function enterPressed(event: KeyboardEvent<HTMLInputElement>): boolean {
 }
 
 function ColorPicker({ value, onChange }: { value: number; onChange: (color: number) => void }) {
+  const t = useT()
   const labelId = useId()
   const refs = useRef<Array<HTMLButtonElement | null>>([])
   const pick = (i: number, focus: boolean): void => {
@@ -223,7 +236,7 @@ function ColorPicker({ value, onChange }: { value: number; onChange: (color: num
   return (
     <div className={styles.colors}>
       <p id={labelId} className={styles.colorsLabel}>
-        Avatar colour
+        {t('friends.form.color.label')}
       </p>
       <div role="radiogroup" aria-labelledby={labelId} className={styles.swatches} onKeyDown={onKeyDown}>
         {COLOR_NAMES.map((label, i) => (
@@ -235,7 +248,7 @@ function ColorPicker({ value, onChange }: { value: number; onChange: (color: num
             type="button"
             role="radio"
             aria-checked={i === value}
-            aria-label={label}
+            aria-label={t(label)}
             tabIndex={i === value ? 0 : -1}
             className={cx(styles.swatch, i === value && styles.picked)}
             style={{ '--swatch': `var(--avatar-${i}-bg)`, '--swatch-ink': `var(--avatar-${i}-ink)` } as CSSProperties}
