@@ -24,6 +24,7 @@ import type { RateLookup, RateState } from '../../api/rates'
 import { isKnownCurrency } from '../../lib/currencies'
 import { formatMoney, rescaleMinor } from '../../lib/money'
 import { describePeople } from '../../components/helpers'
+import { t } from '../../i18n'
 import { splitTemplate } from './splitTemplates'
 
 export interface SplitForm {
@@ -435,26 +436,24 @@ export function outcomeLine(input: OutcomeInput, nameOf: (friendId: string) => s
   const owedTotal = debtors.reduce((sum, [, share]) => sum + share, 0)
 
   if (input.payerId === ME_ID) {
-    if (debtors.length === 0) return 'Nothing to collect — it’s all on you.'
+    if (debtors.length === 0) return t('split.outcome.nothingToCollect')
     const names = debtors.map(([id]) => nameOf(id))
     const amounts = debtors.map(([, share]) => share)
     const first = amounts[0] ?? 0
-    if (debtors.length === 1) return future ? `${names[0]} will owe you ${money(first)}` : `${names[0]} owes you ${money(first)}`
+    if (debtors.length === 1) return t(future ? 'split.outcome.one.future' : 'split.outcome.one.now', { name: names[0] ?? '', amount: money(first) })
     if (debtors.length <= 3) {
       const who = describePeople(names, 3)
-      if (amounts.every((a) => a === first)) return `${who} ${future ? 'will owe' : 'owe'} you ${money(first)} each`
-      return future ? `You’ll get back ${money(owedTotal)} from ${who}` : `${who} owe you ${money(owedTotal)} in all`
+      if (amounts.every((a) => a === first)) return t(future ? 'split.outcome.each.future' : 'split.outcome.each.now', { names: who, amount: money(first) })
+      return t(future ? 'split.outcome.inAll.future' : 'split.outcome.inAll.now', { names: who, amount: money(owedTotal) })
     }
-    return future
-      ? `You’ll get back ${money(owedTotal)} from ${debtors.length} people`
-      : `${debtors.length} people owe you ${money(owedTotal)}`
+    return t(future ? 'split.outcome.many.future' : 'split.outcome.many.now', { count: debtors.length, amount: money(owedTotal) })
   }
 
   const payer = nameOf(input.payerId)
   const mine = input.shares[ME_ID] ?? 0
-  if (mine > 0) return future ? `You’ll owe ${payer} ${money(mine)}` : `You owe ${payer} ${money(mine)}`
-  if (owedTotal === 0) return 'Nothing to pay back.'
-  return future ? `${payer} will get back ${money(owedTotal)}` : `${payer} gets back ${money(owedTotal)}`
+  if (mine > 0) return t(future ? 'split.outcome.owe.future' : 'split.outcome.owe.now', { name: payer, amount: money(mine) })
+  if (owedTotal === 0) return t('split.outcome.nothingToPay')
+  return t(future ? 'split.outcome.getsBack.future' : 'split.outcome.getsBack.now', { name: payer, amount: money(owedTotal) })
 }
 
 /** "Changes saved" — and, when an edit raised a share someone had paid back, that they owe again. */
@@ -464,8 +463,7 @@ export function changesSavedMessage(
   nameOf: (friendId: string) => string,
 ): string {
   const owingAgain = Object.keys(before.paidBack).filter((id) => after.paidBack[id] === undefined && (after.shares[id] ?? 0) > 0)
-  if (owingAgain.length === 0) return 'Changes saved'
-  if (owingAgain.length === 1 && owingAgain[0] === ME_ID) return 'Changes saved. You owe more now, so you’re marked as not paid yet.'
-  const verb = owingAgain.length === 1 ? 'owes' : 'owe'
-  return `Changes saved. ${describePeople(owingAgain.map(nameOf), 3)} ${verb} more now, so they’re marked as not paid yet.`
+  if (owingAgain.length === 0) return t('split.changes.toast')
+  if (owingAgain.length === 1 && owingAgain[0] === ME_ID) return t('split.changes.meAgain.toast')
+  return t('split.changes.othersAgain.toast', { count: owingAgain.length, names: describePeople(owingAgain.map(nameOf), 3) })
 }

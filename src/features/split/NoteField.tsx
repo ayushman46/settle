@@ -1,4 +1,5 @@
 import { useId, useLayoutEffect, useRef } from 'react'
+import { useT } from '../../i18n'
 import { cx } from '../../lib/cx'
 import { graphemes } from '../../lib/people'
 import styles from './NoteField.module.css'
@@ -20,7 +21,8 @@ const COUNTER_FROM = 60
  * An optional note that grows with what's typed (line breaks kept), styled like the other
  * fields. A quiet "N left" appears only near the limit.
  */
-export function NoteField({ value, onChange, maxLength, label = 'Note', placeholder = 'Anything to remember — optional', className }: NoteFieldProps) {
+export function NoteField({ value, onChange, maxLength, label, placeholder, className }: NoteFieldProps) {
+  const t = useT()
   const id = useId()
   const ref = useRef<HTMLTextAreaElement>(null)
   const left = maxLength - graphemes(value).length
@@ -36,7 +38,7 @@ export function NoteField({ value, onChange, maxLength, label = 'Note', placehol
   return (
     <div className={cx(styles.field, className)}>
       <label htmlFor={id} className={styles.label}>
-        {label}
+        {label ?? t('split.note.label')}
       </label>
       <textarea
         ref={ref}
@@ -44,7 +46,7 @@ export function NoteField({ value, onChange, maxLength, label = 'Note', placehol
         className={styles.area}
         value={value}
         rows={2}
-        placeholder={placeholder}
+        placeholder={placeholder ?? t('split.note.placeholder')}
         autoCapitalize="sentences"
         aria-describedby={left <= COUNTER_FROM ? `${id}-left` : undefined}
         onChange={(event) => {
@@ -55,7 +57,7 @@ export function NoteField({ value, onChange, maxLength, label = 'Note', placehol
       />
       {left <= COUNTER_FROM && (
         <p id={`${id}-left`} className={cx(styles.counter, left <= 0 && styles.full)} aria-live="polite">
-          {left <= 0 ? 'That’s the limit' : `${left} left`}
+          {left <= 0 ? t('split.note.full') : t('split.note.left', { count: left })}
         </p>
       )}
     </div>

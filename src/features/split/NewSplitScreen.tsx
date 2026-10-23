@@ -93,6 +93,7 @@ const expensePath = (id: string) => `/app/expense/${encodeURIComponent(id)}`
  * Unsaved work is guarded on Back and survives a reload.
  */
 export function NewSplitScreen() {
+  const t = useT()
   const { params } = useRoute(EDIT_ROUTES)
   const location = useLocation()
   const editId = params.id ?? null
@@ -101,9 +102,9 @@ export function NewSplitScreen() {
   if (editId !== null && editing === null) {
     return (
       <Screen header={<TopBar onBack={() => goBack('/app/activity')} />}>
-        <PageTitle title="This expense is gone" subtitle="It may have been deleted — on this phone or in another tab." />
+        <PageTitle title={t('split.gone.title')} subtitle={t('split.gone.subtitle')} />
         <Button className={styles.gone} onClick={() => navigate('/app/activity', { replace: true })}>
-          See activity
+          {t('split.gone.cta')}
         </Button>
       </Screen>
     )
@@ -300,8 +301,8 @@ function SplitScreen({ editing, url }: SplitScreenProps) {
   // Editing names the expense in the tab ("Edit Dinner at Toit · Settle").
   const editingTitle = editing?.title ?? null
   useEffect(() => {
-    if (editingTitle !== null) document.title = `Edit ${editingTitle} · ${BRAND.name}`
-  }, [editingTitle])
+    if (editingTitle !== null) document.title = t('split.screen.edit.docTitle', { title: editingTitle, brand: BRAND.name })
+  }, [editingTitle, t])
 
   const change = (patch: Partial<SplitForm>): void => setForm((current) => ({ ...current, ...patch }))
 
@@ -330,7 +331,7 @@ function SplitScreen({ editing, url }: SplitScreenProps) {
     if (code === form.currency) return
     const before = form
     setForm(changeCurrency(form, code, trip))
-    toast(`Now in ${code}`, { action: { label: 'Undo', onAction: () => setForm(before) } })
+    toast(t('split.currency.toast', { code }), { action: { label: t('split.undo.cta'), onAction: () => setForm(before) } })
   }
 
   const pickGroup = (groupId: string | null): void => {
@@ -390,7 +391,7 @@ function SplitScreen({ editing, url }: SplitScreenProps) {
   const sharesTotal = converting ? (conversion.status === 'ok' ? conversion.total : null) : form.total
   const sharesCurrency = converting ? settle : form.currency
   const hide = (what: 'origin' | 'rent' | 'trip') => setHidden((current) => new Set(current).add(what))
-  const title = isNew ? 'New split' : 'Edit split'
+  const title = t(isNew ? 'split.screen.new.title' : 'split.screen.edit.title')
 
   return (
     <Screen
@@ -398,14 +399,14 @@ function SplitScreen({ editing, url }: SplitScreenProps) {
       footer={
         <ActionBar hint={hint}>
           <Button block iconStart={<CircleCheck />} disabled={issue !== null} onClick={save}>
-            {isNew ? 'Save split' : 'Save changes'}
+            {t(isNew ? 'split.save.new.cta' : 'split.save.cta')}
           </Button>
         </ActionBar>
       }
       contentClassName={styles.content}
     >
       <h1 className="visually-hidden" tabIndex={-1}>
-        {isNew ? 'New split' : `Edit ${editing.title}`}
+        {isNew ? t('split.screen.new.title') : t('split.screen.edit.heading', { title: editing.title })}
       </h1>
 
       {!hidden.has('origin') && (
@@ -417,8 +418,8 @@ function SplitScreen({ editing, url }: SplitScreenProps) {
         currency={form.currency}
         onChange={(total) => change({ total })}
         onCurrencyClick={itemized ? undefined : () => setCurrencyOpen(true)}
-        label={itemized ? 'Total paid' : 'Amount'}
-        hint={itemized ? 'Tax, tips and discounts are spread over the items again.' : undefined}
+        label={t(itemized ? 'split.amount.itemized.label' : 'split.amount.label')}
+        hint={itemized ? t('split.amount.itemized.hint') : undefined}
         autoFocus={isNew && form.total === null && !initial.restored}
       />
 
@@ -437,7 +438,7 @@ function SplitScreen({ editing, url }: SplitScreenProps) {
 
       <div className={styles.details}>
         <TextField
-          label="What's it for?"
+          label={t('split.title.label')}
           value={form.title}
           placeholder={titlePlaceholder(form.category)}
           maxLength={MAX_TITLE_LENGTH}
@@ -471,7 +472,7 @@ function SplitScreen({ editing, url }: SplitScreenProps) {
         {groupCurrencyNote && (
           <p className={styles.note}>
             <Info aria-hidden="true" className={styles.noteIcon} />
-            In {form.currency}, so it’s settled person to person — not in {groupCurrencyNote.name}’s {groupCurrencyNote.currency} balances.
+            {t('split.groupCurrency.note', { currency: form.currency, group: groupCurrencyNote.name, groupCurrency: groupCurrencyNote.currency })}
           </p>
         )}
       </div>
@@ -482,16 +483,14 @@ function SplitScreen({ editing, url }: SplitScreenProps) {
             <Plane />
           </span>
           <div className={styles.tipText}>
-            <p className={styles.tipTitle}>Splitting a whole trip?</p>
-            <p className={styles.tipBody}>
-              Put it in a group: every expense adds up, and {BRAND.name} works out the fewest payments at the end.
-            </p>
+            <p className={styles.tipTitle}>{t('split.tip.trip.title')}</p>
+            <p className={styles.tipBody}>{t('split.tip.trip.body', { brand: BRAND.name })}</p>
             <div className={styles.tipActions}>
               <Button size="sm" variant="accent" iconStart={<UsersRound />} onClick={() => leave(() => navigate('/app/groups?new=1'))}>
-                Start a trip group
+                {t('split.tip.trip.cta')}
               </Button>
               <Button size="sm" variant="ghost" onClick={() => hide('trip')}>
-                Just this once
+                {t('split.tip.trip.dismiss')}
               </Button>
             </div>
           </div>
@@ -500,7 +499,7 @@ function SplitScreen({ editing, url }: SplitScreenProps) {
 
       {itemized ? (
         <section className={styles.section} aria-labelledby="split-bill">
-          <SectionHeader id="split-bill" title="Split item by item" />
+          <SectionHeader id="split-bill" title={t('split.section.items.title')} />
           <BillCard
             form={form}
             editing={editing}
@@ -516,7 +515,7 @@ function SplitScreen({ editing, url }: SplitScreenProps) {
       ) : (
         <>
           <section ref={peopleRef} className={styles.section} aria-labelledby="split-people">
-            <SectionHeader id="split-people" title="Split with" />
+            <SectionHeader id="split-people" title={t('split.section.people.title')} />
             <PeoplePicker
               selectedIds={peopleIds}
               onChange={(ids) => change({ participants: withPeople(form.participants, ids) })}
@@ -525,7 +524,7 @@ function SplitScreen({ editing, url }: SplitScreenProps) {
           </section>
 
           <section className={styles.section} aria-labelledby="split-how">
-            <SectionHeader id="split-how" title="How to split" />
+            <SectionHeader id="split-how" title={t('split.section.how.title')} />
             <PayerPicker
               className={styles.payer}
               value={form.payerId}
@@ -538,7 +537,7 @@ function SplitScreen({ editing, url }: SplitScreenProps) {
                 icon={<Sparkles />}
                 onDismiss={() => hide('rent')}
                 action={{
-                  label: 'Split by %',
+                  label: t('split.tip.rent.cta'),
                   onAction: () => {
                     haptic('select')
                     change({ mode: 'percent' })
@@ -546,7 +545,7 @@ function SplitScreen({ editing, url }: SplitScreenProps) {
                   },
                 }}
               >
-                Rooms of different sizes? Rent is often fairer split by percentage.
+                {t('split.tip.rent.body')}
               </Banner>
             )}
             {converting && (
@@ -598,15 +597,15 @@ function SplitScreen({ editing, url }: SplitScreenProps) {
       <BottomSheet
         open={confirm.open}
         onClose={() => setConfirm({ open: false, then: null })}
-        title={isNew ? 'Discard this split?' : 'Discard changes?'}
-        description={isNew ? 'What you’ve entered won’t be saved.' : `Your changes to ${editing.title} won’t be saved.`}
+        title={t(isNew ? 'split.discard.new.title' : 'split.discard.title')}
+        description={isNew ? t('split.discard.new.description') : t('split.discard.description', { title: editing.title })}
         footer={
           <div className={styles.confirm}>
             <Button variant="danger" block onClick={discard}>
-              Discard
+              {t('split.discard.cta')}
             </Button>
             <Button variant="secondary" block onClick={() => setConfirm({ open: false, then: null })}>
-              Keep editing
+              {t('split.keep.cta')}
             </Button>
           </div>
         }
@@ -614,7 +613,7 @@ function SplitScreen({ editing, url }: SplitScreenProps) {
 
       {saved && (
         <SuccessBurst
-          title="Split saved"
+          title={t('split.saved.title')}
           amount={<Money value={saved.total} currency={saved.currency} size="lg" trimZeros strong />}
           subtitle={outcomeLine(saved, nameOf, 'now')}
           onDone={openSaved}
@@ -646,6 +645,7 @@ const BANNER_ICONS: Readonly<Record<PrefillBannerIcon, ReactNode>> = {
 
 /** Where a prefilled split came from, so it gets a second look before saving. */
 function OriginBanner({ origin, banner, copyOf, title, onDismiss }: OriginBannerProps) {
+  const t = useT()
   if (banner) {
     return (
       <Banner tone="info" icon={BANNER_ICONS[banner.icon]} title={banner.title} onDismiss={onDismiss}>
@@ -656,44 +656,49 @@ function OriginBanner({ origin, banner, copyOf, title, onDismiss }: OriginBanner
   switch (origin) {
     case 'describe':
       return (
-        <Banner tone="info" icon={<Sparkles />} title="Filled in from what you typed" onDismiss={onDismiss}>
-          Check the amount and who’s in, then save.
+        <Banner tone="info" icon={<Sparkles />} title={t('split.origin.describe.title')} onDismiss={onDismiss}>
+          {t('split.origin.check.body')}
         </Banner>
       )
     case 'scan':
       return (
-        <Banner tone="info" icon={<ScanLine />} title="Filled in from your bill" onDismiss={onDismiss}>
-          Check the amount — AI can misread a blurry photo.
+        <Banner tone="info" icon={<ScanLine />} title={t('split.origin.scan.title')} onDismiss={onDismiss}>
+          {t('split.origin.scan.body')}
         </Banner>
       )
     case 'recurring':
       return (
-        <Banner tone="info" icon={<Repeat />} title={title ? `This month’s ${title}` : 'From a recurring split'} onDismiss={onDismiss}>
-          Check it, then save to start collecting.
+        <Banner
+          tone="info"
+          icon={<Repeat />}
+          title={title ? t('split.origin.recurring.title', { title }) : t('split.origin.recurring.untitled')}
+          onDismiss={onDismiss}
+        >
+          {t('split.origin.recurring.body')}
         </Banner>
       )
     case 'duplicate':
       return (
-        <Banner tone="info" icon={<Copy />} title={copyOf ? `A copy of ${copyOf}` : 'A copy'} onDismiss={onDismiss}>
-          Dated today, and nobody is marked as paid yet.
+        <Banner tone="info" icon={<Copy />} title={copyOf ? t('split.origin.duplicate.title', { title: copyOf }) : t('split.origin.duplicate.untitled')} onDismiss={onDismiss}>
+          {t('split.origin.duplicate.body')}
         </Banner>
       )
     case 'sms':
       return (
-        <Banner tone="info" icon={<MessageSquareText />} title="Filled in from your SMS" onDismiss={onDismiss}>
-          Add who’s in, check it, then save.
+        <Banner tone="info" icon={<MessageSquareText />} title={t('split.origin.sms.title')} onDismiss={onDismiss}>
+          {t('split.origin.sms.body')}
         </Banner>
       )
     case 'voice':
       return (
-        <Banner tone="info" icon={<Mic />} title="Filled in from what you said" onDismiss={onDismiss}>
-          Check the amount and who’s in, then save.
+        <Banner tone="info" icon={<Mic />} title={t('split.origin.voice.title')} onDismiss={onDismiss}>
+          {t('split.origin.check.body')}
         </Banner>
       )
     case 'rotation':
       return (
-        <Banner tone="info" icon={<RotateCw />} title="The next round" onDismiss={onDismiss}>
-          Check the amount and who’s in, then save.
+        <Banner tone="info" icon={<RotateCw />} title={t('split.origin.rotation.title')} onDismiss={onDismiss}>
+          {t('split.origin.check.body')}
         </Banner>
       )
     default:
@@ -710,21 +715,20 @@ interface BillCardProps {
 
 /** An itemized bill keeps its items: what's on it, and the way back to the item-by-item flow. */
 function BillCard({ form, editing, onEditItems }: BillCardProps) {
+  const t = useT()
   const items = form.bill?.items.length ?? 0
   const people = form.participants.length
   return (
     <Card className={styles.bill}>
       <p className={styles.billLine}>
-        {items === 1 ? '1 item' : `${items} items`} · {people === 1 ? '1 person' : `${people} people`}
+        {t('split.bill.line', { items, people })}
       </p>
       <p className={styles.billBody}>
-        {editing
-          ? 'Who had what stays as it is. To change it, open the bill.'
-          : 'The same items and people as the original — change who had what after saving.'}
+        {t(editing ? 'split.bill.editing.body' : 'split.bill.copy.body')}
       </p>
       {onEditItems && (
         <Button size="sm" variant="tonal" className={styles.billButton} onClick={onEditItems}>
-          Change who had what
+          {t('split.bill.change.cta')}
         </Button>
       )}
     </Card>

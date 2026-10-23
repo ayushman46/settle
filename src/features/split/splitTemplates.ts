@@ -5,6 +5,8 @@
  */
 import type { CategoryId } from '../../domain/types'
 import { isCategoryId } from '../../engine/categories'
+import { t, type MessageKey } from '../../i18n'
+import { split as SPLIT_EN } from '../../i18n/en/split'
 
 /** A nudge shown in context: split rent by %, or keep a trip's expenses together in a group. */
 export type SplitTip = 'percent' | 'group'
@@ -17,21 +19,29 @@ export interface SplitTemplate {
   tip: SplitTip | null
 }
 
-export const DEFAULT_PLACEHOLDER = 'Dinner, rent, cab, Netflix…'
+/** The generic placeholder, in English (the screen shows `titlePlaceholder('other')` in the UI language). */
+export const DEFAULT_PLACEHOLDER: string = SPLIT_EN['split.placeholder.other']
 
-const TEMPLATES: Readonly<Record<CategoryId, SplitTemplate>> = {
-  food: { title: '', placeholder: 'Dinner at Toit, Swiggy order…', tip: null },
-  groceries: { title: '', placeholder: 'Blinkit, DMart, weekly veggies…', tip: null },
-  rent: { title: 'Rent', placeholder: 'Rent, maintenance, deposit…', tip: 'percent' },
-  utilities: { title: '', placeholder: 'Electricity, Wi-Fi, gas cylinder…', tip: null },
-  travel: { title: '', placeholder: 'Flights, hotel, Goa trip…', tip: 'group' },
-  transport: { title: '', placeholder: 'Uber to the airport, fuel…', tip: null },
-  shopping: { title: '', placeholder: 'Amazon order, new curtains…', tip: null },
-  entertainment: { title: '', placeholder: 'Movie tickets, concert…', tip: null },
-  subscription: { title: '', placeholder: 'Netflix, Spotify, YouTube Premium…', tip: null },
-  gift: { title: '', placeholder: 'Birthday gift for Neha…', tip: null },
-  health: { title: '', placeholder: 'Pharmacy, doctor’s visit…', tip: null },
-  other: { title: '', placeholder: DEFAULT_PLACEHOLDER, tip: null },
+interface TemplateKeys {
+  /** The title it starts with (null: none). */
+  title: MessageKey | null
+  placeholder: MessageKey
+  tip: SplitTip | null
+}
+
+const TEMPLATES: Readonly<Record<CategoryId, TemplateKeys>> = {
+  food: { title: null, placeholder: 'split.placeholder.food', tip: null },
+  groceries: { title: null, placeholder: 'split.placeholder.groceries', tip: null },
+  rent: { title: 'split.template.rent.title', placeholder: 'split.placeholder.rent', tip: 'percent' },
+  utilities: { title: null, placeholder: 'split.placeholder.utilities', tip: null },
+  travel: { title: null, placeholder: 'split.placeholder.travel', tip: 'group' },
+  transport: { title: null, placeholder: 'split.placeholder.transport', tip: null },
+  shopping: { title: null, placeholder: 'split.placeholder.shopping', tip: null },
+  entertainment: { title: null, placeholder: 'split.placeholder.entertainment', tip: null },
+  subscription: { title: null, placeholder: 'split.placeholder.subscription', tip: null },
+  gift: { title: null, placeholder: 'split.placeholder.gift', tip: null },
+  health: { title: null, placeholder: 'split.placeholder.health', tip: null },
+  other: { title: null, placeholder: 'split.placeholder.other', tip: null },
 }
 
 /** Words Home's quick actions may use for a category ("Trip", "Cab"). */
@@ -42,10 +52,11 @@ export function splitTemplate(value: string | null | undefined): (SplitTemplate 
   const key = value?.toLowerCase() ?? ''
   const category = isCategoryId(value) ? value : Object.hasOwn(ALIASES, key) ? ALIASES[key] : undefined
   if (!category) return null
-  return { category, ...TEMPLATES[category] }
+  const keys = TEMPLATES[category]
+  return { category, title: keys.title ? t(keys.title) : '', placeholder: t(keys.placeholder), tip: keys.tip }
 }
 
 /** The title placeholder for a category (the generic one for "other"). */
 export function titlePlaceholder(category: CategoryId): string {
-  return TEMPLATES[category].placeholder
+  return t(TEMPLATES[category].placeholder)
 }
