@@ -1,0 +1,4550 @@
+{
+ "label": "baseline-298bdd2",
+ "date": "2026-10-22T22:49:38.690Z",
+ "dist": "C:\\Users\\Ayush\\Downloads\\Billsplit-AI\\node_modules\\.cache\\settle-bench\\dist-298bdd2",
+ "runs": 5,
+ "profiles": {
+  "low": {
+   "cold": {
+    "app (empty)": {
+     "runs": [
+      {
+       "ttfb": 497.10000002384186,
+       "fcp": 6336,
+       "lcp": 6472,
+       "content": 5886.100000023842,
+       "interactive": 6817.100000023842,
+       "tbt": 3634,
+       "longTaskMs": 4084,
+       "jsKb": 186.3740234375,
+       "cssKb": 28.4375,
+       "fontKb": 29.9521484375,
+       "totalKb": 250.32421875,
+       "requests": 31,
+       "jsFiles": 20,
+       "domNodes": 159
+      },
+      {
+       "ttfb": 484,
+       "fcp": 5148,
+       "lcp": 5148,
+       "content": 5111.699999988079,
+       "interactive": 5111.699999988079,
+       "tbt": 2764,
+       "longTaskMs": 3208,
+       "jsKb": 186.3740234375,
+       "cssKb": 28.4375,
+       "fontKb": 29.9521484375,
+       "totalKb": 250.32421875,
+       "requests": 14,
+       "jsFiles": 8,
+       "domNodes": 159
+      },
+      {
+       "ttfb": 503,
+       "fcp": 5164,
+       "lcp": 5164,
+       "content": 5133.5,
+       "interactive": 5133.5,
+       "tbt": 2778,
+       "longTaskMs": 3028,
+       "jsKb": 186.3740234375,
+       "cssKb": 28.4375,
+       "fontKb": 29.9521484375,
+       "totalKb": 250.32421875,
+       "requests": 14,
+       "jsFiles": 8,
+       "domNodes": 148
+      },
+      {
+       "ttfb": 491.80000001192093,
+       "fcp": 4080,
+       "lcp": 4812,
+       "content": 4058.9000000059605,
+       "interactive": 5004,
+       "tbt": 2035,
+       "longTaskMs": 2335,
+       "jsKb": 199.158203125,
+       "cssKb": 32.8564453125,
+       "fontKb": 29.9521484375,
+       "totalKb": 269.1748046875,
+       "requests": 31,
+       "jsFiles": 20,
+       "domNodes": 167
+      },
+      {
+       "ttfb": 485.80000001192093,
+       "fcp": 5216,
+       "lcp": 5632,
+       "content": 5224.5,
+       "interactive": 5224.5,
+       "tbt": 3075,
+       "longTaskMs": 3325,
+       "jsKb": 186.3740234375,
+       "cssKb": 28.4375,
+       "fontKb": 29.9521484375,
+       "totalKb": 250.32421875,
+       "requests": 14,
+       "jsFiles": 8,
+       "domNodes": 159
+      }
+     ],
+     "summary": {
+      "ttfb": {
+       "p50": 491.80000001192093,
+       "min": 484,
+       "max": 503,
+       "q1": 485.80000001192093,
+       "q3": 497.10000002384186,
+       "n": 5
+      },
+      "fcp": {
+       "p50": 5164,
+       "min": 4080,
+       "max": 6336,
+       "q1": 5148,
+       "q3": 5216,
+       "n": 5
+      },
+      "lcp": {
+       "p50": 5164,
+       "min": 4812,
+       "max": 6472,
+       "q1": 5148,
+       "q3": 5632,
+       "n": 5
+      },
+      "content": {
+       "p50": 5133.5,
+       "min": 4058.9000000059605,
+       "max": 5886.100000023842,
+       "q1": 5111.699999988079,
+       "q3": 5224.5,
+       "n": 5
+      },
+      "interactive": {
+       "p50": 5133.5,
+       "min": 5004,
+       "max": 6817.100000023842,
+       "q1": 5111.699999988079,
+       "q3": 5224.5,
+       "n": 5
+      },
+      "tbt": {
+       "p50": 2778,
+       "min": 2035,
+       "max": 3634,
+       "q1": 2764,
+       "q3": 3075,
+       "n": 5
+      },
+      "longTaskMs": {
+       "p50": 3208,
+       "min": 2335,
+       "max": 4084,
+       "q1": 3028,
+       "q3": 3325,
+       "n": 5
+      },
+      "jsKb": {
+       "p50": 186.3740234375,
+       "min": 186.3740234375,
+       "max": 199.158203125,
+       "q1": 186.3740234375,
+       "q3": 186.3740234375,
+       "n": 5
+      },
+      "cssKb": {
+       "p50": 28.4375,
+       "min": 28.4375,
+       "max": 32.8564453125,
+       "q1": 28.4375,
+       "q3": 28.4375,
+       "n": 5
+      },
+      "fontKb": {
+       "p50": 29.9521484375,
+       "min": 29.9521484375,
+       "max": 29.9521484375,
+       "q1": 29.9521484375,
+       "q3": 29.9521484375,
+       "n": 5
+      },
+      "totalKb": {
+       "p50": 250.32421875,
+       "min": 250.32421875,
+       "max": 269.1748046875,
+       "q1": 250.32421875,
+       "q3": 250.32421875,
+       "n": 5
+      },
+      "requests": {
+       "p50": 14,
+       "min": 14,
+       "max": 31,
+       "q1": 14,
+       "q3": 31,
+       "n": 5
+      },
+      "jsFiles": {
+       "p50": 8,
+       "min": 8,
+       "max": 20,
+       "q1": 8,
+       "q3": 20,
+       "n": 5
+      },
+      "domNodes": {
+       "p50": 159,
+       "min": 148,
+       "max": 167,
+       "q1": 159,
+       "q3": 159,
+       "n": 5
+      }
+     },
+     "files": [
+      {
+       "url": "/app",
+       "type": "Document",
+       "kb": 2.6
+      },
+      {
+       "url": "/assets/index-bghwgJEe.js",
+       "type": "Script",
+       "kb": 102.8
+      },
+      {
+       "url": "/assets/router-B-ARkD_S.js",
+       "type": "Script",
+       "kb": 42.4
+      },
+      {
+       "url": "/assets/categories-BTIXsA70.js",
+       "type": "Script",
+       "kb": 11.4
+      },
+      {
+       "url": "/assets/balances-BtBka0tb.js",
+       "type": "Script",
+       "kb": 4.1
+      },
+      {
+       "url": "/assets/upi-Cv3KE8Ix.js",
+       "type": "Script",
+       "kb": 2.2
+      },
+      {
+       "url": "/assets/data-Dbq1o_J2.js",
+       "type": "Script",
+       "kb": 14
+      },
+      {
+       "url": "/assets/config-fwGzLccl.js",
+       "type": "Script",
+       "kb": 3.9
+      },
+      {
+       "url": "/assets/pro-DwNgumea.js",
+       "type": "Script",
+       "kb": 5.6
+      },
+      {
+       "url": "/assets/router-CU04_HZP.css",
+       "type": "Stylesheet",
+       "kb": 16.4
+      },
+      {
+       "url": "/assets/index-DrczD3L9.css",
+       "type": "Stylesheet",
+       "kb": 12
+      },
+      {
+       "url": "/api/health",
+       "type": "Fetch",
+       "kb": 1.4
+      },
+      {
+       "url": "/assets/geist-latin-wght-normal-BgDaEnEv.woff2",
+       "type": "Font",
+       "kb": 30
+      },
+      {
+       "url": "/icon.svg",
+       "type": "Other",
+       "kb": 1.6
+      },
+      {
+       "url": "/icon.svg",
+       "type": "Other",
+       "kb": 0
+      },
+      {
+       "url": "/assets/NewSplitScreen-nMU7a-en.js",
+       "type": "Script",
+       "kb": 0
+      },
+      {
+       "url": "/assets/copy-oJjzyQ6i.js",
+       "type": "Script",
+       "kb": 0
+      },
+      {
+       "url": "/assets/GroupPicker-4JuYJELJ.js",
+       "type": "Script",
+       "kb": 0
+      },
+      {
+       "url": "/assets/GroupPicker-CtBTRihG.css",
+       "type": "Stylesheet",
+       "kb": 0
+      },
+      {
+       "url": "/assets/NewSplitScreen-DkS7WSAj.css",
+       "type": "Stylesheet",
+       "kb": 0
+      },
+      {
+       "url": "/assets/ExpenseDetailScreen-gDPLwk3w.js",
+       "type": "Script",
+       "kb": 0
+      },
+      {
+       "url": "/assets/index-b-nDrp8MDp.js",
+       "type": "Script",
+       "kb": 0
+      },
+      {
+       "url": "/assets/payLink-BO0DX22Z.js",
+       "type": "Script",
+       "kb": 0
+      },
+      {
+       "url": "/assets/image-v3ngAV2K.js",
+       "type": "Script",
+       "kb": 0
+      },
+      {
+       "url": "/assets/nudge-Crl2Dlf2.js",
+       "type": "Script",
+       "kb": 0
+      },
+      {
+       "url": "/assets/users-CuegHrHb.js",
+       "type": "Script",
+       "kb": 0
+      },
+      {
+       "url": "/assets/share-sy2M2iq6.js",
+       "type": "Script",
+       "kb": 0
+      },
+      {
+       "url": "/assets/index-b-ZtIcSbNc.css",
+       "type": "Stylesheet",
+       "kb": 0
+      },
+      {
+       "url": "/assets/pencil-CrpACNCb.js",
+       "type": "Script",
+       "kb": 0
+      },
+      {
+       "url": "/assets/trash-BCis7wZz.js",
+       "type": "Script",
+       "kb": 0
+      },
+      {
+       "url": "/assets/ExpenseDetailScreen-wXEeKlCy.css",
+       "type": "Stylesheet",
+       "kb": 0
+      }
+     ]
+    },
+    "pay link": {
+     "runs": [
+      {
+       "ttfb": 508.7000000178814,
+       "fcp": 5772,
+       "lcp": 5772,
+       "content": 6192.5,
+       "interactive": 6192.5,
+       "tbt": 3027,
+       "longTaskMs": 3327,
+       "jsKb": 206.9150390625,
+       "cssKb": 34.09765625,
+       "fontKb": 47.318359375,
+       "totalKb": 292.5322265625,
+       "requests": 22,
+       "jsFiles": 14,
+       "domNodes": 139
+      },
+      {
+       "ttfb": 494.80000001192093,
+       "fcp": 8380,
+       "lcp": 9564,
+       "content": 9553.700000017881,
+       "interactive": 9553.700000017881,
+       "tbt": 6272,
+       "longTaskMs": 6822,
+       "jsKb": 206.9150390625,
+       "cssKb": 34.09765625,
+       "fontKb": 47.318359375,
+       "totalKb": 292.5322265625,
+       "requests": 22,
+       "jsFiles": 14,
+       "domNodes": 139
+      },
+      {
+       "ttfb": 483.59999999403954,
+       "fcp": 5940,
+       "lcp": 7156,
+       "content": 7177.199999988079,
+       "interactive": 7177.199999988079,
+       "tbt": 4266,
+       "longTaskMs": 4766,
+       "jsKb": 206.9150390625,
+       "cssKb": 34.09765625,
+       "fontKb": 29.9521484375,
+       "totalKb": 275.166015625,
+       "requests": 22,
+       "jsFiles": 14,
+       "domNodes": 139
+      },
+      {
+       "ttfb": 483.59999999403954,
+       "fcp": 6440,
+       "lcp": 6440,
+       "content": 7645.300000011921,
+       "interactive": 7645.300000011921,
+       "tbt": 4703,
+       "longTaskMs": 6231,
+       "jsKb": 206.9150390625,
+       "cssKb": 34.09765625,
+       "fontKb": 29.9521484375,
+       "totalKb": 275.166015625,
+       "requests": 22,
+       "jsFiles": 14,
+       "domNodes": 139
+      },
+      {
+       "ttfb": 466.90000000596046,
+       "fcp": 5524,
+       "lcp": 6924,
+       "content": 6956.5,
+       "interactive": 6956.5,
+       "tbt": 3976,
+       "longTaskMs": 4426,
+       "jsKb": 206.9150390625,
+       "cssKb": 34.09765625,
+       "fontKb": 29.9521484375,
+       "totalKb": 275.166015625,
+       "requests": 22,
+       "jsFiles": 14,
+       "domNodes": 139
+      }
+     ],
+     "summary": {
+      "ttfb": {
+       "p50": 483.59999999403954,
+       "min": 466.90000000596046,
+       "max": 508.7000000178814,
+       "q1": 483.59999999403954,
+       "q3": 494.80000001192093,
+       "n": 5
+      },
+      "fcp": {
+       "p50": 5940,
+       "min": 5524,
+       "max": 8380,
+       "q1": 5772,
+       "q3": 6440,
+       "n": 5
+      },
+      "lcp": {
+       "p50": 6924,
+       "min": 5772,
+       "max": 9564,
+       "q1": 6440,
+       "q3": 7156,
+       "n": 5
+      },
+      "content": {
+       "p50": 7177.199999988079,
+       "min": 6192.5,
+       "max": 9553.700000017881,
+       "q1": 6956.5,
+       "q3": 7645.300000011921,
+       "n": 5
+      },
+      "interactive": {
+       "p50": 7177.199999988079,
+       "min": 6192.5,
+       "max": 9553.700000017881,
+       "q1": 6956.5,
+       "q3": 7645.300000011921,
+       "n": 5
+      },
+      "tbt": {
+       "p50": 4266,
+       "min": 3027,
+       "max": 6272,
+       "q1": 3976,
+       "q3": 4703,
+       "n": 5
+      },
+      "longTaskMs": {
+       "p50": 4766,
+       "min": 3327,
+       "max": 6822,
+       "q1": 4426,
+       "q3": 6231,
+       "n": 5
+      },
+      "jsKb": {
+       "p50": 206.9150390625,
+       "min": 206.9150390625,
+       "max": 206.9150390625,
+       "q1": 206.9150390625,
+       "q3": 206.9150390625,
+       "n": 5
+      },
+      "cssKb": {
+       "p50": 34.09765625,
+       "min": 34.09765625,
+       "max": 34.09765625,
+       "q1": 34.09765625,
+       "q3": 34.09765625,
+       "n": 5
+      },
+      "fontKb": {
+       "p50": 29.9521484375,
+       "min": 29.9521484375,
+       "max": 47.318359375,
+       "q1": 29.9521484375,
+       "q3": 47.318359375,
+       "n": 5
+      },
+      "totalKb": {
+       "p50": 275.166015625,
+       "min": 275.166015625,
+       "max": 292.5322265625,
+       "q1": 275.166015625,
+       "q3": 292.5322265625,
+       "n": 5
+      },
+      "requests": {
+       "p50": 22,
+       "min": 22,
+       "max": 22,
+       "q1": 22,
+       "q3": 22,
+       "n": 5
+      },
+      "jsFiles": {
+       "p50": 14,
+       "min": 14,
+       "max": 14,
+       "q1": 14,
+       "q3": 14,
+       "n": 5
+      },
+      "domNodes": {
+       "p50": 139,
+       "min": 139,
+       "max": 139,
+       "q1": 139,
+       "q3": 139,
+       "n": 5
+      }
+     },
+     "files": [
+      {
+       "url": "/pay",
+       "type": "Document",
+       "kb": 2.6
+      },
+      {
+       "url": "/assets/index-bghwgJEe.js",
+       "type": "Script",
+       "kb": 102.8
+      },
+      {
+       "url": "/assets/router-B-ARkD_S.js",
+       "type": "Script",
+       "kb": 42.4
+      },
+      {
+       "url": "/assets/categories-BTIXsA70.js",
+       "type": "Script",
+       "kb": 11.4
+      },
+      {
+       "url": "/assets/balances-BtBka0tb.js",
+       "type": "Script",
+       "kb": 4.1
+      },
+      {
+       "url": "/assets/upi-Cv3KE8Ix.js",
+       "type": "Script",
+       "kb": 2.2
+      },
+      {
+       "url": "/assets/data-Dbq1o_J2.js",
+       "type": "Script",
+       "kb": 14
+      },
+      {
+       "url": "/assets/config-fwGzLccl.js",
+       "type": "Script",
+       "kb": 3.9
+      },
+      {
+       "url": "/assets/pro-DwNgumea.js",
+       "type": "Script",
+       "kb": 5.6
+      },
+      {
+       "url": "/assets/router-CU04_HZP.css",
+       "type": "Stylesheet",
+       "kb": 16.4
+      },
+      {
+       "url": "/assets/index-DrczD3L9.css",
+       "type": "Stylesheet",
+       "kb": 12
+      },
+      {
+       "url": "/assets/PayPage-FPFLarfc.js",
+       "type": "Script",
+       "kb": 6.9
+      },
+      {
+       "url": "/assets/copy-oJjzyQ6i.js",
+       "type": "Script",
+       "kb": 1.5
+      },
+      {
+       "url": "/assets/payLink-BO0DX22Z.js",
+       "type": "Script",
+       "kb": 6.3
+      },
+      {
+       "url": "/assets/share-sy2M2iq6.js",
+       "type": "Script",
+       "kb": 1.9
+      },
+      {
+       "url": "/assets/CtaLink--O1yhOq_.js",
+       "type": "Script",
+       "kb": 2.1
+      },
+      {
+       "url": "/assets/CtaLink-B0k6ek0d.css",
+       "type": "Stylesheet",
+       "kb": 2.2
+      },
+      {
+       "url": "/assets/pageMeta-Bl8eiBI7.js",
+       "type": "Script",
+       "kb": 1.8
+      },
+      {
+       "url": "/assets/PayPage-7fdEIZ7k.css",
+       "type": "Stylesheet",
+       "kb": 3.5
+      },
+      {
+       "url": "/icon.svg",
+       "type": "Other",
+       "kb": 1.6
+      },
+      {
+       "url": "/assets/geist-latin-wght-normal-BgDaEnEv.woff2",
+       "type": "Font",
+       "kb": 30
+      },
+      {
+       "url": "/assets/geist-latin-ext-wght-normal-DC-KSUi6.woff2",
+       "type": "Font",
+       "kb": 17.4
+      }
+     ]
+    },
+    "app (heavy)": {
+     "runs": [
+      {
+       "ttfb": 485.40000000596046,
+       "fcp": 10944,
+       "lcp": 10944,
+       "content": 10731.800000011921,
+       "interactive": 10731.800000011921,
+       "tbt": 8376,
+       "longTaskMs": 10461,
+       "jsKb": 186.3740234375,
+       "cssKb": 28.4375,
+       "fontKb": 47.318359375,
+       "totalKb": 266.04296875,
+       "requests": 14,
+       "jsFiles": 8,
+       "domNodes": 381
+      },
+      {
+       "ttfb": 480.80000001192093,
+       "fcp": 10940,
+       "lcp": 10940,
+       "content": 11066.800000011921,
+       "interactive": 11541.800000011921,
+       "tbt": 9106,
+       "longTaskMs": 10766,
+       "jsKb": 186.3740234375,
+       "cssKb": 28.4375,
+       "fontKb": 47.318359375,
+       "totalKb": 266.04296875,
+       "requests": 15,
+       "jsFiles": 8,
+       "domNodes": 382
+      },
+      {
+       "ttfb": 486.89999997615814,
+       "fcp": 9836,
+       "lcp": 9836,
+       "content": 9949.199999988079,
+       "interactive": 10170.699999988079,
+       "tbt": 7852,
+       "longTaskMs": 9272,
+       "jsKb": 186.3740234375,
+       "cssKb": 28.4375,
+       "fontKb": 47.318359375,
+       "totalKb": 266.04296875,
+       "requests": 15,
+       "jsFiles": 8,
+       "domNodes": 381
+      },
+      {
+       "ttfb": 480.2999999821186,
+       "fcp": 10376,
+       "lcp": 10744,
+       "content": 10459,
+       "interactive": 12408,
+       "tbt": 9229,
+       "longTaskMs": 9881,
+       "jsKb": 186.3740234375,
+       "cssKb": 28.4375,
+       "fontKb": 47.318359375,
+       "totalKb": 266.04296875,
+       "requests": 31,
+       "jsFiles": 20,
+       "domNodes": 405
+      },
+      {
+       "ttfb": 488.5,
+       "fcp": 11216,
+       "lcp": 11216,
+       "content": 11341,
+       "interactive": 11597.90000000596,
+       "tbt": 9083,
+       "longTaskMs": 10611,
+       "jsKb": 186.3740234375,
+       "cssKb": 28.4375,
+       "fontKb": 47.318359375,
+       "totalKb": 266.04296875,
+       "requests": 15,
+       "jsFiles": 8,
+       "domNodes": 381
+      }
+     ],
+     "summary": {
+      "ttfb": {
+       "p50": 485.40000000596046,
+       "min": 480.2999999821186,
+       "max": 488.5,
+       "q1": 480.80000001192093,
+       "q3": 486.89999997615814,
+       "n": 5
+      },
+      "fcp": {
+       "p50": 10940,
+       "min": 9836,
+       "max": 11216,
+       "q1": 10376,
+       "q3": 10944,
+       "n": 5
+      },
+      "lcp": {
+       "p50": 10940,
+       "min": 9836,
+       "max": 11216,
+       "q1": 10744,
+       "q3": 10944,
+       "n": 5
+      },
+      "content": {
+       "p50": 10731.800000011921,
+       "min": 9949.199999988079,
+       "max": 11341,
+       "q1": 10459,
+       "q3": 11066.800000011921,
+       "n": 5
+      },
+      "interactive": {
+       "p50": 11541.800000011921,
+       "min": 10170.699999988079,
+       "max": 12408,
+       "q1": 10731.800000011921,
+       "q3": 11597.90000000596,
+       "n": 5
+      },
+      "tbt": {
+       "p50": 9083,
+       "min": 7852,
+       "max": 9229,
+       "q1": 8376,
+       "q3": 9106,
+       "n": 5
+      },
+      "longTaskMs": {
+       "p50": 10461,
+       "min": 9272,
+       "max": 10766,
+       "q1": 9881,
+       "q3": 10611,
+       "n": 5
+      },
+      "jsKb": {
+       "p50": 186.3740234375,
+       "min": 186.3740234375,
+       "max": 186.3740234375,
+       "q1": 186.3740234375,
+       "q3": 186.3740234375,
+       "n": 5
+      },
+      "cssKb": {
+       "p50": 28.4375,
+       "min": 28.4375,
+       "max": 28.4375,
+       "q1": 28.4375,
+       "q3": 28.4375,
+       "n": 5
+      },
+      "fontKb": {
+       "p50": 47.318359375,
+       "min": 47.318359375,
+       "max": 47.318359375,
+       "q1": 47.318359375,
+       "q3": 47.318359375,
+       "n": 5
+      },
+      "totalKb": {
+       "p50": 266.04296875,
+       "min": 266.04296875,
+       "max": 266.04296875,
+       "q1": 266.04296875,
+       "q3": 266.04296875,
+       "n": 5
+      },
+      "requests": {
+       "p50": 15,
+       "min": 14,
+       "max": 31,
+       "q1": 15,
+       "q3": 15,
+       "n": 5
+      },
+      "jsFiles": {
+       "p50": 8,
+       "min": 8,
+       "max": 20,
+       "q1": 8,
+       "q3": 8,
+       "n": 5
+      },
+      "domNodes": {
+       "p50": 381,
+       "min": 381,
+       "max": 405,
+       "q1": 381,
+       "q3": 382,
+       "n": 5
+      }
+     },
+     "files": [
+      {
+       "url": "/app",
+       "type": "Document",
+       "kb": 2.6
+      },
+      {
+       "url": "/assets/index-bghwgJEe.js",
+       "type": "Script",
+       "kb": 102.8
+      },
+      {
+       "url": "/assets/router-B-ARkD_S.js",
+       "type": "Script",
+       "kb": 42.4
+      },
+      {
+       "url": "/assets/categories-BTIXsA70.js",
+       "type": "Script",
+       "kb": 11.4
+      },
+      {
+       "url": "/assets/balances-BtBka0tb.js",
+       "type": "Script",
+       "kb": 4.1
+      },
+      {
+       "url": "/assets/upi-Cv3KE8Ix.js",
+       "type": "Script",
+       "kb": 2.2
+      },
+      {
+       "url": "/assets/data-Dbq1o_J2.js",
+       "type": "Script",
+       "kb": 14
+      },
+      {
+       "url": "/assets/config-fwGzLccl.js",
+       "type": "Script",
+       "kb": 3.9
+      },
+      {
+       "url": "/assets/pro-DwNgumea.js",
+       "type": "Script",
+       "kb": 5.6
+      },
+      {
+       "url": "/assets/router-CU04_HZP.css",
+       "type": "Stylesheet",
+       "kb": 16.4
+      },
+      {
+       "url": "/assets/index-DrczD3L9.css",
+       "type": "Stylesheet",
+       "kb": 12
+      },
+      {
+       "url": "/assets/geist-latin-wght-normal-BgDaEnEv.woff2",
+       "type": "Font",
+       "kb": 30
+      },
+      {
+       "url": "/assets/geist-latin-ext-wght-normal-DC-KSUi6.woff2",
+       "type": "Font",
+       "kb": 17.4
+      },
+      {
+       "url": "/api/health",
+       "type": "Fetch",
+       "kb": 1.4
+      }
+     ]
+    }
+   },
+   "warm": {
+    "runs": [
+     {
+      "ttfb": 201,
+      "fcp": 8944,
+      "content": 9017.699999988079,
+      "balanceFinal": 10337.09999999404,
+      "interactive": 9017.699999988079,
+      "tbt": 8109,
+      "networkKb": 1.359375,
+      "data:load:parse:settle.v3.profile": 0.5,
+      "data:load:validate:settle.v3.profile": 47.599999994039536,
+      "data:load:parse:settle.v3.expenses": 196.60000002384186,
+      "data:load:validate:settle.v3.expenses": 2553.5999999940395,
+      "data:load:parse:settle.v3.groups": 0.8999999761581421,
+      "data:load:validate:settle.v3.groups": 37.099999994039536,
+      "data:derive:summary": 151.2999999821186,
+      "data:load:parse:settle.v3.friends": 1,
+      "data:load:validate:settle.v3.friends": 48.70000001788139,
+      "data:load:parse:settle.v3.recurring": 0.4000000059604645,
+      "data:load:validate:settle.v3.recurring": 7.299999982118607,
+      "data:derive:sortExpenses": 8.899999976158142,
+      "data:load:total": 2893.699999988079
+     },
+     {
+      "ttfb": 200,
+      "fcp": 9572,
+      "content": 9679,
+      "balanceFinal": 11123.800000011921,
+      "interactive": 9679,
+      "tbt": 8822,
+      "networkKb": 1.359375,
+      "data:load:parse:settle.v3.profile": 1.4000000059604645,
+      "data:load:validate:settle.v3.profile": 47.400000005960464,
+      "data:load:parse:settle.v3.expenses": 192.7000000178814,
+      "data:load:validate:settle.v3.expenses": 3079.0999999940395,
+      "data:load:parse:settle.v3.groups": 2.800000011920929,
+      "data:load:validate:settle.v3.groups": 99.19999998807907,
+      "data:derive:summary": 320.7000000178814,
+      "data:load:parse:settle.v3.friends": 0.800000011920929,
+      "data:load:validate:settle.v3.friends": 72.5,
+      "data:load:parse:settle.v3.recurring": 0.4000000059604645,
+      "data:load:validate:settle.v3.recurring": 11.400000005960464,
+      "data:derive:sortExpenses": 7.5,
+      "data:load:total": 3507.7000000476837
+     },
+     {
+      "ttfb": 206.2000000178814,
+      "fcp": 8828,
+      "content": 8922.200000017881,
+      "balanceFinal": 10668,
+      "interactive": 11014.5,
+      "tbt": 9184,
+      "networkKb": 1.359375,
+      "data:load:parse:settle.v3.profile": 0.5,
+      "data:load:validate:settle.v3.profile": 49.5,
+      "data:load:parse:settle.v3.expenses": 234.59999999403954,
+      "data:load:validate:settle.v3.expenses": 2409.7999999821186,
+      "data:load:parse:settle.v3.groups": 1.699999988079071,
+      "data:load:validate:settle.v3.groups": 45.20000001788139,
+      "data:derive:summary": 150.59999999403954,
+      "data:load:parse:settle.v3.friends": 0.7999999821186066,
+      "data:load:validate:settle.v3.friends": 53.599999994039536,
+      "data:load:parse:settle.v3.recurring": 0.5999999940395355,
+      "data:load:validate:settle.v3.recurring": 7.5999999940395355,
+      "data:derive:sortExpenses": 10.700000017881393,
+      "data:load:total": 2803.899999946356
+     },
+     {
+      "ttfb": 197.30000001192093,
+      "fcp": 14344,
+      "content": 14575.40000000596,
+      "balanceFinal": 15804.300000011921,
+      "interactive": 14575.40000000596,
+      "tbt": 13599,
+      "networkKb": 1.359375,
+      "data:load:parse:settle.v3.profile": 0.800000011920929,
+      "data:load:validate:settle.v3.profile": 63,
+      "data:load:parse:settle.v3.expenses": 252.40000000596046,
+      "data:load:validate:settle.v3.expenses": 5127.4000000059605,
+      "data:load:parse:settle.v3.groups": 0.800000011920929,
+      "data:load:validate:settle.v3.groups": 86.09999999403954,
+      "data:derive:summary": 303.39999997615814,
+      "data:load:parse:settle.v3.friends": 1.7999999821186066,
+      "data:load:validate:settle.v3.friends": 133.90000000596046,
+      "data:load:parse:settle.v3.recurring": 0.4000000059604645,
+      "data:load:validate:settle.v3.recurring": 14.900000005960464,
+      "data:derive:sortExpenses": 15.200000017881393,
+      "data:load:total": 5681.500000029802
+     },
+     {
+      "ttfb": 193.80000001192093,
+      "fcp": 11168,
+      "content": 11433,
+      "balanceFinal": 14564.5,
+      "interactive": 11433,
+      "tbt": 10480,
+      "networkKb": 1.359375,
+      "data:load:parse:settle.v3.profile": 1.4000000059604645,
+      "data:load:validate:settle.v3.profile": 46.099999994039536,
+      "data:load:parse:settle.v3.expenses": 188.60000002384186,
+      "data:load:validate:settle.v3.expenses": 3154.7000000178814,
+      "data:load:parse:settle.v3.groups": 0.9000000059604645,
+      "data:load:validate:settle.v3.groups": 48,
+      "data:derive:summary": 149.69999998807907,
+      "data:load:parse:settle.v3.friends": 4.0999999940395355,
+      "data:load:validate:settle.v3.friends": 67.2999999821186,
+      "data:load:parse:settle.v3.recurring": 0.6000000238418579,
+      "data:load:validate:settle.v3.recurring": 16.599999994039536,
+      "data:derive:sortExpenses": 23.5,
+      "data:load:total": 3528.3000000417233
+     }
+    ],
+    "summary": {
+     "ttfb": {
+      "p50": 200,
+      "min": 193.80000001192093,
+      "max": 206.2000000178814,
+      "q1": 197.30000001192093,
+      "q3": 201,
+      "n": 5
+     },
+     "fcp": {
+      "p50": 9572,
+      "min": 8828,
+      "max": 14344,
+      "q1": 8944,
+      "q3": 11168,
+      "n": 5
+     },
+     "content": {
+      "p50": 9679,
+      "min": 8922.200000017881,
+      "max": 14575.40000000596,
+      "q1": 9017.699999988079,
+      "q3": 11433,
+      "n": 5
+     },
+     "balanceFinal": {
+      "p50": 11123.800000011921,
+      "min": 10337.09999999404,
+      "max": 15804.300000011921,
+      "q1": 10668,
+      "q3": 14564.5,
+      "n": 5
+     },
+     "interactive": {
+      "p50": 11014.5,
+      "min": 9017.699999988079,
+      "max": 14575.40000000596,
+      "q1": 9679,
+      "q3": 11433,
+      "n": 5
+     },
+     "tbt": {
+      "p50": 9184,
+      "min": 8109,
+      "max": 13599,
+      "q1": 8822,
+      "q3": 10480,
+      "n": 5
+     },
+     "networkKb": {
+      "p50": 1.359375,
+      "min": 1.359375,
+      "max": 1.359375,
+      "q1": 1.359375,
+      "q3": 1.359375,
+      "n": 5
+     },
+     "data:load:parse:settle.v3.profile": {
+      "p50": 0.800000011920929,
+      "min": 0.5,
+      "max": 1.4000000059604645,
+      "q1": 0.5,
+      "q3": 1.4000000059604645,
+      "n": 5
+     },
+     "data:load:validate:settle.v3.profile": {
+      "p50": 47.599999994039536,
+      "min": 46.099999994039536,
+      "max": 63,
+      "q1": 47.400000005960464,
+      "q3": 49.5,
+      "n": 5
+     },
+     "data:load:parse:settle.v3.expenses": {
+      "p50": 196.60000002384186,
+      "min": 188.60000002384186,
+      "max": 252.40000000596046,
+      "q1": 192.7000000178814,
+      "q3": 234.59999999403954,
+      "n": 5
+     },
+     "data:load:validate:settle.v3.expenses": {
+      "p50": 3079.0999999940395,
+      "min": 2409.7999999821186,
+      "max": 5127.4000000059605,
+      "q1": 2553.5999999940395,
+      "q3": 3154.7000000178814,
+      "n": 5
+     },
+     "data:load:parse:settle.v3.groups": {
+      "p50": 0.9000000059604645,
+      "min": 0.800000011920929,
+      "max": 2.800000011920929,
+      "q1": 0.8999999761581421,
+      "q3": 1.699999988079071,
+      "n": 5
+     },
+     "data:load:validate:settle.v3.groups": {
+      "p50": 48,
+      "min": 37.099999994039536,
+      "max": 99.19999998807907,
+      "q1": 45.20000001788139,
+      "q3": 86.09999999403954,
+      "n": 5
+     },
+     "data:derive:summary": {
+      "p50": 151.2999999821186,
+      "min": 149.69999998807907,
+      "max": 320.7000000178814,
+      "q1": 150.59999999403954,
+      "q3": 303.39999997615814,
+      "n": 5
+     },
+     "data:load:parse:settle.v3.friends": {
+      "p50": 1,
+      "min": 0.7999999821186066,
+      "max": 4.0999999940395355,
+      "q1": 0.800000011920929,
+      "q3": 1.7999999821186066,
+      "n": 5
+     },
+     "data:load:validate:settle.v3.friends": {
+      "p50": 67.2999999821186,
+      "min": 48.70000001788139,
+      "max": 133.90000000596046,
+      "q1": 53.599999994039536,
+      "q3": 72.5,
+      "n": 5
+     },
+     "data:load:parse:settle.v3.recurring": {
+      "p50": 0.4000000059604645,
+      "min": 0.4000000059604645,
+      "max": 0.6000000238418579,
+      "q1": 0.4000000059604645,
+      "q3": 0.5999999940395355,
+      "n": 5
+     },
+     "data:load:validate:settle.v3.recurring": {
+      "p50": 11.400000005960464,
+      "min": 7.299999982118607,
+      "max": 16.599999994039536,
+      "q1": 7.5999999940395355,
+      "q3": 14.900000005960464,
+      "n": 5
+     },
+     "data:derive:sortExpenses": {
+      "p50": 10.700000017881393,
+      "min": 7.5,
+      "max": 23.5,
+      "q1": 8.899999976158142,
+      "q3": 15.200000017881393,
+      "n": 5
+     },
+     "data:load:total": {
+      "p50": 3507.7000000476837,
+      "min": 2803.899999946356,
+      "max": 5681.500000029802,
+      "q1": 2893.699999988079,
+      "q3": 3528.3000000417233,
+      "n": 5
+     }
+    }
+   },
+   "nav": {
+    "runs": [
+     {
+      "Home → Activity (tab)": 4358.4000000059605,
+      "Home → Activity (tab) · long tasks ms": 4342,
+      "Activity → Expense (bill)": 2734.4000000059605,
+      "Activity → Expense (bill) · long tasks ms": 2742,
+      "Activity → Groups (tab)": 1320.300000011921,
+      "Activity → Groups (tab) · long tasks ms": 1299,
+      "Groups → Group detail (300)": 2099,
+      "Groups → Group detail (300) · long tasks ms": 2088,
+      "Groups → Home (tab)": 1102.9000000059605,
+      "Groups → Home (tab) · long tasks ms": 1093,
+      "Home → New split": 1867.699999988079,
+      "Home → New split · long tasks ms": 1860,
+      "Home → Bill flow": 356.80000001192093,
+      "Home → Bill flow · long tasks ms": 312,
+      "Home → You (tab)": 918,
+      "Home → You (tab) · long tasks ms": 900,
+      "You → Home (tab)": 637.5,
+      "You → Home (tab) · long tasks ms": 589
+     },
+     {
+      "Home → Activity (tab)": 2194,
+      "Home → Activity (tab) · long tasks ms": 2168,
+      "Activity → Expense (bill)": 1180.3999999761581,
+      "Activity → Expense (bill) · long tasks ms": 1171,
+      "Activity → Groups (tab)": 1158.9000000059605,
+      "Activity → Groups (tab) · long tasks ms": 1154,
+      "Groups → Group detail (300)": 7334.0999999940395,
+      "Groups → Group detail (300) · long tasks ms": 7312,
+      "Groups → Home (tab)": 589,
+      "Groups → Home (tab) · long tasks ms": 586,
+      "Home → New split": 1744.5,
+      "Home → New split · long tasks ms": 1712,
+      "Home → Bill flow": 423.40000000596046,
+      "Home → Bill flow · long tasks ms": 369,
+      "Home → You (tab)": 882.9000000059605,
+      "Home → You (tab) · long tasks ms": 873,
+      "You → Home (tab)": 738.6000000238419,
+      "You → Home (tab) · long tasks ms": 723
+     },
+     {
+      "Home → Activity (tab)": 2122,
+      "Home → Activity (tab) · long tasks ms": 2105,
+      "Activity → Expense (bill)": 1326.0999999940395,
+      "Activity → Expense (bill) · long tasks ms": 1329,
+      "Activity → Groups (tab)": 1112.800000011921,
+      "Activity → Groups (tab) · long tasks ms": 1099,
+      "Groups → Group detail (300)": 7865.4000000059605,
+      "Groups → Group detail (300) · long tasks ms": 7840,
+      "Groups → Home (tab)": 616.5,
+      "Groups → Home (tab) · long tasks ms": 620,
+      "Home → New split": 2435.5,
+      "Home → New split · long tasks ms": 2404,
+      "Home → Bill flow": 380.30000001192093,
+      "Home → Bill flow · long tasks ms": 351,
+      "Home → You (tab)": 863,
+      "Home → You (tab) · long tasks ms": 824,
+      "You → Home (tab)": 696.4000000059605,
+      "You → Home (tab) · long tasks ms": 688
+     },
+     {
+      "Home → Activity (tab)": 1854.6000000238419,
+      "Home → Activity (tab) · long tasks ms": 1825,
+      "Activity → Expense (bill)": 1263.9000000059605,
+      "Activity → Expense (bill) · long tasks ms": 1255,
+      "Activity → Groups (tab)": 1337.0999999940395,
+      "Activity → Groups (tab) · long tasks ms": 1333,
+      "Groups → Group detail (300)": 9674.40000000596,
+      "Groups → Group detail (300) · long tasks ms": 9643,
+      "Groups → Home (tab)": 666,
+      "Groups → Home (tab) · long tasks ms": 657,
+      "Home → New split": 1705.4000000059605,
+      "Home → New split · long tasks ms": 1696,
+      "Home → Bill flow": 363.59999999403954,
+      "Home → Bill flow · long tasks ms": 315,
+      "Home → You (tab)": 928.6999999880791,
+      "Home → You (tab) · long tasks ms": 914,
+      "You → Home (tab)": 833.2999999821186,
+      "You → Home (tab) · long tasks ms": 831
+     },
+     {
+      "Home → Activity (tab)": 1786.3999999761581,
+      "Home → Activity (tab) · long tasks ms": 1761,
+      "Activity → Expense (bill)": 1336.800000011921,
+      "Activity → Expense (bill) · long tasks ms": 1333,
+      "Activity → Groups (tab)": 1187.7000000178814,
+      "Activity → Groups (tab) · long tasks ms": 1179,
+      "Groups → Group detail (300)": 7434.799999982119,
+      "Groups → Group detail (300) · long tasks ms": 7417,
+      "Groups → Home (tab)": 644.5,
+      "Groups → Home (tab) · long tasks ms": 641,
+      "Home → New split": 1815.800000011921,
+      "Home → New split · long tasks ms": 1791,
+      "Home → Bill flow": 249.5,
+      "Home → Bill flow · long tasks ms": 240,
+      "Home → You (tab)": 793.7000000178814,
+      "Home → You (tab) · long tasks ms": 793,
+      "You → Home (tab)": 348.10000002384186,
+      "You → Home (tab) · long tasks ms": 342
+     }
+    ],
+    "summary": {
+     "Home → Activity (tab)": {
+      "p50": 2122,
+      "min": 1786.3999999761581,
+      "max": 4358.4000000059605,
+      "q1": 1854.6000000238419,
+      "q3": 2194,
+      "n": 5
+     },
+     "Home → Activity (tab) · long tasks ms": {
+      "p50": 2105,
+      "min": 1761,
+      "max": 4342,
+      "q1": 1825,
+      "q3": 2168,
+      "n": 5
+     },
+     "Activity → Expense (bill)": {
+      "p50": 1326.0999999940395,
+      "min": 1180.3999999761581,
+      "max": 2734.4000000059605,
+      "q1": 1263.9000000059605,
+      "q3": 1336.800000011921,
+      "n": 5
+     },
+     "Activity → Expense (bill) · long tasks ms": {
+      "p50": 1329,
+      "min": 1171,
+      "max": 2742,
+      "q1": 1255,
+      "q3": 1333,
+      "n": 5
+     },
+     "Activity → Groups (tab)": {
+      "p50": 1187.7000000178814,
+      "min": 1112.800000011921,
+      "max": 1337.0999999940395,
+      "q1": 1158.9000000059605,
+      "q3": 1320.300000011921,
+      "n": 5
+     },
+     "Activity → Groups (tab) · long tasks ms": {
+      "p50": 1179,
+      "min": 1099,
+      "max": 1333,
+      "q1": 1154,
+      "q3": 1299,
+      "n": 5
+     },
+     "Groups → Group detail (300)": {
+      "p50": 7434.799999982119,
+      "min": 2099,
+      "max": 9674.40000000596,
+      "q1": 7334.0999999940395,
+      "q3": 7865.4000000059605,
+      "n": 5
+     },
+     "Groups → Group detail (300) · long tasks ms": {
+      "p50": 7417,
+      "min": 2088,
+      "max": 9643,
+      "q1": 7312,
+      "q3": 7840,
+      "n": 5
+     },
+     "Groups → Home (tab)": {
+      "p50": 644.5,
+      "min": 589,
+      "max": 1102.9000000059605,
+      "q1": 616.5,
+      "q3": 666,
+      "n": 5
+     },
+     "Groups → Home (tab) · long tasks ms": {
+      "p50": 641,
+      "min": 586,
+      "max": 1093,
+      "q1": 620,
+      "q3": 657,
+      "n": 5
+     },
+     "Home → New split": {
+      "p50": 1815.800000011921,
+      "min": 1705.4000000059605,
+      "max": 2435.5,
+      "q1": 1744.5,
+      "q3": 1867.699999988079,
+      "n": 5
+     },
+     "Home → New split · long tasks ms": {
+      "p50": 1791,
+      "min": 1696,
+      "max": 2404,
+      "q1": 1712,
+      "q3": 1860,
+      "n": 5
+     },
+     "Home → Bill flow": {
+      "p50": 363.59999999403954,
+      "min": 249.5,
+      "max": 423.40000000596046,
+      "q1": 356.80000001192093,
+      "q3": 380.30000001192093,
+      "n": 5
+     },
+     "Home → Bill flow · long tasks ms": {
+      "p50": 315,
+      "min": 240,
+      "max": 369,
+      "q1": 312,
+      "q3": 351,
+      "n": 5
+     },
+     "Home → You (tab)": {
+      "p50": 882.9000000059605,
+      "min": 793.7000000178814,
+      "max": 928.6999999880791,
+      "q1": 863,
+      "q3": 918,
+      "n": 5
+     },
+     "Home → You (tab) · long tasks ms": {
+      "p50": 873,
+      "min": 793,
+      "max": 914,
+      "q1": 824,
+      "q3": 900,
+      "n": 5
+     },
+     "You → Home (tab)": {
+      "p50": 696.4000000059605,
+      "min": 348.10000002384186,
+      "max": 833.2999999821186,
+      "q1": 637.5,
+      "q3": 738.6000000238419,
+      "n": 5
+     },
+     "You → Home (tab) · long tasks ms": {
+      "p50": 688,
+      "min": 342,
+      "max": 831,
+      "q1": 589,
+      "q3": 723,
+      "n": 5
+     }
+    }
+   },
+   "scroll": {
+    "activity:fling": {
+     "runs": [
+      {
+       "reached": true,
+       "timeToOldest": 144691.70000000595,
+       "frames": 123,
+       "longFrames": 117,
+       "droppedFrames": 8559,
+       "p50Frame": 250,
+       "p95Frame": 4565.900000000009,
+       "maxFrame": 9081.900000000009,
+       "longTasks": 135,
+       "longTaskMs": 142442,
+       "stalledMs": 18163.399999999998,
+       "domNodes": 26023
+      },
+      {
+       "reached": true,
+       "timeToOldest": 126990.10000002384,
+       "frames": 130,
+       "longFrames": 107,
+       "droppedFrames": 7491,
+       "p50Frame": 200,
+       "p95Frame": 4182.699999999997,
+       "maxFrame": 6115.5999999999985,
+       "longTasks": 130,
+       "longTaskMs": 124749,
+       "stalledMs": 23612.299999999996,
+       "domNodes": 26023
+      },
+      {
+       "reached": true,
+       "timeToOldest": 134308.20000000595,
+       "frames": 125,
+       "longFrames": 115,
+       "droppedFrames": 7934,
+       "p50Frame": 250,
+       "p95Frame": 4749.200000000012,
+       "maxFrame": 5665.600000000006,
+       "longTasks": 136,
+       "longTaskMs": 132062,
+       "stalledMs": 14580.999999999985,
+       "domNodes": 26023
+      },
+      {
+       "reached": true,
+       "timeToOldest": 141088,
+       "frames": 127,
+       "longFrames": 108,
+       "droppedFrames": 8339,
+       "p50Frame": 200.10000000000582,
+       "p95Frame": 5282.5,
+       "maxFrame": 7232.200000000012,
+       "longTasks": 124,
+       "longTaskMs": 138761,
+       "stalledMs": 27161.699999999957,
+       "domNodes": 26023
+      },
+      {
+       "reached": true,
+       "timeToOldest": 142364.90000000596,
+       "frames": 118,
+       "longFrames": 107,
+       "droppedFrames": 8425,
+       "p50Frame": 283.3000000000029,
+       "p95Frame": 5182.400000000009,
+       "maxFrame": 7498.800000000003,
+       "longTasks": 126,
+       "longTaskMs": 140253,
+       "stalledMs": 20712.800000000017,
+       "domNodes": 26023
+      }
+     ],
+     "summary": {
+      "timeToOldest": {
+       "p50": 141088,
+       "min": 126990.10000002384,
+       "max": 144691.70000000595,
+       "q1": 134308.20000000595,
+       "q3": 142364.90000000596,
+       "n": 5
+      },
+      "frames": {
+       "p50": 125,
+       "min": 118,
+       "max": 130,
+       "q1": 123,
+       "q3": 127,
+       "n": 5
+      },
+      "longFrames": {
+       "p50": 108,
+       "min": 107,
+       "max": 117,
+       "q1": 107,
+       "q3": 115,
+       "n": 5
+      },
+      "droppedFrames": {
+       "p50": 8339,
+       "min": 7491,
+       "max": 8559,
+       "q1": 7934,
+       "q3": 8425,
+       "n": 5
+      },
+      "p50Frame": {
+       "p50": 250,
+       "min": 200,
+       "max": 283.3000000000029,
+       "q1": 200.10000000000582,
+       "q3": 250,
+       "n": 5
+      },
+      "p95Frame": {
+       "p50": 4749.200000000012,
+       "min": 4182.699999999997,
+       "max": 5282.5,
+       "q1": 4565.900000000009,
+       "q3": 5182.400000000009,
+       "n": 5
+      },
+      "maxFrame": {
+       "p50": 7232.200000000012,
+       "min": 5665.600000000006,
+       "max": 9081.900000000009,
+       "q1": 6115.5999999999985,
+       "q3": 7498.800000000003,
+       "n": 5
+      },
+      "longTasks": {
+       "p50": 130,
+       "min": 124,
+       "max": 136,
+       "q1": 126,
+       "q3": 135,
+       "n": 5
+      },
+      "longTaskMs": {
+       "p50": 138761,
+       "min": 124749,
+       "max": 142442,
+       "q1": 132062,
+       "q3": 140253,
+       "n": 5
+      },
+      "stalledMs": {
+       "p50": 20712.800000000017,
+       "min": 14580.999999999985,
+       "max": 27161.699999999957,
+       "q1": 18163.399999999998,
+       "q3": 23612.299999999996,
+       "n": 5
+      },
+      "domNodes": {
+       "p50": 26023,
+       "min": 26023,
+       "max": 26023,
+       "q1": 26023,
+       "q3": 26023,
+       "n": 5
+      }
+     }
+    },
+    "activity:jump": {
+     "runs": [
+      {
+       "reached": true,
+       "timeToOldest": 148641.4,
+       "frames": 130,
+       "longFrames": 112,
+       "droppedFrames": 8789,
+       "p50Frame": 200,
+       "p95Frame": 5265.800000000003,
+       "maxFrame": 6465.600000000006,
+       "longTasks": 127,
+       "longTaskMs": 146846,
+       "stalledMs": 138260.70000000004,
+       "domNodes": 26023
+      },
+      {
+       "reached": true,
+       "timeToOldest": 141734.40000002383,
+       "frames": 136,
+       "longFrames": 122,
+       "droppedFrames": 8369,
+       "p50Frame": 216.60000000000582,
+       "p95Frame": 4682.5,
+       "maxFrame": 6065.700000000012,
+       "longTasks": 130,
+       "longTaskMs": 139769,
+       "stalledMs": 132678.30000000005,
+       "domNodes": 26023
+      },
+      {
+       "reached": true,
+       "timeToOldest": 158486.70000000595,
+       "frames": 138,
+       "longFrames": 124,
+       "droppedFrames": 9372,
+       "p50Frame": 216.6999999999971,
+       "p95Frame": 5365.700000000012,
+       "maxFrame": 8382,
+       "longTasks": 130,
+       "longTaskMs": 156147,
+       "stalledMs": 149975.10000000006,
+       "domNodes": 26023
+      },
+      {
+       "reached": true,
+       "timeToOldest": 196146.09999998807,
+       "frames": 141,
+       "longFrames": 136,
+       "droppedFrames": 11629,
+       "p50Frame": 266.70000000000437,
+       "p95Frame": 6332.200000000012,
+       "maxFrame": 7682.100000000006,
+       "longTasks": 150,
+       "longTaskMs": 193812,
+       "stalledMs": 184085.80000000002,
+       "domNodes": 26023
+      },
+      {
+       "reached": true,
+       "timeToOldest": 171504.3999999881,
+       "frames": 135,
+       "longFrames": 125,
+       "droppedFrames": 10156,
+       "p50Frame": 283.3000000000029,
+       "p95Frame": 5999.100000000006,
+       "maxFrame": 7765.299999999988,
+       "longTasks": 134,
+       "longTaskMs": 168916,
+       "stalledMs": 159943.79999999996,
+       "domNodes": 26023
+      }
+     ],
+     "summary": {
+      "timeToOldest": {
+       "p50": 158486.70000000595,
+       "min": 141734.40000002383,
+       "max": 196146.09999998807,
+       "q1": 148641.4,
+       "q3": 171504.3999999881,
+       "n": 5
+      },
+      "frames": {
+       "p50": 136,
+       "min": 130,
+       "max": 141,
+       "q1": 135,
+       "q3": 138,
+       "n": 5
+      },
+      "longFrames": {
+       "p50": 124,
+       "min": 112,
+       "max": 136,
+       "q1": 122,
+       "q3": 125,
+       "n": 5
+      },
+      "droppedFrames": {
+       "p50": 9372,
+       "min": 8369,
+       "max": 11629,
+       "q1": 8789,
+       "q3": 10156,
+       "n": 5
+      },
+      "p50Frame": {
+       "p50": 216.6999999999971,
+       "min": 200,
+       "max": 283.3000000000029,
+       "q1": 216.60000000000582,
+       "q3": 266.70000000000437,
+       "n": 5
+      },
+      "p95Frame": {
+       "p50": 5365.700000000012,
+       "min": 4682.5,
+       "max": 6332.200000000012,
+       "q1": 5265.800000000003,
+       "q3": 5999.100000000006,
+       "n": 5
+      },
+      "maxFrame": {
+       "p50": 7682.100000000006,
+       "min": 6065.700000000012,
+       "max": 8382,
+       "q1": 6465.600000000006,
+       "q3": 7765.299999999988,
+       "n": 5
+      },
+      "longTasks": {
+       "p50": 130,
+       "min": 127,
+       "max": 150,
+       "q1": 130,
+       "q3": 134,
+       "n": 5
+      },
+      "longTaskMs": {
+       "p50": 156147,
+       "min": 139769,
+       "max": 193812,
+       "q1": 146846,
+       "q3": 168916,
+       "n": 5
+      },
+      "stalledMs": {
+       "p50": 149975.10000000006,
+       "min": 132678.30000000005,
+       "max": 184085.80000000002,
+       "q1": 138260.70000000004,
+       "q3": 159943.79999999996,
+       "n": 5
+      },
+      "domNodes": {
+       "p50": 26023,
+       "min": 26023,
+       "max": 26023,
+       "q1": 26023,
+       "q3": 26023,
+       "n": 5
+      }
+     }
+    },
+    "group:fling": {
+     "runs": [
+      {
+       "reached": true,
+       "timeToOldest": 4010.4000000059605,
+       "frames": 41,
+       "longFrames": 21,
+       "droppedFrames": 199,
+       "p50Frame": 33.200000000004366,
+       "p95Frame": 316.70000000000437,
+       "maxFrame": 383.3000000000029,
+       "longTasks": 14,
+       "longTaskMs": 3333,
+       "stalledMs": 0,
+       "domNodes": 6227
+      },
+      {
+       "reached": true,
+       "timeToOldest": 4331.700000017881,
+       "frames": 27,
+       "longFrames": 22,
+       "droppedFrames": 232,
+       "p50Frame": 166.6999999999971,
+       "p95Frame": 299.90000000000146,
+       "maxFrame": 566.6000000000058,
+       "longTasks": 15,
+       "longTaskMs": 3357,
+       "stalledMs": 0,
+       "domNodes": 6227
+      },
+      {
+       "reached": true,
+       "timeToOldest": 4045.4000000059605,
+       "frames": 18,
+       "longFrames": 18,
+       "droppedFrames": 224,
+       "p50Frame": 283.20000000000437,
+       "p95Frame": 433.29999999999563,
+       "maxFrame": 433.29999999999563,
+       "longTasks": 14,
+       "longTaskMs": 3789,
+       "stalledMs": 0,
+       "domNodes": 6227
+      },
+      {
+       "reached": true,
+       "timeToOldest": 4031.7999999940366,
+       "frames": 41,
+       "longFrames": 19,
+       "droppedFrames": 200,
+       "p50Frame": 16.799999999995634,
+       "p95Frame": 316.59999999999854,
+       "maxFrame": 399.90000000000146,
+       "longTasks": 14,
+       "longTaskMs": 3410,
+       "stalledMs": 0,
+       "domNodes": 6227
+      },
+      {
+       "reached": true,
+       "timeToOldest": 4010.199999988079,
+       "frames": 61,
+       "longFrames": 29,
+       "droppedFrames": 179,
+       "p50Frame": 16.700000000004366,
+       "p95Frame": 200,
+       "maxFrame": 300,
+       "longTasks": 20,
+       "longTaskMs": 3169,
+       "stalledMs": 0,
+       "domNodes": 6227
+      }
+     ],
+     "summary": {
+      "timeToOldest": {
+       "p50": 4031.7999999940366,
+       "min": 4010.199999988079,
+       "max": 4331.700000017881,
+       "q1": 4010.4000000059605,
+       "q3": 4045.4000000059605,
+       "n": 5
+      },
+      "frames": {
+       "p50": 41,
+       "min": 18,
+       "max": 61,
+       "q1": 27,
+       "q3": 41,
+       "n": 5
+      },
+      "longFrames": {
+       "p50": 21,
+       "min": 18,
+       "max": 29,
+       "q1": 19,
+       "q3": 22,
+       "n": 5
+      },
+      "droppedFrames": {
+       "p50": 200,
+       "min": 179,
+       "max": 232,
+       "q1": 199,
+       "q3": 224,
+       "n": 5
+      },
+      "p50Frame": {
+       "p50": 33.200000000004366,
+       "min": 16.700000000004366,
+       "max": 283.20000000000437,
+       "q1": 16.799999999995634,
+       "q3": 166.6999999999971,
+       "n": 5
+      },
+      "p95Frame": {
+       "p50": 316.59999999999854,
+       "min": 200,
+       "max": 433.29999999999563,
+       "q1": 299.90000000000146,
+       "q3": 316.70000000000437,
+       "n": 5
+      },
+      "maxFrame": {
+       "p50": 399.90000000000146,
+       "min": 300,
+       "max": 566.6000000000058,
+       "q1": 383.3000000000029,
+       "q3": 433.29999999999563,
+       "n": 5
+      },
+      "longTasks": {
+       "p50": 14,
+       "min": 14,
+       "max": 20,
+       "q1": 14,
+       "q3": 15,
+       "n": 5
+      },
+      "longTaskMs": {
+       "p50": 3357,
+       "min": 3169,
+       "max": 3789,
+       "q1": 3333,
+       "q3": 3410,
+       "n": 5
+      },
+      "stalledMs": {
+       "p50": 0,
+       "min": 0,
+       "max": 0,
+       "q1": 0,
+       "q3": 0,
+       "n": 5
+      },
+      "domNodes": {
+       "p50": 6227,
+       "min": 6227,
+       "max": 6227,
+       "q1": 6227,
+       "q3": 6227,
+       "n": 5
+      }
+     }
+    }
+   }
+  },
+  "mid": {
+   "cold": {
+    "app (empty)": {
+     "runs": [
+      {
+       "ttfb": 11.799999982118607,
+       "fcp": 1124,
+       "lcp": 1240,
+       "content": 1096.7999999821186,
+       "interactive": 1096.7999999821186,
+       "tbt": 306,
+       "longTaskMs": 406,
+       "jsKb": 186.3740234375,
+       "cssKb": 28.4375,
+       "fontKb": 29.9521484375,
+       "totalKb": 250.32421875,
+       "requests": 14,
+       "jsFiles": 8,
+       "domNodes": 190
+      },
+      {
+       "ttfb": 12.5,
+       "fcp": 936,
+       "lcp": 1084,
+       "content": 896,
+       "interactive": 896,
+       "tbt": 307,
+       "longTaskMs": 407,
+       "jsKb": 186.3740234375,
+       "cssKb": 28.4375,
+       "fontKb": 29.9521484375,
+       "totalKb": 250.32421875,
+       "requests": 14,
+       "jsFiles": 8,
+       "domNodes": 190
+      },
+      {
+       "ttfb": 12.400000005960464,
+       "fcp": 972,
+       "lcp": 1092,
+       "content": 935.4000000059605,
+       "interactive": 935.4000000059605,
+       "tbt": 347,
+       "longTaskMs": 447,
+       "jsKb": 186.3740234375,
+       "cssKb": 28.4375,
+       "fontKb": 29.9521484375,
+       "totalKb": 250.32421875,
+       "requests": 14,
+       "jsFiles": 8,
+       "domNodes": 190
+      },
+      {
+       "ttfb": 9.300000011920929,
+       "fcp": 1044,
+       "lcp": 1148,
+       "content": 1009,
+       "interactive": 1009,
+       "tbt": 351,
+       "longTaskMs": 451,
+       "jsKb": 186.3740234375,
+       "cssKb": 28.4375,
+       "fontKb": 29.9521484375,
+       "totalKb": 250.32421875,
+       "requests": 14,
+       "jsFiles": 8,
+       "domNodes": 190
+      },
+      {
+       "ttfb": 12,
+       "fcp": 904,
+       "lcp": 988,
+       "content": 868.4000000059605,
+       "interactive": 868.4000000059605,
+       "tbt": 308,
+       "longTaskMs": 408,
+       "jsKb": 186.3740234375,
+       "cssKb": 28.4375,
+       "fontKb": 29.9521484375,
+       "totalKb": 250.32421875,
+       "requests": 14,
+       "jsFiles": 8,
+       "domNodes": 190
+      }
+     ],
+     "summary": {
+      "ttfb": {
+       "p50": 12,
+       "min": 9.300000011920929,
+       "max": 12.5,
+       "q1": 11.799999982118607,
+       "q3": 12.400000005960464,
+       "n": 5
+      },
+      "fcp": {
+       "p50": 972,
+       "min": 904,
+       "max": 1124,
+       "q1": 936,
+       "q3": 1044,
+       "n": 5
+      },
+      "lcp": {
+       "p50": 1092,
+       "min": 988,
+       "max": 1240,
+       "q1": 1084,
+       "q3": 1148,
+       "n": 5
+      },
+      "content": {
+       "p50": 935.4000000059605,
+       "min": 868.4000000059605,
+       "max": 1096.7999999821186,
+       "q1": 896,
+       "q3": 1009,
+       "n": 5
+      },
+      "interactive": {
+       "p50": 935.4000000059605,
+       "min": 868.4000000059605,
+       "max": 1096.7999999821186,
+       "q1": 896,
+       "q3": 1009,
+       "n": 5
+      },
+      "tbt": {
+       "p50": 308,
+       "min": 306,
+       "max": 351,
+       "q1": 307,
+       "q3": 347,
+       "n": 5
+      },
+      "longTaskMs": {
+       "p50": 408,
+       "min": 406,
+       "max": 451,
+       "q1": 407,
+       "q3": 447,
+       "n": 5
+      },
+      "jsKb": {
+       "p50": 186.3740234375,
+       "min": 186.3740234375,
+       "max": 186.3740234375,
+       "q1": 186.3740234375,
+       "q3": 186.3740234375,
+       "n": 5
+      },
+      "cssKb": {
+       "p50": 28.4375,
+       "min": 28.4375,
+       "max": 28.4375,
+       "q1": 28.4375,
+       "q3": 28.4375,
+       "n": 5
+      },
+      "fontKb": {
+       "p50": 29.9521484375,
+       "min": 29.9521484375,
+       "max": 29.9521484375,
+       "q1": 29.9521484375,
+       "q3": 29.9521484375,
+       "n": 5
+      },
+      "totalKb": {
+       "p50": 250.32421875,
+       "min": 250.32421875,
+       "max": 250.32421875,
+       "q1": 250.32421875,
+       "q3": 250.32421875,
+       "n": 5
+      },
+      "requests": {
+       "p50": 14,
+       "min": 14,
+       "max": 14,
+       "q1": 14,
+       "q3": 14,
+       "n": 5
+      },
+      "jsFiles": {
+       "p50": 8,
+       "min": 8,
+       "max": 8,
+       "q1": 8,
+       "q3": 8,
+       "n": 5
+      },
+      "domNodes": {
+       "p50": 190,
+       "min": 190,
+       "max": 190,
+       "q1": 190,
+       "q3": 190,
+       "n": 5
+      }
+     },
+     "files": [
+      {
+       "url": "/app",
+       "type": "Document",
+       "kb": 2.6
+      },
+      {
+       "url": "/assets/index-bghwgJEe.js",
+       "type": "Script",
+       "kb": 102.8
+      },
+      {
+       "url": "/assets/router-B-ARkD_S.js",
+       "type": "Script",
+       "kb": 42.4
+      },
+      {
+       "url": "/assets/categories-BTIXsA70.js",
+       "type": "Script",
+       "kb": 11.4
+      },
+      {
+       "url": "/assets/balances-BtBka0tb.js",
+       "type": "Script",
+       "kb": 4.1
+      },
+      {
+       "url": "/assets/upi-Cv3KE8Ix.js",
+       "type": "Script",
+       "kb": 2.2
+      },
+      {
+       "url": "/assets/data-Dbq1o_J2.js",
+       "type": "Script",
+       "kb": 14
+      },
+      {
+       "url": "/assets/config-fwGzLccl.js",
+       "type": "Script",
+       "kb": 3.9
+      },
+      {
+       "url": "/assets/pro-DwNgumea.js",
+       "type": "Script",
+       "kb": 5.6
+      },
+      {
+       "url": "/assets/router-CU04_HZP.css",
+       "type": "Stylesheet",
+       "kb": 16.4
+      },
+      {
+       "url": "/assets/index-DrczD3L9.css",
+       "type": "Stylesheet",
+       "kb": 12
+      },
+      {
+       "url": "/api/health",
+       "type": "Fetch",
+       "kb": 1.4
+      },
+      {
+       "url": "/assets/geist-latin-wght-normal-BgDaEnEv.woff2",
+       "type": "Font",
+       "kb": 30
+      },
+      {
+       "url": "/icon.svg",
+       "type": "Other",
+       "kb": 1.6
+      }
+     ]
+    },
+    "pay link": {
+     "runs": [
+      {
+       "ttfb": 13,
+       "fcp": 1404,
+       "lcp": 1404,
+       "content": 1391.199999988079,
+       "interactive": 1391.199999988079,
+       "tbt": 369,
+       "longTaskMs": 519,
+       "jsKb": 206.9150390625,
+       "cssKb": 34.09765625,
+       "fontKb": 47.318359375,
+       "totalKb": 292.5322265625,
+       "requests": 22,
+       "jsFiles": 14,
+       "domNodes": 139
+      },
+      {
+       "ttfb": 13,
+       "fcp": 1220,
+       "lcp": 1220,
+       "content": 1317.2999999821186,
+       "interactive": 1317.2999999821186,
+       "tbt": 369,
+       "longTaskMs": 569,
+       "jsKb": 206.9150390625,
+       "cssKb": 34.09765625,
+       "fontKb": 47.318359375,
+       "totalKb": 292.5322265625,
+       "requests": 22,
+       "jsFiles": 14,
+       "domNodes": 139
+      },
+      {
+       "ttfb": 11.699999988079071,
+       "fcp": 1240,
+       "lcp": 1240,
+       "content": 1316.7999999821186,
+       "interactive": 1316.7999999821186,
+       "tbt": 357,
+       "longTaskMs": 557,
+       "jsKb": 206.9150390625,
+       "cssKb": 34.09765625,
+       "fontKb": 47.318359375,
+       "totalKb": 292.5322265625,
+       "requests": 22,
+       "jsFiles": 14,
+       "domNodes": 139
+      },
+      {
+       "ttfb": 12.799999982118607,
+       "fcp": 1260,
+       "lcp": 1260,
+       "content": 1351,
+       "interactive": 1351,
+       "tbt": 358,
+       "longTaskMs": 558,
+       "jsKb": 206.9150390625,
+       "cssKb": 34.09765625,
+       "fontKb": 47.318359375,
+       "totalKb": 292.5322265625,
+       "requests": 22,
+       "jsFiles": 14,
+       "domNodes": 139
+      },
+      {
+       "ttfb": 11.699999988079071,
+       "fcp": 1188,
+       "lcp": 1188,
+       "content": 1290,
+       "interactive": 1290,
+       "tbt": 363,
+       "longTaskMs": 513,
+       "jsKb": 206.9150390625,
+       "cssKb": 34.09765625,
+       "fontKb": 47.318359375,
+       "totalKb": 292.5322265625,
+       "requests": 22,
+       "jsFiles": 14,
+       "domNodes": 139
+      }
+     ],
+     "summary": {
+      "ttfb": {
+       "p50": 12.799999982118607,
+       "min": 11.699999988079071,
+       "max": 13,
+       "q1": 11.699999988079071,
+       "q3": 13,
+       "n": 5
+      },
+      "fcp": {
+       "p50": 1240,
+       "min": 1188,
+       "max": 1404,
+       "q1": 1220,
+       "q3": 1260,
+       "n": 5
+      },
+      "lcp": {
+       "p50": 1240,
+       "min": 1188,
+       "max": 1404,
+       "q1": 1220,
+       "q3": 1260,
+       "n": 5
+      },
+      "content": {
+       "p50": 1317.2999999821186,
+       "min": 1290,
+       "max": 1391.199999988079,
+       "q1": 1316.7999999821186,
+       "q3": 1351,
+       "n": 5
+      },
+      "interactive": {
+       "p50": 1317.2999999821186,
+       "min": 1290,
+       "max": 1391.199999988079,
+       "q1": 1316.7999999821186,
+       "q3": 1351,
+       "n": 5
+      },
+      "tbt": {
+       "p50": 363,
+       "min": 357,
+       "max": 369,
+       "q1": 358,
+       "q3": 369,
+       "n": 5
+      },
+      "longTaskMs": {
+       "p50": 557,
+       "min": 513,
+       "max": 569,
+       "q1": 519,
+       "q3": 558,
+       "n": 5
+      },
+      "jsKb": {
+       "p50": 206.9150390625,
+       "min": 206.9150390625,
+       "max": 206.9150390625,
+       "q1": 206.9150390625,
+       "q3": 206.9150390625,
+       "n": 5
+      },
+      "cssKb": {
+       "p50": 34.09765625,
+       "min": 34.09765625,
+       "max": 34.09765625,
+       "q1": 34.09765625,
+       "q3": 34.09765625,
+       "n": 5
+      },
+      "fontKb": {
+       "p50": 47.318359375,
+       "min": 47.318359375,
+       "max": 47.318359375,
+       "q1": 47.318359375,
+       "q3": 47.318359375,
+       "n": 5
+      },
+      "totalKb": {
+       "p50": 292.5322265625,
+       "min": 292.5322265625,
+       "max": 292.5322265625,
+       "q1": 292.5322265625,
+       "q3": 292.5322265625,
+       "n": 5
+      },
+      "requests": {
+       "p50": 22,
+       "min": 22,
+       "max": 22,
+       "q1": 22,
+       "q3": 22,
+       "n": 5
+      },
+      "jsFiles": {
+       "p50": 14,
+       "min": 14,
+       "max": 14,
+       "q1": 14,
+       "q3": 14,
+       "n": 5
+      },
+      "domNodes": {
+       "p50": 139,
+       "min": 139,
+       "max": 139,
+       "q1": 139,
+       "q3": 139,
+       "n": 5
+      }
+     },
+     "files": [
+      {
+       "url": "/pay",
+       "type": "Document",
+       "kb": 2.6
+      },
+      {
+       "url": "/assets/index-bghwgJEe.js",
+       "type": "Script",
+       "kb": 102.8
+      },
+      {
+       "url": "/assets/router-B-ARkD_S.js",
+       "type": "Script",
+       "kb": 42.4
+      },
+      {
+       "url": "/assets/categories-BTIXsA70.js",
+       "type": "Script",
+       "kb": 11.4
+      },
+      {
+       "url": "/assets/balances-BtBka0tb.js",
+       "type": "Script",
+       "kb": 4.1
+      },
+      {
+       "url": "/assets/upi-Cv3KE8Ix.js",
+       "type": "Script",
+       "kb": 2.2
+      },
+      {
+       "url": "/assets/data-Dbq1o_J2.js",
+       "type": "Script",
+       "kb": 14
+      },
+      {
+       "url": "/assets/config-fwGzLccl.js",
+       "type": "Script",
+       "kb": 3.9
+      },
+      {
+       "url": "/assets/pro-DwNgumea.js",
+       "type": "Script",
+       "kb": 5.6
+      },
+      {
+       "url": "/assets/router-CU04_HZP.css",
+       "type": "Stylesheet",
+       "kb": 16.4
+      },
+      {
+       "url": "/assets/index-DrczD3L9.css",
+       "type": "Stylesheet",
+       "kb": 12
+      },
+      {
+       "url": "/assets/PayPage-FPFLarfc.js",
+       "type": "Script",
+       "kb": 6.9
+      },
+      {
+       "url": "/assets/copy-oJjzyQ6i.js",
+       "type": "Script",
+       "kb": 1.5
+      },
+      {
+       "url": "/assets/payLink-BO0DX22Z.js",
+       "type": "Script",
+       "kb": 6.3
+      },
+      {
+       "url": "/assets/share-sy2M2iq6.js",
+       "type": "Script",
+       "kb": 1.9
+      },
+      {
+       "url": "/assets/CtaLink--O1yhOq_.js",
+       "type": "Script",
+       "kb": 2.1
+      },
+      {
+       "url": "/assets/CtaLink-B0k6ek0d.css",
+       "type": "Stylesheet",
+       "kb": 2.2
+      },
+      {
+       "url": "/assets/pageMeta-Bl8eiBI7.js",
+       "type": "Script",
+       "kb": 1.8
+      },
+      {
+       "url": "/assets/PayPage-7fdEIZ7k.css",
+       "type": "Stylesheet",
+       "kb": 3.5
+      },
+      {
+       "url": "/icon.svg",
+       "type": "Other",
+       "kb": 1.6
+      },
+      {
+       "url": "/assets/geist-latin-wght-normal-BgDaEnEv.woff2",
+       "type": "Font",
+       "kb": 30
+      },
+      {
+       "url": "/assets/geist-latin-ext-wght-normal-DC-KSUi6.woff2",
+       "type": "Font",
+       "kb": 17.4
+      }
+     ]
+    },
+    "app (heavy)": {
+     "runs": [
+      {
+       "ttfb": 12.300000011920929,
+       "fcp": 1388,
+       "lcp": 1472,
+       "content": 1344.6000000238419,
+       "interactive": 1535.6000000238419,
+       "tbt": 970,
+       "longTaskMs": 1170,
+       "jsKb": 186.3740234375,
+       "cssKb": 28.4375,
+       "fontKb": 47.318359375,
+       "totalKb": 266.04296875,
+       "requests": 15,
+       "jsFiles": 8,
+       "domNodes": 422
+      },
+      {
+       "ttfb": 12.900000005960464,
+       "fcp": 1592,
+       "lcp": 1624,
+       "content": 1550.300000011921,
+       "interactive": 2004.9000000059605,
+       "tbt": 1135,
+       "longTaskMs": 1385,
+       "jsKb": 244.35546875,
+       "cssKb": 40.044921875,
+       "fontKb": 47.318359375,
+       "totalKb": 337.279296875,
+       "requests": 31,
+       "jsFiles": 20,
+       "domNodes": 428
+      },
+      {
+       "ttfb": 13.699999988079071,
+       "fcp": 1556,
+       "lcp": 1588,
+       "content": 1515,
+       "interactive": 1812.0999999940395,
+       "tbt": 1085,
+       "longTaskMs": 1285,
+       "jsKb": 244.35546875,
+       "cssKb": 40.044921875,
+       "fontKb": 47.318359375,
+       "totalKb": 337.279296875,
+       "requests": 31,
+       "jsFiles": 20,
+       "domNodes": 428
+      },
+      {
+       "ttfb": 10.199999988079071,
+       "fcp": 1364,
+       "lcp": 1396,
+       "content": 1316.7999999821186,
+       "interactive": 1606.2999999821186,
+       "tbt": 984,
+       "longTaskMs": 1234,
+       "jsKb": 186.3740234375,
+       "cssKb": 28.4375,
+       "fontKb": 47.318359375,
+       "totalKb": 266.04296875,
+       "requests": 20,
+       "jsFiles": 11,
+       "domNodes": 422
+      },
+      {
+       "ttfb": 10,
+       "fcp": 1676,
+       "lcp": 1708,
+       "content": 1621.699999988079,
+       "interactive": 2169.399999976158,
+       "tbt": 1093,
+       "longTaskMs": 1343,
+       "jsKb": 288.814453125,
+       "cssKb": 56.3603515625,
+       "fontKb": 47.318359375,
+       "totalKb": 398.0537109375,
+       "requests": 50,
+       "jsFiles": 32,
+       "domNodes": 428
+      }
+     ],
+     "summary": {
+      "ttfb": {
+       "p50": 12.300000011920929,
+       "min": 10,
+       "max": 13.699999988079071,
+       "q1": 10.199999988079071,
+       "q3": 12.900000005960464,
+       "n": 5
+      },
+      "fcp": {
+       "p50": 1556,
+       "min": 1364,
+       "max": 1676,
+       "q1": 1388,
+       "q3": 1592,
+       "n": 5
+      },
+      "lcp": {
+       "p50": 1588,
+       "min": 1396,
+       "max": 1708,
+       "q1": 1472,
+       "q3": 1624,
+       "n": 5
+      },
+      "content": {
+       "p50": 1515,
+       "min": 1316.7999999821186,
+       "max": 1621.699999988079,
+       "q1": 1344.6000000238419,
+       "q3": 1550.300000011921,
+       "n": 5
+      },
+      "interactive": {
+       "p50": 1812.0999999940395,
+       "min": 1535.6000000238419,
+       "max": 2169.399999976158,
+       "q1": 1606.2999999821186,
+       "q3": 2004.9000000059605,
+       "n": 5
+      },
+      "tbt": {
+       "p50": 1085,
+       "min": 970,
+       "max": 1135,
+       "q1": 984,
+       "q3": 1093,
+       "n": 5
+      },
+      "longTaskMs": {
+       "p50": 1285,
+       "min": 1170,
+       "max": 1385,
+       "q1": 1234,
+       "q3": 1343,
+       "n": 5
+      },
+      "jsKb": {
+       "p50": 244.35546875,
+       "min": 186.3740234375,
+       "max": 288.814453125,
+       "q1": 186.3740234375,
+       "q3": 244.35546875,
+       "n": 5
+      },
+      "cssKb": {
+       "p50": 40.044921875,
+       "min": 28.4375,
+       "max": 56.3603515625,
+       "q1": 28.4375,
+       "q3": 40.044921875,
+       "n": 5
+      },
+      "fontKb": {
+       "p50": 47.318359375,
+       "min": 47.318359375,
+       "max": 47.318359375,
+       "q1": 47.318359375,
+       "q3": 47.318359375,
+       "n": 5
+      },
+      "totalKb": {
+       "p50": 337.279296875,
+       "min": 266.04296875,
+       "max": 398.0537109375,
+       "q1": 266.04296875,
+       "q3": 337.279296875,
+       "n": 5
+      },
+      "requests": {
+       "p50": 31,
+       "min": 15,
+       "max": 50,
+       "q1": 20,
+       "q3": 31,
+       "n": 5
+      },
+      "jsFiles": {
+       "p50": 20,
+       "min": 8,
+       "max": 32,
+       "q1": 11,
+       "q3": 20,
+       "n": 5
+      },
+      "domNodes": {
+       "p50": 428,
+       "min": 422,
+       "max": 428,
+       "q1": 422,
+       "q3": 428,
+       "n": 5
+      }
+     },
+     "files": [
+      {
+       "url": "/app",
+       "type": "Document",
+       "kb": 2.6
+      },
+      {
+       "url": "/assets/index-bghwgJEe.js",
+       "type": "Script",
+       "kb": 102.8
+      },
+      {
+       "url": "/assets/router-B-ARkD_S.js",
+       "type": "Script",
+       "kb": 42.4
+      },
+      {
+       "url": "/assets/categories-BTIXsA70.js",
+       "type": "Script",
+       "kb": 11.4
+      },
+      {
+       "url": "/assets/balances-BtBka0tb.js",
+       "type": "Script",
+       "kb": 4.1
+      },
+      {
+       "url": "/assets/upi-Cv3KE8Ix.js",
+       "type": "Script",
+       "kb": 2.2
+      },
+      {
+       "url": "/assets/data-Dbq1o_J2.js",
+       "type": "Script",
+       "kb": 14
+      },
+      {
+       "url": "/assets/config-fwGzLccl.js",
+       "type": "Script",
+       "kb": 3.9
+      },
+      {
+       "url": "/assets/pro-DwNgumea.js",
+       "type": "Script",
+       "kb": 5.6
+      },
+      {
+       "url": "/assets/router-CU04_HZP.css",
+       "type": "Stylesheet",
+       "kb": 16.4
+      },
+      {
+       "url": "/assets/index-DrczD3L9.css",
+       "type": "Stylesheet",
+       "kb": 12
+      },
+      {
+       "url": "/assets/geist-latin-wght-normal-BgDaEnEv.woff2",
+       "type": "Font",
+       "kb": 30
+      },
+      {
+       "url": "/assets/geist-latin-ext-wght-normal-DC-KSUi6.woff2",
+       "type": "Font",
+       "kb": 17.4
+      },
+      {
+       "url": "/api/health",
+       "type": "Fetch",
+       "kb": 1.4
+      },
+      {
+       "url": "/icon.svg",
+       "type": "Other",
+       "kb": 0
+      }
+     ]
+    }
+   },
+   "warm": {
+    "runs": [
+     {
+      "ttfb": 65.5,
+      "fcp": 1400,
+      "content": 1359.699999988079,
+      "balanceFinal": 2008.5999999940395,
+      "interactive": 1577.8999999761581,
+      "tbt": 964,
+      "networkKb": 1.359375,
+      "data:load:parse:settle.v3.profile": 0.09999999403953552,
+      "data:load:validate:settle.v3.profile": 5.699999988079071,
+      "data:load:parse:settle.v3.expenses": 36.5,
+      "data:load:validate:settle.v3.expenses": 228.60000002384186,
+      "data:load:parse:settle.v3.groups": 0.20000001788139343,
+      "data:load:validate:settle.v3.groups": 5,
+      "data:derive:summary": 18.30000001192093,
+      "data:load:parse:settle.v3.friends": 0.09999999403953552,
+      "data:load:validate:settle.v3.friends": 7,
+      "data:load:parse:settle.v3.recurring": 0,
+      "data:load:validate:settle.v3.recurring": 0.9000000059604645,
+      "data:derive:sortExpenses": 2,
+      "data:load:total": 284.10000002384186
+     },
+     {
+      "ttfb": 79.90000000596046,
+      "fcp": 1572,
+      "content": 1513.699999988079,
+      "balanceFinal": 2175.800000011921,
+      "interactive": 1680.0999999940395,
+      "tbt": 1072,
+      "networkKb": 1.359375,
+      "data:load:parse:settle.v3.profile": 0,
+      "data:load:validate:settle.v3.profile": 6.199999988079071,
+      "data:load:parse:settle.v3.expenses": 40.30000001192093,
+      "data:load:validate:settle.v3.expenses": 286.59999999403954,
+      "data:load:parse:settle.v3.groups": 0.09999999403953552,
+      "data:load:validate:settle.v3.groups": 6.5999999940395355,
+      "data:derive:summary": 22.5,
+      "data:load:parse:settle.v3.friends": 0.09999999403953552,
+      "data:load:validate:settle.v3.friends": 6.399999976158142,
+      "data:load:parse:settle.v3.recurring": 0.09999999403953552,
+      "data:load:validate:settle.v3.recurring": 2.199999988079071,
+      "data:derive:sortExpenses": 1.800000011920929,
+      "data:load:total": 348.5999999344349
+     },
+     {
+      "ttfb": 58.80000001192093,
+      "fcp": 1448,
+      "content": 1405,
+      "balanceFinal": 2041.0999999940395,
+      "interactive": 1545.5999999940395,
+      "tbt": 977,
+      "networkKb": 1.359375,
+      "data:load:parse:settle.v3.profile": 0.09999999403953552,
+      "data:load:validate:settle.v3.profile": 5.5,
+      "data:load:parse:settle.v3.expenses": 34.39999997615814,
+      "data:load:validate:settle.v3.expenses": 254,
+      "data:load:parse:settle.v3.groups": 0.19999998807907104,
+      "data:load:validate:settle.v3.groups": 3.800000011920929,
+      "data:derive:summary": 26.400000005960464,
+      "data:load:parse:settle.v3.friends": 0.19999998807907104,
+      "data:load:validate:settle.v3.friends": 6.5999999940395355,
+      "data:load:parse:settle.v3.recurring": 0,
+      "data:load:validate:settle.v3.recurring": 1,
+      "data:derive:sortExpenses": 1.899999976158142,
+      "data:load:total": 305.7999999523163
+     },
+     {
+      "ttfb": 69.30000001192093,
+      "fcp": 1696,
+      "content": 1640.800000011921,
+      "balanceFinal": 2285.699999988079,
+      "interactive": 1793.199999988079,
+      "tbt": 1048,
+      "networkKb": 1.359375,
+      "data:load:parse:settle.v3.profile": 0,
+      "data:load:validate:settle.v3.profile": 5.800000011920929,
+      "data:load:parse:settle.v3.expenses": 39.10000002384186,
+      "data:load:validate:settle.v3.expenses": 299.09999999403954,
+      "data:load:parse:settle.v3.groups": 0.09999999403953552,
+      "data:load:validate:settle.v3.groups": 3.9000000059604645,
+      "data:derive:summary": 22.30000001192093,
+      "data:load:parse:settle.v3.friends": 0.09999999403953552,
+      "data:load:validate:settle.v3.friends": 4,
+      "data:load:parse:settle.v3.recurring": 0.10000002384185791,
+      "data:load:validate:settle.v3.recurring": 0.7999999821186066,
+      "data:derive:sortExpenses": 2,
+      "data:load:total": 353.0000000298023
+     },
+     {
+      "ttfb": 99.5,
+      "fcp": 1820,
+      "content": 1767.199999988079,
+      "balanceFinal": 2408,
+      "interactive": 2024,
+      "tbt": 1197,
+      "networkKb": 1.359375,
+      "data:load:parse:settle.v3.profile": 0.09999999403953552,
+      "data:load:validate:settle.v3.profile": 5.9000000059604645,
+      "data:load:parse:settle.v3.expenses": 39.30000001192093,
+      "data:load:validate:settle.v3.expenses": 309.09999999403954,
+      "data:load:parse:settle.v3.groups": 0.20000001788139343,
+      "data:load:validate:settle.v3.groups": 4.399999976158142,
+      "data:derive:summary": 26.5,
+      "data:load:parse:settle.v3.friends": 0.09999999403953552,
+      "data:load:validate:settle.v3.friends": 5,
+      "data:load:parse:settle.v3.recurring": 0.10000002384185791,
+      "data:load:validate:settle.v3.recurring": 0.8999999761581421,
+      "data:derive:sortExpenses": 2,
+      "data:load:total": 365.09999999403954
+     }
+    ],
+    "summary": {
+     "ttfb": {
+      "p50": 69.30000001192093,
+      "min": 58.80000001192093,
+      "max": 99.5,
+      "q1": 65.5,
+      "q3": 79.90000000596046,
+      "n": 5
+     },
+     "fcp": {
+      "p50": 1572,
+      "min": 1400,
+      "max": 1820,
+      "q1": 1448,
+      "q3": 1696,
+      "n": 5
+     },
+     "content": {
+      "p50": 1513.699999988079,
+      "min": 1359.699999988079,
+      "max": 1767.199999988079,
+      "q1": 1405,
+      "q3": 1640.800000011921,
+      "n": 5
+     },
+     "balanceFinal": {
+      "p50": 2175.800000011921,
+      "min": 2008.5999999940395,
+      "max": 2408,
+      "q1": 2041.0999999940395,
+      "q3": 2285.699999988079,
+      "n": 5
+     },
+     "interactive": {
+      "p50": 1680.0999999940395,
+      "min": 1545.5999999940395,
+      "max": 2024,
+      "q1": 1577.8999999761581,
+      "q3": 1793.199999988079,
+      "n": 5
+     },
+     "tbt": {
+      "p50": 1048,
+      "min": 964,
+      "max": 1197,
+      "q1": 977,
+      "q3": 1072,
+      "n": 5
+     },
+     "networkKb": {
+      "p50": 1.359375,
+      "min": 1.359375,
+      "max": 1.359375,
+      "q1": 1.359375,
+      "q3": 1.359375,
+      "n": 5
+     },
+     "data:load:parse:settle.v3.profile": {
+      "p50": 0.09999999403953552,
+      "min": 0,
+      "max": 0.09999999403953552,
+      "q1": 0,
+      "q3": 0.09999999403953552,
+      "n": 5
+     },
+     "data:load:validate:settle.v3.profile": {
+      "p50": 5.800000011920929,
+      "min": 5.5,
+      "max": 6.199999988079071,
+      "q1": 5.699999988079071,
+      "q3": 5.9000000059604645,
+      "n": 5
+     },
+     "data:load:parse:settle.v3.expenses": {
+      "p50": 39.10000002384186,
+      "min": 34.39999997615814,
+      "max": 40.30000001192093,
+      "q1": 36.5,
+      "q3": 39.30000001192093,
+      "n": 5
+     },
+     "data:load:validate:settle.v3.expenses": {
+      "p50": 286.59999999403954,
+      "min": 228.60000002384186,
+      "max": 309.09999999403954,
+      "q1": 254,
+      "q3": 299.09999999403954,
+      "n": 5
+     },
+     "data:load:parse:settle.v3.groups": {
+      "p50": 0.19999998807907104,
+      "min": 0.09999999403953552,
+      "max": 0.20000001788139343,
+      "q1": 0.09999999403953552,
+      "q3": 0.20000001788139343,
+      "n": 5
+     },
+     "data:load:validate:settle.v3.groups": {
+      "p50": 4.399999976158142,
+      "min": 3.800000011920929,
+      "max": 6.5999999940395355,
+      "q1": 3.9000000059604645,
+      "q3": 5,
+      "n": 5
+     },
+     "data:derive:summary": {
+      "p50": 22.5,
+      "min": 18.30000001192093,
+      "max": 26.5,
+      "q1": 22.30000001192093,
+      "q3": 26.400000005960464,
+      "n": 5
+     },
+     "data:load:parse:settle.v3.friends": {
+      "p50": 0.09999999403953552,
+      "min": 0.09999999403953552,
+      "max": 0.19999998807907104,
+      "q1": 0.09999999403953552,
+      "q3": 0.09999999403953552,
+      "n": 5
+     },
+     "data:load:validate:settle.v3.friends": {
+      "p50": 6.399999976158142,
+      "min": 4,
+      "max": 7,
+      "q1": 5,
+      "q3": 6.5999999940395355,
+      "n": 5
+     },
+     "data:load:parse:settle.v3.recurring": {
+      "p50": 0.09999999403953552,
+      "min": 0,
+      "max": 0.10000002384185791,
+      "q1": 0,
+      "q3": 0.10000002384185791,
+      "n": 5
+     },
+     "data:load:validate:settle.v3.recurring": {
+      "p50": 0.9000000059604645,
+      "min": 0.7999999821186066,
+      "max": 2.199999988079071,
+      "q1": 0.8999999761581421,
+      "q3": 1,
+      "n": 5
+     },
+     "data:derive:sortExpenses": {
+      "p50": 2,
+      "min": 1.800000011920929,
+      "max": 2,
+      "q1": 1.899999976158142,
+      "q3": 2,
+      "n": 5
+     },
+     "data:load:total": {
+      "p50": 348.5999999344349,
+      "min": 284.10000002384186,
+      "max": 365.09999999403954,
+      "q1": 305.7999999523163,
+      "q3": 353.0000000298023,
+      "n": 5
+     }
+    }
+   },
+   "nav": {
+    "runs": [
+     {
+      "Home → Activity (tab)": 238.40000000596046,
+      "Home → Activity (tab) · long tasks ms": 213,
+      "Activity → Expense (bill)": 175.80000001192093,
+      "Activity → Expense (bill) · long tasks ms": 162,
+      "Activity → Groups (tab)": 179.59999999403954,
+      "Activity → Groups (tab) · long tasks ms": 166,
+      "Groups → Group detail (300)": 807.0999999940395,
+      "Groups → Group detail (300) · long tasks ms": 806,
+      "Groups → Home (tab)": 102.59999999403954,
+      "Groups → Home (tab) · long tasks ms": 88,
+      "Home → New split": 371.60000002384186,
+      "Home → New split · long tasks ms": 342,
+      "Home → Bill flow": 67.30000001192093,
+      "Home → Bill flow · long tasks ms": 53,
+      "Home → You (tab)": 162.69999998807907,
+      "Home → You (tab) · long tasks ms": 125,
+      "You → Home (tab)": 74.59999999403954,
+      "You → Home (tab) · long tasks ms": 63
+     },
+     {
+      "Home → Activity (tab)": 240.90000000596046,
+      "Home → Activity (tab) · long tasks ms": 213,
+      "Activity → Expense (bill)": 153.19999998807907,
+      "Activity → Expense (bill) · long tasks ms": 139,
+      "Activity → Groups (tab)": 159.59999999403954,
+      "Activity → Groups (tab) · long tasks ms": 147,
+      "Groups → Group detail (300)": 822.2000000178814,
+      "Groups → Group detail (300) · long tasks ms": 821,
+      "Groups → Home (tab)": 115.7999999821186,
+      "Groups → Home (tab) · long tasks ms": 104,
+      "Home → New split": 218.90000000596046,
+      "Home → New split · long tasks ms": 188,
+      "Home → Bill flow": 46.30000001192093,
+      "Home → Bill flow · long tasks ms": 0,
+      "Home → You (tab)": 161.40000000596046,
+      "Home → You (tab) · long tasks ms": 123,
+      "You → Home (tab)": 98.89999997615814,
+      "You → Home (tab) · long tasks ms": 86
+     },
+     {
+      "Home → Activity (tab)": 251.30000001192093,
+      "Home → Activity (tab) · long tasks ms": 228,
+      "Activity → Expense (bill)": 152,
+      "Activity → Expense (bill) · long tasks ms": 140,
+      "Activity → Groups (tab)": 167.59999999403954,
+      "Activity → Groups (tab) · long tasks ms": 156,
+      "Groups → Group detail (300)": 831.2999999821186,
+      "Groups → Group detail (300) · long tasks ms": 830,
+      "Groups → Home (tab)": 104.7000000178814,
+      "Groups → Home (tab) · long tasks ms": 91,
+      "Home → New split": 179.40000000596046,
+      "Home → New split · long tasks ms": 155,
+      "Home → Bill flow": 38,
+      "Home → Bill flow · long tasks ms": 0,
+      "Home → You (tab)": 114.40000000596046,
+      "Home → You (tab) · long tasks ms": 86,
+      "You → Home (tab)": 76.5,
+      "You → Home (tab) · long tasks ms": 66
+     },
+     {
+      "Home → Activity (tab)": 234.5,
+      "Home → Activity (tab) · long tasks ms": 203,
+      "Activity → Expense (bill)": 152.30000001192093,
+      "Activity → Expense (bill) · long tasks ms": 140,
+      "Activity → Groups (tab)": 132.2999999821186,
+      "Activity → Groups (tab) · long tasks ms": 122,
+      "Groups → Group detail (300)": 691.0999999940395,
+      "Groups → Group detail (300) · long tasks ms": 690,
+      "Groups → Home (tab)": 79,
+      "Groups → Home (tab) · long tasks ms": 70,
+      "Home → New split": 176.59999999403954,
+      "Home → New split · long tasks ms": 154,
+      "Home → Bill flow": 43.5,
+      "Home → Bill flow · long tasks ms": 0,
+      "Home → You (tab)": 137.59999999403954,
+      "Home → You (tab) · long tasks ms": 98,
+      "You → Home (tab)": 93.40000000596046,
+      "You → Home (tab) · long tasks ms": 81
+     },
+     {
+      "Home → Activity (tab)": 227.69999998807907,
+      "Home → Activity (tab) · long tasks ms": 203,
+      "Activity → Expense (bill)": 125.69999998807907,
+      "Activity → Expense (bill) · long tasks ms": 113,
+      "Activity → Groups (tab)": 143.30000001192093,
+      "Activity → Groups (tab) · long tasks ms": 133,
+      "Groups → Group detail (300)": 694.4000000059605,
+      "Groups → Group detail (300) · long tasks ms": 693,
+      "Groups → Home (tab)": 78.5,
+      "Groups → Home (tab) · long tasks ms": 70,
+      "Home → New split": 202.69999998807907,
+      "Home → New split · long tasks ms": 173,
+      "Home → Bill flow": 41.80000001192093,
+      "Home → Bill flow · long tasks ms": 0,
+      "Home → You (tab)": 116.69999998807907,
+      "Home → You (tab) · long tasks ms": 87,
+      "You → Home (tab)": 109.19999998807907,
+      "You → Home (tab) · long tasks ms": 94
+     }
+    ],
+    "summary": {
+     "Home → Activity (tab)": {
+      "p50": 238.40000000596046,
+      "min": 227.69999998807907,
+      "max": 251.30000001192093,
+      "q1": 234.5,
+      "q3": 240.90000000596046,
+      "n": 5
+     },
+     "Home → Activity (tab) · long tasks ms": {
+      "p50": 213,
+      "min": 203,
+      "max": 228,
+      "q1": 203,
+      "q3": 213,
+      "n": 5
+     },
+     "Activity → Expense (bill)": {
+      "p50": 152.30000001192093,
+      "min": 125.69999998807907,
+      "max": 175.80000001192093,
+      "q1": 152,
+      "q3": 153.19999998807907,
+      "n": 5
+     },
+     "Activity → Expense (bill) · long tasks ms": {
+      "p50": 140,
+      "min": 113,
+      "max": 162,
+      "q1": 139,
+      "q3": 140,
+      "n": 5
+     },
+     "Activity → Groups (tab)": {
+      "p50": 159.59999999403954,
+      "min": 132.2999999821186,
+      "max": 179.59999999403954,
+      "q1": 143.30000001192093,
+      "q3": 167.59999999403954,
+      "n": 5
+     },
+     "Activity → Groups (tab) · long tasks ms": {
+      "p50": 147,
+      "min": 122,
+      "max": 166,
+      "q1": 133,
+      "q3": 156,
+      "n": 5
+     },
+     "Groups → Group detail (300)": {
+      "p50": 807.0999999940395,
+      "min": 691.0999999940395,
+      "max": 831.2999999821186,
+      "q1": 694.4000000059605,
+      "q3": 822.2000000178814,
+      "n": 5
+     },
+     "Groups → Group detail (300) · long tasks ms": {
+      "p50": 806,
+      "min": 690,
+      "max": 830,
+      "q1": 693,
+      "q3": 821,
+      "n": 5
+     },
+     "Groups → Home (tab)": {
+      "p50": 102.59999999403954,
+      "min": 78.5,
+      "max": 115.7999999821186,
+      "q1": 79,
+      "q3": 104.7000000178814,
+      "n": 5
+     },
+     "Groups → Home (tab) · long tasks ms": {
+      "p50": 88,
+      "min": 70,
+      "max": 104,
+      "q1": 70,
+      "q3": 91,
+      "n": 5
+     },
+     "Home → New split": {
+      "p50": 202.69999998807907,
+      "min": 176.59999999403954,
+      "max": 371.60000002384186,
+      "q1": 179.40000000596046,
+      "q3": 218.90000000596046,
+      "n": 5
+     },
+     "Home → New split · long tasks ms": {
+      "p50": 173,
+      "min": 154,
+      "max": 342,
+      "q1": 155,
+      "q3": 188,
+      "n": 5
+     },
+     "Home → Bill flow": {
+      "p50": 43.5,
+      "min": 38,
+      "max": 67.30000001192093,
+      "q1": 41.80000001192093,
+      "q3": 46.30000001192093,
+      "n": 5
+     },
+     "Home → Bill flow · long tasks ms": {
+      "p50": 0,
+      "min": 0,
+      "max": 53,
+      "q1": 0,
+      "q3": 0,
+      "n": 5
+     },
+     "Home → You (tab)": {
+      "p50": 137.59999999403954,
+      "min": 114.40000000596046,
+      "max": 162.69999998807907,
+      "q1": 116.69999998807907,
+      "q3": 161.40000000596046,
+      "n": 5
+     },
+     "Home → You (tab) · long tasks ms": {
+      "p50": 98,
+      "min": 86,
+      "max": 125,
+      "q1": 87,
+      "q3": 123,
+      "n": 5
+     },
+     "You → Home (tab)": {
+      "p50": 93.40000000596046,
+      "min": 74.59999999403954,
+      "max": 109.19999998807907,
+      "q1": 76.5,
+      "q3": 98.89999997615814,
+      "n": 5
+     },
+     "You → Home (tab) · long tasks ms": {
+      "p50": 81,
+      "min": 63,
+      "max": 94,
+      "q1": 66,
+      "q3": 86,
+      "n": 5
+     }
+    }
+   },
+   "scroll": {
+    "activity:fling": {
+     "runs": [
+      {
+       "reached": true,
+       "timeToOldest": 16413.399999982117,
+       "frames": 216,
+       "longFrames": 91,
+       "droppedFrames": 768,
+       "p50Frame": 16.700000000000728,
+       "p95Frame": 416.59999999999854,
+       "maxFrame": 649.6999999999971,
+       "longTasks": 87,
+       "longTaskMs": 12849,
+       "stalledMs": 599.7999999999938,
+       "domNodes": 26023
+      },
+      {
+       "reached": true,
+       "timeToOldest": 16430.20000000596,
+       "frames": 203,
+       "longFrames": 100,
+       "droppedFrames": 782,
+       "p50Frame": 16.800000000000182,
+       "p95Frame": 399.90000000000146,
+       "maxFrame": 566.5,
+       "longTasks": 88,
+       "longTaskMs": 12936,
+       "stalledMs": 749.9000000000015,
+       "domNodes": 26023
+      },
+      {
+       "reached": true,
+       "timeToOldest": 17013.09999999404,
+       "frames": 176,
+       "longFrames": 103,
+       "droppedFrames": 844,
+       "p50Frame": 33.30000000000109,
+       "p95Frame": 433.1999999999971,
+       "maxFrame": 616.5,
+       "longTasks": 94,
+       "longTaskMs": 14093,
+       "stalledMs": 749.9000000000051,
+       "domNodes": 26023
+      },
+      {
+       "reached": true,
+       "timeToOldest": 15277.699999994038,
+       "frames": 231,
+       "longFrames": 109,
+       "droppedFrames": 685,
+       "p50Frame": 16.799999999999272,
+       "p95Frame": 316.60000000000036,
+       "maxFrame": 499.90000000000146,
+       "longTasks": 83,
+       "longTaskMs": 11213,
+       "stalledMs": 300.3999999999978,
+       "domNodes": 26023
+      },
+      {
+       "reached": true,
+       "timeToOldest": 14857.20000000596,
+       "frames": 296,
+       "longFrames": 91,
+       "droppedFrames": 595,
+       "p50Frame": 16.700000000000728,
+       "p95Frame": 283.2999999999993,
+       "maxFrame": 449.90000000000146,
+       "longTasks": 78,
+       "longTaskMs": 9880,
+       "stalledMs": 266.59999999999854,
+       "domNodes": 26023
+      }
+     ],
+     "summary": {
+      "timeToOldest": {
+       "p50": 16413.399999982117,
+       "min": 14857.20000000596,
+       "max": 17013.09999999404,
+       "q1": 15277.699999994038,
+       "q3": 16430.20000000596,
+       "n": 5
+      },
+      "frames": {
+       "p50": 216,
+       "min": 176,
+       "max": 296,
+       "q1": 203,
+       "q3": 231,
+       "n": 5
+      },
+      "longFrames": {
+       "p50": 100,
+       "min": 91,
+       "max": 109,
+       "q1": 91,
+       "q3": 103,
+       "n": 5
+      },
+      "droppedFrames": {
+       "p50": 768,
+       "min": 595,
+       "max": 844,
+       "q1": 685,
+       "q3": 782,
+       "n": 5
+      },
+      "p50Frame": {
+       "p50": 16.799999999999272,
+       "min": 16.700000000000728,
+       "max": 33.30000000000109,
+       "q1": 16.700000000000728,
+       "q3": 16.800000000000182,
+       "n": 5
+      },
+      "p95Frame": {
+       "p50": 399.90000000000146,
+       "min": 283.2999999999993,
+       "max": 433.1999999999971,
+       "q1": 316.60000000000036,
+       "q3": 416.59999999999854,
+       "n": 5
+      },
+      "maxFrame": {
+       "p50": 566.5,
+       "min": 449.90000000000146,
+       "max": 649.6999999999971,
+       "q1": 499.90000000000146,
+       "q3": 616.5,
+       "n": 5
+      },
+      "longTasks": {
+       "p50": 87,
+       "min": 78,
+       "max": 94,
+       "q1": 83,
+       "q3": 88,
+       "n": 5
+      },
+      "longTaskMs": {
+       "p50": 12849,
+       "min": 9880,
+       "max": 14093,
+       "q1": 11213,
+       "q3": 12936,
+       "n": 5
+      },
+      "stalledMs": {
+       "p50": 599.7999999999938,
+       "min": 266.59999999999854,
+       "max": 749.9000000000051,
+       "q1": 300.3999999999978,
+       "q3": 749.9000000000015,
+       "n": 5
+      },
+      "domNodes": {
+       "p50": 26023,
+       "min": 26023,
+       "max": 26023,
+       "q1": 26023,
+       "q3": 26023,
+       "n": 5
+      }
+     }
+    },
+    "activity:jump": {
+     "runs": [
+      {
+       "reached": true,
+       "timeToOldest": 11347.39999998808,
+       "frames": 105,
+       "longFrames": 75,
+       "droppedFrames": 575,
+       "p50Frame": 33.400000000000546,
+       "p95Frame": 350,
+       "maxFrame": 466.6000000000022,
+       "longTasks": 75,
+       "longTaskMs": 9650,
+       "stalledMs": 9914.699999999999,
+       "domNodes": 26023
+      },
+      {
+       "reached": true,
+       "timeToOldest": 12846.100000017883,
+       "frames": 104,
+       "longFrames": 83,
+       "droppedFrames": 666,
+       "p50Frame": 50,
+       "p95Frame": 416.5,
+       "maxFrame": 500.2000000000007,
+       "longTasks": 79,
+       "longTaskMs": 11023,
+       "stalledMs": 11415.299999999992,
+       "domNodes": 26023
+      },
+      {
+       "reached": true,
+       "timeToOldest": 12864.000000011922,
+       "frames": 107,
+       "longFrames": 80,
+       "droppedFrames": 664,
+       "p50Frame": 33.400000000001455,
+       "p95Frame": 416.60000000000036,
+       "maxFrame": 599.8999999999978,
+       "longTasks": 80,
+       "longTaskMs": 11098,
+       "stalledMs": 11414.900000000003,
+       "domNodes": 26023
+      },
+      {
+       "reached": true,
+       "timeToOldest": 11212.7,
+       "frames": 104,
+       "longFrames": 80,
+       "droppedFrames": 568,
+       "p50Frame": 33.400000000000546,
+       "p95Frame": 350,
+       "maxFrame": 450,
+       "longTasks": 78,
+       "longTaskMs": 9569,
+       "stalledMs": 9914.899999999996,
+       "domNodes": 26023
+      },
+      {
+       "reached": true,
+       "timeToOldest": 12030.40000000596,
+       "frames": 109,
+       "longFrames": 80,
+       "droppedFrames": 612,
+       "p50Frame": 33.399999999999636,
+       "p95Frame": 366.60000000000036,
+       "maxFrame": 450,
+       "longTasks": 75,
+       "longTaskMs": 10083,
+       "stalledMs": 10748.099999999999,
+       "domNodes": 26023
+      }
+     ],
+     "summary": {
+      "timeToOldest": {
+       "p50": 12030.40000000596,
+       "min": 11212.7,
+       "max": 12864.000000011922,
+       "q1": 11347.39999998808,
+       "q3": 12846.100000017883,
+       "n": 5
+      },
+      "frames": {
+       "p50": 105,
+       "min": 104,
+       "max": 109,
+       "q1": 104,
+       "q3": 107,
+       "n": 5
+      },
+      "longFrames": {
+       "p50": 80,
+       "min": 75,
+       "max": 83,
+       "q1": 80,
+       "q3": 80,
+       "n": 5
+      },
+      "droppedFrames": {
+       "p50": 612,
+       "min": 568,
+       "max": 666,
+       "q1": 575,
+       "q3": 664,
+       "n": 5
+      },
+      "p50Frame": {
+       "p50": 33.400000000000546,
+       "min": 33.399999999999636,
+       "max": 50,
+       "q1": 33.400000000000546,
+       "q3": 33.400000000001455,
+       "n": 5
+      },
+      "p95Frame": {
+       "p50": 366.60000000000036,
+       "min": 350,
+       "max": 416.60000000000036,
+       "q1": 350,
+       "q3": 416.5,
+       "n": 5
+      },
+      "maxFrame": {
+       "p50": 466.6000000000022,
+       "min": 450,
+       "max": 599.8999999999978,
+       "q1": 450,
+       "q3": 500.2000000000007,
+       "n": 5
+      },
+      "longTasks": {
+       "p50": 78,
+       "min": 75,
+       "max": 80,
+       "q1": 75,
+       "q3": 79,
+       "n": 5
+      },
+      "longTaskMs": {
+       "p50": 10083,
+       "min": 9569,
+       "max": 11098,
+       "q1": 9650,
+       "q3": 11023,
+       "n": 5
+      },
+      "stalledMs": {
+       "p50": 10748.099999999999,
+       "min": 9914.699999999999,
+       "max": 11415.299999999992,
+       "q1": 9914.899999999996,
+       "q3": 11414.900000000003,
+       "n": 5
+      },
+      "domNodes": {
+       "p50": 26023,
+       "min": 26023,
+       "max": 26023,
+       "q1": 26023,
+       "q3": 26023,
+       "n": 5
+      }
+     }
+    },
+    "group:fling": {
+     "runs": [
+      {
+       "reached": true,
+       "timeToOldest": 3913.39999998808,
+       "frames": 218,
+       "longFrames": 16,
+       "droppedFrames": 16,
+       "p50Frame": 16.69999999999891,
+       "p95Frame": 33.29999999999927,
+       "maxFrame": 33.5,
+       "longTasks": 0,
+       "longTaskMs": 0,
+       "stalledMs": 0,
+       "domNodes": 6227
+      },
+      {
+       "reached": true,
+       "timeToOldest": 3914.9999999880783,
+       "frames": 211,
+       "longFrames": 23,
+       "droppedFrames": 23,
+       "p50Frame": 16.69999999999891,
+       "p95Frame": 33.30000000000109,
+       "maxFrame": 33.5,
+       "longTasks": 0,
+       "longTaskMs": 0,
+       "stalledMs": 0,
+       "domNodes": 6227
+      },
+      {
+       "reached": true,
+       "timeToOldest": 3915.4000000119213,
+       "frames": 218,
+       "longFrames": 16,
+       "droppedFrames": 16,
+       "p50Frame": 16.69999999999891,
+       "p95Frame": 33.29999999999927,
+       "maxFrame": 33.5,
+       "longTasks": 0,
+       "longTaskMs": 0,
+       "stalledMs": 0,
+       "domNodes": 6227
+      },
+      {
+       "reached": true,
+       "timeToOldest": 3915.500000005961,
+       "frames": 226,
+       "longFrames": 8,
+       "droppedFrames": 8,
+       "p50Frame": 16.69999999999891,
+       "p95Frame": 16.80000000000109,
+       "maxFrame": 33.5,
+       "longTasks": 0,
+       "longTaskMs": 0,
+       "stalledMs": 0,
+       "domNodes": 6227
+      },
+      {
+       "reached": true,
+       "timeToOldest": 3915.1999999821182,
+       "frames": 213,
+       "longFrames": 21,
+       "droppedFrames": 21,
+       "p50Frame": 16.69999999999891,
+       "p95Frame": 33.29999999999927,
+       "maxFrame": 33.400000000001455,
+       "longTasks": 0,
+       "longTaskMs": 0,
+       "stalledMs": 0,
+       "domNodes": 6227
+      }
+     ],
+     "summary": {
+      "timeToOldest": {
+       "p50": 3915.1999999821182,
+       "min": 3913.39999998808,
+       "max": 3915.500000005961,
+       "q1": 3914.9999999880783,
+       "q3": 3915.4000000119213,
+       "n": 5
+      },
+      "frames": {
+       "p50": 218,
+       "min": 211,
+       "max": 226,
+       "q1": 213,
+       "q3": 218,
+       "n": 5
+      },
+      "longFrames": {
+       "p50": 16,
+       "min": 8,
+       "max": 23,
+       "q1": 16,
+       "q3": 21,
+       "n": 5
+      },
+      "droppedFrames": {
+       "p50": 16,
+       "min": 8,
+       "max": 23,
+       "q1": 16,
+       "q3": 21,
+       "n": 5
+      },
+      "p50Frame": {
+       "p50": 16.69999999999891,
+       "min": 16.69999999999891,
+       "max": 16.69999999999891,
+       "q1": 16.69999999999891,
+       "q3": 16.69999999999891,
+       "n": 5
+      },
+      "p95Frame": {
+       "p50": 33.29999999999927,
+       "min": 16.80000000000109,
+       "max": 33.30000000000109,
+       "q1": 33.29999999999927,
+       "q3": 33.29999999999927,
+       "n": 5
+      },
+      "maxFrame": {
+       "p50": 33.5,
+       "min": 33.400000000001455,
+       "max": 33.5,
+       "q1": 33.5,
+       "q3": 33.5,
+       "n": 5
+      },
+      "longTasks": {
+       "p50": 0,
+       "min": 0,
+       "max": 0,
+       "q1": 0,
+       "q3": 0,
+       "n": 5
+      },
+      "longTaskMs": {
+       "p50": 0,
+       "min": 0,
+       "max": 0,
+       "q1": 0,
+       "q3": 0,
+       "n": 5
+      },
+      "stalledMs": {
+       "p50": 0,
+       "min": 0,
+       "max": 0,
+       "q1": 0,
+       "q3": 0,
+       "n": 5
+      },
+      "domNodes": {
+       "p50": 6227,
+       "min": 6227,
+       "max": 6227,
+       "q1": 6227,
+       "q3": 6227,
+       "n": 5
+      }
+     }
+    }
+   }
+  }
+ },
+ "bundle": {
+  "files": [
+   {
+    "file": "/assets/index-bghwgJEe.js",
+    "kind": "js",
+    "raw": 324903,
+    "gzip": 103694,
+    "brotli": 89775
+   },
+   {
+    "file": "/assets/router-B-ARkD_S.js",
+    "kind": "js",
+    "raw": 125100,
+    "gzip": 41935,
+    "brotli": 36572
+   },
+   {
+    "file": "/assets/router-CU04_HZP.css",
+    "kind": "css",
+    "raw": 82207,
+    "gzip": 15385,
+    "brotli": 13267
+   },
+   {
+    "file": "/assets/BillFlow-DAV765ya.js",
+    "kind": "js",
+    "raw": 68484,
+    "gzip": 22920,
+    "brotli": 20428
+   },
+   {
+    "file": "/assets/index-b-nDrp8MDp.js",
+    "kind": "js",
+    "raw": 55448,
+    "gzip": 20642,
+    "brotli": 18368
+   },
+   {
+    "file": "/assets/index-DrczD3L9.css",
+    "kind": "css",
+    "raw": 52950,
+    "gzip": 10854,
+    "brotli": 9580
+   },
+   {
+    "file": "/assets/data-Dbq1o_J2.js",
+    "kind": "js",
+    "raw": 37210,
+    "gzip": 12928,
+    "brotli": 11589
+   },
+   {
+    "file": "/assets/LandingPage-oi9WDrFj.js",
+    "kind": "js",
+    "raw": 36389,
+    "gzip": 11726,
+    "brotli": 10333
+   },
+   {
+    "file": "/assets/categories-BTIXsA70.js",
+    "kind": "js",
+    "raw": 31305,
+    "gzip": 10312,
+    "brotli": 9244
+   },
+   {
+    "file": "/assets/geist-latin-wght-normal-BgDaEnEv.woff2",
+    "kind": "woff2",
+    "raw": 29400,
+    "gzip": 29400,
+    "brotli": 29400
+   },
+   {
+    "file": "/assets/LandingPage-Bh7VY-4b.css",
+    "kind": "css",
+    "raw": 27977,
+    "gzip": 5969,
+    "brotli": 5270
+   },
+   {
+    "file": "/assets/YouScreen-CqgMCsJZ.js",
+    "kind": "js",
+    "raw": 25125,
+    "gzip": 8937,
+    "brotli": 7988
+   },
+   {
+    "file": "/assets/geist-mono-latin-wght-normal-XN7g48iV.woff2",
+    "kind": "woff2",
+    "raw": 23128,
+    "gzip": 23128,
+    "brotli": 23128
+   },
+   {
+    "file": "/assets/BillFlow-DuDyBDlO.css",
+    "kind": "css",
+    "raw": 20965,
+    "gzip": 4493,
+    "brotli": 3985
+   },
+   {
+    "file": "/assets/NewSplitScreen-nMU7a-en.js",
+    "kind": "js",
+    "raw": 18678,
+    "gzip": 7164,
+    "brotli": 6450
+   },
+   {
+    "file": "/assets/geist-latin-ext-wght-normal-DC-KSUi6.woff2",
+    "kind": "woff2",
+    "raw": 16512,
+    "gzip": 16512,
+    "brotli": 16512
+   },
+   {
+    "file": "/assets/PayPage-FPFLarfc.js",
+    "kind": "js",
+    "raw": 15787,
+    "gzip": 5663,
+    "brotli": 5103
+   },
+   {
+    "file": "/assets/GroupDetailScreen-CVtuCybu.js",
+    "kind": "js",
+    "raw": 15481,
+    "gzip": 5642,
+    "brotli": 5095
+   },
+   {
+    "file": "/assets/useProOffer-DE-BFbcR.js",
+    "kind": "js",
+    "raw": 15148,
+    "gzip": 6178,
+    "brotli": 5524
+   },
+   {
+    "file": "/assets/geist-cyrillic-wght-normal-BEAKL7Jp.woff2",
+    "kind": "woff2",
+    "raw": 15084,
+    "gzip": 15084,
+    "brotli": 15084
+   },
+   {
+    "file": "/assets/geist-mono-latin-ext-wght-normal-Bwz-egvJ.woff2",
+    "kind": "woff2",
+    "raw": 14696,
+    "gzip": 14696,
+    "brotli": 14696
+   },
+   {
+    "file": "/assets/FriendDetailScreen-e0bfLc9P.js",
+    "kind": "js",
+    "raw": 14653,
+    "gzip": 5239,
+    "brotli": 4791
+   },
+   {
+    "file": "/assets/index-b-ZtIcSbNc.css",
+    "kind": "css",
+    "raw": 13910,
+    "gzip": 3159,
+    "brotli": 2783
+   },
+   {
+    "file": "/assets/ExpenseDetailScreen-gDPLwk3w.js",
+    "kind": "js",
+    "raw": 13551,
+    "gzip": 5258,
+    "brotli": 4806
+   },
+   {
+    "file": "/assets/geist-mono-cyrillic-wght-normal-DiZS0aHC.woff2",
+    "kind": "woff2",
+    "raw": 12940,
+    "gzip": 12940,
+    "brotli": 12940
+   },
+   {
+    "file": "/assets/payLink-BO0DX22Z.js",
+    "kind": "js",
+    "raw": 12007,
+    "gzip": 5101,
+    "brotli": 4664
+   },
+   {
+    "file": "/assets/pro-DwNgumea.js",
+    "kind": "js",
+    "raw": 11649,
+    "gzip": 4422,
+    "brotli": 4008
+   },
+   {
+    "file": "/assets/ActivityScreen-Di1hbGzd.js",
+    "kind": "js",
+    "raw": 11411,
+    "gzip": 4606,
+    "brotli": 4172
+   },
+   {
+    "file": "/assets/InsightsScreen-BJ34Gu0b.js",
+    "kind": "js",
+    "raw": 10004,
+    "gzip": 3855,
+    "brotli": 3518
+   },
+   {
+    "file": "/assets/YouScreen-DECr7CCm.css",
+    "kind": "css",
+    "raw": 9205,
+    "gzip": 2262,
+    "brotli": 1975
+   },
+   {
+    "file": "/assets/PayPage-7fdEIZ7k.css",
+    "kind": "css",
+    "raw": 8987,
+    "gzip": 2189,
+    "brotli": 1877
+   },
+   {
+    "file": "/assets/RecurringEditorScreen-BRsPh8zY.js",
+    "kind": "js",
+    "raw": 8526,
+    "gzip": 3459,
+    "brotli": 3110
+   },
+   {
+    "file": "/assets/UpgradeScreen-eGFgmZth.js",
+    "kind": "js",
+    "raw": 8023,
+    "gzip": 2864,
+    "brotli": 2585
+   },
+   {
+    "file": "/assets/geist-vietnamese-wght-normal-6IgcOCM7.woff2",
+    "kind": "woff2",
+    "raw": 8004,
+    "gzip": 8004,
+    "brotli": 8004
+   },
+   {
+    "file": "/assets/geist-mono-vietnamese-wght-normal-DadHysG0.woff2",
+    "kind": "woff2",
+    "raw": 7696,
+    "gzip": 7696,
+    "brotli": 7696
+   },
+   {
+    "file": "/assets/geist-cyrillic-ext-wght-normal-DjL33-gN.woff2",
+    "kind": "woff2",
+    "raw": 7420,
+    "gzip": 7420,
+    "brotli": 7420
+   },
+   {
+    "file": "/assets/GroupSheets-B7zyuGEP.js",
+    "kind": "js",
+    "raw": 7325,
+    "gzip": 2832,
+    "brotli": 2500
+   },
+   {
+    "file": "/assets/SettleUpScreen-zKff5vbb.js",
+    "kind": "js",
+    "raw": 7173,
+    "gzip": 3074,
+    "brotli": 2778
+   },
+   {
+    "file": "/assets/balances-BtBka0tb.js",
+    "kind": "js",
+    "raw": 7075,
+    "gzip": 2822,
+    "brotli": 2583
+   },
+   {
+    "file": "/assets/geist-mono-cyrillic-ext-wght-normal-X_5orZeX.woff2",
+    "kind": "woff2",
+    "raw": 6176,
+    "gzip": 6176,
+    "brotli": 6176
+   },
+   {
+    "file": "/assets/config-fwGzLccl.js",
+    "kind": "js",
+    "raw": 6162,
+    "gzip": 2611,
+    "brotli": 2395
+   },
+   {
+    "file": "/assets/RecurringScreen-BCdoXw9O.js",
+    "kind": "js",
+    "raw": 6009,
+    "gzip": 2246,
+    "brotli": 2020
+   },
+   {
+    "file": "/assets/geist-mono-symbols2-wght-normal-CO5SzqOn.woff2",
+    "kind": "woff2",
+    "raw": 5812,
+    "gzip": 5812,
+    "brotli": 5812
+   },
+   {
+    "file": "/assets/GroupsScreen-daVykKKV.js",
+    "kind": "js",
+    "raw": 5779,
+    "gzip": 2293,
+    "brotli": 2083
+   },
+   {
+    "file": "/assets/GroupDetailScreen-N-DC8YVg.css",
+    "kind": "css",
+    "raw": 5689,
+    "gzip": 1601,
+    "brotli": 1371
+   },
+   {
+    "file": "/assets/UpgradeScreen-vlb4jf56.css",
+    "kind": "css",
+    "raw": 5433,
+    "gzip": 1616,
+    "brotli": 1392
+   },
+   {
+    "file": "/assets/ExpenseDetailScreen-wXEeKlCy.css",
+    "kind": "css",
+    "raw": 5204,
+    "gzip": 1477,
+    "brotli": 1262
+   },
+   {
+    "file": "/assets/FriendDetailScreen-Dhw-3FLw.css",
+    "kind": "css",
+    "raw": 4750,
+    "gzip": 1470,
+    "brotli": 1271
+   },
+   {
+    "file": "/assets/GroupShareSheet-CEEEoXFO.js",
+    "kind": "js",
+    "raw": 4699,
+    "gzip": 2145,
+    "brotli": 1900
+   },
+   {
+    "file": "/assets/FriendSheet-D-wo2O9w.js",
+    "kind": "js",
+    "raw": 4672,
+    "gzip": 2281,
+    "brotli": 2062
+   },
+   {
+    "file": "/assets/PrivacyPage-B7u8tFTj.js",
+    "kind": "js",
+    "raw": 4661,
+    "gzip": 1940,
+    "brotli": 1582
+   },
+   {
+    "file": "/assets/TermsPage-CibrVqFn.js",
+    "kind": "js",
+    "raw": 3900,
+    "gzip": 1749,
+    "brotli": 1411
+   },
+   {
+    "file": "/assets/useProOffer-ltNbSybE.css",
+    "kind": "css",
+    "raw": 3788,
+    "gzip": 1237,
+    "brotli": 1055
+   },
+   {
+    "file": "/assets/GroupPicker-4JuYJELJ.js",
+    "kind": "js",
+    "raw": 3624,
+    "gzip": 1650,
+    "brotli": 1505
+   },
+   {
+    "file": "/assets/groupView-DSwJo-Nv.js",
+    "kind": "js",
+    "raw": 3548,
+    "gzip": 1630,
+    "brotli": 1465
+   },
+   {
+    "file": "/assets/InsightsScreen-C2YA5RFW.css",
+    "kind": "css",
+    "raw": 3327,
+    "gzip": 1193,
+    "brotli": 1012
+   },
+   {
+    "file": "/assets/FriendsScreen-B3GzHsgP.js",
+    "kind": "js",
+    "raw": 3263,
+    "gzip": 1626,
+    "brotli": 1470
+   },
+   {
+    "file": "/assets/NewSplitScreen-DkS7WSAj.css",
+    "kind": "css",
+    "raw": 2980,
+    "gzip": 980,
+    "brotli": 831
+   },
+   {
+    "file": "/assets/GroupPicker-CtBTRihG.css",
+    "kind": "css",
+    "raw": 2725,
+    "gzip": 836,
+    "brotli": 711
+   },
+   {
+    "file": "/assets/GroupSheets-C51S_95Y.css",
+    "kind": "css",
+    "raw": 2721,
+    "gzip": 921,
+    "brotli": 771
+   },
+   {
+    "file": "/assets/PaywallSheet-Bmi5dlsz.js",
+    "kind": "js",
+    "raw": 2702,
+    "gzip": 1312,
+    "brotli": 1200
+   },
+   {
+    "file": "/assets/nudge-Crl2Dlf2.js",
+    "kind": "js",
+    "raw": 2604,
+    "gzip": 1358,
+    "brotli": 1226
+   },
+   {
+    "file": "/assets/RecurringEditorScreen-K33KsGc8.css",
+    "kind": "css",
+    "raw": 2561,
+    "gzip": 923,
+    "brotli": 786
+   },
+   {
+    "file": "/assets/GroupsScreen-BxlIx3xH.css",
+    "kind": "css",
+    "raw": 2516,
+    "gzip": 895,
+    "brotli": 764
+   },
+   {
+    "file": "/assets/CtaLink-B0k6ek0d.css",
+    "kind": "css",
+    "raw": 2442,
+    "gzip": 883,
+    "brotli": 720
+   },
+   {
+    "file": "/assets/RecurringScreen-BP10Fmz8.css",
+    "kind": "css",
+    "raw": 2137,
+    "gzip": 724,
+    "brotli": 634
+   },
+   {
+    "file": "/assets/SettleUpScreen-DLibwy1M.css",
+    "kind": "css",
+    "raw": 2090,
+    "gzip": 807,
+    "brotli": 699
+   },
+   {
+    "file": "/assets/ActivityScreen-hzO29oU-.css",
+    "kind": "css",
+    "raw": 1964,
+    "gzip": 748,
+    "brotli": 606
+   },
+   {
+    "file": "/assets/LegalLayout-sAgIzQxk.js",
+    "kind": "js",
+    "raw": 1884,
+    "gzip": 754,
+    "brotli": 674
+   },
+   {
+    "file": "/assets/LegalLayout-BIwltxPi.css",
+    "kind": "css",
+    "raw": 1824,
+    "gzip": 689,
+    "brotli": 574
+   },
+   {
+    "file": "/assets/ProLock-C8VnNvNJ.js",
+    "kind": "js",
+    "raw": 1802,
+    "gzip": 844,
+    "brotli": 771
+   },
+   {
+    "file": "/assets/GroupShareSheet-BGwoADDl.css",
+    "kind": "css",
+    "raw": 1513,
+    "gzip": 645,
+    "brotli": 535
+   },
+   {
+    "file": "/assets/CtaLink--O1yhOq_.js",
+    "kind": "js",
+    "raw": 1467,
+    "gzip": 770,
+    "brotli": 653
+   },
+   {
+    "file": "/assets/ProLock-CNXPZHGr.css",
+    "kind": "css",
+    "raw": 1438,
+    "gzip": 641,
+    "brotli": 527
+   },
+   {
+    "file": "/assets/upi-Cv3KE8Ix.js",
+    "kind": "js",
+    "raw": 1435,
+    "gzip": 865,
+    "brotli": 761
+   },
+   {
+    "file": "/assets/share-sy2M2iq6.js",
+    "kind": "js",
+    "raw": 1237,
+    "gzip": 614,
+    "brotli": 506
+   },
+   {
+    "file": "/assets/PublicFooter-qrnja8Y6.js",
+    "kind": "js",
+    "raw": 1199,
+    "gzip": 531,
+    "brotli": 456
+   },
+   {
+    "file": "/assets/pageMeta-Bl8eiBI7.js",
+    "kind": "js",
+    "raw": 1172,
+    "gzip": 517,
+    "brotli": 426
+   },
+   {
+    "file": "/assets/FriendSheet-DRnX49SV.css",
+    "kind": "css",
+    "raw": 1034,
+    "gzip": 476,
+    "brotli": 392
+   },
+   {
+    "file": "/assets/PublicFooter-K_oS-KJP.css",
+    "kind": "css",
+    "raw": 885,
+    "gzip": 423,
+    "brotli": 344
+   },
+   {
+    "file": "/assets/PaywallSheet-c6Vl87jS.css",
+    "kind": "css",
+    "raw": 805,
+    "gzip": 390,
+    "brotli": 303
+   },
+   {
+    "file": "/assets/FriendsScreen-D79hugC2.css",
+    "kind": "css",
+    "raw": 719,
+    "gzip": 379,
+    "brotli": 323
+   },
+   {
+    "file": "/assets/GroupEmoji-BZXxVgDY.css",
+    "kind": "css",
+    "raw": 497,
+    "gzip": 282,
+    "brotli": 224
+   },
+   {
+    "file": "/assets/paths-BkFIjs_W.js",
+    "kind": "js",
+    "raw": 477,
+    "gzip": 262,
+    "brotli": 219
+   },
+   {
+    "file": "/assets/GroupEmoji-DJhocYHw.js",
+    "kind": "js",
+    "raw": 464,
+    "gzip": 323,
+    "brotli": 275
+   },
+   {
+    "file": "/assets/presets-CK3NlxQC.js",
+    "kind": "js",
+    "raw": 402,
+    "gzip": 218,
+    "brotli": 177
+   },
+   {
+    "file": "/assets/trash-BCis7wZz.js",
+    "kind": "js",
+    "raw": 377,
+    "gzip": 250,
+    "brotli": 230
+   },
+   {
+    "file": "/assets/badge-check-DI4jQHY5.js",
+    "kind": "js",
+    "raw": 373,
+    "gzip": 259,
+    "brotli": 234
+   },
+   {
+    "file": "/assets/users-CuegHrHb.js",
+    "kind": "js",
+    "raw": 337,
+    "gzip": 246,
+    "brotli": 216
+   },
+   {
+    "file": "/assets/pencil-CrpACNCb.js",
+    "kind": "js",
+    "raw": 307,
+    "gzip": 245,
+    "brotli": 224
+   },
+   {
+    "file": "/assets/image-v3ngAV2K.js",
+    "kind": "js",
+    "raw": 300,
+    "gzip": 243,
+    "brotli": 214
+   },
+   {
+    "file": "/assets/copy-oJjzyQ6i.js",
+    "kind": "js",
+    "raw": 267,
+    "gzip": 231,
+    "brotli": 202
+   },
+   {
+    "file": "/assets/lock-CLcQe8mm.js",
+    "kind": "js",
+    "raw": 237,
+    "gzip": 215,
+    "brotli": 221
+   },
+   {
+    "file": "/assets/smartphone-CnCQ9h-_.js",
+    "kind": "js",
+    "raw": 228,
+    "gzip": 207,
+    "brotli": 211
+   },
+   {
+    "file": "/assets/viewMemory-hOBUfHs1.js",
+    "kind": "js",
+    "raw": 201,
+    "gzip": 156,
+    "brotli": 132
+   }
+  ],
+  "upfront": [
+   "/assets/index-bghwgJEe.js",
+   "/assets/router-B-ARkD_S.js",
+   "/assets/categories-BTIXsA70.js",
+   "/assets/balances-BtBka0tb.js",
+   "/assets/upi-Cv3KE8Ix.js",
+   "/assets/data-Dbq1o_J2.js",
+   "/assets/config-fwGzLccl.js",
+   "/assets/pro-DwNgumea.js",
+   "/assets/router-CU04_HZP.css",
+   "/assets/index-DrczD3L9.css"
+  ],
+  "shell": {
+   "jsRaw": 544839,
+   "jsGzip": 179589,
+   "jsBrotli": 156927,
+   "cssRaw": 135157,
+   "cssGzip": 26239,
+   "cssBrotli": 22847
+  },
+  "all": {
+   "jsFiles": 54,
+   "cssFiles": 30,
+   "jsRaw": 946244,
+   "jsGzip": 331864,
+   "cssRaw": 275243,
+   "cssGzip": 64547,
+   "fontFiles": 11,
+   "fontBytes": 146868
+  },
+  "sw": {
+   "raw": 8695,
+   "gzip": 3545,
+   "brotli": 2930
+  }
+ }
+}
