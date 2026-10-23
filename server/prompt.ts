@@ -2,6 +2,7 @@
  * Everything we tell the vision model. The wording here decides real-world accuracy,
  * so every rule exists because of a real bill layout that trips models up.
  */
+import { SCANNED_FEE_KINDS } from '../shared/api'
 import { CATEGORY_IDS } from '../shared/categories'
 
 const nullableNumber = (description: string) => ({ type: ['number', 'null'], description }) as const
@@ -25,6 +26,7 @@ export const BILL_SCHEMA = {
     'subtotal',
     'tax',
     'serviceCharge',
+    'fees',
     'discount',
     'tip',
     'total',
@@ -51,7 +53,21 @@ export const BILL_SCHEMA = {
     },
     subtotal: nullableNumber('Printed subtotal before taxes and charges'),
     tax: nullableNumber('Sum of all taxes added on top of the item prices'),
-    serviceCharge: nullableNumber('Service charge plus packaging, delivery and other fees'),
+    serviceCharge: nullableNumber('Restaurant service charge only — not delivery, platform or packaging fees'),
+    fees: {
+      type: 'array',
+      description: 'Delivery-app fees, one per printed fee line',
+      items: {
+        type: 'object',
+        additionalProperties: false,
+        required: ['label', 'kind', 'amount'],
+        properties: {
+          label: { type: 'string' },
+          kind: { type: 'string', enum: [...SCANNED_FEE_KINDS] },
+          amount: { type: 'number' },
+        },
+      },
+    },
     discount: nullableNumber('Sum of all discounts, as a positive number'),
     tip: nullableNumber('Tip or gratuity actually charged'),
     total: nullableNumber('Final amount payable, after round-off'),
@@ -82,23 +98,32 @@ ITEMS — one entry per purchased line (food, drinks, products, add-ons with the
 NOT ITEMS — never put these in "items"
 - Subtotal, total, grand total, net amount, bill amount, amount due or payable.
 - Taxes: GST, CGST, SGST, UTGST, IGST, VAT, MwSt, TVA, IVA, sales tax, service tax, cess → add them all together into "tax". Indian bills usually split GST into CGST + SGST — include both.
-- Service charge, service fee, packaging / packing / container charges, delivery fee, convenience / platform / handling fees, priced cover charge (coperto) → add them together into "serviceCharge".
+- Service charge or service fee on a restaurant bill, and a priced cover charge (coperto) → add them together into "serviceCharge".
+- Delivery, delivery partner, platform, convenience, handling, packaging / packing / container, small-order, surge and other app fees → one entry each in "fees" (see FOOD DELIVERY AND QUICK COMMERCE), never in "serviceCharge".
 - Discounts, offers, coupons, promo codes, loyalty, happy-hour, member or staff discounts, "less" lines → add them together into "discount" as a POSITIVE number.
 - Tip or gratuity actually charged or written in by hand → "tip". A table of SUGGESTED tips ("18% = 12.60, 20% = 14.00") is not a tip — ignore it.
 - Round-off / rounding adjustments: ignore them (they are already inside the total).
 - Payment and housekeeping lines: cash, card, UPI, amount tendered, change, balance, table / cover / guest counts, total item or quantity counts, waiter, KOT, GSTIN, FSSAI, invoice or order numbers, phone, address, thank-you notes.
 - For every tax, charge or discount line use its MONEY AMOUNT, never its rate: "CGST @ 2.5%  28.81" → 28.81, not 2.5.
-- Food-delivery bills (Swiggy, Zomato, Uber Eats, DoorDash...): "Item Total" is the subtotal; delivery partner fee, platform fee and packaging are serviceCharge; "GST and restaurant charges" / "Taxes and charges" go into tax; offers and coupons are discount.
+
+FOOD DELIVERY AND QUICK COMMERCE (Swiggy, Zomato, Blinkit, Zepto, Swiggy Instamart, BigBasket, EatSure, Magicpin, ONDC apps — usually app screenshots)
+- items: each dish or product with the price actually charged (after item-level offers). Ignore struck-out MRP or "was" prices.
+- "Item total"/"Item bill" is the subtotal.
+- Put every fee in "fees" with its own amount and a kind: delivery fee / delivery partner fee → delivery; platform fee / convenience fee → platform; packaging / packing / restaurant packaging charges → packaging; rain, surge, peak-hour, late-night or long-distance fee → surge; small cart / small order fee → small_order; delivery tip / tip for your delivery partner → tip; donation (e.g. Feeding India) → donation; GST on the delivery or platform fee → fee_tax; any other charge on top → other. Free, ₹0 or struck-out fees are not fees. Never put these in serviceCharge.
+- "Taxes and charges", "GST and restaurant charges", "Restaurant GST" → tax.
+- Coupons, offers, "Item discount", membership savings (Swiggy One, Zomato Gold), "You saved" lines that reduce what was paid → discount (positive). Savings that were never charged (free delivery shown as struck-out) are not discounts.
+- total: "To pay", "Grand total", "Bill total", "Total paid", "Order total".
+- category: groceries for Blinkit, Zepto, Instamart, BigBasket; food for restaurants.
 
 TOTALS
 - subtotal: the printed subtotal (items before taxes and charges), or null.
 - tax: the sum of the tax lines ADDED ON TOP of the item prices. If the prices already include tax ("incl. VAT", "MwSt enthalten", "TVA incluse", "inclusive of all taxes", or a VAT breakdown printed under the total — common in Europe, the UK and Australia), set tax to null, because that tax is already inside the item amounts.
-- serviceCharge, discount, tip: the sums described above, or null when absent. A blank tip line on a card slip is null. "Service included" / "service compris" with no separate amount means serviceCharge is null.
+- serviceCharge, discount, tip: the sums described above, or null when absent. fees: an empty list when there are none. A blank tip line on a card slip is null. "Service included" / "service compris" with no separate amount means serviceCharge is null.
 - total: the final amount payable — the grand total after taxes, charges, discounts and round-off. If the total was corrected or written by hand, use the final handwritten amount. On card slips with a handwritten tip and total, use those.
 - Write every number as a plain JSON number with a dot for decimals: no currency symbols, no thousands separators, no quotes. Indian "1,23,456.50" → 123456.5. European "1.234,50" → 1234.5 and "12,50 €" → 12.5.
 
 SELF-CHECK BEFORE ANSWERING
-- The item amounts should add up to the subtotal, or to total − tax − serviceCharge − tip + discount (give or take a small round-off). If they don't, re-read: look for a missed or wrapped line, a tax/charge/discount line wrongly listed as an item, a unit price used instead of the line total, or a misread digit (1↔7, 3↔8, 5↔6, 0↔8, a lost decimal point).
+- The item amounts should add up to the subtotal, or to total − tax − serviceCharge − fees − tip + discount (give or take a small round-off). If they don't, re-read: look for a missed or wrapped line, a tax/charge/discount line wrongly listed as an item, a unit price used instead of the line total, or a misread digit (1↔7, 3↔8, 5↔6, 0↔8, a lost decimal point).
 - Prefer the reading that makes the arithmetic work, but never invent lines to force it.
 
 OTHER FIELDS

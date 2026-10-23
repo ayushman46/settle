@@ -384,6 +384,7 @@ describe('parseExtraction', () => {
       subtotal: null,
       tax: null,
       serviceCharge: null,
+      fees: [],
       discount: null,
       tip: null,
       total: null,
@@ -452,6 +453,7 @@ describe('normalize', () => {
       subtotal: 2305,
       tax: 109.49,
       serviceCharge: 115.25,
+      fees: [],
       discount: 230.5,
       tip: null,
       total: 2299,
@@ -716,5 +718,120 @@ describe('total-only bills', () => {
 
   it('still warns when there is no total at all', () => {
     expect(scan({ isBill: true, category: 'transport', items: [], total: null }).warnings).toEqual([WARNINGS.noTotal])
+  })
+})
+
+describe('delivery-app fees (spec 08 §5)', () => {
+  // The §4.1 order as the model would return it: items 857, tax 42.85, four fees, a ₹100 coupon → ₹889.85.
+  const SWIGGY = {
+    isBill: true,
+    merchant: 'Behrouz Biryani',
+    category: 'food',
+    date: '2026-10-21',
+    currency: 'INR',
+    items: [
+      { name: 'Chicken Biryani', quantity: 1, amount: 349 },
+      { name: 'Paneer Butter Masala', quantity: 1, amount: 289 },
+      { name: 'Garlic Naan', quantity: 2, amount: 120 },
+      { name: 'Gulab Jamun (2 pcs)', quantity: 1, amount: 99 },
+    ],
+    subtotal: 857,
+    tax: 42.85,
+    serviceCharge: null,
+    fees: [
+      { label: 'Delivery partner fee', kind: 'delivery', amount: 35 },
+      { label: 'Platform fee', kind: 'platform', amount: 10 },
+      { label: 'Restaurant packaging', kind: 'packaging', amount: 25 },
+      { label: 'Rain fee', kind: 'surge', amount: 20 },
+    ],
+    discount: 100,
+    tip: null,
+    total: 889.85,
+  }
+
+  it('reads a Swiggy order: every fee on its own, nothing in serviceCharge', () => {
+    const result = normalize(parseExtraction(SWIGGY), 'm')
+    expect(result.fees).toEqual(SWIGGY.fees)
+    expect(result).toMatchObject({ subtotal: 857, tax: 42.85, serviceCharge: null, discount: 100, total: 889.85, warnings: [] })
+    expect(result.items).toHaveLength(4)
+  })
+
+  it('reads a Blinkit order: handling and small-cart fees, MRP left out', () => {
+    const blinkit = {
+      isBill: true,
+      merchant: 'Blinkit',
+      category: 'groceries',
+      currency: 'INR',
+      items: [
+        { name: 'Amul Taaza Milk 1L', quantity: 2, amount: 136 },
+        { name: 'Britannia Bread', quantity: 1, amount: 45 },
+      ],
+      subtotal: 181,
+      tax: null,
+      serviceCharge: null,
+      fees: [
+        { label: 'Handling charge', kind: 'platform', amount: 9 },
+        { label: 'Small cart fee', kind: 'small_order', amount: 20 },
+        { label: 'Delivery fee', kind: 'delivery', amount: 0 },
+      ],
+      discount: null,
+      tip: null,
+      total: 210,
+    }
+    const result = normalize(parseExtraction(blinkit), 'm')
+    expect(result.fees.map((f) => [f.kind, f.amount])).toEqual([
+      ['platform', 9],
+      ['small_order', 20],
+    ])
+    expect(result.category).toBe('groceries')
+    expect(result.warnings).toEqual([])
+  })
+
+  it('reads a Zomato Gold order: free delivery is no fee and no discount', () => {
+    const zomato = {
+      isBill: true,
+      merchant: 'Truffles',
+      category: 'food',
+      currency: 'INR',
+      items: [{ name: 'All American Cheese Burger', quantity: 1, amount: 320 }],
+      subtotal: 320,
+      tax: 16,
+      serviceCharge: null,
+      fees: [{ label: 'Platform fee', kind: 'platform', amount: 6 }],
+      discount: 32,
+      tip: null,
+      total: 310,
+    }
+    const result = normalize(parseExtraction(zomato), 'm')
+    expect(result.fees).toEqual([{ label: 'Platform fee', kind: 'platform', amount: 6 }])
+    expect(result.discount).toBe(32)
+  })
+
+  it('drops the copy when the model also added the fees up into serviceCharge', () => {
+    const result = normalize(parseExtraction({ ...SWIGGY, serviceCharge: 90 }), 'm')
+    expect(result.serviceCharge).toBeNull()
+    expect(result.fees).toHaveLength(4)
+    // A real service charge next to fees stays.
+    expect(normalize(parseExtraction({ ...SWIGGY, serviceCharge: 40, total: 929.85 }), 'm').serviceCharge).toBe(40)
+  })
+
+  it('cleans fees: unknown kinds, aliases, labels, amounts, a cap of 15', () => {
+    const many = Array.from({ length: 20 }, (_, i) => ({ name: `Fee ${i}`, kind: 'Small Order', value: '₹5' }))
+    const { fees: _fees, ...withoutFees } = SWIGGY
+    const result = parseExtraction({ ...withoutFees, charges: many })
+    expect(result.fees).toHaveLength(15)
+    expect(result.fees[0]).toEqual({ label: 'Fee 0', kind: 'small_order', amount: 5 })
+    expect(parseExtraction({ ...SWIGGY, fees: [{ label: '', kind: 'weird', amount: 12.345 }, { label: 'x', amount: -3 }, 'junk'] }).fees).toEqual([
+      { label: 'Fee', kind: 'other', amount: 12.35 },
+    ])
+    // A plain number under "fees" is still a service charge, as before.
+    const old = parseExtraction({ items: [], fees: 30 })
+    expect(old.serviceCharge).toBe(30)
+    expect(old.fees).toEqual([])
+  })
+
+  it('drops a fee bigger than the bill', () => {
+    const result = normalize(parseExtraction({ ...SWIGGY, fees: [...SWIGGY.fees, { label: 'Misread', kind: 'other', amount: 5000 }] }), 'm')
+    expect(result.fees).toHaveLength(4)
   })
 })

@@ -8,7 +8,7 @@
  * no JSON at all).
  */
 import { z } from 'zod'
-import type { CategoryId, ScanResponse, ScannedItem } from '../shared/api'
+import { SCANNED_FEE_KINDS, type CategoryId, type ScanResponse, type ScannedFee, type ScannedFeeKind, type ScannedItem } from '../shared/api'
 import { inferCategory, toCategory } from './category'
 
 export class ParseError extends Error {
@@ -41,6 +41,8 @@ const BILL_FIELDS: AliasTable = [
   ['subtotal', ['subtotal', 'itemtotal', 'itemstotal']],
   ['tax', ['tax', 'taxes', 'totaltax', 'taxtotal', 'taxamount']],
   ['serviceCharge', ['servicecharge', 'servicecharges', 'servicefee', 'fees']],
+  // A list of delivery-app fees (a plain "fees" number still means serviceCharge, as before).
+  ['fees', ['fees', 'fee', 'charges', 'deliveryfees', 'appfees']],
   ['discount', ['discount', 'discounts', 'totaldiscount', 'discountamount']],
   ['tip', ['tip', 'tips', 'gratuity', 'tipamount']],
   ['total', ['total', 'grandtotal', 'totalamount', 'amountdue', 'totalpayable', 'amountpayable', 'finaltotal', 'billtotal']],
@@ -389,6 +391,28 @@ function toItems(value: unknown): ExtractedItem[] {
   return items
 }
 
+/** Most fees kept from one scan, and the longest fee label. */
+const MAX_FEES = 15
+const MAX_FEE_LABEL = 40
+const FEE_KINDS: ReadonlySet<unknown> = new Set(SCANNED_FEE_KINDS)
+
+/** Delivery-app fees: a list of objects with a positive amount (labels tidied, kinds from the enum else 'other'). */
+function toFees(value: unknown): ScannedFee[] {
+  if (!Array.isArray(value)) return []
+  const fees: ScannedFee[] = []
+  for (const entry of value) {
+    if (fees.length >= MAX_FEES) break
+    if (!isRecord(entry)) continue
+    const amount = parseNumber(entry.amount ?? entry.value ?? entry.price)
+    if (amount === null || !(amount > 0)) continue
+    const rawLabel = cleanText(entry.label ?? entry.name ?? entry.title) ?? ''
+    const label = Array.from(rawLabel).slice(0, MAX_FEE_LABEL).join('').trim()
+    const kind = typeof entry.kind === 'string' ? entry.kind.trim().toLowerCase().replace(/[\s-]+/g, '_') : ''
+    fees.push({ label: label || 'Fee', kind: FEE_KINDS.has(kind) ? (kind as ScannedFeeKind) : 'other', amount: roundMoney(amount) })
+  }
+  return fees
+}
+
 export const ExtractionSchema = z.preprocess(
   (value: unknown) => canonicalize(BILL_FIELDS)(unwrapBill(value)),
   z.object({
@@ -401,6 +425,7 @@ export const ExtractionSchema = z.preprocess(
     subtotal: lenient(parseNumber),
     tax: lenient(parseNumber),
     serviceCharge: lenient(parseNumber),
+    fees: lenient(toFees),
     discount: lenient(parseNumber),
     tip: lenient(parseNumber),
     total: lenient(parseNumber),
@@ -423,6 +448,7 @@ export function parseExtraction(raw: unknown): Extraction {
     subtotal: null,
     tax: null,
     serviceCharge: null,
+    fees: [],
     discount: null,
     tip: null,
     total: null,
@@ -690,15 +716,15 @@ interface Totals {
 const nonNegativeOrNull = (value: number | null) => (value === null || value < 0 ? null : roundMoney(value))
 const sum = (values: readonly number[]) => roundMoney(values.reduce((acc, value) => acc + value, 0))
 
-function predictedTotal(itemsSum: number, totals: Totals): number {
-  return itemsSum + (totals.tax ?? 0) + (totals.serviceCharge ?? 0) + (totals.tip ?? 0) - (totals.discount ?? 0)
+function predictedTotal(itemsSum: number, totals: Totals, feesSum = 0): number {
+  return itemsSum + (totals.tax ?? 0) + (totals.serviceCharge ?? 0) + feesSum + (totals.tip ?? 0) - (totals.discount ?? 0)
 }
 
 /** What the items should add up to: the printed subtotal, else what the total implies. */
-function expectedItemsTotal(totals: Totals): number | null {
+function expectedItemsTotal(totals: Totals, feesSum = 0): number | null {
   if (totals.subtotal !== null) return totals.subtotal
   if (totals.total === null) return null
-  return roundMoney(totals.total - (totals.tax ?? 0) - (totals.serviceCharge ?? 0) - (totals.tip ?? 0) + (totals.discount ?? 0))
+  return roundMoney(totals.total - (totals.tax ?? 0) - (totals.serviceCharge ?? 0) - feesSum - (totals.tip ?? 0) + (totals.discount ?? 0))
 }
 
 /**
@@ -706,8 +732,8 @@ function expectedItemsTotal(totals: Totals): number | null {
  * instead of the Amount column for lines with qty > 1 — or multiplied a line total by
  * the quantity again. Only applied when it makes the items match the bill's own numbers.
  */
-function reconcileQuantities(items: ScannedItem[], totals: Totals): ScannedItem[] {
-  const target = expectedItemsTotal(totals)
+function reconcileQuantities(items: ScannedItem[], totals: Totals, feesSum = 0): ScannedItem[] {
+  const target = expectedItemsTotal(totals, feesSum)
   if (target === null || target <= 0) return items
   const multi = items.filter((item) => item.quantity > 1 && Number.isInteger(item.quantity))
   if (multi.length === 0) return items
@@ -737,7 +763,7 @@ const CHARGES: readonly Charge[] = ['tax', 'serviceCharge', 'tip', 'discount']
  * total is information, not a charge. The lines are weighed together, since a tax line can
  * look wrong on its own on a bill that also lists a discount.
  */
-function settleExtras(totals: Totals, extras: Readonly<Record<Charge, number>>, itemsSum: number): Totals {
+function settleExtras(totals: Totals, extras: Readonly<Record<Charge, number>>, itemsSum: number, feesSum = 0): Totals {
   const found = CHARGES.filter((key) => roundMoney(extras[key]) !== 0)
   const fold = (mask: number): Totals => {
     const next = { ...totals }
@@ -752,7 +778,7 @@ function settleExtras(totals: Totals, extras: Readonly<Record<Charge, number>>, 
   let best = { totals, error: Number.POSITIVE_INFINITY, folds: -1 }
   for (let mask = 0; mask <= all; mask++) {
     const candidate = fold(mask)
-    const error = roundMoney(Math.abs(totals.total - predictedTotal(itemsSum, candidate)))
+    const error = roundMoney(Math.abs(totals.total - predictedTotal(itemsSum, candidate, feesSum)))
     const folds = found.filter((_key, bit) => mask & (1 << bit)).length
     if (error < best.error || (error === best.error && folds > best.folds)) best = { totals: candidate, error, folds }
   }
@@ -789,9 +815,15 @@ export function normalize(extraction: Extraction, model: string): ScanResponse {
     total: nonNegativeOrNull(extraction.total) ?? (printedTotals.length > 0 ? Math.max(...printedTotals) : null),
   }
 
-  items = reconcileQuantities(items, printed)
+  // Delivery-app fees: positive and never more than the bill. A model that also added them up into
+  // serviceCharge counted them twice: the fees stay, the duplicate goes.
+  const fees = extraction.fees.filter((fee) => fee.amount > 0 && (printed.total === null || fee.amount <= printed.total))
+  const feesSum = sum(fees.map((fee) => fee.amount))
+  if (fees.length > 0 && printed.serviceCharge !== null && roundMoney(printed.serviceCharge) === feesSum) printed.serviceCharge = null
+
+  items = reconcileQuantities(items, printed, feesSum)
   const itemsSum = sum(items.map((item) => item.amount))
-  const totals = settleExtras(printed, extras, itemsSum)
+  const totals = settleExtras(printed, extras, itemsSum, feesSum)
 
   const warnings: string[] = []
   if (items.length > 0 && totals.subtotal !== null && Math.abs(itemsSum - totals.subtotal) > Math.max(1, totals.subtotal * 0.01)) {
@@ -807,7 +839,7 @@ export function normalize(extraction: Extraction, model: string): ScanResponse {
     category: extraction.category ?? inferCategory(merchant) ?? inferCategory(items.map((item) => item.name).join(' · ')),
     items,
     ...totals,
-    fees: [],
+    fees,
     warnings: warnings.slice(0, 2),
     model,
   }

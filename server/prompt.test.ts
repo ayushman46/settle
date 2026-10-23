@@ -45,3 +45,21 @@ describe('prompts', () => {
     for (const category of CATEGORY_IDS) expect(SYSTEM_PROMPT).toContain(category)
   })
 })
+
+describe('delivery-app fees in the prompt (spec 08 §5)', () => {
+  it('asks for fees right after serviceCharge, each with a kind', () => {
+    const required = [...BILL_SCHEMA.required]
+    expect(required.indexOf('fees')).toBe(required.indexOf('serviceCharge') + 1)
+    const keys = Object.keys(BILL_SCHEMA.properties)
+    expect(keys.indexOf('fees')).toBe(keys.indexOf('serviceCharge') + 1)
+    expect(BILL_SCHEMA.properties.fees.items.properties.kind.enum).toEqual(['delivery', 'platform', 'packaging', 'surge', 'small_order', 'tip', 'donation', 'fee_tax', 'other'])
+    expect(BILL_SCHEMA.properties.serviceCharge.description).toBe('Restaurant service charge only — not delivery, platform or packaging fees')
+  })
+
+  it('teaches Indian delivery and quick-commerce layouts', () => {
+    for (const rule of ['FOOD DELIVERY AND QUICK COMMERCE', 'Blinkit', 'Zepto', 'struck-out MRP', 'delivery partner fee → delivery', 'small cart / small order fee → small_order', 'Feeding India', 'fee_tax', 'Never put these in serviceCharge', 'Swiggy One, Zomato Gold', '"To pay"', 'groceries for Blinkit']) {
+      expect(SYSTEM_PROMPT).toContain(rule)
+    }
+    expect(USER_PROMPT).toContain('"fees"')
+  })
+})

@@ -126,6 +126,7 @@ describe('POST /api/scan — happy path', () => {
       subtotal: 645,
       tax: 32.25,
       serviceCharge: null,
+      fees: [],
       discount: null,
       tip: null,
       total: 677,
