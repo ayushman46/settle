@@ -13,6 +13,28 @@ import { sharein } from './sharein'
 import { trip } from './trip'
 import { voice } from './voice'
 import { you } from './you'
+import { ui } from './ui'
+import { kit } from './kit'
+import { app } from './app'
+import { share } from './share'
+import { api } from './api'
+import { bill } from './bill'
+import { split } from './split'
+import { expense } from './expense'
+import { recurring } from './recurring'
+import { state } from './state'
+import { groups } from './groups'
+import { friends } from './friends'
+import { insights } from './insights'
+import { pay } from './pay'
+import { pro } from './pro'
+import { onboarding } from './onboarding'
+import { landing } from './landing'
+import { legal } from './legal'
+import { activity } from './activity'
+import { proof } from './proof'
+import { shagun } from './shagun'
+import { install } from './install'
 
 export const EN = {
   ...common,
@@ -26,6 +48,28 @@ export const EN = {
   ...lend,
   ...pools,
   ...trip,
+  ...ui,
+  ...kit,
+  ...app,
+  ...share,
+  ...api,
+  ...bill,
+  ...split,
+  ...expense,
+  ...recurring,
+  ...state,
+  ...groups,
+  ...friends,
+  ...insights,
+  ...pay,
+  ...pro,
+  ...onboarding,
+  ...landing,
+  ...legal,
+  ...activity,
+  ...proof,
+  ...shagun,
+  ...install,
 } as const
 
 /** Every message key the app may ask for. */
