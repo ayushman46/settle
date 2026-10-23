@@ -1,4 +1,69 @@
-/** Hindi copy for the trip namespace. Keys: `trip.<screen>.<element>` (see i18n-plan §3). */
+/** Hindi copy for S6 · trip currency. Keys: `trip.<screen>.<element>` (see i18n-plan §3). */
 import type { Messages } from '../types'
 
-export const trip = {} as const satisfies Messages
+export const trip = {
+  // The conversion panel under the amount on the split screen.
+  'trip.panel.label': 'कन्वर्ज़न',
+  'trip.panel.converted': '≈ {amount}',
+  'trip.panel.convertedLabel': 'लगभग {amount}, 1 {name} = {rate} के रेट पर',
+  'trip.panel.convertedLabelInverse': 'लगभग {amount}, {rate} के रेट पर',
+  'trip.panel.rate': '1 {from} = {rate}',
+  'trip.panel.change': 'बदलें',
+  'trip.panel.changeLabel': 'एक्सचेंज रेट बदलें',
+  'trip.panel.loading': 'रेट ला रहे हैं…',
+  'trip.panel.unavailable': '{date} का {code} रेट नहीं मिला — खुद डालें',
+  'trip.panel.notCovered': 'ECB {name} के रेट नहीं देता — अपनी रसीद या बैंक SMS से रेट डालें।',
+  'trip.panel.addRate': 'रेट डालें',
+  'trip.panel.saveHint': '{symbol} में हिसाब के लिए रेट डालें',
+  'trip.panel.loadingHint': 'रेट ला रहे हैं…',
+  'trip.panel.switch': '{symbol} में हिसाब करें (सुझाया गया)',
+  'trip.panel.switchNote': 'हिसाब रुपयों में ही रहेगा, ताकि सब UPI से चुका सकें।',
+  'trip.panel.switchOther': '{symbol} में हिसाब करें',
+  'trip.panel.switchNoteOther': 'हिसाब {code} में ही रहेगा, ताकि ग्रुप एक ही करेंसी में चुकाए।',
+  'trip.panel.sharesNote': 'हिस्से {symbol} में (बदलकर)',
+  'trip.panel.useEcb': '{date} का ECB रेट लगाएँ',
+  // Where the rate came from (after "1 THB = ₹2.4108 · ").
+  'trip.source.ecb': '{date} का ECB रेट',
+  'trip.source.pegged': '{to} से जुड़ा ({peg})',
+  'trip.source.manualRate': 'आपका रेट',
+  'trip.source.manualTotal': 'जितना आपके बैंक ने काटा',
+  'trip.source.stale': '{date} का रेट — आप ऑफ़लाइन हैं',
+  'trip.source.frozen': 'रेट {date} को फ़िक्स हुआ',
+  // The exchange rate sheet.
+  'trip.sheet.title': 'एक्सचेंज रेट',
+  'trip.sheet.mode': 'कैसे बदलें',
+  'trip.sheet.mode.rate': 'रेट',
+  'trip.sheet.mode.bank': 'बैंक ने कितना काटा',
+  'trip.sheet.rateLabel': '1 {from} =',
+  'trip.sheet.useEcb': 'ECB रेट लगाएँ',
+  'trip.sheet.bankLabel': 'आपके बैंक ने काटे',
+  'trip.sheet.bankHint': 'कार्ड या फ़ॉरेक्स मार्कअप? बैंक SMS में लिखी रुपये की रकम डालें — वही सही है।',
+  'trip.sheet.bankHintOther': 'कार्ड या फ़ॉरेक्स मार्कअप? बैंक SMS में लिखी रकम डालें — वही सही है।',
+  'trip.sheet.preview': '{paid} यानी {amount}',
+  'trip.sheet.rateError': '0 से ज़्यादा रेट डालें, जैसे 2.4108',
+  'trip.sheet.bankError': 'बैंक ने जितना काटा, वो डालें।',
+  'trip.sheet.save': 'सेव करें',
+  // "Spending in" on the group sheets.
+  'trip.group.label': 'खर्च की करेंसी',
+  'trip.group.same': 'ग्रुप वाली ({symbol})',
+  'trip.group.note': 'हर खर्च उस दिन के रेट पर {symbol} में बदला जाता है।',
+  'trip.group.sheet':
+    'इस ट्रिप पर आप जिस करेंसी में पे करेंगे, वो चुनें। खर्च उस दिन के रेट पर {symbol} (ग्रुप की करेंसी) में बदले जाते हैं — हिसाब {symbol} में ही रहता है।',
+  'trip.group.rowLabel': 'खर्च की करेंसी: {value}। बदलें',
+  'trip.group.more': 'और भी',
+  'trip.picker.search': 'करेंसी खोजें',
+  'trip.picker.placeholder': 'नाम या कोड खोजें',
+  'trip.picker.none': 'कुछ नहीं मिला',
+  'trip.picker.noneText': '“Euro” जैसा नाम या “EUR” जैसा कोड लिखें।',
+  'trip.picker.list': 'करेंसी',
+  'trip.group.moreLabel': 'ग्रुप की और सेटिंग',
+  // The expense page.
+  'trip.note.paid': '{paid} दिए · {rate} ({source})',
+  'trip.note.ecb': 'ECB, {date}',
+  'trip.note.pegged': '{to} से जुड़ा, {date}',
+  'trip.note.manualRate': 'आपका रेट',
+  'trip.note.manualTotal': 'आपका बैंक: {amount}',
+  'trip.convert.text': 'ये {code} में है, इसलिए {group} के {symbol} वाले हिसाब में नहीं जुड़ा।',
+  'trip.convert.action': '{symbol} में बदलें',
+  'trip.bill.settled': '{symbol} में हिसाब',
+} as const satisfies Messages
