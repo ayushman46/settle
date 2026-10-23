@@ -2,4 +2,4 @@
  * Speak to split — off until slice S3 finishes it (its last commit flips this to `true`). While off,
  * the feature is invisible: no entry points, and its routes go home.
  */
-export const VOICE_ENABLED = false
+export const VOICE_ENABLED = true

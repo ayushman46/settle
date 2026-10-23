@@ -11,6 +11,14 @@ Settle is a mobile-first web app for splitting any expense — a restaurant bill
 - **Groups that settle themselves.** Trips, flats and couples keep a running tab with different payers; Settle works out the fewest payments to square everyone up, with a UPI QR for each.
 - **Collect and nudge.** See "₹1,840 of ₹2,766 collected", tick people off, and send a friendly, funny or firm reminder on WhatsApp or SMS.
 - **Share cards, recurring splits and insights.** A receipt image for the group chat; rent and subscriptions reminded monthly; where your money goes by category and month.
+- **Everyone claims their own items.** Send one claim link for a scanned bill; each friend ticks what they had on their own phone and the replies merge into the split.
+- **From SMS.** Paste or share a bank or UPI alert and it's ready to split; OTP messages are refused.
+- **Food orders, fairly.** A Swiggy, Zomato, Blinkit or Zepto screenshot keeps delivery, platform, packaging and small-order fees apart from the food, and shares them in proportion or equally.
+- **Speak to split.** Say it in Hindi, Bengali, Marathi, Tamil, Telugu, Kannada, Gujarati or English — "dhai hazaar" becomes ₹2,500.
+- **Collections (chanda).** One link for a birthday gift, a farewell, a Diwali party or a puja; everyone pays by UPI and you tick them off.
+- **Udhaar.** Lend or borrow in two taps, record part payments, and send a polite (or firm) reminder.
+- **Next round's on you.** Groups that take turns paying see whose round it is and what squares everyone up.
+- **Trips abroad.** Spend in baht or dirhams, settle in ₹ at that day's ECB rate (cached for offline) or at what your bank actually charged.
 
 ## Quick start
 
