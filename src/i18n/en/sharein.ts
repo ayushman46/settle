@@ -1,4 +1,120 @@
 /** English copy for S2 · split from SMS / shared text. Keys: `sharein.<screen>.<element>` (see i18n-plan §3). */
 import type { Messages } from '../types'
 
-export const sharein = {} as const satisfies Messages
+export const sharein = {
+  // `/app/share` in paste mode.
+  'sharein.paste.title': 'Split from an SMS',
+  'sharein.paste.subtitle': 'Paste the bank SMS or UPI message — Settle reads it on your phone.',
+  'sharein.paste.label': 'Bank or UPI message',
+  'sharein.paste.placeholder': 'Paste the message here',
+  'sharein.paste.cta': 'Paste',
+  'sharein.paste.read.cta': 'Read it',
+  'sharein.paste.privacy': 'Read on your phone. Nothing is sent anywhere unless you ask AI to read it.',
+  'sharein.paste.android': 'On Android? Share the SMS straight to Settle from your messages app.',
+  // Clipboard read refused or empty.
+  'sharein.paste.empty.toast': 'Nothing to paste — copy the SMS first.',
+  'sharein.paste.denied.toast': "Couldn't read the clipboard — long-press the field and paste.",
+  // Shared from another app: the message, folded away above the result.
+  'sharein.shared.show': 'Show the message',
+  'sharein.shared.loading.aria': 'Reading what you shared…',
+  'sharein.shared.firstPhoto.toast': 'Using the first photo',
+  'sharein.missed.title': "Couldn't pick that up",
+  'sharein.missed.body': 'Share it again, or paste it here.',
+
+  // Several messages pasted at once.
+  'sharein.pick.title': 'Which one?',
+  'sharein.pick.option': '{name} · {amount} · {date}',
+  'sharein.pick.option.noDate': '{name} · {amount}',
+  'sharein.pick.option.in': '{name} · {amount} in · {date}',
+  'sharein.pick.option.in.noDate': '{name} · {amount} in',
+  'sharein.skipped': '{n, plural, one {# message skipped} other {# messages skipped}} ({reasons})',
+  'sharein.skip.otp': 'OTP',
+  'sharein.skip.promo': 'offer',
+  'sharein.skip.request': 'request',
+  'sharein.skip.failed': 'failed',
+  'sharein.skip.statement': 'bill reminder',
+  'sharein.skip.mandate': 'AutoPay setup',
+  'sharein.skip.balance': 'balance',
+  'sharein.skip.notTxn': 'not a payment',
+  'sharein.skip.unknown': 'unclear',
+
+  // The result card for a payment you made.
+  'sharein.card.split.cta': 'Split it',
+  'sharein.card.edit.cta': 'Edit first',
+  'sharein.card.splitInstead.cta': 'Split it instead',
+  'sharein.card.udhaar.cta': 'It was udhaar',
+  'sharein.card.done.cta': 'Done',
+  'sharein.card.paidFriend.title': 'You paid {name} {amount}',
+  'sharein.card.owedFriend': 'You owed {name} exactly {amount}',
+  'sharein.card.settle.cta': 'Mark as settled',
+  'sharein.card.markOne.cta': 'Mark "{title}" as paid back',
+  'sharein.card.settled.toast': 'Settled with {name}',
+  'sharein.card.markedOne.toast': '"{title}" marked as paid back',
+  // Money that came in.
+  'sharein.card.friendPaid.title': '{name} paid you {amount}',
+  'sharein.card.friendOwed': '{name} owed you exactly {amount}',
+  'sharein.card.markPaid.cta': 'Mark {name} as paid',
+  'sharein.card.refund.title': 'Refund from {name} · {amount}',
+  'sharein.card.refund.titleNoName': 'Refund · {amount}',
+  'sharein.card.refund.body': "Refunds aren't split — but if this was a shared order, edit that split.",
+  'sharein.card.in.title': '{amount} came in from {name}',
+  'sharein.card.in.titleNoName': '{amount} came in',
+  'sharein.card.in.nothingOpen': 'Nothing open with {name} right now.',
+  'sharein.card.in.body': "Money that comes in isn't split.",
+
+  // Titles for a payment with no payee in the SMS.
+  'sharein.title.upi': 'UPI payment',
+  'sharein.title.card': 'Card payment',
+  'sharein.title.other': 'Payment',
+  // How it was paid (the card's meta line).
+  'sharein.via.upi': 'UPI',
+  'sharein.via.card': 'Card',
+  'sharein.via.netbanking': 'Net banking',
+  'sharein.via.neft': 'NEFT',
+  'sharein.via.imps': 'IMPS',
+  'sharein.via.atm': 'ATM',
+  'sharein.via.wallet': 'Wallet',
+  'sharein.via.autopay': 'AutoPay',
+  // The new split's note.
+  'sharein.ref.upi': 'UPI ref {ref}',
+  'sharein.ref.imps': 'IMPS ref {ref}',
+  'sharein.ref.neft': 'NEFT ref {ref}',
+  'sharein.ref.txn': 'Txn ID {ref}',
+  'sharein.ref.plain': 'Ref {ref}',
+  // Banners the split screen shows above a form filled in here.
+  'sharein.banner.sms.title': 'Filled in from your SMS',
+  'sharein.banner.sms.body': "Add who's in, check it, then save.",
+  'sharein.banner.ai.title': 'Filled in by AI from your message',
+  'sharein.banner.ai.body': 'AI can misread — check it, then save.',
+
+  // Messages that aren't a payment.
+  'sharein.ignored.otp.title': "That's an OTP",
+  'sharein.ignored.otp.body': 'Never share it with anyone — not even Settle. Nothing to split here.',
+  'sharein.ignored.promo.title': "That's an offer",
+  'sharein.ignored.promo.body': "Offers and ads aren't payments, so there's nothing to split.",
+  'sharein.ignored.request.title': "That's a payment request",
+  'sharein.ignored.request.body': "Someone asked you for money — it isn't a payment you made.",
+  'sharein.ignored.failed.title': "That payment didn't go through",
+  'sharein.ignored.failed.body': "Failed and declined payments aren't split.",
+  'sharein.ignored.statement.title': "That's a bill or due reminder",
+  'sharein.ignored.statement.body': "Split it once it's paid — or split it now.",
+  'sharein.ignored.mandate.title': "That's an AutoPay setup",
+  'sharein.ignored.mandate.body': 'Nothing has been paid yet. Share the debit SMS when it comes.',
+  'sharein.ignored.balance.title': "That's a balance update",
+  'sharein.ignored.balance.body': "It doesn't say you paid anyone.",
+  'sharein.ignored.notTxn.title': "This doesn't look like a payment",
+  'sharein.ignored.notTxn.body': 'Paste the SMS your bank sent for the payment.',
+  'sharein.ignored.anyway.cta': 'Split it anyway',
+  'sharein.ignored.now.cta': 'Split it now',
+
+  // A message read but not for sure: the AI or by hand.
+  'sharein.unknown.title': "Couldn't read this one for sure",
+  'sharein.unknown.body': 'Let AI read it — or split it yourself.',
+  'sharein.ai.cta': 'Let AI read it',
+  'sharein.hand.cta': 'Split by hand',
+  'sharein.ai.quota': '{n, plural, =0 {No free AI splits left today} one {# free AI split left today} other {# free AI splits left today}}',
+  'sharein.ai.unlimited': 'Unlimited AI splits with Pro',
+  'sharein.ai.offline': "You're offline — split it by hand.",
+  'sharein.ai.reading': 'Reading your message…',
+  'sharein.ai.error.title': "Couldn't read that",
+} as const satisfies Messages
