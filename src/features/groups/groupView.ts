@@ -61,9 +61,17 @@ export function ownExpenses(group: Group, expenses: readonly Expense[]): Expense
   return expenses.filter((e) => e.groupId === group.id && e.currency === group.currency)
 }
 
+/**
+ * What the group spent on: its own-currency expenses without loans (cash handed over isn't
+ * spending — it still counts in the balances).
+ */
+export function spendingExpenses(group: Group, expenses: readonly Expense[]): Expense[] {
+  return ownExpenses(group, expenses).filter((e) => e.kind !== 'loan')
+}
+
 export function groupStanding(group: Group, expenses: readonly Expense[], meId: string = ME_ID): GroupStanding {
   const balances = groupBalances(group, expenses)
-  const own = ownExpenses(group, expenses)
+  const own = spendingExpenses(group, expenses)
   return {
     mine: balances[meId] ?? 0,
     spent: own.reduce((sum, e) => sum + e.total, 0),
@@ -121,7 +129,7 @@ export interface GroupTotals {
 }
 
 export function groupTotals(group: Group, expenses: readonly Expense[]): GroupTotals {
-  const own = ownExpenses(group, expenses)
+  const own = spendingExpenses(group, expenses)
   const categories = new Map<CategoryId, { amount: Minor; count: number }>()
   const paid = new Map<string, Minor>()
   const share = new Map<string, Minor>()

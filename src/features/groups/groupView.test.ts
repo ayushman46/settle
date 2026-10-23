@@ -126,6 +126,17 @@ describe('groupTotals', () => {
   it('lists every member, even with nothing yet', () => {
     expect(groupTotals(group(), []).people.map((p) => p.friendId)).toEqual([ME_ID, riya, sam])
   })
+
+  it('leaves loans out of the spend, but not out of the balances', () => {
+    saveExpense(draft({ title: 'Villa', category: 'travel', total: 90000, groupId: goa.id, with: [riya, sam] }))
+    saveExpense(draft({ kind: 'loan', title: 'Cash', category: 'other', total: 50000, groupId: goa.id, participants: everyone(riya) }))
+    const totals = groupTotals(group(), expensesStore.get())
+    expect(totals).toMatchObject({ spent: 90000, count: 1, elsewhere: 0 })
+    expect(totals.byCategory).toEqual([{ category: 'travel', amount: 90000, count: 1 }])
+    expect(totals.people.find((p) => p.friendId === riya)).toEqual({ friendId: riya, paid: 0, share: 30000 })
+    const standing = groupStanding(group(), expensesStore.get())
+    expect(standing).toMatchObject({ mine: 110000, spent: 90000, expenseCount: 1, settled: false })
+  })
 })
 
 describe('groupTimeline', () => {
