@@ -25,6 +25,11 @@
   min-width: 0;
 }
 
+/* Rows from "Show more" pages join at once (see `calm` in ActivityScreen). */
+.calm > li {
+  animation: none;
+}
+
 .monthTitle {
   padding-inline: var(--s-1);
   font: var(--text-section);

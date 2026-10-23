@@ -1,8 +1,8 @@
-import { render, screen } from '@testing-library/react'
+import { act, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { List } from '../components'
-import { addFriend, createGroup, resetDataForTests } from '../data'
+import { addFriend, createGroup, removeFriend, resetDataForTests, updateFriend } from '../data'
 import { ME_ID, type Expense } from '../domain/types'
 import { today } from '../engine/dates'
 import { makeExpense, makeGroup } from '../share/testing'
@@ -179,6 +179,26 @@ describe('ExpenseRow', () => {
   it('names a removed payer "Someone"', () => {
     render(<ExpenseRow expense={dinner({ payerId: 'gone', paidBack: {} })} />)
     expect(screen.getByText('Someone paid ₹2,766 · 4 people')).toBeInTheDocument()
+  })
+
+  it('names the other side of a 1:1 entry, and follows a rename', () => {
+    const riya = addFriend({ name: 'Riya' })
+    const loan = dinner({
+      kind: 'loan',
+      participants: [{ friendId: riya.id, input: null }],
+      shares: { [riya.id]: 276600 },
+      paidBack: {},
+    })
+    render(<ExpenseRow expense={loan} />)
+    expect(screen.getByText('You lent Riya · cash')).toBeInTheDocument()
+    act(() => {
+      updateFriend(riya.id, { name: 'Riya Sharma' })
+    })
+    expect(screen.getByText('You lent Riya Sharma · cash')).toBeInTheDocument()
+    act(() => {
+      removeFriend(riya.id)
+    })
+    expect(screen.getByText(/^You lent (Riya Sharma|Someone) · cash$/)).toBeInTheDocument()
   })
 
   it('names the group it belongs to, unless told not to', () => {

@@ -14,7 +14,7 @@ import {
   Screen,
   SectionHeader,
 } from '../../components'
-import { useExpenses, useFriendsById, useGroups, useProfile } from '../../data'
+import { shallowArrayEqual, useExpenses, useFriendsById, useGroups, useProfile } from '../../data'
 import { BRAND, type Expense, type Group } from '../../domain/types'
 import { today } from '../../engine/dates'
 import { ExpenseRow } from '../../kit/index-b'
@@ -31,6 +31,7 @@ import {
   groupByMonth,
   groupStandings,
   isActivityFilter,
+  type MonthSection,
   matchesFilter,
   matchesQuery,
   resultsLine,
@@ -112,6 +113,10 @@ export function ActivityScreen() {
   const update = (patch: Partial<ActivityView>): void =>
     setView((prev) => ({ ...prev, limit: ACTIVITY_PAGE, ...patch }))
 
+  // Once a second page is in, rows join without the entrance animation: it is meant for the
+  // first screenful, and 40 rows starting it at once cost a budget phone most of a page's frame.
+  const calm = view.limit > ACTIVITY_PAGE
+
   const nothing = matches.length === 0 && groupCards.length === 0
   // Only groups to show: their section header says it all, so the line is for screen readers.
   const onlyGroups = matches.length === 0 && groupCards.length > 0
@@ -143,18 +148,14 @@ export function ActivityScreen() {
             <NoMatches filter={view.filter} query={query} onShowAll={() => update({ filter: 'all', query: '' })} />
           ) : (
             sections.map((section) => (
-              <section key={section.period} className={styles.month} aria-labelledby={`activity-${section.period}`}>
-                <h2 id={`activity-${section.period}`} className={styles.monthTitle}>
-                  {section.label}
-                </h2>
-                <Card padding="none">
-                  <List>
-                    {section.expenses.map((e: Expense) => (
-                      <ActivityRow key={e.id} expense={e} day={day} />
-                    ))}
-                  </List>
-                </Card>
-              </section>
+              <MonthList
+                key={section.period}
+                period={section.period}
+                label={section.label}
+                expenses={section.expenses}
+                day={day}
+                calm={calm}
+              />
             ))
           )}
 
@@ -172,6 +173,36 @@ export function ActivityScreen() {
     </Screen>
   )
 }
+
+interface MonthListProps extends MonthSection {
+  day: string
+  calm: boolean
+}
+
+/**
+ * One month of the list. Memoised on its rows (the same expenses, in order): loading the next
+ * page re-renders only the month it lands in, not every month and row already on screen.
+ */
+const MonthList = memo(
+  function MonthList({ period, label, expenses, day, calm }: MonthListProps) {
+    return (
+      <section className={styles.month} aria-labelledby={`activity-${period}`}>
+        <h2 id={`activity-${period}`} className={styles.monthTitle}>
+          {label}
+        </h2>
+        <Card padding="none">
+          <List className={calm ? styles.calm : undefined}>
+            {expenses.map((e: Expense) => (
+              <ActivityRow key={e.id} expense={e} day={day} />
+            ))}
+          </List>
+        </Card>
+      </section>
+    )
+  },
+  (a, b) =>
+    a.period === b.period && a.label === b.label && a.day === b.day && a.calm === b.calm && shallowArrayEqual(a.expenses, b.expenses),
+)
 
 /**
  * One expense in the list. Memoised: loading the next page (or typing a search) re-renders only

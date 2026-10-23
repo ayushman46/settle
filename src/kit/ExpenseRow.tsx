@@ -4,7 +4,7 @@ import { useFriend, useGroup } from '../data'
 import type { Expense } from '../domain/types'
 import { cx } from '../lib/cx'
 import { fullDateLabel, relativeDateLabel } from './dateLabel'
-import { expenseRowView } from './expenseLabels'
+import { expenseRowView, oneToOneOther } from './expenseLabels'
 import { friendLabel } from './friendName'
 import styles from './ExpenseRow.module.css'
 
@@ -26,10 +26,14 @@ export interface ExpenseRowProps {
 export function ExpenseRow({ expense, onClick, showDate = false, hideGroup = false, className }: ExpenseRowProps) {
   const payer = useFriend(expense.payerId)
   const group = useGroup(expense.groupId)
+  // The other side of a 1:1 entry ("You lent Riya"), subscribed so a rename reaches the row.
+  const otherId = oneToOneOther(expense)
+  const other = useFriend(otherId)
   const view = expenseRowView(expense, {
     payerName: friendLabel(expense.payerId, payer),
     group,
     showGroup: !hideGroup,
+    otherName: otherId === null ? undefined : friendLabel(otherId, other),
   })
   const date = showDate ? relativeDateLabel(expense.date) : null
   const subtitle = date ? `${date} · ${view.subtitle}` : view.subtitle
