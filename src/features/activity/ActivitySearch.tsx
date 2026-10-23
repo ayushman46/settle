@@ -1,6 +1,7 @@
 import { useId, useRef, type KeyboardEvent } from 'react'
 import { Search, X } from 'lucide-react'
 import { IconButton } from '../../components'
+import { useT } from '../../i18n'
 import styles from './ActivitySearch.module.css'
 
 export interface ActivitySearchProps {
@@ -13,6 +14,7 @@ export interface ActivitySearchProps {
  * clears it; Enter just puts the keyboard away.
  */
 export function ActivitySearch({ value, onChange }: ActivitySearchProps) {
+  const t = useT()
   const id = useId()
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -30,7 +32,7 @@ export function ActivitySearch({ value, onChange }: ActivitySearchProps) {
   return (
     <div role="search" className={styles.search}>
       <label htmlFor={id} className="visually-hidden">
-        Search activity
+        {t('activity.search.label')}
       </label>
       <Search aria-hidden="true" className={styles.icon} strokeWidth={2.25} />
       <input
@@ -38,7 +40,7 @@ export function ActivitySearch({ value, onChange }: ActivitySearchProps) {
         id={id}
         type="search"
         className={styles.input}
-        placeholder="Search names, places or amounts"
+        placeholder={t('activity.search.placeholder')}
         value={value}
         maxLength={80}
         autoComplete="off"
@@ -50,7 +52,7 @@ export function ActivitySearch({ value, onChange }: ActivitySearchProps) {
       />
       {value !== '' && (
         <IconButton
-          label="Clear search"
+          label={t('activity.search.clear.aria')}
           size="sm"
           className={styles.clear}
           onClick={() => {

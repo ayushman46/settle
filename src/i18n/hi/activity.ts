@@ -1,4 +1,70 @@
 /** Hindi copy for Activity (src/features/activity). Keys: `activity.<screen>.<element>` (see i18n-plan §3). */
 import type { Messages } from '../types'
 
-export const activity = {} as const satisfies Messages
+export const activity = {
+  'activity.title': 'लेन-देन',
+  'activity.newSplit.cta': 'नया स्प्लिट',
+
+  'activity.firstRun.title': 'आपके स्प्लिट यहाँ दिखेंगे',
+  'activity.firstRun.body': 'जो भी खर्च आप बाँटेंगे, वो यहाँ दिखेगा — सबसे नया सबसे ऊपर, और किसने पैसे लौटाए, किसने नहीं।',
+  'activity.firstRun.split.cta': 'रकम बाँटें',
+  'activity.firstRun.scan.cta': 'बिल स्कैन करें',
+
+  'activity.empty.all.title': 'अभी कोई खर्च नहीं',
+  'activity.empty.all.body': 'कुछ बाँटिए, वो यहाँ दिखेगा।',
+  'activity.empty.collect.title': 'कुछ लेना बाकी नहीं',
+  'activity.empty.collect.body': 'सबने पैसे लौटा दिए। बढ़िया!',
+  'activity.empty.pay.title': 'सब बराबर है',
+  'activity.empty.pay.body': 'अभी आपको किसी को कुछ नहीं देना।',
+  'activity.empty.bills.title': 'अभी कोई बिल नहीं',
+  'activity.empty.bills.body': 'रेस्टोरेंट बिल की फ़ोटो लें, {brand} उसे आइटम के हिसाब से बाँट देगा।',
+  'activity.empty.groups.title': 'अभी कोई ग्रुप खर्च नहीं',
+  'activity.empty.groups.body': 'ट्रिप, फ़्लैट, कपल — साझा खर्च एक ग्रुप में साथ रखें।',
+  'activity.empty.settled.title': 'अभी कुछ बराबर नहीं हुआ',
+  'activity.empty.settled.body': 'जब सबका हिसाब बराबर हो जाएगा, स्प्लिट यहाँ आ जाएँगे।',
+  'activity.empty.scan.cta': 'बिल स्कैन करें',
+  'activity.empty.groups.cta': 'ग्रुप देखें',
+
+  'activity.noMatches.title': '“{query}” से कुछ नहीं मिला',
+  'activity.noMatches.body': 'कोई नाम, जगह या रकम लिखकर देखें।',
+  'activity.noMatches.cta': 'सारे लेन-देन दिखाएँ',
+
+  'activity.groups.owed.title': 'ग्रुप में आपको मिलने हैं',
+  'activity.groups.owe.title': 'ग्रुप में आपको देने हैं',
+  'activity.groups.description': 'ग्रुप के खर्च का हिसाब एक साथ होता है।',
+  'activity.groups.row.subtitle': 'हिसाब बराबर करें',
+  'activity.groups.row.owed.aria': '{group}: आपको {amount} मिलने हैं। हिसाब बराबर करें',
+  'activity.groups.row.owe.aria': '{group}: आपको {amount} देने हैं। हिसाब बराबर करें',
+
+  'activity.filters.aria': 'दिखाएँ',
+  'activity.filter.all.chip': 'सब',
+  'activity.filter.collect.chip': 'लेने हैं',
+  'activity.filter.pay.chip': 'देने हैं',
+  'activity.filter.bills.chip': 'बिल',
+  'activity.filter.groups.chip': 'ग्रुप',
+  'activity.filter.settled.chip': 'बराबर',
+  'activity.filter.counted.aria': '{label}, {count}',
+
+  'activity.search.label': 'लेन-देन में खोजें',
+  'activity.search.placeholder': 'नाम, जगह या रकम खोजें',
+  'activity.search.clear.aria': 'खोज हटाएँ',
+
+  'activity.results.noMatches': '“{query}” से कुछ नहीं मिला',
+  'activity.results.matches': '“{query}” से {count, plural, one {# नतीजा} other {# नतीजे}} मिले',
+  'activity.results.nothing.all': 'अभी कोई खर्च नहीं',
+  'activity.results.nothing.collect': 'कुछ लेना बाकी नहीं',
+  'activity.results.nothing.pay': 'कुछ देना बाकी नहीं',
+  'activity.results.nothing.bills': 'अभी कोई बिल नहीं',
+  'activity.results.nothing.groups': 'अभी कोई ग्रुप खर्च नहीं',
+  'activity.results.nothing.settled': 'अभी कुछ बराबर नहीं हुआ',
+  'activity.results.all': '{count, plural, one {# खर्च} other {# खर्च}}',
+  'activity.results.collect': '{count, plural, one {# स्प्लिट} other {# स्प्लिट}} पर {sum} लेने हैं',
+  'activity.results.pay': '{count, plural, one {# स्प्लिट} other {# स्प्लिट}} पर आपको {sum} देने हैं',
+  'activity.results.bills': '{count, plural, one {# बिल} other {# बिल}}',
+  'activity.results.groups': '{count, plural, one {# ग्रुप खर्च} other {# ग्रुप खर्च}}',
+  'activity.results.settled': '{count, plural, one {# खर्च} other {# खर्च}} बराबर',
+  'activity.results.owedInGroups': '{count, plural, one {# ग्रुप} other {# ग्रुप}} में आपको पैसे मिलने हैं',
+  'activity.results.oweInGroups': '{count, plural, one {# ग्रुप} other {# ग्रुप}} में आपको पैसे देने हैं',
+
+  'activity.month.undated': 'बिना तारीख',
+} as const satisfies Messages

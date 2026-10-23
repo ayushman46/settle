@@ -6,7 +6,8 @@ import { ME_ID, type Friend } from '../../domain/types'
 import { navigate } from '../../app/router'
 import { currentUrl, renderAt, resetProScreens } from '../pro/testing'
 import { ActivityScreen } from './ActivityScreen'
-import { ACTIVITY_PAGE, forgetActivityView, rememberedActivityView } from './viewMemory'
+import { forgetRowHeights } from './rowWindow'
+import { FIRST_SCREEN_ROWS, forgetActivityView } from './viewMemory'
 
 const OCT_22 = new Date(2026, 9, 22, 12)
 let riya: Friend
@@ -25,8 +26,10 @@ beforeEach(() => {
 afterEach(() => {
   vi.useRealTimers()
   vi.unstubAllGlobals()
+  vi.restoreAllMocks()
   resetProScreens()
   forgetActivityView()
+  forgetRowHeights()
 })
 
 function renderActivity(path = '/app/activity') {
@@ -261,38 +264,6 @@ describe('ActivityScreen — memory and long lists', () => {
     expect(rowTitles()).toEqual(['Cab to airport'])
   })
 
-  it('loads a long history a page at a time', async () => {
-    for (let i = 0; i < ACTIVITY_PAGE + 5; i += 1) {
-      saveExpense(draft({ title: `Chai ${i + 1}`, date: '2026-10-01' }))
-    }
-    const { user } = renderActivity()
-    expect(rowTitles()).toHaveLength(ACTIVITY_PAGE)
-    await user.click(screen.getByRole('button', { name: 'Show 5 more' }))
-    expect(rowTitles()).toHaveLength(ACTIVITY_PAGE + 5)
-    expect(screen.queryByRole('button', { name: /^Show \d+ more$/ })).not.toBeInTheDocument()
-    expect(rememberedActivityView().limit).toBe(ACTIVITY_PAGE * 2)
-  })
-
-  it('keeps rows already shown when the next page loads, and updates the one that changed', async () => {
-    const saved = Array.from({ length: ACTIVITY_PAGE + 5 }, (_, i) =>
-      saveExpense(draft({ title: `Chai ${i + 1}`, date: '2026-10-01' })),
-    )
-    const { user } = renderActivity()
-    const chaiRows = () => screen.getAllByRole('button', { name: /^Chai \d+, / })
-    const before = chaiRows()
-    await user.click(screen.getByRole('button', { name: 'Show 5 more' }))
-    expect(chaiRows().slice(0, ACTIVITY_PAGE)).toEqual(before)
-    // A change to one expense still reaches its (memoised) row; the others stay put.
-    const target = saved.find((e) => before[0]?.getAttribute('aria-label')?.startsWith(`${e.title},`))
-    expect(target).toBeDefined()
-    act(() => {
-      saveExpense({ ...draft({ title: 'Masala chai', date: '2026-10-01' }), id: target?.id })
-    })
-    expect(screen.getAllByRole('button', { name: /^Masala chai, / })).toHaveLength(1)
-    expect(chaiRows()).toHaveLength(ACTIVITY_PAGE + 4)
-    expect(chaiRows().slice(0, ACTIVITY_PAGE - 1)).toEqual(before.slice(1))
-  })
-
   it('moves "Today" on to "Yesterday" at midnight', async () => {
     saveExpense(draft({ title: 'Chai', date: '2026-10-22' }))
     saveExpense(draft({ title: 'Coffee', date: '2026-10-21' }))
@@ -306,12 +277,157 @@ describe('ActivityScreen — memory and long lists', () => {
     expect(screen.getByRole('button', { name: /^Coffee, / })).not.toHaveTextContent(/Yesterday/)
   })
 
-  it('starts a new filter from the first page', async () => {
-    for (let i = 0; i < ACTIVITY_PAGE + 5; i += 1) saveExpense(draft({ title: `Chai ${i + 1}`, date: '2026-10-01' }))
+})
+
+/**
+ * A pretend phone screen for the windowed list: 800px tall, rows 72px, each month's list 100px
+ * below the one before it, the first 200px down the page. `scrollTo(y)` scrolls the page.
+ */
+const rect = (top: number) => ({ x: 0, y: top, top, bottom: top, left: 0, right: 360, width: 360, height: 0, toJSON: () => ({}) }) as DOMRect
+
+function fakeLayout() {
+  let scrollY = 0
+  vi.stubGlobal('innerHeight', 800)
+  vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockImplementation(function (this: HTMLElement) {
+    return this.tagName === 'LI' ? 72 : 0
+  })
+  vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(function (this: Element) {
+    let y = 200 - scrollY
+    for (const ul of document.querySelectorAll('section[aria-labelledby^="activity-2"] ul')) {
+      if (ul === this) return rect(y)
+      for (const li of ul.children) y += li.hasAttribute('data-gap') ? Number.parseFloat((li as HTMLElement).style.height) : 72
+      y += 100
+    }
+    return rect(0)
+  })
+  return {
+    scrollTo(y: number) {
+      scrollY = y
+      act(() => {
+        window.dispatchEvent(new Event('scroll'))
+      })
+    },
+  }
+}
+
+/** `count` chai expenses on one day: "Chai 1" (the oldest, last in the list) to "Chai <count>". */
+function chais(count: number, date = '2026-10-01') {
+  const saved = Array.from({ length: count }, (_, i) => {
+    // A second apart, so same-day entries list newest first.
+    vi.setSystemTime(OCT_22.getTime() + i * 1000)
+    return saveExpense(draft({ title: `Chai ${i + 1}`, date }))
+  })
+  vi.setSystemTime(OCT_22)
+  return saved
+}
+
+const chaiRows = () => screen.queryAllByRole('button', { name: /^Chai \d+, / })
+const gaps = () => [...document.querySelectorAll<HTMLElement>('li[data-gap]')]
+
+describe('ActivityScreen — a long history, windowed', () => {
+  it('renders the first screen of a long history, with blank space of the right height for the rest', () => {
+    fakeLayout()
+    chais(45)
+    renderActivity()
+    expect(chaiRows()).toHaveLength(FIRST_SCREEN_ROWS)
+    expect(rowTitles()[0]).toBe('Chai 45')
+    expect(screen.queryByRole('button', { name: /^Show \d+ more$/ })).not.toBeInTheDocument()
+    // The 25 rows not rendered are blank space, hidden from assistive tech and not counted as items.
+    expect(gaps()).toHaveLength(1)
+    expect(gaps()[0]).toHaveStyle({ height: `${25 * 72}px` })
+    expect(gaps()[0]).toHaveAttribute('aria-hidden', 'true')
+    expect(within(screen.getByRole('region', { name: 'October' })).getAllByRole('listitem')).toHaveLength(FIRST_SCREEN_ROWS)
+    expect(results()).toHaveTextContent('45 expenses')
+  })
+
+  it('renders the rows you scroll to, oldest included, and lets go of the ones far behind', async () => {
+    const page = fakeLayout()
+    chais(45)
+    renderActivity()
+    expect(screen.queryByRole('button', { name: /^Chai 1, / })).not.toBeInTheDocument()
+    page.scrollTo(2000)
+    await waitFor(() => expect(screen.getByRole('button', { name: /^Chai 1, / })).toBeInTheDocument())
+    // Rows 10–44 (Chai 35 … Chai 1) are near the screen; the first ten are blank space now.
+    expect(rowTitles()).toEqual(Array.from({ length: 35 }, (_, i) => `Chai ${35 - i}`))
+    expect(gaps()).toHaveLength(1)
+    expect(gaps()[0]).toHaveStyle({ height: `${10 * 72}px` })
+    // Back to the top: the first rows come back.
+    page.scrollTo(0)
+    await waitFor(() => expect(rowTitles()[0]).toBe('Chai 45'))
+  })
+
+  it('keeps rows that stay on screen as the window moves, and updates the one that changed', async () => {
+    const page = fakeLayout()
+    const saved = chais(45)
+    renderActivity()
+    const before = new Map(chaiRows().map((row) => [row.getAttribute('aria-label')?.split(',')[0], row]))
+    page.scrollTo(2000)
+    await waitFor(() => expect(screen.getByRole('button', { name: /^Chai 1, / })).toBeInTheDocument())
+    // Chai 35 … Chai 26 were on screen before and after: the very same elements.
+    for (let n = 35; n >= 26; n -= 1) expect(screen.getByRole('button', { name: new RegExp(`^Chai ${n}, `) })).toBe(before.get(`Chai ${n}`))
+    // A change to one expense still reaches its (memoised) row.
+    const target = saved[29]
+    act(() => {
+      saveExpense({ ...draft({ title: 'Masala chai', date: '2026-10-01' }), id: target?.id })
+    })
+    expect(screen.getByRole('button', { name: /^Masala chai, / })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /^Chai 30, / })).not.toBeInTheDocument()
+  })
+
+  it('keeps every month heading, and lays out months far down without their rows', () => {
+    fakeLayout()
+    chais(45)
+    saveExpense(draft({ title: 'Diwali sweets', date: '2026-09-28' }))
+    renderActivity()
+    const september = screen.getByRole('region', { name: 'September' })
+    expect(within(september).getByRole('heading', { name: 'September' })).toBeInTheDocument()
+    expect(within(september).queryAllByRole('listitem')).toHaveLength(0)
+    expect(screen.queryByRole('button', { name: /^Diwali sweets, / })).not.toBeInTheDocument()
+  })
+
+  it('keeps a focused row in the list when it scrolls far away', async () => {
+    const page = fakeLayout()
+    chais(45)
+    renderActivity()
+    const first = screen.getByRole('button', { name: /^Chai 45, / })
+    act(() => first.focus())
+    page.scrollTo(2000)
+    await waitFor(() => expect(screen.getByRole('button', { name: /^Chai 1, / })).toBeInTheDocument())
+    expect(first).toBeInTheDocument()
+    expect(first).toHaveFocus()
+    // It sits in its own place, with blank space for the rows between it and the window.
+    expect(rowTitles().slice(0, 2)).toEqual(['Chai 45', 'Chai 35'])
+    expect(gaps()[0]).toHaveStyle({ height: `${9 * 72}px` })
+    // Once focus leaves, it goes with the next scroll.
+    act(() => first.blur())
+    page.scrollTo(2001)
+    await waitFor(() => expect(screen.queryByRole('button', { name: /^Chai 45, / })).not.toBeInTheDocument())
+  })
+
+  it('shows the rows where the page is after a filter brings the list back', async () => {
+    const page = fakeLayout()
+    chais(45)
     const { user } = renderActivity()
-    await user.click(screen.getByRole('button', { name: 'Show 5 more' }))
+    page.scrollTo(2000)
+    await waitFor(() => expect(screen.getByRole('button', { name: /^Chai 1, / })).toBeInTheDocument())
     await user.click(chip('Settled'))
+    expect(chaiRows()).toHaveLength(0)
     await user.click(chip('All'))
-    expect(rowTitles()).toHaveLength(ACTIVITY_PAGE)
+    await waitFor(() => expect(screen.getByRole('button', { name: /^Chai 1, / })).toBeInTheDocument())
+  })
+
+  it('remembers row heights, so coming back lays the list out exactly as it was', async () => {
+    const page = fakeLayout()
+    chais(45)
+    const first = renderActivity()
+    page.scrollTo(2000)
+    await waitFor(() => expect(screen.getByRole('button', { name: /^Chai 1, / })).toBeInTheDocument())
+    first.unmount()
+    vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockImplementation(function (this: HTMLElement) {
+      return this.tagName === 'LI' ? 90 : 0
+    })
+    renderActivity()
+    // Rows 20–44 were measured at 72px last time: the blank space for them still adds up to that.
+    expect(gaps()[0]).toHaveStyle({ height: `${25 * 72}px` })
   })
 })

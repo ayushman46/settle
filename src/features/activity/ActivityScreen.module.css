@@ -25,7 +25,7 @@
   min-width: 0;
 }
 
-/* Rows from "Show more" pages join at once (see `calm` in ActivityScreen). */
+/* Rows that join as you scroll appear at once; the entrance is for the first screenful (see `calm` in MonthList). */
 .calm > li {
   animation: none;
 }
@@ -35,4 +35,19 @@
   font: var(--text-section);
   letter-spacing: -0.012em;
   color: var(--ink);
+}
+
+/* Rows not in the DOM (far from the screen): blank space of their height inside the month's card. */
+.gap {
+  pointer-events: none;
+}
+
+/* The first row after blank space keeps its hairline, like any row with a row above it. */
+.gap + li > *::before {
+  content: '';
+  position: absolute;
+  inset: 0 var(--s-4) auto;
+  height: 1px;
+  background: var(--line);
+  pointer-events: none;
 }

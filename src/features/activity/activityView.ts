@@ -7,19 +7,30 @@ import { ME_ID, type Expense, type Friend, type Group, type Minor } from '../../
 import { collectProgress, expenseStanding, groupBalances, simplifyDebts } from '../../engine/balances'
 import { CATEGORY_META } from '../../engine/categories'
 import { isIsoDate, periodOf } from '../../engine/dates'
+import { getLanguage, intlLocale, t, type MessageKey } from '../../i18n'
 import { formatMoney, toInputString } from '../../lib/money'
 
 /* ------------------------------------------------------------------ filters */
 
 export type ActivityFilter = 'all' | 'collect' | 'pay' | 'bills' | 'groups' | 'settled'
 
-export const ACTIVITY_FILTERS: ReadonlyArray<{ id: ActivityFilter; label: string }> = [
-  { id: 'all', label: 'All' },
-  { id: 'collect', label: 'To collect' },
-  { id: 'pay', label: 'To pay' },
-  { id: 'bills', label: 'Bills' },
-  { id: 'groups', label: 'Groups' },
-  { id: 'settled', label: 'Settled' },
+/** A filter chip; its label is read in the current language each time. */
+function filter(id: ActivityFilter, key: MessageKey): { id: ActivityFilter; readonly label: string } {
+  return {
+    id,
+    get label() {
+      return t(key)
+    },
+  }
+}
+
+export const ACTIVITY_FILTERS: ReadonlyArray<{ id: ActivityFilter; readonly label: string }> = [
+  filter('all', 'activity.filter.all.chip'),
+  filter('collect', 'activity.filter.collect.chip'),
+  filter('pay', 'activity.filter.pay.chip'),
+  filter('bills', 'activity.filter.bills.chip'),
+  filter('groups', 'activity.filter.groups.chip'),
+  filter('settled', 'activity.filter.settled.chip'),
 ]
 
 export function isActivityFilter(value: unknown): value is ActivityFilter {
@@ -173,16 +184,23 @@ export interface MonthSection {
   expenses: Expense[]
 }
 
-function monthFormatter(withYear: boolean): Intl.DateTimeFormat | null {
-  try {
-    return new Intl.DateTimeFormat(undefined, withYear ? { month: 'long', year: 'numeric' } : { month: 'long' })
-  } catch {
-    return null
-  }
-}
+/** Month-name formatters per locale (and with or without the year), made on first use. */
+const monthFormatters = new Map<string, Intl.DateTimeFormat | null>()
 
-const MONTH = monthFormatter(false)
-const MONTH_YEAR = monthFormatter(true)
+function monthFormatter(withYear: boolean): Intl.DateTimeFormat | null {
+  const locale = intlLocale(getLanguage())
+  const key = `${locale}|${withYear ? 'y' : ''}`
+  let format = monthFormatters.get(key)
+  if (format === undefined) {
+    try {
+      format = new Intl.DateTimeFormat(locale, { month: 'long', ...(withYear ? { year: 'numeric' } : {}), numberingSystem: 'latn' })
+    } catch {
+      format = null
+    }
+    monthFormatters.set(key, format)
+  }
+  return format
+}
 
 /** "October" for `2026-10` when `today` is in 2026; "October 2025" for other years. */
 export function monthLabel(period: string, today: string): string {
@@ -190,7 +208,7 @@ export function monthLabel(period: string, today: string): string {
   if (!y || !m) return period
   const date = new Date(2000, 0, 15, 12)
   date.setFullYear(y, m - 1, 15)
-  const fmt = period.slice(0, 4) === today.slice(0, 4) ? MONTH : MONTH_YEAR
+  const fmt = monthFormatter(period.slice(0, 4) !== today.slice(0, 4))
   return fmt ? fmt.format(date) : period
 }
 
@@ -201,7 +219,7 @@ export function groupByMonth(expenses: readonly Expense[], today: string): Month
     const period = isIsoDate(e.date) ? periodOf(e.date) : 'unknown'
     const last = sections[sections.length - 1]
     if (last && last.period === period) last.expenses.push(e)
-    else sections.push({ period, label: period === 'unknown' ? 'Undated' : monthLabel(period, today), expenses: [e] })
+    else sections.push({ period, label: period === 'unknown' ? t('activity.month.undated') : monthLabel(period, today), expenses: [e] })
   }
   return sections
 }
@@ -217,17 +235,13 @@ function sumLine(totals: ReadonlyMap<string, Minor>, currency: string): string {
     .join(' + ')
 }
 
-function countLabel(count: number, one: string, many: string): string {
-  return `${count} ${count === 1 ? one : many}`
-}
-
-const NOTHING: Readonly<Record<ActivityFilter, string>> = {
-  all: 'No expenses yet',
-  collect: 'Nothing to collect',
-  pay: 'Nothing to pay',
-  bills: 'No bills yet',
-  groups: 'No group expenses yet',
-  settled: 'Nothing settled yet',
+const NOTHING: Readonly<Record<ActivityFilter, MessageKey>> = {
+  all: 'activity.results.nothing.all',
+  collect: 'activity.results.nothing.collect',
+  pay: 'activity.results.nothing.pay',
+  bills: 'activity.results.nothing.bills',
+  groups: 'activity.results.nothing.groups',
+  settled: 'activity.results.nothing.settled',
 }
 
 /**
@@ -246,13 +260,14 @@ export function resultsLine(input: {
   const { filter, query, matches, groups, currency } = input
   const q = query.trim()
   if (q) {
-    if (matches.length === 0) return `No matches for “${q}”`
-    return `${countLabel(matches.length, 'match', 'matches')} for “${q}”`
+    if (matches.length === 0) return t('activity.results.noMatches', { query: q })
+    return t('activity.results.matches', { count: matches.length, query: q })
   }
-  if (matches.length === 0) return NOTHING[filter]
+  if (matches.length === 0) return t(NOTHING[filter])
+  const count = matches.length
   switch (filter) {
     case 'all':
-      return countLabel(matches.length, 'expense', 'expenses')
+      return t('activity.results.all', { count })
     case 'collect':
     case 'pay': {
       const totals = new Map<string, Minor>()
@@ -261,14 +276,13 @@ export function resultsLine(input: {
         totals.set(e.currency, (totals.get(e.currency) ?? 0) + outstanding)
       }
       const sum = sumLine(totals, currency)
-      const splits = countLabel(matches.length, 'split', 'splits')
-      return filter === 'collect' ? `${sum} to collect on ${splits}` : `You owe ${sum} on ${splits}`
+      return t(filter === 'collect' ? 'activity.results.collect' : 'activity.results.pay', { sum, count })
     }
     case 'bills':
-      return countLabel(matches.length, 'bill', 'bills')
+      return t('activity.results.bills', { count })
     case 'groups':
-      return countLabel(matches.length, 'group expense', 'group expenses')
+      return t('activity.results.groups', { count })
     case 'settled':
-      return `${countLabel(matches.length, 'expense', 'expenses')} settled`
+      return t('activity.results.settled', { count })
   }
 }

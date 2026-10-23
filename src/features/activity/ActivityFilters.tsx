@@ -1,5 +1,6 @@
 import { useLayoutEffect, useRef } from 'react'
 import { Chip } from '../../components'
+import { useT } from '../../i18n'
 import { ACTIVITY_FILTERS, type ActivityFilter } from './activityView'
 import styles from './ActivityFilters.module.css'
 
@@ -18,6 +19,7 @@ const EDGE = 16
 
 /** The filter chips: one at a time, scrolling sideways on narrow phones. */
 export function ActivityFilters({ value, onChange, counts }: ActivityFiltersProps) {
+  const t = useT()
   const rowRef = useRef<HTMLDivElement>(null)
   const selectedRef = useRef<HTMLButtonElement>(null)
 
@@ -34,7 +36,7 @@ export function ActivityFilters({ value, onChange, counts }: ActivityFiltersProp
   }, [value])
 
   return (
-    <div ref={rowRef} role="group" aria-label="Show" className={styles.filters}>
+    <div ref={rowRef} role="group" aria-label={t('activity.filters.aria')} className={styles.filters}>
       {ACTIVITY_FILTERS.map(({ id, label }) => {
         const count = COUNTED.has(id) ? counts[id] : 0
         const selected = id === value
@@ -43,7 +45,7 @@ export function ActivityFilters({ value, onChange, counts }: ActivityFiltersProp
             key={id}
             ref={selected ? selectedRef : undefined}
             selected={selected}
-            aria-label={count > 0 ? `${label}, ${count}` : undefined}
+            aria-label={count > 0 ? t('activity.filter.counted.aria', { label, count }) : undefined}
             trailing={count > 0 ? <span className={styles.count}>{count > 99 ? '99+' : count}</span> : undefined}
             onClick={() => onChange(id)}
           >
