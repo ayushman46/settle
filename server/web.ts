@@ -89,6 +89,9 @@ export function createWebApp(config: ServerConfig, { clientDir, ...appOptions }:
   app.route('/', createApp(config, appOptions))
   app.post(SHARE_TARGET_PATH, (c) => c.redirect(SHARE_TARGET_MISSED, 303))
 
+  // Hashed assets: the build's brotli copy (vite.config.ts `precompress`) when the browser takes
+  // it, else gzip made on the fly by `compress` above.
+  app.use('/assets/*', serveStatic({ root: clientDir, precompressed: true }))
   app.use('*', serveStatic({ root: clientDir }))
   // App routes get the app shell. Missing files stay 404s, so a stale script URL never
   // receives HTML (which the service worker could then cache).

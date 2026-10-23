@@ -1,6 +1,7 @@
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { brotliCompressSync, brotliDecompressSync } from 'node:zlib'
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 import { silentLogger, testConfig } from './testing'
 import { createWebApp } from './web'
@@ -9,12 +10,16 @@ let clientDir: string
 let app: ReturnType<typeof createWebApp>
 const SHELL = '<!doctype html><html><head><title>Settle</title></head><body><div id="root"></div></body></html>'
 const BIG_SCRIPT = `console.log(${JSON.stringify('x'.repeat(5000))});`
+const PAGE_SCRIPT = `export const page = ${JSON.stringify('y'.repeat(4000))};`
 
 beforeAll(() => {
   clientDir = mkdtempSync(join(tmpdir(), 'settle-web-'))
   mkdirSync(join(clientDir, 'assets'))
   writeFileSync(join(clientDir, 'index.html'), SHELL)
   writeFileSync(join(clientDir, 'assets', 'index-abc123.js'), BIG_SCRIPT)
+  writeFileSync(join(clientDir, 'assets', 'page-def456.js'), PAGE_SCRIPT)
+  writeFileSync(join(clientDir, 'assets', 'page-def456.js.br'), brotliCompressSync(PAGE_SCRIPT))
+  writeFileSync(join(clientDir, 'sw.js.br'), brotliCompressSync('not served'))
   writeFileSync(join(clientDir, 'sw.js'), 'self.addEventListener("fetch", () => {})')
   writeFileSync(join(clientDir, 'manifest.webmanifest'), '{"name":"Settle"}')
   app = createWebApp(testConfig({ apiKey: null }), { clientDir, logger: silentLogger() })
@@ -79,6 +84,32 @@ describe('createWebApp', () => {
     expect(response.headers.get('content-encoding')).toBe('gzip')
     const plain = await new Response(response.body?.pipeThrough(new DecompressionStream('gzip'))).text()
     expect(plain).toBe(BIG_SCRIPT)
+  })
+
+  it("sends the build's brotli copy of an asset to browsers that take it, and gzip to the rest", async () => {
+    const br = await app.request('/assets/page-def456.js', { headers: { 'accept-encoding': 'gzip, deflate, br, zstd' } })
+    expect(br.status).toBe(200)
+    expect(br.headers.get('content-encoding')).toBe('br')
+    expect(br.headers.get('content-type')).toMatch(/javascript/)
+    expect(br.headers.get('vary')).toMatch(/accept-encoding/i)
+    expect(br.headers.get('cache-control')).toBe('public, max-age=31536000, immutable')
+    expect(br.headers.get('content-length')).toBe(String(brotliCompressSync(PAGE_SCRIPT).length))
+    expect(brotliDecompressSync(Buffer.from(await br.arrayBuffer())).toString()).toBe(PAGE_SCRIPT)
+
+    const gzip = await app.request('/assets/page-def456.js', { headers: { 'accept-encoding': 'gzip' } })
+    expect(gzip.headers.get('content-encoding')).toBe('gzip')
+    expect(await new Response(gzip.body?.pipeThrough(new DecompressionStream('gzip'))).text()).toBe(PAGE_SCRIPT)
+
+    const plain = await app.request('/assets/page-def456.js')
+    expect(plain.headers.get('content-encoding')).toBeNull()
+    expect(await plain.text()).toBe(PAGE_SCRIPT)
+
+    // No brotli copy (or not an asset): compressed on the fly as before; the .br itself is just a file.
+    const noCopy = await app.request('/assets/index-abc123.js', { headers: { 'accept-encoding': 'br, gzip' } })
+    expect(noCopy.headers.get('content-encoding')).toBe('gzip')
+    const sw = await app.request('/sw.js', { headers: { 'accept-encoding': 'br' } })
+    expect(sw.headers.get('content-encoding')).toBeNull()
+    expect((await app.request('/assets/missing-000000.js', { headers: { 'accept-encoding': 'br' } })).status).toBe(404)
   })
 
   it('serves the service worker and manifest without long-term caching', async () => {
