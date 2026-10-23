@@ -49,14 +49,14 @@ export const delivery = {
   'delivery.fee.default.other': 'चार्ज',
   'delivery.fee.add.cta': 'चार्ज जोड़ें',
   'delivery.fee.save.cta': 'सेव करें',
-  'delivery.fee.remove.cta': 'चार्ज हटाएँ',
+  'delivery.fee.remove.cta': 'हटाएँ',
   'delivery.fee.tip.hint': 'सिर्फ़ एक व्यक्ति ने टिप दी? इसे आइटम की तरह जोड़ें।',
   'delivery.fee.tip.cta': 'आइटम बनाएँ',
 
   // The fee policy on the "What you paid" step.
   'delivery.paid.policy.label': 'चार्ज कैसे बाँटें?',
   'delivery.paid.policy.equal': 'बराबर-बराबर',
-  'delivery.paid.policy.proportional': 'जिसने जितना लिया',
+  'delivery.paid.policy.proportional': 'जितना लिया',
   'delivery.paid.explain.equal':
     '{fees} के चार्ज ऑर्डर करने वाले सबमें बराबर बँटेंगे — टैक्स और {coupon} कूपन इस हिसाब से कि किसने कितना लिया।',
   'delivery.paid.explain.equal.coupon':
