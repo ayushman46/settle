@@ -1,0 +1,89 @@
+.content {
+  gap: var(--s-8);
+}
+
+.stepTitle {
+  margin: var(--s-2) 0 var(--s-5);
+  color: var(--ink);
+  font: var(--text-headline);
+  letter-spacing: var(--tracking-tight);
+}
+
+.stepTitle:focus {
+  outline: none;
+}
+
+.section,
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  min-width: 0;
+}
+
+.group {
+  gap: var(--s-4);
+}
+
+.occasion {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-3) var(--s-4);
+}
+
+.occasionLabel {
+  flex: 1;
+  min-width: 0;
+  color: var(--ink);
+  font: var(--text-label);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+.chips svg {
+  width: 16px;
+  height: 16px;
+}
+
+.hint {
+  color: var(--ink-2);
+  font: var(--text-caption);
+}
+
+.inlineAction {
+  align-self: flex-start;
+}
+
+.about {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+}
+
+.upi {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  padding: var(--s-3) var(--s-4);
+}
+
+.upiId {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: var(--ink);
+  font: var(--text-label);
+}
+
+.confirm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}

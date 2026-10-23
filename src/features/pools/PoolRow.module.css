@@ -1,0 +1,56 @@
+.tile {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-tile);
+  background: var(--cat-gift-bg);
+  font-size: 22px;
+  line-height: 1;
+}
+
+.tileLg {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--r-xl);
+  font-size: 34px;
+}
+
+.trailing {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--s-1);
+}
+
+.ring {
+  font: var(--text-micro);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-2);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px var(--s-2);
+  border-radius: var(--r-pill);
+  background: var(--surface-2);
+  color: var(--ink-2);
+  font: var(--text-micro);
+  white-space: nowrap;
+}
+
+.soon {
+  background: var(--warning-soft);
+  color: var(--warning-ink);
+}
+
+.ended {
+  background: var(--surface-3);
+  color: var(--ink-2);
+}
+
+.subtitle {
+  font-variant-numeric: tabular-nums;
+}

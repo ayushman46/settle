@@ -131,7 +131,7 @@ export const pools = {
   'pools.detail.share.copyFailed': 'Couldn’t copy the link',
   'pools.detail.people': 'People',
   'pools.detail.remindAll': 'Remind all',
-  'pools.detail.remindAllLabel': 'Remind everyone who hasn’t chipped in',
+  'pools.detail.remindAllLabel': 'Remind all who haven’t chipped in',
   'pools.detail.paid': 'Paid',
   'pools.detail.paidLine': '{amount} · {date} · {method}',
   'pools.detail.paidTwice': '{amount} (paid twice?)',
