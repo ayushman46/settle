@@ -51,16 +51,18 @@ test('lends to someone new, borrows from Sam, then takes some back', async ({ pa
 
   // Riya returns ₹200.
   await page.goto(riyaEntry)
-  const card = page.getByRole('region', { name: /^Cash · You lent Riya ₹500 on d{1,2} [A-Z][a-z]{2}$/ })
+  const card = page.getByRole('region', { name: /^Cash · You lent Riya ₹500 on \d{1,2} [A-Z][a-z]{2}$/ })
   await expect(card).toContainText('₹500 still to come', SLOW)
   await card.getByRole('button', { name: 'Got some back from Riya' }).click()
   const repay = page.getByRole('dialog', { name: 'How much did Riya return?' })
   await repay.getByLabel('Amount returned').fill('200')
   await repay.getByRole('button', { name: 'Save' }).click()
   await expect(page.getByText('₹200 back · ₹300 still to come')).toBeVisible()
-  await expect(card).toContainText('₹300 still to come')
+  // The entry is split (repayLoanPart): this one keeps the ₹300 still open, a copy holds the ₹200.
+  const rest = page.getByRole('region', { name: /^Cash · You lent Riya ₹300 on \d{1,2} [A-Z][a-z]{2}$/ })
+  await expect(rest).toContainText('₹300 still to come')
 
-  await card.getByRole('button', { name: 'Remind Riya' }).click()
+  await rest.getByRole('button', { name: 'Remind Riya' }).click()
   const nudge = page.getByRole('dialog', { name: 'Nudge Riya' })
   await nudge.getByRole('radio', { name: /Firm/ }).click()
   await expect(nudge.getByRole('figure', { name: 'Message to Riya' })).toContainText('the ₹300 I lent you')

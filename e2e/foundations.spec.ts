@@ -1,12 +1,17 @@
 /**
- * Phase 2 foundations, in a real browser: with every new feature still switched off the app looks
- * as before except Home's grid (seven tiles and More, two rows of four, even at 320 px); the new
- * screens go home and the new public pages say there's no link; seeded loans and trip expenses
- * read right in lists; and the test mocks answer exchange rates.
+ * Phase 2 foundations, in a real browser: Home's grid (the switched-on features' tiles, everyday
+ * templates back-filling to seven, then More — two rows of four, even at 320 px); the screens of
+ * features still switched off go home and empty public links say there's no link; seeded loans
+ * and trip expenses read right in lists; and the test mocks answer exchange rates.
  */
 import { seed, friend } from './support/seed'
 import { expect, test } from './support/fixtures'
 import type { Expense } from '../src/domain/types'
+import { DELIVERY_ENABLED } from '../src/features/bill/delivery.enabled'
+import { CLAIMS_ENABLED } from '../src/features/claim/enabled'
+import { LEND_ENABLED } from '../src/features/lend/enabled'
+import { POOLS_ENABLED } from '../src/features/pools/enabled'
+import { SMS_ENABLED } from '../src/features/sharein/enabled'
 
 const RIYA = friend('riya', 'Riya')
 const SAM = friend('sam', 'Sam')
@@ -37,13 +42,23 @@ function expense(extra: Partial<Expense>): Expense {
   }
 }
 
-const GRID = ['Scan bill', 'Split amount', 'New group', 'Rent', 'Trip', 'Subscription', 'Utilities', 'More']
+/** Mirrors src/features/home/quickActions.ts: switched-on actions in order, templates to seven, More. */
+const ACTIONS = [
+  'Scan bill',
+  'Split amount',
+  ...(LEND_ENABLED ? ['Lend / borrow'] : []),
+  ...(POOLS_ENABLED ? ['Collect money'] : []),
+  ...(SMS_ENABLED ? ['From SMS'] : []),
+  ...(DELIVERY_ENABLED ? ['Food order'] : []),
+  'New group',
+]
+const GRID = [...ACTIONS, ...['Rent', 'Trip', 'Subscription', 'Utilities', 'Cab']].slice(0, 7).concat('More')
 
 for (const width of [320, 360]) {
   test.describe(`Home at ${width} px`, () => {
     test.use({ viewport: { width, height: 760 } })
 
-    test('shows seven actions and More in two rows of four, nothing cut off', async ({ page }) => {
+    test('shows seven tiles and More in two rows of four, nothing cut off', async ({ page }) => {
       await seed(page)
       await page.goto('/app')
       const grid = page.getByRole('list', { name: 'Quick actions' })
@@ -71,7 +86,13 @@ for (const width of [320, 360]) {
 }
 
 test.describe('switched-off features', () => {
-  for (const path of ['/app/claims/r1', '/app/share', '/app/lend', '/app/pools', '/app/pools/new']) {
+  const off = [
+    ...(CLAIMS_ENABLED ? [] : ['/app/claims/r1']),
+    ...(SMS_ENABLED ? [] : ['/app/share']),
+    ...(LEND_ENABLED ? [] : ['/app/lend']),
+    ...(POOLS_ENABLED ? [] : ['/app/pools', '/app/pools/new']),
+  ]
+  for (const path of off) {
     test(`${path} goes home`, async ({ page }) => {
       await seed(page)
       await page.goto(path)
@@ -81,7 +102,7 @@ test.describe('switched-off features', () => {
   }
 
   test('/claim and /pool say there is no link', async ({ page }) => {
-    await page.goto('/claim#j.e30')
+    await page.goto('/claim')
     await expect(page.getByRole('heading', { level: 1, name: 'No claim link here' })).toBeVisible()
     await page.goto('/pool')
     await expect(page.getByRole('heading', { level: 1, name: 'No collection link here' })).toBeVisible()

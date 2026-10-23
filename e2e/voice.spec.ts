@@ -60,7 +60,10 @@ async function fakeSpeech(page: Page, mode: Mode): Promise<void> {
         this.end()
       }
     }
-    Object.defineProperty(window, 'webkitSpeechRecognition', { configurable: true, value: FakeRecognition })
+    // Both names: Edge now has the standard one too, and the app prefers it.
+    for (const name of ['SpeechRecognition', 'webkitSpeechRecognition']) {
+      Object.defineProperty(window, name, { configurable: true, value: FakeRecognition })
+    }
     try {
       window.localStorage.setItem('settle.v4.voice-lang', 'hi-IN')
     } catch {
@@ -176,7 +179,8 @@ test.describe('speak to split', () => {
     const picker = page.getByRole('dialog', { name: 'Speak in' })
     await expect(picker.getByRole('radio')).toHaveCount(8)
     await expectAccessible(page)
-    await picker.getByRole('radio', { name: 'தமிழ் Tamil' }).check()
+    // Picking closes the picker, so click (check() would wait for a radio that's gone).
+    await picker.getByRole('radio', { name: 'தமிழ் Tamil' }).click()
     await expect(sheet.getByRole('region', { name: 'Listening in Tamil' })).toBeVisible()
   })
 })
