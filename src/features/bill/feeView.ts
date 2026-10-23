@@ -35,10 +35,10 @@ const KIND_KEYS = {
   platform: 'delivery.fee.kind.platform',
   packaging: 'delivery.fee.kind.packaging',
   surge: 'delivery.fee.kind.surge',
-  small_order: 'delivery.fee.kind.small_order',
+  small_order: 'delivery.fee.kind.smallOrder',
   tip: 'delivery.fee.kind.tip',
   donation: 'delivery.fee.kind.donation',
-  fee_tax: 'delivery.fee.kind.fee_tax',
+  fee_tax: 'delivery.fee.kind.feeTax',
   other: 'delivery.fee.kind.other',
 } as const satisfies Record<BillFeeKind, MessageKey>
 
@@ -47,10 +47,10 @@ const DEFAULT_KEYS = {
   platform: 'delivery.fee.default.platform',
   packaging: 'delivery.fee.default.packaging',
   surge: 'delivery.fee.default.surge',
-  small_order: 'delivery.fee.default.small_order',
+  small_order: 'delivery.fee.default.smallOrder',
   tip: 'delivery.fee.default.tip',
   donation: 'delivery.fee.default.donation',
-  fee_tax: 'delivery.fee.default.fee_tax',
+  fee_tax: 'delivery.fee.default.feeTax',
   other: 'delivery.fee.default.other',
 } as const satisfies Record<BillFeeKind, MessageKey>
 
