@@ -84,8 +84,36 @@ export function currencyForLanguages(languages: readonly string[]): string {
   return FALLBACK_CURRENCY
 }
 
-/** Best-guess currency for this user from their browser languages; INR when unsure. */
+/**
+ * Time zone → currency, for the places the phone's clock says more than its language: most
+ * phones and laptops in India say "en-US" first, but their clock says Asia/Kolkata (or its old
+ * name, Asia/Calcutta). Also the Gulf, Singapore, the neighbours and the UK, where many Indians
+ * live and split.
+ */
+const ZONE_CURRENCY: Readonly<Record<string, string>> = {
+  'Asia/Kolkata': 'INR', 'Asia/Calcutta': 'INR',
+  'Asia/Dubai': 'AED', 'Asia/Riyadh': 'SAR', 'Asia/Qatar': 'QAR', 'Asia/Kuwait': 'KWD', 'Asia/Bahrain': 'BHD', 'Asia/Muscat': 'OMR',
+  'Asia/Singapore': 'SGD', 'Asia/Kathmandu': 'NPR', 'Asia/Katmandu': 'NPR', 'Asia/Dhaka': 'BDT', 'Asia/Dacca': 'BDT',
+  'Asia/Colombo': 'LKR', 'Indian/Maldives': 'MVR', 'Europe/London': 'GBP',
+}
+
+/** The currency of the place a time zone is in, or null when it isn't one of `ZONE_CURRENCY`'s. */
+export function currencyForTimeZone(zone: string | null | undefined): string | null {
+  return (zone && Object.hasOwn(ZONE_CURRENCY, zone) ? ZONE_CURRENCY[zone] : null) ?? null
+}
+
+function deviceTimeZone(): string | null {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone ?? null
+  } catch {
+    return null
+  }
+}
+
+/** Best-guess currency for this user: from their clock's time zone, else their browser languages; INR when unsure. */
 export function defaultCurrency(): string {
+  const byZone = currencyForTimeZone(deviceTimeZone())
+  if (byZone) return byZone
   if (typeof navigator === 'undefined') return FALLBACK_CURRENCY
   const languages =
     Array.isArray(navigator.languages) && navigator.languages.length > 0

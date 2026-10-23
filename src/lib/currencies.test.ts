@@ -1,5 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { COMMON_CURRENCIES, currencyForLanguages, currencyName, defaultCurrency, isKnownCurrency } from './currencies'
+import { COMMON_CURRENCIES, currencyForLanguages, currencyForTimeZone, currencyName, defaultCurrency, isKnownCurrency } from './currencies'
+
+/** Pretends the device clock is in `timeZone`. */
+function zone(timeZone: string) {
+  vi.spyOn(Intl.DateTimeFormat.prototype, 'resolvedOptions').mockReturnValue({ timeZone } as Intl.ResolvedDateTimeFormatOptions)
+}
 
 afterEach(() => {
   vi.restoreAllMocks()
@@ -40,13 +45,37 @@ describe('currencyForLanguages', () => {
   })
 })
 
+describe('currencyForTimeZone', () => {
+  it('knows India by either name, and the places many Indians live', () => {
+    expect(currencyForTimeZone('Asia/Kolkata')).toBe('INR')
+    expect(currencyForTimeZone('Asia/Calcutta')).toBe('INR')
+    expect(currencyForTimeZone('Asia/Dubai')).toBe('AED')
+    expect(currencyForTimeZone('Asia/Singapore')).toBe('SGD')
+    expect(currencyForTimeZone('Europe/London')).toBe('GBP')
+  })
+
+  it('says nothing for other zones', () => {
+    for (const z of ['UTC', 'America/New_York', 'Europe/Berlin', '', null, undefined, 'toString', '__proto__']) expect(currencyForTimeZone(z)).toBeNull()
+  })
+})
+
 describe('defaultCurrency', () => {
-  it('reads navigator.languages', () => {
+  it('trusts the clock over the language: an en-US phone in India is in rupees', () => {
+    vi.spyOn(navigator, 'languages', 'get').mockReturnValue(['en-US', 'en-IN'])
+    zone('Asia/Calcutta')
+    expect(defaultCurrency()).toBe('INR')
+    zone('Asia/Kolkata')
+    expect(defaultCurrency()).toBe('INR')
+  })
+
+  it('reads navigator.languages when the time zone says nothing', () => {
+    zone('UTC')
     vi.spyOn(navigator, 'languages', 'get').mockReturnValue(['en-SG', 'en'])
     expect(defaultCurrency()).toBe('SGD')
   })
 
   it('falls back to navigator.language', () => {
+    zone('America/New_York')
     vi.spyOn(navigator, 'languages', 'get').mockReturnValue([])
     vi.spyOn(navigator, 'language', 'get').mockReturnValue('en-AU')
     expect(defaultCurrency()).toBe('AUD')
