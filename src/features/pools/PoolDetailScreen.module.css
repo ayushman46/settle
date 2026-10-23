@@ -261,3 +261,9 @@
   flex-wrap: wrap;
   gap: var(--s-2);
 }
+
+/* "More ways" and "Copy link" stay on one line, even at 320 px. */
+.shareMore > button {
+  padding-inline: var(--s-3);
+  white-space: nowrap;
+}
