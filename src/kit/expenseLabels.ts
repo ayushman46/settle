@@ -2,8 +2,9 @@
  * How an expense reads in a list, from the owner's side: who paid, what it means for me, and
  * whether it's still open. Pure, so rows, filters and their tests agree to the paisa.
  */
+import { memoizeLast } from '../data/store'
 import { friendsStore } from '../data/stores'
-import { ME_ID, type Expense, type Group, type Minor } from '../domain/types'
+import { ME_ID, type Expense, type Friend, type Group, type Minor } from '../domain/types'
 import { expenseStanding } from '../engine/balances'
 import { uniqueParticipants } from '../engine/split'
 import { currencyDigits, formatMoney } from '../lib/money'
@@ -62,6 +63,9 @@ export interface ExpenseRowViewInput {
   otherName?: string
 }
 
+/** Your people by id (rebuilt only when the list changes), for naming the other side of a 1:1 entry. */
+const friendIndex = memoizeLast((friends: readonly Friend[]): ReadonlyMap<string, Friend> => new Map(friends.map((f) => [f.id, f])))
+
 /** The one participant of a 1:1 entry (one person who isn't the payer), or null. */
 export function oneToOneOther(e: Pick<Expense, 'participants' | 'payerId'>): string | null {
   const people = uniqueParticipants(e.participants)
@@ -108,7 +112,7 @@ export function expenseRowView(e: Expense, { payerName, group, showGroup = true,
   let subtitle: string
   if (otherId !== null) {
     // 1:1: "You lent Riya · cash", "Kabir lent you · cash", "You paid for Riya · Auto".
-    const other = otherId === ME_ID ? 'you' : (otherName ?? friendLabel(otherId, friendsStore.get().find((f) => f.id === otherId)))
+    const other = otherId === ME_ID ? 'you' : (otherName ?? friendLabel(otherId, friendIndex(friendsStore.get()).get(otherId)))
     subtitle = e.kind === 'loan' ? `${payer} lent ${other} · cash` : `${payer} paid for ${other} · ${groupName ?? e.title}`
   } else {
     // Paid abroad: "You paid ฿1,250 (₹3,013)".
