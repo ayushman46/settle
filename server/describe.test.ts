@@ -643,3 +643,45 @@ describe('describeSplit', () => {
     expect(fetchMock).toHaveBeenCalledTimes(2) // 20 s, then the 10 s that were left
   })
 })
+
+describe('describe in Indian languages (spec 03 §4.3, §5.1)', () => {
+  it('turns number words into digits before anything reads the text', () => {
+    const check = parseDescribeRequest({ text: 'dinner dhai hazaar Riya ke saath' }, TODAY)
+    expect(check).toMatchObject({ ok: true, input: { text: 'dinner 2500 Riya ke saath' } })
+    if (!check.ok) return
+    const outcome = normalizeDescribed(reply({ amount: 2500, people: [{ name: 'Me', value: null }, { name: 'Riya', value: null }] }), check.input)
+    expect(outcome).toMatchObject({ kind: 'split', split: { amount: 2500 } })
+  })
+
+  it('keeps Riya ko do and Abdul Sattar as words', () => {
+    expect(parseDescribeRequest({ text: 'Riya ko do 500' }, TODAY)).toMatchObject({ input: { text: 'Riya ko do 500' } })
+    expect(parseDescribeRequest({ text: 'Abdul Sattar ke saath lunch 300' }, TODAY)).toMatchObject({ input: { text: 'Abdul Sattar ke saath lunch 300' } })
+  })
+
+  it('accepts the language and source hints and ignores unknown ones', () => {
+    expect(parseDescribeRequest({ text: 'Cab 840', lang: 'hi-IN', source: 'voice' }, TODAY)).toMatchObject({ ok: true, input: { lang: 'hi-IN', source: 'voice' } })
+    const odd = parseDescribeRequest({ text: 'Cab 840', lang: 'fr-FR', source: 'fax' }, TODAY)
+    expect(odd.ok).toBe(true)
+    if (odd.ok) {
+      expect(odd.input).not.toHaveProperty('lang')
+      expect(odd.input).not.toHaveProperty('source')
+    }
+    expect(parseDescribeRequest({ text: 'Cab 840', lang: 7, source: null }, TODAY).ok).toBe(true)
+  })
+
+  it('sends the hints to the model in the user turn', async () => {
+    const fetchMock = vi.fn(async () => chatResponse(reply({ title: 'Cab', amount: 840, category: 'transport' })))
+    const check = parseDescribeRequest({ text: 'cab ke 840 teen log Kabir ne diya', lang: 'hi-IN', source: 'voice' }, TODAY)
+    if (!check.ok) throw new Error('bad request')
+    vi.stubGlobal('fetch', fetchMock)
+    try {
+      await describeSplit(testConfig(), check.input)
+    } finally {
+      vi.unstubAllGlobals()
+    }
+    const body = sentBody(fetchMock)
+    const user = (body.messages as Array<{ role: string; content: string }>).find((m) => m.role === 'user')?.content ?? ''
+    expect(user).toContain('The message is in Hindi (hi-IN).')
+    expect(user).toContain('It was spoken')
+  })
+})

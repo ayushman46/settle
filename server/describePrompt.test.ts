@@ -107,3 +107,36 @@ describe('buildDescribeBody', () => {
     expect(buildDescribeBody('nvidia/nemotron-x', INPUT, false)).not.toHaveProperty('response_format')
   })
 })
+
+describe('Indian languages (spec 03 §5.2)', () => {
+  it('teaches the model the languages, the payer and "with" words, and English titles', () => {
+    for (const rule of ['LANGUAGES', 'Hinglish (Hindi in Latin letters)', 'Numbers written in words have already been turned into digits', 'मैंने दिया', 'के साथ', 'रिया → Riya', 'always 1–4 English words']) {
+      expect(DESCRIBE_SYSTEM_PROMPT).toContain(rule)
+    }
+    expect(DESCRIBE_SYSTEM_PROMPT.indexOf('LANGUAGES')).toBeGreaterThan(DESCRIBE_SYSTEM_PROMPT.indexOf('FIELDS'))
+    expect(DESCRIBE_SYSTEM_PROMPT.indexOf('LANGUAGES')).toBeLessThan(DESCRIBE_SYSTEM_PROMPT.indexOf('EXAMPLES'))
+  })
+
+  it('has the two new examples, each a valid answer', () => {
+    for (const input of ['"2500 का डिनर रिया और सैम के साथ मैंने दिया" →', '"cab ke 840 teen log Kabir ne diya" →']) {
+      const at = DESCRIBE_SYSTEM_PROMPT.indexOf(input)
+      expect(at).toBeGreaterThan(-1)
+      const line = DESCRIBE_SYSTEM_PROMPT.slice(at + input.length).trimStart().split('\n')[0] ?? ''
+      const answer = JSON.parse(line) as Record<string, unknown>
+      expect(Object.keys(answer).sort()).toEqual([...DESCRIBE_SCHEMA.required].sort())
+    }
+  })
+
+  it('says the language and how the text arrived in the user turn', () => {
+    const spoken = describeUserPrompt({ ...INPUT, lang: 'hi-IN', source: 'voice' })
+    expect(spoken).toContain('The message is in Hindi (hi-IN).')
+    expect(spoken).toContain('It was spoken and turned into text by speech recognition.')
+    const sms = describeUserPrompt({ ...INPUT, source: 'sms' })
+    expect(sms).toContain('The message is a bank or UPI alert the user received')
+    expect(sms).not.toContain('The message is in')
+    const typed = describeUserPrompt({ ...INPUT, lang: 'ta-IN', source: 'typed' })
+    expect(typed).toContain('The message is in Tamil (ta-IN).')
+    expect(typed).not.toContain('speech recognition')
+    expect(describeUserPrompt(INPUT)).not.toMatch(/The message is in|speech recognition|bank or UPI alert/)
+  })
+})

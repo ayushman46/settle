@@ -298,3 +298,103 @@ describe('date helpers', () => {
     expect(utcToday(Date.UTC(2026, 9, 21, 23, 59))).toBe('2026-10-21')
   })
 })
+
+describe('Indian languages (spec 03 §5.3)', () => {
+  it.each([
+    ['ढाई हज़ार का डिनर मैंने दिया', 'Me'],
+    ['2500 का डिनर मैने दिया', 'Me'],
+    ['मी दिले 500', 'Me'],
+    ['મેં આપ્યા 500', 'Me'],
+    ['আমি দিয়েছি 500', 'Me'],
+    ['நான் கொடுத்தேன் 500', 'Me'],
+    ['నేను కట్టాను 500', 'Me'],
+    ['ನಾನು ಕೊಟ್ಟೆ 500', 'Me'],
+  ])('the speaker paid: %s', (text, payer) => {
+    expect(mentionsPayer(text)).toBe(true)
+    expect(payerFromText(text, ['Riya'])).toBe(payer)
+    expect(speaksInFirstPerson(text)).toBe(true)
+  })
+
+  it.each([
+    'रिया ने दिया 500',
+    'रिया ने पेमेंट किया 500',
+    'रिया ने दिले 500',
+    'રિયા એ આપ્યા 500',
+    'রিয়া দিয়েছে 500',
+    'ரியா கொடுத்தார் 500',
+    'రియా కట్టింది 500',
+    'ರಿಯಾ ಕೊಟ್ಟರು 500',
+  ])('someone else paid (the model names them): %s', (text) => {
+    expect(mentionsPayer(text)).toBe(true)
+    expect(payerFromText(text, ['Riya'])).toBeNull()
+  })
+
+  it('does not hear a payer where nobody paid', () => {
+    expect(mentionsPayer('रिया के साथ डिनर 500')).toBe(false)
+    expect(mentionsPayer('दिया जलाओ')).toBe(false)
+  })
+
+  it.each(['मेरे बिना डिनर 500', 'मुझे छोड़कर 500', 'माझ्याशिवाय 500', 'મારા વગર 500', 'আমাকে ছাড়া 500', 'என்னைத் தவிர 500', 'నన్ను తప్ప 500', 'ನನ್ನನ್ನು ಬಿಟ್ಟು 500'])(
+    'the speaker is out: %s',
+    (text) => {
+      expect(excludesSpeaker(text)).toBe(true)
+      expect(speakerTakesPart(text)).toBe(false)
+    },
+  )
+
+  it('an Indian-language sentence includes the speaker unless it says otherwise', () => {
+    expect(speakerTakesPart('रिया और सैम के साथ डिनर 2500')).toBe(true)
+    expect(speakerTakesPart('ரியா உடன் 500')).toBe(true)
+    expect(speaksInFirstPerson('हम तीनों का खाना 900')).toBe(true)
+    expect(speaksInFirstPerson('মোট 900')).toBe(false)
+  })
+
+  it.each([
+    ['कल का डिनर 500', '2026-10-20'],
+    ['गतकाल 500', '2026-10-20'],
+    ['গতকাল 500', '2026-10-20'],
+    ['काल 500 चहा', '2026-10-20'],
+    ['ગઈકાલે 500', '2026-10-20'],
+    ['நேற்று 500', '2026-10-20'],
+    ['నిన్న 500', '2026-10-20'],
+    ['ನಿನ್ನೆ 500', '2026-10-20'],
+    ['आज 500', '2026-10-21'],
+    ['আজ 500', '2026-10-21'],
+    ['આજે 500', '2026-10-21'],
+    ['இன்று 500', '2026-10-21'],
+    ['ఈరోజు 500', '2026-10-21'],
+    ['ಇಂದು 500', '2026-10-21'],
+    ['परसों 500', '2026-10-19'],
+    ['parson dinner 500', '2026-10-19'],
+  ])('dates: %s → %s', (text, date) => {
+    expect(resolveDate(text, '2026-10-21')).toBe(date)
+  })
+
+  it('does not read a date inside another word', () => {
+    expect(resolveDate('कलम 50', '2026-10-21')).toBeUndefined()
+  })
+
+  it.each([
+    ['500 रुपये की चाय', 'INR'],
+    ['500 रुपए', 'INR'],
+    ['रु. 500', 'INR'],
+    ['রুপি 500', 'INR'],
+    ['500 ரூபாய்', 'INR'],
+    ['500 రూపాయలు', 'INR'],
+    ['500 ರೂಪಾಯಿ', 'INR'],
+    ['500 રૂપિયા', 'INR'],
+  ])('currency: %s → %s', (text, code) => {
+    expect(detectCurrency(text, null)).toBe(code)
+  })
+
+  it('reads টাকা as rupees in India and taka for a Bangladeshi user', () => {
+    expect(detectCurrency('500 টাকা', null)).toBe('INR')
+    expect(detectCurrency('500 টাকা', 'INR')).toBe('INR')
+    expect(detectCurrency('500 টাকা', 'BDT')).toBe('BDT')
+  })
+
+  it('matches composed and decomposed letters alike (য় vs য + nukta)', () => {
+    const decomposed = 'আমি দিয়েছি 500'.normalize('NFD')
+    expect(payerFromText(decomposed, [])).toBe('Me')
+  })
+})

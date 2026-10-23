@@ -7,10 +7,15 @@
  * whole-number shares, and "Me" whenever the speaker takes part.
  */
 import { z } from 'zod'
+import { normalizeNumberWords } from '../shared/numberWords'
 import {
   DESCRIBE_BUDGET_MS,
   DESCRIBE_LIMITS,
+  DESCRIBE_SOURCES,
+  VOICE_LANGS,
   type AmountSplitMode,
+  type DescribeSource,
+  type VoiceLang,
   type CategoryId,
   type DescribedPerson,
   type DescribedSplit,
@@ -49,6 +54,9 @@ const RequestSchema = z.object({
   currency: z.string().max(16).nullish(),
   people: z.array(z.string()).nullish(),
   today: z.string().max(32).nullish(),
+  // Hints: an unknown language or source is ignored, never an error.
+  lang: z.unknown().optional(),
+  source: z.unknown().optional(),
 })
 
 export const REQUEST_MESSAGES = {
@@ -67,7 +75,9 @@ export type RequestCheck = { ok: true; input: DescribeInput } | { ok: false; mes
 export function parseDescribeRequest(json: unknown, today: string): RequestCheck {
   const parsed = RequestSchema.safeParse(json)
   if (!parsed.success) return { ok: false, message: REQUEST_MESSAGES.malformed }
-  const text = cleanText(parsed.data.text) ?? ''
+  // Number words become digits before anything reads the text ("dhai hazaar" → 2500), so the
+  // amount checks, the title and the model all see the same, exact amount.
+  const text = normalizeNumberWords(cleanText(parsed.data.text) ?? '')
   if (text === '') return { ok: false, message: REQUEST_MESSAGES.empty }
   if (Array.from(text).length > DESCRIBE_LIMITS.maxTextChars) return { ok: false, message: REQUEST_MESSAGES.tooLong }
 
@@ -86,7 +96,11 @@ export function parseDescribeRequest(json: unknown, today: string): RequestCheck
 
   const currency = /^[A-Za-z]{3}$/.test(parsed.data.currency?.trim() ?? '') ? (parsed.data.currency ?? '').trim().toUpperCase() : null
   const day = parsed.data.today?.trim() ?? ''
-  return { ok: true, input: { text, currency, people, today: isIsoDate(day) ? day : today } }
+  const input: DescribeInput = { text, currency, people, today: isIsoDate(day) ? day : today }
+  const { lang, source } = parsed.data
+  if (typeof lang === 'string' && (VOICE_LANGS as readonly string[]).includes(lang)) input.lang = lang as VoiceLang
+  if (typeof source === 'string' && (DESCRIBE_SOURCES as readonly string[]).includes(source)) input.source = source as DescribeSource
+  return { ok: true, input }
 }
 
 /* ------------------------------------------------------------------ reading the model's answer */

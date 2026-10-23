@@ -30,6 +30,62 @@ const fixed = (code: string) => () => code
 const rupee = (hint: string | null) => (hint !== null && RUPEE_CURRENCIES.has(hint) ? hint : 'INR')
 const dollar = (hint: string | null) => (hint !== null && DOLLAR_CURRENCIES.has(hint) ? hint : 'USD')
 
+/* ------------------------------------------------------------------ Indian languages */
+
+// `\b` only knows ASCII letters: Indic words get their own edges (space, punctuation, the danda).
+const B = String.raw`(?<=^|[\s,.!?।])`
+const E = String.raw`(?=$|[\s,.!?।])`
+
+/** One regex for whole Indic words or phrases (NFC, so composed and decomposed letters match alike). */
+function indic(alternatives: readonly string[], flags = 'u'): RegExp {
+  return new RegExp(`${B}(?:${alternatives.map((a) => a.normalize('NFC')).join('|')})${E}`, flags)
+}
+
+/** Any Devanagari … Sinhala letter: the text is (partly) in an Indian script. */
+const INDIC_LETTER = /[\u0900-\u0DFF]/u
+
+/** "मैंने दिया", "मी दिले", "આમિ দিয়েছি"…: the speaker paid. */
+const SPEAKER_PAYS_INDIC = indic([
+  'मैंने',
+  'मैने',
+  'मी (?:दिले|भरले)',
+  'મેં (?:આપ્યા|ચૂકવ્યા)',
+  'আমি (?:দিয়েছি|দিলাম)',
+  'நான் (?:கொடுத்தேன்|கட்டினேன்|செலுத்தினேன்)',
+  'నేను (?:కట్టాను|ఇచ్చాను)',
+  'ನಾನು (?:ಕೊಟ್ಟೆ|ಪಾವತಿಸಿದೆ)',
+])
+
+/** Someone (named) paid: "रिया ने दिया", "সৌরভ দিয়েছে", "கபீர் கொடுத்தார்"… */
+const SOMEONE_PAYS_INDIC = indic([
+  'ने (?:दिया|दिए|भरा|पे किया|पेमेंट किया)',
+  'ने (?:दिले|भरले)',
+  'એ (?:આપ્યા|ચૂકવ્યા)',
+  '(?:দিয়েছে|দিল|দিয়েছেন)',
+  '(?:கொடுத்தார்|கொடுத்தான்|கொடுத்தாள்|கட்டினார்)',
+  '(?:కట్టాడు|కట్టింది|ఇచ్చాడు|ఇచ్చింది)',
+  '(?:ಕೊಟ್ಟರು|ಕೊಟ್ಟ|ಕೊಟ್ಟಳು|ಪಾವತಿಸಿದರು)',
+])
+
+/** I, my, we… in Hindi, Marathi, Gujarati, Bengali, Tamil, Telugu, Kannada. */
+const FIRST_PERSON_INDIC = indic([
+  'मैं', 'मेरा', 'मेरी', 'मेरे', 'मुझे', 'हम', 'हमने', 'हमारा', 'हमारे',
+  'मी', 'माझा', 'माझी', 'माझे', 'आम्ही', 'आपण',
+  'હું', 'મારું', 'મારી', 'મેં', 'અમે', 'આપણે',
+  'আমি', 'আমার', 'আমরা',
+  'நான்', 'என்', 'நாம்', 'நாங்கள்',
+  'నేను', 'నా', 'మేము', 'మనం',
+  'ನಾನು', 'ನನ್ನ', 'ನಾವು',
+])
+
+/** "without me" and friends. */
+const SPEAKER_OUT_INDIC = indic(['मेरे बिना', 'मुझे छोड़कर', 'मैं नहीं', 'माझ्याशिवाय', 'મારા વગર', 'আমাকে ছাড়া', 'என்னைத் தவிர', 'నన్ను తప్ప', 'ನನ್ನನ್ನು ಬಿಟ್ಟು'])
+
+const DAY_BEFORE_YESTERDAY_INDIC = indic(['परसों', 'parson'], 'iu')
+// Describe is only ever about money already spent, so "कल" (yesterday / tomorrow) is yesterday.
+const YESTERDAY_INDIC = indic(['कल', 'गतकाल', 'গতকাল', 'काल', 'ગઈકાલે', 'நேற்று', 'నిన్న', 'ನಿನ್ನೆ'])
+const TODAY_INDIC = indic(['आज', 'আজ', 'આજે', 'இன்று', 'ఈరోజు', 'ಇಂದು'])
+
 /** When several match, the earliest in the text wins — so "US$ 5" is USD, not a bare "$". */
 const CURRENCY_RULES: readonly CurrencyRule[] = [
   [/US\$/i, fixed('USD')],
@@ -41,6 +97,9 @@ const CURRENCY_RULES: readonly CurrencyRule[] = [
   [/\bR\$/, fixed('BRL')],
   [/₹/, fixed('INR')],
   [/₨|\brs(?:\b|\.|(?=\d))|\b(?:rupees?|rupaye|rupay|rupiya|rupye)\b/i, rupee],
+  [new RegExp(`(?:रुपये|रुपए|रुपया|रु\\.?(?=\\s?\\d)|রুপি|ரூபாய்|రూపాయలు|ರೂಪಾಯಿ|રૂપિયા)`.normalize('NFC'), 'u'), fixed('INR')],
+  // Bengali speakers in India say টাকা for rupees; in Bangladesh it's the taka.
+  [new RegExp('টাকা'.normalize('NFC'), 'u'), (hint) => (hint === 'BDT' ? 'BDT' : 'INR')],
   [/€|\beuros?\b/i, fixed('EUR')],
   [/£|\bquid\b|\d\s*pounds?\b|\bpounds?\s*\d/i, fixed('GBP')],
   [/¥/, (hint) => (hint === 'CNY' ? 'CNY' : 'JPY')],
@@ -69,7 +128,8 @@ const CURRENCY_RULES: readonly CurrencyRule[] = [
  * The currency the text itself names, or null. `hint` (the user's usual currency) only says
  * which dollar a "$" is, or which rupee "Rs" is — it is never assumed when the text names none.
  */
-export function detectCurrency(text: string, hint: string | null): string | null {
+export function detectCurrency(raw: string, hint: string | null): string | null {
+  const text = raw.normalize('NFC')
   let bestIndex = Number.POSITIVE_INFINITY
   let best: string | null = null
   const consider = (index: number, code: string) => {
@@ -122,7 +182,9 @@ const PAYER_CUES: readonly RegExp[] = [
 /** Whether the text says who paid at all. Without that, a payer from the model is a guess. */
 export function mentionsPayer(text: string): boolean {
   const withoutShares = text.replace(SHARE_PHRASE, ' ')
-  return PAYER_CUES.some((cue) => cue.test(withoutShares))
+  if (PAYER_CUES.some((cue) => cue.test(withoutShares))) return true
+  const nfc = withoutShares.normalize('NFC')
+  return SPEAKER_PAYS_INDIC.test(nfc) || SOMEONE_PAYS_INDIC.test(nfc)
 }
 
 const PAID_VERB = String.raw`(?:has\s+|had\s+|just\s+|already\s+)?(?:paid|covered|picked\s+(?:it\s+|this\s+)?up|treated(?:\s+us)?|bought|booked|fronted|footed|is\s+paying|was\s+paying|will\s+pay|got\s+(?:it|this|the\s+(?:bill|tab|check|cheque)))\b`
@@ -154,7 +216,7 @@ export function payerFromText(text: string, people: readonly string[]): string |
       if (person !== undefined) return person
     }
   }
-  return SPEAKER_PAYS.test(withoutShares) ? 'Me' : null
+  return SPEAKER_PAYS.test(withoutShares) || SPEAKER_PAYS_INDIC.test(withoutShares.normalize('NFC')) ? 'Me' : null
 }
 
 /* ------------------------------------------------------------------ the speaker ("Me") */
@@ -193,7 +255,7 @@ const SPEAKER_OUT =
 
 /** Whether the text says the speaker is NOT sharing the cost ("except me", "for Riya and Sam only"). */
 export function excludesSpeaker(text: string): boolean {
-  return SPEAKER_OUT.test(text)
+  return SPEAKER_OUT.test(text) || SPEAKER_OUT_INDIC.test(text.normalize('NFC'))
 }
 
 /**
@@ -204,12 +266,15 @@ export function excludesSpeaker(text: string): boolean {
 export function speakerTakesPart(text: string): boolean {
   if (excludesSpeaker(text)) return false
   const withoutPaying = text.replace(SPEAKER_PAID, ' ')
-  return FIRST_PERSON.test(withoutPaying) || WITH_SOMEONE.test(withoutPaying)
+  // Spoken (and typed) Indian-language sentences almost always include the speaker.
+  return FIRST_PERSON.test(withoutPaying) || WITH_SOMEONE.test(withoutPaying) || INDIC_LETTER.test(text)
 }
 
 /** Whether the text speaks in the first person at all (a payer of "Me" needs that). */
 export function speaksInFirstPerson(text: string): boolean {
-  return FIRST_PERSON.test(text) || /\b(?:maine|mainne|mene|meine)\b/i.test(text)
+  if (FIRST_PERSON.test(text) || /\b(?:maine|mainne|mene|meine)\b/i.test(text)) return true
+  const nfc = text.normalize('NFC')
+  return FIRST_PERSON_INDIC.test(nfc) || SPEAKER_PAYS_INDIC.test(nfc)
 }
 
 /* ------------------------------------------------------------------ names */
@@ -343,9 +408,10 @@ export function resolveDate(text: string, today: string): string | null | undefi
   if (now === null) return undefined
   const lower = text.toLowerCase()
 
-  if (/\bday\s+before\s+yesterday\b/.test(lower)) return toIso(addDays(now, -2))
-  if (/\byesterday\b|\blast\s+night\b|\bkal\s+raat\b/.test(lower)) return toIso(addDays(now, -1))
-  if (/\b(?:today|tonight|this\s+(?:morning|afternoon|evening))\b|\baaj\b/.test(lower)) return today
+  const nfc = lower.normalize('NFC')
+  if (/\bday\s+before\s+yesterday\b/.test(lower) || DAY_BEFORE_YESTERDAY_INDIC.test(nfc)) return toIso(addDays(now, -2))
+  if (/\byesterday\b|\blast\s+night\b|\bkal\s+raat\b/.test(lower) || YESTERDAY_INDIC.test(nfc)) return toIso(addDays(now, -1))
+  if (/\b(?:today|tonight|this\s+(?:morning|afternoon|evening))\b|\baaj\b/.test(lower) || TODAY_INDIC.test(nfc)) return today
   const ago = DAYS_AGO.exec(lower)
   if (ago?.[1]) {
     const days = /^\d+$/.test(ago[1]) ? Number(ago[1]) : (WORD_NUMBERS[ago[1]] ?? 0)

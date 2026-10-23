@@ -2,6 +2,7 @@
  * What we tell the text model for "Just say it" (`POST /api/describe`). Tuned on live calls:
  * every rule below answers a real way the model got a sentence wrong.
  */
+import type { DescribeSource, VoiceLang } from '../shared/api'
 import { CATEGORY_IDS } from '../shared/categories'
 
 const nullable = (type: 'number' | 'string' | 'integer', description: string) => ({ type: [type, 'null'], description }) as const
@@ -61,6 +62,14 @@ FIELDS
   - "exact": fixed amounts per person ("Riya 500, Sam 700"). Value = that amount; null for anyone whose amount isn't given.
 - date: YYYY-MM-DD only when the message names the day ("yesterday", "last Friday", "on 18 Oct"), worked out from today's date; never after today. Otherwise null.
 
+LANGUAGES
+- Messages can be English, Hinglish (Hindi in Latin letters) or Hindi, Bengali, Marathi, Tamil, Telugu, Kannada or Gujarati in their own script. Spoken messages come from speech recognition: no punctuation, odd spellings.
+- Numbers written in words have already been turned into digits. "k" = thousand, "L"/"lakh" = 100000, "cr"/"crore" = 10000000.
+- "maine diya", "मैंने दिया", "मी दिले", "મેં આપ્યા", "আমি দিয়েছি", "நான் கொடுத்தேன்", "నేను కట్టాను", "ನಾನು ಕೊಟ್ಟೆ" mean the speaker (Me) paid. "<name> ne diya", "<name> ने दिया", "<name> ने दिले" mean that person paid.
+- "ke saath", "के साथ", "सोबत", "સાથે", "সাথে", "உடன்", "తో", "ಜೊತೆ" mean "with".
+- Names: if a name means one of the user's known people, write it exactly as listed. Otherwise write it in Latin letters as an Indian would spell it in English (रिया → Riya, সৌরভ → Sourav).
+- title: always 1–4 English words in Title Case ("Dinner", "Cab", "Groceries", "Movie Tickets").
+
 EXAMPLES
 "Cab 840 with Riya and Sam, Sam pays double" →
 {"isExpense":true,"title":"Cab","category":"transport","amount":840,"currency":null,"payer":null,"mode":"shares","people":[{"name":"Me","value":1},{"name":"Riya","value":1},{"name":"Sam","value":2}],"headcount":null,"date":null}
@@ -70,6 +79,10 @@ EXAMPLES
 {"isExpense":true,"title":"Netflix","category":"subscription","amount":649,"currency":null,"payer":null,"mode":"equal","people":[{"name":"Me","value":null}],"headcount":4,"date":null}
 "paid ₹2,400 for dinner at toit w riya & sam" →
 {"isExpense":true,"title":"Dinner at Toit","category":"food","amount":2400,"currency":"INR","payer":"Me","mode":"equal","people":[{"name":"Me","value":null},{"name":"Riya","value":null},{"name":"Sam","value":null}],"headcount":null,"date":null}
+"2500 का डिनर रिया और सैम के साथ मैंने दिया" →
+{"isExpense":true,"title":"Dinner","category":"food","amount":2500,"currency":null,"payer":"Me","mode":"equal","people":[{"name":"Me","value":null},{"name":"Riya","value":null},{"name":"Sam","value":null}],"headcount":null,"date":null}
+"cab ke 840 teen log Kabir ne diya" →
+{"isExpense":true,"title":"Cab","category":"transport","amount":840,"currency":null,"payer":"Kabir","mode":"equal","people":[{"name":"Me","value":null},{"name":"Kabir","value":null}],"headcount":3,"date":null}
 "what's the weather" →
 {"isExpense":false,"title":"","category":"other","amount":null,"currency":null,"payer":null,"mode":"equal","people":[],"headcount":null,"date":null}
 
@@ -85,12 +98,35 @@ export interface DescribePromptInput {
   people: readonly string[]
   /** YYYY-MM-DD. */
   today: string
+  /** The language it was written or spoken in, when the app knows. */
+  lang?: VoiceLang | null
+  /** How it arrived: typed (default), spoken, or a bank SMS. */
+  source?: DescribeSource | null
 }
 
+/** Language names for the user turn. */
+const LANGUAGE_NAMES: Readonly<Record<VoiceLang, string>> = {
+  'en-IN': 'English',
+  'hi-IN': 'Hindi',
+  'bn-IN': 'Bengali',
+  'mr-IN': 'Marathi',
+  'ta-IN': 'Tamil',
+  'te-IN': 'Telugu',
+  'kn-IN': 'Kannada',
+  'gu-IN': 'Gujarati',
+}
+
+export const SPOKEN_LINE = 'It was spoken and turned into text by speech recognition.'
+export const SMS_LINE =
+  'The message is a bank or UPI alert the user received: the amount is the transaction amount (never a balance or limit), the payer is "Me" for a debit, the title is the merchant or person paid. If it is not a payment (OTP, offer, request, failure), isExpense is false.'
+
 /** The user turn: today's date, the hints, then the message fenced off as data. */
-export function describeUserPrompt({ text, currency, people, today }: DescribePromptInput): string {
+export function describeUserPrompt({ text, currency, people, today, lang, source }: DescribePromptInput): string {
   const weekday = WEEKDAY_NAMES[new Date(`${today}T00:00:00Z`).getUTCDay()] ?? ''
   const lines = [`Today is ${weekday}, ${today}.`]
+  if (lang) lines.push(`The message is in ${LANGUAGE_NAMES[lang]} (${lang}).`)
+  if (source === 'voice') lines.push(SPOKEN_LINE)
+  if (source === 'sms') lines.push(SMS_LINE)
   if (currency) {
     lines.push(`The user's usual currency is ${currency} — only a hint for what "$" or "Rs" mean. A message that names no currency still gets currency null.`)
   }
