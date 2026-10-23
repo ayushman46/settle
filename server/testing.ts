@@ -125,3 +125,25 @@ type LogMock = Mock<(message: string) => void>
 export function silentLogger(): Logger & { info: LogMock; warn: LogMock; error: LogMock } {
   return { info: vi.fn<(message: string) => void>(), warn: vi.fn<(message: string) => void>(), error: vi.fn<(message: string) => void>() }
 }
+
+/** Three business days of the ECB's 90-day file, trimmed to a few currencies (not real rates). */
+export const ECB_XML = `<?xml version="1.0" encoding="UTF-8"?>
+<gesmes:Envelope xmlns:gesmes="http://www.gesmes.org/xml/2002-08-01" xmlns="http://www.ecb.int/vocabulary/2002-08-01/eurofxref">
+  <gesmes:subject>Reference rates</gesmes:subject>
+  <Cube>
+    <Cube time="2026-10-16">
+      <Cube currency="USD" rate="1.0812"/>
+      <Cube currency="JPY" rate="163.42"/>
+      <Cube currency="INR" rate="90.4321"/>
+      <Cube currency="THB" rate="37.512"/>
+    </Cube>
+    <Cube time='2026-10-15'>
+      <Cube currency='USD' rate='1.0799'/>
+      <Cube currency='INR' rate='90.1'/>
+      <Cube currency='BAD' rate='x'/>
+    </Cube>
+    <Cube time="2026-10-14">
+      <Cube currency="USD" rate="1.08"/>
+    </Cube>
+  </Cube>
+</gesmes:Envelope>`

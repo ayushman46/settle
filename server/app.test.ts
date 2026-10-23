@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { ApiErrorBody, ApiErrorCode, DescribeResponse, HealthResponse, ScanResponse } from '../shared/api'
+import type { ApiErrorBody, ApiErrorCode, DescribeResponse, HealthResponse, RatesResponse, ScanResponse } from '../shared/api'
 import { API_LIMITS, LICENSE_HEADER } from '../shared/api'
 import { createApp, DESCRIBE_MESSAGES, ERROR_MESSAGES, loadConfig, type AppOptions } from './app'
 import type { ServerConfig } from './config'
@@ -9,6 +9,7 @@ import { forgetPromptOnlyModels } from './nvidia'
 import {
   BILL,
   chatResponse,
+  ECB_XML,
   errorResponse,
   fromSocket,
   GIF_BYTES_AS_PNG,
@@ -791,5 +792,61 @@ describe('AI allowances — free per address, Pro per license', () => {
     const app = limitedApp({ now: nowMs }, { license: NO_LICENSE_KEYS })
     const response = await postDescribe(app, { text: 'Cab 840' }, { [LICENSE_HEADER]: license('pay_Pro123') })
     expect(response.headers.get('ratelimit-limit')).toBe('2')
+  })
+})
+
+describe('GET /api/rates', () => {
+  const FRI = Date.UTC(2026, 9, 16, 18)
+  const ecb = () => vi.fn(async () => new Response(ECB_XML, { status: 200 }))
+  const ratesApp = (fetchImpl: ReturnType<typeof ecb> | typeof fetch, time = FRI) =>
+    makeApp({}, { now: () => time, fetchImpl: fetchImpl as unknown as typeof fetch })
+  const get = (app: ReturnType<typeof createApp>, query = '', socket = '198.51.100.7') => app.request(`/api/rates${query}`, {}, fromSocket(socket))
+
+  it('answers the newest day with pegs, cached briefly', async () => {
+    const response = await get(ratesApp(ecb()))
+    expect(response.status).toBe(200)
+    expect(response.headers.get('cache-control')).toBe('public, max-age=900')
+    const body = (await response.json()) as RatesResponse
+    expect(body).toMatchObject({ date: '2026-10-16', base: 'EUR', rates: { EUR: 1, USD: 1.0812, INR: 90.4321 }, pegged: { AED: { to: 'USD', peg: 3.6725 } } })
+    expect(logger.info).toHaveBeenCalledWith(expect.stringMatching(/^\[rates\] ok · 2026-10-16 · 4 currencies/))
+  })
+
+  it('answers a past day (weekend → Friday) and lets it be cached for long', async () => {
+    const app = ratesApp(ecb(), Date.UTC(2026, 9, 19, 9))
+    const sunday = await get(app, '?date=2026-10-18')
+    expect(((await sunday.json()) as RatesResponse).date).toBe('2026-10-16')
+    const older = await get(app, '?date=2026-10-15')
+    expect(older.headers.get('cache-control')).toBe('public, max-age=3600, stale-while-revalidate=86400')
+  })
+
+  it('says 400 for a bad date and 503 when there is no rate, never cached', async () => {
+    const app = ratesApp(ecb())
+    const bad = await get(app, '?date=yesterday')
+    expect(bad.status).toBe(400)
+    expect(bad.headers.get('cache-control')).toBe('no-store')
+    const early = await get(app, '?date=2026-01-02')
+    expect(early.status).toBe(503)
+    expect(((await early.json()) as ApiErrorBody).error).toEqual({ code: 'rates_unavailable', message: ERROR_MESSAGES.rates_unavailable })
+    expect(early.headers.get('cache-control')).toBe('no-store')
+  })
+
+  it('is 503 when the ECB cannot be reached and nothing is cached', async () => {
+    const response = await get(ratesApp(vi.fn(async () => { throw new Error('offline') }) as unknown as typeof fetch))
+    expect(response.status).toBe(503)
+  })
+
+  it('allows 60 lookups a minute per client', async () => {
+    const app = ratesApp(ecb())
+    for (let i = 0; i < 60; i++) expect((await get(app)).status).toBe(200)
+    const limited = await get(app)
+    expect(limited.status).toBe(429)
+    expect(limited.headers.get('retry-after')).not.toBeNull()
+    expect((await get(app, '', '198.51.100.8')).status).toBe(200)
+  })
+
+  it('takes GET only', async () => {
+    const response = await ratesApp(ecb()).request('/api/rates', { method: 'POST' }, fromSocket('198.51.100.7'))
+    expect(response.status).toBe(405)
+    expect(response.headers.get('allow')).toBe('GET, HEAD')
   })
 })

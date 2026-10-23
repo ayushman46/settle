@@ -1,5 +1,6 @@
 /**
- * The Settle API: health, AI (`POST /api/scan`, `POST /api/describe`) and Pro billing.
+ * The Settle API: health, AI (`POST /api/scan`, `POST /api/describe`), exchange rates
+ * (`GET /api/rates`) and Pro billing.
  *
  * Used twice: mounted inside the Vite dev server (see vite.config.ts) and wrapped with
  * static file serving for production (see web.ts / index.ts). No database, no sessions —
@@ -27,6 +28,7 @@ import { inspectImage } from './image'
 import { MAX_TOKEN_LENGTH, verifyLicense } from './license'
 import { extractBill, UpstreamError } from './nvidia'
 import { isAcceptableReply, isUsable, normalize, parseExtraction } from './parse'
+import { createRatesSource, ratesCacheControl } from './rates'
 import { clientKey, concurrencyLimit, createRateLimiter, tieredRateLimit, type LimitChoice } from './ratelimit'
 
 export { loadConfig, ERROR_MESSAGES, ERROR_STATUS }
@@ -62,7 +64,13 @@ export interface AppOptions {
   logger?: Logger
   /** Clock for the rate limiters, licenses and timings (tests). */
   now?: () => number
+  /** How the server fetches the ECB's exchange rates (tests inject one). Defaults to `fetch`. */
+  fetchImpl?: typeof fetch
 }
+
+/** `GET /api/rates`: per client, a minute at a time. */
+const RATES_LIMIT = { max: 60, windowMs: 60_000 }
+const RATES_LIMITED = 'Too many rate lookups — try again in a minute, or enter the rate yourself.'
 
 interface Route {
   /** Log prefix. */
@@ -91,9 +99,11 @@ export function createApp(config: ServerConfig, options: AppOptions = {}): Hono 
   let keyRejectedAt: number | null = null
   const aiAvailable = () => config.apiKey !== null && (keyRejectedAt === null || now() - keyRejectedAt >= KEY_REJECTED_MS)
 
-  // API answers are per-request and may describe someone's bill: never cache them.
+  // API answers are per-request and may describe someone's bill: never cache them. Exchange
+  // rates are public and the same for everyone: their own successful answers say how long to keep them.
   app.use('/api/*', async (c, next) => {
     await next()
+    if (c.req.path === '/api/rates' && c.res.status === 200 && c.res.headers.has('Cache-Control')) return
     c.header('Cache-Control', 'no-store')
   })
 
@@ -247,6 +257,26 @@ export function createApp(config: ServerConfig, options: AppOptions = {}): Hono 
     }
   }
 
+  /* ---------------------------------------------------------------- GET /api/rates */
+
+  const rates = createRatesSource({ fetchImpl: options.fetchImpl, now, log })
+  const ratesLimiter = createRateLimiter(RATES_LIMIT, now)
+
+  app.get('/api/rates', async (c) => {
+    const decision = ratesLimiter.hit(clientKey(c, config))
+    if (!decision.allowed) {
+      c.header('Retry-After', String(Math.max(1, Math.ceil((decision.resetAt - now()) / 1000))))
+      return fail(c, 'rate_limited', { message: RATES_LIMITED })
+    }
+    const asked = c.req.query('date')?.trim()
+    const result = await rates.lookup(asked ? asked : null)
+    if (!result.ok) {
+      return result.code === 'bad_request' ? fail(c, 'bad_request', { message: 'Ask for a date as YYYY-MM-DD.' }) : fail(c, 'rates_unavailable')
+    }
+    c.header('Cache-Control', ratesCacheControl(result.newest))
+    return c.json(result.body)
+  })
+
   /* ---------------------------------------------------------------- billing, licenses */
 
   registerBilling(app, { config, log, now, ownPageOnly: guard })
@@ -259,6 +289,10 @@ export function createApp(config: ServerConfig, options: AppOptions = {}): Hono 
       return fail(c, 'bad_request', { status: 405, message: 'Use POST here.' })
     })
   }
+  app.on(['POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'], '/api/rates', (c) => {
+    c.header('Allow', 'GET, HEAD')
+    return fail(c, 'bad_request', { status: 405, message: 'Use GET for exchange rates.' })
+  })
   app.on(['POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'], '/api/health', (c) => {
     c.header('Allow', 'GET, HEAD')
     return fail(c, 'bad_request', { status: 405, message: 'Use GET for the health check.' })
