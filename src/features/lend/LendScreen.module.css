@@ -1,0 +1,169 @@
+.content {
+  gap: var(--s-6);
+}
+
+.gone {
+  align-self: flex-start;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  min-width: 0;
+}
+
+/* ---------- Who? — faces, four to a row ---------- */
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--s-2) var(--s-1);
+  min-width: 0;
+}
+
+.person {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-2);
+  min-width: 0;
+  min-height: var(--tap);
+  padding: var(--s-2) var(--s-1);
+  border-radius: var(--radius-tile);
+  color: var(--ink);
+  transition:
+    transform var(--dur-2) var(--ease-spring),
+    background-color var(--dur-2) var(--ease-out);
+}
+
+.person:active {
+  transform: scale(0.94);
+  transition-duration: var(--dur-1);
+}
+
+@media (hover: hover) {
+  .person:hover {
+    background: var(--surface-2);
+  }
+}
+
+.selected,
+.selected:hover {
+  background: var(--accent-soft);
+}
+
+.personName {
+  max-width: 100%;
+  overflow: hidden;
+  font: var(--text-caption);
+  font-weight: 550;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.selected .personName {
+  color: var(--accent-ink);
+  font-weight: 650;
+}
+
+.moreIcon {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border: 1.5px dashed var(--line-strong);
+  border-radius: 50%;
+  color: var(--ink-2);
+}
+
+.moreIcon svg {
+  width: 22px;
+  height: 22px;
+}
+
+.more .personName {
+  color: var(--ink-2);
+}
+
+/* ---------- What for? ---------- */
+
+.whats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  min-width: 0;
+}
+
+.what {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding-inline: var(--s-3);
+  border-radius: var(--r-pill);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+  color: var(--ink);
+  font: var(--text-label);
+  font-weight: 550;
+  white-space: nowrap;
+  transition:
+    transform var(--dur-2) var(--ease-spring),
+    background-color var(--dur-2) var(--ease-out),
+    box-shadow var(--dur-2) var(--ease-out);
+}
+
+/* 44px touch target around the compact pill. */
+.what::after {
+  content: '';
+  position: absolute;
+  inset: -4px 0;
+}
+
+.what:active {
+  transform: scale(0.95);
+  transition-duration: var(--dur-1);
+}
+
+.whatSelected {
+  background: var(--primary);
+  box-shadow: none;
+  color: var(--on-primary);
+}
+
+.whatEmoji {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+/* ---------- Date · Group ---------- */
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2);
+  min-width: 0;
+}
+
+/* ---------- The ActionBar hint ---------- */
+
+.outcome {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  max-width: 100%;
+  color: var(--ink);
+  font-weight: 550;
+}
+
+.outcomeIcon {
+  flex: none;
+  width: var(--s-4);
+  height: var(--s-4);
+  color: var(--positive);
+}

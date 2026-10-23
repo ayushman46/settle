@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { BellRing, Copy, Pencil, Phone, QrCode, Receipt, Split, UserMinus } from 'lucide-react'
+import { ArrowLeftRight, BellRing, Copy, Pencil, Phone, QrCode, Receipt, Split, UserMinus } from 'lucide-react'
 import { goBack, navigate, Redirect, useRoute } from '../../app/router'
 import {
   ActionBar,
@@ -21,6 +21,7 @@ import {
 import { removeFriend, useExpenses, useFriend, useGroups, useMe, useProfile, useRecurring } from '../../data'
 import { ME_ID, type Friend } from '../../domain/types'
 import { today } from '../../engine/dates'
+import { t } from '../../i18n'
 import { FriendAvatar } from '../../kit/index-a'
 import { ExpenseRow, NudgeSheet, UpiPaySheet } from '../../kit/index-b'
 import { cx } from '../../lib/cx'
@@ -30,6 +31,7 @@ import { copyText } from '../../lib/share'
 import { firstName } from '../../share/text'
 import { GroupEmoji } from '../groups/GroupEmoji'
 import { expensePath, FRIENDS_PATH, groupPath, newSplitPath, settleUpPath, YOU_PATH } from '../groups/paths'
+import { LEND_ENABLED } from '../lend/enabled'
 import {
   blockedText,
   friendBalance,
@@ -158,9 +160,25 @@ function FriendDetail({ friend, onLeaving }: { friend: Friend; onLeaving: (frien
       contentClassName={styles.content}
       footer={
         <ActionBar>
-          <Button block iconStart={<Split />} onClick={() => navigate(newSplitPath({ friend: friend.id }))}>
-            Split with {first}
-          </Button>
+          {LEND_ENABLED ? (
+            <div className={styles.footerRow}>
+              <Button block iconStart={<Split />} onClick={() => navigate(newSplitPath({ friend: friend.id }))}>
+                Split with {first}
+              </Button>
+              <Button
+                variant="secondary"
+                iconStart={<ArrowLeftRight />}
+                className={styles.lend}
+                onClick={() => navigate(`/app/lend?friend=${encodeURIComponent(friend.id)}`)}
+              >
+                {t('lend.friend.cta')}
+              </Button>
+            </div>
+          ) : (
+            <Button block iconStart={<Split />} onClick={() => navigate(newSplitPath({ friend: friend.id }))}>
+              Split with {first}
+            </Button>
+          )}
         </ActionBar>
       }
     >

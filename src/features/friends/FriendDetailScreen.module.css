@@ -267,3 +267,29 @@
     transform: scale(0.85);
   }
 }
+
+/* Split with … and Lend / borrow side by side; stacked on 320px phones. */
+.footerRow {
+  display: flex;
+  gap: var(--s-2);
+  min-width: 0;
+}
+
+.footerRow > :first-child {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.lend {
+  flex: none;
+}
+
+@media (max-width: 359px) {
+  .footerRow {
+    flex-direction: column;
+  }
+
+  .lend {
+    width: 100%;
+  }
+}

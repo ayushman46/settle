@@ -16,6 +16,9 @@ import { currentUrl, GROUP_SCREENS, renderApp, resetScreens, type ScreenTable } 
 import { FriendDetailScreen } from './FriendDetailScreen'
 import { FriendsScreen } from './FriendsScreen'
 
+// Lend / borrow is behind its flag: these journeys see it switched on, as it ships.
+vi.mock('../lend/enabled', () => ({ LEND_ENABLED: true }))
+
 const SCREENS: ScreenTable = { ...GROUP_SCREENS, '/app/friends': FriendsScreen, '/app/friends/:id': FriendDetailScreen }
 const OCT_22 = new Date(2026, 9, 22, 12)
 let riya: string
@@ -69,6 +72,12 @@ describe('FriendDetailScreen — who they are', () => {
     const { user } = open(riya)
     await user.click(screen.getByRole('button', { name: 'Split with Riya' }))
     await waitFor(() => expect(currentUrl()).toBe(`/app/split/new?friend=${riya}`))
+  })
+
+  it('lends or borrows with them in a tap', async () => {
+    const { user } = open(riya)
+    await user.click(screen.getByRole('button', { name: 'Lend / borrow' }))
+    await waitFor(() => expect(currentUrl()).toBe(`/app/lend?friend=${riya}`))
   })
 
   it('sends you to your own page for yourself', async () => {
