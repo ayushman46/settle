@@ -1,3 +1,4 @@
+import { useT } from '../i18n'
 import { cx } from '../lib/cx'
 import styles from './Progress.module.css'
 
@@ -19,9 +20,10 @@ const MAX_DOTS = 12
 
 /** Segmented step progress (`role="progressbar"`). */
 export function Progress({ current, total, label, variant = 'bar', className }: ProgressProps) {
+  const t = useT()
   const count = Math.max(1, Math.floor(Number.isFinite(total) ? total : 1))
   const now = Math.min(count, Math.max(0, Math.round(Number.isFinite(current) ? current : 0)))
-  const text = label ?? `Step ${now} of ${count}`
+  const text = label ?? t('ui.progress.step', { current: now, total: count })
   const dots = variant === 'dots' && count <= MAX_DOTS
   return (
     <div

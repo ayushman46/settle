@@ -1,4 +1,5 @@
 import type { MouseEvent, ReactNode } from 'react'
+import { t, useT } from '../i18n'
 import { cx } from '../lib/cx'
 import { haptic } from '../lib/haptics'
 import { isPlainLeftClick } from './links'
@@ -26,8 +27,8 @@ export interface TabBarProps {
 }
 
 function badgeText(badge: number | boolean | undefined): string | null {
-  if (badge === true) return 'new'
-  if (typeof badge === 'number' && Number.isFinite(badge) && badge > 0) return `${Math.floor(badge)} new`
+  if (badge === true) return t('ui.badge.new')
+  if (typeof badge === 'number' && Number.isFinite(badge) && badge > 0) return t('ui.badge.count', { count: Math.floor(badge) })
   return null
 }
 
@@ -45,7 +46,8 @@ function prefersReducedMotion(): boolean {
  * `aria-current="page"`, and tapping it again scrolls back to the top. Renders an in-flow spacer
  * so content never ends up underneath it. Hides while typing on touch screens.
  */
-export function TabBar({ items, activeKey, onNavigate, ariaLabel = 'Main', className }: TabBarProps) {
+export function TabBar({ items, activeKey, onNavigate, ariaLabel, className }: TabBarProps) {
+  useT()
   const onClick = (event: MouseEvent<HTMLAnchorElement>, item: TabBarItem): void => {
     if (!isPlainLeftClick(event)) return
     event.preventDefault()
@@ -60,7 +62,7 @@ export function TabBar({ items, activeKey, onNavigate, ariaLabel = 'Main', class
   return (
     <>
       <div className={styles.spacer} aria-hidden="true" />
-      <nav aria-label={ariaLabel} className={cx(styles.bar, className)} data-tabbar="" data-toast-anchor="">
+      <nav aria-label={ariaLabel ?? t('ui.tabBar.aria')} className={cx(styles.bar, className)} data-tabbar="" data-toast-anchor="">
         <ul role="list" className={styles.list}>
           {items.map((item) => {
             const active = item.key === activeKey

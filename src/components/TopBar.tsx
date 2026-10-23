@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { ChevronLeft } from 'lucide-react'
+import { useT } from '../i18n'
 import { cx } from '../lib/cx'
 import { IconButton } from './IconButton'
 import { Progress } from './Progress'
@@ -20,13 +21,14 @@ export interface TopBarProps {
 }
 
 /** Screen header: back · title · action, with optional step progress. */
-export function TopBar({ onBack, backLabel = 'Back', title, right, progress, className }: TopBarProps) {
+export function TopBar({ onBack, backLabel, title, right, progress, className }: TopBarProps) {
+  const t = useT()
   return (
     <header className={cx(styles.bar, className)}>
       <div className={styles.row}>
         <div className={styles.start}>
           {onBack && (
-            <IconButton label={backLabel} onClick={onBack}>
+            <IconButton label={backLabel ?? t('common.action.back')} onClick={onBack}>
               <ChevronLeft strokeWidth={2.25} />
             </IconButton>
           )}

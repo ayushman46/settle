@@ -1,4 +1,5 @@
 /** Pure maths behind DonutChart and BarChart (kept apart so it's easy to test and component files only export components). */
+import { t } from '../i18n'
 
 /**
  * Whole percentages that always add up to exactly 100 (largest remainder), so a legend never
@@ -62,12 +63,12 @@ export function donutSegments(values: readonly number[], capUnits: number, gapUn
 /** "Food 42%, Travel 30% and 2 more" — a short spoken summary of the biggest parts. */
 export function summarize(parts: ReadonlyArray<{ label: string; percent: number }>, shown = 3): string {
   const sorted = [...parts].filter((p) => p.percent > 0).sort((a, b) => b.percent - a.percent)
-  if (sorted.length === 0) return 'No data'
+  if (sorted.length === 0) return t('ui.chart.summary.empty')
   const head = sorted.slice(0, shown).map((p) => `${p.label} ${p.percent}%`)
   const rest = sorted.length - head.length
-  if (rest > 0) return `${head.join(', ')} and ${rest} more`
+  if (rest > 0) return t('ui.chart.summary.more', { list: head.join(', '), count: rest })
   if (head.length === 1) return head[0] ?? ''
-  return `${head.slice(0, -1).join(', ')} and ${head[head.length - 1] ?? ''}`
+  return t('ui.list.last', { list: head.slice(0, -1).join(', '), last: head[head.length - 1] ?? '' })
 }
 
 /** Bar heights as fractions of the tallest bar (0..1); a non-zero bar is never thinner than `min`. */

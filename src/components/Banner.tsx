@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { CircleAlert, CircleCheck, Info, TriangleAlert, X } from 'lucide-react'
+import { useT } from '../i18n'
 import { cx } from '../lib/cx'
 import styles from './Banner.module.css'
 
@@ -37,6 +38,7 @@ const ICONS: Record<BannerTone, ReactNode> = {
  * polite `role="status"` regions.
  */
 export function Banner({ tone = 'info', title, children, onDismiss, action, actions, icon, className }: BannerProps) {
+  const t = useT()
   const glyph = icon === undefined ? ICONS[tone] : icon
   return (
     <div role={tone === 'error' ? 'alert' : 'status'} className={cx(styles.banner, styles[tone], className)}>
@@ -60,7 +62,7 @@ export function Banner({ tone = 'info', title, children, onDismiss, action, acti
         )}
       </div>
       {onDismiss != null && (
-        <button type="button" className={styles.dismiss} aria-label="Dismiss" onClick={onDismiss}>
+        <button type="button" className={styles.dismiss} aria-label={t('ui.banner.dismiss.aria')} onClick={onDismiss}>
           <X aria-hidden="true" strokeWidth={2.25} />
         </button>
       )}

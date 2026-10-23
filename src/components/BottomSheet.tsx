@@ -11,6 +11,7 @@ import {
 } from 'react'
 import { createPortal } from 'react-dom'
 import { X } from 'lucide-react'
+import { useT } from '../i18n'
 import { cx } from '../lib/cx'
 import { useBackClose } from '../state/backStack'
 import { IconButton } from './IconButton'
@@ -156,6 +157,7 @@ function SheetFrame({
   className,
   bodyClassName,
 }: BottomSheetProps & { onExited: () => void; dismissible: boolean }) {
+  const t = useT()
   const rootRef = useRef<HTMLDivElement>(null)
   const panelRef = useRef<HTMLDivElement>(null)
   const bodyRef = useRef<HTMLDivElement>(null)
@@ -559,7 +561,7 @@ function SheetFrame({
             </Freeze>
           </div>
           {showClose && (
-            <IconButton label="Close" size="sm" variant="secondary" className={styles.close} onClick={onClose}>
+            <IconButton label={t('common.action.close')} size="sm" variant="secondary" className={styles.close} onClick={onClose}>
               <X strokeWidth={2.25} />
             </IconButton>
           )}

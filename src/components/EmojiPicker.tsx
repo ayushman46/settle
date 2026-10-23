@@ -1,4 +1,5 @@
 import { useRef, type CSSProperties, type KeyboardEvent } from 'react'
+import { useT } from '../i18n'
 import { cx } from '../lib/cx'
 import { haptic } from '../lib/haptics'
 import { GROUP_EMOJIS } from './emoji'
@@ -20,7 +21,8 @@ export interface EmojiPickerProps {
  * Compact emoji grid (radiogroup): tap to pick; arrow keys move in two dimensions, Home/End jump
  * to the ends. Only the picked emoji is in the tab order.
  */
-export function EmojiPicker({ value, onChange, options = GROUP_EMOJIS, label = 'Emoji', columns = 6, className }: EmojiPickerProps) {
+export function EmojiPicker({ value, onChange, options = GROUP_EMOJIS, label, columns = 6, className }: EmojiPickerProps) {
+  const t = useT()
   const refs = useRef<Array<HTMLButtonElement | null>>([])
   const unique = Array.from(new Set(options))
   const choices = value !== '' && !unique.includes(value) ? [value, ...unique] : unique
@@ -57,7 +59,7 @@ export function EmojiPicker({ value, onChange, options = GROUP_EMOJIS, label = '
   return (
     <div
       role="radiogroup"
-      aria-label={label}
+      aria-label={label ?? t('ui.emoji.label')}
       className={cx(styles.grid, className)}
       style={{ '--cols': String(cols) } as CSSProperties}
       onKeyDown={onKeyDown}

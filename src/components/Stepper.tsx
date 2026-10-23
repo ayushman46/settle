@@ -1,5 +1,6 @@
 import type { KeyboardEvent, ReactNode } from 'react'
 import { Minus, Plus } from 'lucide-react'
+import { useT } from '../i18n'
 import { cx } from '../lib/cx'
 import { haptic } from '../lib/haptics'
 import styles from './Stepper.module.css'
@@ -41,6 +42,7 @@ export function Stepper({
   disabled = false,
   className,
 }: StepperProps) {
+  const t = useT()
   const current = Number.isFinite(value) ? value : min
   const canDecrease = !disabled && current - step >= min - 1e-9
   const canIncrease = !disabled && current + step <= max + 1e-9
@@ -74,7 +76,7 @@ export function Stepper({
       <button
         type="button"
         className={styles.button}
-        aria-label={`Decrease ${name}`}
+        aria-label={t('ui.stepper.decrease.aria', { name })}
         aria-disabled={!canDecrease || undefined}
         disabled={disabled}
         onClick={() => {
@@ -89,7 +91,7 @@ export function Stepper({
       <button
         type="button"
         className={styles.button}
-        aria-label={`Increase ${name}`}
+        aria-label={t('ui.stepper.increase.aria', { name })}
         aria-disabled={!canIncrease || undefined}
         disabled={disabled}
         onClick={() => {

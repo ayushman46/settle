@@ -1,4 +1,5 @@
 import { useState, type CSSProperties } from 'react'
+import { useT } from '../i18n'
 import { cx } from '../lib/cx'
 import { barHeights } from './chartMath'
 import styles from './BarChart.module.css'
@@ -36,14 +37,16 @@ export interface BarChartProps {
 export function BarChart({
   data,
   formatValue,
-  ariaLabel = 'Bar chart',
-  labelHeader = 'Period',
-  valueHeader = 'Amount',
+  ariaLabel: ariaLabelProp,
+  labelHeader,
+  valueHeader,
   height = 168,
   activeKey,
   onActiveChange,
   className,
 }: BarChartProps) {
+  const t = useT()
+  const ariaLabel = ariaLabelProp ?? t('ui.chart.bar.aria')
   const latest = [...data].reverse().find((d) => d.value > 0)?.key ?? null
   const [picked, setPicked] = useState<string | null>(null)
   const current = activeKey !== undefined ? activeKey : (picked ?? latest)
@@ -52,8 +55,8 @@ export function BarChart({
   const max = data.reduce<BarDatum | null>((best, d) => (d.value > (best?.value ?? 0) ? d : best), null)
   const summary =
     count === 0 || !max
-      ? `${ariaLabel}: no data`
-      : `${ariaLabel}: ${count} ${count === 1 ? 'bar' : 'bars'}, highest ${max.longLabel ?? max.label} at ${formatValue(max.value)}`
+      ? t('ui.chart.bar.summary.empty', { label: ariaLabel })
+      : t('ui.chart.bar.summary', { label: ariaLabel, count, name: max.longLabel ?? max.label, value: formatValue(max.value) })
 
   const pick = (key: string): void => {
     setPicked(key)
@@ -90,8 +93,8 @@ export function BarChart({
         <caption>{ariaLabel}</caption>
         <thead>
           <tr>
-            <th scope="col">{labelHeader}</th>
-            <th scope="col">{valueHeader}</th>
+            <th scope="col">{labelHeader ?? t('ui.chart.bar.period')}</th>
+            <th scope="col">{valueHeader ?? t('ui.chart.bar.amount')}</th>
           </tr>
         </thead>
         <tbody>

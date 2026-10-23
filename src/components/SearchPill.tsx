@@ -1,5 +1,6 @@
 import { useEffect, useId, useState, type ReactNode, type Ref } from 'react'
 import { ArrowUp, Sparkles } from 'lucide-react'
+import { useT } from '../i18n'
 import { cx } from '../lib/cx'
 import { Spinner } from './Spinner'
 import styles from './SearchPill.module.css'
@@ -64,7 +65,7 @@ export function SearchPill({
   asButton = false,
   onClick,
   label,
-  submitLabel = 'Go',
+  submitLabel: submitLabelProp,
   autoFocus,
   maxLength = 500,
   disabled = false,
@@ -72,6 +73,8 @@ export function SearchPill({
   id,
   className,
 }: SearchPillProps) {
+  const t = useT()
+  const submitLabel = submitLabelProp ?? t('ui.search.submit.aria')
   const autoId = useId()
   const fieldId = id ?? `say-${autoId}`
   const hintId = `${fieldId}-hint`

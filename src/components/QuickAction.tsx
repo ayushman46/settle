@@ -1,4 +1,5 @@
 import { Children, type ReactNode } from 'react'
+import { t, useT } from '../i18n'
 import { cx } from '../lib/cx'
 import type { CategoryId } from '../domain/types'
 import { safeCategory } from './categories'
@@ -20,8 +21,8 @@ export interface QuickActionProps {
 }
 
 function badgeLabel(badge: QuickActionProps['badge']): string | null {
-  if (badge === true) return 'new'
-  if (typeof badge === 'number') return Number.isFinite(badge) && badge > 0 ? `${Math.floor(badge)} new` : null
+  if (badge === true) return t('ui.badge.new')
+  if (typeof badge === 'number') return Number.isFinite(badge) && badge > 0 ? t('ui.badge.count', { count: Math.floor(badge) }) : null
   if (typeof badge === 'string' && badge.trim() !== '') return badge.trim()
   return null
 }
@@ -29,6 +30,7 @@ function badgeLabel(badge: QuickActionProps['badge']): string | null {
 /** A colourful round-cornered action tile with its label underneath (payments-app quick actions). */
 export function QuickAction({ icon, label, tone = 'ink', onClick, badge, disabled = false, className }: QuickActionProps) {
   const toneClass = tone === 'accent' || tone === 'ink' ? styles[tone] : styles[safeCategory(tone)]
+  useT()
   const extra = badgeLabel(badge)
   return (
     <button type="button" className={cx(styles.action, className)} disabled={disabled} onClick={onClick}>

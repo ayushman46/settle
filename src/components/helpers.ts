@@ -1,5 +1,6 @@
 /** Small pure helpers shared by design-system components (kept apart so component files only export components). */
 import type { Ref, RefCallback } from 'react'
+import { t } from '../i18n'
 import { AVATAR_COLORS } from '../types'
 
 /** Wraps any integer into the avatar palette (0..AVATAR_COLORS-1); NaN → 0. */
@@ -14,13 +15,13 @@ export function avatarColorIndex(color: number): number {
  * "Aisha, Ben and 3 others" (once there are more than `shown + 1`).
  */
 export function describePeople(names: readonly string[], shown = 2): string {
-  if (names.length === 0) return 'Nobody'
+  if (names.length === 0) return t('ui.list.none')
   if (names.length === 1) return names[0] ?? ''
   if (names.length <= shown + 1) {
-    return `${names.slice(0, -1).join(', ')} and ${names[names.length - 1] ?? ''}`
+    return t('ui.list.last', { list: names.slice(0, -1).join(', '), last: names[names.length - 1] ?? '' })
   }
   const rest = names.length - shown
-  return `${names.slice(0, shown).join(', ')} and ${rest} other${rest === 1 ? '' : 's'}`
+  return t('ui.list.others', { list: names.slice(0, shown).join(', '), count: rest })
 }
 
 /** Combines refs (callback or object) into one callback ref. */

@@ -1,4 +1,5 @@
 import { useState, type CSSProperties, type ReactNode } from 'react'
+import { useT } from '../i18n'
 import { cx } from '../lib/cx'
 import { ARC_UNITS, donutSegments, summarize, wholePercents } from './chartMath'
 import styles from './DonutChart.module.css'
@@ -43,12 +44,14 @@ export function DonutChart({
   centerLabel,
   centerValue,
   formatValue = String,
-  ariaLabel = 'Breakdown',
+  ariaLabel: ariaLabelProp,
   size = 208,
   thickness = 22,
   legend = false,
   className,
 }: DonutChartProps) {
+  const t = useT()
+  const ariaLabel = ariaLabelProp ?? t('ui.chart.donut.aria')
   const [activeKey, setActiveKey] = useState<string | null>(null)
   const values = data.map((d) => d.value)
   const percents = wholePercents(values)
@@ -58,7 +61,7 @@ export function DonutChart({
   const segments = donutSegments(values, toUnits(thickness), toUnits(GAP_PX))
   const active = data.find((d) => d.key === activeKey && d.value > 0) ?? null
   const activeIndex = active ? data.indexOf(active) : -1
-  const summary = `${ariaLabel}: ${summarize(data.map((d, i) => ({ label: d.label, percent: percents[i] ?? 0 })))}`
+  const summary = t('ui.chart.donut.summary', { label: ariaLabel, summary: summarize(data.map((d, i) => ({ label: d.label, percent: percents[i] ?? 0 }))) })
   const toggle = (key: string): void => setActiveKey((current) => (current === key ? null : key))
 
   return (

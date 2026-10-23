@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { Check, CircleAlert, Info, TriangleAlert } from 'lucide-react'
+import { useT } from '../i18n'
 import { cx } from '../lib/cx'
 import { OVERLAY_KEEP_ATTR } from './overlayStack'
 import { DismissToastContext, ToastContext, type ShowToast, type ToastAction, type ToastTone } from './toastContext'
@@ -190,6 +191,7 @@ interface ToastPillProps {
 }
 
 function ToastPill({ item, leaving = false, onDismiss, onPause, onResume }: ToastPillProps) {
+  const t = useT()
   const glyph = GLYPHS[item.tone]
   return (
     <div
@@ -213,7 +215,7 @@ function ToastPill({ item, leaving = false, onDismiss, onPause, onResume }: Toas
           className={styles.action}
           tabIndex={leaving ? -1 : undefined}
           // "Undo: Removed Paneer Tikka" — the button alone ("Undo") wouldn't say what it undoes.
-          aria-label={`${item.action.label}: ${item.message}`}
+          aria-label={t('ui.toast.action.aria', { action: item.action.label, message: item.message })}
           aria-keyshortcuts="Control+Z Meta+Z"
           onClick={() => {
             item.action?.onAction()
