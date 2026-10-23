@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { screen } from '@testing-library/react'
-import { addFriend, createGroup, friendsStore, resetDataForTests } from '../../data'
+import { addFriend, claimsStore, createGroup, expensesStore, friendsStore, resetDataForTests } from '../../data'
+import { CLAIMS_ENABLED } from '../claim/enabled'
 import { ME_ID } from '../../domain/types'
 import { resetFlowHistory } from '../../state/backStack'
 import type { Person, Session, Shares } from '../../types'
@@ -163,5 +164,21 @@ describe('PeopleScreen', () => {
     const { user, probe } = renderScreen(<PeopleScreen />, sampleSession('people'))
     await user.click(screen.getByRole('button', { name: 'Back' }))
     expect(probe.current.step).toBe('paid')
+  })
+})
+
+describe('PeopleScreen — claim link entry', () => {
+  it.runIf(CLAIMS_ENABLED)('saves the bill and starts a claim round from “Let everyone pick their own”', async () => {
+    const riya = friend('Riya')
+    const { user } = renderScreen(<PeopleScreen />, sampleSession('people', { people: [personById(ME_ID)!, riya] }))
+    expect(screen.getByText('Send one link — friends tap what they had on their own phones.')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Let everyone pick their own' }))
+    const [expense] = expensesStore.get()
+    expect(expense?.kind).toBe('bill')
+    expect(expense?.bill?.assignments).toEqual({})
+    const [round] = claimsStore.get()
+    expect(round?.expenseId).toBe(expense?.id)
+    expect(round?.peopleIds).toEqual([ME_ID, riya.id])
+    expect(window.location.pathname).toBe(`/app/claims/${round?.id}`)
   })
 })

@@ -1,7 +1,8 @@
-import { useEffect } from 'react'
+import { useContext, useEffect } from 'react'
 import { ListChecks } from 'lucide-react'
 import { navigate } from '../../app/router'
-import { Button, useToast } from '../../components'
+import { Button } from '../../components'
+import { ToastContext } from '../../components/toastContext'
 import { useClaimRoundForExpense } from '../../data'
 import { roundBoard } from '../../data/claims'
 import type { Expense } from '../../domain/types'
@@ -21,10 +22,11 @@ export interface ClaimStatusCardProps {
  */
 export function ClaimStatusCard({ expense }: ClaimStatusCardProps) {
   const t = useT()
-  const toast = useToast()
+  // Optional: the card also renders where there's no toast host (previews, tests).
+  const toast = useContext(ToastContext)
   const round = useClaimRoundForExpense(expense.id)
 
-  useEffect(() => onClaimStartError((message) => toast(message, { tone: 'error' })), [toast])
+  useEffect(() => (toast ? onClaimStartError((message) => toast(message, { tone: 'error' })) : undefined), [toast])
 
   if (!round || !expense.bill) return null
   const billIds = new Set(expense.bill.items.map((item) => item.id))

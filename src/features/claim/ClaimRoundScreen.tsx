@@ -356,13 +356,13 @@ export function ClaimRoundScreen() {
               return (
                 <ListRow
                   key={item.id}
-                  aria-label={view.needsYou ? t('claim.board.rowNeedsYou', { name: item.name, status: view.label }) : t('claim.board.rowLabel', { name: item.name, status: view.label })}
                   leading={<Icon aria-hidden="true" className={styles[`icon_${view.tone}`]} strokeWidth={2.25} />}
                   title={item.name}
                   subtitle={
                     <>
                       <span className={styles[`status_${view.tone}`]}>{view.label}</span>
                       {sub && <span> · {sub}</span>}
+                      {view.needsYou && <span className="visually-hidden">, {t('claim.board.needsYou')}</span>}
                     </>
                   }
                   trailing={<span className={styles.amount}>{money(item.amount, currency)}</span>}

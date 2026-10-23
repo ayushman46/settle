@@ -47,8 +47,9 @@ export function ShareTotal({ share, itemsPart, currency, unknown, organiser }: S
           {t('claim.page.yourShare')}
         </h2>
         {!unknown && (
-          <p className={styles.amount} aria-label={label}>
-            {amount}
+          <p className={styles.amount}>
+            <span className="visually-hidden">{label}</span>
+            <span aria-hidden="true">{amount}</span>
           </p>
         )}
       </div>

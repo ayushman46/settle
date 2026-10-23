@@ -42,6 +42,7 @@ function SharedBetween({ value, onChange, label, disabled }: { value: number; on
         {QUICK_SHARES.map((n) => (
           <Chip
             key={n}
+            className={styles.chip}
             selected={!more && value === n}
             disabled={disabled}
             onClick={() => {
@@ -53,6 +54,7 @@ function SharedBetween({ value, onChange, label, disabled }: { value: number; on
           </Chip>
         ))}
         <Chip
+          className={styles.chip}
           selected={more}
           disabled={disabled}
           onClick={() => {

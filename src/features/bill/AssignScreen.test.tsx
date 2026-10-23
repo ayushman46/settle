@@ -2,7 +2,11 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { screen, within } from '@testing-library/react'
 import { resetFlowHistory } from '../../state/backStack'
 import type { Session } from '../../types'
+import { addFriend, claimsStore, resetDataForTests } from '../../data'
+import { ME_ID } from '../../domain/types'
+import { CLAIMS_ENABLED } from '../claim/enabled'
 import { AssignScreen } from './AssignScreen'
+import { personById, personFor } from './billPeople'
 import { AISHA, assignAll, BEN, CHEN, historyIdle, renderScreen, sampleSession } from './screenTestKit'
 
 /** Sample bill, three people, nothing assigned (unless `assigned` says which items are). */
@@ -275,5 +279,27 @@ describe('AssignScreen', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Add people' }))
     expect(probe.current.step).toBe('people')
+  })
+})
+
+describe('AssignScreen — claim link entry', () => {
+  it.runIf(CLAIMS_ENABLED)('offers a claim link while items are unassigned, with sorted items kept', async () => {
+    resetDataForTests()
+    const riya = personFor(addFriend({ name: 'Riya' }))
+    const me = personById(ME_ID)!
+    const session = sampleSession('assign', { people: [me, riya] })
+    const first = session.items[0]!
+    const { user } = renderScreen(<AssignScreen />, { ...session, assignments: { [first.id]: { [riya.id]: 1 } } })
+    await user.keyboard('{Escape}')
+    expect(screen.getByText('Rather let them pick? Send a claim link')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Send link' }))
+    const [round] = claimsStore.get()
+    expect(round?.fixedItemIds).toEqual([first.id])
+    resetDataForTests()
+  })
+
+  it.runIf(CLAIMS_ENABLED)('hides the claim link once everything is assigned', () => {
+    renderScreen(<AssignScreen />, assignSession(() => true))
+    expect(screen.queryByText('Rather let them pick? Send a claim link')).toBeNull()
   })
 })
