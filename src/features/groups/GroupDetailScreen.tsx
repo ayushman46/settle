@@ -47,6 +47,9 @@ import { GroupEmoji } from './GroupEmoji'
 import { GroupGone } from './GroupGone'
 import { GroupShareSheet } from './GroupShareSheet'
 import { EditGroupSheet } from './GroupSheets'
+import { NextRoundCard } from './NextRoundCard'
+import { ROTATION_ENABLED } from './rotation.enabled'
+import { RotationSheet } from './RotationSheet'
 import {
   groupStanding,
   groupTimeline,
@@ -79,7 +82,7 @@ function tabFrom(value: string | null): Tab {
   return value === 'balances' || value === 'totals' ? value : 'expenses'
 }
 
-type Sheet = 'menu' | 'details' | 'members' | 'share' | 'delete'
+type Sheet = 'menu' | 'details' | 'members' | 'share' | 'delete' | 'rotation'
 
 /**
  * `/app/groups/:id` — one group: who's in and where you stand, then its expenses and recorded
@@ -178,6 +181,8 @@ function GroupDetail({ group, onLeaving }: { group: Group; onLeaving: (group: Gr
 
       <StandingCard group={group} standing={standing} onShare={() => setSheet('share')} />
 
+      {ROTATION_ENABLED && <NextRoundCard group={group} expenses={expenses} onPlan={() => setSheet('rotation')} />}
+
       <SegmentedControl options={TABS} value={tab} onChange={setTab} ariaLabel="Show" className={styles.tabs} />
 
       <div className={styles.panel} role="region" aria-label={TAB_LABELS[tab]}>
@@ -198,6 +203,7 @@ function GroupDetail({ group, onLeaving }: { group: Group; onLeaving: (group: Gr
       <GroupShareSheet group={group} open={sheet === 'share'} onClose={() => setSheet(null)} />
       <DeleteSheet group={group} count={expenses.length} open={sheet === 'delete'} onClose={() => setSheet(null)} onConfirm={remove} />
       <PaymentSheet group={group} settlement={payment} friendsById={friendsById} onClose={() => setPayment(null)} />
+      {ROTATION_ENABLED && <RotationSheet group={group} expenses={expenses} open={sheet === 'rotation'} onClose={() => setSheet(null)} />}
     </Screen>
   )
 }

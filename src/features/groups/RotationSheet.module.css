@@ -1,0 +1,148 @@
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+  min-width: 0;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--s-1);
+}
+
+.field > :first-child {
+  align-self: stretch;
+}
+
+.reset {
+  margin-inline-start: calc(-1 * var(--s-2));
+}
+
+/* ---------- The rounds ---------- */
+
+.rounds {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.round {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  min-height: 64px;
+  padding: var(--s-3) var(--s-4);
+  animation: slide var(--dur-3) var(--ease-out) backwards;
+}
+
+.round + .round {
+  border-top: 1px solid var(--line);
+}
+
+.round:nth-child(2) {
+  animation-delay: 40ms;
+}
+
+.round:nth-child(3) {
+  animation-delay: 80ms;
+}
+
+.round:nth-child(n + 4) {
+  animation-delay: 120ms;
+}
+
+.roundText {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.roundTitle {
+  font: var(--text-label);
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.roundSub {
+  font: var(--text-caption);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-2);
+}
+
+.settles {
+  flex: none;
+  padding: 4px var(--s-2);
+  border-radius: var(--r-pill);
+  background: var(--positive-soft);
+  font: var(--text-micro);
+  font-variant-numeric: tabular-nums;
+  color: var(--positive);
+  white-space: nowrap;
+}
+
+/* ---------- After the rounds ---------- */
+
+.square {
+  padding: var(--s-3) var(--s-4);
+  border-radius: var(--r-lg);
+  background: var(--accent-soft);
+  font: var(--text-label);
+  color: var(--accent-ink);
+  text-align: center;
+}
+
+.finish {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+.finishLine {
+  padding-inline: var(--s-1);
+  font: var(--text-label);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-2);
+}
+
+.transfers {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+/* ---------- Nothing helps ---------- */
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-2);
+  padding: var(--s-6) var(--s-4);
+  border-radius: var(--r-lg);
+  background: var(--surface-2);
+  text-align: center;
+}
+
+.emptyTitle {
+  font: var(--text-section);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.emptyBody {
+  margin-bottom: var(--s-2);
+  font: var(--text-body);
+  color: var(--ink-2);
+}
+
+@keyframes slide {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
