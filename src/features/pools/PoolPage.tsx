@@ -216,7 +216,7 @@ function Collection({ payload }: { payload: PoolLinkPayload }) {
             {payload.p.map((person, index) => (
               <li key={index}>
                 <button type="button" className={styles.name} onClick={() => pickListed(index)}>
-                  <span className={styles.nameText}>{person.n}</span>
+                  <span className={styles.nameText}>{person.n}</span>{' '}
                   {person.ok === 1 && (
                     <span className={styles.chipped}>
                       <Check aria-hidden="true" />
@@ -353,23 +353,22 @@ function Collection({ payload }: { payload: PoolLinkPayload }) {
           </label>
 
           <div className={styles.tell}>
-            <a
-              className={styles.tellPrimary}
-              href={tellText ? whatsappUrl(tellText, payload.to.ph) : undefined}
-              aria-disabled={!tellText}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={(event) => {
-                if (!tellText) {
-                  event.preventDefault()
-                  return
-                }
-                tellDone()
-              }}
-            >
-              <MessageCircle aria-hidden="true" strokeWidth={2.25} />
-              {t('pools.page.tell', { name: organiser })}
-            </a>
+            {tellText ? (
+              <a
+                className={styles.tellPrimary}
+                href={whatsappUrl(tellText, payload.to.ph)}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={tellDone}
+              >
+                <MessageCircle aria-hidden="true" strokeWidth={2.25} />
+                {t('pools.page.tell', { name: organiser })}
+              </a>
+            ) : (
+              <Button block disabled iconStart={<MessageCircle />}>
+                {t('pools.page.tell', { name: organiser })}
+              </Button>
+            )}
             <div className={styles.tellMore}>
               <Button
                 variant="secondary"

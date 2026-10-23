@@ -44,7 +44,7 @@ function PoolLine({ pool }: { pool: Pool }) {
         {pool.emoji}
       </span>
       <span className={styles.text}>
-        <span className={styles.title}>{pool.title}</span>
+        <span className={styles.title}>{pool.title}</span>{' '}
         <span className={styles.line}>{line}</span>
         {width !== null && (
           <span className={styles.bar} aria-hidden="true">

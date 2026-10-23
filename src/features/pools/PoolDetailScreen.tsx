@@ -471,7 +471,7 @@ function PersonListRow({ pool, row, onOpen, onRemind, onTick }: PersonListRowPro
       <button type="button" className={styles.personMain} onClick={onOpen}>
         {avatar}
         <span className={styles.personText}>
-          <span className={styles.personName}>{row.name}</span>
+          <span className={styles.personName}>{row.name}</span>{' '}
           <span className={styles.line}>{row.line}</span>
         </span>
       </button>
