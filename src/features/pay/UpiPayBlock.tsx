@@ -3,6 +3,7 @@ import { Check, Copy, ExternalLink, QrCode as QrIcon, ShieldCheck } from 'lucide
 import { Avatar, Button, QrCode } from '../../components'
 import type { Minor } from '../../domain/types'
 import { BRAND } from '../../domain/types'
+import { tx, useT } from '../../i18n'
 import { haptic } from '../../lib/haptics'
 import { formatMoney } from '../../lib/money'
 import { copyText } from '../../lib/share'
@@ -36,6 +37,7 @@ export interface UpiPayBlockProps {
  * pay, claim and pool pages.
  */
 export function UpiPayBlock({ payeeName, vpa, amount, note, currency, color }: UpiPayBlockProps) {
+  const t = useT()
   const touch = useTouchFirst()
   const [qrOnTouch, setQrOnTouch] = useState(false)
   const [copied, setCopied] = useState<'idle' | 'done' | 'failed'>('idle')
@@ -60,28 +62,28 @@ export function UpiPayBlock({ payeeName, vpa, amount, note, currency, color }: U
       {touch && (
         <>
           <a href={uri} className={ctaClassName({ block: true })} onClick={() => haptic('tap')}>
-            <span>Pay {money} with any UPI app</span>
+            <span>{t('pay.upi.cta', { amount: money })}</span>
             <span className={ctaParts.iconEnd} aria-hidden="true">
               <ExternalLink strokeWidth={2.25} />
             </span>
           </a>
-          <p className={styles.caption}>Opens GPay, PhonePe, Paytm or BHIM with everything filled in.</p>
+          <p className={styles.caption}>{t('pay.upi.cta.caption')}</p>
           <Button variant="ghost" size="md" iconStart={<QrIcon />} aria-expanded={qrOnTouch} onClick={() => setQrOnTouch((open) => !open)}>
-            {qrOnTouch ? 'Hide the QR code' : 'Pay from another phone'}
+            {qrOnTouch ? t('pay.upi.qr.hide.cta') : t('pay.upi.qr.show.cta')}
           </Button>
         </>
       )}
       {showQr && (
         <div className={styles.qr}>
-          <QrCode value={uri} size={224} label={`UPI QR code to pay ${money} to ${payeeName}`} />
+          <QrCode value={uri} size={224} label={t('pay.upi.qr.aria', { amount: money, name: payeeName })} />
           <p className={styles.caption}>
-            {touch ? 'Scan it with the UPI app on the other phone.' : 'Scan with any UPI app on your phone — GPay, PhonePe, Paytm, BHIM.'}
+            {touch ? t('pay.upi.qr.caption.touch') : t('pay.upi.qr.caption.desktop')}
           </p>
         </div>
       )}
 
       <div className={styles.payee}>
-        <p className={styles.payeeLabel}>Paying to</p>
+        <p className={styles.payeeLabel}>{t('pay.upi.payee.label')}</p>
         <div className={styles.payeeRow}>
           <Avatar name={payeeName} color={color} size="md" />
           <div className={styles.payeeText}>
@@ -92,22 +94,20 @@ export function UpiPayBlock({ payeeName, vpa, amount, note, currency, color }: U
             variant="tonal"
             size="sm"
             iconStart={copied === 'done' ? <Check /> : <Copy />}
-            aria-label={copied === 'done' ? 'Copied UPI ID' : 'Copy UPI ID'}
+            aria-label={copied === 'done' ? t('pay.upi.copied.aria') : t('pay.upi.copy.aria')}
             onClick={copy}
           >
-            {copied === 'done' ? 'Copied' : 'Copy'}
+            {copied === 'done' ? t('pay.upi.copied.cta') : t('pay.upi.copy.cta')}
           </Button>
         </div>
-        {copied === 'failed' && <p className={styles.copyFailed}>Couldn’t copy — press and hold the ID to copy it.</p>}
+        {copied === 'failed' && <p className={styles.copyFailed}>{t('pay.upi.copy.error')}</p>}
         <p className={styles.safety}>
           <ShieldCheck aria-hidden="true" strokeWidth={2.25} />
-          <span>
-            Check that your UPI app shows <strong>{payeeName}</strong> before you pay. {BRAND.name} never touches your money.
-          </span>
+          <span>{tx('pay.upi.safety', { name: payeeName, brand: BRAND.name }, { b: (chunk) => <strong>{chunk}</strong> })}</span>
         </p>
       </div>
       <p className="visually-hidden" role="status">
-        {copied === 'done' ? 'UPI ID copied' : ''}
+        {copied === 'done' ? t('pay.upi.copied.status') : ''}
       </p>
     </div>
   )

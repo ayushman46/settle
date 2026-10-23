@@ -1,5 +1,6 @@
 import { Check, ChevronRight } from 'lucide-react'
 import { Avatar, Badge, Money } from '../../components'
+import { useT } from '../../i18n'
 import { haptic } from '../../lib/haptics'
 import type { PayPerson } from './payView'
 import styles from './WhoAreYou.module.css'
@@ -15,16 +16,17 @@ export interface WhoAreYouProps {
  * carries `data-person={index}`, so focus can return to it after "Not you?".
  */
 export function WhoAreYou({ people, currency, onPick }: WhoAreYouProps) {
+  const t = useT()
   return (
     <section className={styles.who} aria-labelledby="pay-who-title">
       <h2 id="pay-who-title" className={styles.title}>
-        Which one are you?
+        {t('pay.who.title')}
       </h2>
       {people.length === 0 ? (
-        <p className={styles.hint}>Nobody owes anything on this link.</p>
+        <p className={styles.hint}>{t('pay.who.empty')}</p>
       ) : (
         <>
-          <p className={styles.hint}>Tap your name to see your share and pay.</p>
+          <p className={styles.hint}>{t('pay.who.hint')}</p>
           <ul className={styles.list} role="list">
             {people.map((person) => (
               <li key={person.index}>
@@ -41,7 +43,7 @@ export function WhoAreYou({ people, currency, onPick }: WhoAreYouProps) {
                   <span className={styles.name}>{person.name}</span>
                   {person.paid ? (
                     <Badge tone="positive" icon={<Check strokeWidth={3} />}>
-                      Paid
+                      {t('pay.who.paid')}
                     </Badge>
                   ) : (
                     <Money value={person.amount} currency={currency} trimZeros strong className={styles.amount} />

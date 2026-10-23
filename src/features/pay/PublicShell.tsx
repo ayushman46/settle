@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { ArrowRight, Link2Off } from 'lucide-react'
 import { Link } from '../../app/router'
 import { BRAND } from '../../domain/types'
+import { useT } from '../../i18n'
 import { BrandMark } from '../landing/BrandMark'
 import { CtaLink } from '../landing/CtaLink'
 import styles from './PublicShell.module.css'
@@ -18,15 +19,17 @@ export interface PublicShellProps {
  * never read or write the app's data, and onboarding never runs on them.
  */
 export function PublicShell({ children, pitch = true }: PublicShellProps) {
+  const t = useT()
+  const brand = BRAND.name
   return (
     <div className={styles.page}>
       <header className={styles.bar}>
         <div className={styles.barInner}>
-          <Link to="/" className={styles.brand} aria-label={`${BRAND.name} home`}>
+          <Link to="/" className={styles.brand} aria-label={t('pay.shell.home.aria', { brand })}>
             <BrandMark size="sm" />
           </Link>
           <Link to="/" className={styles.what}>
-            What’s {BRAND.name}?
+            {t('pay.shell.what', { brand })}
           </Link>
         </div>
       </header>
@@ -37,11 +40,11 @@ export function PublicShell({ children, pitch = true }: PublicShellProps) {
         {pitch && (
           <aside className={styles.pitch} aria-labelledby="public-pitch-title">
             <p id="public-pitch-title" className={styles.pitchTitle}>
-              Splitting the bill next time?
+              {t('pay.shell.pitch.title')}
             </p>
-            <p className={styles.pitchText}>Snap the bill, share one link like this, and get paid back by UPI. No sign-up, no ads.</p>
+            <p className={styles.pitchText}>{t('pay.shell.pitch.body')}</p>
             <CtaLink to="/" variant="accent" size="md" block iconEnd={<ArrowRight strokeWidth={2.25} />}>
-              Split your own bills with {BRAND.name} — free
+              {t('pay.shell.pitch.cta', { brand })}
             </CtaLink>
           </aside>
         )}
@@ -49,11 +52,11 @@ export function PublicShell({ children, pitch = true }: PublicShellProps) {
 
       <footer className={styles.footer}>
         <Link to="/privacy" className={styles.footerLink}>
-          Privacy
+          {t('pay.shell.privacy')}
         </Link>
         <span aria-hidden="true">·</span>
         <Link to="/terms" className={styles.footerLink}>
-          Terms
+          {t('pay.shell.terms')}
         </Link>
       </footer>
     </div>

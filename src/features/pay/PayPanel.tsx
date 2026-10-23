@@ -10,6 +10,7 @@ import {
   ReceiptRow,
   SuccessCheck,
 } from '../../components'
+import { useLang, useT } from '../../i18n'
 import { amountInWords } from '../../kit/amountWords'
 import { haptic } from '../../lib/haptics'
 import { formatMoney } from '../../lib/money'
@@ -34,11 +35,14 @@ export interface PayPanelProps {
  * a QR code from a computer, or the payee's UPI ID); who the money goes to; and what's in it.
  */
 export function PayPanel({ payload, person, onChangePerson, headingRef }: PayPanelProps) {
+  const t = useT()
+  const lang = useLang()
   const headingId = useId()
   const [reveal, setReveal] = useState(false)
   const option = payOption(payload, person.index)
   const breakdown = itemBreakdown(payload, person.index)
-  const words = amountInWords(person.amount, payload.c)
+  // The amount in English words reads as noise in any other language (i18n-plan §7).
+  const words = lang === 'en' ? amountInWords(person.amount, payload.c) : null
   const showPayment = !person.paid || reveal
 
   return (
@@ -46,7 +50,7 @@ export function PayPanel({ payload, person, onChangePerson, headingRef }: PayPan
       {onChangePerson && (
         <button type="button" className={styles.change} onClick={onChangePerson}>
           <ChevronLeft aria-hidden="true" strokeWidth={2.5} />
-          Not {person.name}? Pick your name
+          {t('pay.panel.notYou.cta', { name: person.name })}
         </button>
       )}
 
@@ -59,7 +63,7 @@ export function PayPanel({ payload, person, onChangePerson, headingRef }: PayPan
           <Avatar name={payload.to.n} color={payeeColor(payload)} size="lg" />
         </div>
         <h2 id={headingId} ref={headingRef} tabIndex={-1} className={styles.heading}>
-          {person.name}’s share
+          {t('pay.panel.share.title', { name: person.name })}
         </h2>
         <Money value={person.amount} currency={payload.c} size="xl" trimZeros className={styles.amount} />
         {words && <p className={styles.words}>{words}</p>}
@@ -69,12 +73,12 @@ export function PayPanel({ payload, person, onChangePerson, headingRef }: PayPan
         <div className={styles.paid}>
           <SuccessCheck size="md" />
           <div>
-            <p className={styles.paidTitle}>You’re all square</p>
-            <p className={styles.paidText}>{payload.to.n} has marked your share as paid.</p>
+            <p className={styles.paidTitle}>{t('pay.panel.paid.title')}</p>
+            <p className={styles.paidText}>{t('pay.panel.paid.body', { name: payload.to.n })}</p>
           </div>
           {option.kind === 'upi' && (
             <Button variant="ghost" size="md" onClick={() => setReveal(true)} className={styles.reveal}>
-              Show payment details anyway
+              {t('pay.panel.reveal.cta')}
             </Button>
           )}
         </div>
@@ -82,18 +86,18 @@ export function PayPanel({ payload, person, onChangePerson, headingRef }: PayPan
 
       {showPayment && option.kind === 'upi' && <UpiPay payload={payload} request={option.request} />}
       {showPayment && option.kind === 'nothing' && (
-        <Banner tone="success" title="Nothing to pay">
-          Your share of this one is {formatMoney(0, payload.c, { trimZeros: true })}.
+        <Banner tone="success" title={t('pay.panel.nothing.title')}>
+          {t('pay.panel.nothing.body', { amount: formatMoney(0, payload.c, { trimZeros: true }) })}
         </Banner>
       )}
       {showPayment && option.kind === 'no_upi' && (
-        <Banner tone="info" title={`${payload.to.n} didn’t add a UPI ID`}>
-          Pay them the way you usually do — or ask for their UPI ID and pay from any UPI app.
+        <Banner tone="info" title={t('pay.panel.noUpi.title', { name: payload.to.n })}>
+          {t('pay.panel.noUpi.body')}
         </Banner>
       )}
       {showPayment && option.kind === 'not_inr' && (
-        <Banner tone="info" title="Pay the usual way">
-          UPI only works in rupees, so pay {payload.to.n} the way you usually do.
+        <Banner tone="info" title={t('pay.panel.notInr.title')}>
+          {t('pay.panel.notInr.body', { name: payload.to.n })}
         </Banner>
       )}
 
@@ -102,7 +106,7 @@ export function PayPanel({ payload, person, onChangePerson, headingRef }: PayPan
       {breakdown && (
         <section className={styles.breakdown} aria-labelledby={`${headingId}-items`}>
           <h3 id={`${headingId}-items`} className={styles.breakdownTitle}>
-            What’s in your share
+            {t('pay.panel.breakdown.title')}
           </h3>
           <Receipt>
             {breakdown.lines.map((line, i) => (
@@ -126,7 +130,7 @@ export function PayPanel({ payload, person, onChangePerson, headingRef }: PayPan
             )}
             <ReceiptDivider />
             <ReceiptRow
-              label="Your share"
+              label={t('pay.panel.breakdown.share')}
               value={<Money value={breakdown.share} currency={payload.c} strong />}
               emphasis="strong"
             />
@@ -144,6 +148,7 @@ function UpiPay({ payload, request }: { payload: PayLinkPayload; request: PayLin
 
 /** "Paid? Let them know" — a ready message for the group chat (share sheet on phones, clipboard elsewhere). */
 function TellThem({ payload, person }: { payload: PayLinkPayload; person: PayPerson }) {
+  const t = useT()
   const [status, setStatus] = useState<'idle' | 'shared' | 'copied' | 'failed'>('idle')
   const send = async () => {
     const outcome = await shareResult(paidMessage(payload, person), { title: payload.t })
@@ -153,14 +158,14 @@ function TellThem({ payload, person }: { payload: PayLinkPayload; person: PayPer
   }
   return (
     <div className={styles.tell}>
-      <p className={styles.tellTitle}>Paid?</p>
+      <p className={styles.tellTitle}>{t('pay.tell.title')}</p>
       <Button variant="secondary" size="md" iconStart={<Send />} onClick={send} block>
-        Tell {firstName(payload.to.n)} you’ve paid
+        {t('pay.tell.cta', { name: firstName(payload.to.n) })}
       </Button>
       <p className={styles.tellStatus} role="status">
-        {status === 'copied' && 'Message copied — paste it in your chat.'}
-        {status === 'shared' && 'Sent. Thanks for settling up!'}
-        {status === 'failed' && 'Couldn’t share the message. Try again.'}
+        {status === 'copied' && t('pay.tell.copied.status')}
+        {status === 'shared' && t('pay.tell.shared.status')}
+        {status === 'failed' && t('pay.tell.failed.status')}
       </p>
     </div>
   )

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useBackClose, useLocation } from '../../app/router'
 import { Skeleton } from '../../components'
 import { BRAND } from '../../domain/types'
+import { useT } from '../../i18n'
 import type { PayLinkPayload } from '../../share/payLink'
 import { usePageMeta } from '../landing/pageMeta'
 import { PayPanel } from './PayPanel'
@@ -80,21 +81,20 @@ function PayRequest({ payload }: { payload: PayLinkPayload }) {
 }
 
 function Problem({ kind }: { kind: 'empty' | 'invalid' }) {
+  const t = useT()
   return kind === 'invalid' ? (
-    <PublicProblem
-      title="This pay link doesn’t work"
-      text="It may have been cut short when it was copied. Ask whoever sent it to share it again."
-    />
+    <PublicProblem title={t('pay.problem.invalid.title')} text={t('pay.problem.invalid.body')} />
   ) : (
-    <PublicProblem title="No pay link here" text="Open the link your friend shared — it has everything you need to pay them." />
+    <PublicProblem title={t('pay.problem.empty.title')} text={t('pay.problem.empty.body')} />
   )
 }
 
 function Loading() {
+  const t = useT()
   return (
     <div className={styles.loading}>
       <p role="status" className="visually-hidden">
-        Opening the pay link…
+        {t('pay.loading.status')}
       </p>
       <Skeleton shape="md" width={64} height={64} />
       <Skeleton width="50%" height={16} />
@@ -111,12 +111,16 @@ function Loading() {
  * data, and onboarding never runs here.
  */
 export function PayPage() {
+  const t = useT()
   const { hash } = useLocation()
   const link = usePayLink(hash)
+  const brand = BRAND.name
   usePageMeta({
     title:
-      link.status === 'ok' ? `Pay ${link.payload.to.n} · ${link.payload.t} · ${BRAND.name}` : `Pay link · ${BRAND.name}`,
-    description: `Pay your share in a tap with any UPI app. Sent with ${BRAND.name}.`,
+      link.status === 'ok'
+        ? t('pay.meta.title', { name: link.payload.to.n, title: link.payload.t, brand })
+        : t('pay.meta.title.empty', { brand }),
+    description: t('pay.meta.description', { brand }),
     robots: 'noindex',
   })
 

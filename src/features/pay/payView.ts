@@ -3,6 +3,7 @@
  * the bill lines behind a share — worked out from the share kit's pay-link helpers.
  */
 import type { Minor } from '../../domain/types'
+import { t } from '../../i18n'
 import { formatMoney } from '../../lib/money'
 import {
   PAYEE_FALLBACK,
@@ -76,8 +77,8 @@ export interface ItemBreakdown {
 
 function lineDetail(line: PayLinkItemLine): string | null {
   if (line.sharedWith <= 1) return null
-  if (line.totalShares === line.sharedWith) return `Shared ${line.sharedWith} ways`
-  return `${line.shares} of ${line.totalShares} shares`
+  if (line.totalShares === line.sharedWith) return t('pay.breakdown.sharedWays', { count: line.sharedWith })
+  return t('pay.breakdown.shares', { shares: line.shares, total: line.totalShares })
 }
 
 /** The bill lines behind one person's share (itemized bills only), or null when there are none. */
@@ -96,12 +97,13 @@ export function itemBreakdown(payload: PayLinkPayload, index: number): ItemBreak
 
 /** The receipt line for `extras`: what was added on top of the items, or taken off. */
 export function extrasLabel(extras: Minor): string {
-  return extras > 0 ? 'Tax, fees & round-off' : 'Discounts and round-off'
+  return extras > 0 ? t('pay.breakdown.extras.added') : t('pay.breakdown.extras.taken')
 }
 
 /** "Hi Ayush! Just paid you ₹691.50 for Friday dinner ✓" — for the group chat, once they've paid. */
 export function paidMessage(payload: PayLinkPayload, person: Pick<PayPerson, 'amount'>): string {
   const amount = formatMoney(person.amount, payload.c, { trimZeros: true })
-  const greeting = payload.to.n === PAYEE_FALLBACK ? 'Hi!' : `Hi ${firstName(payload.to.n)}!`
-  return `${greeting} Just paid you ${amount} for ${payload.t} ✓`
+  return payload.to.n === PAYEE_FALLBACK
+    ? t('pay.tell.message.noName', { amount, title: payload.t })
+    : t('pay.tell.message', { name: firstName(payload.to.n), amount, title: payload.t })
 }
