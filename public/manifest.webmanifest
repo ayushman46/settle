@@ -30,5 +30,16 @@
       "description": "Split rent, a cab, a subscription — anything",
       "url": "/app/split/new"
     }
-  ]
+  ],
+  "share_target": {
+    "action": "/share-target",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url",
+      "files": [{ "name": "media", "accept": ["image/jpeg", "image/png", "image/webp", "image/heic", "image/*", "text/plain", ".txt"] }]
+    }
+  }
 }

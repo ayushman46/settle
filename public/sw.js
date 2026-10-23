@@ -9,6 +9,9 @@
  * - /assets/* (hashed, immutable build files, including each screen's code-split chunk — the app
  *   preloads the main ones while idle): stale-while-revalidate.
  * - /api/*: never touched — AI, billing and health checks always go to the server.
+ * - POST /share-target (Android's share sheet, see the manifest's share_target): the shared text
+ *   and files are kept in the `settle-share` cache for an hour and the app opens /app/share?k=<id>
+ *   to read them (src/lib/sharedPayload.ts).
  *
  * It fails open: Cache Storage can be broken or full (damaged profiles, quota, some private
  * modes), so every cache step is best effort, cache writes never hold up a response, and if
@@ -16,9 +19,20 @@
  *
  * Registered from src/main.tsx in production builds only. Bump VERSION to drop old caches.
  */
-const VERSION = 'v3'
+const VERSION = 'v4'
 const SHELL_CACHE = `settle-shell-${VERSION}`
 const ASSET_CACHE = `settle-assets-${VERSION}`
+/** Things shared into Settle, waiting for the app to read them (kept across worker versions). */
+const SHARE_CACHE = 'settle-share'
+const SHARE_PATH = '/share-target'
+/** A shared title, text or link longer than this is cut. */
+const MAX_SHARED_TEXT = 64 * 1024
+/** Files kept from one share: how many, each, and all together. */
+const MAX_SHARED_FILES = 4
+const MAX_SHARED_FILE_BYTES = 15 * 1024 * 1024
+const MAX_SHARED_TOTAL_BYTES = 30 * 1024 * 1024
+/** A share nobody picked up is dropped after an hour. */
+const SHARE_TTL_MS = 60 * 60 * 1000
 /** Caches this worker manages (older ones, including BillSplit's, are dropped on activate). */
 const CACHE_PREFIXES = ['settle-', 'billsplit-']
 const SHELL_KEY = '/'
@@ -181,6 +195,55 @@ async function networkThenCache(request) {
   }
 }
 
+/** 12 random base64url characters (9 bytes). */
+function shareId() {
+  const bytes = crypto.getRandomValues(new Uint8Array(9))
+  return btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_')
+}
+
+function clip(value) {
+  return typeof value === 'string' ? value.slice(0, MAX_SHARED_TEXT) : ''
+}
+
+/** Drops shares older than an hour (nobody came back for them). */
+async function dropOldShares(cache, now) {
+  for (const request of await cache.keys()) {
+    const response = await cache.match(request)
+    const at = Number(response && response.headers.get('X-Stored-At'))
+    if (!(now - at < SHARE_TTL_MS)) await cache.delete(request)
+  }
+}
+
+/**
+ * Keeps what another app shared (title, text, link and up to 4 files) and opens the app on it.
+ * Anything going wrong still opens the app, on the paste screen with a note.
+ */
+async function receiveShare(request) {
+  const missed = new URL('/app/share?missed=1', self.location.origin).href
+  try {
+    const form = await request.formData()
+    const id = shareId()
+    const now = Date.now()
+    const cache = await caches.open(SHARE_CACHE)
+    await dropOldShares(cache, now).catch(() => undefined)
+    let total = 0
+    let count = 0
+    for (const file of form.getAll('media')) {
+      if (count >= MAX_SHARED_FILES || typeof file === 'string') continue
+      if (file.size > MAX_SHARED_FILE_BYTES || total + file.size > MAX_SHARED_TOTAL_BYTES) continue
+      total += file.size
+      const headers = { 'Content-Type': file.type || 'application/octet-stream', 'X-File-Name': encodeURIComponent(file.name || 'shared'), 'X-Stored-At': String(now) }
+      await cache.put(`${SHARE_PATH}/${id}/file-${count}`, new Response(file, { headers }))
+      count++
+    }
+    const meta = { title: clip(form.get('title')), text: clip(form.get('text')), url: clip(form.get('url')), files: count }
+    await cache.put(`${SHARE_PATH}/${id}/meta`, new Response(JSON.stringify(meta), { headers: { 'Content-Type': 'application/json', 'X-Stored-At': String(now) } }))
+    return Response.redirect(new URL(`/app/share?k=${id}`, self.location.origin).href, 303)
+  } catch {
+    return Response.redirect(missed, 303)
+  }
+}
+
 self.addEventListener('install', (event) => {
   // Offline support is a bonus: a failed precache must not block the new worker.
   event.waitUntil(precache().catch(() => undefined))
@@ -191,7 +254,7 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(
     (async () => {
       try {
-        const keep = new Set([SHELL_CACHE, ASSET_CACHE])
+        const keep = new Set([SHELL_CACHE, ASSET_CACHE, SHARE_CACHE])
         const names = await caches.keys()
         const ours = (name) => CACHE_PREFIXES.some((prefix) => name.startsWith(prefix))
         await Promise.all(names.filter((name) => ours(name) && !keep.has(name)).map((name) => caches.delete(name)))
@@ -208,6 +271,10 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   const { request } = event
+  if (request.method === 'POST' && new URL(request.url).pathname === SHARE_PATH) {
+    event.respondWith(receiveShare(request))
+    return
+  }
   if (request.method !== 'GET') return
   const url = new URL(request.url)
   if (url.origin !== self.location.origin || url.pathname.startsWith('/api/')) return
