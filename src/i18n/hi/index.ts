@@ -1,6 +1,9 @@
 /**
  * The Hindi catalog: every namespace merged. Loaded lazily, only when Hindi is chosen (src/i18n
  * runtime). Keys missing here fall back to English. Add copy to your namespace file, never here.
+ *
+ * A new language mirrors this folder: `src/i18n/<code>/<ns>.ts` per namespace and this index with
+ * the merged catalog as its default export — `load.ts` finds it by itself.
  */
 import type { Messages } from '../types'
 import { common } from './common'
@@ -72,3 +75,5 @@ export const HI: Messages = {
   ...shagun,
   ...install,
 }
+
+export default HI

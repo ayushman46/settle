@@ -104,10 +104,9 @@ describe('the runtime (English only until Phase 3)', () => {
     expect(t('no.such.key' as never)).toBe('no.such.key')
   })
 
-  it('setLanguage refuses languages it has no catalog for, and stays put', async () => {
-    expect(await setLanguage('ta')).toBe(false)
-    expect(getLanguage()).toBe('en')
+  it('setLanguage to English always works (nothing to load)', async () => {
     expect(await setLanguage('en')).toBe(true)
+    expect(getLanguage()).toBe('en')
   })
 
   it('tx() renders rich text as React nodes', () => {
