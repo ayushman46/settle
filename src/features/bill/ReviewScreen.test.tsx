@@ -1,13 +1,16 @@
 import { act, screen, within } from '@testing-library/react'
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { formatBillDate } from '../../lib/format'
 import { resetFlowHistory } from '../../state/backStack'
 import { setPhoto } from '../../state/photo'
 import { createSession } from '../../state/reducer'
 import { useFlow } from '../../state/store'
-import { EMPTY_META, type Session } from '../../types'
+import { EMPTY_META, type BillFee, type Session } from '../../types'
 import { ReviewScreen } from './ReviewScreen'
 import { AISHA, BEN, historyIdle, renderScreen, sampleSession } from './screenTestKit'
+
+// Food-delivery fees on (the flag flips with the feature; these tests hold either way).
+vi.mock('./delivery.enabled', () => ({ DELIVERY_ENABLED: true }))
 
 function Flow() {
   const { step } = useFlow()
@@ -407,5 +410,137 @@ describe('ReviewScreen', () => {
     const second = renderScreen(<Flow />, sampleSession('review'))
     await second.user.click(screen.getByRole('button', { name: 'Back' }))
     expect(second.probe.current.step).toBe('scan')
+  })
+})
+
+const ORDER_FEES: BillFee[] = [
+  { id: 'f1', kind: 'delivery', label: 'Delivery partner fee', amount: 3500 },
+  { id: 'f2', kind: 'platform', label: 'Platform fee', amount: 1000 },
+  { id: 'f3', kind: 'packaging', label: 'Restaurant packaging', amount: 2500 },
+  { id: 'f4', kind: 'surge', label: 'Rain fee', amount: 2000 },
+]
+
+function orderSession(fees: BillFee[] = ORDER_FEES): Session {
+  const base = sampleSession('review')
+  return { ...base, source: 'scan', meta: { ...base.meta, fees }, feeSplit: 'equal' }
+}
+
+describe('ReviewScreen — delivery fees', () => {
+  it('lists each fee with its emoji and amount, under "Fees & charges"', () => {
+    renderScreen(<ReviewScreen />, orderSession())
+    const section = screen.getByRole('region', { name: 'Fees & charges' })
+    const rows = within(section).getAllByRole('button', { name: /, edit$/ })
+    expect(rows.map((row) => row.getAttribute('aria-label'))).toEqual([
+      'Delivery partner fee, ₹35, edit',
+      'Platform fee, ₹10, edit',
+      'Restaurant packaging, ₹25, edit',
+      'Rain fee, ₹20, edit',
+    ])
+    expect(rows[0]).toHaveTextContent('🛵 Delivery partner fee ₹35.00')
+    expect(rows[3]).toHaveTextContent('🌧️ Rain fee ₹20.00')
+    expect(within(section).getByText("You'll choose how to share fees on the next step.")).toBeInTheDocument()
+    expect(within(section).getByRole('button', { name: 'Add fee' })).toBeEnabled()
+  })
+
+  it('edits a fee: name, kind and amount', async () => {
+    const { user, probe } = renderScreen(<ReviewScreen />, orderSession())
+    await user.click(screen.getByRole('button', { name: 'Platform fee, ₹10, edit' }))
+    const dialog = screen.getByRole('dialog', { name: 'Fee' })
+    const kinds = within(dialog).getByRole('group', { name: 'Kind' })
+    expect(within(kinds).getAllByRole('radio').map((r) => r.closest('label')?.textContent)).toEqual([
+      '🛵Delivery',
+      '🧾Platform',
+      '📦Packaging',
+      '🌧️Surge/rain',
+      '🛒Small order',
+      '🙏Tip',
+      '💚Donation',
+      '🏛️GST on fees',
+      '➕Other',
+    ])
+    expect(within(kinds).getByRole('radio', { name: 'Platform' })).toBeChecked()
+    const name = within(dialog).getByRole('textbox', { name: 'Name' })
+    await user.clear(name)
+    await user.type(name, 'Convenience fee')
+    await user.click(within(kinds).getByRole('radio', { name: 'Other' }))
+    const amount = within(dialog).getByRole('textbox', { name: 'Amount' })
+    await user.clear(amount)
+    await user.type(amount, '12.5')
+    await user.click(within(dialog).getByRole('button', { name: 'Save' }))
+
+    expect(probe.current.meta.fees?.[1]).toEqual({ id: 'f2', kind: 'other', label: 'Convenience fee', amount: 1250 })
+    expect(screen.getByRole('button', { name: 'Convenience fee, ₹12.50, edit' })).toBeInTheDocument()
+  })
+
+  it('adds a fee (kind "Other"); a blank name takes the kind’s name', async () => {
+    const { user, probe } = renderScreen(<ReviewScreen />, orderSession())
+    await user.click(screen.getByRole('button', { name: 'Add fee' }))
+    const dialog = screen.getByRole('dialog', { name: 'Fee' })
+    expect(within(dialog).getByRole('radio', { name: 'Other' })).toBeChecked()
+    const add = within(dialog).getByRole('button', { name: 'Add fee' })
+    expect(add).toBeDisabled()
+    await user.click(within(dialog).getByRole('radio', { name: 'Small order' }))
+    expect(within(dialog).getByRole('textbox', { name: 'Name' })).toHaveAttribute('placeholder', 'Small order fee')
+    await user.type(within(dialog).getByRole('textbox', { name: 'Amount' }), '15')
+    await user.click(add)
+
+    expect(probe.current.meta.fees).toHaveLength(5)
+    expect(probe.current.meta.fees?.[4]).toMatchObject({ kind: 'small_order', label: 'Small order fee', amount: 1500 })
+    expect(screen.getByRole('button', { name: 'Small order fee, ₹15, edit' })).toBeInTheDocument()
+  })
+
+  it('a bill without fees offers "Add fee"; the first one brings the section', async () => {
+    const { user, probe } = renderScreen(<ReviewScreen />, sampleSession('review'))
+    expect(screen.queryByRole('region', { name: 'Fees & charges' })).not.toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Add fee' }))
+    const dialog = screen.getByRole('dialog', { name: 'Fee' })
+    await user.click(within(dialog).getByRole('radio', { name: 'Delivery' }))
+    await user.type(within(dialog).getByRole('textbox', { name: 'Amount' }), '30{Enter}')
+    expect(probe.current.meta.fees).toEqual([expect.objectContaining({ kind: 'delivery', label: 'Delivery fee', amount: 3000 })])
+    expect(screen.getByRole('region', { name: 'Fees & charges' })).toBeInTheDocument()
+  })
+
+  it('removing a fee shows an Undo that puts it back in its place', async () => {
+    const { user, probe } = renderScreen(<ReviewScreen />, orderSession())
+    await user.click(screen.getByRole('button', { name: 'Restaurant packaging, ₹25, edit' }))
+    await user.click(within(screen.getByRole('dialog', { name: 'Fee' })).getByRole('button', { name: 'Remove fee' }))
+    expect(probe.current.meta.fees?.map((f) => f.id)).toEqual(['f1', 'f2', 'f4'])
+    expect(screen.getByText('Removed Restaurant packaging')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: /^Undo/ }))
+    expect(probe.current.meta.fees?.map((f) => f.id)).toEqual(['f1', 'f2', 'f3', 'f4'])
+    expect(screen.getByRole('button', { name: 'Restaurant packaging, ₹25, edit' })).toBeInTheDocument()
+  })
+
+  it('removing the last fee leaves the "Add fee" button', async () => {
+    const { user, probe } = renderScreen(<ReviewScreen />, orderSession([ORDER_FEES[0] as BillFee]))
+    await user.click(screen.getByRole('button', { name: 'Delivery partner fee, ₹35, edit' }))
+    await user.click(within(screen.getByRole('dialog', { name: 'Fee' })).getByRole('button', { name: 'Remove fee' }))
+    expect(probe.current.meta.fees).toBeUndefined()
+    expect(screen.queryByRole('region', { name: 'Fees & charges' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Add fee' })).toBeInTheDocument()
+  })
+
+  it('a tip only one person gives becomes an item (and Undo turns it back)', async () => {
+    const tip: BillFee = { id: 'tip', kind: 'tip', label: 'Delivery tip', amount: 3000 }
+    const { user, probe } = renderScreen(<ReviewScreen />, orderSession([...ORDER_FEES, tip]))
+    await user.click(screen.getByRole('button', { name: 'Delivery tip, ₹30, edit' }))
+    const dialog = screen.getByRole('dialog', { name: 'Fee' })
+    expect(within(dialog).getByText('Only one person tipping? Add it as an item instead.')).toBeInTheDocument()
+    await user.click(within(dialog).getByRole('button', { name: 'Make it an item' }))
+
+    expect(probe.current.meta.fees?.map((f) => f.id)).toEqual(['f1', 'f2', 'f3', 'f4'])
+    expect(probe.current.items.at(-1)).toMatchObject({ name: 'Delivery tip', quantity: 1, amount: 3000 })
+    expect(screen.getByRole('button', { name: /^Edit Delivery tip, ₹30\.00/ })).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: /^Undo/ }))
+    expect(probe.current.meta.fees?.map((f) => f.id)).toEqual(['f1', 'f2', 'f3', 'f4', 'tip'])
+    expect(probe.current.items.some((i) => i.name === 'Delivery tip')).toBe(false)
+  })
+
+  it('other kinds don’t offer the item conversion', async () => {
+    const { user } = renderScreen(<ReviewScreen />, orderSession())
+    await user.click(screen.getByRole('button', { name: 'Delivery partner fee, ₹35, edit' }))
+    expect(within(screen.getByRole('dialog', { name: 'Fee' })).queryByRole('button', { name: 'Make it an item' })).not.toBeInTheDocument()
   })
 })

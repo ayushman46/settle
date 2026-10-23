@@ -138,3 +138,65 @@
   color: var(--ink-2);
   text-align: end;
 }
+
+/* ---------- Fees & charges (delivery orders) ---------- */
+
+.feeHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+}
+
+.feeAdd {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+  min-height: var(--tap);
+  margin-block: calc(var(--s-3) * -1);
+  padding-inline: var(--s-2);
+  border-radius: var(--r-pill);
+  color: var(--accent-ink);
+  font: var(--text-label);
+  font-weight: 600;
+  transition: background-color var(--dur-2) var(--ease-out);
+}
+
+.feeAdd > svg {
+  width: var(--s-4);
+  height: var(--s-4);
+}
+
+.feeAdd:disabled {
+  color: var(--ink-3);
+}
+
+@media (hover: hover) {
+  .feeAdd:hover:not(:disabled) {
+    background: var(--surface-2);
+  }
+}
+
+.feeEmoji {
+  display: grid;
+  place-items: center;
+  width: var(--s-10);
+  height: var(--s-10);
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.feeHint {
+  padding-inline: var(--s-1);
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
+.feeAddOnly {
+  display: flex;
+  justify-content: flex-start;
+  margin-top: calc(var(--s-2) * -1);
+}

@@ -1,5 +1,6 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
 import { ChevronDown, Image as ImageIcon, ListPlus, Pencil, Plus, ReceiptText } from 'lucide-react'
+import { useT } from '../../i18n'
 import {
   ActionBar,
   Banner,
@@ -21,11 +22,14 @@ import { haptic } from '../../lib/haptics'
 import { newId } from '../../lib/ids'
 import { currencySymbol, formatMoney } from '../../lib/money'
 import { usePhoto } from '../../state/photo'
-import { MAX_ITEMS } from '../../state/reducer'
+import { MAX_FEES, MAX_ITEMS } from '../../state/reducer'
 import { canContinue, itemsTotal, stepProgress } from '../../state/selectors'
 import { useFlow, useSession } from '../../state/store'
-import type { BillItem } from '../../types'
+import type { BillFee, BillItem } from '../../types'
 import { CurrencySheet } from './CurrencySheet'
+import { DELIVERY_ENABLED } from './delivery.enabled'
+import { FeeEditorSheet, type FeeDraft } from './FeeEditorSheet'
+import { FEE_EMOJI, feeAsItem, feeRowLabel, restoreFee } from './feeView'
 import { ItemEditorSheet, type ItemDraft } from './ItemEditorSheet'
 import { MerchantSheet } from './MerchantSheet'
 import { PhotoSheet } from './PhotoSheet'
@@ -38,6 +42,13 @@ interface EditorState {
   key: number
   /** null = adding a new item. A snapshot, so the sheet can finish closing after a delete. */
   item: BillItem | null
+  open: boolean
+}
+
+interface FeeEditorState {
+  key: number
+  /** null = adding a fee. A snapshot, so the sheet can finish closing after a removal. */
+  fee: BillFee | null
   open: boolean
 }
 
@@ -70,9 +81,14 @@ export function ReviewScreen() {
     latest.current = session
   })
   const [photoOpen, setPhotoOpen] = useState(false)
+  const [feeEditor, setFeeEditor] = useState<FeeEditorState>({ key: 0, fee: null, open: false })
+  const t = useT()
   const baseId = useId()
   const rowId = (itemId: string) => `${baseId}-item-${itemId}`
   const addRowId = `${baseId}-add`
+  const feeRowId = (feeId: string) => `${baseId}-fee-${feeId}`
+  const addFeeId = `${baseId}-add-fee`
+  const fees = DELIVERY_ENABLED ? (meta.fees ?? []) : []
   /** Where focus goes once a deleted item's row (the editor's return target) is gone. */
   const focusAfter = useRef<string | null>(null)
   useEffect(() => {
@@ -158,6 +174,83 @@ export function ReviewScreen() {
     dispatch({ type: 'dismissWarnings' })
     // The banner (and its ✕) is gone: keep focus on the page instead of the body.
     focusScreenHeading()
+  }
+
+  const openFee = (fee: BillFee | null): void => {
+    setFeeEditor((e) => ({ key: e.key + 1, fee, open: true }))
+  }
+  const closeFee = (): void => setFeeEditor((e) => (e.open ? { ...e, open: false } : e))
+
+  const saveFee = (draft: FeeDraft): void => {
+    const editing = feeEditor.fee
+    if (editing) {
+      dispatch({ type: 'updateFee', fee: { ...editing, ...draft } })
+    } else if (fees.length >= MAX_FEES) {
+      toast(t('delivery.review.fees.full.toast', { max: MAX_FEES }), { tone: 'warning' })
+    } else {
+      dispatch({ type: 'addFee', fee: { id: newId(), ...draft } })
+    }
+    closeFee()
+  }
+
+  /** Focus after a fee's row is gone: the next fee, else the previous one, else "Add fee". */
+  const focusAfterFee = (feeId: string): void => {
+    const index = fees.findIndex((f) => f.id === feeId)
+    const neighbour = fees[index + 1] ?? fees[index - 1]
+    focusAfter.current = neighbour ? feeRowId(neighbour.id) : addFeeId
+  }
+
+  const removeFee = (): void => {
+    const fee = feeEditor.fee
+    if (!fee) return
+    const before = session
+    focusAfterFee(fee.id)
+    closeFee()
+    dispatch({ type: 'removeFee', feeId: fee.id })
+    haptic('warning')
+    toast(t('delivery.review.fees.removed.toast', { label: fee.label }), {
+      action: {
+        label: t('common.action.undo'),
+        onAction: () => {
+          const restored = restoreFee(latest.current, before, fee.id, MAX_FEES)
+          if (restored) dispatch({ type: 'restore', session: restored, keys: ['meta'] })
+          else toast(t('delivery.review.fees.undoFailed.toast'), { tone: 'info' })
+        },
+      },
+    })
+  }
+
+  /** "Only one person tipping?": the fee becomes an item that can be given to whoever tips. */
+  const feeToItem = (draft: FeeDraft): void => {
+    const fee = feeEditor.fee
+    if (!fee) return
+    const item = feeAsItem(session, { ...fee, ...draft })
+    if (!item) {
+      toast(`A bill can hold up to ${MAX_ITEMS} items.`, { tone: 'warning' })
+      return
+    }
+    const before = session
+    focusAfterFee(fee.id)
+    closeFee()
+    dispatch({ type: 'removeFee', feeId: fee.id })
+    dispatch({ type: 'addItem', item })
+    haptic('success')
+    toast(t('delivery.review.fees.converted.toast', { label: item.name }), {
+      tone: 'success',
+      action: {
+        label: t('common.action.undo'),
+        onAction: () => {
+          const restored = restoreFee(latest.current, before, fee.id, MAX_FEES)
+          if (!restored) {
+            toast(t('delivery.review.fees.undoFailed.toast'), { tone: 'info' })
+            return
+          }
+          const { [item.id]: _gone, ...assignments } = restored.assignments
+          const back = { ...restored, items: restored.items.filter((i) => i.id !== item.id), assignments }
+          dispatch({ type: 'restore', session: back, keys: ['meta', 'items', 'assignments'] })
+        },
+      },
+    })
   }
 
   let hint: string | undefined
@@ -309,6 +402,10 @@ export function ReviewScreen() {
         </section>
       )}
 
+      {DELIVERY_ENABLED && items.length > 0 && (
+        <FeesSection fees={fees} currency={currency} rowId={feeRowId} addId={addFeeId} onOpen={openFee} full={fees.length >= MAX_FEES} />
+      )}
+
       <ItemEditorSheet
         key={`editor-${editor.key}`}
         open={editor.open}
@@ -338,6 +435,83 @@ export function ReviewScreen() {
       />
 
       <PhotoSheet open={photoOpen && photo !== null} url={photo?.previewUrl ?? null} onClose={() => setPhotoOpen(false)} />
+
+      {DELIVERY_ENABLED && (
+        <FeeEditorSheet
+          key={`fee-${feeEditor.key}`}
+          open={feeEditor.open}
+          fee={feeEditor.fee}
+          currency={currency}
+          onClose={closeFee}
+          onSave={saveFee}
+          onRemove={feeEditor.fee ? removeFee : undefined}
+          onMakeItem={feeEditor.fee ? feeToItem : undefined}
+        />
+      )}
     </Screen>
+  )
+}
+
+interface FeesSectionProps {
+  fees: readonly BillFee[]
+  currency: string
+  rowId: (feeId: string) => string
+  addId: string
+  onOpen: (fee: BillFee | null) => void
+  full: boolean
+}
+
+/**
+ * "Fees & charges": a delivery order's fees, each its own row (tap to edit), and "Add fee". With no
+ * fees yet it's just the "Add fee" button, for an order whose fees weren't read.
+ */
+function FeesSection({ fees, currency, rowId, addId, onOpen, full }: FeesSectionProps) {
+  const t = useT()
+  const headingId = useId()
+  const hintId = useId()
+  if (fees.length === 0) {
+    return (
+      <div className={styles.feeAddOnly}>
+        <Button id={addId} size="sm" variant="ghost" iconStart={<Plus />} onClick={() => onOpen(null)}>
+          {t('delivery.review.fees.add.cta')}
+        </Button>
+      </div>
+    )
+  }
+  return (
+    <section className={styles.section} aria-labelledby={headingId}>
+      <div className={styles.feeHead}>
+        <h2 id={headingId} className={styles.sectionTitle}>
+          {t('delivery.review.fees.title')}
+        </h2>
+        <button id={addId} type="button" className={styles.feeAdd} disabled={full} onClick={() => onOpen(null)}>
+          <Plus aria-hidden="true" strokeWidth={2.5} />
+          {t('delivery.review.fees.add.cta')}
+        </button>
+      </div>
+      <Card padding="none">
+        <List aria-describedby={hintId}>
+          {fees.map((fee) => (
+            <ListRow
+              key={fee.id}
+              id={rowId(fee.id)}
+              leading={
+                <span className={styles.feeEmoji} aria-hidden="true">
+                  {FEE_EMOJI[fee.kind]}
+                </span>
+              }
+              title={fee.label}
+              trailing={<Money value={fee.amount} currency={currency} />}
+              chevron
+              aria-label={feeRowLabel(fee, currency)}
+              onClick={() => onOpen(fee)}
+            />
+          ))}
+        </List>
+      </Card>
+      <p id={hintId} className={styles.feeHint}>
+        {t('delivery.review.fees.hint')}
+      </p>
+    </section>
   )
 }

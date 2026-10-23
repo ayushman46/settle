@@ -31,6 +31,7 @@ import {
 } from '../../components'
 import { navigate } from '../../app/router'
 import { setSplitPrefill } from '../../data'
+import { t, useT } from '../../i18n'
 import { FREE_AI_PER_DAY } from '../../domain/types'
 import { today } from '../../engine/dates'
 import { consumeAiQuota, useAiQuota, usePro } from '../../pro'
@@ -46,6 +47,8 @@ import { takeSharedPhoto } from '../../state/sharedPhoto'
 import { effectivePaid, hasProgress } from '../../state/selectors'
 import { useFlow, useSession } from '../../state/store'
 import { EMPTY_META } from '../../types'
+import { DELIVERY_ENABLED } from './delivery.enabled'
+import { takeScanHint, type ScanHint } from './launch'
 import { useOwnerAvatarName, withOwnerAvatar } from './ownerAvatar'
 import { QUICK_SPLIT_PATH, scanPrefill } from './scanPrefill'
 import { focusScreenHeading, plural, revokeUrl } from './screenUtils'
@@ -164,6 +167,13 @@ export function ScanScreen() {
   const pro = usePro()
   const quota = useAiQuota()
   const ownerName = useOwnerAvatarName()
+  const t = useT()
+  /** "Food order" from Home: this visit reads a delivery app's order screenshot (taken once, on mount). */
+  const [hint] = useState<ScanHint | null>(() => {
+    const taken = takeScanHint()
+    return DELIVERY_ENABLED ? taken : null
+  })
+  const delivery = hint === 'delivery'
   const [phase, setPhase] = useState<Phase>({ kind: 'idle', problem: null })
   const [confirmDiscard, setConfirmDiscard] = useState(false)
   /** A new bill waiting for "Start new bill" (it would replace the one in progress). */
@@ -487,7 +497,7 @@ export function ScanScreen() {
   if (phase.kind === 'busy') {
     return (
       <>
-        <ScanningView key="busy" previewUrl={phase.previewUrl} onCancel={cancel} />
+        <ScanningView key="busy" previewUrl={phase.previewUrl} onCancel={cancel} delivery={delivery} />
         {fileInputs}
       </>
     )
@@ -547,17 +557,35 @@ export function ScanScreen() {
           <ActionBar hint={quotaHint}>
             {canScan ? (
               <>
-                <Button block iconStart={<Camera />} onClick={() => startNewBill({ kind: 'photo', source: 'camera' })}>
-                  Scan a bill
-                </Button>
-                <Button
-                  block
-                  variant="secondary"
-                  iconStart={<ImageUp />}
-                  onClick={() => startNewBill({ kind: 'photo', source: 'gallery' })}
-                >
-                  Upload a photo
-                </Button>
+                {delivery ? (
+                  <>
+                    <Button block iconStart={<ImageUp />} onClick={() => startNewBill({ kind: 'photo', source: 'gallery' })}>
+                      {t('delivery.scan.choose.cta')}
+                    </Button>
+                    <Button
+                      block
+                      variant="secondary"
+                      iconStart={<Camera />}
+                      onClick={() => startNewBill({ kind: 'photo', source: 'camera' })}
+                    >
+                      {t('delivery.scan.camera.cta')}
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button block iconStart={<Camera />} onClick={() => startNewBill({ kind: 'photo', source: 'camera' })}>
+                      Scan a bill
+                    </Button>
+                    <Button
+                      block
+                      variant="secondary"
+                      iconStart={<ImageUp />}
+                      onClick={() => startNewBill({ kind: 'photo', source: 'gallery' })}
+                    >
+                      Upload a photo
+                    </Button>
+                  </>
+                )}
                 <div className={styles.altActions}>
                   <Button variant="ghost" size="md" iconStart={<Keyboard />} onClick={() => startNewBill({ kind: 'manual' })}>
                     Type it in
@@ -584,9 +612,11 @@ export function ScanScreen() {
         {showResume ? resumeCard : !problem && <BillArt scanning={canScan} />}
 
         <PageTitle
-          title="Scan a bill"
+          title={delivery ? t('delivery.scan.title') : 'Scan a bill'}
           subtitle={
-            canScan
+            delivery && canScan
+              ? t('delivery.scan.subtitle')
+              : canScan
               ? 'Snap it, tap who had what — tax, tips and discounts are shared fairly. A cab or power bill becomes a quick split.'
               : 'Type the items in, tap who had what — tax, tips and discounts are shared fairly.'
           }
@@ -711,18 +741,23 @@ export function ScanScreen() {
 /* ---------- Scanning ---------- */
 
 const STATUS = ['Reading the bill…', 'Finding the items…', 'Checking the totals…', 'Almost there…'] as const
+/** A delivery order also has its fees and coupon picked out. */
+function deliveryStatus(): readonly string[] {
+  return ['Reading the bill…', 'Finding the items…', t('delivery.scan.status.fees'), t('delivery.scan.status.coupon'), 'Checking the totals…', 'Almost there…']
+}
 const SLOW_STATUS = 'Still working — longer bills take a little more time…'
 const STATUS_MS = 1800
 /** Ticks after which the "still working" reassurance replaces "Almost there…". */
 const SLOW_AFTER_TICKS = 9
 
-function statusText(previewUrl: string | null, tick: number): string {
+function statusText(previewUrl: string | null, tick: number, delivery = false): string {
   if (previewUrl === null) return 'Getting your photo ready…'
   if (tick >= SLOW_AFTER_TICKS) return SLOW_STATUS
-  return STATUS[Math.min(tick, STATUS.length - 1)] ?? STATUS[0]
+  const lines = delivery ? deliveryStatus() : STATUS
+  return lines[Math.min(tick, lines.length - 1)] ?? STATUS[0]
 }
 
-function ScanningView({ previewUrl, onCancel }: { previewUrl: string | null; onCancel: () => void }) {
+function ScanningView({ previewUrl, onCancel, delivery }: { previewUrl: string | null; onCancel: () => void; delivery: boolean }) {
   const [tick, setTick] = useState(0)
   const [prevPreview, setPrevPreview] = useState(previewUrl)
   if (prevPreview !== previewUrl) {
@@ -768,7 +803,7 @@ function ScanningView({ previewUrl, onCancel }: { previewUrl: string | null; onC
         <span className={styles.beam} aria-hidden="true" />
       </div>
       <p className={styles.status} role="status" aria-live="polite">
-        {statusText(previewUrl, tick)}
+        {statusText(previewUrl, tick, delivery)}
       </p>
       <SkeletonRows count={4} className={styles.skeleton} />
     </Screen>

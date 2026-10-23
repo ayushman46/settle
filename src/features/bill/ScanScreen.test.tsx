@@ -13,6 +13,7 @@ import { resetHealthForTests } from '../../state/health'
 import { getPhoto, setPhoto } from '../../state/photo'
 import { useFlow } from '../../state/store'
 import { createSession } from '../../state/reducer'
+import { openBill, resetBillLaunchForTests } from './launch'
 import { ReviewScreen } from './ReviewScreen'
 import { ScanScreen } from './ScanScreen'
 import { AISHA, assignAll, BEN, historyIdle, renderScreen, sampleSession } from './screenTestKit'
@@ -21,6 +22,9 @@ vi.mock('../../lib/image', async (importOriginal) => {
   const actual: typeof ImageModule = await importOriginal()
   return { ...actual, prepareImage: vi.fn() }
 })
+
+// Food-delivery orders on (the flag flips with the feature; these tests hold either way).
+vi.mock('./delivery.enabled', () => ({ DELIVERY_ENABLED: true }))
 
 const prepareMock = vi.mocked(prepareImage)
 
@@ -783,3 +787,98 @@ describe('ScanScreen — changing a saved bill', () => {
   })
 })
 
+
+/** A Swiggy order as the scan reads it (spec 08 §4.1). */
+const DELIVERY_SCAN: ScanResponse = {
+  merchant: 'Behrouz Biryani',
+  date: '2026-10-21',
+  currency: 'INR',
+  category: 'food',
+  items: [
+    { name: 'Chicken Biryani', quantity: 1, amount: 349 },
+    { name: 'Paneer Butter Masala', quantity: 1, amount: 289 },
+    { name: 'Garlic Naan', quantity: 2, amount: 120 },
+    { name: 'Gulab Jamun (2 pcs)', quantity: 1, amount: 99 },
+  ],
+  subtotal: 857,
+  tax: 42.85,
+  serviceCharge: null,
+  fees: [
+    { label: 'Delivery partner fee', kind: 'delivery', amount: 35 },
+    { label: 'Platform fee', kind: 'platform', amount: 10 },
+    { label: 'Restaurant packaging', kind: 'packaging', amount: 25 },
+    { label: 'Rain fee', kind: 'surge', amount: 20 },
+  ],
+  discount: 100,
+  tip: null,
+  total: 889.85,
+  warnings: [],
+  model: 'test-model',
+}
+
+describe('ScanScreen — a food order from Home', () => {
+  beforeEach(() => resetBillLaunchForTests())
+  afterEach(() => resetBillLaunchForTests())
+
+  it('asks for the order screenshot first, then offers the camera', async () => {
+    mockApi()
+    openBill({ kind: 'delivery' })
+    renderScreen(<ScanScreen />, createSession('INR'))
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Choose screenshot' })).toBeEnabled())
+
+    expect(screen.getByRole('heading', { level: 1, name: 'Split a food order' })).toBeInTheDocument()
+    expect(
+      screen.getByText(
+        "Upload the order screenshot from Swiggy, Zomato, Blinkit, Zepto or Instamart — we'll pick out the items, fees and coupon.",
+      ),
+    ).toBeInTheDocument()
+    const buttons = screen.getAllByRole('button').map((b) => b.textContent)
+    expect(buttons.indexOf('Choose screenshot')).toBeLessThan(buttons.indexOf('Take a photo'))
+    expect(screen.queryByRole('button', { name: 'Scan a bill' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Type it in' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Try a sample' })).toBeInTheDocument()
+    // The screenshot picker is a plain file picker (no camera); the camera one still has it.
+    expect(galleryInput()).not.toHaveAttribute('capture')
+    expect(galleryInput()).toHaveAttribute('accept', 'image/*')
+    expect(screen.getByLabelText('Take a photo of the bill', { selector: 'input' })).toHaveAttribute('capture', 'environment')
+  })
+
+  it('the hint is used once: the next visit is a plain scan', async () => {
+    mockApi()
+    openBill({ kind: 'delivery' })
+    const first = renderScreen(<ScanScreen />, createSession('INR'))
+    expect(screen.getByRole('heading', { level: 1, name: 'Split a food order' })).toBeInTheDocument()
+    first.unmount()
+    renderScreen(<ScanScreen />, createSession('INR'))
+    await healthLoaded()
+    expect(screen.getByRole('heading', { level: 1, name: 'Scan a bill' })).toBeInTheDocument()
+  })
+
+  it('reads the fees and the coupon too, then lists the fees on review', async () => {
+    const { scans } = mockApi()
+    prepareMock.mockResolvedValue(preparedImage())
+    openBill({ kind: 'delivery' })
+    const { probe } = renderScreen(<Flow />, createSession('INR'))
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Choose screenshot' })).toBeEnabled())
+
+    choosePhoto()
+    await waitFor(() => expect(scans).toHaveLength(1))
+    // The rotating status adds the fee and coupon lines for an order.
+    expect(await screen.findByText('Finding the fees…', {}, { timeout: 6000 })).toHaveAttribute('aria-live', 'polite')
+    expect(await screen.findByText('Checking the coupon…', {}, { timeout: 4000 })).toBeInTheDocument()
+
+    await act(async () => {
+      scans[0]?.respond(json(DELIVERY_SCAN))
+    })
+    await screen.findByRole('heading', { level: 1, name: 'Check the items' })
+    expect(probe.current.meta.fees?.map((f) => [f.kind, f.label, f.amount])).toEqual([
+      ['delivery', 'Delivery partner fee', 3500],
+      ['platform', 'Platform fee', 1000],
+      ['packaging', 'Restaurant packaging', 2500],
+      ['surge', 'Rain fee', 2000],
+    ])
+    // A scanned order shares its fees equally by default.
+    expect(probe.current.feeSplit).toBe('equal')
+    expect(screen.getByRole('region', { name: 'Fees & charges' })).toBeInTheDocument()
+  }, 20_000)
+})

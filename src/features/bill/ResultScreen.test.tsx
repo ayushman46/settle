@@ -8,10 +8,13 @@ import { formatMoney } from '../../lib/money'
 import { computeSplit } from '../../lib/split'
 import { resetFlowHistory } from '../../state/backStack'
 import { effectivePaid } from '../../state/selectors'
-import type { Person, Session, Shares } from '../../types'
+import { EMPTY_META, type Person, type Session, type Shares } from '../../types'
 import { personById, personFor } from './billPeople'
 import { ResultScreen } from './ResultScreen'
 import { assignAll, historyIdle, renderScreen, sampleSession } from './screenTestKit'
+
+// Food-delivery fees on (the flag flips with the feature; these tests hold either way).
+vi.mock('./delivery.enabled', () => ({ DELIVERY_ENABLED: true }))
 
 const inr = (minor: number) => formatMoney(minor, 'INR')
 const personRow = (name: string) => screen.getByRole('button', { name: new RegExp(`^${name}\\b`), expanded: false })
@@ -266,5 +269,101 @@ describe('ResultScreen — saving', () => {
     const kabir = probe.current.people[2]
     expect(kabir?.id).not.toBe('v2-person')
     expect(expense?.participants.map((p) => p.friendId)).toEqual([ME_ID, t.riya.id, kabir?.id])
+  })
+})
+
+/* Spec 08 §4.1: Riya's biryani, Sam's paneer, naan they share, your gulab jamun; Kabir skipped. */
+function orderSession(feeSplit: 'equal' | 'proportional'): { session: Session; kabir: Person; t: Table } {
+  const t = table()
+  const kabir = personFor(addFriend({ name: 'Kabir' }))
+  const base = sampleSession('result')
+  const session: Session = {
+    ...base,
+    source: 'scan',
+    items: [
+      { id: 'biryani', name: 'Chicken Biryani', quantity: 1, amount: 34900 },
+      { id: 'pbm', name: 'Paneer Butter Masala', quantity: 1, amount: 28900 },
+      { id: 'naan', name: 'Garlic Naan', quantity: 2, amount: 12000 },
+      { id: 'gj', name: 'Gulab Jamun (2 pcs)', quantity: 1, amount: 9900 },
+    ],
+    meta: {
+      ...EMPTY_META,
+      merchant: 'Behrouz Biryani',
+      tax: 4285,
+      discount: 10000,
+      total: 88985,
+      fees: [
+        { id: 'f1', kind: 'delivery', label: 'Delivery partner fee', amount: 3500 },
+        { id: 'f2', kind: 'platform', label: 'Platform fee', amount: 1000 },
+        { id: 'f3', kind: 'packaging', label: 'Restaurant packaging', amount: 2500 },
+        { id: 'f4', kind: 'surge', label: 'Rain fee', amount: 2000 },
+      ],
+    },
+    feeSplit,
+    people: [t.riya, t.sam, t.me, kabir],
+    assignments: {
+      biryani: { [t.riya.id]: 1 },
+      pbm: { [t.sam.id]: 1 },
+      naan: { [t.riya.id]: 1, [t.sam.id]: 1 },
+      gj: { [ME_ID]: 1 },
+    },
+  }
+  return { session, kabir, t }
+}
+
+function details(row: HTMLElement) {
+  const el = document.getElementById(row.getAttribute('aria-controls') ?? '')
+  if (!el) throw new Error('details not found')
+  return within(el)
+}
+
+describe('ResultScreen — delivery fees', () => {
+  it('equal fees: Riya ₹411.72, Sam ₹355.73, you ₹122.40 and Kabir — who didn’t order — nothing', () => {
+    renderScreen(<ResultScreen />, orderSession('equal').session)
+    expect(personRow('Riya')).toHaveTextContent('₹411.72')
+    expect(personRow('Sam')).toHaveTextContent('₹355.73')
+    expect(personRow('You')).toHaveTextContent('₹122.40')
+    expect(personRow('Kabir')).toHaveTextContent("₹0.00Didn't order · ₹0")
+    expect(screen.getByText(/Adds up to/).closest('p')).toHaveTextContent('Adds up to ₹889.85')
+  })
+
+  it('each person’s card shows their fees, then tax, charges & offers, then the total', async () => {
+    const { user } = renderScreen(<ResultScreen />, orderSession('equal').session)
+    const riya = personRow('Riya')
+    await user.click(riya)
+    const d = details(riya)
+    expect(d.getByText('Items').parentElement).toHaveTextContent('₹409.00')
+    expect(d.getByText('Fees').parentElement).toHaveTextContent('+₹30.00')
+    expect(d.getByText('Tax, charges & offers').parentElement).toHaveTextContent('-₹27.28')
+    expect(d.getByText('Total').parentElement).toHaveTextContent('₹411.72')
+    expect(d.queryByText('Discount')).not.toBeInTheDocument()
+
+    const kabir = personRow('Kabir')
+    await user.click(kabir)
+    const k = details(kabir)
+    expect(k.queryByText('Fees')).not.toBeInTheDocument()
+    expect(k.queryByText('Tax, charges & offers')).not.toBeInTheDocument()
+    expect(k.getByText('Total').parentElement).toHaveTextContent('₹0.00')
+  })
+
+  it('fees by what each had: ₹424.68 / ₹362.38 / ₹102.79, fees still shown', async () => {
+    const { user } = renderScreen(<ResultScreen />, orderSession('proportional').session)
+    expect(personRow('Riya')).toHaveTextContent('₹424.68')
+    expect(personRow('Sam')).toHaveTextContent('₹362.38')
+    expect(personRow('You')).toHaveTextContent('₹102.79')
+    const you = personRow('You')
+    await user.click(you)
+    const d = details(you)
+    expect(d.getByText('Fees').parentElement).toHaveTextContent('+₹10.40')
+    expect(d.getByText('Tax, charges & offers').parentElement).toHaveTextContent('-₹6.61')
+  })
+
+  it('a bill without fees keeps its tax and discount lines', async () => {
+    const t = table()
+    const { user } = renderScreen(<ResultScreen />, resultSession(t))
+    const riya = personRow('Riya')
+    await user.click(riya)
+    expect(details(riya).queryByText('Fees')).not.toBeInTheDocument()
+    expect(details(riya).queryByText('Tax, charges & offers')).not.toBeInTheDocument()
   })
 })

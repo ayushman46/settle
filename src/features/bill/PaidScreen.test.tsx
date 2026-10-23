@@ -3,9 +3,12 @@ import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { resetFlowHistory } from '../../state/backStack'
 import { useFlow } from '../../state/store'
-import { EMPTY_META } from '../../types'
+import { EMPTY_META, type BillFee, type Session } from '../../types'
 import { PaidScreen } from './PaidScreen'
 import { historyIdle, renderScreen, sampleSession } from './screenTestKit'
+
+// Food-delivery fees on (the flag flips with the feature; these tests hold either way).
+vi.mock('./delivery.enabled', () => ({ DELIVERY_ENABLED: true }))
 
 function Flow() {
   const { step } = useFlow()
@@ -225,5 +228,79 @@ describe('PaidScreen', () => {
     const second = renderScreen(<Flow />, sampleSession('paid'))
     await second.user.type(amountField(), '{Enter}')
     expect(second.probe.current.step).toBe('people')
+  })
+})
+
+/* Spec 08 §4.1: the Swiggy order (items ₹857, GST ₹42.85, four fees ₹90, ₹100 coupon → ₹889.85). */
+const ORDER_FEES: BillFee[] = [
+  { id: 'f1', kind: 'delivery', label: 'Delivery partner fee', amount: 3500 },
+  { id: 'f2', kind: 'platform', label: 'Platform fee', amount: 1000 },
+  { id: 'f3', kind: 'packaging', label: 'Restaurant packaging', amount: 2500 },
+  { id: 'f4', kind: 'surge', label: 'Rain fee', amount: 2000 },
+]
+
+function orderSession(overrides: Partial<Session> = {}): Session {
+  const base = sampleSession('paid')
+  return {
+    ...base,
+    source: 'scan',
+    items: [
+      { id: 'biryani', name: 'Chicken Biryani', quantity: 1, amount: 34900 },
+      { id: 'pbm', name: 'Paneer Butter Masala', quantity: 1, amount: 28900 },
+      { id: 'naan', name: 'Garlic Naan', quantity: 2, amount: 12000 },
+      { id: 'gj', name: 'Gulab Jamun (2 pcs)', quantity: 1, amount: 9900 },
+    ],
+    meta: { ...EMPTY_META, merchant: 'Behrouz Biryani', subtotal: 85700, tax: 4285, discount: 10000, total: 88985, fees: ORDER_FEES },
+    feeSplit: 'equal',
+    ...overrides,
+  }
+}
+
+const policy = () => screen.getByRole('radiogroup', { name: 'How should fees be shared?' })
+
+describe('PaidScreen — delivery fees', () => {
+  it('has no fee policy for a bill without fees', () => {
+    renderScreen(<PaidScreen />, sampleSession('paid'))
+    expect(screen.queryByRole('radiogroup', { name: 'How should fees be shared?' })).not.toBeInTheDocument()
+  })
+
+  it('a scanned order shares fees equally by default, and says so', () => {
+    renderScreen(<PaidScreen />, orderSession())
+    expect(amountField()).toHaveValue('889.85')
+    expect(within(policy()).getByRole('radio', { name: 'Equally' })).toHaveAttribute('aria-checked', 'true')
+    expect(within(policy()).getByRole('radio', { name: 'By what each had' })).toHaveAttribute('aria-checked', 'false')
+    const line = note('₹90 in fees split equally between everyone who ordered — tax and the ₹100 coupon go by what each had.')
+    // The explanation describes the radiogroup.
+    expect(policy()).toHaveAttribute('aria-describedby', line.closest('p')?.id)
+  })
+
+  it('switching to "By what each had" changes the split and the explanation', async () => {
+    const { user, probe } = renderScreen(<PaidScreen />, orderSession())
+    await user.click(within(policy()).getByRole('radio', { name: 'By what each had' }))
+    expect(probe.current.feeSplit).toBe('proportional')
+    expect(note('Fees, tax and the coupon are all shared by what each person had.')).toBeInTheDocument()
+    await user.click(within(policy()).getByRole('radio', { name: 'Equally' }))
+    expect(probe.current.feeSplit).toBe('equal')
+  })
+
+  it('a bill whose fees were added by hand starts on "By what each had"', () => {
+    renderScreen(<PaidScreen />, orderSession({ source: 'manual', feeSplit: undefined }))
+    expect(within(policy()).getByRole('radio', { name: 'By what each had' })).toHaveAttribute('aria-checked', 'true')
+  })
+
+  it('the breakdown lists each fee between tax and the coupon', async () => {
+    const { user } = renderScreen(<PaidScreen />, orderSession())
+    await user.click(screen.getByRole('button', { name: /What the bill says/ }))
+    const terms = Array.from(document.querySelectorAll('dt')).map((dt) => dt.textContent)
+    expect(terms).toEqual([
+      'Items',
+      'Tax',
+      'Delivery partner fee',
+      'Platform fee',
+      'Restaurant packaging',
+      'Rain fee',
+      'Discount',
+      'Bill total',
+    ])
   })
 })

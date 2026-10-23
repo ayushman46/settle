@@ -14,11 +14,13 @@ import {
   TopBar,
   useToast,
 } from '../../components'
+import { useT } from '../../i18n'
 import { ExpenseError, saveExpense, useFriendsById, useProfile, type ExpenseDraft } from '../../data'
 import { ME_ID, type Expense } from '../../domain/types'
 import { today } from '../../engine/dates'
 import { CategoryPicker, DateField, FriendAvatar, friendLabel, friendObjectLabel, PayerPicker } from '../../kit/index-a'
 import { formatBillDate, formatPercent } from '../../lib/format'
+import { cx } from '../../lib/cx'
 import { haptic } from '../../lib/haptics'
 import { currencyDigits, formatMoney } from '../../lib/money'
 import { shareLabel, type PersonSplit, type SplitResult } from '../../lib/split'
@@ -28,6 +30,8 @@ import { billCategory, billDate, stepProgress, suggestedCategory } from '../../s
 import { useFlow, useSession, useSplit } from '../../state/store'
 import type { Session } from '../../types'
 import { billExpenseDraft, billPayer, payerCandidates } from './billExpense'
+import { DELIVERY_ENABLED } from './delivery.enabled'
+import { personFeeLines } from './feeView'
 import { linkToFriends } from './billPeople'
 import { countUp, useEntranceProgress } from './entranceMotion'
 import { GroupPicker } from './GroupPicker'
@@ -140,6 +144,8 @@ export function ResultScreen() {
   const adds = split.check === split.paid
   const unassigned = split.unassignedItemIds.length
   const adjustment = adjustmentLine(split, currency)
+  // A delivery order: everyone's fees get their own line, and nobody who didn't order pays.
+  const withFees = DELIVERY_ENABLED && split.fees > 0
 
   const header = <TopBar onBack={flow.back} progress={stepProgress('result') ?? undefined} />
 
@@ -234,6 +240,7 @@ export function ResultScreen() {
               payerId={payerId}
               payerObject={friendObjectLabel(payerId, friendsById[payerId] ?? null)}
               paid={split.paid}
+              withFees={withFees}
               expanded={expanded.has(personSplit.person.id)}
               onToggle={() => toggle(personSplit.person.id)}
             />
@@ -305,22 +312,28 @@ interface PersonRowProps {
   payerObject: string
   /** What was paid for the whole bill. */
   paid: number
+  /** The bill has delivery fees: show "Fees" and "Tax, charges & offers" lines. */
+  withFees: boolean
   expanded: boolean
   onToggle: () => void
 }
 
 /** One person on the receipt: their total, what they owe the payer, and (expanded) their items. */
-function PersonRow({ split, index, currency, progress, payerId, payerObject, paid, expanded, onToggle }: PersonRowProps) {
+function PersonRow({ split, index, currency, progress, payerId, payerObject, paid, withFees, expanded, onToggle }: PersonRowProps) {
   const { person, lines, itemsSubtotal, adjustment, total } = split
+  const t = useT()
   const detailsId = useId()
   const isPayer = person.id === payerId
+  const feeLines = withFees ? personFeeLines(split) : null
 
   const money = (minor: number) => formatMoney(minor, currency)
   const status = isPayer
     ? `paid ${money(paid)} · gets back ${money(paid - total)}`
     : total > 0
       ? `owes ${payerObject} ${money(total)}`
-      : 'owes nothing'
+      : feeLines?.none
+        ? t('delivery.result.none', { amount: formatMoney(0, currency, { trimZeros: true }) })
+        : 'owes nothing'
 
   return (
     <li className={styles.person} style={{ '--i': index } as CSSProperties}>
@@ -349,7 +362,7 @@ function PersonRow({ split, index, currency, progress, payerId, payerObject, pai
           </span>
         </span>
         <ChevronDown aria-hidden="true" className={styles.chevron} strokeWidth={2.25} />
-        <span className={styles.personStatus}>{status}</span>
+        <span className={cx(styles.personStatus, feeLines?.none && !isPayer && styles.personNone)}>{status}</span>
       </button>
 
       <div id={detailsId} className={styles.details} hidden={!expanded}>
@@ -379,6 +392,42 @@ function PersonRow({ split, index, currency, progress, payerId, payerObject, pai
             ) : (
               <p className={styles.noLines}>Nothing assigned to them.</p>
             )}
+            {feeLines ? (
+              <div className={styles.subtotals}>
+                <ReceiptRow
+                  label="Items"
+                  value={<Money value={itemsSubtotal} currency={currency} size="inherit" />}
+                  emphasis="muted"
+                />
+                {feeLines.fees > 0 && (
+                  <ReceiptRow
+                    label={t('delivery.result.fees')}
+                    value={<Money value={feeLines.fees} currency={currency} size="inherit" sign="always" />}
+                    emphasis="muted"
+                  />
+                )}
+                {feeLines.other !== 0 && (
+                  <ReceiptRow
+                    label={t('delivery.result.other')}
+                    value={
+                      <Money
+                        value={feeLines.other}
+                        currency={currency}
+                        size="inherit"
+                        sign="always"
+                        tone={feeLines.other < 0 ? 'positive' : 'default'}
+                      />
+                    }
+                    emphasis="muted"
+                  />
+                )}
+                <ReceiptRow
+                  label={t('delivery.result.total')}
+                  value={<Money value={total} currency={currency} size="inherit" />}
+                  emphasis="strong"
+                />
+              </div>
+            ) : (
             <div className={styles.subtotals}>
               <ReceiptRow
                 label="Items"
@@ -405,6 +454,7 @@ function PersonRow({ split, index, currency, progress, payerId, payerObject, pai
                 emphasis="strong"
               />
             </div>
+            )}
           </>
         )}
       </div>

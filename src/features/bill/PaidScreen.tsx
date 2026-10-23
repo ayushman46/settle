@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
-import { ArrowRight, ChevronDown, Equal, PiggyBank, Scale } from 'lucide-react'
+import { ArrowRight, Bike, ChevronDown, Equal, PiggyBank, Scale } from 'lucide-react'
 import { ActionBar, AmountInput, Button, Card, Chip, Money, PageTitle, Screen, TopBar } from '../../components'
 import { currencyName } from '../../lib/currencies'
 import { cx } from '../../lib/cx'
@@ -11,12 +11,16 @@ import {
   computedBillTotal,
   defaultPaid,
   effectivePaid,
+  feesTotal,
   itemsTotal,
   stepProgress,
   type BreakdownRow,
 } from '../../state/selectors'
 import { useFlow, useSession } from '../../state/store'
-import type { Minor } from '../../types'
+import type { FeeSplit, Minor, Session } from '../../types'
+import { DELIVERY_ENABLED } from './delivery.enabled'
+import { FeePolicy } from './FeePolicy'
+import { explainFeePolicy, feePolicyFacts } from './feeView'
 import { revealElement, TINY_RATE } from './screenUtils'
 import styles from './PaidScreen.module.css'
 
@@ -28,6 +32,12 @@ interface Explanation {
 
 /** Screen readers hear the explanation once typing settles, not on every keystroke. */
 const SPEAK_AFTER_MS = 700
+
+/** With delivery fees: how the fees (equally or by what each had), tax and the coupon are shared. */
+function explainFees(session: Session, fees: Minor): Explanation {
+  const facts = feePolicyFacts(session, fees)
+  return { tone: 'extra', icon: facts.feeSplit === 'equal' ? <Bike /> : <Scale />, text: explainFeePolicy(facts) }
+}
 
 /** How the amount paid compares with the items, in one friendly line (null when there's nothing to say). */
 function explain(paid: Minor, items: Minor, currency: string): Explanation | null {
@@ -69,7 +79,11 @@ export function PaidScreen() {
   const [breakdownOpen, setBreakdownOpen] = useState(false)
   const breakdownId = useId()
   const breakdownRef = useRef<HTMLDivElement>(null)
-  const explanation = explain(paid, items, currency)
+  const noteId = useId()
+  // Delivery orders: the fee policy, and its explanation in place of the one-liner.
+  const fees = DELIVERY_ENABLED ? feesTotal(session) : 0
+  const feeSplit: FeeSplit = session.feeSplit ?? 'proportional'
+  const explanation = fees > 0 && paid > 0 ? explainFees(session, fees) : explain(paid, items, currency)
   const explanationText = explanation?.text ?? ''
   /** What the hidden live region says: the explanation, once typing pauses (at once for a chip). */
   const [spoken, setSpoken] = useState(explanationText)
@@ -93,7 +107,7 @@ export function PaidScreen() {
   }
 
   const pick = (value: Minor): void => {
-    if ((explain(value, items, currency)?.text ?? '') !== explanationText) speakNow.current = true
+    if (fees === 0 && (explain(value, items, currency)?.text ?? '') !== explanationText) speakNow.current = true
     setText(toInputString(value, currency, { trimZeros: true }))
     dispatch({ type: 'setPaid', paid: value })
   }
@@ -159,7 +173,18 @@ export function PaidScreen() {
           </div>
         )}
 
-        <p className={cx(styles.note, explanation && styles[explanation.tone])}>
+        {fees > 0 && (
+          <FeePolicy
+            value={feeSplit}
+            describedBy={noteId}
+            onChange={(next) => {
+              speakNow.current = true
+              dispatch({ type: 'setFeeSplit', feeSplit: next })
+            }}
+          />
+        )}
+
+        <p id={noteId} className={cx(styles.note, explanation && styles[explanation.tone])}>
           {explanation && (
             <>
               <span className={styles.noteIcon} aria-hidden="true">
