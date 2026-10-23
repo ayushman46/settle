@@ -4,6 +4,7 @@
  */
 import { defaultCurrency, isKnownCurrency } from '../lib/currencies'
 import { newId } from '../lib/ids'
+import { t } from '../i18n'
 import { MAX_MINOR, rescaleMinor } from '../lib/money'
 import { graphemes, MAX_PEOPLE, nextColor, normalizeName } from '../lib/people'
 import { validShares } from '../lib/split'
@@ -144,7 +145,7 @@ export function sanitizeFee(fee: BillFee): BillFee | null {
   return {
     id: fee.id,
     kind: FEE_KINDS.has(fee.kind) ? fee.kind : ('other' as BillFeeKind),
-    label: graphemes(label).length > MAX_FEE_LABEL ? graphemes(label).slice(0, MAX_FEE_LABEL).join('').trim() : label || 'Fee',
+    label: graphemes(label).length > MAX_FEE_LABEL ? graphemes(label).slice(0, MAX_FEE_LABEL).join('').trim() : label || t('state.fee.default'),
     amount,
   }
 }

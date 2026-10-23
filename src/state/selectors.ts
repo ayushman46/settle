@@ -1,6 +1,7 @@
 /** Derived values for screens. Pure functions of the session. */
 import type { CategoryId } from '../../shared/categories'
 import { categoryFromText } from '../engine/categories'
+import { t } from '../i18n'
 import { currencyDigits } from '../lib/money'
 import { validShares } from '../lib/split'
 import { STEPS, type BillItem, type Minor, type Session, type StepId } from '../types'
@@ -177,12 +178,12 @@ export interface BreakdownRow {
  */
 export function billBreakdown(s: Session): BreakdownRow[] {
   const { meta } = s
-  const rows: BreakdownRow[] = [{ key: 'items', label: 'Items', amount: itemsTotal(s), kind: 'items' }]
+  const rows: BreakdownRow[] = [{ key: 'items', label: t('state.breakdown.items'), amount: itemsTotal(s), kind: 'items' }]
 
   const charges = [
-    ['serviceCharge', 'Service charge', meta.serviceCharge],
-    ['tax', 'Tax', meta.tax],
-    ['tip', 'Tip', meta.tip],
+    ['serviceCharge', t('state.breakdown.serviceCharge'), meta.serviceCharge],
+    ['tax', t('state.breakdown.tax'), meta.tax],
+    ['tip', t('state.breakdown.tip'), meta.tip],
   ] as const
   for (const [key, label, amount] of charges) {
     if (key === 'tip') for (const fee of meta.fees ?? []) rows.push({ key: `fee:${fee.id}`, label: fee.label, amount: fee.amount, kind: 'fee' })
@@ -190,21 +191,21 @@ export function billBreakdown(s: Session): BreakdownRow[] {
     rows.push({ key, label, amount, kind: 'charge' })
   }
   if (meta.discount !== null && meta.discount !== 0) {
-    rows.push({ key: 'discount', label: 'Discount', amount: -Math.abs(meta.discount), kind: 'discount' })
+    rows.push({ key: 'discount', label: t('state.breakdown.discount'), amount: -Math.abs(meta.discount), kind: 'discount' })
   }
 
   const computed = computedBillTotal(s)
   if (meta.total === null) {
-    rows.push({ key: 'total', label: 'Adds up to', amount: computed, kind: 'total' })
+    rows.push({ key: 'total', label: t('state.breakdown.addsUpTo'), amount: computed, kind: 'total' })
     return rows
   }
 
   const diff = meta.total - computed
   if (diff !== 0) {
     const roundOff = Math.abs(diff) < 10 ** currencyDigits(s.currency)
-    const label = roundOff ? 'Round-off' : diff > 0 ? 'Other charges' : 'Other discounts'
+    const label = t(roundOff ? 'state.breakdown.roundOff' : diff > 0 ? 'state.breakdown.otherCharges' : 'state.breakdown.otherDiscounts')
     rows.push({ key: 'roundoff', label, amount: diff, kind: roundOff ? 'roundoff' : 'other' })
   }
-  rows.push({ key: 'total', label: 'Bill total', amount: meta.total, kind: 'total' })
+  rows.push({ key: 'total', label: t('state.breakdown.total'), amount: meta.total, kind: 'total' })
   return rows
 }
