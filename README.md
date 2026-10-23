@@ -111,6 +111,10 @@ scripts/      license CLI
 
 ## Deploy
 
+Live at **[settleupi.vercel.app](https://settleupi.vercel.app)**. On Vercel's free plan it's `npx vercel deploy --prod` (see [DEPLOY.md](DEPLOY.md) for keys and the Cloudflare Pages + Render alternative).
+
+Any Node host:
+
 ```sh
 npm run build && npm start        # http://localhost:3000
 ```

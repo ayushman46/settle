@@ -23,6 +23,19 @@ Phone ──► https://settle.pages.dev                 Cloudflare Pages: the a
 
 > Everything except AI and Pro works without any keys: splitting, groups, people, pay links, UPI QR codes, reminders and backups.
 
+## The quick way: Vercel (one service, about 5 minutes)
+
+Settle also runs entirely on Vercel's free plan: the app from Vercel's network, and the API (AI, rates, Pro) as one serverless function that never sleeps. The live site is **https://settleupi.vercel.app** (project `settle`).
+
+1. `npx vercel login`, then in this folder: `npx vercel link --project settle` (or `npx vercel project create <name>` first for a new one).
+2. Add your keys as **Production** environment variables, in the Vercel dashboard (project → **Settings → Environment Variables**) or with `npx vercel env add NVIDIA_API_KEY production`. The same names as below: `NVIDIA_API_KEY`, and optionally `LICENSE_PRIVATE_KEY`, `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`. Nothing else is needed; `TRUST_PROXY` is already right for Vercel.
+3. `npx vercel deploy --prod`. Vercel runs `npm run build:vercel` (vercel.json), which builds the app, bundles the API into one function and writes the same security headers and routes the Node server uses. Changing a variable needs a new deploy.
+4. Optional: `npx vercel git connect` deploys every push to `main` automatically; **Settings → Domains** adds your own domain or another free `*.vercel.app` name.
+
+Checks: `https://<your address>/api/health` says `"configured": true` once the NVIDIA key is in. A scan can take up to 90 seconds; Vercel's free plan allows it.
+
+The rest of this guide is the Cloudflare Pages + Render route, which suits a custom setup or very high traffic.
+
 ---
 
 ## Step 0 — Get your keys ready (5 minutes, optional)
