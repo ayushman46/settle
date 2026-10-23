@@ -21,6 +21,7 @@ import { useExpenses, useFriendsById, useProfile } from '../../data'
 import { ME_ID, type CategoryId, type Expense } from '../../domain/types'
 import { CATEGORY_META } from '../../engine/categories'
 import { today } from '../../engine/dates'
+import { useT } from '../../i18n'
 import { FriendAvatar, friendLabel } from '../../kit/index-a'
 import { formatMoney } from '../../lib/money'
 import { useHasFeature } from '../../pro'
@@ -36,60 +37,53 @@ import styles from './InsightsScreen.module.css'
  * phone. Free users see a softly blurred sketch behind an honest unlock card.
  */
 export function InsightsScreen() {
+  const t = useT()
   const unlocked = useHasFeature('insights')
   return (
     <Screen header={<TopBar onBack={() => goBack('/app/you')} />}>
-      <PageTitle title="Insights" subtitle="Where your money goes" />
+      <PageTitle title={t('insights.title')} subtitle={t('insights.subtitle')} />
       {unlocked ? <InsightsBody /> : <LockedInsights />}
     </Screen>
   )
 }
 
 function InsightsBody() {
+  const t = useT()
   const expenses = useExpenses()
   const { currency } = useProfile()
   const day = today()
   const [range, setRange] = useState(() => initialRange(expenses, { meId: ME_ID, currency, today: day }))
   const view = useMemo(() => insightsView(expenses, { meId: ME_ID, currency, range, today: day }), [expenses, currency, range, day])
-  const option = RANGE_OPTIONS.find((o) => o.value === range) ?? RANGE_OPTIONS[0]!
   const hasAny = expenses.length > 0
 
   return (
     <>
-      <RangeChips label="Time range" options={RANGE_OPTIONS} value={range} onChange={setRange} />
+      <RangeChips label={t('insights.range.aria')} options={RANGE_OPTIONS} value={range} onChange={setRange} />
       {view.count === 0 || view.spent === 0 ? (
         <EmptyState
           illustration={<Illustration name="empty-insights" />}
-          title={hasAny ? `Nothing ${option.phrase} yet` : 'Your insights start with your first split'}
-          text={
-            hasAny
-              ? 'Splits you’re part of in this range will show up here. Try a longer range.'
-              : 'Every split you’re part of shows up here — by category, month and friend.'
-          }
+          title={hasAny ? t('insights.empty.title', { range }) : t('insights.empty.first.title')}
+          text={hasAny ? t('insights.empty.body') : t('insights.empty.first.body')}
           action={
             <Button size="md" onClick={() => navigate('/app/split/new')}>
-              Split an expense
+              {t('insights.empty.cta')}
             </Button>
           }
         />
       ) : (
         <>
-          <SpentCard view={view} currency={currency} phrase={option.phrase} />
+          <SpentCard view={view} currency={currency} />
           <CategorySection view={view} currency={currency} />
           {view.months.length > 1 && <MonthSection view={view} currency={currency} />}
           {view.people.length > 0 && <PeopleSection view={view} currency={currency} />}
         </>
       )}
       {view.otherCurrencyCount > 0 && (
-        <p className={styles.footnote}>
-          {view.otherCurrencyCount === 1
-            ? `1 expense in another currency isn't counted here — amounts are never converted.`
-            : `${view.otherCurrencyCount} expenses in other currencies aren't counted here — amounts are never converted.`}
-        </p>
+        <p className={styles.footnote}>{t('insights.otherCurrency', { count: view.otherCurrencyCount })}</p>
       )}
       <p className={styles.private}>
         <ShieldCheck aria-hidden="true" />
-        Worked out on this phone — nothing is uploaded.
+        {t('insights.private')}
       </p>
     </>
   )
@@ -103,9 +97,10 @@ function categoryLabel(category: CategoryId): string {
   return CATEGORY_META[category].label
 }
 
-function SpentCard({ view, currency, phrase }: { view: InsightsView; currency: string; phrase: string }) {
+function SpentCard({ view, currency }: { view: InsightsView; currency: string }) {
+  const t = useT()
   const shown = useCountUp(view.spent)
-  const label = `You spent ${phrase}`
+  const label = t('insights.spent.title', { range: view.range })
   return (
     <section className={styles.spent} aria-labelledby="insights-spent">
       <h2 id="insights-spent" className={styles.spentLabel}>
@@ -118,17 +113,17 @@ function SpentCard({ view, currency, phrase }: { view: InsightsView; currency: s
         <span className="visually-hidden">{formatMoney(view.spent, currency, { trimZeros: true })}</span>
       </div>
       <p className={styles.spentNote}>
-        Your share across {view.count} {view.count === 1 ? 'expense' : 'expenses'}
-        {view.top && ` · ${view.top.percent}% on ${categoryLabel(view.top.category)}`}
+        {t('insights.spent.note', { count: view.count })}
+        {view.top && ` · ${t('insights.spent.top', { percent: view.top.percent, category: categoryLabel(view.top.category) })}`}
       </p>
       <dl className={styles.stats}>
         <div className={styles.stat}>
-          <dt>You paid up front</dt>
+          <dt>{t('insights.stat.paid')}</dt>
           <dd>{formatMoney(view.paidOut, currency, { trimZeros: true })}</dd>
         </div>
         {view.perMonth !== null && (
           <div className={styles.stat}>
-            <dt>About a month</dt>
+            <dt>{t('insights.stat.perMonth')}</dt>
             <dd>{formatMoney(view.perMonth, currency, { trimZeros: true })}</dd>
           </div>
         )}
@@ -138,10 +133,11 @@ function SpentCard({ view, currency, phrase }: { view: InsightsView; currency: s
 }
 
 function CategorySection({ view, currency }: { view: InsightsView; currency: string }) {
+  const t = useT()
   const format = money(currency)
   return (
     <section className={styles.section} aria-labelledby="insights-categories">
-      <SectionHeader id="insights-categories" title="By category" />
+      <SectionHeader id="insights-categories" title={t('insights.category.title')} />
       <Card padding="lg" className={styles.chartCard}>
         <DonutChart
           data={view.byCategory.map((c) => ({
@@ -150,10 +146,10 @@ function CategorySection({ view, currency }: { view: InsightsView; currency: str
             color: categoryColor(c.category),
             label: categoryLabel(c.category),
           }))}
-          centerLabel="Spent"
+          centerLabel={t('insights.chart.spent')}
           centerValue={format(view.spent)}
           formatValue={format}
-          ariaLabel="Spending by category"
+          ariaLabel={t('insights.category.aria')}
           legend
         />
       </Card>
@@ -162,19 +158,20 @@ function CategorySection({ view, currency }: { view: InsightsView; currency: str
 }
 
 function MonthSection({ view, currency }: { view: InsightsView; currency: string }) {
+  const t = useT()
   return (
     <section className={styles.section} aria-labelledby="insights-months">
       <SectionHeader
         id="insights-months"
-        title="By month"
-        description={view.byMonth.length > MAX_MONTH_BARS ? `The last ${MAX_MONTH_BARS} months` : undefined}
+        title={t('insights.month.title')}
+        description={view.byMonth.length > MAX_MONTH_BARS ? t('insights.month.last', { count: MAX_MONTH_BARS }) : undefined}
       />
       <Card padding="lg" className={styles.chartCard}>
         <BarChart
           data={view.months.map((m) => ({ key: m.month, label: shortMonth(m.month), longLabel: longMonth(m.month), value: m.amount }))}
           formatValue={money(currency)}
-          ariaLabel="Spending by month"
-          labelHeader="Month"
+          ariaLabel={t('insights.month.aria')}
+          labelHeader={t('insights.month.header')}
         />
       </Card>
     </section>
@@ -182,10 +179,11 @@ function MonthSection({ view, currency }: { view: InsightsView; currency: string
 }
 
 function PeopleSection({ view, currency }: { view: InsightsView; currency: string }) {
+  const t = useT()
   const friendsById = useFriendsById()
   return (
     <section className={styles.section} aria-labelledby="insights-people">
-      <SectionHeader id="insights-people" title="Who you split with" description="Your share of what you split with each person" />
+      <SectionHeader id="insights-people" title={t('insights.people.title')} description={t('insights.people.description')} />
       <Card padding="none">
         <List>
           {view.people.map((p) => {
@@ -195,7 +193,7 @@ function PeopleSection({ view, currency }: { view: InsightsView; currency: strin
                 key={p.friendId}
                 leading={<FriendAvatar friend={friend} friendId={p.friendId} size="md" />}
                 title={friendLabel(p.friendId, friend)}
-                subtitle={`${p.count} shared ${p.count === 1 ? 'expense' : 'expenses'}`}
+                subtitle={t('insights.people.count', { count: p.count })}
                 trailing={<Money value={p.amount} currency={currency} trimZeros strong />}
                 onClick={friend ? () => navigate(`/app/friends/${encodeURIComponent(p.friendId)}`) : undefined}
                 chevron
@@ -221,6 +219,7 @@ const SAMPLE_CATEGORIES: ReadonlyArray<[CategoryId, number]> = [
 const SAMPLE_MONTHS: readonly number[] = [52, 64, 48, 71, 58, 83]
 
 function InsightsSketch() {
+  const t = useT()
   return (
     <div className={styles.sketch}>
       <Card padding="lg" className={styles.chartCard}>
@@ -231,14 +230,14 @@ function InsightsSketch() {
             color: categoryColor(category),
             label: categoryLabel(category),
           }))}
-          ariaLabel="Sample"
+          ariaLabel={t('insights.sample.aria')}
         />
       </Card>
       <Card padding="lg" className={styles.chartCard}>
         <BarChart
           data={SAMPLE_MONTHS.map((value, i) => ({ key: String(i), label: '', value }))}
           formatValue={String}
-          ariaLabel="Sample"
+          ariaLabel={t('insights.sample.aria')}
         />
       </Card>
     </div>
@@ -250,13 +249,14 @@ function involvesMe(e: Expense): boolean {
 }
 
 function LockedInsights() {
+  const t = useT()
   const expenses = useExpenses()
   const count = expenses.filter(involvesMe).length
   return (
     <ProLock
       feature="insights"
       preview={<InsightsSketch />}
-      note={count > 0 ? `You've split ${count} ${count === 1 ? 'expense' : 'expenses'} so far — see where it all went.` : undefined}
+      note={count > 0 ? t('insights.locked.note', { count }) : undefined}
     />
   )
 }

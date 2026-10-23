@@ -1,25 +1,33 @@
 /**
- * What the Insights screen shows for a range — the engine's numbers plus the few plain-English
+ * What the Insights screen shows for a range — the engine's numbers plus the few plain-language
  * extras around them (the biggest category, a monthly average, expenses in other currencies).
  */
 import type { CategoryId, Expense, Minor } from '../../domain/types'
 import { wholePercents } from '../../components/chartMath'
 import { insights, insightsRange, type Insights, type InsightsRange } from '../../engine/insights'
+import { getLanguage, intlLocale, t, type MessageKey } from '../../i18n'
 import { currencyDigits } from '../../lib/money'
 
 export interface RangeOption {
   value: InsightsRange
-  /** Chip text. */
-  label: string
-  /** Fuller words for sentences ("in the last 3 months"). */
-  phrase: string
+  /** Chip text, in the current language (read when used). Sentences about the range select on `value`. */
+  readonly label: string
+}
+
+function rangeOption(value: InsightsRange, label: MessageKey): RangeOption {
+  return {
+    value,
+    get label() {
+      return t(label)
+    },
+  }
 }
 
 export const RANGE_OPTIONS: readonly RangeOption[] = [
-  { value: 'this_month', label: 'This month', phrase: 'this month' },
-  { value: 'last_3_months', label: '3 months', phrase: 'in the last 3 months' },
-  { value: 'this_year', label: 'This year', phrase: 'this year' },
-  { value: 'all', label: 'All time', phrase: 'since you started' },
+  rangeOption('this_month', 'insights.range.thisMonth'),
+  rangeOption('last_3_months', 'insights.range.last3Months'),
+  rangeOption('this_year', 'insights.range.thisYear'),
+  rangeOption('all', 'insights.range.all'),
 ]
 
 /** Most months drawn in the month chart (the latest ones). */
@@ -95,16 +103,24 @@ export function initialRange(expenses: readonly Expense[], opts: { meId: string;
   return 'this_month'
 }
 
-function formatter(options: Intl.DateTimeFormatOptions): Intl.DateTimeFormat | null {
-  try {
-    return new Intl.DateTimeFormat(undefined, options)
-  } catch {
-    return null
-  }
-}
+const formatters = new Map<string, Intl.DateTimeFormat | null>()
 
-const SHORT_MONTH = formatter({ month: 'short' })
-const LONG_MONTH = formatter({ month: 'long', year: 'numeric' })
+/** A month formatter in the UI language (Latin digits), made once per language and style. */
+function formatter(style: 'short' | 'long'): Intl.DateTimeFormat | null {
+  const locale = intlLocale(getLanguage())
+  const key = `${locale}|${style}`
+  if (!formatters.has(key)) {
+    const options: Intl.DateTimeFormatOptions = style === 'short' ? { month: 'short' } : { month: 'long', year: 'numeric' }
+    let made: Intl.DateTimeFormat | null
+    try {
+      made = new Intl.DateTimeFormat(locale, { ...options, numberingSystem: 'latn' })
+    } catch {
+      made = null
+    }
+    formatters.set(key, made)
+  }
+  return formatters.get(key) ?? null
+}
 
 function monthDate(period: string): Date {
   const [y, m] = period.split('-').map(Number)
@@ -113,10 +129,12 @@ function monthDate(period: string): Date {
 
 /** "Oct" for `2026-10`. */
 export function shortMonth(period: string): string {
-  return SHORT_MONTH ? SHORT_MONTH.format(monthDate(period)) : period.slice(5)
+  const format = formatter('short')
+  return format ? format.format(monthDate(period)) : period.slice(5)
 }
 
 /** "October 2026" for `2026-10`. */
 export function longMonth(period: string): string {
-  return LONG_MONTH ? LONG_MONTH.format(monthDate(period)) : period
+  const format = formatter('long')
+  return format ? format.format(monthDate(period)) : period
 }
