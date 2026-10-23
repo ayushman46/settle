@@ -1,0 +1,122 @@
+/* One transaction read from an SMS: a little receipt of what the bank said, then what to do. */
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+  min-width: 0;
+  padding: var(--s-5);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+  animation: card-in var(--dur-3) var(--ease-spring) backwards;
+}
+
+@keyframes card-in {
+  from {
+    transform: translateY(8px) scale(0.98);
+    opacity: 0;
+  }
+}
+
+.top {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-3);
+  min-width: 0;
+}
+
+.heading {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.title {
+  color: var(--ink);
+  font: var(--text-headline);
+  letter-spacing: var(--tracking-tight);
+  overflow-wrap: anywhere;
+}
+
+.meta {
+  color: var(--ink-2);
+  font: var(--text-caption);
+  font-variant-numeric: tabular-nums;
+}
+
+.ref {
+  color: var(--ink-2);
+  font: var(--text-caption);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.amount {
+  flex: none;
+  padding-top: 2px;
+}
+
+.inIcon {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-field);
+  background: var(--positive-soft);
+  color: var(--positive);
+}
+
+.inIcon > svg {
+  width: 22px;
+  height: 22px;
+}
+
+.body {
+  color: var(--ink-2);
+  font: var(--text-body);
+}
+
+/* "You owed Riya exactly ₹1,840" — the match that closes the loop. */
+.offer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  padding: var(--s-4);
+  border-radius: var(--radius-field);
+  background: var(--accent-soft);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent-ink) 22%, transparent);
+}
+
+.offerText {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-2);
+  color: var(--ink);
+  font: var(--text-label);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.offerIcon {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  margin-top: 1px;
+  color: var(--accent-ink);
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+@media (forced-colors: active) {
+  .offer {
+    border: 1px solid CanvasText;
+  }
+}
