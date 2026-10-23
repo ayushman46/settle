@@ -38,8 +38,9 @@ function farewell(memberIds: string[] = [samId]): Pool {
   })
 }
 
-async function openReply(pool: Pool, extra: { n?: string; a?: number; secret?: string; tamper?: boolean } = {}) {
-  const reply = signPoolReply(extra.secret ?? pool.secret, { v: 1, k: 'chip', id: pool.id, w: 0, n: extra.n ?? 'Sam', a: extra.a ?? 50000, at: Math.floor(Date.now() / 1000) - 60 })
+async function openReply(pool: Pool, extra: { n?: string; a?: number; at?: number; secret?: string; tamper?: boolean } = {}) {
+  const at = extra.at ?? Math.floor(Date.now() / 1000) - 60
+  const reply = signPoolReply(extra.secret ?? pool.secret, { v: 1, k: 'chip', id: pool.id, w: 0, n: extra.n ?? 'Sam', a: extra.a ?? 50000, at })
   const url = await encodePoolReply(extra.tamper ? { ...reply, a: reply.a + 1 } : reply, '')
   return renderAt(url, <PoolReplyScreen />)
 }
@@ -67,10 +68,12 @@ describe('PoolReplyScreen', { timeout: 30_000 }, () => {
 
   it('the same reply twice is already ticked', async () => {
     const pool = farewell()
-    const first = await openReply(pool)
+    // The very same reply both times: built a second later, a fresh `at` would make it a new one.
+    const at = Math.floor(Date.now() / 1000) - 60
+    const first = await openReply(pool, { at })
     await first.user.click(await screen.findByRole('button', { name: 'Yes, tick Sam off' }))
     first.unmount()
-    await openReply(pool)
+    await openReply(pool, { at })
     expect(await screen.findByRole('heading', { level: 1, name: 'Already ticked' })).toBeInTheDocument()
     expect(screen.getByText('Sam’s ₹500 is in.')).toBeInTheDocument()
     expect(poolsStore.get()[0]?.contributions).toHaveLength(1)
