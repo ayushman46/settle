@@ -242,6 +242,75 @@ Still slow on a budget phone (each page is a ~1.5 s long task there): see open i
 **Why it looked promising.** On the mid phone, the Activity tab open (254 ms) spent ~90 ms inside the filter chips' layout effect (it reads `offsetLeft` to slide a remembered chip into view, forcing a layout of the whole new screen before its first paint).
 **Result** (`ab-fix4-filters-no-forced-layout.json`): mid Home → Activity 232 → 218 ms (−6%, spreads overlap: 202–330 vs 171–278 ms); low 1.78 → 1.83 s (+3%). The layout simply moves to the browser's next frame — no measurable win, so the change was **reverted**. Its tests stayed (they pin the existing slide-into-view behaviour).
 
+## Second pass (perf-2, 23 Oct 06:25–08:30): the deferred wins and the Activity open issue
+
+Same method, tightened for a busier machine (six feature agents building and testing alongside): **7–9 interleaved runs** per A/B, and both sides built from a clean `git archive HEAD` in which only the fix's files differ (scratchpad `perf2/mkab.sh`; other agents' uncommitted work never reaches either side). Where an end-to-end number can't resolve a small change through the noise, the fix is judged by a direct measurement of the work it removes (the data layer's own marks, transferred bytes, `bench/intl.mjs`), and that is said plainly. Harness additions: `data:start` (when the data layer starts = the app's code has loaded and run), every `data:*` mark in A/B tables, `bench/intl.mjs` (first-use cost of Intl objects in a fresh browser), `bench/micro.mjs` first-call times and schema-only rows, a 60 s server start-up wait, and the heavy seed now carries the v4 fields (`language`, `travelCurrency`, `roundSize`), so it is exactly what the current app writes and takes the fast paths.
+
+### Fix 4 — currency names built on first use, not on every start (61fa33c, kept)
+
+**Why.** `src/lib/currencies.ts` built `Intl.DisplayNames` while the main bundle evaluated; only the currency pickers and a few labels use it.
+**What.** A getter creates it the first time `currencyName()` runs (same `null` fallback; a browser that can't build it isn't asked again). Tests: not built at import, built once, fallback names.
+**Result.** `bench/intl.mjs` (low profile, fresh browser per sample, 7 samples): building it *after* the Intl objects the app makes anyway (money, dates, graphemes) costs **38 ms median (6–99 ms)** of main thread — now off every start; cold, in a fresh renderer, it costs 495 ms (286–727 ms), which a currency picker now pays on first open instead. End to end (`ab-perf2-t1-lazy-currency-names*.json`, 7 cold + 9 warm runs): every row inside the spread (warm Home content 7.64 → 8.14 s, `data:start` 2.47 → 2.64 s, ranges 6.3–11.3 s) — no regression, and a 40 ms gain is below what the end-to-end runs can resolve on this machine. Kept for the measured main-thread saving. (The previous estimate of 93 ms was the profile's self time including ICU data the app loads anyway.)
+
+### Fix 5 — the profile, friends, groups and templates load without re-checking what the app wrote (0ee5d49, kept)
+
+**Why.** After fix 1 the expense list skipped zod for canonical records, but the four small collections still went through it on every start.
+**What.** `isCanonicalProfile` / `isCanonicalFriend` / `isCanonicalGroup` / `isCanonicalRecurring` in src/data/schemas.ts recognise records already in exactly the shape their schema returns; the lists use them through `records()`, the profile through `canonicalOr()` (success, failure and output exactly the schema's). Everything else still goes through the schema. Exported schemas unchanged; src/data/store.ts needed no change. Tests (src/data/canonical.test.ts): per collection, hand-written records, every single-field variant (names, UPI IDs, phones, emoji incl. ZWJ sequences, flags, lone surrogates, members, settlements, timestamps incl. −0/NaN, trip currency, round size, periods), 2,000 random records, extra / `__proto__` / inherited keys, lists (order, repeats, bad records, owner first) and everything the app itself saves; mutation-checked.
+**Result** (low profile, warm start with 2 years of data, 9 runs, `ab-perf2-t2-small-collections-fast-path.json`):
+
+| data-layer mark | before | after | change |
+| --- | --- | --- | --- |
+| validate friends (60) | 46 ms (4–103) | **2 ms** (1–44) | −95% |
+| validate groups (12) | 139 ms (15–696) | **30 ms** (2–76) | −78% |
+| validate profile | 96 ms (5–194) | 49 ms (3–97) | −49% |
+| validate recurring | 9 ms | 7 ms | (noise) |
+| data layer total | 1.34 s (316 ms–1.97 s) | **1.06 s** (156 ms–1.79 s) | −21% |
+| Home content painted | 11.59 s (9.63–16.27) | 9.83 s (6.76–16.53) | −15% (inside the spread) |
+
+Node, steady state (`bench/micro.mjs`): friends 3.08 → 0.83 ms, groups 3.20 → 0.71 ms. Caveat: a profile or group saved before v4 (no `language` / `travelCurrency` / `roundSize`) still takes the schema path until the app next saves it — correct, just not faster yet.
+
+### Fix 6 — brotli for hashed assets from the Node server (c3a13a4, kept)
+
+**Why.** `hono/compress` sends gzip; brotli is ~13% smaller on this bundle. Cloudflare Pages compresses by itself, so this is for the Render-only deployment.
+**What.** The client build writes `<file>.br` (quality 11) beside each compressible asset (`precompress()` in vite.config.ts, `node:zlib`, no new dependency; skipped for the server build and when `CF_PAGES` is set); server/web.ts serves `/assets/*` with `serveStatic({ precompressed: true })`: `Content-Encoding: br` + `Vary: Accept-Encoding` when the browser takes br, gzip on the fly otherwise. Headless Edge sends `br` to `http://127.0.0.1` too, so the bench sees it. Tests: br / gzip / identity, an asset without a copy, non-asset files, missing files.
+**Result** (low profile, cold, 7 runs, `ab-perf2-t3-brotli.json`; bytes are transferred bytes until interactive):
+
+| cold visit | JS | CSS | content painted |
+| --- | --- | --- | --- |
+| `/app` first visit | 240.5 → **194.1 KB** (−19%) | 33.2 → 24.9 KB (−25%) | 9.72 → 9.62 s |
+| `/pay` link | 252.9 → **224.6 KB** (−11%) | 37.4 → 33.1 KB (−11%) | 13.15 → **11.74 s** (−11%) |
+| `/app` with data, empty cache | 220.8 → 194.1 KB (−12%) | 28.4 → 24.9 KB (−12%) | 16.27 → 14.40 s (−12%) |
+
+The byte savings are exact; the times come from the busiest hour of the night (absolute values ~2× the baseline run's) and their spreads overlap, but every content/FCP/LCP median moved the right way.
+
+### Fix 7 — a link page preloads its own code with the page (6b16182, kept)
+
+**Why.** `/pay`, `/claim` and `/pool` pages are lazy chunks: the browser only learned about them after the main bundle had downloaded and run, one more round trip on a 150 ms-RTT phone.
+**What.** The client build writes its manifest (`build.manifest`); server/web.ts adds `<link rel="modulepreload">` for that route's chunk and its imports when it serves a link page.
+**Result** (low profile, cold, 7 runs, `ab-perf2-t4-link-page-preload.json`):
+
+| cold visit | first paint | content painted | bytes |
+| --- | --- | --- | --- |
+| `/pay` link | 13.23 → **11.97 s** (−10%) | 15.15 → **13.21 s** (−13%) | 327 → 327 KB (same files, earlier) |
+| `/app` (control, no preload) | 10.45 → 9.77 s | 10.48 → 9.78 s | 302 → 304 KB |
+
+The control moved too (machine noise), so read the `/pay` win as ~10%, not 13%.
+
+### Fix 8 — Activity's "Show more" pages join without the entrance animation, and only the month they land in re-renders (kept)
+
+**Why.** Every page of 40 rows started 40 entrance animations at once, and every page re-rendered every month section already on screen — a ~1.5 s long task per page on the budget phone (open issue from the first pass).
+**What.** `MonthList` is memoised on its rows (`shallowArrayEqual`), and once a second page is in, rows join with `animation: none` (`.calm`). `ExpenseRow` now subscribes to the other side of a 1:1 entry, so a memoised row still follows a rename (test added).
+**Result** (low profile, 1,500 expenses, scroll Activity to the oldest entry, 7 runs, `ab-perf2-t5-activity-calm-rows.json`):
+
+| | before | after | change |
+| --- | --- | --- | --- |
+| time to oldest entry | 78.0 s | **59.1 s** | −24% |
+| long-task time | 75.4 s | **56.2 s** | −26% |
+| stalled time | 72.3 s | 56.3 s | −22% |
+| p95 frame | 2.23 s | 2.28 s | (same) |
+
+Pages still cost a long task each on a budget phone; list virtualisation is the next step (open).
+
 ## Deferred wins (files the perf agent doesn't own — ready for the lead to apply)
 
 Each is measured the same way as the fixes above: build before/after into `node_modules/.cache/settle-bench/dist-*` and run `node bench/ab.mjs --a <before> --b <after> …` (interleaved, 5 runs, medians). Numbers below come from the low-profile CPU profile / trace of a cold start with heavy data (`node bench/profile.mjs --sourcemap --scenario cold --data heavy --trace`), so "expected" = self time that goes away, not yet an A/B result.

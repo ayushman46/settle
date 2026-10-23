@@ -27,7 +27,8 @@ export async function startServer({ dist, port }) {
   child.on('exit', () => (exited = true))
 
   const origin = `http://127.0.0.1:${port}`
-  for (let i = 0; i < 100; i++) {
+  // Up to a minute: on a machine busy with builds and tests, Node can take a while to start.
+  for (let i = 0; i < 600; i++) {
     if (exited) throw new Error(`Server exited:\n${log}`)
     try {
       const res = await fetch(`${origin}/api/health`)
@@ -35,7 +36,7 @@ export async function startServer({ dist, port }) {
     } catch {
       await sleep(100)
     }
-    if (i === 99) throw new Error(`Server did not start on ${port}:\n${log}`)
+    if (i === 599) throw new Error(`Server did not start on ${port}:\n${log}`)
   }
 
   return {

@@ -34,6 +34,28 @@ const cases = {
     const data = JSON.parse(entries['settle.v3.groups']).data
     return () => z.safeParse(schemas.groupsSchema, data)
   })(),
+  'validate profile': (() => {
+    const data = JSON.parse(entries['settle.v3.profile']).data
+    return () => z.safeParse(schemas.profileSchema, data)
+  })(),
+  'validate recurring': (() => {
+    const data = JSON.parse(entries['settle.v3.recurring']).data
+    return () => z.safeParse(schemas.recurringListSchema, data)
+  })(),
+  // The same records through the schemas alone (what loading cost before the fast paths).
+  'schema only: friends': (() => {
+    const data = JSON.parse(entries['settle.v3.friends']).data
+    return () => z.safeParse(z.array(schemas.friendSchema), data)
+  })(),
+  'schema only: groups': (() => {
+    const data = JSON.parse(entries['settle.v3.groups']).data
+    return () => z.safeParse(z.array(schemas.groupSchema), data)
+  })(),
+  'schema only: profile': (() => {
+    // An unknown key keeps the profile off its fast path; the schema drops it.
+    const data = { ...JSON.parse(entries['settle.v3.profile']).data, offFastPath: 1 }
+    return () => z.safeParse(schemas.profileSchema, data)
+  })(),
   'overall summary': (() => {
     const expenses = JSON.parse(entries['settle.v3.expenses']).data
     const groups = JSON.parse(entries['settle.v3.groups']).data
@@ -49,7 +71,10 @@ const check = z.safeParse(schemas.expensesSchema, JSON.parse(entries['settle.v3.
 if (!check.success || check.data.length !== 1500) throw new Error('validation changed the heavy data set')
 
 for (const [name, fn] of Object.entries(cases)) {
-  for (let i = 0; i < 3; i++) fn() // warm-up
+  const t0 = performance.now()
+  fn() // the first call is what a start pays (plus warm-up)
+  const first = performance.now() - t0
+  for (let i = 0; i < 2; i++) fn()
   const times = []
   for (let i = 0; i < runs; i++) {
     const t = performance.now()
@@ -57,7 +82,7 @@ for (const [name, fn] of Object.entries(cases)) {
     times.push(performance.now() - t)
   }
   const s = summarize(times)
-  console.log(`${name.padEnd(24)} p50 ${s.p50.toFixed(2).padStart(8)} ms   min ${s.min.toFixed(2).padStart(8)}   max ${s.max.toFixed(2).padStart(8)}`)
+  console.log(`${name.padEnd(24)} first ${first.toFixed(2).padStart(8)} ms   p50 ${s.p50.toFixed(2).padStart(8)} ms   min ${s.min.toFixed(2).padStart(8)}   max ${s.max.toFixed(2).padStart(8)}`)
 }
 // Cold (first-call) cost matters most at startup: measure a fresh process with --runs 1.
 await closeAppModules()

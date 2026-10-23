@@ -121,6 +121,7 @@ export async function buildHeavy({ today = localToday(), seed = 20261023 } = {})
     haptics: true,
     onboarded: true,
     createdAt: startMs - 5 * DAY,
+    language: null,
   }
 
   const friends = [
@@ -164,6 +165,8 @@ export async function buildHeavy({ today = localToday(), seed = 20261023 } = {})
       createdAt,
       updatedAt: createdAt,
       archived: Boolean(g.archived),
+      travelCurrency: null,
+      roundSize: null,
     }
   })
   const bigGroup = groups[0]

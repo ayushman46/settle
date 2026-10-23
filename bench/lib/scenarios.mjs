@@ -177,6 +177,9 @@ export function dataMeasures(measures) {
     if (!m.name.startsWith('settle:')) continue
     const key = m.name.replace(/^settle:/, '')
     out[`data:${key}`] = (out[`data:${key}`] ?? 0) + m.duration
+    // When the data layer starts (ms after navigation start): everything before it is loading
+    // and evaluating the app's code, so this isolates module-evaluation cost from the rest.
+    if (out['data:start'] === undefined || m.start < out['data:start']) out['data:start'] = m.start
   }
   const loads = Object.entries(out)
     .filter(([k]) => k.startsWith('data:load:'))

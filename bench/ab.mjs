@@ -141,7 +141,7 @@ try {
       // Print the comparison.
       const keys = new Set()
       for (const r of [...records.A, ...records.B]) for (const k of Object.keys(r)) if (typeof r[k] === 'number') keys.add(k)
-      const shown = [...keys].filter((k) => KEYS.includes(k) || (name === 'screen opens' && !k.includes('·')))
+      const shown = [...keys].filter((k) => KEYS.includes(k) || k.startsWith('data:') || (name === 'screen opens' && !k.includes('·')))
       console.log(`\n### ${key}\n\n| metric | A (before) | B (after) | change |\n| --- | --- | --- | --- |`)
       for (const k of shown) {
         const a = summarize(records.A.map((r) => r[k]))
