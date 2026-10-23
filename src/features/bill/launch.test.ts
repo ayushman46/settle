@@ -11,8 +11,11 @@ import {
   openBill,
   resetBillLaunchForTests,
   takeBillStart,
+  takeScanHint,
   useBillDraft,
 } from './launch'
+import { bootFlow } from './boot'
+import { hasSharedPhoto, setSharedPhoto, takeSharedPhoto } from '../../state/sharedPhoto'
 import { sampleSession } from './screenTestKit'
 
 beforeEach(() => {
@@ -84,5 +87,52 @@ describe('the bill in progress', () => {
     expect(getPhoto()).toBeNull()
     expect(takeBillStart()).toBeNull()
     expect(billDraftSummary()).toBeNull()
+  })
+})
+
+describe('v4 starts: a shared photo and a delivery order', () => {
+  it('a delivery order opens the scan step with a one-shot hint', () => {
+    openBill({ kind: 'delivery' })
+    expect(window.location.pathname).toBe(BILL_PATH)
+    expect(takeBillStart()).toEqual({ kind: 'delivery' })
+    expect(takeScanHint()).toBe('delivery')
+    expect(takeScanHint()).toBeNull()
+  })
+
+  it('any other open clears the hint', () => {
+    openBill({ kind: 'delivery' })
+    openBill()
+    expect(takeScanHint()).toBeNull()
+    openBill({ kind: 'delivery' })
+    clearBillDraft()
+    expect(takeScanHint()).toBeNull()
+  })
+
+  it('a shared photo waits for the scan step, once', () => {
+    const file = new File(['x'], 'bill.jpg', { type: 'image/jpeg' })
+    setSharedPhoto(file)
+    expect(hasSharedPhoto()).toBe(true)
+    openBill({ kind: 'photo' })
+    expect(takeBillStart()).toEqual({ kind: 'photo' })
+    expect(takeSharedPhoto()).toBe(file)
+    expect(takeSharedPhoto()).toBeNull()
+    expect(hasSharedPhoto()).toBe(false)
+    setSharedPhoto(file)
+    setSharedPhoto(null)
+    expect(takeSharedPhoto()).toBeNull()
+  })
+
+  it('both land on the scan step without asking (the scan step asks before replacing a bill)', () => {
+    window.localStorage.setItem(SESSION_KEY, JSON.stringify(sampleSession('people')))
+    for (const kind of ['photo', 'delivery'] as const) {
+      openBill({ kind })
+      const boot = bootFlow()
+      expect(boot.ask).toBeNull()
+      expect(boot.session.step).toBe('scan')
+      expect(boot.session.items.length).toBeGreaterThan(0)
+      resetBillLaunchForTests()
+    }
+    window.localStorage.removeItem(SESSION_KEY)
+    expect(createSession('INR').step).toBe('scan')
   })
 })

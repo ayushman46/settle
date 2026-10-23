@@ -7,6 +7,10 @@
 /app/       /  200
 /pay        /  200
 /pay/       /  200
+/claim      /  200
+/claim/     /  200
+/pool       /  200
+/pool/      /  200
 /privacy    /  200
 /privacy/   /  200
 /terms      /  200

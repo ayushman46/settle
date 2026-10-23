@@ -1,5 +1,5 @@
 /**
- * Every page of Settle: the public pages (`/`, `/pay`, `/privacy`, `/terms`) and the app under
+ * Every page of Settle: the public pages (`/`, `/pay`, `/claim`, `/pool`, `/privacy`, `/terms`) and the app under
  * `/app`. Home and onboarding ship in the main bundle (the app opens on one of them); every other
  * screen is its own chunk, loaded on first visit — or earlier, while the person is idle on Home
  * (`preloadCoreScreens`), so moving around feels instant and works offline afterwards.
@@ -22,6 +22,16 @@ export const PayPage = lazyScreen(
   () => import('../features/pay/PayPage'),
   (m) => m.PayPage,
 )
+export const ClaimPage = lazyScreen(
+  'ClaimPage',
+  () => import('../features/claim/ClaimPage'),
+  (m) => m.ClaimPage,
+)
+export const PoolPage = lazyScreen(
+  'PoolPage',
+  () => import('../features/pools/PoolPage'),
+  (m) => m.PoolPage,
+)
 export const PrivacyPage = lazyScreen(
   'PrivacyPage',
   () => import('../features/legal/PrivacyPage'),
@@ -33,11 +43,13 @@ export const TermsPage = lazyScreen(
   (m) => m.TermsPage,
 )
 
-export type PublicPageKey = 'landing' | 'pay' | 'privacy' | 'terms'
+export type PublicPageKey = 'landing' | 'pay' | 'claim' | 'pool' | 'privacy' | 'terms'
 
 export const PUBLIC_PAGES: Readonly<Record<string, { key: PublicPageKey; page: LazyScreen }>> = {
   '/': { key: 'landing', page: LandingPage },
   '/pay': { key: 'pay', page: PayPage },
+  '/claim': { key: 'claim', page: ClaimPage },
+  '/pool': { key: 'pool', page: PoolPage },
   '/privacy': { key: 'privacy', page: PrivacyPage },
   '/terms': { key: 'terms', page: TermsPage },
 }
@@ -120,6 +132,46 @@ const RecurringEditorScreen = lazyScreen(
   () => import('../features/recurring/RecurringEditorScreen'),
   (m) => m.RecurringEditorScreen,
 )
+const ClaimRoundScreen = lazyScreen(
+  'ClaimRoundScreen',
+  () => import('../features/claim/ClaimRoundScreen'),
+  (m) => m.ClaimRoundScreen,
+)
+const ClaimReplyScreen = lazyScreen(
+  'ClaimReplyScreen',
+  () => import('../features/claim/ClaimReplyScreen'),
+  (m) => m.ClaimReplyScreen,
+)
+const ShareInScreen = lazyScreen(
+  'ShareInScreen',
+  () => import('../features/sharein/ShareInScreen'),
+  (m) => m.ShareInScreen,
+)
+const LendScreen = lazyScreen(
+  'LendScreen',
+  () => import('../features/lend/LendScreen'),
+  (m) => m.LendScreen,
+)
+const PoolsScreen = lazyScreen(
+  'PoolsScreen',
+  () => import('../features/pools/PoolsScreen'),
+  (m) => m.PoolsScreen,
+)
+const PoolEditorScreen = lazyScreen(
+  'PoolEditorScreen',
+  () => import('../features/pools/PoolEditorScreen'),
+  (m) => m.PoolEditorScreen,
+)
+const PoolDetailScreen = lazyScreen(
+  'PoolDetailScreen',
+  () => import('../features/pools/PoolDetailScreen'),
+  (m) => m.PoolDetailScreen,
+)
+const PoolReplyScreen = lazyScreen(
+  'PoolReplyScreen',
+  () => import('../features/pools/PoolReplyScreen'),
+  (m) => m.PoolReplyScreen,
+)
 const UpgradeScreen = lazyScreen(
   'UpgradeScreen',
   () => import('../features/pro/UpgradeScreen'),
@@ -158,14 +210,24 @@ export const APP_ROUTES: readonly AppRoute[] = [
   { pattern: '/app/you', screen: YouScreen, title: 'You', tab: 'you' },
   { pattern: '/app/split/new', screen: NewSplitScreen, title: 'New split', tab: null },
   { pattern: '/app/split/:id/edit', screen: NewSplitScreen, title: 'Edit split', tab: null },
+  { pattern: '/app/share', screen: ShareInScreen, title: 'From SMS', tab: null },
+  { pattern: '/app/lend', screen: LendScreen, title: 'Lend or borrow', tab: null },
+  { pattern: '/app/lend/:id/edit', screen: LendScreen, title: 'Edit udhaar', tab: null },
   { pattern: '/app/expense/:id', screen: ExpenseDetailScreen, title: 'Expense', tab: null },
   { pattern: '/app/bill', screen: BillFlow, title: null, tab: null },
+  { pattern: '/app/claims/in', screen: ClaimReplyScreen, title: 'Claims', tab: null },
+  { pattern: '/app/claims/:id', screen: ClaimRoundScreen, title: 'Claims', tab: null },
   { pattern: '/app/friends', screen: FriendsScreen, title: 'People', tab: null },
   { pattern: '/app/friends/:id', screen: FriendDetailScreen, title: 'Person', tab: null },
   { pattern: '/app/insights', screen: InsightsScreen, title: 'Insights', tab: null },
   { pattern: '/app/recurring', screen: RecurringScreen, title: 'Recurring splits', tab: null },
   { pattern: '/app/recurring/new', screen: RecurringEditorScreen, title: 'New recurring split', tab: null },
   { pattern: '/app/recurring/:id', screen: RecurringEditorScreen, title: 'Recurring split', tab: null },
+  { pattern: '/app/pools', screen: PoolsScreen, title: 'Collections', tab: null },
+  { pattern: '/app/pools/new', screen: PoolEditorScreen, title: 'New collection', tab: null },
+  { pattern: '/app/pools/in', screen: PoolReplyScreen, title: 'Collections', tab: null },
+  { pattern: '/app/pools/:id', screen: PoolDetailScreen, title: 'Collection', tab: null },
+  { pattern: '/app/pools/:id/edit', screen: PoolEditorScreen, title: 'Edit collection', tab: null },
   { pattern: '/app/pro', screen: UpgradeScreen, title: 'Pro', tab: null },
 ]
 
@@ -185,6 +247,7 @@ const CORE_SCREENS: readonly LazyScreen[] = [
   FriendsScreen,
   GroupDetailScreen,
   FriendDetailScreen,
+  LendScreen,
   // Last: the paywall opens instantly the first time a free limit is reached.
   PaywallHost,
 ]

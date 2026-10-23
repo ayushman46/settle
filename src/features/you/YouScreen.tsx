@@ -1,12 +1,14 @@
 import { useState } from 'react'
-import { ChartPie, Coins, FileText, KeyRound, Repeat, ShieldCheck, Users } from 'lucide-react'
+import { ChartPie, Coins, FileText, HandCoins, KeyRound, Repeat, ShieldCheck, Users } from 'lucide-react'
 import { navigate } from '../../app/router'
 import { Badge, Card, List, ListRow, Screen, SuccessBurst, Switch, useToast } from '../../components'
-import { updateProfile, useDueRecurring, useFriends, useProfile, useRecurring } from '../../data'
+import { updateProfile, useDueRecurring, useFriends, usePools, useProfile, useRecurring } from '../../data'
 import { BRAND, type License } from '../../domain/types'
 import { currencyName } from '../../lib/currencies'
 import { currencySymbol } from '../../lib/money'
+import { useT } from '../../i18n'
 import { useHasFeature } from '../../pro'
+import { POOLS_ENABLED } from '../pools/enabled'
 import { CurrencySheet } from '../bill/CurrencySheet'
 import { BrandMark } from '../landing/BrandMark'
 import { PaywallHost } from '../pro/PaywallSheet'
@@ -99,8 +101,28 @@ function Shortcuts() {
           onClick={() => navigate('/app/insights')}
           chevron
         />
+        {POOLS_ENABLED && <CollectionsRow />}
       </List>
     </Card>
+  )
+}
+
+/** "Collections · 2 open" (or what they're for, before the first one). */
+function CollectionsRow() {
+  const t = useT()
+  const open = usePools().filter((p) => p.closedAt === null).length
+  return (
+    <ListRow
+      leading={
+        <SettingIcon>
+          <HandCoins />
+        </SettingIcon>
+      }
+      title={t('you.shortcuts.collections.title')}
+      subtitle={open > 0 ? t('you.shortcuts.collections.subtitle.open', { count: open }) : t('you.shortcuts.collections.subtitle.none')}
+      onClick={() => navigate('/app/pools')}
+      chevron
+    />
   )
 }
 

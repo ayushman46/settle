@@ -9,6 +9,7 @@ import { useAiQuota } from '../../pro/quota'
 import { AiDescribeSheet } from './AiDescribeSheet'
 import { BillDraftCard } from './BillDraftCard'
 import { DueSplits } from './DueSplits'
+import { HomeExtras } from './HomeExtras'
 import { FirstRunCard } from './FirstRunCard'
 import { HomeHeader } from './HomeHeader'
 import { allowanceLabel, FRIENDS_PATH } from './homeLinks'
@@ -55,6 +56,8 @@ export function HomeScreen() {
       {hasData ? <BalanceCard summary={summary} onSettle={() => navigate(FRIENDS_PATH)} /> : <FirstRunCard />}
 
       <DueSplits />
+
+      <HomeExtras />
 
       <PeopleRow />
 

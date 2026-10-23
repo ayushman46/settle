@@ -7,6 +7,8 @@
  *   openBill({ kind: 'resume' })                 // "Continue your bill": where it was left
  *   openBill({ kind: 'sample' })                 // "Try a sample bill"
  *   openBill({ kind: 'edit', expenseId: e.id })  // an itemized expense's "Edit"
+ *   openBill({ kind: 'photo' })                  // a photo shared in (`setSharedPhoto`): the scan step reads it
+ *   openBill({ kind: 'delivery' })               // "Food order": the scan step, set up for a delivery app's order
  *
  * Starting something new asks first when it would replace a bill in progress.
  */
@@ -29,18 +31,37 @@ export type BillStart =
   | { kind: 'edit'; expenseId: string }
   /** The bill in progress, right where it was left (the scan step when there is none). */
   | { kind: 'resume' }
+  /**
+   * A photo shared into Settle (left with `setSharedPhoto`): the scan step reads it straight away,
+   * asking first (like a pasted photo) when it would replace a bill in progress.
+   */
+  | { kind: 'photo' }
+  /** A food-delivery or quick-commerce order: the scan step, with the delivery hint (`takeScanHint`). */
+  | { kind: 'delivery' }
+
+/** How the scan step should read the next photo. */
+export type ScanHint = 'delivery'
 
 /** A second `take` this soon after the first returns the same value (React StrictMode double renders). */
 const RETAKE_GRACE_MS = 1000
 
 let pending: BillStart | null = null
 let lastTaken: { value: BillStart; at: number } | null = null
+let scanHint: ScanHint | null = null
 
 /** Opens the bill flow, optionally starting something in it (see `BillStart`). */
 export function openBill(start?: BillStart): void {
   pending = start ?? null
   lastTaken = null
+  scanHint = start?.kind === 'delivery' ? 'delivery' : null
   navigate(BILL_PATH)
+}
+
+/** The hint `openBill({ kind: 'delivery' })` left for the scan step (once) — null when none. */
+export function takeScanHint(): ScanHint | null {
+  const hint = scanHint
+  scanHint = null
+  return hint
 }
 
 /** What `openBill` asked the flow to start (once) — null when nothing. The flow calls this as it opens. */
@@ -94,6 +115,7 @@ export function useBillDraft(): BillDraftSummary | null {
 export function clearBillDraft(): void {
   pending = null
   lastTaken = null
+  scanHint = null
   setPhoto(null)
   try {
     window.localStorage.removeItem(SESSION_KEY)
@@ -106,4 +128,5 @@ export function clearBillDraft(): void {
 export function resetBillLaunchForTests(): void {
   pending = null
   lastTaken = null
+  scanHint = null
 }

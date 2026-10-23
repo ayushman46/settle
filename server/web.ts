@@ -46,11 +46,19 @@ export const CONTENT_SECURITY_POLICY = {
 }
 
 /**
- * Pages the client app renders: the landing page, the app (`/app/...`), friends' pay pages
- * and the legal pages. Anything else that isn't a file still gets the app shell (which shows
- * the landing page), but with a 404 so search engines don't index made-up URLs.
+ * Pages the client app renders: the landing page, the app (`/app/...`), friends' pay, claim and
+ * collection pages and the legal pages. Anything else that isn't a file still gets the app shell
+ * (which shows the landing page), but with a 404 so search engines don't index made-up URLs.
  */
-export const APP_ROUTE = /^\/(?:app(?:\/.*)?|pay|privacy|terms)?\/?$/
+export const APP_ROUTE = /^\/(?:app(?:\/.*)?|pay|claim|pool|privacy|terms)?\/?$/
+
+/**
+ * Where Android's share sheet posts (manifest `share_target`). The service worker answers it; this
+ * runs only when the worker isn't there yet (first visit, or it was cleared), and sends people to
+ * the paste screen with a note that the shared text didn't come through.
+ */
+export const SHARE_TARGET_PATH = '/share-target'
+export const SHARE_TARGET_MISSED = '/app/share?missed=1'
 
 const IMMUTABLE = 'public, max-age=31536000, immutable'
 /** Paths that name a file ("/sw.js", "/assets/x.css") rather than an app route. */
@@ -71,13 +79,15 @@ export function createWebApp(config: ServerConfig, { clientDir, ...appOptions }:
     secureHeaders({
       contentSecurityPolicy: CONTENT_SECURITY_POLICY,
       xFrameOptions: 'DENY',
-      permissionsPolicy: { camera: ['self'], microphone: [], geolocation: [], payment: ['self', ...RAZORPAY_ORIGINS.frames], usb: [] },
+      // The microphone is for "Speak to split" (this origin only; the browser still asks).
+      permissionsPolicy: { camera: ['self'], microphone: ['self'], geolocation: [], payment: ['self', ...RAZORPAY_ORIGINS.frames], usb: [] },
     }),
   )
   app.use(compress())
   app.use(cacheHeaders)
 
   app.route('/', createApp(config, appOptions))
+  app.post(SHARE_TARGET_PATH, (c) => c.redirect(SHARE_TARGET_MISSED, 303))
 
   app.use('*', serveStatic({ root: clientDir }))
   // App routes get the app shell. Missing files stay 404s, so a stale script URL never

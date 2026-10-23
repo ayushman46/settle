@@ -1,20 +1,26 @@
-import { ScanLine, Split, UsersRound } from 'lucide-react'
-import { navigate } from '../../app/router'
-import { CATEGORY_ICONS, QuickAction, QuickActionGrid } from '../../components'
-import { openBill } from '../bill/launch'
-import { NEW_GROUP_PATH, NEW_SPLIT_PATH, SPLIT_TEMPLATES, templatePath } from './homeLinks'
+import { useState } from 'react'
+import { QuickAction, QuickActionGrid } from '../../components'
+import { useT } from '../../i18n'
+import { MoreActionsSheet } from './MoreActionsSheet'
+import { homeGridActions } from './quickActions'
 
-/** Home's grid of colourful quick actions: scan, split, a group, then the everyday templates. */
+/**
+ * Home's grid of colourful quick actions: scan, split and what's switched on (lend, collect, SMS,
+ * food order), a group, everyday templates to fill two rows, and More for the rest (see
+ * `quickActions.ts`).
+ */
 export function HomeQuickActions() {
+  const t = useT()
+  const [moreOpen, setMoreOpen] = useState(false)
+  const actions = homeGridActions(() => setMoreOpen(true))
   return (
-    <QuickActionGrid label="Quick actions">
-      <QuickAction icon={<ScanLine />} label="Scan bill" tone="ink" onClick={() => openBill()} />
-      <QuickAction icon={<Split />} label="Split amount" tone="accent" onClick={() => navigate(NEW_SPLIT_PATH)} />
-      <QuickAction icon={<UsersRound />} label="New group" tone="entertainment" onClick={() => navigate(NEW_GROUP_PATH)} />
-      {SPLIT_TEMPLATES.map(({ category, label }) => {
-        const Icon = CATEGORY_ICONS[category]
-        return <QuickAction key={category} icon={<Icon />} label={label} tone={category} onClick={() => navigate(templatePath(category))} />
-      })}
-    </QuickActionGrid>
+    <>
+      <QuickActionGrid label={t('home.quick.label')}>
+        {actions.map(({ id, label, icon: Icon, tone, run }) => (
+          <QuickAction key={id} icon={<Icon />} label={label} tone={tone} onClick={run} />
+        ))}
+      </QuickActionGrid>
+      <MoreActionsSheet open={moreOpen} onClose={() => setMoreOpen(false)} />
+    </>
   )
 }

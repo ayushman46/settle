@@ -23,6 +23,16 @@ describe('the app route table', () => {
       ['/app/recurring/new', '/app/recurring/new'],
       ['/app/recurring/r1', '/app/recurring/:id'],
       ['/app/pro', '/app/pro'],
+      ['/app/claims/in', '/app/claims/in'],
+      ['/app/claims/r1', '/app/claims/:id'],
+      ['/app/share', '/app/share'],
+      ['/app/lend', '/app/lend'],
+      ['/app/lend/e1/edit', '/app/lend/:id/edit'],
+      ['/app/pools', '/app/pools'],
+      ['/app/pools/new', '/app/pools/new'],
+      ['/app/pools/in', '/app/pools/in'],
+      ['/app/pools/p1', '/app/pools/:id'],
+      ['/app/pools/p1/edit', '/app/pools/:id/edit'],
     ]
     for (const [path, pattern] of cases) expect(matchAppRoute(path)?.pattern, path).toBe(pattern)
   })
@@ -31,6 +41,8 @@ describe('the app route table', () => {
     expect(matchAppRoute('/app/nope')).toBeNull()
     expect(matchAppRoute('/app/groups/g1/members')).toBeNull()
     expect(matchAppRoute('/app/split')).toBeNull()
+    expect(matchAppRoute('/app/claims')).toBeNull()
+    expect(matchAppRoute('/app/lend/e1')).toBeNull()
   })
 
   it('marks exactly the four tab roots', () => {
@@ -46,6 +58,22 @@ describe('the app route table', () => {
     expect(APP_ROUTES.filter((r) => r.title === null).map((r) => r.pattern)).toEqual(['/app/bill'])
   })
 
+  it('titles the v4 screens', () => {
+    const titles = Object.fromEntries(APP_ROUTES.map((r) => [r.pattern, r.title]))
+    expect(titles).toMatchObject({
+      '/app/claims/in': 'Claims',
+      '/app/claims/:id': 'Claims',
+      '/app/share': 'From SMS',
+      '/app/lend': 'Lend or borrow',
+      '/app/lend/:id/edit': 'Edit udhaar',
+      '/app/pools': 'Collections',
+      '/app/pools/new': 'New collection',
+      '/app/pools/in': 'Collections',
+      '/app/pools/:id': 'Collection',
+      '/app/pools/:id/edit': 'Edit collection',
+    })
+  })
+
   it('lists each pattern once', () => {
     const patterns = APP_ROUTES.map((r) => r.pattern)
     expect(new Set(patterns).size).toBe(patterns.length)
@@ -53,9 +81,11 @@ describe('the app route table', () => {
 })
 
 describe('public pages', () => {
-  it('finds the four public pages, with or without a trailing slash', () => {
+  it('finds the six public pages, with or without a trailing slash', () => {
     expect(publicPage('/')?.key).toBe('landing')
     expect(publicPage('/pay')?.key).toBe('pay')
+    expect(publicPage('/claim')?.key).toBe('claim')
+    expect(publicPage('/pool/')?.key).toBe('pool')
     expect(publicPage('/privacy/')?.key).toBe('privacy')
     expect(publicPage('/terms')?.key).toBe('terms')
     expect(publicPage('/pricing')).toBeNull()

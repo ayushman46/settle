@@ -17,8 +17,11 @@ import { EMPTY_META, type Session } from '../../types'
 import { billSessionFromExpense } from './billExpense'
 import { takeBillStart, type BillStart } from './launch'
 
-/** A start that replaces the bill in progress (so the flow may need to ask first). */
-export type ReplacingStart = Exclude<BillStart, { kind: 'resume' }>
+/**
+ * A start that replaces the bill in progress (so the flow may need to ask first). A shared photo
+ * asks on the scan step itself (like a pasted one); a delivery order just opens the scan step.
+ */
+export type ReplacingStart = Exclude<BillStart, { kind: 'resume' } | { kind: 'photo' } | { kind: 'delivery' }>
 
 export interface Boot {
   session: Session
@@ -52,6 +55,9 @@ export function bootFlow(initial?: Session): Boot {
   const landing: Session = arriving && saved.step !== 'scan' ? { ...saved, step: 'scan' } : saved
 
   if (start?.kind === 'resume') return { session: hasProgress(saved) ? saved : landing, ask: null }
+  // The scan step takes it from here: it reads the shared photo (asking before replacing a bill
+  // in progress), or reads the next photo as a delivery order.
+  if (start?.kind === 'photo' || start?.kind === 'delivery') return { session: landing, ask: null }
   if (start?.kind === 'edit') {
     // Already fixing this very bill: carry on where it was left.
     if (saved.expenseId === start.expenseId && hasProgress(saved)) return { session: saved, ask: null }

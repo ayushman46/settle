@@ -59,8 +59,16 @@ describe('createWebApp', () => {
     expect(response.headers.get('referrer-policy')).toBe('no-referrer')
     const permissions = response.headers.get('permissions-policy') ?? ''
     expect(permissions).toContain('camera=(self)')
-    expect(permissions).toContain('microphone=()')
+    expect(permissions).toContain('microphone=(self)')
     expect(permissions).toContain('payment=(self "https://api.razorpay.com" "https://checkout.razorpay.com")')
+  })
+
+  it('serves the claim and collection pages, and sends a share that missed the service worker to the paste screen', async () => {
+    for (const path of ['/claim', '/claim/', '/pool', '/pool/']) expect((await app.request(path)).status, path).toBe(200)
+    expect((await app.request('/claims')).status).toBe(404)
+    const shared = await app.request('/share-target', { method: 'POST', body: new FormData() })
+    expect(shared.status).toBe(303)
+    expect(shared.headers.get('location')).toBe('/app/share?missed=1')
   })
 
   it('caches hashed assets forever and compresses them', async () => {

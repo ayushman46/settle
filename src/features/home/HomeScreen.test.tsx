@@ -98,7 +98,6 @@ describe('HomeScreen — quick actions', SLOW, () => {
     ['Trip', '/app/split/new?category=travel'],
     ['Subscription', '/app/split/new?category=subscription'],
     ['Utilities', '/app/split/new?category=utilities'],
-    ['Cab', '/app/split/new?category=transport'],
   ])('%s opens %s', async (label, url) => {
     const { user } = renderHome()
     await user.click(within(screen.getByRole('list', { name: 'Quick actions' })).getByRole('button', { name: label }))
@@ -112,7 +111,7 @@ describe('HomeScreen — quick actions', SLOW, () => {
     expect(takeBillStart()).toBeNull()
   })
 
-  it('lists eight actions, scan first', () => {
+  it('lists eight actions, scan first and More last (features that are off are left out)', () => {
     renderHome()
     const grid = screen.getByRole('list', { name: 'Quick actions' })
     expect(within(grid).getAllByRole('button').map((b) => b.textContent)).toEqual([
@@ -123,8 +122,19 @@ describe('HomeScreen — quick actions', SLOW, () => {
       'Trip',
       'Subscription',
       'Utilities',
-      'Cab',
+      'More',
     ])
+  })
+
+  it('More opens every everyday template; Cab starts a cab split', async () => {
+    const { user } = renderHome()
+    await user.click(within(screen.getByRole('list', { name: 'Quick actions' })).getByRole('button', { name: 'More' }))
+    const sheet = await screen.findByRole('dialog', { name: 'More ways to split' })
+    expect(within(sheet).getAllByRole('button').map((b) => b.textContent).filter((t) => t !== 'Close')).toEqual(
+      expect.arrayContaining(['Rent', 'Trip', 'Subscription', 'Utilities', 'Cab']),
+    )
+    await user.click(within(sheet).getByRole('button', { name: 'Cab' }))
+    expect(currentUrl()).toBe('/app/split/new?category=transport')
   })
 })
 

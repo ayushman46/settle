@@ -42,6 +42,7 @@ import { formatMoney } from '../../lib/money'
 import { useBackClose } from '../../state/backStack'
 import { markScanningUnavailable, useHealth } from '../../state/health'
 import { setPhoto } from '../../state/photo'
+import { takeSharedPhoto } from '../../state/sharedPhoto'
 import { effectivePaid, hasProgress } from '../../state/selectors'
 import { useFlow, useSession } from '../../state/store'
 import { EMPTY_META } from '../../types'
@@ -299,6 +300,12 @@ export function ScanScreen() {
     },
     [scanFile],
   )
+
+  // A photo shared into Settle from another app: read it as if it had been picked here.
+  useEffect(() => {
+    const file = takeSharedPhoto()
+    if (file) onPhotoFile(file)
+  }, [onPhotoFile])
 
   /** Must run inside the click itself (no await before it), or browsers block the file picker. */
   const openPicker = (source: PhotoSource): void => {

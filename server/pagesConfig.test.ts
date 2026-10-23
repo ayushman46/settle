@@ -108,7 +108,7 @@ describe('public/_redirects', () => {
     for (const rule of redirects) expect(rule, rule.from).toMatchObject({ to: '/', status: 200 })
   })
 
-  it.each(['/app', '/app/', '/app/welcome', '/app/groups/abc/settle', '/app/expense/x-1', '/pay', '/pay/', '/privacy', '/privacy/', '/terms', '/terms/'])(
+  it.each(['/app', '/app/', '/app/welcome', '/app/groups/abc/settle', '/app/expense/x-1', '/pay', '/pay/', '/claim', '/claim/', '/pool', '/pool/', '/privacy', '/privacy/', '/terms', '/terms/'])(
     'serves the shell at %s, like the Node server',
     (path) => {
       expect(APP_ROUTE.test(path)).toBe(true)
@@ -116,7 +116,7 @@ describe('public/_redirects', () => {
     },
   )
 
-  it.each(['/', '/foo', '/payment', '/apps', '/assets/index-abc123.js', '/assets/missing.js', '/sw.js', '/api/health', '/privacy-policy'])(
+  it.each(['/', '/foo', '/payment', '/apps', '/claims', '/pools', '/share-target', '/assets/index-abc123.js', '/assets/missing.js', '/sw.js', '/api/health', '/privacy-policy'])(
     'leaves %s to the files (or a 404)',
     (path) => {
       expect(rewrite(path), path).toBeNull()
@@ -159,5 +159,14 @@ describe('functions/api/[[path]].ts', () => {
     const response = await onRequest({ request: new Request('https://settle.pages.dev/api/health'), env: {} })
     expect(response.status).toBe(503)
     expect(await response.json()).toMatchObject({ error: { code: 'not_configured' } })
+  })
+})
+
+describe('functions/share-target.ts', () => {
+  it('sends a share that reached Pages (no service worker yet) to the paste screen, like the Node server', async () => {
+    const { onRequestPost } = await import('../functions/share-target')
+    const response = onRequestPost({ request: new Request('https://settle.pages.dev/share-target', { method: 'POST', body: new FormData() }) })
+    expect(response.status).toBe(303)
+    expect(response.headers.get('location')).toBe('https://settle.pages.dev/app/share?missed=1')
   })
 })
