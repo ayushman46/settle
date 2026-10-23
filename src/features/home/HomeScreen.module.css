@@ -109,6 +109,18 @@
   letter-spacing: var(--tracking-tight);
 }
 
+.sayRow {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-width: 0;
+}
+
+.sayPill {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
 .sayQuota {
   color: var(--ink-2);
   font: var(--text-caption);

@@ -7,7 +7,9 @@ import { describedToPrefill, missingPeople } from '../../ai/prefill'
 import type { CategoryId, DescribedSplit, Friend, Minor, SplitMode } from '../../domain/types'
 import { CATEGORY_META } from '../../engine/categories'
 import { splitAmount } from '../../engine/split'
+import { t } from '../../i18n'
 import { formatBps } from '../../kit/splitInputs'
+import { formatMoney } from '../../lib/money'
 import { nameKey, normalizeName } from '../../lib/people'
 import { AVATAR_COLORS } from '../../types'
 
@@ -164,4 +166,33 @@ export function peopleSummary(people: readonly Pick<DescribePerson, 'name'>[], m
   if (names.length === 0) return 'Pick who’s in on the next screen'
   if (names.length === 1) return names[0] ?? ''
   return `${names.slice(0, -1).join(', ')} and ${names[names.length - 1] ?? ''}`
+}
+
+/** A number phrase from a voice transcript that was turned into digits. */
+export interface HeardNumber {
+  /** As spoken ("ढाई हज़ार"). */
+  text: string
+  /** In major units ("sava sau" = 125; may end in .25/.5/.75). */
+  value: number
+}
+
+/**
+ * The chips under the field after speaking: `Heard “ढाई हज़ार” → ₹2,500` — with the currency
+ * symbol and Indian grouping when your currency is INR, else just the grouped number.
+ */
+export function heardChips(heard: readonly HeardNumber[], currency: string): string[] {
+  const seen = new Set<string>()
+  const out: string[] = []
+  for (const { text, value } of heard) {
+    if (!Number.isFinite(value) || text.trim() === '') continue
+    const amount =
+      currency === 'INR'
+        ? formatMoney(Math.round(value * 100), 'INR', { trimZeros: true })
+        : new Intl.NumberFormat('en-IN', { maximumFractionDigits: 2 }).format(value)
+    const chip = t('voice.heard.chip', { phrase: text.trim(), amount })
+    if (seen.has(chip)) continue
+    seen.add(chip)
+    out.push(chip)
+  }
+  return out
 }

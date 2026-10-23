@@ -9,7 +9,11 @@ import { takeBillStart } from '../bill/launch'
 import { paywallState } from '../pro/paywall'
 import { currentHour, greetingName, helloLine, timeOfDayGreeting } from './greeting'
 import { draftLine } from './homeLinks'
+import { homeGridActions } from './quickActions'
 import { atTime, currentUrl, installPro, renderHome, resetHome, seedExpense, serveHealth, testSigner } from './testKit'
+
+// Speak to split on (the flag flips with the feature; without speech recognition nothing changes).
+vi.mock('./voice.enabled', () => ({ VOICE_ENABLED: true }))
 
 /** Typing-heavy tests: room to finish on a busy machine. */
 const SLOW = { timeout: 20_000 }
@@ -100,7 +104,16 @@ describe('HomeScreen — quick actions', SLOW, () => {
     ['Utilities', '/app/split/new?category=utilities'],
   ])('%s opens %s', async (label, url) => {
     const { user } = renderHome()
-    await user.click(within(screen.getByRole('list', { name: 'Quick actions' })).getByRole('button', { name: label }))
+    // A template is a tile, or (when switched-on features take the room) in the More sheet.
+    const grid = within(screen.getByRole('list', { name: 'Quick actions' }))
+    const tile = grid.queryByRole('button', { name: label })
+    if (tile) {
+      await user.click(tile)
+    } else {
+      await user.click(grid.getByRole('button', { name: 'More' }))
+      const sheet = await screen.findByRole('dialog', { name: 'More ways to split' })
+      await user.click(within(sheet).getByRole('button', { name: label }))
+    }
     expect(currentUrl()).toBe(url)
   })
 
@@ -114,16 +127,12 @@ describe('HomeScreen — quick actions', SLOW, () => {
   it('lists eight actions, scan first and More last (features that are off are left out)', () => {
     renderHome()
     const grid = screen.getByRole('list', { name: 'Quick actions' })
-    expect(within(grid).getAllByRole('button').map((b) => b.textContent)).toEqual([
-      'Scan bill',
-      'Split amount',
-      'New group',
-      'Rent',
-      'Trip',
-      'Subscription',
-      'Utilities',
-      'More',
-    ])
+    const labels = within(grid).getAllByRole('button').map((b) => b.textContent)
+    // Which tiles depend on the feature flags; the registry is the source of truth.
+    expect(labels).toEqual(homeGridActions(() => {}).map((a) => a.label))
+    expect(labels).toHaveLength(8)
+    expect(labels[0]).toBe('Scan bill')
+    expect(labels.at(-1)).toBe('More')
   })
 
   it('More opens every everyday template; Cab starts a cab split', async () => {
@@ -307,5 +316,67 @@ describe('greeting', () => {
     expect(greetingName('me')).toBeNull()
     expect(helloLine('Ayush')).toBe('Hi, Ayush')
     expect(helloLine('')).toBe('Hi there')
+  })
+})
+
+describe('HomeScreen — speak to split', SLOW, () => {
+  /** Chrome's `webkitSpeechRecognition`, faked (it only needs to start). */
+  class FakeRecognition {
+    static started = 0
+    lang = ''
+    continuous = true
+    interimResults = false
+    maxAlternatives = 1
+    onresult: unknown = null
+    onerror: ((event: { error: string }) => void) | null = null
+    onend: (() => void) | null = null
+    start(): void {
+      FakeRecognition.started++
+    }
+    stop(): void {
+      this.onend?.()
+    }
+    abort(): void {
+      this.onend?.()
+    }
+  }
+
+  beforeEach(() => {
+    FakeRecognition.started = 0
+    window.localStorage.removeItem('settle.v4.voice-lang')
+  })
+
+  it('a mic beside the pill opens “Just say it” already listening', async () => {
+    vi.stubGlobal('webkitSpeechRecognition', FakeRecognition)
+    const { user } = renderHome()
+    const mic = await screen.findByRole('button', { name: 'Speak to split' })
+    await user.click(mic)
+    const sheet = await screen.findByRole('dialog', { name: 'Just say it' })
+    expect(await within(sheet).findByRole('region', { name: 'Listening in English' })).toBeInTheDocument()
+    await waitFor(() => expect(FakeRecognition.started).toBe(1))
+    expect(within(sheet).getByRole('button', { name: 'Speak instead' })).toHaveAttribute('aria-pressed', 'true')
+  })
+
+  it('the pill itself opens it for typing', async () => {
+    vi.stubGlobal('webkitSpeechRecognition', FakeRecognition)
+    const { user } = renderHome()
+    await user.click(await screen.findByRole('button', { name: /^Just say it/ }))
+    const sheet = await screen.findByRole('dialog', { name: 'Just say it' })
+    expect(within(sheet).queryByRole('region', { name: /^Listening in/ })).not.toBeInTheDocument()
+    expect(FakeRecognition.started).toBe(0)
+  })
+
+  it('no mic when the AI is off', async () => {
+    vi.stubGlobal('webkitSpeechRecognition', FakeRecognition)
+    serveHealth(false)
+    renderHome()
+    await screen.findByRole('button', { name: /^Just say it/ })
+    await waitFor(() => expect(screen.queryByRole('button', { name: 'Speak to split' })).not.toBeInTheDocument())
+  })
+
+  it('no mic where the browser can’t turn speech into text', async () => {
+    renderHome()
+    await screen.findByRole('button', { name: /^Just say it/ })
+    expect(screen.queryByRole('button', { name: 'Speak to split' })).not.toBeInTheDocument()
   })
 })

@@ -1,4 +1,4 @@
-import { screen, waitFor, within } from '@testing-library/react'
+import { act, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { addFriend, friendsStore, peekSplitPrefill, updateProfile } from '../../data'
 import { ME_ID } from '../../domain/types'
@@ -17,6 +17,9 @@ import {
   serveHealth,
   testSigner,
 } from './testKit'
+
+// Speak to split on (the flag flips with the feature; without speech recognition nothing changes).
+vi.mock('./voice.enabled', () => ({ VOICE_ENABLED: true }))
 
 /** Typing-heavy tests: room to finish on a busy machine. */
 const SLOW = { timeout: 20_000 }
@@ -279,5 +282,177 @@ describe('AiDescribeSheet — Pro', SLOW, () => {
     await sayIn(opened, 'Dinner 2400 with Riya and Sam')
     expect(await within(opened.sheet).findByRole('article', { name: 'Dinner' })).toBeInTheDocument()
     expect(calls[0]?.headers['x-settle-license']).toMatch(/^SETTLE1\./)
+  })
+})
+
+/* ---------- Speak to split (spec 03) ---------- */
+
+/** Chrome's `webkitSpeechRecognition`, faked: tests say what was heard. */
+class FakeRecognition {
+  static instances: FakeRecognition[] = []
+  lang = ''
+  continuous = true
+  interimResults = false
+  maxAlternatives = 1
+  onresult: ((event: unknown) => void) | null = null
+  onerror: ((event: { error: string }) => void) | null = null
+  onend: (() => void) | null = null
+  started = 0
+  constructor() {
+    FakeRecognition.instances.push(this)
+  }
+  start(): void {
+    this.started++
+  }
+  stop(): void {
+    this.onend?.()
+  }
+  abort(): void {
+    this.onerror?.({ error: 'aborted' })
+    this.onend?.()
+  }
+  say(text: string, isFinal: boolean): void {
+    const result = Object.assign([{ transcript: text, confidence: 0.9 }], { isFinal })
+    this.onresult?.({ resultIndex: 0, results: [result] })
+  }
+}
+
+const recognizer = () => FakeRecognition.instances.at(-1) as FakeRecognition
+
+describe('AiDescribeSheet — speak to split', SLOW, () => {
+  beforeEach(() => {
+    FakeRecognition.instances = []
+    vi.stubGlobal('webkitSpeechRecognition', FakeRecognition)
+    window.localStorage.setItem('settle.v4.voice-lang', 'hi-IN')
+  })
+  afterEach(() => window.localStorage.removeItem('settle.v4.voice-lang'))
+
+  async function listen(opened: Opened) {
+    await opened.user.click(within(opened.sheet).getByRole('button', { name: 'Speak instead' }))
+    const panel = await within(opened.sheet).findByRole('region', { name: 'Listening in Hindi' })
+    await waitFor(() => expect(recognizer()?.started).toBe(1))
+    return panel
+  }
+
+  it('hears Hindi, writes the amount in digits with a “heard” chip, and sends it as spoken Hindi', async () => {
+    const calls = serveDescribe(described({ amount: 2500 }))
+    const opened = await openSheet()
+    const panel = await listen(opened)
+    expect(recognizer()).toMatchObject({ lang: 'hi-IN', interimResults: true, maxAlternatives: 3, continuous: false })
+    expect(within(opened.sheet).getByRole('button', { name: 'Speak instead' })).toHaveAttribute('aria-pressed', 'true')
+    expect(panel).toHaveTextContent('Listening…')
+    expect(panel).toHaveTextContent('ढाई हज़ार का डिनर रिया और सैम के साथ, मैंने दिया')
+    expect(within(panel).getByRole('button', { name: 'हिन्दी, speaking in Hindi. Change language' })).toHaveTextContent('हिन्दी')
+    // The examples make way for the listening panel.
+    expect(within(opened.sheet).queryByText('Try one')).not.toBeInTheDocument()
+
+    act(() => recognizer().say('ढाई हज़ार का', false))
+    expect(panel).toHaveTextContent('“ढाई हज़ार का…”')
+    act(() => {
+      recognizer().say('ढाई हज़ार का डिनर रिया और सैम के साथ मैंने दिया', true)
+      recognizer().stop()
+    })
+
+    await waitFor(() => expect(opened.field).toHaveValue('2500 का डिनर रिया और सैम के साथ मैंने दिया'))
+    expect(within(opened.sheet).queryByRole('region', { name: 'Listening in Hindi' })).not.toBeInTheDocument()
+    const chips = within(opened.sheet).getByRole('list', { name: 'Numbers we heard' })
+    expect(within(chips).getAllByRole('listitem').map((li) => li.textContent)).toEqual(['Heard “ढाई हज़ार” → ₹2,500'])
+    expect(within(opened.sheet).getByRole('button', { name: 'Read it' })).toHaveFocus()
+
+    // Nothing is sent until "Read it".
+    expect(calls).toHaveLength(0)
+    await opened.user.click(within(opened.sheet).getByRole('button', { name: 'Read it' }))
+    await within(opened.sheet).findByRole('article', { name: 'Dinner' })
+    expect(calls[0]?.body).toMatchObject({ text: '2500 का डिनर रिया और सैम के साथ मैंने दिया', lang: 'hi-IN', source: 'voice' })
+
+    await opened.user.click(within(opened.sheet).getByRole('button', { name: 'Looks right' }))
+    expect(currentUrl()).toBe('/app/split/new?from=voice')
+    expect(peekSplitPrefill()).toMatchObject({
+      source: 'voice',
+      total: 250000,
+      banner: { icon: 'mic', title: 'Filled in from what you said', body: "Check the amount and who's in, then save." },
+    })
+  })
+
+  it('typed text is still sent as typed', async () => {
+    const calls = serveDescribe(described())
+    const opened = await openSheet()
+    await listen(opened)
+    act(() => {
+      recognizer().say('do sau', true)
+      recognizer().stop()
+    })
+    await waitFor(() => expect(opened.field).toHaveValue('200'))
+    await opened.user.clear(opened.field)
+    expect(within(opened.sheet).queryByRole('list', { name: 'Numbers we heard' })).not.toBeInTheDocument()
+    await sayIn(opened, 'Dinner 2400 with Riya and Sam')
+    await within(opened.sheet).findByRole('article', { name: 'Dinner' })
+    expect(calls[0]?.body).not.toHaveProperty('source')
+    expect(calls[0]?.body).not.toHaveProperty('lang')
+  })
+
+  it.each([
+    ['not-allowed', 'Mic blocked', "Allow the microphone for Settle in your browser's site settings — or just type it."],
+    ['no-speech', "Didn't catch that", 'Tap the mic and try again — speak after the beep.'],
+    ['audio-capture', 'No microphone found', 'Plug one in, or type it instead.'],
+    ['network', 'Voice needs the internet', 'Your browser turns speech into text online. Type it instead while offline.'],
+    ['language-not-supported', "Hindi isn't available in this browser", 'Try English or हिन्दी, or type it.'],
+    ['bad-grammar', "Voice didn't work this time", 'Try again, or type it.'],
+  ])('a "%s" error says "%s", then it’s back to typing', async (error, title, body) => {
+    const opened = await openSheet()
+    await listen(opened)
+    act(() => {
+      recognizer().onerror?.({ error })
+      recognizer().onend?.()
+    })
+    const banner = await within(opened.sheet).findByText(title)
+    expect(banner.closest('[role]')?.textContent ?? banner.parentElement?.textContent).toContain(body)
+    await waitFor(() => expect(opened.field).toHaveFocus())
+    // The mic stays, to try again.
+    expect(within(opened.sheet).getByRole('button', { name: 'Speak instead' })).toHaveAttribute('aria-pressed', 'false')
+  })
+
+  it('Escape stops listening without closing the sheet', async () => {
+    const opened = await openSheet()
+    await listen(opened)
+    await opened.user.keyboard('{Escape}')
+    expect(screen.getByRole('dialog', { name: 'Just say it' })).toBeInTheDocument()
+    await waitFor(() => expect(within(opened.sheet).queryByRole('region', { name: 'Listening in Hindi' })).not.toBeInTheDocument())
+    await waitFor(() => expect(opened.field).toHaveFocus())
+  })
+
+  it('the language sheet lists the eight, remembers the choice and listens in it', async () => {
+    const opened = await openSheet()
+    const panel = await listen(opened)
+    await opened.user.click(within(panel).getByRole('button', { name: 'हिन्दी, speaking in Hindi. Change language' }))
+    const picker = await screen.findByRole('dialog', { name: 'Speak in' }, { timeout: 8000 })
+    const group = within(picker).getByRole('radiogroup', { name: 'Speak in' })
+    expect(within(group).getAllByRole('radio')).toHaveLength(8)
+    expect(within(group).getByRole('radio', { name: 'हिन्दी Hindi · also for Hinglish' })).toBeChecked()
+    expect(within(picker).getByText(/Settle never records or keeps audio\./)).toBeInTheDocument()
+    expect(within(group).getByText('தமிழ்')).toHaveAttribute('lang', 'ta-IN')
+
+    await opened.user.click(within(group).getByRole('radio', { name: 'தமிழ் Tamil' }))
+    expect(window.localStorage.getItem('settle.v4.voice-lang')).toBe('ta-IN')
+    await within(opened.sheet).findByRole('region', { name: 'Listening in Tamil' })
+    await waitFor(() => expect(recognizer()).toMatchObject({ lang: 'ta-IN', started: 1 }))
+  })
+
+  it('caps a very long transcript at what the AI reads, and says so', async () => {
+    const opened = await openSheet()
+    await listen(opened)
+    act(() => {
+      recognizer().say('dinner '.repeat(100).trim(), true)
+      recognizer().stop()
+    })
+    await within(opened.sheet).findByText("That's a lot — keep it short")
+    expect(String((opened.field as HTMLInputElement).value).length).toBe(500)
+  })
+})
+
+describe('AiDescribeSheet — without speech recognition', SLOW, () => {
+  it('has no mic at all', async () => {
+    const opened = await openSheet()
+    expect(within(opened.sheet).queryByRole('button', { name: 'Speak instead' })).not.toBeInTheDocument()
   })
 })

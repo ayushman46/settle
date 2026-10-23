@@ -1,0 +1,112 @@
+.mic {
+  position: relative;
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  border-radius: 50%;
+  cursor: pointer;
+  transition:
+    transform var(--dur-2) var(--ease-spring),
+    background-color var(--dur-2) var(--ease-out),
+    box-shadow var(--dur-2) var(--ease-out),
+    color var(--dur-2) var(--ease-out);
+}
+
+.mic:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.mic:active:not(:disabled) {
+  transform: scale(0.94);
+  transition-duration: var(--dur-1);
+}
+
+.mic:disabled {
+  cursor: not-allowed;
+}
+
+.icon {
+  position: relative;
+  width: 22px;
+  height: 22px;
+}
+
+/* Beside Home's pill: as tall as the pill, filled with the accent. */
+.pill {
+  width: 60px;
+  height: 60px;
+  background: var(--accent);
+  box-shadow: var(--shadow-card);
+  color: var(--on-accent);
+}
+
+.pill:disabled {
+  background: var(--surface-2);
+  box-shadow: none;
+  color: var(--ink-3);
+}
+
+@media (hover: hover) {
+  .pill:hover:not(:disabled) {
+    background: var(--accent-hover);
+  }
+}
+
+/* Inside the sheet's field (the pill's trailing slot). */
+.inline {
+  width: var(--tap);
+  height: var(--tap);
+  background: transparent;
+  color: var(--ink-2);
+}
+
+.inline:disabled {
+  color: var(--ink-3);
+}
+
+@media (hover: hover) {
+  .inline:hover:not(:disabled) {
+    background: var(--surface-2);
+    color: var(--ink);
+  }
+}
+
+/* Listening: the mic fills and its ring pulses (still, with reduced motion). */
+.listening.inline {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.listening .ring {
+  box-shadow: 0 0 0 3px var(--accent-soft), 0 0 0 5px var(--accent-ink);
+  animation: pulse 1.2s var(--ease-in-out) infinite alternate;
+}
+
+@keyframes pulse {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.08);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mic,
+  .mic:active:not(:disabled) {
+    transform: none;
+    transition: none;
+  }
+
+  .listening .ring {
+    animation: none;
+  }
+}

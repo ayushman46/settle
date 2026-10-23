@@ -255,3 +255,36 @@
   flex-direction: column;
   gap: var(--s-1);
 }
+
+/* ---------- Speak to split: what was heard ---------- */
+
+.heard {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  margin: calc(var(--s-1) * -1) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Informational, not buttons: a quiet tinted pill. */
+.heardChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  min-height: calc(var(--s-8) - 2px);
+  padding: var(--s-1) var(--s-3);
+  border-radius: var(--r-pill);
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  font: var(--text-caption);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.heardChip > svg {
+  flex: none;
+  width: 14px;
+  height: 14px;
+}

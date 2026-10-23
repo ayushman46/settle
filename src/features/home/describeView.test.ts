@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { ME_ID, type DescribedSplit, type Friend } from '../../domain/types'
-import { describeView, peopleSummary } from './describeView'
+import { describeView, peopleSummary, heardChips } from './describeView'
 
 function friend(id: string, name: string, color = 1): Friend {
   return { id, name, color, upiId: null, phone: null, createdAt: 1, lastUsedAt: 1 }
@@ -149,5 +149,34 @@ describe('peopleSummary', () => {
     expect(peopleSummary([{ name: 'You' }, { name: 'Riya' }, { name: 'Sam' }], 0)).toBe('You, Riya and Sam')
     expect(peopleSummary([{ name: 'You' }], 3)).toBe('You and 3 more')
     expect(peopleSummary([], 4)).toBe('4 more')
+  })
+})
+
+describe('heardChips', () => {
+  it('shows each spoken number as it was said and as money (₹, Indian grouping)', () => {
+    expect(
+      heardChips(
+        [
+          { text: 'ढाई हज़ार', value: 2500 },
+          { text: 'dedh lakh', value: 150000 },
+          { text: 'sava sau', value: 125 },
+          { text: 'saadhe teen', value: 3.5 },
+        ],
+        'INR',
+      ),
+    ).toEqual(['Heard “ढाई हज़ार” → ₹2,500', 'Heard “dedh lakh” → ₹1,50,000', 'Heard “sava sau” → ₹125', 'Heard “saadhe teen” → ₹3.50'])
+  })
+
+  it('is a plain grouped number in another currency, and lists a phrase once', () => {
+    expect(
+      heardChips(
+        [
+          { text: 'two fifty', value: 250 },
+          { text: 'two fifty', value: 250 },
+          { text: 'dedh lakh', value: 150000 },
+        ],
+        'USD',
+      ),
+    ).toEqual(['Heard “two fifty” → 250', 'Heard “dedh lakh” → 1,50,000'])
   })
 })
