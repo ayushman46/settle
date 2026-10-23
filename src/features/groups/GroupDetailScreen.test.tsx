@@ -7,6 +7,7 @@ import {
   groupsStore,
   recordSettlement,
   saveExpense,
+  updateGroup,
   updateProfile,
 } from '../../data'
 import { draft, everyone } from '../../data/testKit'
@@ -19,6 +20,8 @@ import { forgetTimelineLimits, rememberedTimelineLimit, TIMELINE_PAGE } from './
 const mocks = vi.hoisted(() => ({
   renderGroupCard: vi.fn<(input: unknown, opts: unknown) => Promise<Blob>>(),
 }))
+
+vi.mock('../trip/enabled', () => ({ TRIP_ENABLED: true }))
 
 vi.mock('../../share', async (importOriginal) => ({
   ...(await importOriginal<typeof ShareKit>()),
@@ -76,6 +79,12 @@ describe('GroupDetailScreen — header and standing', () => {
     expect(within(standing).getByText('₹1,200 spent · 2 expenses')).toBeInTheDocument()
     await user.click(within(standing).getByRole('button', { name: 'Settle up: 2 payments' }))
     await waitFor(() => expect(currentUrl()).toBe(`${path()}/settle`))
+  })
+
+  it('says what a trip spends in', () => {
+    updateGroup(goa.id, { travelCurrency: 'THB' })
+    renderApp(path())
+    expect(screen.getByText('Trip · 3 people · spending in THB')).toBeInTheDocument()
   })
 
   it('invites the first expense in a new group', async () => {

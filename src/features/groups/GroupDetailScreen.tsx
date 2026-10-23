@@ -50,6 +50,7 @@ import { EditGroupSheet } from './GroupSheets'
 import { NextRoundCard } from './NextRoundCard'
 import { ROTATION_ENABLED } from './rotation.enabled'
 import { RotationSheet } from './RotationSheet'
+import { TRIP_ENABLED } from '../trip/enabled'
 import {
   groupStanding,
   groupTimeline,
@@ -159,7 +160,11 @@ function GroupDetail({ group, onLeaving }: { group: Group; onLeaving: (group: Gr
     >
       <header className={styles.hero}>
         <GroupEmoji emoji={group.emoji} kind={group.kind} size="lg" className={styles.heroEmoji} />
-        <PageTitle align="center" title={group.name} subtitle={`${meta.label} · ${membersLabel(group.memberIds.length)}`} />
+        <PageTitle
+          align="center"
+          title={group.name}
+          subtitle={`${meta.label} · ${membersLabel(group.memberIds.length)}${TRIP_ENABLED && group.travelCurrency ? ` · spending in ${group.travelCurrency}` : ''}`}
+        />
         <button
           type="button"
           className={styles.members}
