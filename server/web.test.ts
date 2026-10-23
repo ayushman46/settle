@@ -4,7 +4,7 @@ import { join } from 'node:path'
 import { brotliCompressSync, brotliDecompressSync } from 'node:zlib'
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 import { silentLogger, testConfig } from './testing'
-import { createWebApp } from './web'
+import { createWebApp, linkPagePreloads } from './web'
 
 let clientDir: string
 let app: ReturnType<typeof createWebApp>
@@ -22,8 +22,25 @@ beforeAll(() => {
   writeFileSync(join(clientDir, 'sw.js.br'), brotliCompressSync('not served'))
   writeFileSync(join(clientDir, 'sw.js'), 'self.addEventListener("fetch", () => {})')
   writeFileSync(join(clientDir, 'manifest.webmanifest'), '{"name":"Settle"}')
+  mkdirSync(join(clientDir, '.vite'))
+  writeFileSync(join(clientDir, '.vite', 'manifest.json'), JSON.stringify(BUILD_MANIFEST))
   app = createWebApp(testConfig({ apiKey: null }), { clientDir, logger: silentLogger() })
 })
+
+/** A client build's manifest: the shell's entry, the pay page and what it imports (some shared). */
+const BUILD_MANIFEST = {
+  'index.html': { file: 'assets/index-abc123.js', isEntry: true, imports: ['_vendor-v1.js'], css: ['assets/index-c1.css'], dynamicImports: ['src/features/pay/PayPage.tsx'] },
+  '_vendor-v1.js': { file: 'assets/vendor-v1.js' },
+  'src/features/pay/PayPage.tsx': {
+    file: 'assets/PayPage-p1.js',
+    isDynamicEntry: true,
+    imports: ['_vendor-v1.js', '_payLink-l1.js'],
+    css: ['assets/PayPage-p1.css'],
+  },
+  '_payLink-l1.js': { file: 'assets/payLink-l1.js', css: ['assets/index-c1.css'] },
+  // A name that could break the header is never sent.
+  'src/features/pools/PoolPage.tsx': { file: 'assets/PoolPage.js\r\nSet-Cookie: x=1', isDynamicEntry: true },
+}
 
 afterAll(() => {
   rmSync(clientDir, { recursive: true, force: true })
@@ -110,6 +127,21 @@ describe('createWebApp', () => {
     const sw = await app.request('/sw.js', { headers: { 'accept-encoding': 'br' } })
     expect(sw.headers.get('content-encoding')).toBeNull()
     expect((await app.request('/assets/missing-000000.js', { headers: { 'accept-encoding': 'br' } })).status).toBe(404)
+  })
+
+  it("preloads a link page's own code and styles with the page, from the build manifest", async () => {
+    const expected = '</assets/PayPage-p1.css>; rel=preload; as=style, </assets/PayPage-p1.js>; rel=modulepreload, </assets/payLink-l1.js>; rel=modulepreload'
+    for (const path of ['/pay', '/pay/']) {
+      const response = await app.request(path)
+      expect(response.status).toBe(200)
+      expect(response.headers.get('link'), path).toBe(expected)
+      expect(await response.text()).toBe(SHELL)
+    }
+    // Pages without their own chunk in the manifest (or with an unsafe name), and the app itself: as before.
+    for (const path of ['/', '/app', '/claim', '/pool', '/privacy']) expect((await app.request(path)).headers.get('link'), path).toBeNull()
+    expect(linkPagePreloads(join(clientDir, 'assets'))).toEqual(new Map())
+    // The manifest itself stays private.
+    expect((await app.request('/.vite/manifest.json')).status).toBe(404)
   })
 
   it('serves the service worker and manifest without long-term caching', async () => {

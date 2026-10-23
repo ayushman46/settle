@@ -80,7 +80,7 @@ function precompress(): Plugin {
   }
 }
 
-export default defineConfig(({ mode }) => {
+export default defineConfig(({ mode, isSsrBuild }) => {
   const env = loadEnv(mode, process.cwd(), '')
   return {
     plugins: [react(), devApi(env), precompress()],
@@ -90,6 +90,8 @@ export default defineConfig(({ mode }) => {
       outDir: 'dist/client',
       emptyOutDir: true,
       target: 'es2022',
+      // dist/client/.vite/manifest.json: the server preloads a link page's own code with it.
+      manifest: !isSsrBuild,
     },
     test: {
       projects: [

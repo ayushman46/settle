@@ -3,6 +3,8 @@
  * security headers, compression, long-lived caching for hashed assets and the app's routes.
  */
 import { serveStatic } from '@hono/node-server/serve-static'
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { Hono, type MiddlewareHandler } from 'hono'
 import { compress } from 'hono/compress'
 import { secureHeaders } from 'hono/secure-headers'
@@ -60,6 +62,71 @@ export const APP_ROUTE = /^\/(?:app(?:\/.*)?|pay|claim|pool|privacy|terms)?\/?$/
 export const SHARE_TARGET_PATH = '/share-target'
 export const SHARE_TARGET_MISSED = '/app/share?missed=1'
 
+/** The screen each public link page shows, by its source module (as the Vite manifest names it). */
+export const LINK_PAGE_MODULES: Readonly<Record<string, string>> = {
+  '/pay': 'src/features/pay/PayPage.tsx',
+  '/claim': 'src/features/claim/ClaimPage.tsx',
+  '/pool': 'src/features/pools/PoolPage.tsx',
+}
+
+interface ManifestChunk {
+  file?: unknown
+  css?: unknown
+  imports?: unknown
+  isEntry?: unknown
+}
+
+/** A built asset path we're willing to put in a header ("assets/PayPage-AbC123.js"). */
+const ASSET_FILE = /^assets\/[\w.-]+\.(?:js|css)$/
+
+/**
+ * `Link` preload headers for the link pages friends open from WhatsApp (`LINK_PAGE_MODULES`),
+ * from the client build's manifest (`<clientDir>/.vite/manifest.json`). Without them the page's
+ * own code and styles are only discovered once the app's main script has downloaded and run: a
+ * whole extra round trip on a slow network before the friend sees their name. What the HTML
+ * shell loads already (the entry and everything it imports) is left out. Empty without a
+ * readable manifest (dev, tests), so pages are served exactly as before.
+ */
+export function linkPagePreloads(clientDir: string): Map<string, string> {
+  const out = new Map<string, string>()
+  let manifest: Record<string, ManifestChunk>
+  try {
+    const parsed: unknown = JSON.parse(readFileSync(join(clientDir, '.vite', 'manifest.json'), 'utf8'))
+    if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) return out
+    manifest = parsed as Record<string, ManifestChunk>
+  } catch {
+    return out
+  }
+  const list = (value: unknown): string[] => (Array.isArray(value) ? value.filter((v): v is string => typeof v === 'string') : [])
+  /** `key` and every chunk it imports statically (what loading it brings in). */
+  const closure = (key: string, into: Set<string>): Set<string> => {
+    if (into.has(key) || !Object.hasOwn(manifest, key)) return into
+    into.add(key)
+    for (const next of list(manifest[key]?.imports)) closure(next, into)
+    return into
+  }
+  const inShell = new Set<string>()
+  for (const [key, chunk] of Object.entries(manifest)) if (chunk?.isEntry === true) closure(key, inShell)
+  const shellFiles = new Set<string>()
+  for (const key of inShell) {
+    const chunk = manifest[key]
+    if (typeof chunk?.file === 'string') shellFiles.add(chunk.file)
+    for (const css of list(chunk?.css)) shellFiles.add(css)
+  }
+
+  for (const [path, module] of Object.entries(LINK_PAGE_MODULES)) {
+    const links = new Set<string>()
+    for (const key of closure(module, new Set())) {
+      if (inShell.has(key)) continue
+      const { file, css } = manifest[key] ?? {}
+      for (const style of list(css)) if (ASSET_FILE.test(style) && !shellFiles.has(style)) links.add(`</${style}>; rel=preload; as=style`)
+      if (typeof file === 'string' && ASSET_FILE.test(file)) links.add(`</${file}>; rel=modulepreload`)
+    }
+    if (links.size > 0) out.set(path, [...links].join(', '))
+  }
+  return out
+}
+
 const IMMUTABLE = 'public, max-age=31536000, immutable'
 /** Paths that name a file ("/sw.js", "/assets/x.css") rather than an app route. */
 const FILE_PATH = /\/[^/]*\.[a-z0-9]{1,8}$/i
@@ -89,6 +156,8 @@ export function createWebApp(config: ServerConfig, { clientDir, ...appOptions }:
   app.route('/', createApp(config, appOptions))
   app.post(SHARE_TARGET_PATH, (c) => c.redirect(SHARE_TARGET_MISSED, 303))
 
+  // The build manifest is for this server (`linkPagePreloads`), not for the web.
+  app.get('/.vite/*', (c) => c.notFound())
   // Hashed assets: the build's brotli copy (vite.config.ts `precompress`) when the browser takes
   // it, else gzip made on the fly by `compress` above.
   app.use('/assets/*', serveStatic({ root: clientDir, precompressed: true }))
@@ -96,9 +165,14 @@ export function createWebApp(config: ServerConfig, { clientDir, ...appOptions }:
   // App routes get the app shell. Missing files stay 404s, so a stale script URL never
   // receives HTML (which the service worker could then cache).
   const shell = serveStatic({ root: clientDir, path: 'index.html' })
+  const preloads = linkPagePreloads(clientDir)
   app.get('*', async (c, next) => {
     if (FILE_PATH.test(c.req.path)) return next()
-    if (APP_ROUTE.test(c.req.path)) return shell(c, next)
+    if (APP_ROUTE.test(c.req.path)) {
+      const link = preloads.get(c.req.path.replace(/\/+$/, ''))
+      if (link) c.header('Link', link)
+      return shell(c, next)
+    }
     const response = await shell(c, async () => {})
     if (!(response instanceof Response) || response.status !== 200) return next()
     return new Response(response.body, { status: 404, headers: response.headers })
