@@ -4,6 +4,7 @@
  * features still switched off go home and empty public links say there's no link; seeded loans
  * and trip expenses read right in lists; and the test mocks answer exchange rates.
  */
+import { settleAnimations } from './support/a11y'
 import { seed, friend } from './support/seed'
 import { expect, test } from './support/fixtures'
 import type { Expense } from '../src/domain/types'
@@ -63,6 +64,8 @@ for (const width of [320, 360]) {
       await page.goto('/app')
       const grid = page.getByRole('list', { name: 'Quick actions' })
       await expect(grid.getByRole('button')).toHaveText(GRID)
+      // Measure where the tiles stay, not mid-way through their entrance.
+      await settleAnimations(page)
       const boxes = await grid.getByRole('button').evaluateAll((buttons) =>
         buttons.map((b) => {
           const r = b.getBoundingClientRect()

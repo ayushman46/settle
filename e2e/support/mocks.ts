@@ -259,7 +259,8 @@ export async function installMockApi(context: BrowserContext): Promise<MockApi> 
     return fulfill(route, api.scan)
   })
 
-  await context.route('**/api/rates**', async (route) => {
+  // The API path only: a glob like `**/api/rates**` also caught the dev server's `/src/api/rates.ts`.
+  await context.route((url) => url.pathname === '/api/rates', async (route) => {
     if (route.request().method() !== 'GET') return route.fallback()
     const asked = new URL(route.request().url()).searchParams.get('date')
     api.calls.rates.push(asked)

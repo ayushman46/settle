@@ -29,12 +29,6 @@ const BANGKOK: Group = {
   roundSize: null,
 }
 
-// The rates mock's glob (e2e/support/mocks.ts) also matches the dev server's `/src/api/rates.ts`
-// module; let the module through (page routes run before the context's mock).
-test.beforeEach(async ({ page }) => {
-  await page.route(/\/src\/api\/rates\.ts/, (route) => route.continue())
-})
-
 test.describe('trip currency', () => {
   test.beforeEach(async ({ api }) => {
     // The ECB's latest day in these tests: 21 Oct (the fixture table of spec 06 §4).

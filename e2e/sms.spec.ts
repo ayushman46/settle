@@ -46,12 +46,6 @@ function cab(): Expense {
   }
 }
 
-test.beforeEach(async ({ page }) => {
-  // The shared rates mock (`**/api/rates**`) also catches the dev server's own `/src/api/rates.ts`
-  // module (the split screen imports it): let source files through to the server.
-  await page.route('**/src/api/rates.ts*', (route) => route.continue())
-})
-
 async function openFromHome(page: Page): Promise<void> {
   await page.goto('/app')
   await page.getByRole('list', { name: 'Quick actions' }).getByRole('button', { name: 'From SMS' }).click()
