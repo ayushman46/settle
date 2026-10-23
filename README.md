@@ -2,6 +2,8 @@
 
 **Split anything. Settle in a tap.**
 
+**Live: [settleupi.vercel.app](https://settleupi.vercel.app)** · [What works and what doesn't](STATUS.md)
+
 Settle is a mobile-first web app for splitting any expense — a restaurant bill, the rent, a Goa trip, a cab, Netflix — and actually getting paid back over UPI. No sign-up, no ads, and no database: everything lives on your phone.
 
 - **AI that reads the bill.** Snap a restaurant bill and every item, tax, service charge and discount is filled in; tap who had what. Snap any other bill (electricity, cab, hotel) and the total and category are ready to split.
