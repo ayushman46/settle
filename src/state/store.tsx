@@ -24,7 +24,7 @@ import { appReducer, initAppState, type AppState, type NavDirection } from './na
 import { loadSession, saveSession } from './persist'
 import { setPhoto } from './photo'
 import { createSession, type Action } from './reducer'
-import { clampStep, effectivePaid, nextStep, prevStep, resumeStep } from './selectors'
+import { clampStep, effectivePaid, feesTotal, nextStep, prevStep, resumeStep } from './selectors'
 
 export type { NavDirection } from './nav'
 
@@ -132,12 +132,14 @@ export function useSession(): { session: Session; dispatch: Dispatch<Action> } {
   return { session: state.session, dispatch }
 }
 
-/** The split for the current session (memoised). Totals always add up to `effectivePaid`. */
+/** The split for the current session (memoised). Totals always add up to `effectivePaid`; fees follow the fee split. */
 export function useSplit(): SplitResult {
   const { session } = useStore().state
   const { items, people, assignments } = session
   const paid = effectivePaid(session)
-  return useMemo(() => computeSplit({ items, people, assignments, paid }), [items, people, assignments, paid])
+  const fees = feesTotal(session)
+  const feeSplit = session.feeSplit ?? 'proportional'
+  return useMemo(() => computeSplit({ items, people, assignments, paid, fees, feeSplit }), [items, people, assignments, paid, fees, feeSplit])
 }
 
 export interface Flow {

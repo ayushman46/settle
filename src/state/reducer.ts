@@ -5,17 +5,21 @@
 import { defaultCurrency, isKnownCurrency } from '../lib/currencies'
 import { newId } from '../lib/ids'
 import { MAX_MINOR, rescaleMinor } from '../lib/money'
-import { MAX_PEOPLE, nextColor, normalizeName } from '../lib/people'
+import { graphemes, MAX_PEOPLE, nextColor, normalizeName } from '../lib/people'
 import { validShares } from '../lib/split'
 import { CATEGORY_IDS, type CategoryId } from '../../shared/categories'
 import { ME_ID } from '../domain/types'
 import {
   AVATAR_COLORS,
+  BILL_FEE_KINDS,
   EMPTY_META,
   STEPS,
+  type BillFee,
+  type BillFeeKind,
   type BillItem,
   type BillMeta,
   type BillSource,
+  type FeeSplit,
   type Minor,
   type Person,
   type Session,
@@ -81,6 +85,13 @@ export type Action =
    * become one, sharing what both had.
    */
   | { type: 'linkPeople'; links: Readonly<Record<string, Person>> }
+  /** A delivery-app fee (cleaned; ignored past 15 fees or for an id already there). */
+  | { type: 'addFee'; fee: BillFee }
+  /** Replaces the fee with the same id (cleaned). */
+  | { type: 'updateFee'; fee: BillFee }
+  | { type: 'removeFee'; feeId: string }
+  /** How the fees are shared: in proportion to what each had, or equally between people who had anything. */
+  | { type: 'setFeeSplit'; feeSplit: FeeSplit }
   /**
    * Undo: puts back a snapshot of this same session (ignored for a different session id).
    * Restores only `keys` when given, else every field except `step` — undo never navigates.
@@ -115,7 +126,53 @@ const RESTORABLE_KEYS: readonly RestorableKey[] = [
   'category',
   'date',
   'groupId',
+  'feeSplit',
 ]
+
+/** Most delivery-app fees one bill can hold, and the longest fee label. */
+export const MAX_FEES = 15
+export const MAX_FEE_LABEL = 40
+
+const FEE_KINDS: ReadonlySet<unknown> = new Set(BILL_FEE_KINDS)
+
+/** A fee as the bill keeps it: tidy label (blank → "Fee"), known kind (else 'other'), amount 1…MAX_MINOR; null when unusable. */
+export function sanitizeFee(fee: BillFee): BillFee | null {
+  if (typeof fee.id !== 'string' || fee.id === '') return null
+  const amount = toAmount(fee.amount)
+  if (amount < 1) return null
+  const label = typeof fee.label === 'string' ? collapse(fee.label, MAX_FEE_LABEL) : ''
+  return {
+    id: fee.id,
+    kind: FEE_KINDS.has(fee.kind) ? fee.kind : ('other' as BillFeeKind),
+    label: graphemes(label).length > MAX_FEE_LABEL ? graphemes(label).slice(0, MAX_FEE_LABEL).join('').trim() : label || 'Fee',
+    amount,
+  }
+}
+
+/** Clean, unique fees (at most 15); `same` says whether `fees` was already exactly that. */
+function cleanFees(fees: readonly BillFee[] | undefined): { fees: BillFee[]; same: boolean } {
+  if (fees === undefined) return { fees: [], same: true }
+  const seen = new Set<string>()
+  const out: BillFee[] = []
+  let same = Array.isArray(fees)
+  for (const raw of Array.isArray(fees) ? fees : []) {
+    const fee = out.length < MAX_FEES && raw && typeof raw === 'object' && !seen.has(raw.id) ? sanitizeFee(raw) : null
+    if (!fee) {
+      same = false
+      continue
+    }
+    seen.add(fee.id)
+    if (fee.label !== raw.label || fee.kind !== raw.kind || fee.amount !== raw.amount) same = false
+    out.push(same ? raw : fee)
+  }
+  return { fees: out, same: same && out.length === fees.length }
+}
+
+/** `meta` with these fees (the key is left out when there are none). */
+function withFees(meta: BillMeta, fees: readonly BillFee[]): BillMeta {
+  const { fees: _old, ...rest } = meta
+  return fees.length > 0 ? { ...rest, fees: [...fees] } : rest
+}
 
 export function createSession(currency?: string): Session {
   return {
@@ -221,7 +278,7 @@ function clampCursor(index: number, items: readonly BillItem[]): number {
 
 function rescaleMeta(meta: BillMeta, from: string, to: string): BillMeta {
   const scale = (v: Minor | null) => (v === null ? null : rescaleMinor(v, from, to))
-  return {
+  const rescaled: BillMeta = {
     ...meta,
     subtotal: scale(meta.subtotal),
     tax: scale(meta.tax),
@@ -230,6 +287,9 @@ function rescaleMeta(meta: BillMeta, from: string, to: string): BillMeta {
     tip: scale(meta.tip),
     total: scale(meta.total),
   }
+  // A fee that rounds away to nothing (₹0.40 → ¥0) is dropped.
+  if (meta.fees) return withFees(rescaled, meta.fees.map((fee) => ({ ...fee, amount: toAmount(rescaleMinor(fee.amount, from, to)) })).filter((fee) => fee.amount > 0))
+  return rescaled
 }
 
 /**
@@ -252,8 +312,14 @@ export function repairSession(state: Session): Session {
   }
   const payerId = state.payerId !== null && isPayerCandidate(state, state.payerId) ? state.payerId : null
   const assignCursor = clampCursor(state.assignCursor, state.items)
-  if (!changed && payerId === state.payerId && assignCursor === state.assignCursor) return state
-  return { ...state, assignments: changed ? assignments : state.assignments, payerId, assignCursor }
+  const fees = cleanFees(state.meta.fees)
+  const feesOk = fees.same && (state.meta.fees === undefined || fees.fees.length > 0)
+  const feeSplitOk = state.feeSplit === undefined || state.feeSplit === 'proportional' || state.feeSplit === 'equal'
+  if (!changed && payerId === state.payerId && assignCursor === state.assignCursor && feesOk && feeSplitOk) return state
+  const next: Session = { ...state, assignments: changed ? assignments : state.assignments, payerId, assignCursor }
+  if (!feesOk) next.meta = withFees(state.meta, fees.fees)
+  if (!feeSplitOk) delete next.feeSplit
+  return next
 }
 
 /** Applies `linkPeople` (see the action). Same object when nothing changes. */
@@ -311,14 +377,15 @@ export function reducer(state: Session, action: Action): Session {
         seen.add(raw.id)
         items.push(sanitizeItem(raw))
       }
-      return {
+      const fees = cleanFees(action.meta.fees).fees
+      const loaded: Session = {
         ...state,
         id: newId(),
         createdAt: Date.now(),
         step: 'review',
         source: action.source,
         currency,
-        meta: { ...EMPTY_META, ...action.meta },
+        meta: withFees({ ...EMPTY_META, ...action.meta }, fees),
         warnings: action.warnings.filter((w) => typeof w === 'string' && w.trim() !== ''),
         items,
         paid: null,
@@ -329,6 +396,37 @@ export function reducer(state: Session, action: Action): Session {
         date: null,
         expenseId: null,
       }
+      // A delivery order's fees are shared equally by default; everything else by what each had.
+      if (action.source === 'scan' && fees.length > 0) loaded.feeSplit = 'equal'
+      else delete loaded.feeSplit
+      return loaded
+    }
+
+    case 'addFee': {
+      const current = state.meta.fees ?? []
+      const fee = sanitizeFee(action.fee)
+      if (!fee || current.length >= MAX_FEES || current.some((f) => f.id === fee.id)) return state
+      return { ...state, meta: withFees(state.meta, [...current, fee]) }
+    }
+
+    case 'updateFee': {
+      const current = state.meta.fees ?? []
+      const fee = sanitizeFee(action.fee)
+      const at = fee ? current.findIndex((f) => f.id === fee.id) : -1
+      const old = current[at]
+      if (!fee || !old || (old.label === fee.label && old.kind === fee.kind && old.amount === fee.amount)) return state
+      return { ...state, meta: withFees(state.meta, current.map((f, i) => (i === at ? fee : f))) }
+    }
+
+    case 'removeFee': {
+      const current = state.meta.fees ?? []
+      if (!current.some((f) => f.id === action.feeId)) return state
+      return { ...state, meta: withFees(state.meta, current.filter((f) => f.id !== action.feeId)) }
+    }
+
+    case 'setFeeSplit': {
+      if ((action.feeSplit !== 'equal' && action.feeSplit !== 'proportional') || (state.feeSplit ?? 'proportional') === action.feeSplit) return state
+      return { ...state, feeSplit: action.feeSplit }
     }
 
     case 'setCurrency': {

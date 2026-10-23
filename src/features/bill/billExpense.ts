@@ -51,10 +51,12 @@ export function billExpenseDraft(session: Session, today: string): ExpenseDraft 
     note: null,
     groupId: session.groupId,
     bill: {
-      meta: { ...session.meta },
+      meta: session.meta.fees ? { ...session.meta, fees: session.meta.fees.map((fee) => ({ ...fee })) } : { ...session.meta },
       items: session.items.map((item) => ({ ...item })),
       assignments,
       warnings: [...session.warnings],
+      // How fees are shared only matters (and is only kept) when there are fees.
+      ...(session.meta.fees && session.meta.fees.length > 0 ? { feeSplit: session.feeSplit ?? 'proportional' } : {}),
     },
     recurringId: null,
     source: session.source ? SOURCES[session.source] : 'manual',
@@ -89,6 +91,7 @@ export function billSessionFromExpense(expense: Expense, friends: readonly Frien
     date: expense.date,
     groupId: expense.groupId,
     expenseId: expense.id,
+    ...(bill.feeSplit ? { feeSplit: bill.feeSplit } : {}),
   })
   return { ...session, step: clampStep(session, 'result') }
 }

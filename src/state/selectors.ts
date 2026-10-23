@@ -12,13 +12,21 @@ export function itemsTotal(s: Session): Minor {
   return total
 }
 
+/** Σ of the bill's delivery-app fees (0 without any). */
+export function feesTotal(s: Session): Minor {
+  let total = 0
+  for (const fee of s.meta.fees ?? []) total += fee.amount
+  return total
+}
+
 /**
- * What the bill's own lines add up to: items + service charge + tax + tip − discount. Used when no
- * total was printed (or read), so known charges and discounts aren't silently dropped.
+ * What the bill's own lines add up to: items + service charge + tax + delivery fees + tip −
+ * discount. Used when no total was printed (or read), so known charges and discounts aren't
+ * silently dropped.
  */
 export function computedBillTotal(s: Session): Minor {
   const { serviceCharge, tax, tip, discount } = s.meta
-  return itemsTotal(s) + (serviceCharge ?? 0) + (tax ?? 0) + (tip ?? 0) - Math.abs(discount ?? 0)
+  return itemsTotal(s) + (serviceCharge ?? 0) + (tax ?? 0) + feesTotal(s) + (tip ?? 0) - Math.abs(discount ?? 0)
 }
 
 /**
@@ -147,11 +155,11 @@ export function resumeStep(s: Session, furthest: StepId = s.step): StepId {
  * `roundoff`: a difference of less than one major unit (e.g. −₹0.24) that makes the printed total
  * add up. `other`: a bigger one ("Other charges" / "Other discounts"), a real charge or saving.
  */
-export type BreakdownKind = 'items' | 'charge' | 'discount' | 'roundoff' | 'other' | 'total'
+export type BreakdownKind = 'items' | 'charge' | 'fee' | 'discount' | 'roundoff' | 'other' | 'total'
 
 export interface BreakdownRow {
-  /** `roundoff` keys the adjustment row whatever its kind (`roundoff` or `other`). */
-  key: 'items' | 'serviceCharge' | 'tax' | 'tip' | 'discount' | 'roundoff' | 'total'
+  /** `roundoff` keys the adjustment row whatever its kind (`roundoff` or `other`); fees are `fee:<id>`. */
+  key: 'items' | 'serviceCharge' | 'tax' | 'tip' | 'discount' | 'roundoff' | 'total' | `fee:${string}`
   label: string
   /**
    * Signed contribution to the total: charges positive, the discount NEGATIVE. The rows above
@@ -162,7 +170,7 @@ export interface BreakdownRow {
 }
 
 /**
- * "What the bill says", for the paid screen: Items, Service charge, Tax, Tip, Discount (−),
+ * "What the bill says", for the paid screen: Items, Service charge, Tax, each fee, Tip, Discount (−),
  * Round-off / Other charges / Other discounts (whatever makes the printed total add up) and Bill
  * total. Without a printed total the last row is what the lines add up to ("Adds up to").
  * Zero/absent charges are left out.
@@ -177,6 +185,7 @@ export function billBreakdown(s: Session): BreakdownRow[] {
     ['tip', 'Tip', meta.tip],
   ] as const
   for (const [key, label, amount] of charges) {
+    if (key === 'tip') for (const fee of meta.fees ?? []) rows.push({ key: `fee:${fee.id}`, label: fee.label, amount: fee.amount, kind: 'fee' })
     if (amount === null || amount === 0) continue
     rows.push({ key, label, amount, kind: 'charge' })
   }
