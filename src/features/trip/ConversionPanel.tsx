@@ -58,8 +58,8 @@ export function ConversionPanel({ conversion, paid, settle, date, converting, on
           <ConvertedAmount conversion={conversion} paid={paid} settle={settle} />
           <div className={styles.rateRow}>
             <p className={styles.line}>
-              {conversion.rate && conversion.total !== null && <span className={styles.rate}>{rateText(conversion.rate, paid, settle)}</span>}
-              {conversion.rate && conversion.total !== null && <span aria-hidden="true"> · </span>}
+              {conversion.rate && <span className={styles.rate}>{rateText(conversion.rate, paid, settle)}</span>}
+              {conversion.rate && <span aria-hidden="true"> · </span>}
               <span>{sourceText(conversion)}</span>
             </p>
             <Button size="sm" variant="ghost" iconStart={<ArrowRightLeft />} className={styles.change} onClick={onChangeRate} aria-label={t('trip.panel.changeLabel')}>
