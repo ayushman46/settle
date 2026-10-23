@@ -2,3 +2,15 @@
 .picker {
   min-width: 0;
 }
+
+/* "Let everyone pick their own" under the main button, with its one-line hint. */
+.claim {
+  display: grid;
+  gap: var(--s-1);
+}
+
+.claimHint {
+  font: var(--text-caption);
+  color: var(--ink-2);
+  text-align: center;
+}

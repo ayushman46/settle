@@ -1,5 +1,5 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
-import { ArrowRight, ListChecks, UsersRound } from 'lucide-react'
+import { ArrowRight, ListChecks, Send, UsersRound } from 'lucide-react'
 import {
   ActionBar,
   AvatarStack,
@@ -15,14 +15,20 @@ import {
   TopBar,
   useToast,
 } from '../../components'
+import { useFriendsById, useProfile } from '../../data'
+import { useT } from '../../i18n'
 import { formatQuantity } from '../../lib/format'
 import { haptic } from '../../lib/haptics'
 import { formatMoney } from '../../lib/money'
 import { validShares } from '../../lib/split'
+import { reducer } from '../../state/reducer'
 import { assignedCount, firstUnassignedIndex, stepProgress, unassignedItems } from '../../state/selectors'
 import { useFlow, useSession } from '../../state/store'
 import type { Shares } from '../../types'
+import { CLAIMS_ENABLED } from '../claim/enabled'
+import { claimBoardPath, claimRoundFromBill, claimStartError } from '../claim/startClaimRound'
 import { AssignSheet, type AssignDirection } from './AssignSheet'
+import { linkToFriends } from './billPeople'
 import { withOwnerAvatar, useOwnerAvatarName } from './ownerAvatar'
 import { ASSIGNMENT_KEYS, restoreAssignments } from './undoMerge'
 import styles from './AssignScreen.module.css'
@@ -34,6 +40,9 @@ export function AssignScreen() {
   const toast = useToast()
   const { items, people, currency } = session
   const ownerName = useOwnerAvatarName()
+  const friendsById = useFriendsById()
+  const profile = useProfile()
+  const t = useT()
 
   const sessionRef = useRef(session)
   useLayoutEffect(() => {
@@ -120,6 +129,21 @@ export function AssignScreen() {
     })
   }
 
+  // "Rather let them pick?": save the bill as it is (sorted items stay sorted) and send a claim link.
+  const startClaims = () => {
+    let current = sessionRef.current
+    try {
+      const links = linkToFriends(current.people, friendsById, profile.name)
+      if (Object.keys(links).length > 0) current = reducer(current, { type: 'linkPeople', links })
+      const round = claimRoundFromBill(current)
+      haptic('success')
+      flow.finish(claimBoardPath(round.id, true))
+    } catch (error) {
+      haptic('error')
+      toast(claimStartError(error), { tone: 'error' })
+    }
+  }
+
   const subtitle =
     total === 0
       ? undefined
@@ -171,6 +195,18 @@ export function AssignScreen() {
         />
       ) : (
         <>
+          {CLAIMS_ENABLED && left > 0 && (
+            <Card className={styles.claim}>
+              <span className={styles.claimIcon} aria-hidden="true">
+                <Send strokeWidth={2.25} />
+              </span>
+              <p className={styles.claimText}>{t('claim.entry.assign')}</p>
+              <Button size="sm" variant="secondary" onClick={startClaims}>
+                {t('claim.entry.assignButton')}
+              </Button>
+            </Card>
+          )}
+
           {left > 0 && people.length > 1 && (
             <Button variant="secondary" size="md" iconStart={<UsersRound />} className={styles.quick} onClick={shareRest}>
               {left === total ? 'Everyone shared everything' : 'Everyone shared the rest'}

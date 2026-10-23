@@ -1,14 +1,19 @@
 import { useEffect, useLayoutEffect, useRef } from 'react'
-import { ArrowRight } from 'lucide-react'
+import { ArrowRight, Send } from 'lucide-react'
 import { ActionBar, Button, PageTitle, Screen, TopBar, useToast } from '../../components'
-import { friendsStore, useGroup } from '../../data'
+import { friendsStore, useFriendsById, useGroup, useProfile } from '../../data'
 import { ME_ID } from '../../domain/types'
+import { useT } from '../../i18n'
 import { PeoplePicker } from '../../kit/index-a'
+import { haptic } from '../../lib/haptics'
 import { MAX_PEOPLE } from '../../lib/people'
+import { reducer } from '../../state/reducer'
 import { stepProgress } from '../../state/selectors'
 import { useFlow, useSession } from '../../state/store'
 import type { Person, Session } from '../../types'
-import { personById } from './billPeople'
+import { CLAIMS_ENABLED } from '../claim/enabled'
+import { claimBoardPath, claimRoundFromBill, claimStartError } from '../claim/startClaimRound'
+import { linkToFriends, personById } from './billPeople'
 import { PERSON_KEYS, restorePerson } from './undoMerge'
 import styles from './PeopleScreen.module.css'
 
@@ -27,6 +32,9 @@ export function PeopleScreen() {
   const flow = useFlow()
   const toast = useToast()
   const group = useGroup(session.groupId)
+  const friendsById = useFriendsById()
+  const profile = useProfile()
+  const t = useT()
   const { people } = session
 
   const sessionRef = useRef(session)
@@ -77,9 +85,25 @@ export function PeopleScreen() {
     }
   }
 
+  // "Let everyone pick their own": save the bill as it is and send one claim link instead.
+  const startClaims = (): void => {
+    let current = sessionRef.current
+    try {
+      const links = linkToFriends(current.people, friendsById, profile.name)
+      if (Object.keys(links).length > 0) current = reducer(current, { type: 'linkPeople', links })
+      const round = claimRoundFromBill(current)
+      haptic('success')
+      flow.finish(claimBoardPath(round.id, true))
+    } catch (error) {
+      haptic('error')
+      toast(claimStartError(error), { tone: 'error' })
+    }
+  }
+
   const count = people.length
   const canNext = count >= 2
   const hint = canNext ? undefined : count === 0 ? 'Pick at least 2 people' : 'Pick one more person'
+  const canClaim = CLAIMS_ENABLED && session.items.length > 0 && count >= 1
 
   return (
     <Screen
@@ -89,6 +113,16 @@ export function PeopleScreen() {
           <Button block iconEnd={<ArrowRight />} disabled={!canNext} onClick={flow.next}>
             Next: who had what
           </Button>
+          {canClaim && (
+            <div className={styles.claim}>
+              <Button block variant="ghost" iconStart={<Send />} aria-describedby="people-claim-hint" onClick={startClaims}>
+                {t('claim.entry.people')}
+              </Button>
+              <p id="people-claim-hint" className={styles.claimHint}>
+                {t('claim.entry.peopleHint')}
+              </p>
+            </div>
+          )}
         </ActionBar>
       }
     >

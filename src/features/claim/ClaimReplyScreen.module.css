@@ -1,0 +1,19 @@
+.amount {
+  font: var(--text-label);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.gone {
+  color: var(--ink-2);
+}
+
+.paid {
+  padding-inline: var(--s-2);
+  font: var(--text-label);
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}

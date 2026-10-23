@@ -1,0 +1,153 @@
+.share {
+  display: grid;
+  gap: var(--s-3);
+  background: var(--accent-soft);
+  box-shadow: none;
+}
+
+.shareTitle {
+  font: var(--text-headline);
+  font-weight: 650;
+  letter-spacing: var(--tracking-tight);
+  color: var(--ink);
+}
+
+.shareText {
+  font: var(--text-body);
+  color: var(--ink);
+}
+
+.shareButtons {
+  display: grid;
+  gap: var(--s-2);
+}
+
+.shareRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+.shareRow > * {
+  flex: 1 1 auto;
+}
+
+/* "Share on WhatsApp": the primary action, as a link (it opens WhatsApp). */
+.whatsapp {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  min-height: var(--btn-h, 52px);
+  padding-inline: var(--s-5);
+  border-radius: var(--r-pill);
+  background: var(--primary);
+  color: var(--on-primary);
+  font: var(--text-body);
+  font-weight: 650;
+  text-decoration: none;
+  transition: background-color var(--dur-2) var(--ease-out);
+}
+
+.whatsapp:hover {
+  background: var(--primary-hover);
+}
+
+.whatsapp[aria-disabled='true'] {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.whatsapp svg {
+  width: 20px;
+  height: 20px;
+}
+
+.privacy {
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
+.section {
+  display: grid;
+  gap: var(--s-2);
+  min-width: 0;
+}
+
+.hint {
+  padding-inline: var(--s-2);
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
+.personTitle {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding-inline: var(--s-4);
+  border-radius: var(--r-pill);
+  background: var(--surface-2);
+  color: var(--ink);
+  font: var(--text-label);
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.amount {
+  font: var(--text-label);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+
+.icon_positive,
+.icon_warning,
+.icon_muted {
+  width: 22px;
+  height: 22px;
+  flex: none;
+}
+
+.icon_positive {
+  color: var(--positive);
+}
+
+.icon_warning {
+  color: var(--warning-ink, var(--warning));
+}
+
+.icon_muted {
+  color: var(--ink-3);
+}
+
+.status_positive {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.status_warning {
+  font-weight: 650;
+  color: var(--warning-ink, var(--ink));
+}
+
+.status_muted {
+  font-weight: 550;
+  color: var(--ink-2);
+}
+
+.skip {
+  margin-top: var(--s-2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .whatsapp {
+    transition: none;
+  }
+}

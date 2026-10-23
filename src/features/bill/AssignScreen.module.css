@@ -48,3 +48,35 @@
   font-weight: 550;
   white-space: nowrap;
 }
+
+/* "Rather let them pick? Send a claim link": one quiet row above the items. */
+.claim {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-3) var(--s-3) var(--s-3) var(--s-4);
+}
+
+.claimIcon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--ink);
+}
+
+.claimIcon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.claimText {
+  flex: 1 1 auto;
+  min-width: 0;
+  font: var(--text-label);
+  font-weight: 600;
+  color: var(--ink);
+}

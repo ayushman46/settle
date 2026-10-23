@@ -1,0 +1,282 @@
+/* The claim page's own pieces; the page frame is PublicShell's. */
+
+.loading {
+  display: grid;
+  justify-items: center;
+  gap: var(--s-3);
+  padding: var(--s-8) var(--s-5);
+  border-radius: var(--radius-sheet);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+}
+
+.request {
+  display: grid;
+  justify-items: center;
+  gap: var(--s-2);
+  padding: var(--s-6) var(--s-5) var(--s-5);
+  border-radius: var(--radius-sheet);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+  text-align: center;
+}
+
+.by {
+  margin-top: var(--s-1);
+  font: var(--text-label);
+  font-weight: 500;
+  color: var(--ink-2);
+}
+
+.title {
+  font: var(--text-title);
+  letter-spacing: var(--tracking-tight);
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.meta {
+  font: var(--text-caption);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-2);
+}
+
+.lead {
+  max-width: 34ch;
+  margin-top: var(--s-2);
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
+.section {
+  display: grid;
+  gap: var(--s-3);
+  min-width: 0;
+}
+
+.h2 {
+  padding-inline: var(--s-2);
+  font: var(--text-headline);
+  font-weight: 650;
+  letter-spacing: var(--tracking-tight);
+}
+
+.h2:focus {
+  outline: none;
+}
+
+.h2:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+  border-radius: var(--r-sm);
+}
+
+.names {
+  display: grid;
+  overflow: hidden;
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+}
+
+.names > li + li {
+  border-top: 1px solid var(--line);
+}
+
+.name {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  width: 100%;
+  min-height: 64px;
+  padding: var(--s-3) var(--s-3) var(--s-3) var(--s-4);
+  color: var(--ink);
+  text-align: start;
+  transition: background-color var(--dur-2) var(--ease-out);
+}
+
+.name:focus-visible {
+  outline-offset: -3px;
+}
+
+.name:active {
+  background: var(--surface-2);
+}
+
+@media (hover: hover) {
+  .name:hover {
+    background: var(--surface-2);
+  }
+}
+
+.nameText {
+  flex: 1 1 auto;
+  min-width: 0;
+  font: var(--text-body);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.chevron {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  color: var(--ink-3);
+}
+
+.addIcon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--surface-2);
+  color: var(--ink-2);
+}
+
+.addIcon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.typed {
+  display: grid;
+  gap: var(--s-3);
+  padding: var(--s-4);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+}
+
+.notYou {
+  padding-inline: var(--s-2);
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
+.inlineLink {
+  justify-self: start;
+  min-height: 44px;
+  padding-inline: var(--s-2);
+  color: var(--accent-ink);
+  font: var(--text-label);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.notYou .inlineLink {
+  min-height: 0;
+  padding: var(--s-2) var(--s-1);
+  font: inherit;
+  font-weight: 600;
+}
+
+.nothingNote {
+  padding-inline: var(--s-2);
+  font: var(--text-caption);
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.bannerActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  min-height: 44px;
+  padding-inline: var(--s-2);
+  font: var(--text-label);
+  font-weight: 600;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.check input {
+  width: 22px;
+  height: 22px;
+  accent-color: var(--accent-ink);
+}
+
+.send {
+  display: grid;
+  gap: var(--s-2);
+}
+
+/* "Send my picks to Ayush": the page's main action, as a link (it opens WhatsApp). */
+.sendLink {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  min-height: var(--btn-h, 52px);
+  padding-inline: var(--s-5);
+  border-radius: var(--r-pill);
+  background: var(--primary);
+  color: var(--on-primary);
+  font: var(--text-body);
+  font-weight: 650;
+  text-align: center;
+  text-decoration: none;
+  transition: background-color var(--dur-2) var(--ease-out);
+}
+
+.sendLink:hover {
+  background: var(--primary-hover);
+}
+
+.sendLink svg {
+  flex: none;
+  width: 20px;
+  height: 20px;
+}
+
+.hint {
+  font: var(--text-caption);
+  color: var(--ink-2);
+  text-align: center;
+}
+
+.sendMore {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--s-2);
+}
+
+.sent {
+  display: grid;
+  justify-items: center;
+  gap: var(--s-3);
+  padding: var(--s-8) var(--s-5);
+  border-radius: var(--radius-sheet);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+  text-align: center;
+}
+
+.sentTitle {
+  font: var(--text-title);
+  letter-spacing: var(--tracking-tight);
+}
+
+.sentTitle:focus {
+  outline: none;
+}
+
+.sentText {
+  font: var(--text-body);
+  color: var(--ink-2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .name,
+  .sendLink {
+    transition: none;
+  }
+}

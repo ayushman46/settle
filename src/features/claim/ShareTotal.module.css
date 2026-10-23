@@ -1,0 +1,40 @@
+/* Sticks to the bottom of the viewport while the items scroll underneath. */
+.card {
+  position: sticky;
+  bottom: calc(var(--s-3) + var(--safe-bottom, 0px));
+  z-index: 2;
+  display: grid;
+  gap: var(--s-1);
+  padding: var(--s-4) var(--s-5);
+  border-radius: var(--radius-card);
+  background: var(--primary);
+  color: var(--on-primary);
+  box-shadow: var(--shadow-lg);
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-1) var(--s-3);
+}
+
+.title {
+  font: var(--text-label);
+  font-weight: 600;
+  opacity: 0.85;
+}
+
+.amount {
+  font: var(--text-title);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: var(--tracking-tight);
+}
+
+.breakdown {
+  font: var(--text-caption);
+  font-variant-numeric: tabular-nums;
+  opacity: 0.85;
+}

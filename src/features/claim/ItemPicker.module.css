@@ -1,0 +1,202 @@
+.list {
+  display: grid;
+  overflow: hidden;
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+}
+
+.list > li + li {
+  border-top: 1px solid var(--line);
+}
+
+.listDisabled .row {
+  opacity: 0.5;
+}
+
+.row {
+  display: grid;
+  gap: var(--s-2);
+  padding: var(--s-4);
+  min-width: 0;
+  transition: background-color var(--dur-2) var(--ease-out);
+}
+
+.picked {
+  background: color-mix(in srgb, var(--accent-soft) 45%, var(--surface));
+}
+
+.fixed {
+  background: var(--surface-2);
+}
+
+.head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s-3);
+  min-width: 0;
+}
+
+.name {
+  flex: 1 1 auto;
+  min-width: 0;
+  font: var(--text-body);
+  font-weight: 600;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.qty {
+  font-weight: 500;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.amount {
+  flex: none;
+  font: var(--text-body);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-2);
+}
+
+.portion {
+  margin-top: calc(var(--s-1) * -1);
+  font: var(--text-caption);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent-ink);
+}
+
+.sortedBy {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-1);
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
+.lock {
+  width: 14px;
+  height: 14px;
+  color: var(--ink-3);
+}
+
+.yours {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+/* "I had this": a pill toggle with a tick box. */
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-self: start;
+  gap: var(--s-2);
+  min-height: 44px;
+  padding: 0 var(--s-4) 0 var(--s-3);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-pill);
+  background: var(--surface);
+  color: var(--ink);
+  font: var(--text-label);
+  font-weight: 600;
+  transition:
+    background-color var(--dur-2) var(--ease-out),
+    border-color var(--dur-2) var(--ease-out);
+}
+
+.toggle:active {
+  background: var(--surface-2);
+}
+
+.toggleOn {
+  border-color: var(--accent-edge, var(--accent-ink));
+  background: var(--accent);
+  color: var(--on-accent, var(--ink));
+}
+
+.toggleOn:active {
+  background: var(--accent-hover, var(--accent));
+}
+
+.tick {
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border: 1.5px solid currentColor;
+  border-radius: 6px;
+}
+
+.tick svg {
+  width: 14px;
+  height: 14px;
+}
+
+.controls {
+  display: grid;
+  gap: var(--s-3);
+  min-width: 0;
+}
+
+.unitControls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2) var(--s-3);
+  min-width: 0;
+}
+
+.stepperRow {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+}
+
+.stepperLabel {
+  font: var(--text-label);
+  color: var(--ink-2);
+}
+
+.shared {
+  display: grid;
+  gap: var(--s-2);
+  min-width: 0;
+}
+
+.sharedLabel {
+  font: var(--text-caption);
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+.link {
+  justify-self: start;
+  min-height: 44px;
+  padding-inline: var(--s-1);
+  color: var(--accent-ink);
+  font: var(--text-label);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.link:disabled,
+.toggle:disabled {
+  cursor: default;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .row,
+  .toggle {
+    transition: none;
+  }
+}

@@ -1,0 +1,96 @@
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  margin-inline: calc(var(--s-2) * -1);
+}
+
+.action {
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+  width: 100%;
+  min-height: 60px;
+  padding: var(--s-2);
+  border-radius: var(--radius-field);
+  color: var(--ink);
+  text-align: start;
+  text-decoration: none;
+  transition: background-color var(--dur-2) var(--ease-out);
+}
+
+.action:active {
+  background: var(--surface-2);
+}
+
+@media (hover: hover) {
+  .action:hover {
+    background: var(--surface-2);
+  }
+}
+
+.icon {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-2);
+  color: var(--ink);
+}
+
+.icon > svg {
+  width: 20px;
+  height: 20px;
+}
+
+.text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.label {
+  font: var(--text-label);
+  font-weight: 650;
+}
+
+.detail {
+  font: var(--text-caption);
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.people {
+  display: grid;
+  gap: var(--s-1);
+}
+
+.person {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  min-height: 56px;
+}
+
+.personName {
+  flex: 1 1 auto;
+  min-width: 0;
+  font: var(--text-body);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.hint {
+  margin-top: var(--s-2);
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .action {
+    transition: none;
+  }
+}
