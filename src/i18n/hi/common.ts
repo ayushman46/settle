@@ -1,4 +1,30 @@
-/** Hindi copy for the common namespace. Keys: `common.<screen>.<element>` (see i18n-plan §3). */
+/** Hindi words used all over the app. Keys: `common.<group>.<word>`. */
 import type { Messages } from '../types'
 
-export const common = {} as const satisfies Messages
+export const common = {
+  'common.action.save': 'सेव करें',
+  'common.action.cancel': 'रद्द करें',
+  'common.action.done': 'हो गया',
+  'common.action.undo': 'वापस लें',
+  'common.action.delete': 'हटाएँ',
+  'common.action.edit': 'बदलें',
+  'common.action.close': 'बंद करें',
+  'common.action.back': 'वापस',
+  'common.action.next': 'आगे',
+  'common.action.continue': 'आगे बढ़ें',
+  'common.action.retry': 'फिर से कोशिश करें',
+  'common.action.skip': 'छोड़ें',
+  'common.action.share': 'शेयर करें',
+  'common.action.copy': 'कॉपी करें',
+  'common.action.copied': 'कॉपी हो गया',
+  'common.action.add': 'जोड़ें',
+  'common.action.remove': 'हटाएँ',
+  'common.action.seeAll': 'सभी देखें',
+  'common.action.more': 'और भी',
+  'common.date.today': 'आज',
+  'common.date.yesterday': 'कल',
+  'common.people.you': 'आप',
+  'common.people.someone': 'कोई',
+  'common.count.people': '{count, plural, one {# व्यक्ति} other {# लोग}}',
+  'common.count.items': '{count, plural, one {# आइटम} other {# आइटम}}',
+} as const satisfies Messages
