@@ -5,19 +5,23 @@ import { useFriendsById } from '../../data'
 import type { Minor, Settlement } from '../../domain/types'
 import { today } from '../../engine/dates'
 import type { Transfer } from '../../engine/balances'
+import { t as translate, useT } from '../../i18n'
 import { AmountHero, DateField, FriendAvatar, friendLabel, friendObjectLabel } from '../../kit/index-a'
 import { cx } from '../../lib/cx'
 import { formatMoney } from '../../lib/money'
-import { paymentSentence } from './groupView'
+import { METHOD_LABELS, paymentWithAmount } from './groupView'
 import styles from './RecordPaymentSheet.module.css'
 
 export type PaymentMethod = Settlement['method']
 
-const METHOD_OPTIONS: ReadonlyArray<SegmentedOption<PaymentMethod>> = [
-  { value: 'upi', label: 'UPI', icon: <Smartphone /> },
-  { value: 'cash', label: 'Cash', icon: <Banknote /> },
-  { value: 'other', label: 'Other', icon: <CircleEllipsis /> },
-]
+/** UPI, cash or other, labelled in the current language. */
+function methodOptions(): ReadonlyArray<SegmentedOption<PaymentMethod>> {
+  return [
+    { value: 'upi', label: METHOD_LABELS.upi, icon: <Smartphone /> },
+    { value: 'cash', label: METHOD_LABELS.cash, icon: <Banknote /> },
+    { value: 'other', label: METHOD_LABELS.other, icon: <CircleEllipsis /> },
+  ]
+}
 
 export interface RecordedPayment {
   amount: Minor
@@ -45,10 +49,10 @@ function freshForm(transfer: Transfer, currency: string): Form {
 
 /** How the typed amount compares with what's owed, in words (null for the full amount). */
 function amountNote(amount: Minor | null, owed: Minor, currency: string): string | null {
-  if (amount === null || amount <= 0) return 'Enter what was paid.'
+  if (amount === null || amount <= 0) return translate('groups.record.note.empty')
   const money = (minor: Minor) => formatMoney(minor, currency, { trimZeros: true })
-  if (amount < owed) return `Part payment — ${money(owed - amount)} still to go.`
-  if (amount > owed) return `${money(amount - owed)} more than owed — that much will be owed back.`
+  if (amount < owed) return translate('groups.record.note.part', { amount: money(owed - amount) })
+  if (amount > owed) return translate('groups.record.note.over', { amount: money(amount - owed) })
   return null
 }
 
@@ -57,6 +61,7 @@ function amountNote(amount: Minor | null, owed: Minor, currency: string): string
  * full one to start with; less for a part payment), how it was paid and when.
  */
 export function RecordPaymentSheet({ transfer, currency, onClose, onRecord }: RecordPaymentSheetProps) {
+  const tr = useT()
   const friendsById = useFriendsById()
   // Keeps the last payment on show while the sheet slides away; a new one starts a fresh form.
   const [shown, setShown] = useState<Transfer | null>(transfer)
@@ -70,7 +75,7 @@ export function RecordPaymentSheet({ transfer, currency, onClose, onRecord }: Re
 
   const from = friendsById[t.fromId] ?? null
   const to = friendsById[t.toId] ?? null
-  const sentence = paymentSentence(t.fromId, t.toId, friendLabel(t.fromId, from), friendObjectLabel(t.toId, to), 'present')
+  const eyebrow = paymentWithAmount(t.fromId, t.toId, friendLabel(t.fromId, from), friendObjectLabel(t.toId, to), formatMoney(t.amount, currency, { trimZeros: true }))
   const note = amountNote(form.amount, t.amount, currency)
   const ready = form.amount !== null && form.amount > 0
 
@@ -83,11 +88,11 @@ export function RecordPaymentSheet({ transfer, currency, onClose, onRecord }: Re
     <BottomSheet
       open={transfer !== null}
       onClose={onClose}
-      eyebrow={`${sentence} ${formatMoney(t.amount, currency, { trimZeros: true })}`}
-      title="Record a payment"
+      eyebrow={eyebrow}
+      title={tr('groups.record.title')}
       footer={
         <Button block disabled={!ready} onClick={submit}>
-          {ready && form.amount !== null ? `Record ${formatMoney(form.amount, currency, { trimZeros: true })}` : 'Record payment'}
+          {ready && form.amount !== null ? tr('groups.record.amount.cta', { amount: formatMoney(form.amount, currency, { trimZeros: true }) }) : tr('groups.record.cta')}
         </Button>
       }
     >
@@ -108,28 +113,28 @@ export function RecordPaymentSheet({ transfer, currency, onClose, onRecord }: Re
         <AmountHero
           value={form.amount}
           currency={currency}
-          label="Amount paid"
+          label={tr('groups.record.amount.label')}
           onChange={(amount) => setForm((f) => ({ ...f, amount }))}
         />
         <p className={cx(styles.note, note && styles.noteShown)} aria-live="polite">
-          {note ?? 'The full amount.'}
+          {note ?? tr('groups.record.note.full')}
         </p>
         <div className={styles.row}>
           <span className={styles.rowLabel}>
-            How
+            {tr('groups.record.how')}
           </span>
           <SegmentedControl
-            options={METHOD_OPTIONS}
+            options={methodOptions()}
             value={form.method}
             onChange={(method) => setForm((f) => ({ ...f, method }))}
-            ariaLabel="How it was paid"
+            ariaLabel={tr('groups.record.how.aria')}
             size="sm"
             className={styles.methods}
           />
         </div>
         <div className={styles.row}>
-          <span className={styles.rowLabel}>When</span>
-          <DateField label="Paid on" value={form.date} onChange={(date) => setForm((f) => ({ ...f, date }))} />
+          <span className={styles.rowLabel}>{tr('groups.record.when')}</span>
+          <DateField label={tr('groups.record.date.label')} value={form.date} onChange={(date) => setForm((f) => ({ ...f, date }))} />
         </div>
       </form>
     </BottomSheet>

@@ -18,7 +18,8 @@ import {
   TopBar,
 } from '../../components'
 import { useExpenses, useGroups, useProfile } from '../../data'
-import type { Group, GroupKind } from '../../domain/types'
+import { BRAND, type Group, type GroupKind } from '../../domain/types'
+import { useT } from '../../i18n'
 import { formatMoney } from '../../lib/money'
 import { cx } from '../../lib/cx'
 import { GroupEmoji } from './GroupEmoji'
@@ -40,6 +41,7 @@ interface Row {
  * from Home) opens the create sheet; the new group opens straight after.
  */
 export function GroupsScreen() {
+  const t = useT()
   const query = useSearchParams()
   const fromQuery = query.get('new') === '1'
   const groups = useGroups()
@@ -66,7 +68,7 @@ export function GroupsScreen() {
       header={
         <TopBar
           right={
-            <IconButton label="Your people" onClick={() => navigate(FRIENDS_PATH)}>
+            <IconButton label={t('groups.list.people.aria')} onClick={() => navigate(FRIENDS_PATH)}>
               <Users />
             </IconButton>
           }
@@ -74,7 +76,7 @@ export function GroupsScreen() {
       }
       contentClassName={styles.content}
     >
-      <PageTitle title="Groups" subtitle="Trips, flats, couples — Settle works out who pays whom." />
+      <PageTitle title={t('groups.list.title')} subtitle={t('groups.list.subtitle', { brand: BRAND.name })} />
 
       {groups.length === 0 ? (
         <EmptyGroups onCreate={startCreate} />
@@ -84,7 +86,7 @@ export function GroupsScreen() {
           {active.length > 0 ? (
             <section className={styles.section} aria-labelledby="groups-active">
               <h2 id="groups-active" className="visually-hidden">
-                Your groups
+                {t('groups.list.active.title')}
               </h2>
               <Card padding="none">
                 <List>
@@ -95,11 +97,11 @@ export function GroupsScreen() {
               </Card>
             </section>
           ) : (
-            <p className={styles.allArchived}>Every group is archived. Start a new one any time.</p>
+            <p className={styles.allArchived}>{t('groups.list.allArchived')}</p>
           )}
           {archived.length > 0 && (
             <section className={styles.section} aria-labelledby="groups-archived">
-              <SectionHeader id="groups-archived" title={`Archived (${archived.length})`} />
+              <SectionHeader id="groups-archived" title={t('groups.list.archived.title', { count: archived.length })} />
               <button
                 type="button"
                 className={styles.fold}
@@ -108,7 +110,7 @@ export function GroupsScreen() {
                 onClick={() => setShowArchived((v) => !v)}
               >
                 <Archive aria-hidden="true" strokeWidth={2.25} />
-                <span>{showArchived ? 'Hide archived groups' : 'Show archived groups'}</span>
+                <span>{showArchived ? t('groups.list.archived.hide') : t('groups.list.archived.show')}</span>
                 <ChevronDown aria-hidden="true" strokeWidth={2.5} className={cx(styles.foldChevron, showArchived && styles.open)} />
               </button>
               {showArchived && (
@@ -122,7 +124,7 @@ export function GroupsScreen() {
               )}
             </section>
           )}
-          <Fab extended icon={<Plus strokeWidth={2.5} />} label="New group" onClick={() => startCreate()} />
+          <Fab extended icon={<Plus strokeWidth={2.5} />} label={t('groups.list.new.cta')} onClick={() => startCreate()} />
         </>
       )}
 
@@ -150,9 +152,10 @@ function dropNewQuery(): void {
 }
 
 function GroupRow({ row }: { row: Row }) {
+  const t = useT()
   const { group, standing } = row
   const label = standingLabel(standing.mine, group.currency, standing.expenseCount > 0)
-  const spent = standing.expenseCount > 0 ? `${formatMoney(standing.spent, group.currency, { trimZeros: true })} spent` : null
+  const spent = standing.expenseCount > 0 ? t('groups.list.spent', { amount: formatMoney(standing.spent, group.currency, { trimZeros: true }) }) : null
   // The emoji tile already says what kind of group it is; the kind is spoken, not printed.
   const subtitle = [membersLabel(group.memberIds.length), spent].filter(Boolean).join(' · ')
   const spoken = [kindMeta(group.kind).label, subtitle].join(', ')
@@ -178,6 +181,7 @@ function GroupRow({ row }: { row: Row }) {
 
 /** "Across your groups: you're owed ₹1,240 · you owe ₹300" — only when something's open. */
 function AcrossGroups({ rows }: { rows: Row[] }) {
+  const t = useT()
   const profile = useProfile()
   const totals = acrossGroups(rows)
   const codes = Object.keys(totals).sort((a, b) => (a === profile.currency ? -1 : b === profile.currency ? 1 : a < b ? -1 : 1))
@@ -185,51 +189,52 @@ function AcrossGroups({ rows }: { rows: Row[] }) {
   if (main === undefined) return null
   const lead = totals[main] ?? { owedToMe: 0, iOwe: 0 }
   const rest = codes.slice(1).map((code) => {
-    const t = totals[code] ?? { owedToMe: 0, iOwe: 0 }
+    const total = totals[code] ?? { owedToMe: 0, iOwe: 0 }
     const parts = [
-      t.owedToMe > 0 ? `owed ${formatMoney(t.owedToMe, code, { trimZeros: true })}` : null,
-      t.iOwe > 0 ? `owe ${formatMoney(t.iOwe, code, { trimZeros: true })}` : null,
+      total.owedToMe > 0 ? t('groups.across.other.owed', { amount: formatMoney(total.owedToMe, code, { trimZeros: true }) }) : null,
+      total.iOwe > 0 ? t('groups.across.other.owe', { amount: formatMoney(total.iOwe, code, { trimZeros: true }) }) : null,
     ].filter(Boolean)
     return `${code}: ${parts.join(', ')}`
   })
   return (
     <section className={styles.across} aria-labelledby="groups-across">
       <h2 id="groups-across" className={styles.acrossTitle}>
-        Across your groups
+        {t('groups.across.title')}
       </h2>
       <dl className={styles.totals}>
         <div className={styles.total}>
-          <dt>You’re owed</dt>
+          <dt>{t('groups.across.owed')}</dt>
           <dd>
             <Money value={lead.owedToMe} currency={main} size="lg" trimZeros strong tone={lead.owedToMe > 0 ? 'positive' : 'default'} />
           </dd>
         </div>
         <div className={styles.total}>
-          <dt>You owe</dt>
+          <dt>{t('groups.across.owe')}</dt>
           <dd>
             <Money value={lead.iOwe} currency={main} size="lg" trimZeros strong tone={lead.iOwe > 0 ? 'negative' : 'default'} />
           </dd>
         </div>
       </dl>
-      {rest.length > 0 && <p className={styles.acrossMore}>Also {rest.join(' · ')}</p>}
+      {rest.length > 0 && <p className={styles.acrossMore}>{t('groups.across.also', { list: rest.join(' · ') })}</p>}
     </section>
   )
 }
 
 function EmptyGroups({ onCreate }: { onCreate: (kind?: GroupKind) => void }) {
+  const t = useT()
   return (
     <div className={styles.empty}>
       <EmptyState
         illustration={<Illustration name="empty-groups" />}
-        title="Split as a group"
-        text="Add expenses as you go — Settle works out the fewest payments to square everyone up."
+        title={t('groups.empty.title')}
+        text={t('groups.empty.body', { brand: BRAND.name })}
         action={
           <Button size="md" iconStart={<Plus />} onClick={() => onCreate()}>
-            Create a group
+            {t('groups.empty.cta')}
           </Button>
         }
       />
-      <div className={styles.quick} role="group" aria-label="Quick start">
+      <div className={styles.quick} role="group" aria-label={t('groups.empty.quick.aria')}>
         {QUICK_KINDS.map((kind) => {
           const meta = kindMeta(kind)
           return (

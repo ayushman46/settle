@@ -3,9 +3,10 @@ import { Share2 } from 'lucide-react'
 import { goBack, useRoute } from '../../app/router'
 import { Button, Card, Money, PageTitle, Screen, SectionHeader, SuccessBurst, SuccessCheck, TopBar, useToast } from '../../components'
 import { DataError, recordSettlement, useExpenses, useFriendsById, useGroup } from '../../data'
-import { ME_ID, type Group, type Settlement } from '../../domain/types'
+import { BRAND, ME_ID, type Group, type Settlement } from '../../domain/types'
 import type { Transfer } from '../../engine/balances'
 import { today } from '../../engine/dates'
+import { useT } from '../../i18n'
 import { friendLabel, friendObjectLabel } from '../../kit/index-a'
 import { NudgeSheet, TransferRow, UpiPaySheet, upiPaymentForTransfer } from '../../kit/index-b'
 import { haptic } from '../../lib/haptics'
@@ -37,6 +38,7 @@ interface Moment {
 }
 
 function SettleUp({ group }: { group: Group }) {
+  const tr = useT()
   const toast = useToast()
   const friendsById = useFriendsById()
   const expenses = useExpenses({ groupId: group.id })
@@ -63,7 +65,7 @@ function SettleUp({ group }: { group: Group }) {
     } catch (error) {
       if (!(error instanceof DataError)) throw error
       haptic('error')
-      toast('Couldn’t record that. Check the amount and try again.', { tone: 'error' })
+      toast(tr('groups.settle.error'), { tone: 'error' })
       return
     }
     setRecording(null)
@@ -71,8 +73,8 @@ function SettleUp({ group }: { group: Group }) {
     const allSquare = groupStanding({ ...group, settlements: [...group.settlements, settlement] }, expenses).settled
     const sentence = paymentSentence(t.fromId, t.toId, nameOf(t.fromId), friendObjectLabel(t.toId, friendsById[t.toId] ?? null))
     setMoment({
-      title: allSquare ? 'All settled up!' : 'Payment recorded',
-      subtitle: allSquare ? `Everyone in ${group.name} is square.` : `${sentence} · ${METHOD_LABELS[payment.method]}`,
+      title: allSquare ? tr('groups.settle.done.title') : tr('groups.settle.recorded.title'),
+      subtitle: allSquare ? tr('groups.settle.done.subtitle', { name: group.name }) : `${sentence} · ${METHOD_LABELS[payment.method]}`,
       amount: <Money value={payment.amount} currency={group.currency} size="lg" trimZeros strong />,
     })
   }
@@ -109,36 +111,32 @@ function SettleUp({ group }: { group: Group }) {
     <Screen header={<TopBar onBack={back} />} contentClassName={styles.content}>
       <PageTitle
         eyebrow={`${group.emoji} ${group.name}`}
-        title="Settle up"
-        subtitle={
-          count > 0
-            ? `${count} ${count === 1 ? 'payment squares' : 'payments square'} everyone up — the fewest possible.`
-            : undefined
-        }
+        title={tr('groups.settle.title')}
+        subtitle={count > 0 ? tr('groups.settle.subtitle', { count }) : undefined}
       />
 
       {count === 0 ? (
         <div className={styles.square}>
           <SuccessCheck size="lg" />
-          <h2 className={styles.squareTitle}>{standing.expenseCount > 0 ? 'Everyone’s square' : 'Nothing to settle yet'}</h2>
+          <h2 className={styles.squareTitle}>{standing.expenseCount > 0 ? tr('groups.settle.square.title') : tr('groups.settle.empty.title')}</h2>
           <p className={styles.squareText}>
-            {standing.expenseCount > 0 ? `No payments needed in ${group.name}.` : 'Add an expense and Settle works out who pays whom.'}
+            {standing.expenseCount > 0 ? tr('groups.settle.square.body', { name: group.name }) : tr('groups.settle.empty.body', { brand: BRAND.name })}
           </p>
           <div className={styles.squareActions}>
-            <Button onClick={back}>Back to {group.name}</Button>
+            <Button onClick={back}>{tr('groups.settle.back.cta', { name: group.name })}</Button>
             {standing.expenseCount > 0 && (
               <Button variant="secondary" iconStart={<Share2 />} onClick={() => setSharing(true)}>
-                Share summary
+                {tr('groups.share.cta')}
               </Button>
             )}
           </div>
         </div>
       ) : (
         <>
-          {section('settle-pay', 'You pay', upi ? 'Pay by UPI, or record it once it’s paid.' : 'Record it once it’s paid.', youPay)}
-          {section('settle-get', 'Coming to you', 'Send a friendly reminder, or record it when it arrives.', youGet)}
-          {section('settle-between', 'Between others', 'Anyone can record these once they’re paid.', between)}
-          <p className={styles.hint}>Paid part of it, or in cash? Record what changed hands — the rest stays here.</p>
+          {section('settle-pay', tr('groups.settle.youPay.title'), upi ? tr('groups.settle.youPay.upi') : tr('groups.settle.youPay.other'), youPay)}
+          {section('settle-get', tr('groups.settle.youGet.title'), tr('groups.settle.youGet.description'), youGet)}
+          {section('settle-between', tr('groups.settle.between.title'), tr('groups.settle.between.description'), between)}
+          <p className={styles.hint}>{tr('groups.settle.hint')}</p>
         </>
       )}
 

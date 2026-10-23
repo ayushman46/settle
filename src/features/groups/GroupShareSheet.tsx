@@ -3,6 +3,7 @@ import { FileText, Image as ImageIcon, MessageCircle, Share2, Sparkles } from 'l
 import { Badge, BottomSheet, Button, QuickAction, QuickActionGrid, Skeleton, useToast } from '../../components'
 import { useExpenses, useFriendsById, useProfile } from '../../data'
 import { BRAND, type AccentId, type Group } from '../../domain/types'
+import { tx, useT } from '../../i18n'
 import { DARK_SCHEME, TOUCH_FIRST, useMediaQuery } from '../../kit/index-b'
 import { haptic } from '../../lib/haptics'
 import { useHasFeature } from '../../pro'
@@ -81,6 +82,7 @@ function useGroupCard(open: boolean, input: GroupCardInput, opts: CardOptions): 
  * (WhatsApp, any app, or copied) or as a receipt-style image (clean on Pro).
  */
 export function GroupShareSheet({ group, open, onClose }: GroupShareSheetProps) {
+  const t = useT()
   const imageHeadingId = useId()
   const toast = useToast()
   const profile = useProfile()
@@ -115,78 +117,78 @@ export function GroupShareSheet({ group, open, onClose }: GroupShareSheetProps) 
       win.opener = null
       haptic('success')
     } else if (await copyText(text)) {
-      done('Summary copied. Paste it in WhatsApp.')
+      done(t('groups.share.whatsapp.copied.toast'))
     } else {
-      oops('Couldn’t open WhatsApp. Try “More apps”.')
+      oops(t('groups.share.whatsapp.error'))
     }
   }
 
   const shareElsewhere = async (): Promise<void> => {
     const outcome = await shareResult(text, { mode: 'share', title: group.name })
     if (outcome === 'shared') haptic('success')
-    else if (outcome === 'copied') done('Summary copied')
-    else if (outcome === 'failed') oops('Couldn’t share. Try copying the text.')
+    else if (outcome === 'copied') done(t('groups.share.copied.toast'))
+    else if (outcome === 'failed') oops(t('groups.share.share.error'))
   }
 
   const copySummary = async (): Promise<void> => {
-    if (await copyText(text)) done('Summary copied')
-    else oops('Couldn’t copy the summary.')
+    if (await copyText(text)) done(t('groups.share.copied.toast'))
+    else oops(t('groups.share.copy.error'))
   }
 
   const shareImage = async (): Promise<void> => {
     if (card?.status !== 'ready') return
     const outcome = await shareFile(card.blob, shareCardFilename(group.name), text, { title: group.name })
     if (outcome === 'shared') haptic('success')
-    else if (outcome === 'downloaded') done('Image saved')
-    else if (outcome === 'failed') oops('Couldn’t share the image.')
+    else if (outcome === 'downloaded') done(t('groups.share.image.saved.toast'))
+    else if (outcome === 'failed') oops(t('groups.share.image.error'))
   }
 
   const description =
     input.transfers.length > 0
-      ? `${input.transfers.length} ${input.transfers.length === 1 ? 'payment squares' : 'payments square'} everyone up.`
+      ? t('groups.share.description.transfers', { count: input.transfers.length })
       : input.expenseCount > 0
-        ? 'Everyone’s settled up. Share it for the record.'
-        : 'Nothing spent yet — share it once the first expense is in.'
+        ? t('groups.share.description.settled')
+        : t('groups.share.description.empty')
 
   return (
-    <BottomSheet open={open} onClose={onClose} eyebrow={group.name} title="Share group summary" description={description}>
+    <BottomSheet open={open} onClose={onClose} eyebrow={group.name} title={t('groups.share.title')} description={description}>
       <div className={styles.body}>
-        <QuickActionGrid label="Share the summary" className={styles.actions}>
-          <QuickAction tone="groceries" icon={<MessageCircle />} label="WhatsApp" onClick={sendWhatsApp} />
-          <QuickAction tone="travel" icon={<Share2 />} label="More apps" onClick={shareElsewhere} />
-          <QuickAction tone="entertainment" icon={<FileText />} label="Copy text" onClick={copySummary} />
+        <QuickActionGrid label={t('groups.share.actions.aria')} className={styles.actions}>
+          <QuickAction tone="groceries" icon={<MessageCircle />} label="WhatsApp" onClick={sendWhatsApp} /* i18n-ignore */ />
+          <QuickAction tone="travel" icon={<Share2 />} label={t('groups.share.more.cta')} onClick={shareElsewhere} />
+          <QuickAction tone="entertainment" icon={<FileText />} label={t('groups.share.copy.cta')} onClick={copySummary} />
         </QuickActionGrid>
 
         <section className={styles.image} aria-labelledby={imageHeadingId}>
           <div className={styles.preview}>
             {card?.status === 'ready' && card.preview ? (
-              <img src={card.preview} alt={`Summary card for ${group.name}`} className={styles.previewImage} />
+              <img src={card.preview} alt={t('groups.share.image.alt', { name: group.name })} className={styles.previewImage} />
             ) : card?.status === 'failed' ? (
-              <span className={styles.previewFailed}>No preview</span>
+              <span className={styles.previewFailed}>{t('groups.share.image.noPreview')}</span>
             ) : (
               <Skeleton shape="md" width="100%" height="100%" />
             )}
           </div>
           <div className={styles.imageText}>
             <h3 id={imageHeadingId} className={styles.imageTitle}>
-              Share as image
+              {t('groups.share.image.title')}
             </h3>
             <p className={styles.imageSub} aria-live="polite">
               {card === null
-                ? 'Drawing your summary…'
+                ? t('groups.share.image.drawing')
                 : card.status === 'failed'
-                  ? 'This browser couldn’t draw the image. The text works everywhere.'
+                  ? t('groups.share.image.failed')
                   : cleanCards
-                    ? 'Who pays whom, as a clean card for the group chat.'
-                    : `Who pays whom, with a small “Made with ${BRAND.name}” line.`}
+                    ? t('groups.share.image.clean')
+                    : t('groups.share.image.watermark', { brand: BRAND.name })}
             </p>
             <Button size="sm" variant="secondary" iconStart={<ImageIcon />} onClick={shareImage} disabled={card?.status !== 'ready'}>
-              {touch ? 'Share image' : 'Save image'}
+              {touch ? t('groups.share.image.share.cta') : t('groups.share.image.save.cta')}
             </Button>
             {!cleanCards && (
               <button type="button" className={styles.upgrade} onClick={() => openPaywall('clean_cards')}>
                 <Sparkles aria-hidden="true" strokeWidth={2.25} />
-                Remove the line with <Badge tone="pro">Pro</Badge>
+                {tx('groups.share.upgrade.cta', {}, { pro: (chunk) => <Badge tone="pro">{chunk}</Badge> })}
               </button>
             )}
           </div>

@@ -35,8 +35,9 @@ import {
   useGroup,
   useGroupBalances,
 } from '../../data'
-import { ME_ID, type Friend, type Group, type Minor, type Settlement } from '../../domain/types'
+import { BRAND, ME_ID, type Friend, type Group, type Minor, type Settlement } from '../../domain/types'
 import { CATEGORY_META } from '../../engine/categories'
+import { t as translate, useT } from '../../i18n'
 import { ExpenseRow } from '../../kit/index-b'
 import { FriendAvatar, friendLabel, friendObjectLabel, fullDateLabel, relativeDateLabel } from '../../kit/index-a'
 import { LoadMore } from '../../kit/LoadMore'
@@ -72,12 +73,12 @@ const ROUTES = ['/app/groups/:id'] as const
 
 type Tab = 'expenses' | 'balances' | 'totals'
 
-const TAB_LABELS: Readonly<Record<Tab, string>> = { expenses: 'Expenses', balances: 'Balances', totals: 'Totals' }
+const TAB_LABELS = { expenses: 'groups.detail.tab.expenses', balances: 'groups.detail.tab.balances', totals: 'groups.detail.tab.totals' } as const
 
-const TABS: ReadonlyArray<SegmentedOption<Tab>> = (['expenses', 'balances', 'totals'] as const).map((value) => ({
-  value,
-  label: TAB_LABELS[value],
-}))
+/** The three tabs, labelled in the current language. */
+function tabOptions(): ReadonlyArray<SegmentedOption<Tab>> {
+  return (['expenses', 'balances', 'totals'] as const).map((value) => ({ value, label: translate(TAB_LABELS[value]) }))
+}
 
 function tabFrom(value: string | null): Tab {
   return value === 'balances' || value === 'totals' ? value : 'expenses'
@@ -102,6 +103,7 @@ export function GroupDetailScreen() {
 }
 
 function GroupDetail({ group, onLeaving }: { group: Group; onLeaving: (group: Group) => void }) {
+  const t = useT()
   const toast = useToast()
   const query = useSearchParams()
   const friendsById = useFriendsById()
@@ -121,9 +123,9 @@ function GroupDetail({ group, onLeaving }: { group: Group; onLeaving: (group: Gr
     setSheet(null)
     setGroupArchived(group.id, archived)
     haptic('success')
-    toast(archived ? `${group.name} archived` : `${group.name} is back in your groups`, {
+    toast(archived ? t('groups.detail.archived.toast', { name: group.name }) : t('groups.detail.unarchived.toast', { name: group.name }), {
       tone: 'success',
-      action: archived ? { label: 'Undo', onAction: () => setGroupArchived(group.id, false) } : undefined,
+      action: archived ? { label: t('common.action.undo'), onAction: () => setGroupArchived(group.id, false) } : undefined,
     })
   }
 
@@ -134,8 +136,8 @@ function GroupDetail({ group, onLeaving }: { group: Group; onLeaving: (group: Gr
     haptic('success')
     goBack(GROUPS_PATH)
     const count = snapshot.expenses.length
-    toast(`${group.name} deleted${count > 0 ? ` with ${count} ${count === 1 ? 'expense' : 'expenses'}` : ''}`, {
-      action: { label: 'Undo', onAction: () => restoreGroup(snapshot) },
+    toast(t('groups.detail.deleted.toast', { name: group.name, count }), {
+      action: { label: t('common.action.undo'), onAction: () => restoreGroup(snapshot) },
     })
   }
 
@@ -146,10 +148,10 @@ function GroupDetail({ group, onLeaving }: { group: Group; onLeaving: (group: Gr
           onBack={() => goBack(GROUPS_PATH)}
           right={
             <span className={styles.topActions}>
-              <IconButton label="Share group summary" onClick={() => setSheet('share')}>
+              <IconButton label={t('groups.detail.share.aria')} onClick={() => setSheet('share')}>
                 <Share2 />
               </IconButton>
-              <IconButton label="Group options" onClick={() => setSheet('menu')}>
+              <IconButton label={t('groups.detail.options.aria')} onClick={() => setSheet('menu')}>
                 <Ellipsis />
               </IconButton>
             </span>
@@ -163,24 +165,24 @@ function GroupDetail({ group, onLeaving }: { group: Group; onLeaving: (group: Gr
         <PageTitle
           align="center"
           title={group.name}
-          subtitle={`${meta.label} · ${membersLabel(group.memberIds.length)}${TRIP_ENABLED && group.travelCurrency ? ` · spending in ${group.travelCurrency}` : ''}`}
+          subtitle={`${meta.label} · ${membersLabel(group.memberIds.length)}${TRIP_ENABLED && group.travelCurrency ? ` · ${t('groups.detail.spendingIn', { currency: group.travelCurrency })}` : ''}`}
         />
         <button
           type="button"
           className={styles.members}
           onClick={() => setSheet('members')}
-          aria-label={`Members: ${memberNames.join(', ')}. Manage members`}
+          aria-label={t('groups.detail.members.aria', { names: memberNames.join(', ') })}
         >
           <AvatarStack people={people} max={5} size="sm" />
           <span className={styles.membersLabel} aria-hidden="true">
-            {group.memberIds.length > 1 ? 'Members' : 'Add people'}
+            {group.memberIds.length > 1 ? t('groups.detail.members') : t('groups.detail.addPeople')}
           </span>
         </button>
       </header>
 
       {group.archived && (
-        <Banner tone="info" title="Archived" action={{ label: 'Unarchive', onAction: () => archive(false) }}>
-          It’s tucked away from your groups list. Everything is still here.
+        <Banner tone="info" title={t('groups.detail.archived.title')} action={{ label: t('groups.detail.unarchive.cta'), onAction: () => archive(false) }}>
+          {t('groups.detail.archived.body')}
         </Banner>
       )}
 
@@ -188,15 +190,15 @@ function GroupDetail({ group, onLeaving }: { group: Group; onLeaving: (group: Gr
 
       {ROTATION_ENABLED && <NextRoundCard group={group} expenses={expenses} onPlan={() => setSheet('rotation')} />}
 
-      <SegmentedControl options={TABS} value={tab} onChange={setTab} ariaLabel="Show" className={styles.tabs} />
+      <SegmentedControl options={tabOptions()} value={tab} onChange={setTab} ariaLabel={t('groups.detail.tabs.aria')} className={styles.tabs} />
 
-      <div className={styles.panel} role="region" aria-label={TAB_LABELS[tab]}>
+      <div className={styles.panel} role="region" aria-label={t(TAB_LABELS[tab])}>
         {tab === 'expenses' && <ExpensesTab group={group} onAdd={addExpense} onPayment={setPayment} />}
         {tab === 'balances' && <BalancesTab group={group} standing={standing} />}
         {tab === 'totals' && <TotalsTab group={group} />}
       </div>
 
-      {!group.archived && <Fab extended icon={<Plus strokeWidth={2.5} />} label="Add expense" onClick={addExpense} />}
+      {!group.archived && <Fab extended icon={<Plus strokeWidth={2.5} />} label={t('groups.detail.add.cta')} onClick={addExpense} />}
 
       <MenuSheet
         group={group}
@@ -216,13 +218,21 @@ function GroupDetail({ group, onLeaving }: { group: Group; onLeaving: (group: Gr
 /* ------------------------------------------------------------------ where I stand */
 
 function StandingCard({ group, standing, onShare }: { group: Group; standing: GroupStanding; onShare: () => void }) {
+  const t = useT()
   const titleId = useId()
   const { mine, spent, expenseCount, settled, transfers } = standing
-  const headline = mine > 0 ? 'You’re owed' : mine < 0 ? 'You owe' : expenseCount > 0 ? 'You’re all square' : 'Nothing spent yet'
+  const headline =
+    mine > 0
+      ? t('groups.standing.title.owed')
+      : mine < 0
+        ? t('groups.standing.title.owe')
+        : expenseCount > 0
+          ? t('groups.standing.title.square')
+          : t('groups.standing.title.none')
   const spentLine =
     expenseCount > 0
-      ? `${formatMoney(spent, group.currency, { trimZeros: true })} spent · ${expenseCount} ${expenseCount === 1 ? 'expense' : 'expenses'}`
-      : 'Add the first expense — anyone can have paid.'
+      ? t('groups.standing.spent', { amount: formatMoney(spent, group.currency, { trimZeros: true }), count: expenseCount })
+      : t('groups.standing.first')
   return (
     <section className={styles.standing} aria-labelledby={titleId}>
       <h2 id={titleId} className={styles.standingLabel}>
@@ -233,7 +243,7 @@ function StandingCard({ group, standing, onShare }: { group: Group; standing: Gr
       )}
       <p className={styles.standingLine}>
         {spentLine}
-        {!settled && mine === 0 && ` · others still settling`}
+        {!settled && mine === 0 && ` · ${t('groups.standing.othersSettling')}`}
       </p>
       {(!settled || expenseCount > 0) && (
         <div className={styles.standingActions}>
@@ -243,13 +253,13 @@ function StandingCard({ group, standing, onShare }: { group: Group; standing: Gr
               size="md"
               iconEnd={<ArrowRight />}
               onClick={() => navigate(settleUpPath(group.id))}
-              aria-label={`Settle up: ${transfers.length} ${transfers.length === 1 ? 'payment' : 'payments'}`}
+              aria-label={t('groups.standing.settle.aria', { count: transfers.length })}
             >
-              Settle up
+              {t('groups.standing.settle.cta')}
             </Button>
           ) : (
             <Button variant="tonal" size="md" iconStart={<Share2 />} onClick={onShare}>
-              Share summary
+              {t('groups.share.cta')}
             </Button>
           )}
         </div>
@@ -261,6 +271,7 @@ function StandingCard({ group, standing, onShare }: { group: Group; standing: Gr
 /* ------------------------------------------------------------------ expenses */
 
 function ExpensesTab({ group, onAdd, onPayment }: { group: Group; onAdd: () => void; onPayment: (s: Settlement) => void }) {
+  const t = useT()
   const expenses = useExpenses({ groupId: group.id })
   const days = useMemo(() => groupTimeline(group, expenses), [group, expenses])
   // A page at a time: a long-running flat's hundreds of rows would hold up opening the group.
@@ -276,12 +287,12 @@ function ExpensesTab({ group, onAdd, onPayment }: { group: Group; onAdd: () => v
         size="sm"
         headingLevel={3}
         illustration={<Illustration name="empty-activity" size={136} />}
-        title="No expenses yet"
-        text="Add what the group spends as you go — whoever paid, Settle keeps the score."
+        title={t('groups.expenses.empty.title')}
+        text={t('groups.expenses.empty.body', { brand: BRAND.name })}
         action={
           group.archived ? undefined : (
             <Button size="md" iconStart={<Plus />} onClick={onAdd}>
-              Add the first expense
+              {t('groups.expenses.empty.cta')}
             </Button>
           )
         }
@@ -309,6 +320,7 @@ function ExpensesTab({ group, onAdd, onPayment }: { group: Group; onAdd: () => v
 
 /** One expense or payment; skips re-rendering while its entry is unchanged (say, as more rows load). */
 const TimelineRow = memo(function TimelineRow({ entry, group, onPayment }: { entry: TimelineEntry; group: Group; onPayment: (s: Settlement) => void }) {
+  const t = useT()
   const friendsById = useFriendsById()
   if (entry.kind === 'expense') {
     return <ExpenseRow expense={entry.expense} hideGroup onClick={() => navigate(expensePath(entry.expense.id))} />
@@ -320,14 +332,14 @@ const TimelineRow = memo(function TimelineRow({ entry, group, onPayment }: { ent
   return (
     <ListRow
       onClick={() => onPayment(s)}
-      aria-label={`${sentence} ${amount}, ${METHOD_LABELS[s.method]} payment`}
+      aria-label={t('groups.timeline.payment.aria', { sentence, amount, method: METHOD_LABELS[s.method] })}
       leading={
         <span className={styles.paymentIcon} aria-hidden="true">
           <HandCoins strokeWidth={2.25} />
         </span>
       }
       title={sentence}
-      subtitle={`Payment · ${METHOD_LABELS[s.method]}`}
+      subtitle={t('groups.timeline.payment.subtitle', { method: METHOD_LABELS[s.method] })}
       trailing={
         <Money
           value={mine === 'out' ? -s.amount : s.amount}
@@ -346,6 +358,7 @@ const TimelineRow = memo(function TimelineRow({ entry, group, onPayment }: { ent
 /* ------------------------------------------------------------------ balances */
 
 function BalancesTab({ group, standing }: { group: Group; standing: GroupStanding }) {
+  const t = useT()
   const friendsById = useFriendsById()
   const balances = useGroupBalances(group.id)
   const ids = [...group.memberIds, ...Object.keys(balances).filter((id) => !group.memberIds.includes(id) && balances[id] !== 0)]
@@ -356,17 +369,17 @@ function BalancesTab({ group, standing }: { group: Group; standing: GroupStandin
   return (
     <div className={styles.stack}>
       <Card padding="none">
-        <List aria-label="Balances">
+        <List aria-label={t('groups.balances.aria')}>
           {rows.map(({ id, amount }) => (
             <BalanceRow key={id} id={id} friend={friendsById[id] ?? null} amount={amount} currency={group.currency} member={group.memberIds.includes(id)} />
           ))}
         </List>
       </Card>
       {standing.settled ? (
-        <p className={styles.square}>{standing.expenseCount > 0 ? 'Everyone’s square — nothing to settle.' : 'Balances appear once the first expense is in.'}</p>
+        <p className={styles.square}>{standing.expenseCount > 0 ? t('groups.balances.square') : t('groups.balances.empty')}</p>
       ) : (
         <Button block iconEnd={<ArrowRight />} onClick={() => navigate(settleUpPath(group.id))}>
-          Settle up · {count} {count === 1 ? 'payment' : 'payments'}
+          {t('groups.balances.settle.cta', { count })}
         </Button>
       )}
     </div>
@@ -374,14 +387,20 @@ function BalancesTab({ group, standing }: { group: Group; standing: GroupStandin
 }
 
 function BalanceRow({ id, friend, amount, currency, member }: { id: string; friend: Friend | null; amount: Minor; currency: string; member: boolean }) {
+  const t = useT()
   const name = friendLabel(id, friend)
   const me = id === ME_ID
-  const words = amount > 0 ? (me ? 'get back' : 'gets back') : amount < 0 ? (me ? 'owe' : 'owes') : 'settled up'
+  const words =
+    amount > 0
+      ? t(me ? 'groups.balances.getBack.me' : 'groups.balances.getBack')
+      : amount < 0
+        ? t(me ? 'groups.balances.owe.me' : 'groups.balances.owe')
+        : t('groups.balances.settled')
   return (
     <ListRow
       leading={<FriendAvatar friend={friend} friendId={id} size="md" />}
       title={name}
-      subtitle={member ? words : `${words} · left the group`}
+      subtitle={member ? words : `${words} · ${t('groups.balances.left')}`}
       trailing={
         amount === 0 ? (
           <span className={styles.zero}>—</span>
@@ -396,6 +415,7 @@ function BalanceRow({ id, friend, amount, currency, member }: { id: string; frie
 /* ------------------------------------------------------------------ totals */
 
 function TotalsTab({ group }: { group: Group }) {
+  const t = useT()
   const friendsById = useFriendsById()
   const expenses = useExpenses({ groupId: group.id })
   const totals = useMemo(() => groupTotals(group, expenses), [group, expenses])
@@ -407,8 +427,8 @@ function TotalsTab({ group }: { group: Group }) {
         size="sm"
         headingLevel={3}
         illustration={<Illustration name="empty-insights" size={136} />}
-        title="Totals appear here"
-        text="Once the group spends, see it by category and by person."
+        title={t('groups.totals.empty.title')}
+        text={t('groups.totals.empty.body')}
       />
     )
   }
@@ -424,16 +444,16 @@ function TotalsTab({ group }: { group: Group }) {
             color: categoryColor(c.category),
             label: CATEGORY_META[c.category].label,
           }))}
-          centerLabel="Spent"
+          centerLabel={t('groups.totals.spent')}
           centerValue={money(totals.spent)}
           formatValue={money}
-          ariaLabel="Spending by category"
+          ariaLabel={t('groups.totals.chart.aria')}
           legend
         />
       </Card>
 
       <section className={styles.stack} aria-labelledby="group-by-person">
-        <SectionHeader id="group-by-person" title="By person" description="Each person’s share, and what they paid." />
+        <SectionHeader id="group-by-person" title={t('groups.totals.byPerson.title')} description={t('groups.totals.byPerson.description')} />
         <Card padding="none">
           <ul role="list" className={styles.people}>
             {totals.people.map((p) => {
@@ -451,8 +471,8 @@ function TotalsTab({ group }: { group: Group }) {
                       <span className={styles.paidBar} style={barWidth(p.paid, top)} />
                     </div>
                     <span className={styles.personSub}>
-                      <span className="visually-hidden">Share {money(p.share)}, </span>
-                      Paid {money(p.paid)}
+                      <span className="visually-hidden">{t('groups.totals.person.share', { amount: money(p.share) })}, </span>
+                      {t('groups.totals.person.paid', { amount: money(p.paid) })}
                     </span>
                   </div>
                 </li>
@@ -461,13 +481,13 @@ function TotalsTab({ group }: { group: Group }) {
           </ul>
         </Card>
         <p className={styles.legend} aria-hidden="true">
-          <span className={styles.legendShare} /> Share <span className={styles.legendPaid} /> Paid
+          <span className={styles.legendShare} /> {t('groups.totals.legend.share')} <span className={styles.legendPaid} /> {t('groups.totals.legend.paid')}
         </p>
       </section>
 
       {totals.elsewhere > 0 && (
         <p className={styles.note}>
-          Plus {totals.elsewhere} {totals.elsewhere === 1 ? 'expense' : 'expenses'} in another currency, settled person to person.
+          {t('groups.totals.elsewhere', { count: totals.elsewhere })}
         </p>
       )}
     </div>
@@ -485,6 +505,7 @@ function barWidth(value: number, top: number): CSSProperties {
 type MenuPick = 'details' | 'members' | 'share' | 'archive' | 'delete'
 
 function MenuSheet({ group, open, onClose, onPick }: { group: Group; open: boolean; onClose: () => void; onPick: (pick: MenuPick) => void }) {
+  const t = useT()
   const item = (pick: MenuPick, icon: ReactNode, title: string, subtitle?: string, danger = false) => (
     <ListRow
       className={cx(styles.menuRow, danger && styles.danger)}
@@ -499,38 +520,35 @@ function MenuSheet({ group, open, onClose, onPick }: { group: Group; open: boole
     />
   )
   return (
-    <BottomSheet open={open} onClose={onClose} eyebrow={group.name} title="Group options">
+    <BottomSheet open={open} onClose={onClose} eyebrow={group.name} title={t('groups.menu.title')}>
       <List className={styles.menu}>
-        {item('details', <Pencil />, 'Edit group', 'Name, icon, kind and currency')}
-        {item('members', <UserPen />, 'Members', 'Add or remove people')}
-        {item('share', <Share2 />, 'Share summary', 'Who pays whom, for the group chat')}
+        {item('details', <Pencil />, t('groups.menu.edit'), t('groups.menu.edit.subtitle'))}
+        {item('members', <UserPen />, t('groups.menu.members'), t('groups.menu.members.subtitle'))}
+        {item('share', <Share2 />, t('groups.menu.share'), t('groups.menu.share.subtitle'))}
         {group.archived
-          ? item('archive', <ArchiveRestore />, 'Unarchive', 'Back into your groups list')
-          : item('archive', <Archive />, 'Archive', 'Tuck it away — nothing is deleted')}
-        {item('delete', <Trash2 />, 'Delete group', 'With all its expenses', true)}
+          ? item('archive', <ArchiveRestore />, t('groups.menu.unarchive'), t('groups.menu.unarchive.subtitle'))
+          : item('archive', <Archive />, t('groups.menu.archive'), t('groups.menu.archive.subtitle'))}
+        {item('delete', <Trash2 />, t('groups.menu.delete'), t('groups.menu.delete.subtitle'), true)}
       </List>
     </BottomSheet>
   )
 }
 
 function DeleteSheet({ group, count, open, onClose, onConfirm }: { group: Group; count: number; open: boolean; onClose: () => void; onConfirm: () => void }) {
+  const t = useT()
   return (
     <BottomSheet
       open={open}
       onClose={onClose}
-      title={`Delete ${group.name}?`}
-      description={
-        count > 0
-          ? `Its ${count} ${count === 1 ? 'expense goes' : 'expenses go'} too. You can undo straight after.`
-          : 'You can undo straight after.'
-      }
+      title={t('groups.delete.title', { name: group.name })}
+      description={t('groups.delete.body', { count })}
       footer={
         <div className={styles.sheetActions}>
           <Button block variant="danger" onClick={onConfirm}>
-            Delete group
+            {t('groups.delete.cta')}
           </Button>
           <Button block variant="ghost" onClick={onClose}>
-            Keep it
+            {t('groups.delete.keep.cta')}
           </Button>
         </div>
       }
@@ -549,6 +567,7 @@ function PaymentSheet({
   friendsById: Readonly<Record<string, Friend>>
   onClose: () => void
 }) {
+  const t = useT()
   const toast = useToast()
   // Keeps the last payment on show while the sheet slides away.
   const [shown, setShown] = useState<Settlement | null>(settlement)
@@ -561,14 +580,14 @@ function PaymentSheet({
     deleteSettlement(group.id, s.id)
     haptic('success')
     onClose()
-    toast('Payment removed', {
+    toast(t('groups.payment.removed.toast'), {
       action: {
-        label: 'Undo',
+        label: t('common.action.undo'),
         onAction: () => {
           try {
             recordSettlement(group.id, { fromId: s.fromId, toId: s.toId, amount: s.amount, date: s.date, method: s.method })
           } catch {
-            toast('Couldn’t put it back — the group is gone.', { tone: 'error' })
+            toast(t('groups.payment.restore.error'), { tone: 'error' })
           }
         },
       },
@@ -579,11 +598,11 @@ function PaymentSheet({
     <BottomSheet
       open={settlement !== null}
       onClose={onClose}
-      eyebrow="Recorded payment"
+      eyebrow={t('groups.payment.sheet.eyebrow')}
       title={sentence}
       footer={
         <Button block variant="danger" iconStart={<Trash2 />} onClick={remove}>
-          Remove payment
+          {t('groups.payment.remove.cta')}
         </Button>
       }
     >
@@ -591,19 +610,19 @@ function PaymentSheet({
         <Money value={s.amount} currency={group.currency} size="xl" trimZeros className={styles.paymentAmount} />
         <dl className={styles.facts}>
           <div>
-            <dt>Method</dt>
+            <dt>{t('groups.payment.method')}</dt>
             <dd>{METHOD_LABELS[s.method]}</dd>
           </div>
           <div>
-            <dt>On</dt>
+            <dt>{t('groups.payment.date')}</dt>
             <dd>{fullDateLabel(s.date)}</dd>
           </div>
           <div>
-            <dt>Group</dt>
+            <dt>{t('groups.payment.group')}</dt>
             <dd>{group.name}</dd>
           </div>
         </dl>
-        <p className={styles.note}>Recorded by mistake? Removing it puts the balances back as they were.</p>
+        <p className={styles.note}>{t('groups.payment.mistake')}</p>
       </div>
     </BottomSheet>
   )

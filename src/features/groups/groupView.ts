@@ -5,6 +5,7 @@
  */
 import { BRAND, ME_ID, type CategoryId, type Expense, type Group, type GroupKind, type Minor, type Settlement } from '../../domain/types'
 import { groupBalances, simplifyDebts, type Transfer } from '../../engine/balances'
+import { t, type MessageKey } from '../../i18n'
 import { formatMoney } from '../../lib/money'
 import type { GroupCardInput } from '../../share'
 
@@ -12,21 +13,37 @@ import type { GroupCardInput } from '../../share'
 
 export interface GroupKindMeta {
   kind: GroupKind
-  label: string
+  /** In the current language (read when used). */
+  readonly label: string
   /** The emoji a new group of this kind starts with. */
   emoji: string
-  /** Example name for the name field. */
-  placeholder: string
+  /** Example name for the name field, in the current language. */
+  readonly placeholder: string
   /** Category whose soft tint sits behind the group's emoji. */
   tint: CategoryId
 }
 
+/** A kind whose label and example name follow the UI language. */
+function kindOf(kind: GroupKind, emoji: string, tint: CategoryId, label: MessageKey, placeholder: MessageKey): GroupKindMeta {
+  return {
+    kind,
+    get label() {
+      return t(label)
+    },
+    emoji,
+    get placeholder() {
+      return t(placeholder)
+    },
+    tint,
+  }
+}
+
 export const GROUP_KIND_META: Readonly<Record<GroupKind, GroupKindMeta>> = {
-  trip: { kind: 'trip', label: 'Trip', emoji: '✈️', placeholder: 'Goa trip', tint: 'travel' },
-  home: { kind: 'home', label: 'Home', emoji: '🏠', placeholder: 'Flat 302', tint: 'rent' },
-  couple: { kind: 'couple', label: 'Couple', emoji: '💑', placeholder: 'Us two', tint: 'gift' },
-  event: { kind: 'event', label: 'Event', emoji: '🎉', placeholder: 'Riya’s birthday', tint: 'entertainment' },
-  other: { kind: 'other', label: 'Other', emoji: '👥', placeholder: 'Office lunch crew', tint: 'other' },
+  trip: kindOf('trip', '✈️', 'travel', 'groups.kind.trip', 'groups.kind.trip.placeholder'),
+  home: kindOf('home', '🏠', 'rent', 'groups.kind.home', 'groups.kind.home.placeholder'),
+  couple: kindOf('couple', '💑', 'gift', 'groups.kind.couple', 'groups.kind.couple.placeholder'),
+  event: kindOf('event', '🎉', 'entertainment', 'groups.kind.event', 'groups.kind.event.placeholder'),
+  other: kindOf('other', '👥', 'other', 'groups.kind.other', 'groups.kind.other.placeholder'),
 }
 
 export const GROUP_KIND_ORDER: readonly GroupKind[] = ['trip', 'home', 'couple', 'event', 'other']
@@ -37,8 +54,8 @@ export function kindMeta(kind: GroupKind): GroupKindMeta {
 
 /** "Just you", "2 people", "6 people" — everyone in the group, you included. */
 export function membersLabel(count: number): string {
-  if (count <= 1) return 'Just you'
-  return `${count} people`
+  if (count <= 1) return t('groups.members.justYou')
+  return t('groups.members.count', { count })
 }
 
 /* ------------------------------------------------------------------ where I stand */
@@ -96,9 +113,9 @@ export interface StandingLabel {
 /** My side of a group (or any balance) in words. `active`: there's been money in it at all. */
 export function standingLabel(mine: Minor, currency: string, active: boolean): StandingLabel {
   const money = (minor: Minor) => formatMoney(minor, currency, { trimZeros: true })
-  if (mine > 0) return { caption: 'you’re owed', tone: 'positive', amount: mine, spoken: `you’re owed ${money(mine)}` }
-  if (mine < 0) return { caption: 'you owe', tone: 'negative', amount: -mine, spoken: `you owe ${money(-mine)}` }
-  const caption = active ? 'settled up' : 'no expenses yet'
+  if (mine > 0) return { caption: t('groups.standing.owed'), tone: 'positive', amount: mine, spoken: t('groups.standing.owed.aria', { amount: money(mine) }) }
+  if (mine < 0) return { caption: t('groups.standing.owe'), tone: 'negative', amount: -mine, spoken: t('groups.standing.owe.aria', { amount: money(-mine) }) }
+  const caption = active ? t('groups.standing.settled') : t('groups.standing.none')
   return { caption, tone: 'muted', amount: null, spoken: caption }
 }
 
@@ -219,10 +236,15 @@ export function timelineHead(days: readonly TimelineDay[], limit: number): Timel
 
 /* ------------------------------------------------------------------ payments */
 
+/** How a payment was made, in the current language (read when used). */
 export const METHOD_LABELS: Readonly<Record<Settlement['method'], string>> = {
-  upi: 'UPI',
-  cash: 'Cash',
-  other: 'Other',
+  upi: 'UPI', // i18n-ignore: the same in every language
+  get cash() {
+    return t('groups.method.cash')
+  },
+  get other() {
+    return t('groups.method.other')
+  },
 }
 
 /**
@@ -230,10 +252,17 @@ export const METHOD_LABELS: Readonly<Record<Settlement['method'], string>> = {
  * owner knows them (the owner's own name is never used — they're "you").
  */
 export function paymentSentence(fromId: string, toId: string, fromName: string, toName: string, tense: 'past' | 'present' = 'past'): string {
-  const verb = tense === 'past' ? 'paid' : 'pays'
-  if (fromId === ME_ID) return `You ${tense === 'past' ? 'paid' : 'pay'} ${toName}`
-  if (toId === ME_ID) return `${fromName} ${verb} you`
-  return `${fromName} ${verb} ${toName}`
+  const past = tense === 'past'
+  if (fromId === ME_ID) return t(past ? 'groups.payment.paid.fromMe' : 'groups.payment.pays.fromMe', { name: toName })
+  if (toId === ME_ID) return t(past ? 'groups.payment.paid.toMe' : 'groups.payment.pays.toMe', { name: fromName })
+  return t(past ? 'groups.payment.paid.between' : 'groups.payment.pays.between', { from: fromName, to: toName })
+}
+
+/** "Sam pays Riya ₹800", "You pay Riya ₹800", "Riya pays you ₹800" — a payment still to make, with its amount. */
+export function paymentWithAmount(fromId: string, toId: string, fromName: string, toName: string, amount: string): string {
+  if (fromId === ME_ID) return t('groups.payment.pays.fromMe.amount', { name: toName, amount })
+  if (toId === ME_ID) return t('groups.payment.pays.toMe.amount', { name: fromName, amount })
+  return t('groups.payment.pays.between.amount', { from: fromName, to: toName, amount })
 }
 
 /* ------------------------------------------------------------------ sharing */
@@ -254,15 +283,14 @@ export function paymentSentence(fromId: string, toId: string, fromName: string, 
  */
 export function groupSummaryText(input: GroupCardInput): string {
   const money = (minor: Minor) => formatMoney(minor, input.currency, { trimZeros: true })
-  const expenses = `${input.expenseCount} ${input.expenseCount === 1 ? 'expense' : 'expenses'}`
-  const people = `${input.memberCount} ${input.memberCount === 1 ? 'person' : 'people'}`
-  const lines = [`${input.emoji} ${input.name}`.trim(), `${money(input.total)} spent · ${expenses} · ${people}`, '']
+  const stats = t('groups.summary.stats', { total: money(input.total), expenses: input.expenseCount, people: input.memberCount })
+  const lines = [`${input.emoji} ${input.name}`.trim(), stats, '']
   if (input.transfers.length === 0) {
-    lines.push(input.expenseCount > 0 ? 'Everyone’s settled up ✓' : 'Nothing to settle yet.')
+    lines.push(input.expenseCount > 0 ? t('groups.summary.settled') : t('groups.summary.empty'))
   } else {
-    lines.push('To settle up:')
-    for (const t of input.transfers) lines.push(`${t.from.name} pays ${t.to.name} ${money(t.amount)}`)
+    lines.push(t('groups.summary.toSettle'))
+    for (const tr of input.transfers) lines.push(t('groups.summary.transfer', { from: tr.from.name, to: tr.to.name, amount: money(tr.amount) }))
   }
-  lines.push('', `— split with ${BRAND.name}`)
+  lines.push('', t('groups.summary.footer', { brand: BRAND.name }))
   return lines.join('\n')
 }

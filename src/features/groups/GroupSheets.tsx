@@ -2,7 +2,7 @@ import { useId, useRef, useState, type ReactNode } from 'react'
 import { ChevronDown, ChevronRight, Globe } from 'lucide-react'
 import { BottomSheet, Button, Chip, describePeople, EmojiPicker, TextField, useToast } from '../../components'
 import { createGroup, MAX_GROUP_NAME_LENGTH, updateGroup, useFriendsById, useProfile } from '../../data'
-import { ME_ID, type Group, type GroupKind } from '../../domain/types'
+import { BRAND, ME_ID, type Group, type GroupKind } from '../../domain/types'
 import { friendLabel, PeoplePicker } from '../../kit/index-a'
 import { currencyName } from '../../lib/currencies'
 import { haptic } from '../../lib/haptics'
@@ -47,6 +47,7 @@ function NameAndEmoji({
   onSubmit: () => void
   autoFocus: boolean
 }) {
+  const t = useT()
   const [picking, setPicking] = useState(false)
   const pickerId = useId()
   const tileRef = useRef<HTMLButtonElement>(null)
@@ -57,7 +58,7 @@ function NameAndEmoji({
           ref={tileRef}
           type="button"
           className={styles.emojiButton}
-          aria-label={`Group icon: ${draft.emoji}. Change`}
+          aria-label={t('groups.form.icon.aria', { emoji: draft.emoji })}
           aria-expanded={picking}
           aria-controls={pickerId}
           onClick={() => {
@@ -71,7 +72,7 @@ function NameAndEmoji({
           </span>
         </button>
         <TextField
-          label="Group name"
+          label={t('groups.form.name.label')}
           containerClassName={styles.nameField}
           value={draft.name}
           placeholder={kindMeta(draft.kind).placeholder}
@@ -91,7 +92,7 @@ function NameAndEmoji({
       {picking && (
         <div id={pickerId} className={styles.picker}>
           <EmojiPicker
-            label="Group icon"
+            label={t('groups.form.icon.label')}
             value={draft.emoji}
             onChange={(emoji) => {
               onChange({ emoji, emojiPicked: true })
@@ -106,11 +107,12 @@ function NameAndEmoji({
 }
 
 function KindChips({ draft, onChange }: { draft: Draft; onChange: (patch: Partial<Draft>) => void }) {
+  const t = useT()
   const labelId = useId()
   return (
     <section className={styles.field} aria-labelledby={labelId}>
       <p id={labelId} className={styles.overline}>
-        What kind of group?
+        {t('groups.form.kind.title')}
       </p>
       <div className={styles.kinds} role="group" aria-labelledby={labelId}>
         {GROUP_KIND_ORDER.map((kind) => {
@@ -132,14 +134,15 @@ function KindChips({ draft, onChange }: { draft: Draft; onChange: (patch: Partia
 }
 
 function CurrencyRow({ currency, onPick, note }: { currency: string; onPick: () => void; note?: ReactNode }) {
+  const t = useT()
   return (
     <div className={styles.field}>
-      <button type="button" className={styles.currency} onClick={onPick} aria-label={`Currency: ${currencyName(currency)}. Change`}>
+      <button type="button" className={styles.currency} onClick={onPick} aria-label={t('groups.form.currency.aria', { name: currencyName(currency) })}>
         <span className={styles.currencySymbol} aria-hidden="true">
           {currencySymbol(currency).length <= 3 ? currencySymbol(currency) : currency.slice(0, 1)}
         </span>
         <span className={styles.currencyText}>
-          <span className={styles.currencyLabel}>Currency</span>
+          <span className={styles.currencyLabel}>{t('groups.form.currency.label')}</span>
           <span className={styles.currencyName}>
             {currencyName(currency)} · {currency}
           </span>
@@ -198,26 +201,33 @@ function useTravelPicker(draft: Draft, onPick: (code: string | null) => void) {
 }
 
 function Members({ draft, onChange }: { draft: Draft; onChange: (patch: Partial<Draft>) => void }) {
+  const t = useT()
   const labelId = useId()
   return (
     <section className={styles.field} aria-labelledby={labelId}>
       <p id={labelId} className={styles.overline}>
-        Who’s in?
+        {t('groups.form.members.title')}
       </p>
-      <p className={styles.note}>You’re in already. Add friends now or any time later — they don’t need the app.</p>
-      <PeoplePicker selectedIds={draft.memberIds} onChange={(memberIds) => onChange({ memberIds })} includeMe={false} label="Add people to the group" />
+      <p className={styles.note}>{t('groups.form.members.note')}</p>
+      <PeoplePicker
+        selectedIds={draft.memberIds}
+        onChange={(memberIds) => onChange({ memberIds })}
+        includeMe={false}
+        label={t('groups.form.members.picker.aria')}
+      />
     </section>
   )
 }
 
 /** Opens the shared currency picker over a sheet and applies the pick; `description` says what picking does here. */
 function useCurrencyPicker(currency: string, description: string, onPick: (code: string) => void) {
+  const t = useT()
   const [open, setOpen] = useState(false)
   const sheet = (
     <CurrencySheet
       open={open}
       currency={currency}
-      title="Group currency"
+      title={t('groups.form.currency.sheet.title')}
       description={description}
       onClose={() => setOpen(false)}
       onSelect={(code) => {
@@ -251,6 +261,7 @@ function blankDraft(kind: GroupKind, currency: string): Draft {
  * one), who's in (you always are) and its currency. "Create group" is ready as soon as it has a name.
  */
 export function CreateGroupSheet({ open, onClose, onCreated, initialKind = 'trip', onExited }: CreateGroupSheetProps) {
+  const t = useT()
   const profile = useProfile()
   const [draft, setDraft] = useState<Draft>(() => blankDraft(initialKind, profile.currency))
   // A fresh form every time it opens.
@@ -260,7 +271,7 @@ export function CreateGroupSheet({ open, onClose, onCreated, initialKind = 'trip
     if (open) setDraft(blankDraft(initialKind, profile.currency))
   }
   const patch = (next: Partial<Draft>) => setDraft((d) => ({ ...d, ...next }))
-  const currency = useCurrencyPicker(draft.currency, 'The group’s expenses and settle-ups are in this currency.', (code) =>
+  const currency = useCurrencyPicker(draft.currency, t('groups.create.currency.description'), (code) =>
     patch({ currency: code }),
   )
   const travel = useTravelPicker(draft, (code) => patch({ travelCurrency: code }))
@@ -289,15 +300,15 @@ export function CreateGroupSheet({ open, onClose, onCreated, initialKind = 'trip
         onClose={onClose}
         onExited={onExited}
         size="tall"
-        title="New group"
-        description="Trips, flats, couples — add expenses as you go and Settle works out who pays whom."
+        title={t('groups.create.title')}
+        description={t('groups.create.description', { brand: BRAND.name })}
         footer={
           <div className={styles.footer}>
             <p className={styles.footerHint} aria-live="polite">
-              {ready ? `${count === 1 ? 'Just you for now' : `${count} people`} · ${draft.currency}` : 'Give the group a name to create it.'}
+              {ready ? t('groups.create.ready.hint', { count, currency: draft.currency }) : t('groups.create.name.hint')}
             </p>
             <Button block disabled={!ready} onClick={create}>
-              Create group
+              {t('groups.create.cta')}
             </Button>
           </div>
         }
@@ -365,11 +376,11 @@ export function EditGroupSheet({ group, open, onClose, section }: EditGroupSheet
     }
   }
   const patch = (next: Partial<Draft>) => setDraft((d) => ({ ...d, ...next }))
-  const currency = useCurrencyPicker(draft.currency, 'Its expenses and payments move to this currency — the numbers stay the same.', (code) =>
+  const t = useT()
+  const currency = useCurrencyPicker(draft.currency, t('groups.edit.currency.description'), (code) =>
     patch({ currency: code }),
   )
   const travel = useTravelPicker(draft, (code) => patch({ travelCurrency: code }))
-  const t = useT()
   const spendingShown = TRIP_ENABLED && (draft.kind === 'trip' || travelOf(draft) !== null || more)
   const details = section === 'details'
   const ready = !details || draft.name.trim() !== ''
@@ -386,22 +397,22 @@ export function EditGroupSheet({ group, open, onClose, section }: EditGroupSheet
           ...(TRIP_ENABLED ? { travelCurrency: travelOf(draft) } : {}),
         })
         haptic('success')
-        toast('Group updated', { tone: 'success' })
+        toast(t('groups.edit.saved.toast'), { tone: 'success' })
       } else {
         const saved = updateGroup(group.id, { memberIds: [ME_ID, ...draft.memberIds] })
         const kept = saved.memberIds.filter((id) => id !== ME_ID && !draft.memberIds.includes(id))
         haptic('success')
         if (kept.length > 0) {
           const names = describePeople(kept.map((id) => friendLabel(id, friendsById[id] ?? null)))
-          toast(`${names} ${kept.length === 1 ? 'stays' : 'stay'} in until they’re settled up`, { tone: 'info' })
+          toast(t('groups.edit.members.kept.toast', { names, count: kept.length }), { tone: 'info' })
         } else {
-          toast('Members updated', { tone: 'success' })
+          toast(t('groups.edit.members.saved.toast'), { tone: 'success' })
         }
       }
       onClose()
     } catch {
       haptic('error')
-      toast('Couldn’t save that. The group may have been deleted.', { tone: 'error' })
+      toast(t('groups.edit.error'), { tone: 'error' })
       onClose()
     }
   }
@@ -414,11 +425,11 @@ export function EditGroupSheet({ group, open, onClose, section }: EditGroupSheet
         onClose={onClose}
         size={details ? 'auto' : 'tall'}
         eyebrow={group.name}
-        title={details ? 'Edit group' : 'Members'}
-        description={details ? undefined : 'People with money still to settle stay in until they’re square.'}
+        title={details ? t('groups.edit.title') : t('groups.edit.members.title')}
+        description={details ? undefined : t('groups.edit.members.description')}
         footer={
           <Button block disabled={!ready} onClick={save}>
-            Save
+            {t('common.action.save')}
           </Button>
         }
       >
@@ -436,7 +447,7 @@ export function EditGroupSheet({ group, open, onClose, section }: EditGroupSheet
               <CurrencyRow
                 currency={draft.currency}
                 onPick={currency.openPicker}
-                note={currencyChanged ? 'Amounts keep their numbers — only the currency changes.' : undefined}
+                note={currencyChanged ? t('groups.edit.currency.note') : undefined}
               />
               {spendingShown && <SpendingRow draft={draft} onPick={travel.openPicker} />}
               {TRIP_ENABLED && !spendingShown && (

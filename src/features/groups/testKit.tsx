@@ -34,7 +34,7 @@ function TestApp({ table }: { table: ScreenTable }) {
   if (Screen) return <Screen key={path} />
   return (
     <main>
-      <h1 tabIndex={-1}>Elsewhere</h1>
+      <h1 tabIndex={-1} /* i18n-ignore: test-only page */>Elsewhere</h1>
       <p data-testid="elsewhere">{path}</p>
     </main>
   )
