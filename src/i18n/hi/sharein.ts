@@ -1,4 +1,121 @@
-/** Hindi copy for the sharein namespace. Keys: `sharein.<screen>.<element>` (see i18n-plan §3). */
+/** Hindi copy for S2 · split from SMS / shared text. Keys: `sharein.<screen>.<element>` (see i18n-plan §3). */
 import type { Messages } from '../types'
 
-export const sharein = {} as const satisfies Messages
+export const sharein = {
+  // `/app/share` in paste mode.
+  'sharein.paste.title': 'SMS से बाँटें',
+  'sharein.paste.subtitle': 'बैंक का SMS या UPI मैसेज पेस्ट करें — Settle इसे आपके फ़ोन पर ही पढ़ता है।',
+  'sharein.paste.label': 'बैंक या UPI मैसेज',
+  'sharein.paste.placeholder': 'मैसेज यहाँ पेस्ट करें',
+  'sharein.paste.cta': 'पेस्ट करें',
+  'sharein.paste.read.cta': 'पढ़ें',
+  'sharein.paste.privacy': 'आपके फ़ोन पर ही पढ़ा जाता है। जब तक आप AI से पढ़वाने को न कहें, कुछ भी कहीं नहीं जाता।',
+  'sharein.paste.android': 'Android है? मैसेज ऐप से SMS सीधे Settle पर शेयर करें।',
+  // Clipboard read refused or empty.
+  'sharein.paste.empty.toast': 'पेस्ट करने को कुछ नहीं — पहले SMS कॉपी करें।',
+  'sharein.paste.denied.toast': 'क्लिपबोर्ड नहीं पढ़ पाए — बॉक्स को देर तक दबाकर पेस्ट करें।',
+  // Shared from another app: the message, folded away above the result.
+  'sharein.shared.show': 'मैसेज दिखाएँ',
+  'sharein.shared.loading.aria': 'आपने जो शेयर किया, उसे पढ़ रहे हैं…',
+  'sharein.shared.firstPhoto.toast': 'पहली फ़ोटो ले रहे हैं',
+  'sharein.missed.title': 'ये पकड़ में नहीं आया',
+  'sharein.missed.body': 'इसे फिर से शेयर करें, या यहाँ पेस्ट करें।',
+
+  // Several messages pasted at once.
+  'sharein.pick.title': 'कौन-सा?',
+  'sharein.pick.option': '{name} · {amount} · {date}',
+  'sharein.pick.option.noDate': '{name} · {amount}',
+  'sharein.pick.option.in': '{name} · {amount} आए · {date}',
+  'sharein.pick.option.in.noDate': '{name} · {amount} आए',
+  'sharein.skipped': '{n, plural, one {# मैसेज छोड़ा} other {# मैसेज छोड़े}} ({reasons})',
+  'sharein.skip.otp': 'OTP',
+  'sharein.skip.promo': 'ऑफ़र',
+  'sharein.skip.request': 'रिक्वेस्ट',
+  'sharein.skip.failed': 'फ़ेल',
+  'sharein.skip.statement': 'बिल रिमाइंडर',
+  'sharein.skip.mandate': 'AutoPay सेटअप',
+  'sharein.skip.balance': 'बैलेंस',
+  'sharein.skip.notTxn': 'पेमेंट नहीं',
+  'sharein.skip.unknown': 'साफ़ नहीं',
+
+  // The result card for a payment you made.
+  'sharein.card.split.cta': 'बाँटें',
+  'sharein.card.edit.cta': 'पहले बदलें',
+  'sharein.card.splitInstead.cta': 'इसकी जगह बाँटें',
+  'sharein.card.udhaar.cta': 'ये उधार था',
+  'sharein.card.done.cta': 'हो गया',
+  'sharein.card.paidFriend.title': 'आपने {name} को {amount} दिए',
+  'sharein.card.owedFriend': 'आपको {name} को ठीक {amount} ही देने थे',
+  'sharein.card.settle.cta': 'हिसाब बराबर करें',
+  'sharein.card.markOne.cta': '“{title}” चुकाया मार्क करें',
+  'sharein.card.settled.toast': '{name} के साथ हिसाब बराबर',
+  'sharein.card.markedOne.toast': '“{title}” चुकाया मार्क हुआ',
+  // Money that came in.
+  'sharein.card.friendPaid.title': '{name} ने आपको {amount} दिए',
+  'sharein.card.friendOwed': '{name} को आपको ठीक {amount} ही देने थे',
+  'sharein.card.markPaid.cta': '{name} का पेमेंट मार्क करें',
+  'sharein.card.refund.title': '{name} से रिफ़ंड · {amount}',
+  'sharein.card.refund.titleNoName': 'रिफ़ंड · {amount}',
+  'sharein.card.refund.body': 'रिफ़ंड बाँटे नहीं जाते — पर अगर ये मिलकर किया ऑर्डर था, तो उस खर्च को बदल दें।',
+  'sharein.card.in.title': '{name} से {amount} आए',
+  'sharein.card.in.titleNoName': '{amount} आए',
+  'sharein.card.in.nothingOpen': 'अभी {name} के साथ कोई हिसाब बाकी नहीं।',
+  'sharein.card.in.body': 'आने वाले पैसे बाँटे नहीं जाते।',
+
+  // Titles for a payment with no payee in the SMS.
+  'sharein.title.upi': 'UPI पेमेंट',
+  'sharein.title.card': 'कार्ड पेमेंट',
+  'sharein.title.other': 'पेमेंट',
+  // How it was paid (the card's meta line).
+  'sharein.via.upi': 'UPI',
+  'sharein.via.card': 'कार्ड',
+  'sharein.via.netbanking': 'नेट बैंकिंग',
+  'sharein.via.neft': 'NEFT',
+  'sharein.via.imps': 'IMPS',
+  'sharein.via.atm': 'ATM',
+  'sharein.via.wallet': 'वॉलेट',
+  'sharein.via.autopay': 'AutoPay',
+  // The new split's note.
+  'sharein.ref.upi': 'UPI रेफ़रेंस {ref}',
+  'sharein.ref.imps': 'IMPS रेफ़रेंस {ref}',
+  'sharein.ref.neft': 'NEFT रेफ़रेंस {ref}',
+  'sharein.ref.txn': 'ट्रांज़ैक्शन ID {ref}',
+  'sharein.ref.plain': 'रेफ़रेंस {ref}',
+  // Banners the split screen shows above a form filled in here.
+  'sharein.banner.sms.title': 'आपके SMS से भरा गया',
+  'sharein.banner.sms.body': 'कौन-कौन शामिल है जोड़ें, जाँचें, फिर सेव करें।',
+  'sharein.banner.ai.title': 'आपके मैसेज से AI ने भरा',
+  'sharein.banner.ai.body': 'AI से गलती हो सकती है — जाँचें, फिर सेव करें।',
+
+  // Messages that aren't a payment.
+  'sharein.ignored.otp.title': 'ये OTP है',
+  'sharein.ignored.otp.body': 'इसे कभी किसी को न बताएँ — Settle को भी नहीं। यहाँ बाँटने को कुछ नहीं है।',
+  'sharein.ignored.promo.title': 'ये एक ऑफ़र है',
+  'sharein.ignored.promo.body': 'ऑफ़र और विज्ञापन पेमेंट नहीं होते, तो बाँटने को कुछ नहीं है।',
+  'sharein.ignored.request.title': 'ये पेमेंट रिक्वेस्ट है',
+  'sharein.ignored.request.body': 'किसी ने आपसे पैसे माँगे हैं — ये आपका किया हुआ पेमेंट नहीं है।',
+  'sharein.ignored.failed.title': 'ये पेमेंट पूरा नहीं हुआ',
+  'sharein.ignored.failed.body': 'फ़ेल या रिजेक्ट हुए पेमेंट बाँटे नहीं जाते।',
+  'sharein.ignored.statement.title': 'ये बिल या ड्यू डेट का रिमाइंडर है',
+  'sharein.ignored.statement.body': 'पे होने के बाद बाँटें — या अभी बाँट लें।',
+  'sharein.ignored.mandate.title': 'ये AutoPay सेटअप है',
+  'sharein.ignored.mandate.body': 'अभी कोई पेमेंट नहीं हुआ। पैसे कटने का SMS आए, तब शेयर करें।',
+  'sharein.ignored.balance.title': 'ये बैलेंस अपडेट है',
+  'sharein.ignored.balance.body': 'इसमें किसी को पे करने की बात नहीं है।',
+  'sharein.ignored.notTxn.title': 'ये पेमेंट जैसा नहीं लग रहा',
+  'sharein.ignored.notTxn.body': 'पेमेंट के लिए बैंक ने जो SMS भेजा था, वो पेस्ट करें।',
+  'sharein.ignored.anyway.cta': 'फिर भी बाँटें',
+  'sharein.ignored.now.cta': 'अभी बाँटें',
+
+  // A message read but not for sure: the AI or by hand.
+  'sharein.unknown.title': 'इसे ठीक से नहीं पढ़ पाए',
+  'sharein.unknown.body': 'AI से पढ़वाएँ — या खुद बाँटें।',
+  'sharein.ai.cta': 'AI से पढ़वाएँ',
+  'sharein.hand.cta': 'खुद बाँटें',
+  'sharein.ai.quota':
+    '{n, plural, =0 {आज के मुफ़्त AI स्प्लिट ख़त्म} one {आज # मुफ़्त AI स्प्लिट बचा है} other {आज # मुफ़्त AI स्प्लिट बचे हैं}}',
+  'sharein.ai.unlimited': 'Pro के साथ अनलिमिटेड AI स्प्लिट',
+  'sharein.ai.offline': 'आप ऑफ़लाइन हैं — खुद बाँटें।',
+  'sharein.ai.reading': 'आपका मैसेज पढ़ रहे हैं…',
+  'sharein.ai.error.title': 'इसे पढ़ नहीं पाए',
+} as const satisfies Messages
