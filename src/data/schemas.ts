@@ -224,6 +224,24 @@ function repaired<I, O>(shape: ZodType<I>, repair: (value: I) => O | null): ZodT
   )
 }
 
+/**
+ * `schema`, except that a value `isCanonical` recognises (one `schema` would hand back unchanged)
+ * skips it: the fast path for a single stored record (`records` has it for lists). Success,
+ * failure and output are exactly `schema`'s.
+ */
+function canonicalOr<T>(schema: ZodType<T>, isCanonical: (raw: unknown) => raw is T): ZodType<T> {
+  return z.pipe(
+    z.unknown(),
+    z.transform((raw: unknown, ctx) => {
+      if (isCanonical(raw)) return raw
+      const parsed = z.safeParse(schema, raw)
+      if (parsed.success) return parsed.data
+      ctx.issues.push({ code: 'custom', message: 'Unusable record', input: raw })
+      return z.NEVER
+    }),
+  )
+}
+
 /* ------------------------------------------------------------------ primitives */
 
 const id = z.string().check(z.minLength(1), z.maxLength(200))
@@ -265,7 +283,7 @@ export function cleanLanguage(value: unknown): LanguageCode | null {
   return typeof value === 'string' && (LANGUAGE_CODES as readonly string[]).includes(value) ? (value as LanguageCode) : null
 }
 
-export const profileSchema: ZodType<Profile> = repaired(profileShape, (p) => ({
+const repairedProfile: ZodType<Profile> = repaired(profileShape, (p) => ({
   name: normalizeName(p.name),
   upiId: cleanUpiId(p.upiId),
   currency: cleanCurrency(p.currency, defaultCurrency()),
@@ -276,6 +294,8 @@ export const profileSchema: ZodType<Profile> = repaired(profileShape, (p) => ({
   createdAt: cleanTimestamp(p.createdAt) || Date.now(),
   language: p.language,
 }))
+
+export const profileSchema: ZodType<Profile> = canonicalOr(repairedProfile, isCanonicalProfile)
 
 /* ------------------------------------------------------------------ friends */
 
@@ -324,7 +344,7 @@ export function withMe(friends: readonly Friend[]): Friend[] {
 }
 
 export const friendsSchema: ZodType<Friend[]> = z.pipe(
-  records(friendSchema, (f) => f.id, MAX_FRIENDS + 1),
+  records(friendSchema, (f) => f.id, MAX_FRIENDS + 1, isCanonicalFriend),
   z.transform((friends: Friend[]) => withMe(friends)),
 )
 
@@ -716,6 +736,159 @@ export function isCanonicalExpense(raw: unknown): raw is Expense {
 
 export const expensesSchema: ZodType<Expense[]> = records(expenseSchema, (e) => e.id, Number.POSITIVE_INFINITY, isCanonicalExpense)
 
+/* ------------------------------------------------------------------ the small collections: fast paths */
+
+// The same idea for the profile, friends, groups and recurring templates: on a budget phone their
+// schemas cost ~0.3 s of every start between them, for records the app wrote itself. Each check
+// must only say yes when its schema would return an equal record (src/data/canonical.test.ts).
+
+const PROFILE_KEYS: readonly (keyof Profile)[] = ['name', 'upiId', 'currency', 'theme', 'accent', 'haptics', 'onboarded', 'createdAt', 'language']
+const FRIEND_KEYS: readonly (keyof Friend)[] = ['id', 'name', 'color', 'upiId', 'phone', 'createdAt', 'lastUsedAt']
+const GROUP_KEYS: readonly (keyof Group)[] = [
+  'id',
+  'name',
+  'emoji',
+  'kind',
+  'currency',
+  'memberIds',
+  'settlements',
+  'createdAt',
+  'updatedAt',
+  'archived',
+  'travelCurrency',
+  'roundSize',
+]
+const SETTLEMENT_KEYS: readonly (keyof Settlement)[] = ['id', 'fromId', 'toId', 'amount', 'date', 'createdAt', 'method']
+const RECURRING_KEYS: readonly (keyof RecurringTemplate)[] = [
+  'id',
+  'title',
+  'category',
+  'currency',
+  'total',
+  'payerId',
+  'mode',
+  'participants',
+  'dayOfMonth',
+  'groupId',
+  'lastCreatedPeriod',
+  'active',
+  'createdAt',
+]
+const THEME_SET: ReadonlySet<unknown> = new Set(['system', 'light', 'dark'])
+const ACCENT_SET: ReadonlySet<unknown> = new Set(['lime', 'mint', 'sky', 'violet', 'coral'])
+const LANGUAGE_SET: ReadonlySet<unknown> = new Set(LANGUAGE_CODES)
+const GROUP_KIND_SET: ReadonlySet<unknown> = new Set(GROUP_KINDS)
+const METHOD_SET: ReadonlySet<unknown> = new Set(['upi', 'cash', 'other'])
+const RECURRING_MODE_SET: ReadonlySet<unknown> = new Set(['equal', 'exact', 'percent', 'shares'])
+
+/** A name exactly as `normalizeName` leaves it (`allowEmpty`: '' counts). */
+function isCleanName(value: unknown, allowEmpty: boolean): value is string {
+  return typeof value === 'string' && (value !== '' || allowEmpty) && normalizeName(value) === value
+}
+
+/** null, or a UPI ID exactly as `cleanUpiId` leaves it. */
+function isCleanUpi(value: unknown): boolean {
+  return value === null || (typeof value === 'string' && cleanUpiId(value) === value)
+}
+
+/** One emoji exactly as `cleanEmoji` leaves it. A single code point is one character: no segmenting. */
+function isCleanEmoji(value: unknown): value is string {
+  if (typeof value !== 'string' || value === '') return false
+  const first = value.codePointAt(0) ?? 0
+  if (value.length === (first > 0xffff ? 2 : 1)) return value.trim() === value
+  return cleanEmoji(value) === value
+}
+
+/** Participants exactly as `cleanParticipants` leaves them: 1–100 different people. */
+function isCanonicalParticipants(value: unknown): value is Participant[] {
+  if (!Array.isArray(value) || value.length === 0 || value.length > MAX_PARTICIPANTS) return false
+  const seen = new Set<string>()
+  for (const p of value as unknown[]) {
+    if (!hasExactly(p, PARTICIPANT_KEYS) || !isIdText(p.friendId) || seen.has(p.friendId)) return false
+    if (p.input !== null && !isFiniteNumber(p.input)) return false
+    seen.add(p.friendId)
+  }
+  return true
+}
+
+/** True when `raw` is exactly what `profileSchema` would return for it. */
+export function isCanonicalProfile(raw: unknown): raw is Profile {
+  if (!hasExactly(raw, PROFILE_KEYS)) return false
+  const p = raw
+  if (!isCleanName(p.name, true) || !isCleanUpi(p.upiId)) return false
+  if (typeof p.currency !== 'string' || !isKnownCurrency(p.currency)) return false
+  if (!THEME_SET.has(p.theme) || !ACCENT_SET.has(p.accent)) return false
+  if (typeof p.haptics !== 'boolean' || typeof p.onboarded !== 'boolean') return false
+  // 0 would become "now".
+  if (!isCleanTimestamp(p.createdAt) || p.createdAt === 0) return false
+  return p.language === null || LANGUAGE_SET.has(p.language)
+}
+
+/** True when `raw` is exactly what `friendSchema` would return for it. */
+export function isCanonicalFriend(raw: unknown): raw is Friend {
+  if (!hasExactly(raw, FRIEND_KEYS)) return false
+  const f = raw
+  if (!isIdText(f.id) || !isCleanName(f.name, false)) return false
+  if (!Number.isInteger(f.color) || (f.color as number) < 0 || (f.color as number) >= AVATAR_COLORS) return false
+  if (!isCleanUpi(f.upiId)) return false
+  if (f.phone !== null && (typeof f.phone !== 'string' || cleanPhone(f.phone) !== f.phone)) return false
+  return isCleanTimestamp(f.createdAt) && isCleanTimestamp(f.lastUsedAt)
+}
+
+function isCanonicalSettlement(raw: unknown): raw is Settlement {
+  if (!hasExactly(raw, SETTLEMENT_KEYS)) return false
+  const s = raw
+  if (!isIdText(s.id) || !isIdText(s.fromId) || !isIdText(s.toId) || s.fromId === s.toId) return false
+  if (!Number.isSafeInteger(s.amount) || (s.amount as number) <= 0 || (s.amount as number) > MAX_MINOR) return false
+  return isIsoDate(s.date) && isCleanTimestamp(s.createdAt) && METHOD_SET.has(s.method)
+}
+
+/** True when `raw` is exactly what `groupSchema` would return for it. */
+export function isCanonicalGroup(raw: unknown): raw is Group {
+  if (!hasExactly(raw, GROUP_KEYS)) return false
+  const g = raw
+  if (!isIdText(g.id)) return false
+  if (typeof g.name !== 'string' || g.name === '' || cleanText(g.name, MAX_GROUP_NAME_LENGTH) !== g.name) return false
+  if (!isCleanEmoji(g.emoji) || !GROUP_KIND_SET.has(g.kind)) return false
+  if (typeof g.currency !== 'string' || !CURRENCY_CODE.test(g.currency)) return false
+  // Members: the owner first, then different, non-empty ids, at most 100 in all.
+  const members = g.memberIds
+  if (!Array.isArray(members) || members.length > MAX_GROUP_MEMBERS || members[0] !== ME_ID) return false
+  const seenMembers = new Set<unknown>()
+  for (const memberId of members as unknown[]) {
+    if (typeof memberId !== 'string' || memberId === '' || seenMembers.has(memberId)) return false
+    seenMembers.add(memberId)
+  }
+  const settlements = g.settlements
+  if (!Array.isArray(settlements)) return false
+  const seenSettlements = new Set<string>()
+  for (const s of settlements as unknown[]) {
+    if (!isCanonicalSettlement(s) || seenSettlements.has(s.id)) return false
+    seenSettlements.add(s.id)
+  }
+  if (!isCleanTimestamp(g.createdAt) || !isCleanTimestamp(g.updatedAt) || g.updatedAt < g.createdAt) return false
+  if (typeof g.archived !== 'boolean') return false
+  if (g.travelCurrency !== null && (typeof g.travelCurrency !== 'string' || cleanTravelCurrency(g.travelCurrency, g.currency) !== g.travelCurrency)) {
+    return false
+  }
+  return g.roundSize === null || isValidTotal(g.roundSize)
+}
+
+/** True when `raw` is exactly what `recurringSchema` would return for it. */
+export function isCanonicalRecurring(raw: unknown): raw is RecurringTemplate {
+  if (!hasExactly(raw, RECURRING_KEYS)) return false
+  const r = raw
+  if (!isIdText(r.id) || !isIdText(r.payerId)) return false
+  if (typeof r.title !== 'string' || r.title === '' || cleanText(r.title, MAX_TITLE_LENGTH) !== r.title) return false
+  if (!CATEGORY_SET.has(r.category) || !RECURRING_MODE_SET.has(r.mode)) return false
+  if (typeof r.currency !== 'string' || !CURRENCY_CODE.test(r.currency) || !isValidTotal(r.total)) return false
+  if (!isCanonicalParticipants(r.participants)) return false
+  if (!Number.isInteger(r.dayOfMonth) || (r.dayOfMonth as number) < 1 || (r.dayOfMonth as number) > 28) return false
+  if (r.groupId !== null && !isIdText(r.groupId)) return false
+  if (r.lastCreatedPeriod !== null && !isPeriod(r.lastCreatedPeriod)) return false
+  return typeof r.active === 'boolean' && isCleanTimestamp(r.createdAt)
+}
+
 /* ------------------------------------------------------------------ groups */
 
 const settlementShape = z.object({
@@ -783,7 +956,7 @@ export const groupSchema: ZodType<Group> = repaired(groupShape, (g) => {
   }
 })
 
-export const groupsSchema: ZodType<Group[]> = records(groupSchema, (g) => g.id)
+export const groupsSchema: ZodType<Group[]> = records(groupSchema, (g) => g.id, Number.POSITIVE_INFINITY, isCanonicalGroup)
 
 /* ------------------------------------------------------------------ recurring */
 
@@ -823,7 +996,7 @@ export const recurringSchema: ZodType<RecurringTemplate> = repaired(recurringSha
   }
 })
 
-export const recurringListSchema: ZodType<RecurringTemplate[]> = records(recurringSchema, (r) => r.id)
+export const recurringListSchema: ZodType<RecurringTemplate[]> = records(recurringSchema, (r) => r.id, Number.POSITIVE_INFINITY, isCanonicalRecurring)
 
 /* ------------------------------------------------------------------ claims (claim your items) */
 
