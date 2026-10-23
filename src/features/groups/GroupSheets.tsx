@@ -1,5 +1,5 @@
 import { useId, useRef, useState, type ReactNode } from 'react'
-import { ChevronRight } from 'lucide-react'
+import { ChevronDown, ChevronRight, Globe } from 'lucide-react'
 import { BottomSheet, Button, Chip, describePeople, EmojiPicker, TextField, useToast } from '../../components'
 import { createGroup, MAX_GROUP_NAME_LENGTH, updateGroup, useFriendsById, useProfile } from '../../data'
 import { ME_ID, type Group, type GroupKind } from '../../domain/types'
@@ -7,7 +7,11 @@ import { friendLabel, PeoplePicker } from '../../kit/index-a'
 import { currencyName } from '../../lib/currencies'
 import { haptic } from '../../lib/haptics'
 import { currencySymbol } from '../../lib/money'
+import { useT } from '../../i18n'
 import { CurrencySheet } from '../bill/CurrencySheet'
+import { TRIP_ENABLED } from '../trip/enabled'
+import { proseName } from '../trip/fxView'
+import { TravelCurrencySheet } from '../trip/TravelCurrencySheet'
 import { GroupEmoji } from './GroupEmoji'
 import { GROUP_KIND_ORDER, kindMeta } from './groupView'
 import styles from './GroupSheets.module.css'
@@ -21,6 +25,8 @@ interface Draft {
   currency: string
   /** Everyone but you (you're always in). */
   memberIds: string[]
+  /** "Spending in" (trip currency); null = the group's own currency. */
+  travelCurrency: string | null
 }
 
 function others(ids: readonly string[]): string[] {
@@ -145,6 +151,52 @@ function CurrencyRow({ currency, onPick, note }: { currency: string; onPick: () 
   )
 }
 
+/** The trip currency, or null when it's the group's own (picking the group's currency turns it off). */
+function travelOf(draft: Pick<Draft, 'currency' | 'travelCurrency'>): string | null {
+  return draft.travelCurrency !== null && draft.travelCurrency !== draft.currency ? draft.travelCurrency : null
+}
+
+/** "Spending in · Thai baht · THB": the currency a trip pays in, converted into the group's. */
+function SpendingRow({ draft, onPick }: { draft: Draft; onPick: () => void }) {
+  const t = useT()
+  const travel = travelOf(draft)
+  const symbol = currencySymbol(draft.currency)
+  const value = travel ? `${proseName(travel)} · ${travel}` : t('trip.group.same', { symbol })
+  return (
+    <div className={styles.field}>
+      <button type="button" className={styles.currency} onClick={onPick} aria-label={t('trip.group.rowLabel', { value })}>
+        <span className={styles.currencySymbol} aria-hidden="true">
+          <Globe className={styles.globe} strokeWidth={2.25} />
+        </span>
+        <span className={styles.currencyText}>
+          <span className={styles.currencyLabel}>{t('trip.group.label')}</span>
+          <span className={styles.currencyName}>{value}</span>
+        </span>
+        <ChevronRight aria-hidden="true" className={styles.chevron} strokeWidth={2.25} />
+      </button>
+      <p className={styles.note}>{t('trip.group.note', { symbol })}</p>
+    </div>
+  )
+}
+
+/** Opens "Spending in" over a sheet and applies the pick. */
+function useTravelPicker(draft: Draft, onPick: (code: string | null) => void) {
+  const [open, setOpen] = useState(false)
+  const sheet = TRIP_ENABLED ? (
+    <TravelCurrencySheet
+      open={open}
+      groupCurrency={draft.currency}
+      value={travelOf(draft)}
+      onClose={() => setOpen(false)}
+      onSelect={(code) => {
+        onPick(code)
+        setOpen(false)
+      }}
+    />
+  ) : null
+  return { openPicker: () => setOpen(true), sheet }
+}
+
 function Members({ draft, onChange }: { draft: Draft; onChange: (patch: Partial<Draft>) => void }) {
   const labelId = useId()
   return (
@@ -191,7 +243,7 @@ export interface CreateGroupSheetProps {
 }
 
 function blankDraft(kind: GroupKind, currency: string): Draft {
-  return { name: '', emoji: kindMeta(kind).emoji, emojiPicked: false, kind, currency, memberIds: [] }
+  return { name: '', emoji: kindMeta(kind).emoji, emojiPicked: false, kind, currency, memberIds: [], travelCurrency: null }
 }
 
 /**
@@ -211,7 +263,9 @@ export function CreateGroupSheet({ open, onClose, onCreated, initialKind = 'trip
   const currency = useCurrencyPicker(draft.currency, 'The group’s expenses and settle-ups are in this currency.', (code) =>
     patch({ currency: code }),
   )
+  const travel = useTravelPicker(draft, (code) => patch({ travelCurrency: code }))
   const ready = draft.name.trim() !== ''
+  const showSpending = TRIP_ENABLED && (draft.kind === 'trip' || travelOf(draft) !== null)
 
   const create = (): void => {
     if (!ready) return
@@ -221,6 +275,7 @@ export function CreateGroupSheet({ open, onClose, onCreated, initialKind = 'trip
       kind: draft.kind,
       currency: draft.currency,
       memberIds: [ME_ID, ...draft.memberIds],
+      ...(showSpending ? { travelCurrency: travelOf(draft) } : {}),
     })
     haptic('success')
     onCreated(group)
@@ -258,9 +313,11 @@ export function CreateGroupSheet({ open, onClose, onCreated, initialKind = 'trip
           <KindChips draft={draft} onChange={patch} />
           <Members draft={draft} onChange={patch} />
           <CurrencyRow currency={draft.currency} onPick={currency.openPicker} />
+          {showSpending && <SpendingRow draft={draft} onPick={travel.openPicker} />}
         </form>
       </BottomSheet>
       {currency.sheet}
+      {travel.sheet}
     </>
   )
 }
@@ -285,6 +342,7 @@ function draftOf(group: Group): Draft {
     kind: group.kind,
     currency: group.currency,
     memberIds: others(group.memberIds),
+    travelCurrency: group.travelCurrency ?? null,
   }
 }
 
@@ -297,14 +355,22 @@ export function EditGroupSheet({ group, open, onClose, section }: EditGroupSheet
   const friendsById = useFriendsById()
   const [draft, setDraft] = useState<Draft>(() => draftOf(group))
   const [session, setSession] = useState({ open, section })
+  // "Spending in" shows for trips and when set; any other group has it under "More".
+  const [more, setMore] = useState(false)
   if (open !== session.open || (open && section !== session.section)) {
     setSession({ open, section })
-    if (open) setDraft(draftOf(group))
+    if (open) {
+      setDraft(draftOf(group))
+      setMore(false)
+    }
   }
   const patch = (next: Partial<Draft>) => setDraft((d) => ({ ...d, ...next }))
   const currency = useCurrencyPicker(draft.currency, 'Its expenses and payments move to this currency — the numbers stay the same.', (code) =>
     patch({ currency: code }),
   )
+  const travel = useTravelPicker(draft, (code) => patch({ travelCurrency: code }))
+  const t = useT()
+  const spendingShown = TRIP_ENABLED && (draft.kind === 'trip' || travelOf(draft) !== null || more)
   const details = section === 'details'
   const ready = !details || draft.name.trim() !== ''
 
@@ -312,7 +378,13 @@ export function EditGroupSheet({ group, open, onClose, section }: EditGroupSheet
     if (!ready) return
     try {
       if (details) {
-        updateGroup(group.id, { name: draft.name, emoji: draft.emoji, kind: draft.kind, currency: draft.currency })
+        updateGroup(group.id, {
+          name: draft.name,
+          emoji: draft.emoji,
+          kind: draft.kind,
+          currency: draft.currency,
+          ...(TRIP_ENABLED ? { travelCurrency: travelOf(draft) } : {}),
+        })
         haptic('success')
         toast('Group updated', { tone: 'success' })
       } else {
@@ -366,6 +438,13 @@ export function EditGroupSheet({ group, open, onClose, section }: EditGroupSheet
                 onPick={currency.openPicker}
                 note={currencyChanged ? 'Amounts keep their numbers — only the currency changes.' : undefined}
               />
+              {spendingShown && <SpendingRow draft={draft} onPick={travel.openPicker} />}
+              {TRIP_ENABLED && !spendingShown && (
+                <button type="button" className={styles.more} aria-expanded={false} aria-label={t('trip.group.moreLabel')} onClick={() => setMore(true)}>
+                  {t('trip.group.more')}
+                  <ChevronDown aria-hidden="true" strokeWidth={2.5} />
+                </button>
+              )}
             </>
           ) : (
             <Members draft={draft} onChange={patch} />
@@ -373,6 +452,7 @@ export function EditGroupSheet({ group, open, onClose, section }: EditGroupSheet
         </form>
       </BottomSheet>
       {currency.sheet}
+      {travel.sheet}
     </>
   )
 }
