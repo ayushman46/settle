@@ -47,7 +47,7 @@ describe('ReviewScreen', () => {
     expect(eyebrow.textContent).toBe(formatBillDate('2026-10-18'))
     expect(screen.getByRole('progressbar', { name: 'Step 1 of 5' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: '8 items' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Edit Garlic Naan, quantity 4, ₹300.00' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Edit Garlic Naan, Qty 4 · ₹75.00 each, ₹300.00' })).toBeInTheDocument()
     expect(screen.getByText('Qty 4 · ₹75.00 each')).toBeInTheDocument()
     expect(totalText()).toBe('₹2,305.00')
     // Sample items add up to the printed subtotal: no mismatch note.
@@ -100,7 +100,7 @@ describe('ReviewScreen', () => {
 
     expect(probe.current.items).toHaveLength(9)
     expect(probe.current.items[8]).toMatchObject({ name: 'Masala Chai', quantity: 2, amount: 9000 })
-    expect(screen.getByRole('button', { name: 'Edit Masala Chai, quantity 2, ₹90.00' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Edit Masala Chai, Qty 2 · ₹45.00 each, ₹90.00' })).toBeInTheDocument()
     expect(totalText()).toBe('₹2,395.00')
   })
 
@@ -436,8 +436,8 @@ describe('ReviewScreen — delivery fees', () => {
       'Restaurant packaging, ₹25, edit',
       'Rain fee, ₹20, edit',
     ])
-    expect(rows[0]).toHaveTextContent('🛵 Delivery partner fee ₹35.00')
-    expect(rows[3]).toHaveTextContent('🌧️ Rain fee ₹20.00')
+    expect(rows[0]).toHaveTextContent('🛵 Delivery partner fee ₹35')
+    expect(rows[3]).toHaveTextContent('🌧️ Rain fee ₹20')
     expect(within(section).getByText("You'll choose how to share fees on the next step.")).toBeInTheDocument()
     expect(within(section).getByRole('button', { name: 'Add fee' })).toBeEnabled()
   })

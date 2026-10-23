@@ -354,13 +354,15 @@ export function ReviewScreen() {
               {items.map((item) => {
                 const free = item.amount === 0
                 const name = item.name || 'Unnamed item'
-                const qty = item.quantity === 1 ? '' : `, quantity ${formatQuantity(item.quantity)}`
+                // The name says what the row shows ("Qty 4 · ₹75.00 each"), so voice control can find it.
+                const subtitle = quantityLine(item, currency)
+                const qty = subtitle ? `, ${subtitle}` : ''
                 return (
                   <ListRow
                     key={item.id}
                     id={rowId(item.id)}
                     title={name}
-                    subtitle={quantityLine(item, currency)}
+                    subtitle={subtitle}
                     trailing={
                       free ? (
                         <span className={styles.free}>Free</span>
@@ -501,7 +503,7 @@ function FeesSection({ fees, currency, rowId, addId, onOpen, full }: FeesSection
                 </span>
               }
               title={fee.label}
-              trailing={<Money value={fee.amount} currency={currency} />}
+              trailing={<Money value={fee.amount} currency={currency} trimZeros />}
               chevron
               aria-label={feeRowLabel(fee, currency)}
               onClick={() => onOpen(fee)}

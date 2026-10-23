@@ -146,6 +146,7 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--s-3);
+  margin-block: calc(var(--s-2) * -1) calc(var(--s-1) * -1);
 }
 
 .feeAdd {
@@ -154,7 +155,6 @@
   align-items: center;
   gap: var(--s-1);
   min-height: var(--tap);
-  margin-block: calc(var(--s-3) * -1);
   padding-inline: var(--s-2);
   border-radius: var(--r-pill);
   color: var(--accent-ink);
