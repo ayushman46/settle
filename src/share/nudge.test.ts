@@ -124,3 +124,45 @@ describe('nudgeText', () => {
     expect(nudgeText(input({ link })).endsWith(link)).toBe(true)
   })
 })
+
+describe('nudgeText — loans (udhaar)', () => {
+  const loan = (extra: Partial<NudgeInput> = {}) => input({ kind: 'loan', toName: 'Riya', amount: 30_000, title: 'Cash', date: '21 Oct', payeeUpi: null, link: null, ...extra })
+
+  it('has its own wordings per tone, word for word', () => {
+    expect(nudgeVariantCount('friendly', 'loan', '21 Oct')).toBe(2)
+    expect(nudgeVariantCount('funny', 'loan', '21 Oct')).toBe(2)
+    expect(nudgeVariantCount('firm', 'loan', '21 Oct')).toBe(1)
+    expect(nudgeText(loan({ tone: 'friendly', variant: 0 }))).toBe('Hey Riya! 👋 Just a reminder about the ₹300 I lent you. No rush!')
+    expect(nudgeText(loan({ tone: 'friendly', variant: 1 }))).toBe('Hi Riya 🙂 Whenever you get a sec — the ₹300 from 21 Oct. Thanks!')
+    expect(nudgeText(loan({ tone: 'funny', variant: 0 }))).toBe('Riya, that ₹300 udhaar is feeling homesick 🏠 Send it back whenever you can 😄')
+    expect(nudgeText(loan({ tone: 'funny', variant: 1 }))).toBe('Fun fact, Riya: ₹300 misses its old wallet 👛')
+    expect(nudgeText(loan({ tone: 'firm', variant: 0 }))).toBe('Hi Riya, please return the ₹300 I lent you on 21 Oct.')
+  })
+
+  it('skips wordings that need the date when it is not known', () => {
+    expect(nudgeVariantCount('friendly', 'loan', null)).toBe(1)
+    expect(nudgeVariantCount('firm', 'loan')).toBe(1)
+    for (let variant = 0; variant < 4; variant++) {
+      expect(nudgeText(loan({ tone: 'friendly', date: null, variant }))).not.toContain('{date}')
+    }
+    expect(nudgeText(loan({ tone: 'firm', date: '' }))).toBe('Hi Riya, please return the ₹300 I lent you.')
+  })
+
+  it('is deterministic, adds the UPI ID and link like any nudge, and stays within the cap', () => {
+    expect(nudgeText(loan())).toBe(nudgeText(loan()))
+    const full = nudgeText(loan({ payeeUpi: 'ayush@okaxis', payeeName: '', link: LINK, tone: 'firm' }))
+    expect(full.split('\n')).toEqual(['Hi Riya, please return the ₹300 I lent you on 21 Oct.', 'My UPI: ayush@okaxis', `Pay here: ${LINK}`])
+    for (const tone of TONES) {
+      for (let variant = 0; variant < nudgeVariantCount(tone, 'loan', '21 Oct'); variant++) {
+        const text = nudgeText(loan({ tone, variant, toName: '🦄'.repeat(40), amount: 99_999_999_999, payeeUpi: `${'a'.repeat(250)}@okaxis`, link: LINK }))
+        expect(text.replace(LINK, '').length).toBeLessThanOrEqual(NUDGE_MAX_LENGTH)
+        expect(text.endsWith(LINK)).toBe(true)
+      }
+    }
+  })
+
+  it('leaves ordinary nudges as they were', () => {
+    expect(nudgeVariantCount('friendly')).toBe(4)
+    expect(nudgeText(input({ kind: undefined, date: '21 Oct' }))).toBe(nudgeText(input()))
+  })
+})

@@ -2,6 +2,7 @@ import { useId, useState } from 'react'
 import { Copy, MessageCircle, MessageSquareText, Shuffle } from 'lucide-react'
 import { ActionBar, BottomSheet, Button, SegmentedControl, useToast, type SegmentedOption } from '../components'
 import { useProfile } from '../data'
+import { shortDateLabel } from '../data/loans'
 import type { Friend, Minor } from '../domain/types'
 import { cx } from '../lib/cx'
 import { haptic } from '../lib/haptics'
@@ -28,6 +29,10 @@ export interface NudgeSheetProps {
   link: string | null
   /** After the message went to WhatsApp / SMS or was copied (e.g. to note it). */
   onSent?: (channel: NudgeChannel) => void
+  /** 'loan': money you lent them — the udhaar wordings ("the ₹500 I lent you"). */
+  kind?: 'loan'
+  /** The loan's date (YYYY-MM-DD), for wordings that mention it ("the ₹500 from 21 Oct"). */
+  date?: string | null
 }
 
 // The emoji sits inside the label (one unbreakable line) and steps aside on 320px phones.
@@ -49,7 +54,7 @@ const TONE_OPTIONS: ReadonlyArray<SegmentedOption<NudgeTone>> = NUDGE_TONES.map(
  * exact message, shuffle the wording, then send it on WhatsApp or SMS — straight to their chat
  * when you have their number — or copy it. The message carries your UPI ID and the pay link.
  */
-export function NudgeSheet({ open, onClose, friend, amount, currency, title, link, onSent }: NudgeSheetProps) {
+export function NudgeSheet({ open, onClose, friend, amount, currency, title, link, onSent, kind, date }: NudgeSheetProps) {
   const previewId = useId()
   const toast = useToast()
   const profile = useProfile()
@@ -72,8 +77,10 @@ export function NudgeSheet({ open, onClose, friend, amount, currency, title, lin
     payeeName: '',
     payeeUpi: profile.upiId,
     link,
+    kind,
+    date: kind === 'loan' && date ? shortDateLabel(date) : null,
   }
-  const count = nudgeVariantCount(tone)
+  const count = nudgeVariantCount(tone, input.kind, input.date)
   const natural = nudgeText(input)
   const current = variant ?? Math.max(0, Array.from({ length: count }, (_, i) => nudgeText({ ...input, variant: i })).indexOf(natural))
   const text = variant === null ? natural : nudgeText({ ...input, variant })

@@ -4,6 +4,7 @@
  * identically; pass `variant` to offer "try another".
  */
 import type { Minor } from '../domain/types'
+import { t } from '../i18n'
 import { formatMoney } from '../lib/money'
 import { nameKey } from '../lib/people'
 import { isValidUpiId, normalizeUpiId } from '../lib/upi'
@@ -33,6 +34,10 @@ export interface NudgeInput {
   link: string | null
   /** Pick a specific wording (any integer, wraps); by default it's derived from the inputs. */
   variant?: number
+  /** 'loan': money you lent them (udhaar) — its own wordings ("the ₹500 I lent you"). */
+  kind?: 'loan'
+  /** When it was lent, already formatted ("21 Oct"); loan wordings that mention it need it. */
+  date?: string | null
 }
 
 /** Longest a nudge may be, not counting the link (which can't be cut). */
@@ -45,6 +50,40 @@ interface Words {
 }
 
 type Template = (w: Words) => string
+
+interface LoanWords {
+  to: string
+  amount: string
+  date: string
+}
+
+/** Udhaar reminders (spec 07 §2.5). Wordings that mention the date are used only when it's known. */
+const LOAN_TEMPLATES: Readonly<Record<NudgeTone, ReadonlyArray<{ dated: boolean; text: (w: LoanWords) => string }>>> = {
+  friendly: [
+    { dated: false, text: (w) => t('lend.nudge.friendly.0', { to: w.to, amount: w.amount }) },
+    { dated: true, text: (w) => t('lend.nudge.friendly.1', { to: w.to, amount: w.amount, date: w.date }) },
+  ],
+  funny: [
+    { dated: false, text: (w) => t('lend.nudge.funny.0', { to: w.to, amount: w.amount }) },
+    { dated: false, text: (w) => t('lend.nudge.funny.1', { to: w.to, amount: w.amount }) },
+  ],
+  firm: [{ dated: true, text: (w) => t('lend.nudge.firm.0', { to: w.to, amount: w.amount, date: w.date }) }],
+}
+
+function loanTemplates(tone: NudgeTone, date: string): Template[] {
+  const usable = LOAN_TEMPLATES[tone].filter((x) => !x.dated || date !== '')
+  const list: Template[] = usable.map((x) => (w: Words) => x.text({ to: w.to, amount: w.amount, date }))
+  // Only the firm tone has nothing undated: it says the same without the day.
+  return list.length > 0 ? list : [(w: Words) => t('lend.nudge.firm.undated', { to: w.to, amount: w.amount })]
+}
+
+function cleanDate(date: string | null | undefined): string {
+  return typeof date === 'string' ? cleanText(date, 24) : ''
+}
+
+function templatesFor(tone: NudgeTone, kind: NudgeInput['kind'], date: string): readonly Template[] {
+  return kind === 'loan' ? loanTemplates(tone, date) : TEMPLATES[tone]
+}
 
 const TEMPLATES: Readonly<Record<NudgeTone, readonly Template[]>> = {
   friendly: [
@@ -74,9 +113,9 @@ const LINK_LABEL: Readonly<Record<NudgeTone, string>> = {
 
 const FIRST_PERSON = new Set(['', 'you', 'me', 'myself', 'i'])
 
-/** How many wordings a tone has. */
-export function nudgeVariantCount(tone: NudgeTone): number {
-  return TEMPLATES[tone].length
+/** How many wordings a tone has (a loan's depend on whether its date is known). */
+export function nudgeVariantCount(tone: NudgeTone, kind?: NudgeInput['kind'], date?: string | null): number {
+  return templatesFor(Object.hasOwn(TEMPLATES, tone) ? tone : 'friendly', kind, cleanDate(date)).length
 }
 
 function upiLine(input: NudgeInput): string | null {
@@ -92,8 +131,9 @@ function upiLine(input: NudgeInput): string | null {
  */
 export function nudgeText(input: NudgeInput): string {
   const tone: NudgeTone = Object.hasOwn(TEMPLATES, input.tone) ? input.tone : 'friendly'
-  const templates = TEMPLATES[tone]
-  const seed = hashString(`${tone}|${nameKey(input.toName)}|${input.amount}|${input.currency}|${nameKey(input.title)}`)
+  const kind = input.kind === 'loan' ? 'loan' : undefined
+  const templates = templatesFor(tone, kind, cleanDate(input.date))
+  const seed = hashString(`${tone}|${nameKey(input.toName)}|${input.amount}|${input.currency}|${nameKey(input.title)}${kind ? '|loan' : ''}`)
   const pick = input.variant !== undefined && Number.isInteger(input.variant) ? input.variant : seed
   const template = templates[((pick % templates.length) + templates.length) % templates.length] ?? templates[0]
   if (!template) return ''

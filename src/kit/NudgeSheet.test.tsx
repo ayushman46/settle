@@ -177,4 +177,16 @@ describe('NudgeSheet', () => {
     const sams = screen.getByRole('figure', { name: 'Message to Sam' }).querySelector('p')
     expect(sams?.textContent).toBe(expected('friendly', undefined, 'Sam'))
   })
+
+  it('words a loan as udhaar, with its date, and hides Try another when there is one wording', async () => {
+    const user = userEvent.setup()
+    render(<Harness kind="loan" date="2026-10-21" amount={30_000} title="Cash" link={null} />)
+    const loan = (tone: NudgeTone, variant?: number) =>
+      nudgeText({ tone, toName: 'Riya', amount: 30_000, currency: 'INR', title: 'Cash', payeeName: '', payeeUpi: 'ayush@okaxis', link: null, kind: 'loan', date: '21 Oct', variant })
+    expect(bubble().textContent).toBe(loan('friendly'))
+    expect(bubble().textContent).toMatch(/the ₹300 (I lent you|from 21 Oct)/)
+    await user.click(screen.getByRole('radio', { name: /Firm/ }))
+    expect(bubble().textContent).toBe('Hi Riya, please return the ₹300 I lent you on 21 Oct.\nMy UPI: ayush@okaxis')
+    expect(screen.queryByRole('button', { name: 'Try another' })).not.toBeInTheDocument()
+  })
 })
