@@ -5,6 +5,7 @@
  */
 import { ME_ID, type Expense, type ExpenseSource, type Group, type Minor } from '../../domain/types'
 import { collectProgress, expenseStanding, isSettledInGroup } from '../../engine/balances'
+import { getLanguage, intlLocale, t, type MessageKey } from '../../i18n'
 import { currencyDigits, formatMoney } from '../../lib/money'
 import { computeSplit } from '../../lib/split'
 
@@ -21,20 +22,20 @@ export interface StandingPill {
 export function standingPill(e: Expense, payerName: string, groups: readonly Group[]): StandingPill | null {
   const money = (minor: Minor) => formatMoney(minor, e.currency, { trimZeros: true })
   const s = expenseStanding(e, ME_ID, groups)
-  if (s.role === 'none') return { label: 'You’re not in this one', tone: 'neutral', done: false }
+  if (s.role === 'none') return { label: t('expense.standing.notIn'), tone: 'neutral', done: false }
   if (s.outstanding === null) {
     // Settled through the group: what this expense did to my balance there.
-    if (s.net > 0) return { label: `You lent ${money(s.net)}`, tone: 'positive', done: false }
-    if (s.net < 0) return { label: `You borrowed ${money(-s.net)}`, tone: 'negative', done: false }
+    if (s.net > 0) return { label: t('expense.standing.lent', { amount: money(s.net) }), tone: 'positive', done: false }
+    if (s.net < 0) return { label: t('expense.standing.borrowed', { amount: money(-s.net) }), tone: 'negative', done: false }
     return null
   }
   if (s.role === 'paid') {
-    if (s.outstanding > 0) return { label: `You’re owed ${money(s.outstanding)}`, tone: 'positive', done: false }
-    if (s.net > 0) return { label: 'Settled', tone: 'positive', done: true }
+    if (s.outstanding > 0) return { label: t('expense.standing.owed', { amount: money(s.outstanding) }), tone: 'positive', done: false }
+    if (s.net > 0) return { label: t('expense.standing.settled'), tone: 'positive', done: true }
     return null
   }
-  if (s.outstanding < 0) return { label: `You owe ${payerName} ${money(-s.outstanding)}`, tone: 'negative', done: false }
-  return { label: `You paid ${payerName} back`, tone: 'positive', done: true }
+  if (s.outstanding < 0) return { label: t('expense.standing.owe', { name: payerName, amount: money(-s.outstanding) }), tone: 'negative', done: false }
+  return { label: t('expense.standing.paidBack', { name: payerName }), tone: 'positive', done: true }
 }
 
 /** What the screen's main button does. */
@@ -88,46 +89,56 @@ export function billExtraLines(e: Pick<Expense, 'total' | 'currency' | 'bill'>):
   const add = (key: BillExtraLine['key'], label: string, amount: Minor | null, sign: 1 | -1 = 1) => {
     if (amount !== null && amount > 0) lines.push({ key, label, amount: amount * sign })
   }
-  add('tax', 'Tax', bill.meta.tax)
-  add('service', 'Service charge', bill.meta.serviceCharge)
+  add('tax', t('expense.bill.tax'), bill.meta.tax)
+  add('service', t('expense.bill.service'), bill.meta.serviceCharge)
   for (const fee of bill.meta.fees ?? []) add('fee', fee.label, fee.amount)
-  add('tip', 'Tip', bill.meta.tip)
-  add('discount', 'Discount', bill.meta.discount, -1)
+  add('tip', t('expense.bill.tip'), bill.meta.tip)
+  add('discount', t('expense.bill.discount'), bill.meta.discount, -1)
   const rest = e.total - itemsTotal - lines.reduce((sum, line) => sum + line.amount, 0)
   if (rest !== 0) {
     const roundOff = Math.abs(rest) <= 10 ** currencyDigits(e.currency)
-    lines.push({ key: 'other', label: roundOff ? 'Round-off' : rest > 0 ? 'Other charges' : 'Other discounts', amount: rest })
+    lines.push({ key: 'other', label: t(roundOff ? 'expense.bill.roundOff' : rest > 0 ? 'expense.bill.otherCharges' : 'expense.bill.otherDiscounts'), amount: rest })
   }
   return lines
 }
 
 /* ------------------------------------------------------------------ small print */
 
-const SOURCE_LABELS: Readonly<Record<ExpenseSource, string | null>> = {
+const SOURCE_KEYS: Readonly<Record<ExpenseSource, MessageKey | null>> = {
   manual: null,
-  scan: 'from a scanned bill',
-  describe: 'with “Just say it”',
-  sample: 'from the sample bill',
-  recurring: 'from a recurring split',
-  sms: 'from a bank SMS',
-  voice: 'by voice',
+  scan: 'expense.added.source.scan',
+  describe: 'expense.added.source.describe',
+  sample: 'expense.added.source.sample',
+  recurring: 'expense.added.source.recurring',
+  sms: 'expense.added.source.sms',
+  voice: 'expense.added.source.voice',
 }
 
-function formatter(options: Intl.DateTimeFormatOptions): Intl.DateTimeFormat | null {
-  try {
-    return new Intl.DateTimeFormat(undefined, options)
-  } catch {
-    return null
+const formatters = new Map<string, Intl.DateTimeFormat | null>()
+
+/** English keeps the phone's own order; other languages use their Indian locale with Latin digits. */
+function formatter(name: string, options: Intl.DateTimeFormatOptions): Intl.DateTimeFormat | null {
+  const lang = getLanguage()
+  const id = `${lang}|${name}`
+  let fmt = formatters.get(id)
+  if (fmt === undefined) {
+    try {
+      fmt = lang === 'en' ? new Intl.DateTimeFormat(undefined, options) : new Intl.DateTimeFormat(intlLocale(lang), { ...options, numberingSystem: 'latn' })
+    } catch {
+      fmt = null
+    }
+    formatters.set(id, fmt)
   }
+  return fmt
 }
 
-const STAMP = formatter({ day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })
-const STAMP_YEAR = formatter({ day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' })
+const STAMP: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }
+const STAMP_YEAR: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' }
 
 function stamp(ms: number, now: number): string {
   const date = new Date(ms)
   const sameYear = date.getFullYear() === new Date(now).getFullYear()
-  const fmt = sameYear ? STAMP : STAMP_YEAR
+  const fmt = sameYear ? formatter('stamp', STAMP) : formatter('stampYear', STAMP_YEAR)
   return fmt ? fmt.format(date) : date.toISOString().slice(0, 16).replace('T', ' ')
 }
 
@@ -136,10 +147,10 @@ const EDIT_GRACE_MS = 60_000
 
 /** "Added 18 Oct, 9:41 pm · from a scanned bill · edited 19 Oct, 8:02 am". */
 export function addedLine(e: Pick<Expense, 'createdAt' | 'updatedAt' | 'source'>, now: number = Date.now()): string {
-  const parts = [`Added ${stamp(e.createdAt, now)}`]
-  const source = SOURCE_LABELS[e.source]
-  if (source) parts.push(source)
-  if (e.updatedAt - e.createdAt > EDIT_GRACE_MS) parts.push(`last changed ${stamp(e.updatedAt, now)}`)
+  const parts = [t('expense.added', { date: stamp(e.createdAt, now) })]
+  const source = SOURCE_KEYS[e.source]
+  if (source) parts.push(t(source))
+  if (e.updatedAt - e.createdAt > EDIT_GRACE_MS) parts.push(t('expense.added.changed', { date: stamp(e.updatedAt, now) }))
   return parts.join(' · ')
 }
 

@@ -3,6 +3,7 @@ import { Link } from '../../app/router'
 import { CategoryIcon, Money, Receipt } from '../../components'
 import { ME_ID, type Expense, type Group } from '../../domain/types'
 import { CATEGORY_META } from '../../engine/categories'
+import { useT } from '../../i18n'
 import { FriendAvatar, fullDateLabel, relativeDateLabel } from '../../kit/index-a'
 import { cx } from '../../lib/cx'
 import type { StandingPill } from './expenseView'
@@ -22,6 +23,7 @@ export interface ExpenseHeroProps {
  * numerals, who paid, and where the owner stands.
  */
 export function ExpenseHero({ expense, payerName, group, standing }: ExpenseHeroProps) {
+  const t = useT()
   const category = CATEGORY_META[expense.category]
   return (
     <Receipt padding="lg" className={styles.hero} paperClassName={styles.paper}>
@@ -37,7 +39,7 @@ export function ExpenseHero({ expense, payerName, group, standing }: ExpenseHero
         {category.label.toLocaleLowerCase() !== expense.title.trim().toLocaleLowerCase() && <> · {category.label}</>}
       </p>
       {group && (
-        <Link to={`/app/groups/${encodeURIComponent(group.id)}`} className={styles.group} aria-label={`In the group ${group.name}`}>
+        <Link to={`/app/groups/${encodeURIComponent(group.id)}`} className={styles.group} aria-label={t('expense.hero.group.aria', { name: group.name })}>
           <span aria-hidden="true">{group.emoji}</span>
           <span className={styles.groupName}>{group.name}</span>
         </Link>
@@ -45,7 +47,7 @@ export function ExpenseHero({ expense, payerName, group, standing }: ExpenseHero
       <Money value={expense.total} currency={expense.currency} size="xl" trimZeros strong className={styles.amount} />
       <p className={styles.payer}>
         <FriendAvatar friendId={expense.payerId} size="xs" />
-        <span>Paid by {expense.payerId === ME_ID ? 'you' : payerName}</span>
+        <span>{t('expense.hero.paidBy', { who: expense.payerId === ME_ID ? 'me' : 'other', name: payerName })}</span>
       </p>
       {standing && (
         <p className={cx(styles.standing, styles[standing.tone])}>

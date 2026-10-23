@@ -45,9 +45,9 @@ export function BillBreakdown({ expense }: BillBreakdownProps) {
 
   return (
     <section aria-labelledby={headingId} className={styles.section}>
-      <SectionHeader id={headingId} title="The bill" description={`${bill.items.length} items · who had what`} />
+      <SectionHeader id={headingId} title={t('expense.bill.title')} description={t('expense.bill.description', { count: bill.items.length })} />
       <Receipt padding="lg" className={styles.receipt}>
-        <ul id={listId} role="list" className={styles.items} aria-label="Items">
+        <ul id={listId} role="list" className={styles.items} aria-label={t('expense.bill.items.aria')}>
           {items.map((item) => {
             const ids = Object.entries(bill.assignments[item.id] ?? {})
               .filter(([, weight]) => weight > 0)
@@ -65,7 +65,7 @@ export function BillBreakdown({ expense }: BillBreakdownProps) {
                   {who.length > 0 ? (
                     <AvatarStack people={who} label={label} size="xs" max={5} className={styles.who} />
                   ) : (
-                    <span className={styles.everyone}>Shared by everyone</span>
+                    <span className={styles.everyone}>{t('expense.bill.everyone')}</span>
                   )}
                 </span>
                 <span className={styles.itemAmount}>{money(item.amount)}</span>
@@ -75,19 +75,19 @@ export function BillBreakdown({ expense }: BillBreakdownProps) {
         </ul>
         {folded && (
           <button type="button" className={styles.more} aria-expanded={false} aria-controls={listId} onClick={() => setExpanded(true)}>
-            Show all {bill.items.length} items
+            {t('expense.bill.showAll.cta', { count: bill.items.length })}
             <ChevronDown aria-hidden="true" strokeWidth={2.5} />
           </button>
         )}
         <ReceiptDivider />
         <div className={styles.totals}>
-          <ReceiptRow label="Items" value={money(itemsTotal)} emphasis="muted" />
+          <ReceiptRow label={t('expense.bill.items')} value={money(itemsTotal)} emphasis="muted" />
           {extras.map((line, i) => (
             <ReceiptRow key={`${line.key}-${i}`} label={line.label} value={money(line.amount, { sign: 'always' })} emphasis="muted" />
           ))}
         </div>
         <ReceiptDivider />
-        <ReceiptRow label="Total paid" value={money(printed.total)} emphasis="strong" />
+        <ReceiptRow label={t('expense.bill.totalPaid')} value={money(printed.total)} emphasis="strong" />
         {fx && (
           <ReceiptRow
             label={t('trip.bill.settled', { symbol: currencySymbol(expense.currency) })}
@@ -98,9 +98,9 @@ export function BillBreakdown({ expense }: BillBreakdownProps) {
         {fees.length > 0 && (
           <>
             <ReceiptDivider />
-            <div className={styles.totals} role="group" aria-label={expense.bill?.feeSplit === 'equal' ? 'Fees, shared equally' : 'Fees, by what each had'}>
+            <div className={styles.totals} role="group" aria-label={t(expense.bill?.feeSplit === 'equal' ? 'expense.bill.fees.equal.aria' : 'expense.bill.fees.proportional.aria')}>
               {fees.map(({ id, amount }) => (
-                <ReceiptRow key={id} label={`Fees · ${friendLabel(id, friendsById[id] ?? null)}`} value={money(amount)} emphasis="muted" />
+                <ReceiptRow key={id} label={t('expense.bill.fees.person', { name: friendLabel(id, friendsById[id] ?? null) })} value={money(amount)} emphasis="muted" />
               ))}
             </div>
           </>

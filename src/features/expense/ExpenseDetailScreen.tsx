@@ -14,6 +14,7 @@ import {
 } from '../../data'
 import { BRAND, ME_ID, type Expense } from '../../domain/types'
 import { collectProgress } from '../../engine/balances'
+import { useT } from '../../i18n'
 import { friendLabel } from '../../kit/index-a'
 import { CollectCard, NudgeSheet, ShareList, ShareSheet, upiPaymentForShare, UpiPaySheet, usePayLink } from '../../kit/index-b'
 import { haptic } from '../../lib/haptics'
@@ -39,6 +40,7 @@ const ROUTES = ['/app/expense/:id'] as const
  * duplicates, marks everyone paid or deletes (with undo).
  */
 export function ExpenseDetailScreen() {
+  const t = useT()
   const { params } = useRoute(ROUTES)
   const id = params.id ?? null
   const found = useExpense(id)
@@ -49,9 +51,9 @@ export function ExpenseDetailScreen() {
   if (!expense) {
     return (
       <Screen header={<TopBar onBack={() => goBack('/app/activity')} />}>
-        <PageTitle title="This expense is gone" subtitle="It may have been deleted — on this phone or in another tab." />
+        <PageTitle title={t('expense.gone.title')} subtitle={t('expense.gone.subtitle')} />
         <Button className={styles.gone} onClick={() => navigate('/app/activity', { replace: true })}>
-          See activity
+          {t('expense.gone.cta')}
         </Button>
       </Screen>
     )
@@ -70,6 +72,7 @@ interface ExpenseDetailProps {
 }
 
 function ExpenseDetail({ expense, onDeleting }: ExpenseDetailProps) {
+  const t = useT()
   const toast = useToast()
   const friendsById = useFriendsById()
   const groups = useGroups()
@@ -100,17 +103,18 @@ function ExpenseDetail({ expense, onDeleting }: ExpenseDetailProps) {
   const togglePaid = (friendId: string, paid: boolean): void => {
     const next = setPaidBack(expense.id, friendId, paid)
     const progress = collectProgress(next)
-    const undo = { label: 'Undo', onAction: () => setPaidBack(expense.id, friendId, !paid) }
+    const undo = { label: t('expense.toast.undo'), onAction: () => setPaidBack(expense.id, friendId, !paid) }
     if (paid && progress.peopleCount > 0 && progress.outstanding === 0) {
       haptic('success')
       const message =
-        expense.payerId === ME_ID ? `Everyone’s paid — all ${money(progress.total)} is back` : `All settled with ${firstName(payerName)}`
+        expense.payerId === ME_ID
+          ? t('expense.toast.allBack', { amount: money(progress.total) })
+          : t('expense.toast.allSettled', { name: firstName(payerName) })
       toast(message, { tone: 'success', action: undo })
       return
     }
-    const who = friendId === ME_ID ? 'You' : nameOf(friendId)
-    const verb = friendId === ME_ID ? 'are' : 'is'
-    toast(paid ? `${who} ${verb} marked as paid` : `${who} ${verb} marked as not paid yet`, { action: undo })
+    const vars = { who: friendId === ME_ID ? 'me' : 'other', name: nameOf(friendId) }
+    toast(t(paid ? 'expense.toast.markedPaid' : 'expense.toast.markedUnpaid', vars), { action: undo })
   }
 
   const markAllPaid = (): void => {
@@ -118,10 +122,10 @@ function ExpenseDetail({ expense, onDeleting }: ExpenseDetailProps) {
     const ticked = owingIds(expense)
     setAllPaidBack(expense.id, true)
     haptic('success')
-    toast(`Everyone’s paid — all ${money(collectProgress(expense).total)} is back`, {
+    toast(t('expense.toast.allBack', { amount: money(collectProgress(expense).total) }), {
       tone: 'success',
       action: {
-        label: 'Undo',
+        label: t('expense.toast.undo'),
         onAction: () => {
           for (const id of ticked) setPaidBack(expense.id, id, false)
         },
@@ -147,7 +151,7 @@ function ExpenseDetail({ expense, onDeleting }: ExpenseDetailProps) {
     onDeleting(expense)
     const removed = deleteExpense(expense.id)
     if (removed) {
-      toast(`${removed.title} deleted`, { action: { label: 'Undo', onAction: () => restoreExpense(removed) } })
+      toast(t('expense.toast.deleted', { title: removed.title }), { action: { label: t('expense.toast.undo'), onAction: () => restoreExpense(removed) } })
     }
     goBack(back)
   }
@@ -157,25 +161,25 @@ function ExpenseDetail({ expense, onDeleting }: ExpenseDetailProps) {
       case 'group':
         return (
           <Button block iconStart={<UsersRound />} onClick={() => navigate(`/app/groups/${encodeURIComponent(action.group.id)}/settle`)}>
-            Settle up in {action.group.name}
+            {t('expense.primary.group.cta', { group: action.group.name })}
           </Button>
         )
       case 'pay':
         return (
           <Button block variant="accent" iconStart={<QrCode />} onClick={() => setUpi({ friendId: ME_ID, open: true })}>
-            Pay {firstName(payerName)} {money(action.amount)}
+            {t('expense.primary.pay.cta', { name: firstName(payerName), amount: money(action.amount) })}
           </Button>
         )
       case 'mark-paid':
         return (
           <Button block variant="accent" iconStart={<CheckCheck />} onClick={() => togglePaid(ME_ID, true)}>
-            I’ve paid {firstName(payerName)} back
+            {t('expense.primary.markPaid.cta', { name: firstName(payerName) })}
           </Button>
         )
       case 'share':
         return (
           <Button block iconStart={<Share2 />} onClick={() => setShareOpen(true)}>
-            {action.payLink ? 'Share pay link' : 'Share'}
+            {t(action.payLink ? 'expense.primary.payLink.cta' : 'expense.primary.share.cta')}
           </Button>
         )
     }
@@ -188,10 +192,10 @@ function ExpenseDetail({ expense, onDeleting }: ExpenseDetailProps) {
           onBack={() => goBack(back)}
           right={
             <span className={styles.topActions}>
-              <IconButton label={`Edit ${expense.title}`} onClick={edit}>
+              <IconButton label={t('expense.edit.aria', { title: expense.title })} onClick={edit}>
                 <Pencil />
               </IconButton>
-              <IconButton label="More options" aria-haspopup="dialog" onClick={() => setMoreOpen(true)}>
+              <IconButton label={t('expense.more.aria')} aria-haspopup="dialog" onClick={() => setMoreOpen(true)}>
                 <EllipsisVertical />
               </IconButton>
             </span>
@@ -205,7 +209,7 @@ function ExpenseDetail({ expense, onDeleting }: ExpenseDetailProps) {
           ) : (
             <div className={styles.footerRow}>
               {primary}
-              <Button variant="secondary" aria-label="Share" onClick={() => setShareOpen(true)} className={styles.shareButton}>
+              <Button variant="secondary" aria-label={t('expense.share.aria')} onClick={() => setShareOpen(true)} className={styles.shareButton}>
                 <Share2 aria-hidden="true" />
               </Button>
             </div>
@@ -223,8 +227,8 @@ function ExpenseDetail({ expense, onDeleting }: ExpenseDetailProps) {
       <section className={styles.section} aria-labelledby="expense-shares">
         <SectionHeader
           id="expense-shares"
-          title="Everyone’s share"
-          action={canMarkAll ? { label: 'Mark all paid', onClick: markAllPaid } : undefined}
+          title={t('expense.shares.title')}
+          action={canMarkAll ? { label: t('expense.shares.markAll.cta'), onClick: markAllPaid } : undefined}
         />
         <Card padding="none">
           <ShareList
@@ -240,7 +244,7 @@ function ExpenseDetail({ expense, onDeleting }: ExpenseDetailProps) {
 
       {expense.note && (
         <section className={styles.section} aria-labelledby="expense-note">
-          <SectionHeader id="expense-note" title="Note" />
+          <SectionHeader id="expense-note" title={t('expense.note.title')} />
           <Card className={styles.note}>
             <p className={styles.noteText}>{expense.note}</p>
           </Card>
