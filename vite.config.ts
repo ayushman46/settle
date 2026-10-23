@@ -52,7 +52,7 @@ const PRECOMPRESSIBLE = /\.(?:js|mjs|css|svg|json|txt)$/
  * Writes `<file>.br` (brotli at its best quality) beside each compressible file in the client
  * build's assets, which the Node server sends as is (server/web.ts) instead of gzip made per
  * request: about 13% fewer bytes on a first visit. Not for the server build, nor on Cloudflare
- * Pages (`CF_PAGES`), which compresses by itself.
+ * Pages (`CF_PAGES`) or Vercel (`VERCEL`), which compress by themselves.
  */
 function precompress(): Plugin {
   let assetsDir = ''
@@ -62,7 +62,7 @@ function precompress(): Plugin {
     apply: 'build',
     configResolved(config) {
       assetsDir = resolve(config.root, config.build.outDir, config.build.assetsDir)
-      skip = Boolean(config.build.ssr) || Boolean(process.env.CF_PAGES)
+      skip = Boolean(config.build.ssr) || Boolean(process.env.CF_PAGES) || Boolean(process.env.VERCEL)
     },
     closeBundle() {
       if (skip || !existsSync(assetsDir)) return

@@ -1,0 +1,18 @@
+# Never uploaded to Vercel: secrets, local builds and anything that isn't the app's source.
+.env
+.env.*
+!.env.example
+.dev.vars
+node_modules
+dist
+.vercel
+.e2e-build
+.e2e-build-qa
+test-results
+playwright-report
+blob-report
+coverage
+bench/results
+launch-video
+Claude outputs
+*.log

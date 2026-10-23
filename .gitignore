@@ -36,3 +36,6 @@ Thumbs.db
 
 # Local tooling
 .claude/
+
+# Vercel: the local project link and the Build Output folder (npm run build:vercel)
+.vercel/
