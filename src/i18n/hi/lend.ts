@@ -1,4 +1,89 @@
-/** Hindi copy for the lend namespace. Keys: `lend.<screen>.<element>` (see i18n-plan §3). */
+/** Hindi copy for S4 · lend / borrow. Keys: `lend.<screen>.<element>` (see i18n-plan §3). */
 import type { Messages } from '../types'
 
-export const lend = {} as const satisfies Messages
+export const lend = {
+  // The lend screen (`/app/lend`, `/app/lend/:id/edit`).
+  'lend.screen.title': 'उधार दें या लें',
+  'lend.screen.edit.title': 'उधार बदलें',
+  'lend.screen.subtitle': 'कैश, कोई ट्रीट, ऑटो का किराया — दो टैप में हिसाब रखें।',
+  'lend.direction.label': 'दिए या लिए',
+  'lend.direction.lent': 'मैंने दिए',
+  'lend.direction.borrowed': 'मैंने लिए',
+  'lend.who.title': 'किसके साथ?',
+  // The last tile of the people grid; opens a search sheet.
+  'lend.who.other.cta': 'कोई और',
+  'lend.who.sheet.title': 'कोई और',
+  'lend.who.sheet.description': 'अपने लोगों में से चुनें, या नया नाम लिखें।',
+  'lend.who.search.label': 'किसी को खोजें या जोड़ें',
+  'lend.amount.label': 'रकम',
+  'lend.what.title': 'किस लिए?',
+  'lend.what.label': 'किस लिए',
+  'lend.what.cash': 'कैश',
+  'lend.what.auto': 'ऑटो',
+  'lend.what.chai': 'चाय',
+  'lend.what.food': 'खाना',
+  'lend.what.recharge': 'रिचार्ज',
+  'lend.what.tickets': 'टिकट',
+  'lend.what.petrol': 'पेट्रोल',
+  'lend.what.other': 'अन्य',
+  'lend.what.other.label': 'क्या था?',
+  'lend.what.other.placeholder': 'मूवी, गिफ़्ट, राशन…',
+  // Why Save is disabled.
+  'lend.hint.pickWho': 'व्यक्ति चुनें',
+  'lend.hint.enterAmount': 'रकम डालें',
+  'lend.hint.enterTitle': 'बताएँ क्या था',
+  // What saving will mean (the ActionBar hint) and what it means now (after saving).
+  'lend.outcome.lent.future': '{name} से {amount} लेने होंगे',
+  'lend.outcome.borrowed.future': '{name} को {amount} देने होंगे',
+  'lend.outcome.lent.now': '{name} से {amount} लेने हैं',
+  'lend.outcome.borrowed.now': '{name} को {amount} देने हैं',
+  'lend.save.cta': 'सेव करें',
+  'lend.saveChanges.cta': 'बदलाव सेव करें',
+  'lend.saved.title': 'लिख लिया!',
+  'lend.saved.toast': 'बदलाव सेव हो गए',
+  // The card on the expense page of a loan or a 1:1 entry.
+  'lend.card.title': 'उधार',
+  'lend.card.lent': '{date} को आपने {name} को {amount} उधार दिए',
+  'lend.card.borrowed': '{date} को {name} ने आपको {amount} उधार दिए',
+  'lend.card.paidFor': '{date} को आपने {name} के लिए {amount} दिए',
+  'lend.card.paidForYou': '{date} को {name} ने आपके लिए {amount} दिए',
+  'lend.card.open.lent': '{amount} अभी आने बाकी',
+  'lend.card.open.borrowed': '{amount} अभी लौटाने बाकी',
+  'lend.card.settled': '{date} को चुकता ✓',
+  'lend.card.group': '{group} में — ग्रुप के हिसाब के साथ चुकता होगा।',
+  'lend.card.allBack.cta': 'पूरे पैसे मिल गए',
+  'lend.card.allBack.aria': '{name} से पूरे पैसे मिल गए',
+  'lend.card.someBack.cta': 'कुछ पैसे मिले',
+  'lend.card.someBack.aria': '{name} से कुछ पैसे मिले',
+  'lend.card.paidBack.cta': 'मैंने लौटा दिए',
+  'lend.card.paidBack.aria': 'मैंने {name} को पैसे लौटा दिए',
+  'lend.card.paidSome.cta': 'कुछ लौटाए',
+  'lend.card.paidSome.aria': '{name} को कुछ पैसे लौटाए',
+  'lend.card.remind.cta': '{name} को याद दिलाएँ',
+  'lend.card.allBack.toast': '{name} से {amount} वापस मिल गए',
+  'lend.card.paidBack.toast': '{name} को {amount} लौटा दिए',
+  'lend.card.someBack.toast': '{back} वापस मिले · {left} अभी आने बाकी',
+  'lend.card.paidSome.toast': '{back} लौटाए · {left} अभी लौटाने बाकी',
+  'lend.card.failed.toast': 'ये नहीं हो पाया — एंट्री बदल गई है। फिर से कोशिश करें।',
+  // The part-repayment sheet.
+  'lend.repay.lent.title': '{name} ने कितने लौटाए?',
+  'lend.repay.borrowed.title': 'आपने कितने लौटाए?',
+  'lend.repay.description': '{amount} में से। बाकी उधार बना रहेगा।',
+  'lend.repay.amount.label': 'लौटाई गई रकम',
+  'lend.repay.error.empty': 'रकम डालें',
+  'lend.repay.error.lent.whole': 'पूरे {amount} के लिए “पूरे पैसे मिल गए” दबाएँ।',
+  'lend.repay.error.borrowed.whole': 'पूरे {amount} के लिए “मैंने लौटा दिए” दबाएँ।',
+  'lend.repay.save.cta': 'सेव करें',
+  // The note on the copy saved for a part-repayment.
+  'lend.repay.note': '{date} को लौटाए',
+  // Friend page: the second button in the bottom bar.
+  'lend.friend.cta': 'उधार दें / लें',
+  // Nudges about a loan (deterministic pick, like every nudge). Gender-neutral for the sender.
+  'lend.nudge.friendly.0': 'हाय {to}! 👋 बस याद दिलाना था — {amount} जो मैंने उधार दिए थे। कोई जल्दी नहीं!',
+  'lend.nudge.friendly.1': 'हाय {to} 🙂 जब फ़ुर्सत मिले — {date} वाले {amount}। शुक्रिया!',
+  'lend.nudge.funny.0': '{to}, वो {amount} का उधार अपने घर को याद कर रहा है 🏠 जब हो सके, वापस भेज दीजिए 😄',
+  'lend.nudge.funny.1': 'मज़े की बात, {to}: {amount} को अपने पुराने वॉलेट की याद आ रही है 👛',
+  'lend.nudge.firm.0': 'नमस्ते {to}, {date} को मैंने जो {amount} उधार दिए थे, कृपया लौटा दीजिए।',
+  // The firm nudge when the loan's date isn't known.
+  'lend.nudge.firm.undated': 'नमस्ते {to}, मैंने जो {amount} उधार दिए थे, कृपया लौटा दीजिए।',
+} as const satisfies Messages
