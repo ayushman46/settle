@@ -1,12 +1,17 @@
 import { act, screen, waitFor, within } from '@testing-library/react'
 import type { UserEvent } from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { RATES_CACHE_KEY, resetRatesForTests } from '../../api/rates'
 import { expensesStore, setSplitPrefill } from '../../data'
 import { BRAND, ME_ID, type BillSnapshot } from '../../domain/types'
 import { EMPTY_META } from '../../types'
 import { takeBillStart } from '../bill/launch'
+import { json, route } from '../pro/testing'
 import { SPLIT_DRAFT_KEY } from './splitDraft'
 import { currentUrl, renderApp, resetSplitScreens, seedExpense, seedGroup, seedPeople } from './testing'
+
+// Trip currency is on in these tests (as it ships).
+vi.mock('../trip/enabled', () => ({ TRIP_ENABLED: true }))
 
 const OCT_22 = new Date(2026, 9, 22, 12)
 
@@ -185,6 +190,8 @@ describe('NewSplitScreen — starting points', SCREEN, () => {
     const { user } = renderApp('/app/split/new?group=g1')
     await user.click(screen.getByRole('button', { name: 'Currency: INR. Change' }))
     await user.click(within(await screen.findByRole('dialog', { name: 'Currency' })).getByRole('button', { name: /Euro/ }))
+    // Converted into rupees by default; switched off, it's settled outside the group.
+    await user.click(await screen.findByRole('switch', { name: 'Settle in ₹ (recommended)' }))
     expect(await screen.findByText(/In EUR, so it’s settled person to person — not in Goa 2026’s INR balances\./)).toBeInTheDocument()
   })
 
@@ -452,5 +459,182 @@ describe('NewSplitScreen — editing', SCREEN, () => {
     expect(screen.getByRole('heading', { level: 1, name: 'This expense is gone' })).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'See activity' }))
     await waitFor(() => expect(currentUrl()).toBe('/app/activity'))
+  })
+})
+
+/* ------------------------------------------------------------------ trip currency (spec 06) */
+
+/** Units per 1 EUR — spec 06 §4's fixture table (not real rates). */
+const ECB = { EUR: 1, USD: 1.0812, JPY: 163.42, INR: 90.4321, THB: 37.512, SGD: 1.4103, IDR: 17012.5, GBP: 0.8364 }
+
+/** `GET /api/rates` answers `answer`'s table for each asked day (the 22nd isn't published yet: the 21st). */
+function serveRates(asked: readonly string[] = ['2026-10-22', '2026-10-18'], answer = (day: string) => (day >= '2026-10-21' ? '2026-10-21' : day)) {
+  for (const day of asked) {
+    route(`/api/rates?date=${day}`, () => json({ date: answer(day), base: 'EUR', rates: ECB, pegged: {} }))
+  }
+}
+
+const conversion = () => screen.getByRole('group', { name: 'Conversion' })
+const settleSwitch = () => screen.getByRole('switch', { name: 'Settle in ₹ (recommended)' })
+
+describe('NewSplitScreen — trip currency', SCREEN, () => {
+  beforeEach(() => {
+    resetRatesForTests()
+    window.localStorage.removeItem(RATES_CACHE_KEY)
+  })
+
+  it('starts a trip group’s split in baht and saves it in rupees at the ECB rate', async () => {
+    serveRates()
+    seedGroup({ name: 'Bangkok', travelCurrency: 'THB' })
+    const { user } = renderApp('/app/split/new?group=g1')
+    expect(screen.getByRole('button', { name: 'Currency: THB. Change' })).toBeInTheDocument()
+    await user.type(amountField(), '1250')
+    const panel = conversion()
+    expect(await within(panel).findByText('≈ ₹3,013.44')).toBeInTheDocument()
+    expect(within(panel).getByRole('note', { name: 'About ₹3,013.44 at 1 Thai baht = ₹2.4108' })).toBeInTheDocument()
+    expect(within(panel).getByText('1 THB = ₹2.4108')).toBeInTheDocument()
+    expect(within(panel).getByText('ECB rate for 21 Oct')).toBeInTheDocument()
+    expect(settleSwitch()).toHaveAttribute('aria-checked', 'true')
+    expect(screen.getByText('Shares in ₹ (converted)')).toBeInTheDocument()
+    expect(screen.getByText('Riya, Sam and Neha Sharma will owe you ₹753.36 each')).toBeInTheDocument()
+
+    await user.click(saveButton())
+    await screen.findByRole('dialog', { name: 'Split saved' })
+    expect(expensesStore.get()[0]).toMatchObject({
+      currency: 'INR',
+      total: 301_344,
+      groupId: 'g1',
+      shares: { [ME_ID]: 75_336, riya: 75_336, sam: 75_336, neha: 75_336 },
+      fx: { amount: 125_000, currency: 'THB', rate: '2.410751226', rateDate: '2026-10-21', source: 'ecb' },
+    })
+  })
+
+  it('splits exact amounts in rupees on the converted total', async () => {
+    serveRates()
+    const { user } = renderApp('/app/split/new')
+    await user.click(screen.getByRole('button', { name: 'Currency: INR. Change' }))
+    await user.click(within(await screen.findByRole('dialog', { name: 'Currency' })).getByRole('button', { name: /Thai Baht/ }))
+    await user.type(amountField(), '1250')
+    await screen.findByText('≈ ₹3,013.44')
+    await pickPerson(user, 'Riya')
+    await user.click(screen.getByRole('radio', { name: 'Exact' }))
+    await user.type(screen.getByLabelText('Amount for you'), '1000')
+    await user.type(screen.getByLabelText('Amount for Riya'), '2013.44')
+    expect(screen.getByText('Riya will owe you ₹2,013.44')).toBeInTheDocument()
+    await user.click(saveButton())
+    expect(expensesStore.get()[0]).toMatchObject({ mode: 'exact', currency: 'INR', total: 301_344, shares: { [ME_ID]: 100_000, riya: 201_344 } })
+  })
+
+  it('saves in baht, settled person to person, with the switch off', async () => {
+    serveRates()
+    seedGroup({ name: 'Bangkok', travelCurrency: 'THB' })
+    const { user } = renderApp('/app/split/new?group=g1')
+    await user.type(amountField(), '1250')
+    await user.click(settleSwitch())
+    expect(settleSwitch()).toHaveAttribute('aria-checked', 'false')
+    expect(screen.queryByText('≈ ₹3,013.44')).not.toBeInTheDocument()
+    expect(screen.getByText(/In THB, so it’s settled person to person — not in Bangkok’s INR balances\./)).toBeInTheDocument()
+    await user.click(saveButton())
+    const saved = expensesStore.get()[0]!
+    expect(saved).toMatchObject({ currency: 'THB', total: 125_000, groupId: 'g1' })
+    expect(saved.fx).toBeUndefined()
+  })
+
+  it('takes what the bank charged, exactly', async () => {
+    serveRates()
+    seedGroup({ name: 'Bangkok', travelCurrency: 'THB' })
+    const { user } = renderApp('/app/split/new?group=g1')
+    await user.type(amountField(), '1250')
+    await screen.findByText('≈ ₹3,013.44')
+    await user.click(within(conversion()).getByRole('button', { name: 'Change the exchange rate' }))
+    const sheet = await screen.findByRole('dialog', { name: 'Exchange rate' })
+    expect(within(sheet).getByLabelText('1 THB =')).toHaveValue('2.410751226')
+    await user.click(within(sheet).getByRole('radio', { name: 'What your bank charged' }))
+    expect(within(sheet).getByText('Card or forex markup? Use the rupee amount from your bank SMS — it’s exact.')).toBeInTheDocument()
+    await user.type(within(sheet).getByLabelText('Your bank charged'), '3104.20')
+    expect(within(sheet).getByText('฿1,250 comes to ₹3,104.20')).toBeInTheDocument()
+    await user.click(within(sheet).getByRole('button', { name: 'Save' }))
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Exchange rate' })).not.toBeInTheDocument())
+    expect(within(conversion()).getByText('≈ ₹3,104.20')).toBeInTheDocument()
+    expect(within(conversion()).getByText('what your bank charged')).toBeInTheDocument()
+    await user.click(saveButton())
+    await screen.findByRole('dialog', { name: 'Split saved' })
+    expect(expensesStore.get()[0]).toMatchObject({
+      currency: 'INR',
+      total: 310_420,
+      fx: { amount: 125_000, currency: 'THB', rate: '2.48336', rateDate: null, source: 'manual_total' },
+    })
+  })
+
+  it('keeps Save off until a rate is added when there’s none', async () => {
+    route('/api/rates?date=2026-10-22', () => json({ error: { code: 'rates_unavailable', message: 'x' } }, 503))
+    seedGroup({ name: 'Bangkok', travelCurrency: 'THB' })
+    const { user } = renderApp('/app/split/new?group=g1')
+    await user.type(amountField(), '1250')
+    expect(await within(conversion()).findByText('No rate for THB on 22 Oct — add it')).toBeInTheDocument()
+    expect(saveButton()).toBeDisabled()
+    expect(screen.getByText('Add the rate to settle in ₹')).toBeInTheDocument()
+
+    await user.click(within(conversion()).getByRole('button', { name: 'Add rate' }))
+    const sheet = await screen.findByRole('dialog', { name: 'Exchange rate' })
+    expect(within(sheet).queryByRole('button', { name: 'Use the ECB rate' })).not.toBeInTheDocument()
+    await user.click(within(sheet).getByRole('button', { name: 'Save' }))
+    expect(within(sheet).getByText('Enter a rate above 0, like 2.4108.')).toBeInTheDocument()
+    await user.type(within(sheet).getByLabelText('1 THB ='), '2.5')
+    await user.click(within(sheet).getByRole('button', { name: 'Save' }))
+    expect(await within(conversion()).findByText('≈ ₹3,125.00')).toBeInTheDocument()
+    expect(within(conversion()).getByText('your rate')).toBeInTheDocument()
+    expect(saveButton()).toBeEnabled()
+    await user.click(saveButton())
+    await screen.findByRole('dialog', { name: 'Split saved' })
+    expect(expensesStore.get()[0]).toMatchObject({ total: 312_500, fx: { rate: '2.5', source: 'manual_rate', rateDate: null } })
+  })
+
+  it('says when the ECB doesn’t publish a currency', async () => {
+    serveRates()
+    seedGroup({ name: 'Colombo', travelCurrency: 'LKR' })
+    const { user } = renderApp('/app/split/new?group=g1')
+    await user.type(amountField(), '5000')
+    expect(
+      await within(conversion()).findByText('ECB doesn’t publish Sri Lankan rupee rates — add the rate from your receipt or bank SMS.'),
+    ).toBeInTheDocument()
+    expect(saveButton()).toBeDisabled()
+  })
+
+  it('edits an expense paid abroad in baht, with its rate frozen', async () => {
+    serveRates()
+    seedGroup({ name: 'Bangkok', travelCurrency: 'THB' })
+    seedExpense({
+      groupId: 'g1',
+      total: 301_344,
+      shares: { [ME_ID]: 75_336, riya: 75_336, sam: 75_336, neha: 75_336 },
+      fx: { amount: 125_000, currency: 'THB', rate: '2.410751226', rateDate: '2026-10-16', source: 'ecb' },
+    })
+    const { user } = renderApp('/app/split/e1/edit')
+    expect(amountField()).toHaveValue('1,250')
+    expect(screen.getByRole('button', { name: 'Currency: THB. Change' })).toBeInTheDocument()
+    expect(within(conversion()).getByText('≈ ₹3,013.44')).toBeInTheDocument()
+    expect(within(conversion()).getByText('Rate frozen on 16 Oct')).toBeInTheDocument()
+    // A new amount reconverts at the frozen rate.
+    await user.clear(amountField())
+    await user.type(amountField(), '2500')
+    expect(within(conversion()).getByText('≈ ₹6,026.88')).toBeInTheDocument()
+    await user.click(within(conversion()).getByRole('button', { name: 'Use the ECB rate for 18 Oct' }))
+    expect(await within(conversion()).findByText('ECB rate for 18 Oct')).toBeInTheDocument()
+    await user.click(saveButton())
+    await waitFor(() => expect(currentUrl()).toBe('/app/expense/e1'))
+    expect(expensesStore.get()[0]).toMatchObject({ total: 602_688, fx: { amount: 250_000, rateDate: '2026-10-18', source: 'ecb' } })
+  })
+
+  it('converts an old expense in baht when asked to (convert=1)', async () => {
+    serveRates()
+    seedGroup({ name: 'Bangkok' })
+    seedExpense({ groupId: 'g1', currency: 'THB', total: 125_000, shares: { [ME_ID]: 31_250, riya: 31_250, sam: 31_250, neha: 31_250 } })
+    const { user } = renderApp('/app/split/e1/edit?convert=1')
+    expect(settleSwitch()).toHaveAttribute('aria-checked', 'true')
+    expect(await within(conversion()).findByText('≈ ₹3,013.44')).toBeInTheDocument()
+    await user.click(saveButton())
+    await waitFor(() => expect(currentUrl()).toBe('/app/expense/e1'))
+    expect(expensesStore.get()[0]).toMatchObject({ currency: 'INR', total: 301_344, fx: { amount: 125_000, currency: 'THB' } })
   })
 })

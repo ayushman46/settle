@@ -1,0 +1,28 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-5);
+  min-width: 0;
+}
+
+.symbol {
+  font: var(--text-body);
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.bank {
+  min-width: 0;
+}
+
+.preview {
+  font: var(--text-caption);
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.footer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}

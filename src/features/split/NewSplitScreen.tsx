@@ -39,10 +39,16 @@ import { BRAND, ME_ID, type Expense, type ExpenseSource, type Group } from '../.
 import { categoryFromText } from '../../engine/categories'
 import { today } from '../../engine/dates'
 import { AmountHero, CategoryPicker, DateField, friendLabel, PayerPicker, PeoplePicker, SplitEditor } from '../../kit/index-a'
+import { useRate } from '../../api/rates'
+import { useT } from '../../i18n'
 import { haptic } from '../../lib/haptics'
+import { currencySymbol } from '../../lib/money'
 import { CurrencySheet } from '../bill/CurrencySheet'
 import { GroupPicker } from '../bill/GroupPicker'
 import { openBill } from '../bill/launch'
+import { ConversionPanel } from '../trip/ConversionPanel'
+import { TRIP_ENABLED } from '../trip/enabled'
+import { RateSheet } from '../trip/RateSheet'
 import { NoteField } from './NoteField'
 import {
   blankForm,
@@ -51,14 +57,21 @@ import {
   formFromExpense,
   formShares,
   formToDraft,
+  isConverting,
   outcomeLine,
   payerCandidates,
+  resolveConversion,
+  settleCurrency,
+  withConvert,
+  withDate,
   withFriend,
   withGroup,
+  withManualRate,
   withPeople,
   withPrefill,
   withTemplate,
   type SplitForm,
+  type TripContext,
 } from './splitForm'
 import { clearSplitDraft, loadSplitDraft, saveSplitDraft, type SplitOrigin } from './splitDraft'
 import { titlePlaceholder } from './splitTemplates'
@@ -139,11 +152,18 @@ const FROM_ORIGINS: Readonly<Record<string, SplitOrigin>> = {
 
 /** The form a fresh visit to `query` starts with (takes any waiting hand-off). */
 function startFrom(editing: Expense | null, query: URLSearchParams, ctx: StartContext): Start {
-  if (editing) return { form: formFromExpense(editing), prefilled: false, origin: 'edit', copyOf: null, banner: null }
+  if (editing) {
+    // Trip currency off: an expense paid abroad edits as its settled amount (its rate is let go).
+    let form = formFromExpense(TRIP_ENABLED || !editing.fx ? editing : { ...editing, fx: null })
+    // "Convert to ₹" on the expense page: start with "Settle in ₹" on.
+    if (TRIP_ENABLED && query.get('convert') === '1') form = { ...form, conversion: { ...form.conversion, convert: true } }
+    return { form, prefilled: false, origin: 'edit', copyOf: null, banner: null }
+  }
 
+  const trip: TripContext | undefined = TRIP_ENABLED ? { settle: ctx.currency, profileCurrency: ctx.currency } : undefined
   let form = blankForm(ctx.currency, ctx.today)
   const group = ctx.groups.find((g) => g.id === query.get('group')) ?? null
-  if (group) form = withGroup(form, group)
+  if (group) form = withGroup(form, group, trip)
   const friend = query.get('friend')
   if (friend && friend !== ME_ID && ctx.friendIds.has(friend)) form = withFriend(form, friend)
   form = withTemplate(form, query.get('category'))
@@ -153,7 +173,9 @@ function startFrom(editing: Expense | null, query: URLSearchParams, ctx: StartCo
   if (from === 'duplicate' && of) {
     try {
       const copy = duplicateExpenseDraft(of)
-      return { form: { ...formFromExpense(copy), date: ctx.today }, prefilled: true, origin: 'duplicate', copyOf: copy.title, banner: null }
+      // Dated today: a rate frozen for the original's day is looked up again for today.
+      const copied = formFromExpense(TRIP_ENABLED || !copy.fx ? copy : { ...copy, fx: null })
+      return { form: withDate(copied, ctx.today), prefilled: true, origin: 'duplicate', copyOf: copy.title, banner: null }
     } catch (error) {
       if (!(error instanceof ExpenseError)) throw error
       // The original is gone: start an empty split instead.
@@ -166,7 +188,7 @@ function startFrom(editing: Expense | null, query: URLSearchParams, ctx: StartCo
       const said = prefill.source ? HAND_OFF_ORIGINS[prefill.source] : undefined
       const fromAddress = Object.hasOwn(FROM_ORIGINS, from) ? FROM_ORIGINS[from] : undefined
       const origin = (fromAddress === 'rotation' ? fromAddress : (said ?? fromAddress)) ?? 'new'
-      return { form: withPrefill(form, prefill, ctx), prefilled: true, origin, copyOf: null, banner: prefill.banner ?? null }
+      return { form: withPrefill(form, prefill, { ...ctx, trip }), prefilled: true, origin, copyOf: null, banner: prefill.banner ?? null }
     }
   }
   return { form, prefilled: false, origin: 'new', copyOf: null, banner: null }
@@ -210,6 +232,7 @@ function SplitScreen({ editing, url }: SplitScreenProps) {
 
   const [form, setForm] = useState<SplitForm>(initial.form)
   const [currencyOpen, setCurrencyOpen] = useState(false)
+  const [rateOpen, setRateOpen] = useState(false)
   /** The discard confirm, and what happens after Discard (null: go back). */
   const [confirm, setConfirm] = useState<{ open: boolean; then: (() => void) | null }>({ open: false, then: null })
   const [leaving, setLeaving] = useState(false)
@@ -220,12 +243,30 @@ function SplitScreen({ editing, url }: SplitScreenProps) {
   const categoriesRef = useRef<HTMLDivElement>(null)
   const peopleRef = useRef<HTMLElement>(null)
 
+  const t = useT()
   const group = useGroup(form.groupId)
   const isNew = editing === null
   const itemized = form.bill !== null
   const dirty = !leaving && saved === null && (initial.prefilled || formKey(form) !== initial.pristine)
-  const draft = formToDraft(form, editing?.id)
+
+  // Trip currency: paid in one currency (the amount's), settled in another (the group's or yours).
+  const settle = TRIP_ENABLED ? settleCurrency(form, group, profile.currency) : form.currency
+  const trip: TripContext | undefined = TRIP_ENABLED ? { settle, profileCurrency: profile.currency } : undefined
+  const foreign = form.currency !== settle
+  const converting = isConverting(form, settle)
+  const live = useRate(converting ? form.currency : null, settle, form.date)
+  const conversion = resolveConversion(form, settle, live)
+  const settleSymbol = currencySymbol(settle)
+
+  const draft = formToDraft(form, editing?.id, conversion)
   const issue = expenseDraftIssue(draft)
+  const typedAmount = form.total !== null && form.total > 0
+  const fxBlock =
+    typedAmount && conversion.status === 'loading'
+      ? t('trip.panel.loadingHint')
+      : typedAmount && conversion.status === 'unavailable'
+        ? t('trip.panel.saveHint', { symbol: settleSymbol })
+        : null
   const nameOf = (id: string) => friendLabel(id, friendsById[id] ?? null)
   const peopleIds = form.participants.map((p) => p.friendId)
   const friendParam = query.get('friend')
@@ -288,12 +329,12 @@ function SplitScreen({ editing, url }: SplitScreenProps) {
     setCurrencyOpen(false)
     if (code === form.currency) return
     const before = form
-    setForm(changeCurrency(form, code))
+    setForm(changeCurrency(form, code, trip))
     toast(`Now in ${code}`, { action: { label: 'Undo', onAction: () => setForm(before) } })
   }
 
   const pickGroup = (groupId: string | null): void => {
-    setForm((current) => withGroup(current, groups.find((g) => g.id === groupId) ?? null))
+    setForm((current) => withGroup(current, groups.find((g) => g.id === groupId) ?? null, trip))
   }
 
   const save = (): void => {
@@ -328,9 +369,11 @@ function SplitScreen({ editing, url }: SplitScreenProps) {
   // Back during the success moment just finishes it (the split is already saved).
   useBackClose(saved !== null, openSaved)
 
-  const shares = issue === null ? formShares(form) : null
-  const outcome = shares ? outcomeLine({ payerId: form.payerId, currency: form.currency, shares }, nameOf) : null
-  const hint: ReactNode = issue ? (
+  const shares = issue === null ? formShares(form, conversion) : null
+  const outcome = shares ? outcomeLine({ payerId: form.payerId, currency: draft.currency, shares }, nameOf) : null
+  const hint: ReactNode = fxBlock ? (
+    fxBlock
+  ) : issue ? (
     expenseErrorMessage(issue)
   ) : outcome ? (
     <span className={styles.outcome}>
@@ -343,7 +386,9 @@ function SplitScreen({ editing, url }: SplitScreenProps) {
   const showRentTip =
     !itemized && !hidden.has('rent') && form.category === 'rent' && form.mode === 'equal' && form.participants.length >= 2
   const showTripTip = isNew && !itemized && !hidden.has('trip') && form.category === 'travel' && form.groupId === null
-  const groupCurrencyNote = group && !itemized && group.currency !== form.currency ? group : null
+  const groupCurrencyNote = group && !itemized && group.currency !== form.currency && !converting ? group : null
+  const sharesTotal = converting ? (conversion.status === 'ok' ? conversion.total : null) : form.total
+  const sharesCurrency = converting ? settle : form.currency
   const hide = (what: 'origin' | 'rent' | 'trip') => setHidden((current) => new Set(current).add(what))
   const title = isNew ? 'New split' : 'Edit split'
 
@@ -377,6 +422,19 @@ function SplitScreen({ editing, url }: SplitScreenProps) {
         autoFocus={isNew && form.total === null && !initial.restored}
       />
 
+      {TRIP_ENABLED && foreign && (
+        <ConversionPanel
+          conversion={conversion}
+          paid={form.currency}
+          settle={settle}
+          date={form.date}
+          converting={converting}
+          onConvertChange={(on) => setForm((current) => withConvert(current, on, settle))}
+          onChangeRate={() => setRateOpen(true)}
+          onUseEcb={() => setForm((current) => withManualRate(current, null))}
+        />
+      )}
+
       <div className={styles.details}>
         <TextField
           label="What's it for?"
@@ -407,7 +465,7 @@ function SplitScreen({ editing, url }: SplitScreenProps) {
           />
         </div>
         <div className={styles.chips}>
-          <DateField value={form.date} onChange={(date) => change({ date })} max={form.date > day ? form.date : undefined} />
+          <DateField value={form.date} onChange={(date) => setForm((current) => withDate(current, date))} max={form.date > day ? form.date : undefined} />
           <GroupPicker value={form.groupId} onChange={pickGroup} />
         </div>
         {groupCurrencyNote && (
@@ -491,9 +549,15 @@ function SplitScreen({ editing, url }: SplitScreenProps) {
                 Rooms of different sizes? Rent is often fairer split by percentage.
               </Banner>
             )}
+            {converting && (
+              <p className={styles.note}>
+                <Info aria-hidden="true" className={styles.noteIcon} />
+                {t('trip.panel.sharesNote', { symbol: settleSymbol })}
+              </p>
+            )}
             <SplitEditor
-              total={form.total}
-              currency={form.currency}
+              total={sharesTotal}
+              currency={sharesCurrency}
               mode={form.mode}
               onModeChange={(mode) => change({ mode })}
               participants={form.participants}
@@ -509,6 +573,27 @@ function SplitScreen({ editing, url }: SplitScreenProps) {
       <NoteField value={form.note} onChange={(note) => change({ note })} maxLength={MAX_NOTE_LENGTH} />
 
       <CurrencySheet open={currencyOpen} currency={form.currency} onClose={() => setCurrencyOpen(false)} onSelect={pickCurrency} />
+
+      {TRIP_ENABLED && (
+        <RateSheet
+          open={rateOpen && foreign}
+          onClose={() => setRateOpen(false)}
+          paid={form.currency}
+          settle={settle}
+          amount={form.total}
+          rate={conversion.status === 'ok' && conversion.rate ? conversion.rate : null}
+          manual={form.conversion.manual}
+          ecbAvailable={live?.status === 'ok'}
+          onSave={(manual) => {
+            setRateOpen(false)
+            setForm((current) => withManualRate(withConvert(current, true, settle), manual))
+          }}
+          onUseEcb={() => {
+            setRateOpen(false)
+            setForm((current) => withManualRate(current, null))
+          }}
+        />
+      )}
 
       <BottomSheet
         open={confirm.open}

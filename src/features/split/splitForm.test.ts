@@ -16,6 +16,13 @@ import {
   withPeople,
   withPrefill,
   withTemplate,
+  isConverting,
+  resolveConversion,
+  settleCurrency,
+  splitCurrency,
+  withConvert,
+  withDate,
+  withManualRate,
   type PrefillContext,
   type SplitForm,
 } from './splitForm'
@@ -58,6 +65,7 @@ describe('blankForm', () => {
       bill: null,
       source: 'manual',
       recurringId: null,
+      conversion: { convert: null, settle: null, manual: null, frozen: null },
     })
   })
 })
@@ -347,5 +355,155 @@ describe('changesSavedMessage', () => {
 
   it('stays quiet about someone taken out of the split', () => {
     expect(changesSavedMessage({ paidBack: { riya: 1 } }, { paidBack: {}, shares: {} }, nameOf)).toBe('Changes saved')
+  })
+})
+
+/* ------------------------------------------------------------------ trip currency (spec 06) */
+
+describe('trip currency', () => {
+  const ECB_THB = { status: 'ok', rate: '2.410751226', rateDate: '2026-10-21', source: 'ecb', stale: false } as const
+  const bangkok = makeGroup({ id: 'bkk', name: 'Bangkok', travelCurrency: 'THB' })
+  const trip = (settle = 'INR') => ({ settle, profileCurrency: 'INR' })
+
+  it('settles in the group’s currency, else the edited expense’s, else the profile’s', () => {
+    expect(settleCurrency(form(), bangkok, 'USD')).toBe('INR')
+    expect(settleCurrency(form(), null, 'USD')).toBe('USD')
+    expect(settleCurrency(form({ conversion: { convert: true, settle: 'INR', manual: null, frozen: null } }), null, 'USD')).toBe('INR')
+  })
+
+  it('converts by default into rupees, or inside a group; never when paid in the settle currency', () => {
+    expect(isConverting(form({ currency: 'THB' }), 'INR')).toBe(true)
+    expect(isConverting(form({ currency: 'THB' }), 'USD')).toBe(false)
+    expect(isConverting(form({ currency: 'THB', groupId: 'g' }), 'USD')).toBe(true)
+    expect(isConverting(form({ currency: 'INR' }), 'INR')).toBe(false)
+    const off = withConvert(form({ currency: 'THB' }), false, 'INR')
+    expect(isConverting(off, 'INR')).toBe(false)
+    expect(splitCurrency(off, 'INR')).toBe('THB')
+  })
+
+  it('starts a split from a group that’s spending in THB in baht', () => {
+    const next = withGroup(form(), bangkok, trip())
+    expect(next).toMatchObject({ groupId: 'bkk', currency: 'THB' })
+    expect(next.participants.map((p) => p.friendId)).toEqual([ME_ID, 'riya', 'sam', 'neha'])
+    // Without trip currency: the group's own currency, as before.
+    expect(withGroup(form({ currency: 'USD' }), bangkok)).toMatchObject({ currency: 'INR' })
+  })
+
+  it('keeps an amount already paid abroad in its currency when it moves into a group', () => {
+    const next = withGroup(form({ currency: 'JPY', total: 4_800 }), bangkok, trip())
+    expect(next).toMatchObject({ currency: 'JPY', total: 4_800, groupId: 'bkk' })
+  })
+
+  it('converts ฿1,250 to ₹3,013.44 at the ECB rate and saves the snapshot (spec 06 §4)', () => {
+    const f = { ...withGroup(form({ title: 'Dinner' }), bangkok, trip()), total: 125_000 }
+    const c = resolveConversion(f, 'INR', ECB_THB)
+    expect(c).toMatchObject({ status: 'ok', total: 301_344, rate: '2.410751226', rateDate: '2026-10-21', source: 'ecb', frozen: false })
+    expect(formToDraft(f, undefined, c)).toMatchObject({
+      currency: 'INR',
+      total: 301_344,
+      groupId: 'bkk',
+      fx: { amount: 125_000, currency: 'THB', rate: '2.410751226', rateDate: '2026-10-21', source: 'ecb' },
+    })
+    expect(formShares({ ...f, participants: people(ME_ID, 'riya', 'sam') }, c)).toEqual({ [ME_ID]: 100_448, riya: 100_448, sam: 100_448 })
+  })
+
+  it('takes what the bank charged as the total, exactly (manual_total)', () => {
+    const f = withManualRate(form({ currency: 'THB', total: 125_000 }), { source: 'manual_total', total: 310_420 })
+    const c = resolveConversion(f, 'INR', ECB_THB)
+    expect(c).toMatchObject({ status: 'ok', total: 310_420, rate: '2.48336', source: 'manual_total' })
+    expect(formToDraft(f, undefined, c)).toMatchObject({
+      currency: 'INR',
+      total: 310_420,
+      fx: { amount: 125_000, rate: '2.48336', rateDate: null, source: 'manual_total' },
+    })
+    // No amount paid yet: nothing to save.
+    expect(resolveConversion({ ...f, total: null }, 'INR', ECB_THB)).toMatchObject({ status: 'ok', total: null, fx: null })
+  })
+
+  it('uses a typed rate over the ECB’s and keeps it when the date changes', () => {
+    const f = withManualRate(form({ currency: 'THB', total: 125_000 }), { source: 'manual_rate', rate: '2.5' })
+    expect(resolveConversion(f, 'INR', ECB_THB)).toMatchObject({ status: 'ok', total: 312_500, source: 'manual_rate', rateDate: null })
+    expect(withDate(f, '2026-10-01').conversion.manual).toEqual({ source: 'manual_rate', rate: '2.5' })
+  })
+
+  it('waits for the rate, and says when there’s none (nothing to save in the meantime)', () => {
+    const f = form({ currency: 'THB', total: 125_000 })
+    const loading = resolveConversion(f, 'INR', { status: 'loading' })
+    expect(loading).toEqual({ status: 'loading', settle: 'INR' })
+    expect(formToDraft(f, undefined, loading)).toMatchObject({ currency: 'INR', total: 0 })
+    expect(formToDraft(f, undefined, loading)).not.toHaveProperty('fx')
+    expect(resolveConversion(f, 'INR', { status: 'unavailable', reason: 'not_covered' })).toEqual({ status: 'unavailable', settle: 'INR', reason: 'not_covered' })
+  })
+
+  it('switched off: saved as paid, in baht', () => {
+    const f = withConvert(form({ currency: 'THB', total: 125_000 }), false, 'INR')
+    const c = resolveConversion(f, 'INR', ECB_THB)
+    expect(c).toEqual({ status: 'none' })
+    expect(formToDraft(f, undefined, c)).toMatchObject({ currency: 'THB', total: 125_000 })
+    expect(formToDraft(f, undefined, c)).not.toHaveProperty('fx')
+  })
+
+  it('keeps exact amounts in rupees while converting', () => {
+    const exact = form({
+      mode: 'exact',
+      participants: [
+        { friendId: ME_ID, input: 100_000 },
+        { friendId: 'riya', input: 201_344 },
+      ],
+    })
+    // Paid in baht now, but the shares are still worked out in rupees: the inputs don't move.
+    const thb = changeCurrency(exact, 'THB', trip())
+    expect(thb.participants.map((p) => p.input)).toEqual([100_000, 201_344])
+    const paid = { ...thb, total: 125_000 }
+    expect(formShares(paid, resolveConversion(paid, 'INR', ECB_THB))).toEqual({ [ME_ID]: 100_000, riya: 201_344 })
+    // Without trip currency they move with the currency, as before.
+    expect(changeCurrency(exact, 'JPY').participants.map((p) => p.input)).toEqual([1_000, 2_013])
+  })
+
+  it('drops a typed rate when the currency changes', () => {
+    const f = withManualRate(form({ currency: 'THB', total: 125_000 }), { source: 'manual_rate', rate: '2.5' })
+    expect(changeCurrency(f, 'USD', trip()).conversion.manual).toBeNull()
+  })
+
+  it('edits an expense paid abroad in what was paid, with its frozen rate', () => {
+    const fx = { amount: 125_000, currency: 'THB', rate: '2.410751226', rateDate: '2026-10-21', source: 'ecb' } as const
+    const e = makeExpense({ total: 301_344, groupId: 'bkk', fx })
+    const f = formFromExpense(e)
+    expect(f).toMatchObject({
+      currency: 'THB',
+      total: 125_000,
+      conversion: { convert: true, settle: 'INR', manual: null, frozen: { rate: '2.410751226', rateDate: '2026-10-21', source: 'ecb' } },
+    })
+    // The live rate differs, but the frozen one is used — and a new amount reconverts with it.
+    const other = { status: 'ok', rate: '2.6', rateDate: '2026-10-22', source: 'ecb', stale: false } as const
+    expect(resolveConversion(f, 'INR', other)).toMatchObject({ status: 'ok', total: 301_344, frozen: true, rateDate: '2026-10-21' })
+    expect(resolveConversion({ ...f, total: 250_000 }, 'INR', other)).toMatchObject({ total: 602_688 })
+    expect(formToDraft(f, e.id, resolveConversion(f, 'INR', other))).toMatchObject({ id: 'e1', currency: 'INR', total: 301_344, fx })
+    // "Use the ECB rate for 21 Oct", or a new date: the live rate.
+    expect(resolveConversion(withManualRate(f, null), 'INR', other)).toMatchObject({ total: 325_000, frozen: false })
+    expect(withDate(f, '2026-10-20').conversion.frozen).toBeNull()
+  })
+
+  it('edits a bank-total expense with the bank total, and a typed-rate one with its rate', () => {
+    const bank = formFromExpense(makeExpense({ total: 310_420, fx: { amount: 125_000, currency: 'THB', rate: '2.48336', rateDate: null, source: 'manual_total' } }))
+    expect(bank.conversion.manual).toEqual({ source: 'manual_total', total: 310_420 })
+    const typed = formFromExpense(makeExpense({ total: 312_500, fx: { amount: 125_000, currency: 'THB', rate: '2.5', rateDate: null, source: 'manual_rate' } }))
+    expect(typed.conversion.manual).toEqual({ source: 'manual_rate', rate: '2.5' })
+  })
+
+  it('edits an old expense in another currency as paid, unless asked to convert (convert=1)', () => {
+    const old = formFromExpense(makeExpense({ currency: 'THB', total: 125_000, groupId: 'bkk' }))
+    expect(old).toMatchObject({ currency: 'THB', total: 125_000, conversion: { convert: false } })
+    expect(isConverting(old, 'INR')).toBe(false)
+    const convert = { ...old, conversion: { ...old.conversion, convert: true } }
+    expect(formToDraft(convert, 'e1', resolveConversion(convert, 'INR', ECB_THB))).toMatchObject({ currency: 'INR', total: 301_344 })
+  })
+
+  it('converts an itemized bill’s total and leaves its items in baht', () => {
+    const f = form({ currency: 'THB', total: 105_000, bill: BILL, participants: people(ME_ID, 'riya'), groupId: 'bkk' })
+    const c = resolveConversion(f, 'INR', ECB_THB)
+    expect(formToDraft(f, undefined, c)).toMatchObject({ currency: 'INR', total: 253_129, mode: 'items', bill: BILL })
+    const shares = formShares(f, c)
+    expect(Object.values(shares).reduce((a, b) => a + b, 0)).toBe(253_129)
   })
 })

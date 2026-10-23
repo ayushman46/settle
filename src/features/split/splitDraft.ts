@@ -7,8 +7,9 @@
 import * as z from 'zod/mini'
 import { CATEGORY_IDS, type CategoryId, type ExpenseSource } from '../../domain/types'
 import { EXPENSE_SOURCES, PREFILL_BANNER_ICONS, type PrefillBanner } from '../../data'
+import { RATE_PATTERN } from '../../engine/fx'
 import { MAX_MINOR } from '../../lib/money'
-import type { SplitForm } from './splitForm'
+import { NO_CONVERSION, type FormConversion, type SplitForm } from './splitForm'
 
 export const SPLIT_DRAFT_KEY = 'settle.v3.split-draft'
 
@@ -39,6 +40,24 @@ export interface SplitDraft {
 
 const minor = z.int().check(z.gte(0), z.lte(MAX_MINOR))
 
+const code = z.string().check(z.regex(/^[A-Z]{3}$/))
+const rate = z.string().check(z.regex(RATE_PATTERN))
+
+/** Trip currency's part of the form; anything unreadable starts over (the ECB rate is looked up again). */
+const conversionSchema = z.object({
+  convert: z.nullable(z.boolean()),
+  settle: z.nullable(code),
+  manual: z.nullable(
+    z.union([
+      z.object({ source: z.literal('manual_rate'), rate }),
+      z.object({ source: z.literal('manual_total'), total: minor.check(z.gt(0)) }),
+    ]),
+  ),
+  frozen: z.nullable(
+    z.object({ rate, rateDate: z.nullable(z.string().check(z.regex(/^\d{4}-\d{2}-\d{2}$/))), source: z.enum(['ecb', 'pegged']) }),
+  ),
+})
+
 const formSchema = z.object({
   total: z.nullable(minor),
   currency: z.string().check(z.regex(/^[A-Z]{3}$/)),
@@ -54,6 +73,8 @@ const formSchema = z.object({
   note: z.string().check(z.maxLength(4000)),
   source: z.enum(EXPENSE_SOURCES as readonly ExpenseSource[]),
   recurringId: z.nullable(z.string()),
+  // Drafts saved before trip currency have none.
+  conversion: z.optional(z.catch(conversionSchema, NO_CONVERSION)),
 })
 
 const draftSchema = z.object({
@@ -115,7 +136,8 @@ export function loadSplitDraft(url: string, base: string, now: number = Date.now
   const draft = result.data
   if (draft.url !== url || draft.base !== base) return null
   if (!(now - draft.savedAt >= 0 && now - draft.savedAt < MAX_AGE_MS)) return null
-  return draft
+  const conversion: FormConversion = draft.form.conversion ?? NO_CONVERSION
+  return { ...draft, form: { ...draft.form, conversion } }
 }
 
 /** Forgets the draft (saved, discarded, or the screen was left). */
