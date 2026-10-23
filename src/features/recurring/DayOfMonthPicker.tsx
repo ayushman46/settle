@@ -1,6 +1,7 @@
 import { useRef, useState, type KeyboardEvent } from 'react'
 import { CalendarDays, ChevronDown } from 'lucide-react'
 import { BottomSheet } from '../../components'
+import { useT } from '../../i18n'
 import { cx } from '../../lib/cx'
 import { haptic } from '../../lib/haptics'
 import { ordinal, repeatsLabel } from './recurringLabels'
@@ -23,6 +24,7 @@ const COLUMNS = 7
  * group: arrow keys move in the grid, Home/End jump to the ends).
  */
 export function DayOfMonthPicker({ value, onChange, className }: DayOfMonthPickerProps) {
+  const t = useT()
   const [open, setOpen] = useState(false)
   const refs = useRef<Array<HTMLButtonElement | null>>([])
   const selectedRef = useRef<HTMLButtonElement | null>(null)
@@ -82,11 +84,11 @@ export function DayOfMonthPicker({ value, onChange, className }: DayOfMonthPicke
       <BottomSheet
         open={open}
         onClose={() => setOpen(false)}
-        title="Which day each month?"
-        description="Months have at least 28 days, so the 28th is the latest."
+        title={t('recurring.day.sheet.title')}
+        description={t('recurring.day.sheet.description')}
         initialFocus={selectedRef}
       >
-        <div role="radiogroup" aria-label="Day of the month" className={styles.grid} onKeyDown={onKeyDown}>
+        <div role="radiogroup" aria-label={t('recurring.day.grid.aria')} className={styles.grid} onKeyDown={onKeyDown}>
           {DAYS.map((day, i) => {
             const checked = day === value
             return (
@@ -99,7 +101,7 @@ export function DayOfMonthPicker({ value, onChange, className }: DayOfMonthPicke
                 type="button"
                 role="radio"
                 aria-checked={checked}
-                aria-label={`The ${ordinal(day)}`}
+                aria-label={t('recurring.day.option.aria', { day: ordinal(day) })}
                 tabIndex={checked ? 0 : -1}
                 className={cx(styles.day, checked && styles.checked)}
                 onClick={() => pick(day)}

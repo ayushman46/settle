@@ -21,6 +21,7 @@ import { useDueRecurring, useFriendsById, useRecurring } from '../../data'
 import type { RecurringTemplate } from '../../domain/types'
 import { today } from '../../engine/dates'
 import type { RecurringDue } from '../../engine/recurring'
+import { t as translate, useT } from '../../i18n'
 import { friendLabel } from '../../kit/index-a'
 import { formatMoney } from '../../lib/money'
 import { useHasFeature, usePro } from '../../pro'
@@ -36,17 +37,13 @@ function editorPath(id: string): string {
   return `/app/recurring/${encodeURIComponent(id)}`
 }
 
-function peopleCount(template: RecurringTemplate): string {
-  const n = template.participants.length
-  return `${n} ${n === 1 ? 'person' : 'people'}`
-}
-
 /**
  * `/app/recurring` (Pro) — rent, Wi-Fi, subscriptions: the ones due now (one tap to split), then
  * every recurring split with when it's next due. A pass that ran out pauses them, but nothing is
  * hidden or deleted.
  */
 export function RecurringScreen() {
+  const t = useT()
   const unlocked = useHasFeature('recurring')
   const pro = usePro()
   const templates = useRecurring()
@@ -55,12 +52,12 @@ export function RecurringScreen() {
   const { splitNow, moment } = useSplitNow()
   const startNew = (): void => withPro('recurring', () => navigate('/app/recurring/new'))
 
-  const active = templates.filter((t) => t.active)
-  const paused = templates.filter((t) => !t.active)
+  const active = templates.filter((tpl) => tpl.active)
+  const paused = templates.filter((tpl) => !tpl.active)
 
   return (
     <Screen header={<TopBar onBack={() => goBack('/app/you')} />} contentClassName={styles.content}>
-      <PageTitle title="Recurring splits" subtitle="Rent, Wi-Fi, subscriptions — set them once, split them each month." />
+      <PageTitle title={t('recurring.list.title')} subtitle={t('recurring.list.subtitle')} />
 
       {!unlocked && templates.length === 0 ? (
         <ProLock feature="recurring" preview={<RecurringSketch />} />
@@ -69,10 +66,10 @@ export function RecurringScreen() {
           {!unlocked && (
             <Banner
               tone="warning"
-              title={pro.status === 'expired' ? 'Your Pro pass has ended' : 'Recurring splits are part of Pro'}
-              action={{ label: pro.status === 'expired' ? 'Renew Pro' : 'See Pro', onAction: () => openPaywall('recurring') }}
+              title={t(pro.status === 'expired' ? 'recurring.pro.ended.title' : 'recurring.pro.locked.title')}
+              action={{ label: t(pro.status === 'expired' ? 'recurring.pro.renew.cta' : 'recurring.pro.see.cta'), onAction: () => openPaywall('recurring') }}
             >
-              They're paused for now — all still here, nothing deleted. Edit them any time; splitting them needs Pro.
+              {t('recurring.list.paused.body')}
             </Banner>
           )}
 
@@ -82,7 +79,7 @@ export function RecurringScreen() {
             <>
               {due.length > 0 && (
                 <section className={styles.section} aria-labelledby="recurring-due">
-                  <SectionHeader id="recurring-due" title="Due now" />
+                  <SectionHeader id="recurring-due" title={t('recurring.list.due.title')} />
                   <div className={styles.dueList}>
                     {due.map((item) => (
                       <DueCard key={item.template.id} due={item} today={day} onSplit={() => splitNow(item.template, item.period)} />
@@ -92,11 +89,11 @@ export function RecurringScreen() {
               )}
               {active.length > 0 && (
                 <section className={styles.section} aria-labelledby="recurring-all">
-                  <SectionHeader id="recurring-all" title={due.length > 0 ? 'All recurring splits' : 'Your recurring splits'} />
+                  <SectionHeader id="recurring-all" title={t(due.length > 0 ? 'recurring.list.all.title' : 'recurring.list.yours.title')} />
                   <Card padding="none">
                     <List>
-                      {active.map((t) => (
-                        <TemplateRow key={t.id} template={t} today={day} due={due.find((d) => d.template.id === t.id) ?? null} />
+                      {active.map((tpl) => (
+                        <TemplateRow key={tpl.id} template={tpl} today={day} due={due.find((d) => d.template.id === tpl.id) ?? null} />
                       ))}
                     </List>
                   </Card>
@@ -104,11 +101,11 @@ export function RecurringScreen() {
               )}
               {paused.length > 0 && (
                 <section className={styles.section} aria-labelledby="recurring-paused">
-                  <SectionHeader id="recurring-paused" title="Paused" description="No reminders until you switch them back on." />
+                  <SectionHeader id="recurring-paused" title={t('recurring.list.paused.title')} description={t('recurring.list.paused.description')} />
                   <Card padding="none">
                     <List>
-                      {paused.map((t) => (
-                        <TemplateRow key={t.id} template={t} today={day} due={null} />
+                      {paused.map((tpl) => (
+                        <TemplateRow key={tpl.id} template={tpl} today={day} due={null} />
                       ))}
                     </List>
                   </Card>
@@ -116,7 +113,7 @@ export function RecurringScreen() {
               )}
             </>
           )}
-          <Fab extended icon={<Plus strokeWidth={2.5} />} label="New recurring split" onClick={startNew} />
+          <Fab extended icon={<Plus strokeWidth={2.5} />} label={t('recurring.list.new.cta')} onClick={startNew} />
         </>
       )}
       {moment}
@@ -126,6 +123,7 @@ export function RecurringScreen() {
 }
 
 function DueCard({ due, today: day, onSplit }: { due: RecurringDue; today: string; onSplit: () => void }) {
+  const t = useT()
   const { template, period } = due
   const friendsById = useFriendsById()
   const payerName = friendLabel(template.payerId, friendsById[template.payerId] ?? null)
@@ -149,11 +147,11 @@ function DueCard({ due, today: day, onSplit }: { due: RecurringDue; today: strin
       </p>
       {line && <p className={styles.dueLine}>{line}</p>}
       <div className={styles.dueActions}>
-        <Button variant="accent" size="md" onClick={onSplit} aria-label={`Split ${template.title} for ${month} now`}>
-          Split now
+        <Button variant="accent" size="md" onClick={onSplit} aria-label={t('recurring.list.due.split.aria', { title: template.title, month })}>
+          {t('recurring.splitNow.cta')}
         </Button>
-        <Button variant="ghost" size="md" onClick={() => navigate(editorPath(template.id))} aria-label={`Edit ${template.title}`}>
-          Edit
+        <Button variant="ghost" size="md" onClick={() => navigate(editorPath(template.id))} aria-label={t('recurring.list.edit.aria', { title: template.title })}>
+          {t('recurring.list.edit.cta')}
         </Button>
       </div>
     </article>
@@ -161,9 +159,10 @@ function DueCard({ due, today: day, onSplit }: { due: RecurringDue; today: strin
 }
 
 function TemplateRow({ template, today: day, due }: { template: RecurringTemplate; today: string; due: RecurringDue | null }) {
+  const t = useT()
   const amount = formatMoney(template.total, template.currency, { trimZeros: true })
   const status = !template.active ? (
-    <Badge>Paused</Badge>
+    <Badge>{t('recurring.list.paused.badge')}</Badge>
   ) : due ? (
     <Badge tone={due.overdue ? 'negative' : 'warning'}>{dueBadgeLabel(due)}</Badge>
   ) : (
@@ -173,7 +172,7 @@ function TemplateRow({ template, today: day, due }: { template: RecurringTemplat
     <ListRow
       leading={<CategoryIcon category={template.category} size="md" />}
       title={template.title}
-      subtitle={`${amount} · on the ${ordinal(template.dayOfMonth)} · ${peopleCount(template)}`}
+      subtitle={t('recurring.list.row.subtitle', { amount, day: ordinal(template.dayOfMonth), count: template.participants.length })}
       trailing={status}
       onClick={() => navigate(editorPath(template.id))}
       chevron
@@ -182,19 +181,20 @@ function TemplateRow({ template, today: day, due }: { template: RecurringTemplat
 }
 
 function EmptyRecurring({ onNew }: { onNew: () => void }) {
+  const t = useT()
   return (
     <div className={styles.empty}>
       <EmptyState
         icon={<Repeat />}
-        title="Set it once, split it every month"
-        text="Settle reminds you when each one is due, and splits it in one tap."
+        title={t('recurring.list.empty.title')}
+        text={t('recurring.list.empty.body')}
         action={
           <Button size="md" iconStart={<Plus />} onClick={onNew}>
-            New recurring split
+            {t('recurring.list.new.cta')}
           </Button>
         }
       />
-      <div className={styles.presets} role="group" aria-label="Quick start">
+      <div className={styles.presets} role="group" aria-label={t('recurring.list.presets.aria')}>
         {RECURRING_PRESETS.map((preset) => (
           <Chip
             key={preset.id}
@@ -210,16 +210,19 @@ function EmptyRecurring({ onNew }: { onNew: () => void }) {
 }
 
 /** Illustrative cards for the blurred sketch behind the lock — never the person's data. */
-const SKETCH: ReadonlyArray<{ title: string; category: RecurringTemplate['category']; amount: number; when: string }> = [
-  { title: 'Rent', category: 'rent', amount: 3200000, when: 'Due in 3 days' },
-  { title: 'Wi-Fi', category: 'utilities', amount: 117900, when: 'Next: 5th' },
-  { title: 'Netflix', category: 'subscription', amount: 64900, when: 'Next: 12th' },
-]
+function sketch(): ReadonlyArray<{ title: string; category: RecurringTemplate['category']; amount: number; when: string }> {
+  return [
+    { title: translate('recurring.preset.rent'), category: 'rent', amount: 3200000, when: translate('recurring.due.inDays', { count: 3 }) },
+    { title: translate('recurring.preset.wifi'), category: 'utilities', amount: 117900, when: translate('recurring.next', { date: ordinal(5) }) },
+    { title: translate('recurring.preset.netflix'), category: 'subscription', amount: 64900, when: translate('recurring.next', { date: ordinal(12) }) },
+  ]
+}
 
 function RecurringSketch() {
+  useT()
   return (
     <div className={styles.sketch}>
-      {SKETCH.map((item) => (
+      {sketch().map((item) => (
         <div key={item.title} className={styles.sketchRow}>
           <CategoryIcon category={item.category} size="md" />
           <span className={styles.sketchText}>

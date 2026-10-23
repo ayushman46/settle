@@ -35,6 +35,7 @@ import { categoryFromText } from '../../engine/categories'
 import { today } from '../../engine/dates'
 import { nextRecurringPeriod } from '../../engine/recurring'
 import type { AmountSplitMode } from '../../engine/split'
+import { useT } from '../../i18n'
 import { AmountHero, CategoryPicker, PayerPicker, PeoplePicker, SplitEditor } from '../../kit/index-a'
 import { useHasFeature, usePro } from '../../pro'
 import { PaywallHost } from '../pro/PaywallSheet'
@@ -54,13 +55,14 @@ const LIST = '/app/recurring'
  * whether it's on. Unsaved changes are guarded on Back; deleting can be undone.
  */
 export function RecurringEditorScreen() {
+  const t = useT()
   const { params } = useRoute(ROUTES)
   const query = useSearchParams()
   const id = params.id ?? 'new'
   const isNew = id === 'new'
   const templates = useRecurring()
   const unlocked = useHasFeature('recurring')
-  const found = isNew ? null : (templates.find((t) => t.id === id) ?? null)
+  const found = isNew ? null : (templates.find((tpl) => tpl.id === id) ?? null)
   // Keeps the form on screen while it leaves after a delete (the template is already gone).
   const [deleted, setDeleted] = useState<RecurringTemplate | null>(null)
   const template = found ?? (deleted?.id === id ? deleted : null)
@@ -68,7 +70,7 @@ export function RecurringEditorScreen() {
   if (isNew && !unlocked) {
     return (
       <Screen header={<TopBar onBack={() => goBack(LIST)} />}>
-        <PageTitle title="New recurring split" />
+        <PageTitle title={t('recurring.editor.new.title')} />
         <ProLock feature="recurring" />
       </Screen>
     )
@@ -76,9 +78,9 @@ export function RecurringEditorScreen() {
   if (!isNew && !template) {
     return (
       <Screen header={<TopBar onBack={() => goBack(LIST)} />}>
-        <PageTitle title="This recurring split is gone" subtitle="It may have been deleted — on this phone or in another tab." />
+        <PageTitle title={t('recurring.editor.gone.title')} subtitle={t('recurring.editor.gone.subtitle')} />
         <Button className={styles.gone} onClick={() => navigate(LIST, { replace: true })}>
-          See recurring splits
+          {t('recurring.editor.gone.cta')}
         </Button>
       </Screen>
     )
@@ -164,6 +166,7 @@ interface EditorProps {
 }
 
 function Editor({ template, preset, onDeleting }: EditorProps) {
+  const t = useT()
   const toast = useToast()
   const profile = useProfile()
   const pro = usePro()
@@ -219,7 +222,7 @@ function Editor({ template, preset, onDeleting }: EditorProps) {
       return
     }
     setDirty(false)
-    toast(isNew ? 'Recurring split saved' : 'Changes saved', { tone: 'success' })
+    toast(t(isNew ? 'recurring.editor.saved.toast' : 'recurring.editor.changesSaved.toast'), { tone: 'success' })
     goBack(LIST)
   }
 
@@ -229,8 +232,8 @@ function Editor({ template, preset, onDeleting }: EditorProps) {
     const removed = deleteRecurring(template.id)
     setDirty(false)
     if (removed) {
-      toast(`${removed.title} deleted`, {
-        action: { label: 'Undo', onAction: () => restoreRecurring(removed) },
+      toast(t('recurring.editor.deleted.toast', { title: removed.title }), {
+        action: { label: t('recurring.editor.undo.cta'), onAction: () => restoreRecurring(removed) },
       })
     }
     goBack(LIST)
@@ -241,10 +244,10 @@ function Editor({ template, preset, onDeleting }: EditorProps) {
       header={
         <TopBar
           onBack={leave}
-          title={isNew ? 'New recurring split' : 'Recurring split'}
+          title={t(isNew ? 'recurring.editor.new.title' : 'recurring.editor.title')}
           right={
             template ? (
-              <IconButton label={`Delete ${template.title}`} onClick={remove}>
+              <IconButton label={t('recurring.editor.delete.aria', { title: template.title })} onClick={remove}>
                 <Trash2 />
               </IconButton>
             ) : undefined
@@ -254,34 +257,34 @@ function Editor({ template, preset, onDeleting }: EditorProps) {
       footer={
         <ActionBar hint={issue ? expenseErrorMessage(issue) : undefined}>
           <Button block disabled={issue !== null} onClick={save}>
-            {isNew ? 'Save recurring split' : 'Save changes'}
+            {t(isNew ? 'recurring.editor.save.new.cta' : 'recurring.editor.save.cta')}
           </Button>
         </ActionBar>
       }
       contentClassName={styles.content}
     >
       <h1 className="visually-hidden" tabIndex={-1}>
-        {isNew ? 'New recurring split' : `Edit ${template.title}`}
+        {isNew ? t('recurring.editor.new.title') : t('recurring.editor.edit.title', { title: template.title })}
       </h1>
 
       {!unlocked && template && (
-        <Banner tone="warning" title={pro.status === 'expired' ? 'Your Pro pass has ended' : 'Recurring splits are part of Pro'}>
-          This one is paused. You can still edit or delete it; splitting it needs Pro.
+        <Banner tone="warning" title={t(pro.status === 'expired' ? 'recurring.pro.ended.title' : 'recurring.pro.locked.title')}>
+          {t('recurring.editor.paused.body')}
         </Banner>
       )}
 
       {template && next && (
         <Card className={styles.next}>
           <div className={styles.nextText}>
-            <p className={styles.nextLabel}>{due ? dueLabel(due) : `Next split: ${shortDate(next.dueDate)}`}</p>
-            <p className={styles.nextMonth}>For {monthName(next.period, day)}</p>
+            <p className={styles.nextLabel}>{due ? dueLabel(due) : t('recurring.editor.nextSplit', { date: shortDate(next.dueDate) })}</p>
+            <p className={styles.nextMonth}>{t('recurring.forMonth', { month: monthName(next.period, day) })}</p>
           </div>
           {due && !dirty && (
             <Button variant="accent" size="md" onClick={() => splitNow(template, due.period)}>
-              Split now
+              {t('recurring.splitNow.cta')}
             </Button>
           )}
-          {due && dirty && <p className={styles.nextHint}>Save first to split with your changes.</p>}
+          {due && dirty && <p className={styles.nextHint}>{t('recurring.editor.saveFirst.hint')}</p>}
         </Card>
       )}
 
@@ -289,15 +292,15 @@ function Editor({ template, preset, onDeleting }: EditorProps) {
         value={form.total}
         currency={form.currency}
         onChange={(total) => change({ total })}
-        label="Amount each month"
+        label={t('recurring.editor.amount.label')}
         autoFocus={isNew && preset === null}
       />
 
       <div className={styles.group}>
         <TextField
-          label="What's it for?"
+          label={t('recurring.editor.what.label')}
           value={form.title}
-          placeholder="Rent, Wi-Fi, Netflix…"
+          placeholder={t('recurring.editor.what.placeholder')}
           maxLength={MAX_TITLE_LENGTH}
           autoCapitalize="sentences"
           enterKeyHint="next"
@@ -315,15 +318,15 @@ function Editor({ template, preset, onDeleting }: EditorProps) {
       </div>
 
       <section className={styles.section} aria-labelledby="recurring-repeats">
-        <SectionHeader id="recurring-repeats" title="Repeats" />
+        <SectionHeader id="recurring-repeats" title={t('recurring.editor.repeats.title')} />
         <DayOfMonthPicker value={form.dayOfMonth} onChange={(dayOfMonth) => change({ dayOfMonth })} />
         <p className={styles.caption}>
-          {isNew ? `First reminder ${shortDate(nextDue)}, then every month.` : `Next due ${shortDate(nextDue)}.`}
+          {t(isNew ? 'recurring.editor.firstReminder' : 'recurring.editor.nextDue', { date: shortDate(nextDue) })}
         </p>
       </section>
 
       <section className={styles.section} aria-labelledby="recurring-people">
-        <SectionHeader id="recurring-people" title="Split with" />
+        <SectionHeader id="recurring-people" title={t('recurring.editor.people.title')} />
         <PeoplePicker
           selectedIds={peopleIds}
           onChange={(ids) => change({ participants: withPeople(form.participants, ids) })}
@@ -332,7 +335,7 @@ function Editor({ template, preset, onDeleting }: EditorProps) {
       </section>
 
       <section className={styles.section} aria-labelledby="recurring-how">
-        <SectionHeader id="recurring-how" title="How to split" />
+        <SectionHeader id="recurring-how" title={t('recurring.editor.how.title')} />
         <SplitEditor
           className={styles.split}
           total={form.total}
@@ -353,8 +356,8 @@ function Editor({ template, preset, onDeleting }: EditorProps) {
           <Switch
             checked={form.active}
             onChange={(active) => change({ active })}
-            label="Remind me each month"
-            description="Shows on Home when it's due. Turn off to pause it — nothing is deleted."
+            label={t('recurring.editor.remind.label')}
+            description={t('recurring.editor.remind.description')}
           />
         </Card>
       )}
@@ -362,8 +365,8 @@ function Editor({ template, preset, onDeleting }: EditorProps) {
       <BottomSheet
         open={confirming}
         onClose={() => setConfirming(false)}
-        title="Discard changes?"
-        description={isNew ? "This recurring split won't be saved." : "Your changes to this recurring split won't be saved."}
+        title={t('recurring.editor.discard.title')}
+        description={t(isNew ? 'recurring.editor.discard.new.description' : 'recurring.editor.discard.description')}
         footer={
           <div className={styles.confirm}>
             <Button
@@ -375,10 +378,10 @@ function Editor({ template, preset, onDeleting }: EditorProps) {
                 goBack(LIST)
               }}
             >
-              Discard
+              {t('recurring.editor.discard.cta')}
             </Button>
             <Button variant="secondary" block onClick={() => setConfirming(false)}>
-              Keep editing
+              {t('recurring.editor.keep.cta')}
             </Button>
           </div>
         }
