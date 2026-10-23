@@ -12,6 +12,9 @@ import { onboard, OWNER, readUpiLink } from './support/app'
 import { expectAccessible } from './support/a11y'
 import { expectNoSideScroll, replyLinkIn, sampleBillToPeople } from './support/claims'
 import { expect, test } from './support/fixtures'
+
+/** Phones in this run are slow (budget Android, busy CI): generous waits, same checks. */
+const slowExpect = expect.configure({ timeout: 30_000 })
 import { friend, seed } from './support/seed'
 
 /** "Try a sample bill" (src/api/sample.ts), in paise, as the claim link carries it. */
@@ -35,15 +38,17 @@ async function storedExpenses(page: Page): Promise<Expense[]> {
 }
 
 test.describe('claim your items', () => {
+  test.use({ actionTimeout: 45_000, navigationTimeout: 90_000 })
+
   test('one link: friends pick, pay and reply; a conflict is decided and the bill adds up', async ({ page, shared, openPhone }) => {
     test.setTimeout(300_000)
     await onboard(page)
     await sampleBillToPeople(page, ['Riya', 'Sam'])
 
     await page.getByRole('button', { name: 'Let everyone pick their own' }).click()
-    await expect(page).toHaveURL(/\/app\/claims\/[A-Za-z0-9_-]{10}$/)
-    await expect(page.getByRole('heading', { level: 1, name: 'Who had what?' })).toBeVisible()
-    await expect(page.getByText(/^Saffron Table · ₹2,299/)).toBeVisible()
+    await slowExpect(page).toHaveURL(/\/app\/claims\/[A-Za-z0-9_-]{10}$/)
+    await slowExpect(page.getByRole('heading', { level: 1, name: 'Who had what?' })).toBeVisible()
+    await slowExpect(page.getByText(/^Saffron Table · ₹2,299/)).toBeVisible()
     await page.getByRole('button', { name: 'Copy link' }).click()
     const link = (await shared()).clipboard.at(-1) ?? ''
     expect(link).toContain('/claim#')
@@ -52,15 +57,15 @@ test.describe('claim your items', () => {
     // Riya's phone.
     const riya = (await openPhone()).page
     await riya.goto(link)
-    await expect(riya.getByRole('heading', { level: 1, name: 'Saffron Table' })).toBeVisible()
-    await expect(riya.getByText('Ayush is splitting')).toBeVisible()
+    await slowExpect(riya.getByRole('heading', { level: 1, name: 'Saffron Table' })).toBeVisible()
+    await slowExpect(riya.getByText('Ayush is splitting')).toBeVisible()
     await riya.getByRole('button', { name: 'Riya' }).click()
-    await expect(riya.getByRole('heading', { name: 'What did you have?' })).toBeFocused()
+    await slowExpect(riya.getByRole('heading', { name: 'What did you have?' })).toBeFocused()
     await riya.getByRole('button', { name: 'I had this: Paneer Tikka' }).click()
     await riya.getByRole('radio', { name: 'Shared' }).click()
     await riya.getByRole('button', { name: '2', exact: true }).click()
     await riya.getByRole('button', { name: 'Increase garlic Naan: you had' }).or(riya.getByRole('button', { name: 'Increase garlic naan: you had' })).click()
-    await expect(riya.getByText('1 of 4 · ₹75')).toBeVisible()
+    await slowExpect(riya.getByText('1 of 4 · ₹75')).toBeVisible()
 
     const riyaShare = shareFor(
       [
@@ -69,7 +74,7 @@ test.describe('claim your items', () => {
       ],
       1,
     )
-    await expect(riya.getByText(`Your share, ${rupees(riyaShare)}, after the discount`, { exact: true })).toBeAttached()
+    await slowExpect(riya.getByText(`Your share, ${rupees(riyaShare)}, after the discount`, { exact: true })).toBeAttached()
     await expectAccessible(riya)
 
     const upi = readUpiLink((await riya.getByRole('link', { name: /with any UPI app/ }).getAttribute('href')) ?? '')
@@ -78,18 +83,18 @@ test.describe('claim your items', () => {
     await riya.getByRole('checkbox', { name: `Paid ${rupees(riyaShare)}?` }).check()
 
     const send = riya.getByRole('link', { name: 'Send my picks to Ayush' })
-    await expect(send).toHaveAttribute('href', /claims%2Fin%23/)
+    await slowExpect(send).toHaveAttribute('href', /claims%2Fin%23/)
     const riyaReply = replyLinkIn((await send.getAttribute('href')) ?? '')
 
     // Back on the organiser's phone: Riya's picks arrive.
     await page.goto(riyaReply)
-    await expect(page.getByRole('heading', { name: 'Riya’s picks' })).toBeVisible()
-    await expect(page.getByText(`Says they’ve paid ${rupees(riyaShare)}`)).toBeVisible()
+    await slowExpect(page.getByRole('heading', { name: 'Riya’s picks' })).toBeVisible()
+    await slowExpect(page.getByText(`Says they’ve paid ${rupees(riyaShare)}`)).toBeVisible()
     await page.getByRole('button', { name: 'Add to the bill' }).click()
-    await expect(page).toHaveURL(boardUrl)
-    await expect(page.getByText('Riya’s picks added')).toBeVisible()
+    await slowExpect(page).toHaveURL(boardUrl)
+    await slowExpect(page.getByText('Riya’s picks added')).toBeVisible()
     const people = page.getByRole('list', { name: 'People' })
-    await expect(people.getByRole('listitem').filter({ hasText: 'Riya' })).toContainText('Paid')
+    await slowExpect(people.getByRole('listitem').filter({ hasText: 'Riya' })).toContainText('Paid')
     await expectAccessible(page)
 
     // Sam takes the whole Paneer Tikka: claimed 1½ times.
@@ -100,22 +105,22 @@ test.describe('claim your items', () => {
     const samReply = replyLinkIn((await sam.getByRole('link', { name: 'Send my picks to Ayush' }).getAttribute('href')) ?? '')
     await page.goto(samReply)
     await page.getByRole('button', { name: 'Add to the bill' }).click()
-    await expect(page).toHaveURL(boardUrl)
+    await slowExpect(page).toHaveURL(boardUrl)
 
     const paneer = page.getByRole('button', { name: /Paneer Tikka.*Claimed 1½ of 1.*needs you/ })
-    await expect(paneer).toBeVisible()
+    await slowExpect(paneer).toBeVisible()
     await paneer.click()
-    await expect(page.getByRole('dialog', { name: 'Paneer Tikka — 1½ of 1 claimed' })).toBeVisible()
+    await slowExpect(page.getByRole('dialog', { name: 'Paneer Tikka — 1½ of 1 claimed' })).toBeVisible()
     await page.getByRole('button', { name: /Split it as claimed/ }).click()
-    await expect(page.getByRole('button', { name: /Paneer Tikka.*Decided.*Split as claimed/ })).toBeVisible()
+    await slowExpect(page.getByRole('button', { name: /Paneer Tikka.*Decided.*Split as claimed/ })).toBeVisible()
 
     await page.getByRole('button', { name: 'Update the bill' }).click()
     const updated = page.getByRole('dialog', { name: 'Bill updated' })
-    await expect(updated).toBeVisible()
-    await expect(updated.getByText(/^Riya paid/)).toBeVisible()
-    await expect(updated.getByText(/^Sam · share now/)).toBeVisible()
+    await slowExpect(updated).toBeVisible()
+    await slowExpect(updated.getByText(/^Riya paid/)).toBeVisible()
+    await slowExpect(updated.getByText(/^Sam · share now/)).toBeVisible()
     await updated.getByRole('button', { name: 'See the bill' }).click()
-    await expect(page).toHaveURL(/\/app\/expense\//)
+    await slowExpect(page).toHaveURL(/\/app\/expense\//)
 
     const [bill] = await storedExpenses(page)
     expect(bill?.total).toBe(SAMPLE_TOTAL)
@@ -123,13 +128,13 @@ test.describe('claim your items', () => {
     // Paneer Tikka is split 1 : 2 between Riya and Sam, as claimed.
     const paneerId = bill?.bill?.items.find((i) => i.name === 'Paneer Tikka')?.id ?? ''
     expect(Object.values(bill?.bill?.assignments[paneerId] ?? {}).sort()).toEqual([1, 2])
-    await expect(page.getByText('Claims · 2 of 2 replied')).toBeVisible()
+    await slowExpect(page.getByText('Claims · 2 of 2 replied')).toBeVisible()
 
     // A reply changed by one character is refused.
     const at = riyaReply.indexOf('#') + 20
     const tampered = riyaReply.slice(0, at) + (riyaReply[at] === 'A' ? 'B' : 'A') + riyaReply.slice(at + 1)
     await page.goto(tampered)
-    await expect(page.getByRole('heading', { name: 'This reply doesn’t look right' })).toBeVisible()
+    await slowExpect(page.getByRole('heading', { name: 'This reply doesn’t look right' })).toBeVisible()
   })
 
   test('a saved bill: claim from the ⋮ menu, add your UPI ID first, and it fits 320 px', async ({ page, shared, openPhone }) => {
@@ -178,11 +183,11 @@ test.describe('claim your items', () => {
     await page.getByRole('button', { name: /More/ }).first().click()
     await page.getByRole('button', { name: /Let friends claim items/ }).click()
 
-    await expect(page.getByRole('dialog', { name: 'Add your UPI ID' })).toBeVisible()
+    await slowExpect(page.getByRole('dialog', { name: 'Add your UPI ID' })).toBeVisible()
     await page.getByRole('textbox', { name: 'Your UPI ID' }).fill('ayush@okicici')
     await page.getByRole('button', { name: 'Save and continue' }).click()
-    await expect(page.getByRole('dialog', { name: 'Add your UPI ID' })).toBeHidden()
-    await expect(page.getByText(/^Toit Brewpub · ₹2,766 · 18 Oct/)).toBeVisible()
+    await slowExpect(page.getByRole('dialog', { name: 'Add your UPI ID' })).toBeHidden()
+    await slowExpect(page.getByText(/^Toit Brewpub · ₹2,766 · 18 Oct/)).toBeVisible()
     await expectNoSideScroll(page)
     await expectAccessible(page)
 
@@ -198,19 +203,19 @@ test.describe('claim your items', () => {
     await kabir.getByRole('button', { name: 'I had this: Paneer Tikka' }).click()
     await kabir.getByRole('radio', { name: 'Shared' }).click()
     await kabir.getByRole('button', { name: 'Increase butter Naan: you had' }).or(kabir.getByRole('button', { name: 'Increase butter naan: you had' })).click()
-    await expect(kabir.getByText('Your share, ₹1,049.60, including tax and service', { exact: true })).toBeAttached()
+    await slowExpect(kabir.getByText('Your share, ₹1,049.60, including tax and service', { exact: true })).toBeAttached()
     await expectNoSideScroll(kabir)
     await expectAccessible(kabir)
 
     // The "had nothing" path needs no picks.
     await kabir.getByRole('button', { name: 'I didn’t have anything' }).click()
-    await expect(kabir.getByRole('link', { name: 'Send my picks to Ayush' })).toBeVisible()
+    await slowExpect(kabir.getByRole('link', { name: 'Send my picks to Ayush' })).toBeVisible()
   })
 
   test('an empty or broken claim link says so', async ({ page }) => {
     await page.goto('/claim')
-    await expect(page.getByRole('heading', { name: 'No claim link here' })).toBeVisible()
+    await slowExpect(page.getByRole('heading', { name: 'No claim link here' })).toBeVisible()
     await page.goto('/claim#AAAAbroken')
-    await expect(page.getByRole('heading', { name: 'This claim link doesn’t work' })).toBeVisible()
+    await slowExpect(page.getByRole('heading', { name: 'This claim link doesn’t work' })).toBeVisible()
   })
 })
