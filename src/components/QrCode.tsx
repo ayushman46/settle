@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { encode } from 'uqr'
+import { useT } from '../i18n'
 import { cx } from '../lib/cx'
 import { qrPath } from './helpers'
 import styles from './QrCode.module.css'
@@ -21,6 +22,7 @@ const QUIET_ZONE = 2
 
 /** Crisp, scannable QR code: one SVG path, dark ink on white in every theme. */
 export function QrCode({ value, label, size = 232, ecc = 'M', className }: QrCodeProps) {
+  const t = useT()
   const code = useMemo(() => {
     try {
       const { data } = encode(value, { ecc, border: 0 })
@@ -45,7 +47,7 @@ export function QrCode({ value, label, size = 232, ecc = 'M', className }: QrCod
         </svg>
       ) : (
         <p role="img" aria-label={label} className={styles.fallback}>
-          This code is too long to show as a QR.
+          {t('ui.qr.tooLong')}
         </p>
       )}
     </div>

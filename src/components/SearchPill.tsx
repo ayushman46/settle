@@ -111,7 +111,7 @@ export function SearchPill({
   )
   const hint = examples[0] !== undefined && (
     <span id={hintId} className="visually-hidden">
-      For example: {examples[0]}
+      {t('ui.search.example', { example: examples[0] })}
     </span>
   )
   const lead = (

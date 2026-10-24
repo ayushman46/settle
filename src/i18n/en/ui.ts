@@ -36,4 +36,8 @@ export const ui = {
   'ui.search.submit.aria': 'Go',
   // A toast's action button, spoken with the message ("Undo: Expense deleted").
   'ui.toast.action.aria': '{action}: {message}',
+  // The QR code's stand-in text when the content is too long for one.
+  'ui.qr.tooLong': 'This code is too long to show as a QR.',
+  // The hidden example of what to type in the "Just say it" search pill; `{example}` is one of them.
+  'ui.search.example': 'For example: {example}',
 } as const satisfies Messages
