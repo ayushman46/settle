@@ -32,6 +32,7 @@ export const friends = {
   'friends.form.name.taken': '{name} पहले से आपके लोगों में हैं।',
   'friends.form.upi.label': 'UPI ID',
   'friends.form.upi.hint': 'ज़रूरी नहीं — ताकि उन्हें एक टैप में पे किया जा सके।',
+  'friends.form.upi.error': 'यह UPI ID जैसा नहीं दिख रहा। यह name@bank जैसा होता है।',
   'friends.form.phone.label': 'फ़ोन',
   'friends.form.phone.hint': 'ज़रूरी नहीं — WhatsApp और SMS रिमाइंडर के लिए।',
   'friends.form.phone.error': 'यह फ़ोन नंबर नहीं लगता। 7 से 15 अंक डालें, जैसे 98765 43210।',

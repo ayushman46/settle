@@ -37,6 +37,7 @@ export const friends = {
   'friends.form.name.taken': '{name} is already in your people.',
   'friends.form.upi.label': 'UPI ID',
   'friends.form.upi.hint': 'Optional — so they can be paid in a tap.',
+  'friends.form.upi.error': 'That doesn’t look like a UPI ID. It’s like name@bank.',
   'friends.form.phone.label': 'Phone',
   'friends.form.phone.hint': 'Optional — for WhatsApp and SMS reminders.',
   'friends.form.phone.error': 'That doesn’t look like a phone number. Use 7 to 15 digits, like 98765 43210.',

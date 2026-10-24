@@ -4,7 +4,6 @@ import { Avatar, BottomSheet, Button, TextField, useToast } from '../../componen
 import { addFriend, cleanPhone, DataError, findFriendByName, updateFriend, useFriends } from '../../data'
 import { ME_ID, type Friend } from '../../domain/types'
 import { useT, type MessageKey } from '../../i18n'
-import { UPI_ID_ERROR } from '../../kit/index-b'
 import { cx } from '../../lib/cx'
 import { haptic } from '../../lib/haptics'
 import { MAX_NAME_LENGTH, nextColor, normalizeName } from '../../lib/people'
@@ -167,7 +166,7 @@ export function FriendSheet({ open, onClose, friend, initialName = '', onSaved, 
           enterKeyHint="next"
           className={styles.mono}
           hint={t('friends.form.upi.hint')}
-          error={form.touched.upiId && !upiOk ? UPI_ID_ERROR : undefined}
+          error={form.touched.upiId && !upiOk ? t('friends.form.upi.error') : undefined}
           onChange={(event) => patch({ upiId: event.currentTarget.value.replace(/\s+/g, '') })}
           onKeyDown={(event) => {
             if (enterPressed(event)) phoneRef.current?.focus()
