@@ -1,6 +1,7 @@
 /** The language loader: chunks load once, `setLanguage` resolves after they're in, failures stay put. */
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { LanguageCode } from '../domain/types'
+import { EN } from './en'
 import type { Messages } from './types'
 
 const chunks = vi.hoisted(() => {
@@ -38,7 +39,13 @@ vi.mock('./load', () => ({
 
 // The setup file already loaded the runtime (through the data layer), so load it again under the mock.
 vi.resetModules()
-const { getLanguage, loadLanguage, resetI18nForTests, setLanguage, subscribe, t } = await import('./runtime')
+const { getLanguage, loadLanguage, registerCatalog, resetI18nForTests, setLanguage, subscribe, t } = await import('./runtime')
+
+// The English catalog is laid over the runtime here, so the test reads the same whether or not the
+// build plugin bundles English per screen.
+beforeEach(() => {
+  registerCatalog('en', EN)
+})
 
 afterEach(() => {
   resetI18nForTests()
