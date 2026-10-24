@@ -17,6 +17,7 @@ import { FirstRunCard } from './FirstRunCard'
 import { HomeHeader } from './HomeHeader'
 import { allowanceLabel, FRIENDS_PATH } from './homeLinks'
 import { HomeQuickActions } from './HomeQuickActions'
+import { InstallCard } from '../install'
 import { MicButton } from './MicButton'
 import { PeopleRow } from './PeopleRow'
 import { RecentActivity } from './RecentActivity'
@@ -67,6 +68,8 @@ export function HomeScreen() {
       <BillDraftCard />
 
       <HomeQuickActions />
+
+      <InstallCard />
 
       {hasData ? <BalanceCard summary={summary} onSettle={() => navigate(FRIENDS_PATH)} /> : <FirstRunCard />}
 

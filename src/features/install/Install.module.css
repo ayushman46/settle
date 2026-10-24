@@ -1,0 +1,113 @@
+.card {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin: 12px 0;
+  padding: 14px;
+  border-radius: 16px;
+  background: var(--surface-raised, #fff);
+  border: 1px solid var(--border, #e5e7eb);
+}
+
+.cardIcon {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  background: var(--accent-soft, #e6f4ea);
+  color: var(--accent, #0b7a4b);
+}
+
+.cardBody {
+  min-width: 0;
+  flex: 1;
+}
+
+.cardTitle {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.cardText {
+  margin: 2px 0 8px;
+  font-size: 0.875rem;
+  color: var(--text-muted, #4b5563);
+  overflow-wrap: anywhere;
+}
+
+.cardActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  width: 100%;
+  padding: 12px 16px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.rowText {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.rowTitle {
+  font-weight: 600;
+}
+
+.rowSub {
+  font-size: 0.8125rem;
+  color: var(--text-muted, #4b5563);
+}
+
+.steps {
+  display: grid;
+  gap: 12px;
+  margin: 0 0 16px;
+  padding: 0;
+  list-style: none;
+}
+
+.step {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.stepIcon {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: var(--accent-soft, #e6f4ea);
+  color: var(--accent, #0b7a4b);
+}
+
+.stepTitle {
+  display: block;
+  font-weight: 700;
+}
+
+.stepBody {
+  display: block;
+  font-size: 0.875rem;
+  color: var(--text-muted, #4b5563);
+  overflow-wrap: anywhere;
+}
