@@ -1,0 +1,38 @@
+/** Tamil copy for privacy and terms (src/features/legal). Keys: `legal.<screen>.<element>` (see i18n-plan §3). */
+import type { Messages } from '../types'
+
+export const legal = {
+  'legal.back.label': 'பின்செல்',
+  'legal.home.label': '{brand} முகப்பு',
+  // The date is formatted by code; <time> wraps it for screen readers.
+  'legal.updated': 'கடைசியாகப் புதுப்பிக்கப்பட்டது <time>{date}</time>',
+  'legal.summary.title': 'சுருக்கமாக',
+  'legal.englishBody': 'இந்தக் கொள்கையின் முழு உரை ஆங்கிலத்தில் உள்ளது.',
+  'legal.privacy.title': 'தனியுரிமைக் கொள்கை',
+  'legal.privacy.description': '{brand} உங்கள் தரவை எப்படிக் கையாளுகிறது: எல்லாம் உங்கள் சாதனத்திலேயே இருக்கும், AI படிப்புகள் வைக்கப்படுவதில்லை, கண்காணிப்பு இல்லை.',
+  'legal.privacy.summary.0': '{brand} இல் கணக்குகளும் தரவுத்தளமும் இல்லை. உங்கள் பிரிப்புகள், நண்பர்கள், குழுக்கள் உங்கள் சாதனத்திலேயே இருக்கும்.',
+  'legal.privacy.summary.1': 'பில் புகைப்படங்களும் “சொல்லுங்கள்” உரையும் படிப்பதற்காக மட்டுமே NVIDIA ஹோஸ்ட் செய்யும் AI மாதிரிக்கு அனுப்பப்படும்; அவை வைக்கப்படுவதில்லை.',
+  'legal.privacy.summary.2': 'பணம் செலுத்தும் இணைப்பு அதன் பிரிப்பை இணைப்புக்குள்ளேயே கொண்டுள்ளது — அந்தப் பகுதி எங்கள் சேவையகத்தை ஒருபோதும் அடைவதில்லை.',
+  'legal.privacy.summary.3': 'Pro பணம் செலுத்தல்கள் Razorpay மூலம் கையாளப்படுகின்றன. உங்கள் கார்டு விவரங்களையோ UPI PIN-ஐயோ நாங்கள் பார்ப்பதில்லை.',
+  'legal.privacy.summary.4': 'விளம்பரங்கள் இல்லை, பகுப்பாய்வு இல்லை, கண்காணிப்பு குக்கீகள் இல்லை.',
+  'legal.privacy.section.device': 'உங்கள் சாதனத்தில் இருப்பவை',
+  'legal.privacy.section.leaves': 'உங்கள் சாதனத்திலிருந்து வெளியேறுபவை, ஏன்',
+  'legal.privacy.section.server': 'எங்கள் சேவையகம் வைத்திருப்பவை',
+  'legal.privacy.section.cookies': 'குக்கீகளும் கண்காணிப்பும்',
+  'legal.privacy.section.choices': 'உங்கள் தேர்வுகள்',
+  'legal.privacy.section.children': 'குழந்தைகள்',
+  'legal.privacy.section.changes': 'மாற்றங்களும் தொடர்பும்',
+  'legal.terms.title': 'பயன்பாட்டு விதிமுறைகள்',
+  'legal.terms.description': '{brand} ஐப் பயன்படுத்துவதற்கான விதிமுறைகள்: செலவுகளைப் பிரிக்கும் இலவசக் கருவி, விருப்பத்திற்குரிய ஒரு முறை Pro பாஸ்கள் உண்டு.',
+  'legal.terms.summary.0': '{brand} யார் எதற்குக் கடன்பட்டுள்ளார்கள் என்று கணக்கிட்டுக் கண்காணிக்கிறது. பணத்தை ஒருபோதும் வைத்திருப்பதோ நகர்த்துவதோ இல்லை — பணம் செலுத்தல்கள் உங்கள் UPI ஆப்பில் நடக்கும்.',
+  'legal.terms.summary.1': 'பணம் செலுத்தும் முன் அல்லது யாரையாவது செலுத்தச் சொல்லும் முன் தொகைகள், பெயர்கள், AI முடிவுகளைச் சரிபாருங்கள்.',
+  'legal.terms.summary.2': 'Pro பாஸ்கள் ஒரு முறை கட்டணங்கள். அவை தானாகப் புதுப்பிக்கப்படுவதில்லை.',
+  'legal.terms.summary.3': 'உங்கள் தரவு உங்கள் சாதனத்தில் உள்ளது, அதனால் காப்புப் பிரதி வைத்திருப்பது உங்கள் பொறுப்பு.',
+  'legal.terms.section.using': '{brand} ஐப் பயன்படுத்துதல்',
+  'legal.terms.section.money': 'பணம் மற்றும் UPI',
+  'legal.terms.section.ai': 'AI அம்சங்கள்',
+  'legal.terms.section.pro': '{brand} Pro',
+  'legal.terms.section.data': 'உங்கள் தரவு',
+  'legal.terms.section.service': 'சேவை',
+  'legal.terms.section.changes': 'மாற்றங்களும் தொடர்பும்',
+} as const satisfies Messages

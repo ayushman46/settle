@@ -19,4 +19,17 @@ export const state = {
   // The last row when the bill printed no total: what its lines add up to.
   'state.breakdown.addsUpTo': 'கூட்டுத்தொகை',
   'state.breakdown.total': 'பில் மொத்தம்',
+  // Errors when a draft can't be saved yet.
+  'state.error.expense.noPeople': 'பிரிக்க குறைந்தது ஒரு நபரைச் சேருங்கள்.',
+  'state.error.expense.badTotal': 'பூஜ்ஜியத்தை விட அதிகமான தொகையை உள்ளிடுங்கள்.',
+  'state.error.expense.exactMismatch': 'தொகைகள் இன்னும் மொத்தத்துடன் சரியாகக் கூடவில்லை.',
+  'state.error.expense.percentMismatch': 'சதவீதங்கள் இன்னும் 100% ஆகச் சரியாகக் கூடவில்லை.',
+  'state.error.expense.payerMissing': 'யார் செலுத்தினார் என்று தேர்ந்தெடுங்கள்.',
+  'state.error.expense.zeroWeights': 'குறைந்தது ஒருவருக்காவது பங்கு கொடுங்கள்.',
+  'state.error.expense.notFound': 'அந்தச் செலவு இனி இல்லை.',
+  'state.error.data.notFound': 'அது கண்டுபிடிக்கப்படவில்லை — நீக்கப்பட்டிருக்கலாம்.',
+  'state.error.data.emptyName': 'முதலில் ஒரு பெயரைச் சேருங்கள்.',
+  'state.error.data.duplicateName': 'அந்தப் பெயரில் ஒருவர் ஏற்கனவே உங்கள் நபர்களில் இருக்கிறார்.',
+  'state.error.data.limit': 'இங்கு வரம்பை எட்டிவிட்டீர்கள் — இனி தேவையில்லாததை அகற்றுங்கள்.',
+  'state.error.data.invalid': 'அது சரியாகத் தெரியவில்லை — சரிபார்த்து மீண்டும் முயற்சி செய்யுங்கள்.',
 } as const satisfies Messages

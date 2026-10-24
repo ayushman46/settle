@@ -52,4 +52,6 @@ export const proof = {
   'proof.shared.note': 'வேறொரு ஆப்பிலிருந்து பகிரப்பட்டது',
   'proof.more.title': 'பணம் செலுத்தினீர்களா? ஸ்கிரீன்ஷாட்டை இடுங்கள்',
   'proof.more.subtitle': 'UPI பணப்பரிவர்த்தனையை அதன் ஸ்கிரீன்ஷாட்டிலிருந்து செலுத்தியதாகக் குறியுங்கள்',
+  // The link on Settle-up and friend pages that opens the screenshot flow.
+  'proof.entry.cta': 'பணம் செலுத்திய ஸ்கிரீன்ஷாட் கிடைத்ததா?',
 } as const satisfies Messages
