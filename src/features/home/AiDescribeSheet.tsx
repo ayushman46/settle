@@ -8,7 +8,7 @@ import { Avatar, Badge, Banner, BottomSheet, Button, CategoryIcon, Chip, Money, 
 import { addFriend, setSplitPrefill, useFriends, useProfile } from '../../data'
 import { FREE_AI_PER_DAY, ME_ID, type DescribedSplit } from '../../domain/types'
 import { today } from '../../engine/dates'
-import { useT } from '../../i18n'
+import { t, useT } from '../../i18n'
 import { relativeDateLabel } from '../../kit/dateLabel'
 import { cx } from '../../lib/cx'
 import { haptic } from '../../lib/haptics'
@@ -50,8 +50,8 @@ const RETRYABLE: ReadonlySet<DescribeErrorCode> = new Set(['timeout', 'upstream_
 const CHIP_EXAMPLES = DESCRIBE_EXAMPLES.slice(0, 3)
 
 function quotaLine(remaining: number): string {
-  if (remaining <= 0) return `You’ve used today’s ${FREE_AI_PER_DAY} free AI splits`
-  return `${remaining} of ${FREE_AI_PER_DAY} free AI splits left today`
+  if (remaining <= 0) return t('home.describe.quota.used', { limit: FREE_AI_PER_DAY })
+  return t('home.describe.quota.left', { count: remaining, limit: FREE_AI_PER_DAY })
 }
 
 interface VoiceState {
@@ -278,8 +278,8 @@ export function AiDescribeSheet({ open, onClose, startWith }: AiDescribeSheetPro
     <BottomSheet
       open={open}
       onClose={close}
-      title="Just say it"
-      description="Type it like you’d text a friend — Settle sets up the split."
+      title={t('home.say.title')}
+      description={t('home.describe.body')}
       initialFocus={startWith === 'voice' && voiceOn ? micRef : inputRef}
       footer={
         view ? (
@@ -296,9 +296,9 @@ export function AiDescribeSheet({ open, onClose, startWith }: AiDescribeSheetPro
     >
       <div className={styles.body}>
         <SearchPill
-          placeholder="Dinner 2400 with Riya and Sam"
-          label="Describe the expense"
-          submitLabel="Read it"
+          placeholder={t('home.describe.placeholder')}
+          label={t('home.describe.label')}
+          submitLabel={t('home.describe.submit')}
           examples={DESCRIBE_EXAMPLES}
           value={text}
           onChange={edit}
@@ -379,7 +379,7 @@ export function AiDescribeSheet({ open, onClose, startWith }: AiDescribeSheetPro
           {phase.kind === 'error' && (
             <Banner
               tone={phase.error.code === 'not_a_split' || phase.error.code === 'bad_request' ? 'warning' : 'error'}
-              title={RETRYABLE.has(phase.error.code) ? 'Couldn’t read that' : 'Let’s try that again'}
+              title={RETRYABLE.has(phase.error.code) ? t('home.describe.error.retryTitle') : t('home.describe.error.againTitle')}
               actions={
                 <div className={styles.errorActions}>
                   {RETRYABLE.has(phase.error.code) && (
@@ -478,7 +478,7 @@ function QuotaLine({ limited, remaining, onUpgrade }: { limited: boolean; remain
     <p className={cx(styles.quota, remaining <= 0 && styles.quotaOut)}>
       <span>{quotaLine(remaining)}</span>
       <button type="button" className={styles.quotaLink} onClick={onUpgrade}>
-        {remaining <= 0 ? 'Get unlimited' : 'Go unlimited'}
+        {remaining <= 0 ? t('home.describe.getUnlimited') : t('home.describe.goUnlimited')}
       </button>
     </p>
   )
@@ -507,7 +507,7 @@ function Reading() {
 function DraftCard({ view }: { view: DescribeView }) {
   const t = useT()
   const titleId = useId()
-  const date = view.date ? relativeDateLabel(view.date) : 'Today'
+  const date = view.date ? relativeDateLabel(view.date) : t('home.describe.today')
   return (
     <article className={styles.card} aria-labelledby={titleId}>
       <header className={styles.cardTop}>
@@ -532,7 +532,7 @@ function DraftCard({ view }: { view: DescribeView }) {
       </div>
 
       {view.people.length > 0 ? (
-        <ul role="list" className={styles.people} aria-label="Who’s in">
+        <ul role="list" className={styles.people} aria-label={t('home.describe.whosIn')}>
           {view.people.map((person) => (
             <li key={person.id} className={styles.person}>
               <Avatar name={person.avatarName} color={person.color} size="sm" />
@@ -540,7 +540,7 @@ function DraftCard({ view }: { view: DescribeView }) {
                 {person.name}
                 {person.isNew && (
                   <Badge tone="accent" className={styles.newBadge}>
-                    New
+                    {t('home.describe.new')}
                   </Badge>
                 )}
               </span>
@@ -555,14 +555,14 @@ function DraftCard({ view }: { view: DescribeView }) {
 
       <p className={styles.cardNote}>
         {view.missing > 0
-          ? `${peopleSummary(view.people, view.missing)} — pick the other ${view.missing} on the next screen.`
+          ? t('home.describe.note.pick', { summary: peopleSummary(view.people, view.missing), count: view.missing })
           : view.people.length === 0
             ? peopleSummary(view.people, 0)
             : !view.addsUp
-              ? 'The amounts don’t add up to the total yet — you can fix that on the next screen.'
+              ? t('home.describe.note.addsUp')
               : view.people.some((p) => p.isNew)
-                ? 'New names are added to your people when you continue.'
-                : 'Nothing is saved until you tap Save.'}
+                ? t('home.describe.note.newNames')
+                : t('home.describe.note.nothingSaved')}
       </p>
     </article>
   )

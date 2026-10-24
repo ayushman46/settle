@@ -1,6 +1,6 @@
 import { useRef, useState, type ChangeEvent } from 'react'
 import { DatabaseBackup, Download, FileSpreadsheet, Trash2 } from 'lucide-react'
-import { useT } from '../../i18n'
+import { t, useT } from '../../i18n'
 import { Link, navigate } from '../../app/router'
 import { Badge, Card, List, ListRow, useToast } from '../../components'
 import {
@@ -44,9 +44,9 @@ const WELCOME_PATH = '/app/welcome'
 const YOU_PATH = '/app/you'
 
 function restoredMessage(mode: RestoreMode, result: { added: number; updated: number }): string {
-  if (mode === 'replace') return 'Backup restored'
+  if (mode === 'replace') return t('you.data.restored')
   const parts = [result.added > 0 && `${result.added} added`, result.updated > 0 && `${result.updated} updated`].filter(Boolean)
-  return parts.length > 0 ? `Backup merged — ${parts.join(', ')}` : 'Backup merged — nothing new in it'
+  return parts.length > 0 ? t('you.data.merged', { parts: parts.join(', ') }) : t('you.data.merged.none')
 }
 
 /**
@@ -81,9 +81,9 @@ export function DataSettings() {
     if (outcome === 'shared' || outcome === 'downloaded') {
       setLastBackupAt(Date.now())
       haptic('success')
-      toast(outcome === 'shared' ? 'Backup shared — keep it somewhere safe' : 'Backup saved to your downloads', { tone: 'success' })
+      toast(outcome === 'shared' ? t('you.data.shared') : t('you.data.saved'), { tone: 'success' })
     } else if (outcome === 'failed') {
-      toast("Couldn't save the backup. Try again.", { tone: 'error' })
+      toast(t('you.data.saveFailed'), { tone: 'error' })
     }
   }
 
@@ -112,10 +112,10 @@ export function DataSettings() {
     toast(restoredMessage(mode, result), {
       tone: 'success',
       action: {
-        label: 'Undo',
+        label: t('you.data.undo'),
         onAction: () => {
           importBackup(before, 'replace')
-          toast('Restore undone')
+          toast(t('you.data.undone'))
         },
       },
     })
@@ -133,7 +133,7 @@ export function DataSettings() {
       const what = `${expenses.length} ${expenses.length === 1 ? 'expense' : 'expenses'}`
       toast(outcome === 'shared' ? `${what} exported` : `${what} saved to your downloads as CSV`, { tone: 'success' })
     } else if (outcome === 'failed') {
-      toast("Couldn't export right now. Try again.", { tone: 'error' })
+      toast(t('you.data.exportFailed'), { tone: 'error' })
     }
   }
 
@@ -147,15 +147,15 @@ export function DataSettings() {
     clearLastBackup()
     if (removePro) clearLicense()
     setClearing(false)
-    toast(removePro ? 'Everything is cleared, Pro included' : 'Everything on this phone is cleared', {
+    toast(removePro ? t('you.data.cleared.pro') : t('you.data.cleared'), {
       action: {
-        label: 'Undo',
+        label: t('you.data.undo'),
         onAction: () => {
           importBackup(snapshot, 'replace')
           setLastBackupAt(savedAt)
           if (token) void redeemLicense(token)
           navigate(YOU_PATH, { replace: true })
-          toast('Everything is back', { tone: 'success' })
+          toast(t('you.data.back'), { tone: 'success' })
         },
       },
     })
@@ -165,8 +165,8 @@ export function DataSettings() {
   const backupLine = lastBackup
     ? `Last saved ${savedWhen(lastBackup)}`
     : hasLocalData
-      ? 'Not backed up yet — keep a copy somewhere safe'
-      : 'Keep a copy of everything, just in case'
+      ? t('you.data.notBacked')
+      : t('you.data.keepCopy')
 
   return (
     <section className={styles.section} aria-labelledby="you-data">

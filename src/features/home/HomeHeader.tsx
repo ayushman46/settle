@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Crown, Sparkles } from 'lucide-react'
 import { Link } from '../../app/router'
 import { Avatar, Badge } from '../../components'
+import { useT } from '../../i18n'
 import { useMe, useProfile } from '../../data'
 import { usePro } from '../../pro/store'
 import { currentHour, helloLine, timeOfDayGreeting } from './greeting'
@@ -12,6 +13,7 @@ import styles from './HomeScreen.module.css'
  * gradient badge, or a quiet "Go Pro" — and their avatar, which opens You.
  */
 export function HomeHeader() {
+  const t = useT()
   const profile = useProfile()
   const me = useMe()
   const pro = usePro()
@@ -28,7 +30,7 @@ export function HomeHeader() {
       </div>
       <div className={styles.headerEnd}>
         {pro.isPro ? (
-          <Link to="/app/pro" className={styles.proLink} aria-label="Settle Pro is on">
+          <Link to="/app/pro" className={styles.proLink} aria-label={t('home.header.proOn')}>
             <Badge tone="pro" size="md" icon={<Sparkles />}>
               Pro
             </Badge>
@@ -36,7 +38,7 @@ export function HomeHeader() {
         ) : (
           <Link to="/app/pro" className={styles.goPro}>
             <Crown aria-hidden="true" className={styles.goProIcon} />
-            {pro.status === 'expired' ? 'Renew Pro' : 'Go Pro'}
+            {pro.status === 'expired' ? t('home.header.renew') : t('home.header.go')}
           </Link>
         )}
         <Link to="/app/you" className={styles.avatarLink} aria-label="You: profile and settings">

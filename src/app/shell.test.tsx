@@ -142,7 +142,7 @@ describe('AppShell — the welcome gate', SLOW, () => {
   it('welcomes a first-time visitor before anything else', async () => {
     const length = window.history.length
     renderApp('/app')
-    expect(await heading('Welcome to Settle')).toBeInTheDocument()
+    expect(await heading('Choose your language')).toBeInTheDocument()
     expect(currentUrl()).toBe('/app/welcome')
     expect(window.history.length).toBe(length)
     expect(tabBar()).toBeNull()
@@ -150,7 +150,7 @@ describe('AppShell — the welcome gate', SLOW, () => {
 
   it('carries on to a deep link once onboarding is done', async () => {
     const { user } = renderApp('/app/split/new?category=rent')
-    await heading('Welcome to Settle')
+    await heading('Choose your language')
     expect(currentUrl()).toBe('/app/welcome?next=%2Fapp%2Fsplit%2Fnew%3Fcategory%3Drent')
     await user.click(screen.getByRole('button', { name: 'Skip' }))
     await user.type(await screen.findByLabelText('Your name'), 'Ayush')

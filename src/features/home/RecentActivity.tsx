@@ -1,20 +1,22 @@
 import { navigate } from '../../app/router'
 import { Card, List, SectionHeader } from '../../components'
 import { useExpenses } from '../../data'
+import { useT } from '../../i18n'
 import { ExpenseRow } from '../../kit/ExpenseRow'
 import { ACTIVITY_PATH, expensePath, RECENT_SHOWN } from './homeLinks'
 import styles from './HomeScreen.module.css'
 
 /** The latest few expenses, newest first, each opening its detail. Nothing when there are none. */
 export function RecentActivity() {
+  const t = useT()
   const expenses = useExpenses()
   if (expenses.length === 0) return null
   return (
     <section className={styles.section} aria-labelledby="home-recent">
       <SectionHeader
         id="home-recent"
-        title="Recent activity"
-        action={{ label: 'See all', href: ACTIVITY_PATH, 'aria-label': 'See all activity' }}
+        title={t('home.recent.title')}
+        action={{ label: t('home.recent.all'), href: ACTIVITY_PATH, 'aria-label': t('home.recent.allAria') }}
       />
       <Card padding="none">
         <List>
