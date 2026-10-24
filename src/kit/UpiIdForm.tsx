@@ -1,7 +1,7 @@
 import { useState, type FormEvent, type ReactNode } from 'react'
 import { Button, TextField } from '../components'
 import { ME_ID } from '../domain/types'
-import { useT } from '../i18n'
+import { t, useT } from '../i18n'
 import { cx } from '../lib/cx'
 import { isValidUpiId, normalizeUpiId } from '../lib/upi'
 import styles from './UpiIdForm.module.css'
@@ -21,8 +21,13 @@ export interface UpiIdFormProps {
   className?: string
 }
 
-/** English only (kept for older callers): show `t('kit.upiForm.error')` instead. */
+/** English only (kept for older callers): use `upiIdError()`, which reads in the UI language. */
 export const UPI_ID_ERROR = 'That doesn’t look like a UPI ID. It’s like name@bank.'
+
+/** `UPI_ID_ERROR` in the UI language. */
+export function upiIdError(): string {
+  return t('kit.upiForm.error')
+}
 
 /**
  * Adds a UPI ID in place, where one is missing (a pay sheet, a share sheet asking for yours):
@@ -56,7 +61,7 @@ export function UpiIdForm({
       {lead != null && <p className={styles.lead}>{lead}</p>}
       <TextField
         label={mine ? t('kit.upiForm.label.mine') : t('kit.upiForm.label', { name: ownerName })}
-        placeholder="name@okaxis"
+        placeholder="name@okaxis" /* i18n-ignore: an example UPI ID */
         value={text}
         onChange={(event) => setText(event.target.value.replace(/\s+/g, ''))}
         onBlur={() => {

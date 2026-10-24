@@ -252,7 +252,7 @@ export function ShareSheet({ expense, open, onClose, onUpgrade }: ShareSheetProp
         )}
 
         <QuickActionGrid label={settlesIn ? t('kit.share.actions.split') : t('kit.share.actions.link')} className={styles.actions}>
-          <QuickAction tone="groceries" icon={<MessageCircle />} label="WhatsApp" onClick={sendWhatsApp} disabled={!message} />
+          <QuickAction tone="groceries" icon={<MessageCircle />} label="WhatsApp" /* i18n-ignore: brand */ onClick={sendWhatsApp} disabled={!message} />
           <QuickAction tone="travel" icon={<Share2 />} label={t('kit.share.moreApps')} onClick={shareElsewhere} disabled={!message} />
           {settlesIn === null && <QuickAction tone="ink" icon={<Copy />} label={t('kit.share.copyLink')} onClick={copyLink} disabled={!link} />}
           <QuickAction tone="entertainment" icon={<FileText />} label={t('kit.share.copyText')} onClick={copySummary} disabled={!summary} />

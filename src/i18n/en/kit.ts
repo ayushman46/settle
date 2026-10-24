@@ -91,6 +91,7 @@ export const kit = {
   'kit.row.spoken': '{subtitle}, {phrase}',
 
   // Each person's line in an expense's share list.
+  'kit.shares.list.aria': 'Shares',
   'kit.shares.status.payer': 'Paid the bill',
   'kit.shares.status.paid': 'Paid {name} back',
   'kit.shares.status.youOwe': 'You owe {name}',

@@ -41,7 +41,7 @@ export {
 } from './shareLines'
 export { ShareSheet, type ShareSheetProps } from './ShareSheet'
 export { TransferRow, type TransferRowProps } from './TransferRow'
-export { UPI_ID_ERROR, UpiIdForm, type UpiIdFormProps } from './UpiIdForm'
+export { UPI_ID_ERROR, UpiIdForm, upiIdError, type UpiIdFormProps } from './UpiIdForm'
 export { UpiPaySheet, type UpiPayee, type UpiPayer, type UpiPaySheetProps } from './UpiPaySheet'
 export { upiPaymentForShare, upiPaymentForTransfer, type UpiPayment } from './upiPayment'
 export { usePayLink, type PayLink, type PayLinkOptions } from './usePayLink'

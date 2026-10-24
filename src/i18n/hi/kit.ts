@@ -77,6 +77,7 @@ export const kit = {
   'kit.row.paidBack': 'आपने {amount} चुका दिए, हिसाब बराबर',
   'kit.row.spoken': '{subtitle}, {phrase}',
 
+  'kit.shares.list.aria': 'हिस्से',
   'kit.shares.status.payer': 'बिल दिया',
   'kit.shares.status.paid': '{name} को चुका दिया',
   'kit.shares.status.youOwe': '{name} को देने हैं',

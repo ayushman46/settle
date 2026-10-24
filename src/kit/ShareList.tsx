@@ -42,7 +42,7 @@ export function ShareList({ expense, onTogglePaid, onPayUpi, onNudge, className 
   const payer = friendsById[expense.payerId] ?? null
 
   return (
-    <ul role="list" aria-label="Shares" className={cx(styles.list, className)}>
+    <ul role="list" aria-label={t('kit.shares.list.aria')} className={cx(styles.list, className)}>
       {lines.map((line) => (
         <ShareRow
           key={line.friendId}
