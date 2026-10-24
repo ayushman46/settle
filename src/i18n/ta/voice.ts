@@ -15,7 +15,7 @@ export const voice = {
   'voice.listen.tip': 'அது என்னவாக இருந்தது, எவ்வளவு, யார் இருந்தார்கள் என்று சொல்லுங்கள் — உதாரணம்',
   'voice.listen.heard.aria': 'கேட்டது: {text}',
   // Chips under the field for each number phrase turned into digits.
-  'voice.heard.chip': '“{phrase}” கேட்டது → {amount}',
+  'voice.heard.chip': '“{phrase}” → {amount}',
   'voice.heard.label': 'நாங்கள் கேட்ட எண்கள்',
   // When the transcript is longer than the AI can read.
   'voice.long.title': 'இது நீளமானது — சுருக்கமாகச் சொல்லுங்கள்',

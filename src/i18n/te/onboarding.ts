@@ -3,7 +3,7 @@ import type { Messages } from '../types'
 
 export const onboarding = {
   // First step: the language (title is common.language.title).
-  'onboarding.language.subtitle': 'మీరు → భాష లో ఎప్పుడైనా మార్చుకోవచ్చు.',
+  'onboarding.language.subtitle': 'మీరు → భాషలో ఎప్పుడైనా మార్చుకోవచ్చు.',
   // The three intro slides.
   'onboarding.intro.heading': '{brand} కు స్వాగతం',
   'onboarding.intro.carousel.aria': '{brand} ఏమి చేస్తుంది',

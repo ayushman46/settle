@@ -7,7 +7,7 @@ export const pay = {
   'pay.shell.what': '{brand} என்றால் என்ன?',
   'pay.shell.pitch.title': 'அடுத்த முறை பில்லைப் பிரிக்கப் போகிறீர்களா?',
   'pay.shell.pitch.body': 'பில்லை புகைப்படம் எடுங்கள், இதைப் போன்ற ஒரு இணைப்பைப் பகிருங்கள், UPI மூலம் திருப்பிப் பெறுங்கள். பதிவு இல்லை, விளம்பரங்கள் இல்லை.',
-  'pay.shell.pitch.cta': '{brand} மூலம் உங்கள் சொந்தப் பில்களைப் பிரியுங்கள் — இலவசம்',
+  'pay.shell.pitch.cta': '{brand} மூலம் உங்கள் பில்களைப் பிரியுங்கள்',
   'pay.shell.privacy': 'தனியுரிமை',
   'pay.shell.terms': 'விதிமுறைகள்',
   // The request card, the page's h1. <by> is the small line, <what> the big title (user content).
@@ -40,11 +40,11 @@ export const pay = {
   'pay.upi.copied.status': 'UPI ID நகலெடுக்கப்பட்டது',
   'pay.upi.safety': 'செலுத்துவதற்கு முன் உங்கள் UPI ஆப்பில் <b>{name}</b> தெரிகிறதா என்று பாருங்கள். {brand} ஒருபோதும் உங்கள் பணத்தைத் தொடுவதில்லை.',
   // One person's share.
-  'pay.panel.notYou.cta': '{name} இல்லையா? உங்கள் பெயரைத் தேர்ந்தெடுங்கள்',
+  'pay.panel.notYou.cta': '{name} இல்லையா? பெயர் தேர்',
   'pay.panel.share.title': '{name} இன் பங்கு',
   'pay.panel.paid.title': 'கணக்கு சரியாக உள்ளது',
   'pay.panel.paid.body': 'உங்கள் பங்கை {name} செலுத்தியதாகக் குறித்துள்ளார்.',
-  'pay.panel.reveal.cta': 'எப்படியும் பணம் செலுத்தும் விவரங்களைக் காட்டு',
+  'pay.panel.reveal.cta': 'எப்படியும் விவரங்களைக் காட்டு',
   'pay.panel.nothing.title': 'செலுத்த எதுவுமில்லை',
   'pay.panel.nothing.body': 'இதில் உங்கள் பங்கு {amount}.',
   'pay.panel.noUpi.title': '{name} UPI ID சேர்க்கவில்லை',
@@ -60,7 +60,7 @@ export const pay = {
   'pay.breakdown.extras.taken': 'தள்ளுபடிகள் மற்றும் சுற்றல்',
   // "Paid? Tell them" — a ready message the payer sends to the payee's chat.
   'pay.tell.title': 'செலுத்தினீர்களா?',
-  'pay.tell.cta': 'நீங்கள் செலுத்தியதை {name} அவர்களுக்குச் சொல்லுங்கள்',
+  'pay.tell.cta': '{name}: செலுத்தியதைச் சொல்',
   'pay.tell.copied.status': 'செய்தி நகலெடுக்கப்பட்டது — உங்கள் அரட்டையில் ஒட்டுங்கள்.',
   'pay.tell.shared.status': 'அனுப்பப்பட்டது. கணக்கைத் தீர்த்ததற்கு நன்றி!',
   'pay.tell.failed.status': 'செய்தியைப் பகிர முடியவில்லை. மீண்டும் முயற்சி செய்யுங்கள்.',

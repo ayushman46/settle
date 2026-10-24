@@ -27,7 +27,7 @@ export const expense = {
   // The main button.
   'expense.primary.group.cta': '{group} లో లెక్క తేల్చండి',
   'expense.primary.pay.cta': '{name} గారికి {amount} చెల్లించండి',
-  'expense.primary.markPaid.cta': 'నేను {name} గారికి తిరిగి ఇచ్చేశాను',
+  'expense.primary.markPaid.cta': '{name} గారికి తిరిగి ఇచ్చాను',
   'expense.primary.payLink.cta': 'పే లింక్ షేర్ చేయండి',
   'expense.primary.share.cta': 'షేర్ చేయండి',
   'expense.share.aria': 'షేర్ చేయండి',
@@ -35,7 +35,7 @@ export const expense = {
   'expense.more.aria': 'ఇతర ఎంపికలు',
   // Sections.
   'expense.shares.title': 'అందరి వాటా',
-  'expense.shares.markAll.cta': 'అందరినీ చెల్లించినట్లు గుర్తించండి',
+  'expense.shares.markAll.cta': 'అందరూ చెల్లించారు',
   'expense.note.title': 'నోట్',
   // The small print: "Added 18 Oct, 9:41 pm · from a scanned bill · last changed 19 Oct, 8:02 am".
   'expense.added': 'జోడించబడింది {date}',

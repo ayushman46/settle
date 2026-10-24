@@ -127,7 +127,7 @@ export const kit = {
   'kit.transfer.pay.aria': 'UPI ద్వారా {name} కు {amount} చెల్లించండి',
   'kit.transfer.remind.cta': 'గుర్తు చేయండి',
   'kit.transfer.remind.aria': '{amount} గురించి {name} కు గుర్తు చేయండి',
-  'kit.transfer.record.cta': 'చెల్లింపును నమోదు చేయండి',
+  'kit.transfer.record.cta': 'చెల్లింపు నమోదు',
   'kit.transfer.record.aria': '{from} నుంచి {to} కి {amount} నమోదు చేయండి',
   // Picking who paid.
   'kit.payer.label': 'చెల్లించినవారు',

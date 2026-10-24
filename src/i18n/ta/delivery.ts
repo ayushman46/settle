@@ -5,7 +5,7 @@ export const delivery = {
   // The scan step opened from Home's "Food order" tile.
   'delivery.scan.title': 'உணவு ஆர்டரைப் பிரி',
   'delivery.scan.subtitle': 'Swiggy, Zomato, Blinkit, Zepto அல்லது Instamart ஆர்டர் ஸ்கிரீன்ஷாட்டை இடுங்கள் — பொருட்கள், கட்டணங்கள், கூப்பன் ஆகியவற்றை நாங்கள் எடுத்துக்கொள்வோம்.',
-  'delivery.scan.choose.cta': 'ஸ்கிரீன்ஷாட்டைத் தேர்ந்தெடு',
+  'delivery.scan.choose.cta': 'ஸ்கிரீன்ஷாட் தேர்வு',
   'delivery.scan.camera.cta': 'புகைப்படம் எடு',
   // Extra lines in the rotating "reading" status while a delivery order is read.
   'delivery.scan.status.fees': 'கட்டணங்களைத் தேடுகிறது…',

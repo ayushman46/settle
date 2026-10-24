@@ -102,7 +102,7 @@ export const kit = {
   'kit.shares.item.sharedByAll': 'அனைவரும் பகிர்ந்தது',
   // Someone's part of an unevenly shared item ("2 of 3 shares").
   'kit.shares.portion': '{total} பங்கில் {shares}',
-  'kit.shares.pay.cta': '{name} அவர்களுக்குச் செலுத்து',
+  'kit.shares.pay.cta': '{name}: செலுத்து',
   'kit.shares.pay.aria': 'UPI மூலம் {name} அவர்களுக்கு {amount} செலுத்து',
   'kit.shares.qr.cta': 'UPI QR',
   'kit.shares.qr.aria': '{name} அவர்களுக்கு {amount} செலுத்த UPI QR-ஐக் காட்டு',
@@ -127,7 +127,7 @@ export const kit = {
   'kit.transfer.pay.aria': 'UPI மூலம் {name} அவர்களுக்கு {amount} செலுத்து',
   'kit.transfer.remind.cta': 'நினைவூட்டு',
   'kit.transfer.remind.aria': '{amount} பற்றி {name} அவர்களுக்கு நினைவூட்டு',
-  'kit.transfer.record.cta': 'பணம் செலுத்தியதைப் பதிவு செய்',
+  'kit.transfer.record.cta': 'செலுத்தலைப் பதிவு செய்',
   'kit.transfer.record.aria': '{from} இலிருந்து {to} வரை {amount} பதிவு செய்',
   // Picking who paid.
   'kit.payer.label': 'செலுத்தியவர்',
@@ -234,7 +234,7 @@ export const kit = {
   'kit.upi.markPaid.cta': 'செலுத்தியதாகக் குறி',
   'kit.upi.rupeesOnly.title': 'UPI ரூபாயில் மட்டுமே வேலை செய்யும்',
   'kit.upi.rupeesOnly.body': 'இதை வங்கிப் பரிவர்த்தனை அல்லது ரொக்கமாகத் தீர்த்து, பின்னர் செலுத்தியதாகக் குறியுங்கள்.',
-  'kit.upi.useId.cta': 'இந்த UPI ID ஐப் பயன்படுத்து',
+  'kit.upi.useId.cta': 'UPI ID-ஐப் பயன்படுத்து',
   'kit.upi.missing.mine': 'ஒரே தட்டில் பணம் பெற உங்கள் UPI ID ஐச் சேருங்கள்.',
   'kit.upi.missing.theirs': '{name} இன்னும் UPI ID சேர்க்கவில்லை. QR குறியீடு பெற அதைச் சேருங்கள்.',
   'kit.upi.qr.aria': '{name} அவர்களுக்கு {amount} செலுத்த UPI QR குறியீடு',

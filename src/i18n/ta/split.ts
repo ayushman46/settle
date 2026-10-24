@@ -40,7 +40,7 @@ export const split = {
   'split.bill.line': '{items, plural, one {# பொருள்} other {# பொருட்கள்}} · {people, plural, one {# நபர்} other {# நபர்கள்}}',
   'split.bill.editing.body': 'யார் எதை எடுத்தார்கள் என்பது அப்படியே இருக்கும். மாற்ற, பில்லைத் திறவுங்கள்.',
   'split.bill.copy.body': 'அசல் பிரிப்பில் உள்ள அதே பொருட்களும் நபர்களும் — சேமித்த பின் யார் எதை எடுத்தார்கள் என்பதை மாற்றுங்கள்.',
-  'split.bill.change.cta': 'யார் எதை எடுத்தார்கள் என்பதை மாற்று',
+  'split.bill.change.cta': 'யார் எடுத்தது மாற்று',
   // Discard confirm.
   'split.discard.new.title': 'இந்தப் பிரிப்பை நிராகரிக்கவா?',
   'split.discard.title': 'மாற்றங்களை நிராகரிக்கவா?',

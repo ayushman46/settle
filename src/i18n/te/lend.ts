@@ -77,7 +77,7 @@ export const lend = {
   // The note on the copy saved for a part-repayment.
   'lend.repay.note': '{date} న తిరిగి ఇచ్చారు',
   // Friend page: the second button in the bottom bar.
-  'lend.friend.cta': 'అప్పు ఇవ్వండి / తీసుకోండి',
+  'lend.friend.cta': 'అప్పు ఇవ్వు/తీసుకో',
   // Nudges about a loan (deterministic pick, like every nudge).
   'lend.nudge.friendly.0': 'హాయ్ {to}! 👋 నేను ఇచ్చిన {amount} గురించి ఒక చిన్న గుర్తు. తొందర లేదు!',
   'lend.nudge.friendly.1': 'హాయ్ {to} 🙂 మీకు వీలైనప్పుడు — {date} నాటి {amount}. ధన్యవాదాలు!',

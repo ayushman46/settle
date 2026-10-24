@@ -28,7 +28,7 @@ export const bill = {
   'bill.start.new.description': '{people, select, yes {{what} భర్తీ అవుతుంది. మీరు జోడించిన వ్యక్తులు అలాగే ఉంటారు.} other {{what} భర్తీ అవుతుంది.}}',
   'bill.start.edit.cta': '{title} మార్చండి',
   'bill.start.sample.cta': 'నమూనాను ప్రయత్నించండి',
-  'bill.start.new.cta': 'కొత్త బిల్లు మొదలుపెట్టండి',
+  'bill.start.new.cta': 'కొత్త బిల్లు',
   'bill.start.keep.cta': 'నా బిల్లు ఉంచండి',
   // The group chip and its sheet.
   'bill.group.lead': 'గ్రూప్',
@@ -111,7 +111,7 @@ export const bill = {
   'bill.people.undoFull.toast': 'వెనక్కి తీసుకోలేకపోయాం — టేబుల్ నిండింది',
   'bill.people.needTwo.hint': 'కనీసం 2 మందిని ఎంచుకోండి',
   'bill.people.needOne.hint': 'మరొక వ్యక్తిని ఎంచుకోండి',
-  'bill.people.next.cta': 'తర్వాత: ఎవరు ఏది తీసుకున్నారు',
+  'bill.people.next.cta': 'తర్వాత: ఎవరు తీసుకున్నారు',
   // The bill's name chip / button (review and result steps).
   'bill.name.rename.aria': 'బిల్లు పేరు మార్చండి, {name}',
   'bill.name.empty': 'ఈ బిల్లుకు పేరు పెట్టండి',
@@ -243,7 +243,7 @@ export const bill = {
   'bill.scan.typeIn.cta': 'టైప్ చేయండి',
   'bill.scan.sample.cta': 'నమూనాను ప్రయత్నించండి',
   'bill.scan.typeItems.cta': 'ఐటమ్‌లను టైప్ చేయండి',
-  'bill.scan.sampleBill.cta': 'నమూనా బిల్లును ప్రయత్నించండి',
+  'bill.scan.sampleBill.cta': 'నమూనా బిల్లు',
   'bill.scan.camera.aria': 'బిల్లు ఫోటో తీయండి',
   'bill.scan.gallery.aria': 'బిల్లు ఫోటో ఎంచుకోండి',
   'bill.scan.quota.hint': 'ఈ రోజు {limit} లో {remaining} ఉచిత AI స్ప్లిట్‌లు మిగిలి ఉన్నాయి',

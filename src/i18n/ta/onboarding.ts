@@ -3,7 +3,7 @@ import type { Messages } from '../types'
 
 export const onboarding = {
   // First step: the language (title is common.language.title).
-  'onboarding.language.subtitle': 'நீங்கள் → மொழி பகுதியில் எப்போது வேண்டுமானாலும் மாற்றலாம்.',
+  'onboarding.language.subtitle': 'நீங்கள் → மொழியில் எப்போதும் மாற்றலாம்.',
   // The three intro slides.
   'onboarding.intro.heading': 'வரவேற்கிறோம் — {brand}',
   'onboarding.intro.carousel.aria': '{brand} என்ன செய்கிறது',

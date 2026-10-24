@@ -60,7 +60,7 @@ export const pay = {
   'pay.breakdown.extras.taken': 'డిస్కౌంట్లు మరియు రౌండ్-ఆఫ్',
   // "Paid? Tell them" — a ready message the payer sends to the payee's chat.
   'pay.tell.title': 'చెల్లించారా?',
-  'pay.tell.cta': 'మీరు చెల్లించారని {name} కు చెప్పండి',
+  'pay.tell.cta': '{name} గారికి చెప్పండి',
   'pay.tell.copied.status': 'మెసేజ్ కాపీ అయింది — మీ చాట్‌లో అతికించండి.',
   'pay.tell.shared.status': 'పంపబడింది. లెక్క తేల్చినందుకు ధన్యవాదాలు!',
   'pay.tell.failed.status': 'మెసేజ్ షేర్ చేయలేకపోయాం. మళ్ళీ ప్రయత్నించండి.',

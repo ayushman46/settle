@@ -29,7 +29,7 @@ export const common = {
   'common.count.items': '{count, plural, one {# பொருள்} other {# பொருட்கள்}}',
   // The language pickers (onboarding, You → Language) and the switcher on public pages.
   'common.language.label': 'மொழி',
-  'common.language.title': 'உங்கள் மொழியைத் தேர்ந்தெடுங்கள்',
+  'common.language.title': 'மொழியைத் தேர்ந்தெடுங்கள்',
   'common.language.automatic': 'தானாக',
   // Under "Automatic": which language the phone gives ({language} is its own name, e.g. हिन्दी).
   'common.language.automatic.hint': 'ஃபோன் மொழி · {language}',

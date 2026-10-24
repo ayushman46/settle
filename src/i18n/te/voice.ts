@@ -15,7 +15,7 @@ export const voice = {
   'voice.listen.tip': 'అది ఏమిటి, ఎంత, ఎవరు ఉన్నారు అని చెప్పండి — ఉదాహరణకు',
   'voice.listen.heard.aria': 'విన్నది: {text}',
   // Chips under the field for each number phrase turned into digits.
-  'voice.heard.chip': '“{phrase}” విన్నది → {amount}',
+  'voice.heard.chip': '“{phrase}” → {amount}',
   'voice.heard.label': 'మేము విన్న సంఖ్యలు',
   // When the transcript is longer than the AI can read.
   'voice.long.title': 'ఇది చాలా పొడవుగా ఉంది — క్లుప్తంగా చెప్పండి',

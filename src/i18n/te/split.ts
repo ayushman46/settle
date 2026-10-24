@@ -40,7 +40,7 @@ export const split = {
   'split.bill.line': '{items, plural, one {# ఐటమ్} other {# ఐటమ్‌లు}} · {people, plural, one {# వ్యక్తి} other {# మంది}}',
   'split.bill.editing.body': 'ఎవరు ఏది తీసుకున్నారో అలాగే ఉంటుంది. మార్చాలంటే, బిల్లు తెరవండి.',
   'split.bill.copy.body': 'అసలు బిల్లులోని అవే ఐటమ్‌లు, వ్యక్తులు — సేవ్ చేసిన తర్వాత ఎవరు ఏది తీసుకున్నారో మార్చండి.',
-  'split.bill.change.cta': 'ఎవరు ఏది తీసుకున్నారో మార్చండి',
+  'split.bill.change.cta': 'ఎవరు తీసుకున్నారో మార్చండి',
   // Discard confirm.
   'split.discard.new.title': 'ఈ స్ప్లిట్‌ను తీసేయాలా?',
   'split.discard.title': 'మార్పులను తీసేయాలా?',

@@ -183,7 +183,7 @@ export const groups = {
   'groups.settle.empty.title': 'தீர்க்க இன்னும் எதுவுமில்லை',
   'groups.settle.square.body': '{name} இல் செலுத்தல்கள் தேவையில்லை.',
   'groups.settle.empty.body': 'ஒரு செலவைச் சேருங்கள், யார் யாருக்குச் செலுத்த வேண்டும் என்பதை {brand} கணக்கிடும்.',
-  'groups.settle.back.cta': 'குழுவுக்குத் திரும்பு: {name}',
+  'groups.settle.back.cta': 'திரும்பு: {name}',
   'groups.settle.youPay.title': 'நீங்கள் செலுத்துகிறீர்கள்',
   'groups.settle.youPay.upi': 'UPI மூலம் செலுத்துங்கள், அல்லது செலுத்திய பின் பதிவு செய்யுங்கள்.',
   'groups.settle.youPay.other': 'செலுத்திய பின் பதிவு செய்யுங்கள்.',

@@ -45,7 +45,7 @@ export const sharein = {
   'sharein.card.paidFriend.title': 'நீங்கள் {name} அவர்களுக்கு {amount} செலுத்தினீர்கள்',
   'sharein.card.owedFriend': 'நீங்கள் {name} அவர்களுக்குச் சரியாக {amount} தர வேண்டும்',
   'sharein.card.settle.cta': 'தீர்ந்ததாகக் குறி',
-  'sharein.card.markOne.cta': '“{title}” திருப்பிச் செலுத்தப்பட்டதாகக் குறி',
+  'sharein.card.markOne.cta': '“{title}” செலுத்தியதாகக் குறி',
   'sharein.card.settled.toast': '{name} உடன் தீர்க்கப்பட்டது',
   'sharein.card.markedOne.toast': '“{title}” திருப்பிச் செலுத்தப்பட்டதாகக் குறிக்கப்பட்டது',
   // Money that came in.
