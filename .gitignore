@@ -39,3 +39,6 @@ Thumbs.db
 
 # Vercel: the local project link and the Build Output folder (npm run build:vercel)
 .vercel/
+
+# QA scenario build (e2e/scenarios): its own production copy
+.e2e-build-qa/
