@@ -16,7 +16,9 @@ import {
   LICENSE_HEADER,
   type ApiErrorCode,
   type DescribeResponse,
+  NOT_A_PAYMENT_CODE,
   type HealthResponse,
+  type ProofResponse,
   type ScanResponse,
 } from '../shared/api'
 import { registerBilling } from './billing'
@@ -27,6 +29,7 @@ import { ERROR_MESSAGES, ERROR_STATUS, fail, NOT_JSON, ownPageOnly, readJson, ty
 import { inspectImage } from './image'
 import { MAX_TOKEN_LENGTH, verifyLicense } from './license'
 import { extractBill, UpstreamError } from './nvidia'
+import { isProofReply, NOT_A_PAYMENT_MESSAGE, readProof } from './proof'
 import { isAcceptableReply, isUsable, normalize, parseExtraction } from './parse'
 import { createRatesSource, ratesCacheControl } from './rates'
 import { clientKey, concurrencyLimit, createRateLimiter, tieredRateLimit, type LimitChoice } from './ratelimit'
@@ -48,6 +51,7 @@ const UPSTREAM_BUSY = 'The AI service is busy right now. Try again in a minute �
 const UPSTREAM_BUSY_DESCRIBE = 'The AI service is busy right now. Try again in a minute — or fill it in yourself.'
 const SCANS_BUSY = 'Lots of bills are being read right now — try again in a moment.'
 const DESCRIBES_BUSY = 'Lots of people are using AI right now — try again in a moment.'
+const PROOFS_BUSY = 'The AI service is busy right now. Try again in a minute — or pick the person yourself.'
 const PRO_DAILY_LIMIT = "You've reached today's fair-use limit for AI. It resets within a day — you can still fill things in yourself."
 const INTERNAL_ERROR = 'Something went wrong on our side. Please try again.'
 
@@ -56,6 +60,16 @@ const BUSY_RETRY_AFTER_SECONDS = 10
 /** After NVIDIA rejects the key, /api/health reports AI as off for this long. */
 const KEY_REJECTED_MS = 10 * 60_000
 const DAY_MS = 86_400_000
+/** Wording for `/api/proof`: when a screenshot can't be read, the person picks who was paid. */
+export const PROOF_MESSAGES: Messages = {
+  bad_request: 'Something went wrong sending the screenshot. Please try again.',
+  not_configured: "Screenshot reading isn't available right now — you can pick who was paid yourself.",
+  upstream_auth: "Screenshot reading isn't working right now — you can pick who was paid yourself.",
+  rate_limited: 'Too many screenshots right now. Try again in a few minutes — or pick the person yourself.',
+  timeout: 'Reading the screenshot took too long. Try again, or pick the person yourself.',
+  unreadable: "We couldn't read that screenshot. Try the full success screen, in good light.",
+}
+
 /** A sentence, a few names and a date: anything bigger isn't from our client. */
 const MAX_DESCRIBE_BODY_BYTES = 16 * 1024
 
@@ -74,13 +88,14 @@ const RATES_LIMITED = 'Too many rate lookups — try again in a minute, or enter
 
 interface Route {
   /** Log prefix. */
-  tag: '[scan]' | '[describe]'
+  tag: '[scan]' | '[describe]' | '[proof]'
   messages: Messages
   busy: string
 }
 
 const SCAN: Route = { tag: '[scan]', messages: {}, busy: UPSTREAM_BUSY }
 const DESCRIBE: Route = { tag: '[describe]', messages: DESCRIBE_MESSAGES, busy: UPSTREAM_BUSY_DESCRIBE }
+const PROOF: Route = { tag: '[proof]', messages: PROOF_MESSAGES, busy: PROOFS_BUSY }
 
 /** `fail` with the route's own wording for `code`, when it has one. */
 function failOn(c: Context, route: Route, code: ApiErrorCode, status?: ContentfulStatusCode) {
@@ -257,6 +272,47 @@ export function createApp(config: ServerConfig, options: AppOptions = {}): Hono 
     }
   }
 
+  /* ---------------------------------------------------------------- POST /api/proof */
+
+  app.post(
+    '/api/proof',
+    guard,
+    aiAllowance(PROOF),
+    inFlight(PROOFS_BUSY),
+    bodyLimit({ maxSize: API_LIMITS.maxBodyBytes, onError: (c) => fail(c, 'image_too_large') }),
+    async (c) => {
+      const json = await readJson(c)
+      const request = json === NOT_JSON ? null : ScanRequestSchema.safeParse(json)
+      if (!request?.success) return fail(c, 'bad_request')
+
+      const photo = inspectImage(request.data.image)
+      if (!photo.ok) return fail(c, photo.code)
+      if (config.apiKey === null) return failOn(c, PROOF, 'not_configured')
+
+      const started = now()
+      try {
+        const { outcome, model } = await readProof(config, photo.dataUrl, {
+          signal: c.req.raw.signal,
+          accept: isProofReply,
+          onAttemptFailed: (error) => log.warn(`[proof] attempt failed: ${describeUpstream(error, redact)}`),
+        })
+        keyRejectedAt = null
+        const elapsed = now() - started
+        if (outcome.kind === 'not_a_payment') {
+          log.info(`[proof] not a payment · ${model} · ${elapsed} ms`)
+          return c.json({ error: { code: NOT_A_PAYMENT_CODE, message: NOT_A_PAYMENT_MESSAGE } }, 422)
+        }
+        // Amounts, names and references are never logged: only what kind of reading it was.
+        log.info(`[proof] ok · ${model} · ${outcome.proof.status} · ${Math.round(photo.bytes / 1024)} KB · ${elapsed} ms`)
+        const body: ProofResponse = { ...outcome.proof, model }
+        return c.json(body)
+      } catch (error) {
+        if (!(error instanceof UpstreamError)) throw error
+        return upstreamFailure(c, error, PROOF)
+      }
+    },
+  )
+
   /* ---------------------------------------------------------------- GET /api/rates */
 
   const rates = createRatesSource({ fetchImpl: options.fetchImpl, now, log })
@@ -283,7 +339,7 @@ export function createApp(config: ServerConfig, options: AppOptions = {}): Hono 
 
   /* ---------------------------------------------------------------- everything else */
 
-  for (const path of ['/api/scan', '/api/describe']) {
+  for (const path of ['/api/scan', '/api/describe', '/api/proof']) {
     app.on(['GET', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'], path, (c) => {
       c.header('Allow', 'POST')
       return fail(c, 'bad_request', { status: 405, message: 'Use POST here.' })

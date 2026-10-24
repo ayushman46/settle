@@ -314,3 +314,51 @@ export const API_LIMITS = {
   /** Max JSON body size (base64 overhead included). */
   maxBodyBytes: 12 * 1024 * 1024,
 } as const
+
+/* ------------------------------------------------------------------ payment screenshots */
+
+/** The one error `POST /api/proof` adds to the shared codes: the screenshot isn't a UPI payment (422). */
+export const NOT_A_PAYMENT_CODE = 'not_a_payment'
+export type NotAPaymentCode = typeof NOT_A_PAYMENT_CODE
+
+/** Request body for `POST /api/proof`: a screenshot of a UPI payment (same image rules as a bill). */
+export interface ProofRequest {
+  /** The screenshot as a data URL: `data:image/jpeg;base64,...` (jpeg, png or webp). */
+  image: string
+}
+
+/** The UPI app the screenshot comes from, as far as the model can tell. */
+export const PAYMENT_APPS = ['gpay', 'phonepe', 'paytm', 'bhim', 'bank', 'other', 'unknown'] as const
+export type PaymentApp = (typeof PAYMENT_APPS)[number]
+
+/** What the payment screen says about the money: only `success` may be recorded. */
+export const PAYMENT_STATUSES = ['success', 'pending', 'failed', 'unknown'] as const
+export type PaymentStatus = (typeof PAYMENT_STATUSES)[number]
+
+/**
+ * Successful response of `POST /api/proof`: what a payment screenshot says. Money is in MAJOR
+ * units (rupees, 2dp). Anything the screenshot doesn't show is null; the client decides what
+ * to trust (see src/features/proof/matchProof.ts).
+ */
+export interface ProofResponse {
+  app: PaymentApp
+  status: PaymentStatus
+  /** Amount paid, e.g. 420 for "₹420". */
+  amount: number | null
+  /** ISO 4217 code, "INR" for rupees; null when the screen shows no currency. */
+  currency: string | null
+  /** Who paid (the sender's name as shown). */
+  payerName: string | null
+  /** Who received it (the name shown on the payee line). */
+  payeeName: string | null
+  /** The receiver's UPI ID as shown (name@bank), lower case, or null. */
+  payeeUpi: string | null
+  /** UPI transaction reference / UTR: 12 digits on most apps, digits only. Null when not shown. */
+  utr: string | null
+  /** Date of the payment as printed, YYYY-MM-DD, or null. */
+  date: string | null
+  /** Time of the payment as printed (24h "HH:MM"), or null. */
+  time: string | null
+  /** Model that read the screenshot (for logs and the report). */
+  model: string
+}
