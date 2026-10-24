@@ -23,7 +23,7 @@ export { ProLock, type ProLockProps } from './ProLock'
 export { RedeemSheet, type RedeemSheetProps } from './RedeemSheet'
 export { UpgradeScreen } from './UpgradeScreen'
 export { PlanPicker, type PlanPickerProps } from './PlanPicker'
-export { featurePitch, FREE_FOREVER, GENERAL_PITCH, proPerks, type FeaturePitch, type Perk } from './perks'
+export { featurePitch, freeForever, GENERAL_PITCH, proPerks, type FeaturePitch, type Perk } from './perks'
 export {
   checkoutLabel,
   checkoutNote,

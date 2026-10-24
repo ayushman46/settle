@@ -4,6 +4,7 @@ import { Banner, BottomSheet, Button, IconButton, TextField, useToast } from '..
 import { BRAND, type License } from '../../domain/types'
 import { isOffline } from '../../api/http'
 import { LICENSE_PREFIX } from '../../../shared/api'
+import { t as translate, useT } from '../../i18n'
 import { extractLicenseToken, licenseToken, redeemLicense, usePro } from '../../pro'
 import { passDate } from './plans'
 import styles from './RedeemSheet.module.css'
@@ -23,13 +24,24 @@ type Notice =
   /** That exact code is already this phone's pass. */
   | { kind: 'same' }
 
+/** What went wrong with a code, in the current language (read when used). */
 const ERRORS = {
-  notACode: `That doesn't look like a ${BRAND.name} Pro code. Codes start with ${LICENSE_PREFIX}.`,
-  invalid: "That code isn't valid. Check you copied all of it, then try again.",
-  expired: 'That code has expired.',
-  offline: "You're offline. Connect to the internet to check the code.",
-  network: "Couldn't check the code right now. Try again in a moment.",
-} as const
+  get notACode() {
+    return translate('pro.redeem.error.notACode', { brand: BRAND.name, prefix: LICENSE_PREFIX })
+  },
+  get invalid() {
+    return translate('pro.redeem.error.invalid')
+  },
+  get expired() {
+    return translate('pro.redeem.error.expired')
+  },
+  get offline() {
+    return translate('pro.redeem.error.offline')
+  },
+  get network() {
+    return translate('pro.redeem.error.network')
+  },
+}
 
 function canReadClipboard(): boolean {
   return typeof navigator !== 'undefined' && typeof navigator.clipboard?.readText === 'function'
@@ -41,6 +53,7 @@ function canReadClipboard(): boolean {
  * and never swaps a longer pass for a shorter one.
  */
 export function RedeemSheet({ open, onClose, onRedeemed, initialCode = '' }: RedeemSheetProps) {
+  const t = useT()
   const toast = useToast()
   const pro = usePro()
   const formId = useId()
@@ -96,7 +109,7 @@ export function RedeemSheet({ open, onClose, onRedeemed, initialCode = '' }: Red
       setNotice(null)
       inputRef.current?.focus()
     } catch {
-      toast("Couldn't read the clipboard. Long-press the field to paste instead.", { tone: 'warning' })
+      toast(t('pro.redeem.paste.error'), { tone: 'warning' })
     }
   }
 
@@ -104,17 +117,17 @@ export function RedeemSheet({ open, onClose, onRedeemed, initialCode = '' }: Red
     <BottomSheet
       open={open}
       onClose={close}
-      title="Redeem a code"
-      description={`Paste the Pro code you were given or copied from your old phone. Codes start with ${LICENSE_PREFIX}.`}
+      title={t('pro.redeem.title')}
+      description={t('pro.redeem.description', { prefix: LICENSE_PREFIX })}
       initialFocus={inputRef}
       footer={
         notice ? (
           <Button block onClick={onClose}>
-            Done
+            {t('common.action.done')}
           </Button>
         ) : (
           <Button block type="submit" form={formId} loading={busy} disabled={!code.trim()}>
-            Redeem
+            {t('pro.redeem.submit.cta')}
           </Button>
         )
       }
@@ -122,7 +135,7 @@ export function RedeemSheet({ open, onClose, onRedeemed, initialCode = '' }: Red
       <form id={formId} className={styles.form} onSubmit={(event) => void submit(event)} noValidate>
         <TextField
           ref={inputRef}
-          label="Pro code"
+          label={t('pro.redeem.label')}
           value={code}
           placeholder={`${LICENSE_PREFIX}.…`}
           autoComplete="off"
@@ -135,7 +148,7 @@ export function RedeemSheet({ open, onClose, onRedeemed, initialCode = '' }: Red
           startAdornment={<KeyRound aria-hidden="true" className={styles.key} />}
           endAdornment={
             canReadClipboard() ? (
-              <IconButton label="Paste from clipboard" size="sm" onClick={() => void paste()}>
+              <IconButton label={t('pro.redeem.paste.aria')} size="sm" onClick={() => void paste()}>
                 <ClipboardPaste />
               </IconButton>
             ) : undefined
@@ -148,21 +161,17 @@ export function RedeemSheet({ open, onClose, onRedeemed, initialCode = '' }: Red
         />
       </form>
       {notice?.kind === 'kept' && (
-        <Banner tone="info" title="You already have a longer pass">
-          {notice.until === null
-            ? 'Your Lifetime pass is already on, so nothing changed here.'
-            : `Your pass runs until ${passDate(notice.until)} — longer than this code — so nothing changed.`}{' '}
-          The code still works on another phone.
+        <Banner tone="info" title={t('pro.redeem.kept.title')}>
+          {notice.until === null ? t('pro.redeem.kept.lifetime') : t('pro.redeem.kept.until', { date: passDate(notice.until) })}{' '}
+          {t('pro.redeem.kept.elsewhere')}
         </Banner>
       )}
       {notice?.kind === 'same' && (
-        <Banner tone="success" title="That code is already on this phone">
-          Pro is on — there's nothing else to do.
+        <Banner tone="success" title={t('pro.redeem.same.title')}>
+          {t('pro.redeem.same.body')}
         </Banner>
       )}
-      <p className={styles.note}>
-        Your pass lives on this phone — no account needed. Keep your code private: anyone with it gets your Pro.
-      </p>
+      <p className={styles.note}>{t('pro.redeem.note')}</p>
     </BottomSheet>
   )
 }

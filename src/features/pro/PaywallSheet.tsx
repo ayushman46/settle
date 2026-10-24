@@ -3,10 +3,11 @@ import { Check } from 'lucide-react'
 import { navigate } from '../../app/router'
 import { Badge, BottomSheet, Button, SuccessBurst } from '../../components'
 import { BRAND, type License, type ProFeature } from '../../domain/types'
+import { useT } from '../../i18n'
 import { usePro } from '../../pro'
 import { BuyButton, CheckoutNotice, TrustRow } from './OfferParts'
 import { closePaywall, completePaywall, usePaywall } from './paywall'
-import { featurePitch, FREE_FOREVER, proPerks } from './perks'
+import { featurePitch, freeForever, proPerks } from './perks'
 import { PlanPicker } from './PlanPicker'
 import { passSummary } from './plans'
 import { RedeemSheet } from './RedeemSheet'
@@ -31,6 +32,7 @@ const SHEET_PERKS = 4
  * then carries on with whatever the person was doing.
  */
 export function PaywallSheet({ open, feature, onClose, onUnlocked }: PaywallSheetProps) {
+  const t = useT()
   const pro = usePro()
   const [celebrate, setCelebrate] = useState<License | null>(null)
   const [redeemOpen, setRedeemOpen] = useState(false)
@@ -58,15 +60,15 @@ export function PaywallSheet({ open, feature, onClose, onUnlocked }: PaywallShee
         dismissible={!busy}
         eyebrow={
           <Badge tone="pro" size="md" icon={<PitchIcon />}>
-            {BRAND.name} Pro
+            {`${BRAND.name} Pro`}
           </Badge>
         }
-        title={alreadyPro ? 'Pro is on' : pitch.title}
+        title={alreadyPro ? t('pro.paywall.on.title') : pitch.title}
         description={alreadyPro && pro.license ? passSummary(pro.license) : pitch.text}
         footer={
           alreadyPro ? (
             <Button block onClick={onUnlocked}>
-              Continue
+              {t('pro.paywall.continue.cta')}
             </Button>
           ) : (
             <div className={styles.footer}>
@@ -74,7 +76,7 @@ export function PaywallSheet({ open, feature, onClose, onUnlocked }: PaywallShee
               <div className={styles.links}>
                 {!offer.checkoutOff && (
                   <Button variant="ghost" size="sm" onClick={() => setRedeemOpen(true)} disabled={busy}>
-                    Redeem a code
+                    {t('pro.redeem.cta')}
                   </Button>
                 )}
                 <Button
@@ -86,7 +88,7 @@ export function PaywallSheet({ open, feature, onClose, onUnlocked }: PaywallShee
                     navigate('/app/pro')
                   }}
                 >
-                  See everything in Pro
+                  {t('pro.paywall.all.cta')}
                 </Button>
               </div>
             </div>
@@ -94,10 +96,10 @@ export function PaywallSheet({ open, feature, onClose, onUnlocked }: PaywallShee
         }
       >
         {alreadyPro ? (
-          <p className={styles.lead}>Everything in Pro is unlocked on this phone.</p>
+          <p className={styles.lead}>{t('pro.paywall.on.body')}</p>
         ) : (
           <div className={styles.body}>
-            <ul role="list" className={styles.perks} aria-label="Also in Pro">
+            <ul role="list" className={styles.perks} aria-label={t('pro.paywall.also.aria')}>
               {perks.map((perk) => (
                 <li key={perk.key} className={styles.perk}>
                   <Check aria-hidden="true" className={styles.check} strokeWidth={3} />
@@ -114,7 +116,7 @@ export function PaywallSheet({ open, feature, onClose, onUnlocked }: PaywallShee
             />
             <CheckoutNotice offer={offer} onRedeem={() => setRedeemOpen(true)} />
             <TrustRow />
-            <p className={styles.free}>{FREE_FOREVER}</p>
+            <p className={styles.free}>{freeForever()}</p>
           </div>
         )}
       </BottomSheet>
@@ -126,7 +128,7 @@ export function PaywallSheet({ open, feature, onClose, onUnlocked }: PaywallShee
           setCelebrate(license)
         }}
       />
-      {celebrate && <SuccessBurst title="Pro unlocked" subtitle={passSummary(celebrate)} onDone={finish} />}
+      {celebrate && <SuccessBurst title={t('pro.unlocked.title')} subtitle={passSummary(celebrate)} onDone={finish} />}
     </>
   )
 }

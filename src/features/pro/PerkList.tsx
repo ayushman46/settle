@@ -1,5 +1,6 @@
 import { ChevronRight } from 'lucide-react'
 import { Link } from '../../app/router'
+import { useT } from '../../i18n'
 import { cx } from '../../lib/cx'
 import type { Perk } from './perks'
 import styles from './PerkList.module.css'
@@ -14,9 +15,10 @@ export interface PerkListProps {
 }
 
 /** Pro's perks as icon rows — a gradient-tinted tile, a title and one plain sentence each. */
-export function PerkList({ perks, linked = false, label = 'What Pro adds', className }: PerkListProps) {
+export function PerkList({ perks, linked = false, label, className }: PerkListProps) {
+  const t = useT()
   return (
-    <ul role="list" aria-label={label} className={cx(styles.list, className)}>
+    <ul role="list" aria-label={label ?? t('pro.perks.aria')} className={cx(styles.list, className)}>
       {perks.map((perk) => {
         const Icon = perk.icon
         const body = (

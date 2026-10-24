@@ -7,6 +7,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import { useToast } from '../../components'
 import { useProfile } from '../../data'
 import type { License, PlanId } from '../../domain/types'
+import { t } from '../../i18n'
 import { startCheckout } from '../../pro'
 
 export type CheckoutPhase =
@@ -63,7 +64,7 @@ export function useCheckout(onSuccess: (license: License) => void): CheckoutCont
         return result.license
       case 'cancelled':
         setPhase(IDLE)
-        latest.current.toast('Checkout closed. No payment was made.')
+        latest.current.toast(t('pro.checkout.cancelled.toast'))
         return null
       case 'failed':
         setPhase({ kind: 'failed', message: result.message })

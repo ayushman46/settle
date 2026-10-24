@@ -3,6 +3,7 @@ import { Check } from 'lucide-react'
 import { Badge, Skeleton } from '../../components'
 import type { PlanId } from '../../domain/types'
 import { cx } from '../../lib/cx'
+import { useT } from '../../i18n'
 import { haptic } from '../../lib/haptics'
 import { planSpokenLabel, type PlanOption } from './plans'
 import styles from './PlanPicker.module.css'
@@ -31,18 +32,19 @@ export function PlanPicker({
   options,
   value,
   onChange,
-  legend = 'Choose your pass',
+  legend,
   showLegend = false,
   disabled = false,
   compact = false,
   className,
 }: PlanPickerProps) {
+  const t = useT()
   const name = useId()
 
   if (options === null) {
     return (
       <div className={cx(styles.plans, compact && styles.compact, className)} role="status">
-        <span className="visually-hidden">Loading prices…</span>
+        <span className="visually-hidden">{t('pro.plan.loading')}</span>
         {[0, 1, 2].map((i) => (
           <div key={i} className={cx(styles.plan, styles.placeholder)} aria-hidden="true">
             <Skeleton shape="circle" width={22} height={22} />
@@ -59,7 +61,7 @@ export function PlanPicker({
 
   return (
     <fieldset className={cx(styles.plans, compact && styles.compact, className)} disabled={disabled}>
-      <legend className={showLegend ? styles.legend : 'visually-hidden'}>{legend}</legend>
+      <legend className={showLegend ? styles.legend : 'visually-hidden'}>{legend ?? t('pro.plan.legend')}</legend>
       {options.map((option) => {
         const checked = option.id === value
         const detail = option.perMonth ? `${option.term} · ${option.perMonth}` : option.term
@@ -95,7 +97,7 @@ export function PlanPicker({
               <span className={styles.price}>{option.price}</span>
               {option.savingsPercent !== null && (
                 <Badge tone="positive" className={styles.save}>
-                  Save {option.savingsPercent}%
+                  {t('pro.plan.save', { percent: option.savingsPercent })}
                 </Badge>
               )}
             </span>

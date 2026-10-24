@@ -14,10 +14,11 @@ import {
   useToast,
 } from '../../components'
 import { BRAND, type License } from '../../domain/types'
+import { tx, useT } from '../../i18n'
 import { copyText } from '../../lib/share'
 import { extractLicenseToken, licenseToken, usePro, type ProState } from '../../pro'
 import { BuyButton, CheckoutNotice, TrustRow } from './OfferParts'
-import { FREE_FOREVER, proPerks } from './perks'
+import { freeForever, proPerks } from './perks'
 import { PerkList } from './PerkList'
 import { PlanPicker } from './PlanPicker'
 import { checkoutNote, endsInLabel, passDate, passSummary, priceLabel } from './plans'
@@ -31,6 +32,7 @@ import styles from './UpgradeScreen.module.css'
  * (`/app/pro#code=SETTLE1.…`) opens "Redeem a code" with it filled in.
  */
 export function UpgradeScreen() {
+  const t = useT()
   const pro = usePro()
   const { hash } = useLocation()
   const [celebrate, setCelebrate] = useState<License | null>(null)
@@ -59,8 +61,8 @@ export function UpgradeScreen() {
       {pro.isPro ? (
         <>
           <section className={styles.section} aria-labelledby="pro-unlocked">
-            <SectionHeader id="pro-unlocked" title="What you've unlocked" />
-            <PerkList perks={perks} linked label="What you've unlocked" />
+            <SectionHeader id="pro-unlocked" title={t('pro.upgrade.unlocked.title')} />
+            <PerkList perks={perks} linked label={t('pro.upgrade.unlocked.title')} />
           </section>
           {pro.license && pro.license.exp !== null && <LifetimeCard offer={offer} />}
           <MovePhonesCard onRedeem={openRedeem} />
@@ -69,31 +71,34 @@ export function UpgradeScreen() {
         <>
           {pro.status === 'expired' && <Plans offer={offer} onRedeem={openRedeem} />}
           <section className={styles.section} aria-labelledby="pro-perks">
-            <SectionHeader id="pro-perks" title="Everything in Pro" />
+            <SectionHeader id="pro-perks" title={t('pro.upgrade.perks.title')} />
             <PerkList perks={perks} />
           </section>
           {pro.status !== 'expired' && <Plans offer={offer} onRedeem={openRedeem} />}
           <Card tone="sunken" className={styles.freeCard}>
-            <p className={styles.freeText}>{FREE_FOREVER}</p>
+            <p className={styles.freeText}>{freeForever()}</p>
           </Card>
           <Card className={styles.redeemCard}>
             <span className={styles.cardIcon} aria-hidden="true">
               <KeyRound />
             </span>
             <div className={styles.cardText}>
-              <h2 className={styles.cardTitle}>Already have Pro?</h2>
-              <p className={styles.cardBody}>
-                Your pass lives on the phone it was bought on — there's no account. Moving phones? Copy your Pro code on the
-                old one and redeem it here. Promo codes work the same way.
-              </p>
+              <h2 className={styles.cardTitle}>{t('pro.upgrade.have.title')}</h2>
+              <p className={styles.cardBody}>{t('pro.upgrade.have.body')}</p>
               <Button variant="secondary" size="md" className={styles.cardAction} onClick={openRedeem}>
-                Redeem a code
+                {t('pro.redeem.cta')}
               </Button>
             </div>
           </Card>
           <p className={styles.legal}>
-            Payments are handled securely by Razorpay. By buying a pass you agree to the{' '}
-            <Link to="/terms">Terms</Link>; see how we treat your data in the <Link to="/privacy">Privacy policy</Link>.
+            {tx(
+              'pro.upgrade.legal',
+              {},
+              {
+                terms: (chunk) => <Link to="/terms">{chunk}</Link>,
+                privacy: (chunk) => <Link to="/privacy">{chunk}</Link>,
+              },
+            )}
           </p>
         </>
       )}
@@ -108,7 +113,7 @@ export function UpgradeScreen() {
         }}
       />
       {celebrate && (
-        <SuccessBurst title="Pro unlocked" subtitle={passSummary(celebrate)} onDone={() => setCelebrate(null)} />
+        <SuccessBurst title={t('pro.unlocked.title')} subtitle={passSummary(celebrate)} onDone={() => setCelebrate(null)} />
       )}
     </Screen>
   )
@@ -116,6 +121,7 @@ export function UpgradeScreen() {
 
 /** The premium dark card at the top: "Settle Pro", and the pass on this phone (if any). */
 function Hero({ pro }: { pro: ProState }) {
+  const t = useT()
   const { license } = pro
   return (
     <section className={styles.hero} aria-labelledby="pro-title">
@@ -123,12 +129,12 @@ function Hero({ pro }: { pro: ProState }) {
         <Sparkles strokeWidth={2.1} />
       </span>
       <h1 id="pro-title" className={styles.title} tabIndex={-1}>
-        {BRAND.name} <span className={styles.gradientText}>Pro</span>
+        {BRAND.name} <span className={styles.gradientText}>Pro</span>{/* i18n-ignore: Pro stays Pro in every language */}
       </h1>
       {pro.isPro && license ? (
         <div className={styles.status}>
           <Badge tone="accent" size="md">
-            {license.exp === null ? 'Lifetime' : 'Active'}
+            {license.exp === null ? t('pro.pass.lifetime') : t('pro.pass.active')}
           </Badge>
           <p className={styles.lede}>{passSummary(license)}</p>
           {pro.expiresAt !== null && <p className={styles.small}>{endsInLabel(pro.expiresAt)}</p>}
@@ -136,15 +142,12 @@ function Hero({ pro }: { pro: ProState }) {
       ) : pro.status === 'expired' && pro.expiresAt !== null ? (
         <div className={styles.status}>
           <Badge tone="warning" size="md">
-            Ended {passDate(pro.expiresAt)}
+            {t('pro.pass.endedOn', { date: passDate(pro.expiresAt) })}
           </Badge>
-          <p className={styles.lede}>
-            Your Pro pass has run out. Pick a pass to switch Pro back on — your recurring splits and settings are all still
-            here.
-          </p>
+          <p className={styles.lede}>{t('pro.upgrade.expired.body')}</p>
         </div>
       ) : (
-        <p className={styles.lede}>Unlimited AI, recurring splits and insights. Pay once — nothing renews.</p>
+        <p className={styles.lede}>{t('pro.upgrade.lede')}</p>
       )}
     </section>
   )
@@ -152,9 +155,10 @@ function Hero({ pro }: { pro: ProState }) {
 
 /** "Choose your pass": the plan cards, why checkout can't run (if it can't) and how paying works. */
 function Plans({ offer, onRedeem }: { offer: ProOffer; onRedeem: () => void }) {
+  const t = useT()
   return (
     <section className={styles.section} aria-labelledby="pro-plans">
-      <SectionHeader id="pro-plans" title="Choose your pass" description="One-time payments — nothing renews automatically." />
+      <SectionHeader id="pro-plans" title={t('pro.upgrade.plans.title')} description={t('pro.upgrade.plans.description')} />
       <PlanPicker
         options={offer.options}
         value={offer.selected?.id ?? null}
@@ -169,6 +173,7 @@ function Plans({ offer, onRedeem }: { offer: ProOffer; onRedeem: () => void }) {
 
 /** For a time-limited pass: an honest way to never think about renewing again. */
 function LifetimeCard({ offer }: { offer: ProOffer }) {
+  const t = useT()
   const lifetime = offer.options?.find((o) => o.lifetime) ?? null
   if (!lifetime || offer.checkoutOff) return null
   const busy = offer.checkout.phase.kind === 'busy'
@@ -178,11 +183,8 @@ function LifetimeCard({ offer }: { offer: ProOffer }) {
         <InfinityIcon />
       </span>
       <div className={styles.cardText}>
-        <h2 className={styles.cardTitle}>Make it lifetime</h2>
-        <p className={styles.cardBody}>
-          Pay {priceLabel(lifetime.amount, lifetime.currency)} once and never renew. It replaces your current pass from today —
-          passes don't add up, so the days left on this one aren't carried over.
-        </p>
+        <h2 className={styles.cardTitle}>{t('pro.lifetime.title')}</h2>
+        <p className={styles.cardBody}>{t('pro.lifetime.body', { price: priceLabel(lifetime.amount, lifetime.currency) })}</p>
         {offer.checkout.phase.kind === 'failed' && (
           <Banner tone="error" onDismiss={offer.checkout.reset}>
             {offer.checkout.phase.message}
@@ -195,7 +197,7 @@ function LifetimeCard({ offer }: { offer: ProOffer }) {
           loading={busy}
           onClick={() => void offer.checkout.buy(lifetime.id)}
         >
-          Go lifetime — {lifetime.price}
+          {t('pro.lifetime.cta', { price: lifetime.price })}
         </Button>
       </div>
     </Card>
@@ -204,13 +206,14 @@ function LifetimeCard({ offer }: { offer: ProOffer }) {
 
 /** Pro lives on this phone; this is how it moves to the next one. */
 function MovePhonesCard({ onRedeem }: { onRedeem: () => void }) {
+  const t = useT()
   const toast = useToast()
   const copy = async (): Promise<void> => {
     const token = licenseToken()
     if (token && (await copyText(token))) {
-      toast(`Pro code copied. Redeem it in ${BRAND.name} on your new phone.`, { tone: 'success' })
+      toast(t('pro.move.copied.toast', { brand: BRAND.name }), { tone: 'success' })
     } else {
-      toast("Couldn't copy your Pro code. Please try again.", { tone: 'error' })
+      toast(t('pro.move.copy.error'), { tone: 'error' })
     }
   }
   return (
@@ -219,17 +222,14 @@ function MovePhonesCard({ onRedeem }: { onRedeem: () => void }) {
         <Smartphone />
       </span>
       <div className={styles.cardText}>
-        <h2 className={styles.cardTitle}>Moving to a new phone?</h2>
-        <p className={styles.cardBody}>
-          Your pass lives on this phone — there's no account, and backups don't include it. Copy your Pro code and redeem it
-          on the new phone. Keep it private: anyone with the code gets your Pro.
-        </p>
+        <h2 className={styles.cardTitle}>{t('pro.move.title')}</h2>
+        <p className={styles.cardBody}>{t('pro.move.body')}</p>
         <div className={styles.cardActions}>
           <Button variant="secondary" size="md" iconStart={<Copy />} onClick={() => void copy()}>
-            Copy your Pro code
+            {t('pro.move.copy.cta')}
           </Button>
           <Button variant="ghost" size="md" onClick={onRedeem}>
-            Redeem another code
+            {t('pro.move.redeem.cta')}
           </Button>
         </div>
       </div>

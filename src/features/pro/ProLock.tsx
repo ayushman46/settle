@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { Lock } from 'lucide-react'
 import { Badge, Button } from '../../components'
 import { BRAND, type ProFeature } from '../../domain/types'
+import { useT } from '../../i18n'
 import { cx } from '../../lib/cx'
 import { FALLBACK_BILLING_CONFIG, useBillingConfig, usePro } from '../../pro'
 import { openPaywall } from './paywall'
@@ -26,6 +27,7 @@ export interface ProLockProps {
  * starting price — no countdowns, no fake scarcity. Says so when a pass has run out.
  */
 export function ProLock({ feature, preview, note, onUnlock, className }: ProLockProps) {
+  const t = useT()
   const pro = usePro()
   const config = useBillingConfig()
   const pitch = featurePitch(feature, (config ?? FALLBACK_BILLING_CONFIG).proAiPerDay)
@@ -44,20 +46,20 @@ export function ProLock({ feature, preview, note, onUnlock, className }: ProLock
           <span className={styles.lockIcon} aria-hidden="true">
             <Lock strokeWidth={2.25} />
           </span>
-          <Badge tone="pro">{BRAND.name} Pro</Badge>
+          <Badge tone="pro">{`${BRAND.name} Pro`}</Badge>
         </span>
         <h2 id={`pro-lock-${feature}`} className={styles.title}>
           {pitch.title}
         </h2>
         <p className={styles.text}>{pitch.text}</p>
         {ended && pro.expiresAt !== null && (
-          <p className={styles.ended}>Your Pro pass ended on {passDate(pro.expiresAt)}.</p>
+          <p className={styles.ended}>{t('pro.lock.ended', { date: passDate(pro.expiresAt) })}</p>
         )}
         {note != null && <p className={styles.note}>{note}</p>}
         <Button block onClick={() => openPaywall(feature, onUnlock ? { onUnlock } : {})}>
-          {ended ? 'Renew Pro' : pitch.unlock}
+          {ended ? t('pro.lock.renew.cta') : pitch.unlock}
         </Button>
-        {from && <p className={styles.price}>Pro from {from} · one-time payment, nothing renews</p>}
+        {from && <p className={styles.price}>{t('pro.lock.from', { price: from })}</p>}
       </section>
       <PaywallHost />
     </div>

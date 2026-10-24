@@ -1,7 +1,8 @@
 /**
  * What Pro adds, in plain words — the perk list on the upgrade screen and the per-feature pitch
  * the paywall leads with. Honest by rule: the free AI allowance is named (and that it resets at
- * midnight), the fair-use cap is stated, and nothing that's free is dressed up as Pro.
+ * midnight), the fair-use cap is stated, and nothing that's free is dressed up as Pro. Words come
+ * from the `pro` catalog, in the current language, when these are called.
  */
 import {
   ChartPie,
@@ -14,6 +15,7 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import { BRAND, FREE_AI_PER_DAY, type ProFeature } from '../../domain/types'
+import { t } from '../../i18n'
 
 export interface Perk {
   key: ProFeature | 'early'
@@ -30,50 +32,50 @@ export function proPerks(proAiPerDay: number): Perk[] {
     {
       key: 'unlimited_ai',
       icon: Sparkles,
-      title: 'Unlimited AI',
-      text: `Scan bills and “Just say it” as often as you like — fair use, up to ${proAiPerDay} a day.`,
+      title: t('pro.perk.ai.title'),
+      text: t('pro.perk.ai.body', { count: proAiPerDay }),
       href: null,
     },
     {
       key: 'recurring',
       icon: Repeat,
-      title: 'Recurring splits',
-      text: 'Rent, Wi-Fi, Netflix: a reminder each month and a one-tap split.',
+      title: t('pro.perk.recurring.title'),
+      text: t('pro.perk.recurring.body'),
       href: '/app/recurring',
     },
     {
       key: 'insights',
       icon: ChartPie,
-      title: 'Insights',
-      text: 'Where your money goes — by category, month and friend.',
+      title: t('pro.perk.insights.title'),
+      text: t('pro.perk.insights.body'),
       href: '/app/insights',
     },
     {
       key: 'export',
       icon: FileSpreadsheet,
-      title: 'CSV export',
-      text: 'Every expense, ready for Excel or Google Sheets.',
+      title: t('pro.perk.export.title'),
+      text: t('pro.perk.export.body'),
       href: '/app/you',
     },
     {
       key: 'themes',
       icon: Palette,
-      title: 'Accent colours',
-      text: 'Make it yours in mint, sky, violet or coral.',
+      title: t('pro.perk.themes.title'),
+      text: t('pro.perk.themes.body'),
       href: '/app/you',
     },
     {
       key: 'clean_cards',
       icon: ImageIcon,
-      title: 'Clean share cards',
-      text: `Split cards for the group chat, without the “Made with ${BRAND.name}” line.`,
+      title: t('pro.perk.cleanCards.title'),
+      text: t('pro.perk.cleanCards.body', { brand: BRAND.name }),
       href: null,
     },
     {
       key: 'early',
       icon: Rocket,
-      title: 'Early access',
-      text: 'Try new features before they reach everyone.',
+      title: t('pro.perk.early.title'),
+      text: t('pro.perk.early.body'),
       href: null,
     },
   ]
@@ -82,19 +84,25 @@ export function proPerks(proAiPerDay: number): Perk[] {
 export interface FeaturePitch {
   icon: LucideIcon
   /** The paywall's heading. */
-  title: string
+  readonly title: string
   /** One or two sentences under it. */
-  text: string
+  readonly text: string
   /** The unlock button on a locked screen ("Unlock Insights"). */
-  unlock: string
+  readonly unlock: string
 }
 
-/** The pitch for Pro in general (a "Go Pro" link rather than a locked feature). */
+/** The pitch for Pro in general (a "Go Pro" link rather than a locked feature), in the current language when read. */
 export const GENERAL_PITCH: FeaturePitch = {
   icon: Sparkles,
-  title: `${BRAND.name} Pro`,
-  text: 'Unlimited AI, recurring splits and insights. Pay once — nothing renews.',
-  unlock: 'See Pro',
+  get title() {
+    return t('pro.pitch.general.title', { brand: BRAND.name })
+  },
+  get text() {
+    return t('pro.pitch.general.body')
+  },
+  get unlock() {
+    return t('pro.pitch.general.cta')
+  },
 }
 
 /** What the paywall leads with when a locked feature sent the person there. */
@@ -103,44 +111,44 @@ export function featurePitch(feature: ProFeature | null, proAiPerDay: number): F
     case 'unlimited_ai':
       return {
         icon: Sparkles,
-        title: 'Unlimited AI with Pro',
-        text: `Free includes ${FREE_AI_PER_DAY} AI scans or “Just say it” splits a day, and they reset at midnight. Pro lifts the limit — fair use, up to ${proAiPerDay} a day.`,
-        unlock: 'Get unlimited AI',
+        title: t('pro.pitch.ai.title'),
+        text: t('pro.pitch.ai.body', { free: FREE_AI_PER_DAY, count: proAiPerDay }),
+        unlock: t('pro.pitch.ai.cta'),
       }
     case 'recurring':
       return {
         icon: Repeat,
-        title: 'Recurring splits are part of Pro',
-        text: 'Set up rent, Wi-Fi or Netflix once. Each month you get a reminder and split it in one tap.',
-        unlock: 'Unlock recurring splits',
+        title: t('pro.pitch.recurring.title'),
+        text: t('pro.pitch.recurring.body'),
+        unlock: t('pro.pitch.recurring.cta'),
       }
     case 'insights':
       return {
         icon: ChartPie,
-        title: 'See where your money goes',
-        text: 'Your spending by category, month and friend — worked out on your phone, never uploaded.',
-        unlock: 'Unlock Insights',
+        title: t('pro.pitch.insights.title'),
+        text: t('pro.pitch.insights.body'),
+        unlock: t('pro.pitch.insights.cta'),
       }
     case 'export':
       return {
         icon: FileSpreadsheet,
-        title: 'Export to a spreadsheet',
-        text: 'Download every expense as a CSV for Excel or Google Sheets. Backups stay free for everyone.',
-        unlock: 'Unlock CSV export',
+        title: t('pro.pitch.export.title'),
+        text: t('pro.pitch.export.body'),
+        unlock: t('pro.pitch.export.cta'),
       }
     case 'themes':
       return {
         icon: Palette,
-        title: 'Make it yours',
-        text: 'Pick mint, sky, violet or coral as your accent colour. Lime stays free.',
-        unlock: 'Unlock accent colours',
+        title: t('pro.pitch.themes.title'),
+        text: t('pro.pitch.themes.body'),
+        unlock: t('pro.pitch.themes.cta'),
       }
     case 'clean_cards':
       return {
         icon: ImageIcon,
-        title: 'Cleaner share cards',
-        text: `Share split cards in the group chat without the “Made with ${BRAND.name}” line.`,
-        unlock: 'Unlock clean cards',
+        title: t('pro.pitch.cleanCards.title'),
+        text: t('pro.pitch.cleanCards.body', { brand: BRAND.name }),
+        unlock: t('pro.pitch.cleanCards.cta'),
       }
     case null:
       return GENERAL_PITCH
@@ -148,5 +156,6 @@ export function featurePitch(feature: ProFeature | null, proAiPerDay: number): F
 }
 
 /** Free forever — said plainly on every paywall, so nobody wonders what they'd lose by staying free. */
-export const FREE_FOREVER =
-  'Free forever: unlimited manual splits, groups, pay links, UPI QR codes, nudges and backups.'
+export function freeForever(): string {
+  return t('pro.freeForever')
+}
