@@ -300,4 +300,10 @@ export const pools = {
   'pools.reply.empty.title': 'इथे उत्तर नाही',
   'pools.reply.empty.text': 'हातभार लावल्यानंतर मित्राने पाठवलेली लिंक उघडा.',
   'pools.reply.for': '{title} साठी',
+  // Paste a reply (the organiser's board).
+  'pools.paste.title': 'उत्तर पेस्ट करा',
+  'pools.paste.text': 'मित्राचा “Tick me off” संदेश कॉपी केला आहे? येथे पेस्ट करा.',
+  'pools.paste.label': 'त्यांचा संदेश',
+  'pools.paste.open': 'उत्तर उघडा',
+  'pools.paste.invalid': 'हे उत्तराच्या लिंकसारखे वाटत नाही.',
 } as const satisfies Messages

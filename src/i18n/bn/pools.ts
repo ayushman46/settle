@@ -300,4 +300,10 @@ export const pools = {
   'pools.reply.empty.title': 'এখানে কোনো উত্তর নেই',
   'pools.reply.empty.text': 'দেওয়ার পর বন্ধুর পাঠানো লিংকটি খুলুন।',
   'pools.reply.for': '{title}-এর জন্য',
+  // Paste a reply (the organiser's board).
+  'pools.paste.title': 'একটি উত্তর পেস্ট করুন',
+  'pools.paste.text': 'বন্ধুর “Tick me off” বার্তা কপি করেছেন? এখানে পেস্ট করুন।',
+  'pools.paste.label': 'তাঁদের বার্তা',
+  'pools.paste.open': 'উত্তর খুলুন',
+  'pools.paste.invalid': 'এটি উত্তরের লিংক বলে মনে হচ্ছে না।',
 } as const satisfies Messages
