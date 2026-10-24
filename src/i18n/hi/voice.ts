@@ -50,7 +50,7 @@ export const voice = {
   'voice.error.noMic.body': 'माइक लगाएँ, या टाइप कर दें।',
   'voice.error.network.title': 'आवाज़ के लिए इंटरनेट चाहिए',
   'voice.error.network.body': 'आपका ब्राउज़र ऑनलाइन ही आवाज़ को टेक्स्ट में बदलता है। ऑफ़लाइन हैं तो टाइप कर दें।',
-  'voice.error.language.title': '{language} इस ब्राउज़र में नहीं चलती',
+  'voice.error.language.title': '{language} इस ब्राउज़र में उपलब्ध नहीं है',
   'voice.error.language.body': 'English या हिन्दी आज़माएँ, या टाइप कर दें।',
   'voice.error.other.title': 'इस बार आवाज़ से नहीं हो पाया',
   'voice.error.other.body': 'फिर से कोशिश करें, या टाइप कर दें।',
