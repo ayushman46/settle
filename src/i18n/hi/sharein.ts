@@ -18,7 +18,7 @@ export const sharein = {
   'sharein.shared.show': 'मैसेज दिखाएँ',
   'sharein.shared.loading.aria': 'आपने जो शेयर किया, उसे पढ़ रहे हैं…',
   'sharein.shared.firstPhoto.toast': 'पहली फ़ोटो ले रहे हैं',
-  'sharein.missed.title': 'ये पकड़ में नहीं आया',
+  'sharein.missed.title': 'ये पढ़ नहीं पाए',
   'sharein.missed.body': 'इसे फिर से शेयर करें, या यहाँ पेस्ट करें।',
 
   // Several messages pasted at once.
@@ -45,14 +45,14 @@ export const sharein = {
   'sharein.card.udhaar.cta': 'ये उधार था',
   'sharein.card.done.cta': 'हो गया',
   'sharein.card.paidFriend.title': 'आपने {name} को {amount} दिए',
-  'sharein.card.owedFriend': 'आपको {name} को ठीक {amount} ही देने थे',
+  'sharein.card.owedFriend': 'आपको {name} को ठीक {amount} देने थे',
   'sharein.card.settle.cta': 'हिसाब बराबर करें',
   'sharein.card.markOne.cta': '“{title}” चुकाया मार्क करें',
   'sharein.card.settled.toast': '{name} के साथ हिसाब बराबर',
   'sharein.card.markedOne.toast': '“{title}” चुकाया मार्क हुआ',
   // Money that came in.
   'sharein.card.friendPaid.title': '{name} ने आपको {amount} दिए',
-  'sharein.card.friendOwed': '{name} को आपको ठीक {amount} ही देने थे',
+  'sharein.card.friendOwed': '{name} को आपको ठीक {amount} देने थे',
   'sharein.card.markPaid.cta': '{name} का पेमेंट मार्क करें',
   'sharein.card.refund.title': '{name} से रिफ़ंड · {amount}',
   'sharein.card.refund.titleNoName': 'रिफ़ंड · {amount}',
