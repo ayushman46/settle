@@ -1,6 +1,6 @@
 # Settle — what works and what doesn't
 
-Live: **https://settleupi.vercel.app** · last checked 24 Oct 2026, 01:30 IST · updated as work lands.
+Live: **https://settleupi.vercel.app** · last checked 24 Oct 2026, 09:40 IST (deploy `settle-5sxzwzh3l`).
 
 Legend: ✅ works on the live site · ⚠️ works with a limit · ❌ not working yet
 
@@ -32,16 +32,18 @@ Legend: ✅ works on the live site · ⚠️ works with a limit · ❌ not worki
 | --- | --- | --- |
 | AI on the live site (scan a bill photo, "Just say it", speak to split, "let AI read" an SMS) | ❌ | The NVIDIA API key isn't set on Vercel yet. Add `NVIDIA_API_KEY` in Vercel → settle → Settings → Environment Variables, then redeploy. Everything else works without it. |
 | Pro (paid plan) on the live site | ❌ | Needs `LICENSE_PRIVATE_KEY` (and Razorpay keys to sell it) on Vercel; see [DEPLOY.md](DEPLOY.md) step 0 and 6. Without them the Pro page shows the plans but can't unlock. |
-| Indian languages for the screens | ❌ (in progress) | Voice input understands 8 Indian languages, but the screens are English only. Hindi first, then Bengali, Marathi, Tamil, Telugu, Kannada, Gujarati. |
-| An "Install app" button | ❌ (in progress) | Installing works from the browser menu; there's no in-app button yet. |
+| Indian languages for the screens | ⚠️ | Eight languages (English, Hindi, Bengali, Marathi, Tamil, Telugu, Kannada, Gujarati) on every app screen; pick on the first onboarding screen or in You → Language. **Translations not yet reviewed by native speakers**, and the landing page and the privacy / terms text stay in English. |
+| "Install Settle" card | ✅ | On Home after the first split or second visit, and a You row. Android / desktop Chrome use the install prompt; iPhone gets the two Share → Add to Home Screen steps. Hidden once installed; dismissible for 30 days. |
+| Paid? Drop the screenshot | ⚠️ | Drop a GPay / PhonePe / Paytm / BHIM payment screenshot: the AI reads status, amount, payee, UTR and date and matches it to who owes you. Refuses pending or failed payments, payments to someone else and duplicate UTRs. Needs the NVIDIA key on the live site (see below). |
+| Shagun book (gifts ledger) | ❌ | Only the "What should I give?" suggestion rule is in the code and tested. The ledger screens and reminders are not built, and the feature is off. |
 | Very long histories on budget phones | ⚠️ | Scrolling Activity to the oldest of 1,500 entries takes ~59 s on the budget-phone profile (was 165 s). |
 | Speak to split | ⚠️ | Needs a browser with speech recognition (Chrome, Edge, Safari; not Firefox) and the AI key. |
 | Sharing an SMS into Settle | ⚠️ | Android with the installed app only (iPhone doesn't let web apps receive shares). |
 | Using one account on two phones | ⚠️ by design | No accounts and no database: data stays on the phone. Move it with a backup file. |
 | Automatic deploys | ⚠️ | Deploys run from the command line (`npx vercel deploy --prod`); GitHub isn't connected to Vercel for deploy-on-push yet. |
 
-## Tests (last full run, 23 Oct 2026)
+## Tests (24 Oct 2026, after the night-2 changes)
 
-- Unit and component tests: **4,591 passed**, 0 failed.
-- End-to-end on the production build: **164 passed** across 360 px and 390 px phones, light and dark (accessibility scans with axe on every journey).
-- End-to-end against the live site: **58 passed**, 2 skipped (offline / service-worker cases run on the local build).
+- Unit and component tests: **4,790 passed**, 0 failed (`npm run check`: typecheck and lint clean).
+- End-to-end against the live site (this morning): smoke and foundations journeys, **13 passed** on 360 px and 390 px phones. The full 164-journey production run was last done on 23 Oct; the night-2 scenario matrix (offline, slow 3G, 320 px, Hindi, 1,500 expenses) was written but not run in full before the wrap-up.
+
