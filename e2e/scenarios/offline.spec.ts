@@ -66,10 +66,7 @@ async function offlineJourney(page: Page, context: BrowserContext, link: string)
 test.describe('offline after the first visit', () => {
   test.describe.configure({ timeout: 240_000 })
 
-  // Known bug (qa-bugs.md #1): the code-split screens that the app preloads on Home during the
-  // first visit bypass the service worker, so they never reach its cache; going offline straight
-  // after that visit opens "You're offline" on the split screen. Re-enable when it is fixed.
-  test.fixme('straight after the first visit: Home, a split and the pay link work offline', async ({ page, context, shared }) => {
+  test('straight after the first visit: Home, a split and the pay link work offline', async ({ page, context, shared }) => {
     const link = await firstVisit(page, context, shared)
     await offlineJourney(page, context, link)
   })

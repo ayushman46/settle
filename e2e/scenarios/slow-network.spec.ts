@@ -102,9 +102,7 @@ test.describe('slow network, slow phone', () => {
     }
   })
 
-  // Known bug (qa-bugs.md #2): on slow 3G the pay page's lower sections are pushed down when the
-  // friend's share arrives (one shift of about 0.14). Re-enable when fixed.
-  test.fixme('a pay link opened for the first time on slow 3G does not jump', async ({ page, shared, openPhone }) => {
+  test('a pay link opened for the first time on slow 3G does not jump', async ({ page, shared, openPhone }) => {
     await onboard(page)
     await splitEqually(page, { amount: '1000', title: 'Goa cab', people: ['Riya', 'Sam'] })
     const link = await copyPayLink(page, async () => (await shared()).clipboard)
