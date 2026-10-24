@@ -1,0 +1,38 @@
+/** Bengali copy for privacy and terms (src/features/legal). The long policy text stays in English for now (see `legal.englishBody`). */
+import type { Messages } from '../types'
+
+export const legal = {
+  'legal.back.label': 'ফিরে যান',
+  'legal.home.label': '{brand}-এর হোম',
+  // The date is formatted by code; <time> wraps it for screen readers.
+  'legal.updated': 'সর্বশেষ আপডেট <time>{date}</time>',
+  'legal.summary.title': 'সংক্ষেপে',
+  'legal.englishBody': 'এই নীতির পূর্ণ লেখা এখনও ইংরেজিতে আছে।',
+  'legal.privacy.title': 'গোপনীয়তা নীতি',
+  'legal.privacy.description': '{brand} আপনার ডেটা কীভাবে রাখে: সবকিছু আপনার ফোনে থাকে, AI পড়ার পর কিছু জমা থাকে না, এবং কোনো ট্র্যাকিং নেই।',
+  'legal.privacy.summary.0': '{brand}-এর কোনো অ্যাকাউন্ট বা ডেটাবেস নেই। আপনার ভাগ, বন্ধু আর গ্রুপ আপনার ফোনেই থাকে।',
+  'legal.privacy.summary.1': 'বিলের ছবি আর “Just say it”-এর লেখা শুধু পড়ার জন্য NVIDIA-র হোস্ট করা একটি AI মডেলে পাঠানো হয়, এবং জমা রাখা হয় না।',
+  'legal.privacy.summary.2': 'পে লিংক তার ভাগের হিসাব লিংকের ভেতরেই বহন করে — সেই অংশ কখনও আমাদের সার্ভারে পৌঁছায় না।',
+  'legal.privacy.summary.3': 'Pro পেমেন্ট Razorpay দিয়ে হয়। আপনার কার্ডের তথ্য বা UPI PIN আমরা কখনও দেখি না।',
+  'legal.privacy.summary.4': 'কোনো বিজ্ঞাপন নেই, কোনো অ্যানালিটিক্স নেই, ট্র্যাকিং কুকিও নেই।',
+  'legal.privacy.section.device': 'আপনার ফোনে যা থাকে',
+  'legal.privacy.section.leaves': 'আপনার ফোন থেকে কী বাইরে যায়, এবং কেন',
+  'legal.privacy.section.server': 'আমাদের সার্ভার কী রাখে',
+  'legal.privacy.section.cookies': 'কুকি ও ট্র্যাকিং',
+  'legal.privacy.section.choices': 'আপনার পছন্দ',
+  'legal.privacy.section.children': 'শিশুরা',
+  'legal.privacy.section.changes': 'পরিবর্তন ও যোগাযোগ',
+  'legal.terms.title': 'ব্যবহারের শর্তাবলি',
+  'legal.terms.description': '{brand} ব্যবহারের শর্ত: খরচ ভাগ করার একটি বিনামূল্যের টুল, সঙ্গে ঐচ্ছিক এককালীন Pro পাস।',
+  'legal.terms.summary.0': '{brand} হিসাব রাখে কে কার কাছে কত পাবে বা দেবে। এটি কখনও টাকা ধরে রাখে বা সরায় না — পেমেন্ট আপনার UPI অ্যাপেই হয়।',
+  'legal.terms.summary.1': 'টাকা দেওয়ার বা কাউকে দিতে বলার আগে পরিমাণ, নাম আর AI-এর ফল যাচাই করুন।',
+  'legal.terms.summary.2': 'Pro পাস এককালীন পেমেন্ট। নিজে থেকে কখনও নবায়ন হয় না।',
+  'legal.terms.summary.3': 'আপনার ডেটা আপনার ফোনে থাকে, তাই ব্যাকআপ রাখা আপনার দায়িত্ব।',
+  'legal.terms.section.using': '{brand} ব্যবহার',
+  'legal.terms.section.money': 'টাকা ও UPI',
+  'legal.terms.section.ai': 'AI ফিচার',
+  'legal.terms.section.pro': '{brand} Pro',
+  'legal.terms.section.data': 'আপনার ডেটা',
+  'legal.terms.section.service': 'সেবা',
+  'legal.terms.section.changes': 'পরিবর্তন ও যোগাযোগ',
+} as const satisfies Messages
