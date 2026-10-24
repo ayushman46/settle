@@ -38,6 +38,7 @@ test.describe('1,500 expenses', () => {
     const scrolled = Date.now()
     const steps = await scrollUntilVisible(page, OLDEST)
     const reached = Date.now() - scrolled
+    console.log(`[timing] activity opened in ${opened} ms; oldest reached in ${reached} ms (${steps} scrolls)`)
     testInfo.annotations.push({ type: 'activity-open-ms', description: String(opened) }, { type: 'activity-oldest-ms', description: `${reached} (${steps} steps)` })
     expect(opened, 'Activity with 1,500 expenses opens within 30 s').toBeLessThan(30_000)
     expect(reached, 'scrolling to the oldest expense takes under 90 s').toBeLessThan(90_000)
@@ -57,6 +58,7 @@ test.describe('1,500 expenses', () => {
     const scrolled = Date.now()
     const steps = await scrollUntilVisible(page, OLDEST)
     const reached = Date.now() - scrolled
+    console.log(`[timing] group opened in ${opened} ms; oldest reached in ${reached} ms (${steps} scrolls)`)
     testInfo.annotations.push({ type: 'group-open-ms', description: String(opened) }, { type: 'group-oldest-ms', description: `${reached} (${steps} steps)` })
     expect(opened, 'the group with 1,500 expenses opens within 30 s').toBeLessThan(30_000)
     expect(reached, 'scrolling the group to the oldest expense takes under 90 s').toBeLessThan(90_000)
