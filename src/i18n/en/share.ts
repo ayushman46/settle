@@ -101,4 +101,14 @@ export const share = {
   'share.card.payments': '{count, plural, one {# payment} other {# payments}}',
   'share.card.toSettle': 'To settle up',
   'share.card.morePayments': '{count, plural, one {# more payment} other {# more payments}}',
+
+  // Names used when a person never gave one (share/fallbacks.ts): the organiser or payee, a numbered person, anyone unnamed.
+  'share.fallback.friend': 'Your friend',
+  'share.fallback.person': 'Person {n}',
+  'share.fallback.someone': 'Someone',
+  // The note on a UPI payment that has no title (it shows in the payer's UPI app).
+  'share.upi.note': 'Bill split',
+  // Why a share card image couldn't be made.
+  'share.card.error.canvas': "This browser can't draw images",
+  'share.card.error.render': "Couldn't create the image",
 } as const satisfies Messages

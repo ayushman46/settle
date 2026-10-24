@@ -1,6 +1,7 @@
 /** Renders share cards to PNGs: fonts first, then layout → paint on a canvas. */
 import { BRAND, ME_ID, type AccentId, type Expense, type Friend, type Profile } from '../../domain/types'
 import { formatBillDate } from '../../lib/format'
+import { t } from '../../i18n'
 import { formatMoney } from '../../lib/money'
 import { outsideName } from '../names'
 import { CARD_SIZE, layoutShareCard, type ShareCardInput } from './layout'
@@ -32,6 +33,18 @@ export function cardCharacters(input: ShareCardInput): string {
     formatMoney(input.total, input.currency, { trimZeros: true }),
     formatBillDate(input.date) ?? '',
     `${BRAND.name} ${BRAND.tagline} 0123456789 +…·`,
+    // The card's own words in the UI language (Geist fetches subsets by the characters it's asked for).
+    t('share.card.paidBy', { name: '' }),
+    t('share.card.splitWays', { count: 2 }),
+    t('share.card.status.payer'),
+    t('share.card.status.paid'),
+    t('share.card.status.owes'),
+    t('share.card.status.zero'),
+    t('share.card.paidCount', { paid: 1, count: 2 }),
+    t('share.card.allSettled'),
+    t('share.card.collected', { collected: '', owed: '' }),
+    t('share.card.morePeople', { count: 2 }),
+    t('share.card.madeWith', { brand: BRAND.name }),
   ].join(' ')
   return [...new Set(Array.from(text))].join('')
 }
@@ -137,16 +150,16 @@ export async function renderScene(
 ): Promise<Blob> {
   await loadFonts(chars)
   const surface = domSurface() ?? offscreenSurface()
-  if (!surface) throw new ShareCardError("This browser can't draw images")
+  if (!surface) throw new ShareCardError(t('share.card.error.canvas'))
   try {
     const scene = layout({ ...opts, siteLabel: defaultSiteLabel() }, canvasMeasure(surface.ctx))
     paintScene(surface.ctx, scene)
     const blob = await surface.toBlob()
-    if (!blob || blob.size === 0) throw new ShareCardError("Couldn't create the image")
+    if (!blob || blob.size === 0) throw new ShareCardError(t('share.card.error.render'))
     return blob
   } catch (error) {
     if (error instanceof ShareCardError) throw error
-    throw new ShareCardError("Couldn't create the image")
+    throw new ShareCardError(t('share.card.error.render'))
   } finally {
     surface.release()
   }
@@ -174,9 +187,9 @@ export function shareCardInputFromExpense(
     currency: e.currency,
     date: e.date,
     total: e.total,
-    payerName: outsideName(e.payerId, friendsById, profile, 'Me'),
+    payerName: outsideName(e.payerId, friendsById, profile, t('share.card.me')),
     people: ids.map((id) => ({
-      name: outsideName(id, friendsById, profile, id === ME_ID ? 'Me' : 'Friend'),
+      name: outsideName(id, friendsById, profile, id === ME_ID ? t('share.card.me') : t('share.card.friend')),
       color: friendsById[id]?.color ?? 0,
       amount: e.shares[id] ?? 0,
       paid: id === e.payerId || e.paidBack[id] !== undefined,

@@ -4,19 +4,19 @@
  * note. Copy lives in the `pools` i18n namespace; amounts are exact (`formatMoney`, trimmed zeros).
  */
 import type { Minor } from '../domain/types'
-import { t } from '../i18n'
+import { getLanguage, intlLocale, t } from '../i18n'
 import { formatMoney } from '../lib/money'
 import type { NudgeTone } from './nudge'
 import { cleanText } from './text'
 
-/** "30 Oct" for `2026-10-30` (Indian English, Latin digits); '' for anything else. */
+/** "30 Oct" for `2026-10-30` (in the UI language's Indian locale, Latin digits); '' for anything else. */
 export function shortDay(iso: string | null | undefined): string {
   if (!iso || !/^\d{4}-\d{2}-\d{2}$/.test(iso)) return ''
   const [y, m, d] = iso.split('-').map(Number) as [number, number, number]
   const date = new Date(y, m - 1, d)
   if (Number.isNaN(date.getTime())) return ''
   try {
-    return new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'short' }).format(date)
+    return new Intl.DateTimeFormat(intlLocale(getLanguage()), { day: 'numeric', month: 'short', numberingSystem: 'latn' }).format(date)
   } catch {
     return iso
   }

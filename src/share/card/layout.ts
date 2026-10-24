@@ -16,6 +16,7 @@
  */
 import type { CategoryId, Minor } from '../../domain/types'
 import { formatBillDate } from '../../lib/format'
+import { t } from '../../i18n'
 import { formatMoney } from '../../lib/money'
 import { categoryLabel } from '../categories'
 import { cleanText } from '../text'
@@ -38,7 +39,6 @@ import {
   drawTicket,
   heroGeometry,
   maxCardHeight,
-  plural,
   STYLE,
   textOp,
   TILE,
@@ -198,7 +198,7 @@ export function layoutShareCard(input: ShareCardInput, opts: ShareCardLayoutOpti
   const hiddenPeople = people.slice(shown)
   if (hiddenPeople.length > 0) {
     rows.push({
-      name: `${plural(hiddenPeople.length, 'more person', 'more people')}`,
+      name: t('share.card.morePeople', { count: hiddenPeople.length }),
       color: 0,
       amount: hiddenPeople.reduce((sum, p) => sum + p.amount, 0),
       paid: false,
@@ -234,7 +234,7 @@ export function layoutShareCard(input: ShareCardInput, opts: ShareCardLayoutOpti
   /* ---- title, subtitle, total, tear ---- */
   const payer = cleanText(input.payerName, 40)
   const ways = input.people.length
-  const subtitle = [payer ? `Paid by ${payer}` : null, ways > 0 ? `split ${plural(ways, 'way', 'ways')}` : null].filter(Boolean).join(' · ')
+  const subtitle = [payer ? t('share.card.paidBy', { name: payer }) : null, ways > 0 ? t('share.card.splitWays', { count: ways }) : null].filter(Boolean).join(' · ')
   drawHero(ops, theme, cardY, hero, { titleLines, subtitle, amount: amountText, amountStyle }, measure)
 
   /* ---- people ---- */
@@ -266,7 +266,16 @@ export function layoutShareCard(input: ShareCardInput, opts: ShareCardLayoutOpti
 
     const nameW = Math.max(0, X0 + CW - amountW - 28 - nameX)
     text({ text: fitText(cleanText(row.name, 60) || '?', nameW, m.name, measure), x: nameX, y: cy + m.nameDy, style: m.name, color: theme.ink, align: 'left', maxWidth: nameW })
-    const status = row.more !== undefined ? null : row.isPayer ? 'Paid the bill' : row.paid ? 'Paid back' : row.amount > 0 ? 'Yet to pay' : 'Nothing to pay'
+    const status =
+      row.more !== undefined
+        ? null
+        : row.isPayer
+          ? t('share.card.status.payer')
+          : row.paid
+            ? t('share.card.status.paid')
+            : row.amount > 0
+              ? t('share.card.status.owes')
+              : t('share.card.status.zero')
     if (status && m.status) {
       text({
         text: fitText(status, nameW, m.status, measure),
@@ -293,12 +302,12 @@ export function layoutShareCard(input: ShareCardInput, opts: ShareCardLayoutOpti
       ops.push(theme.accentEdge ? { ...fill, stroke: theme.accentEdge } : fill)
     }
     const lineY = barY + 14 + 20 + 26
-    const right = `${paidCount} of ${debtors.length} paid`
+    const right = t('share.card.paidCount', { paid: paidCount, count: debtors.length })
     const rightW = measure(right, STYLE.muted)
     text({ text: right, x: X0 + CW, y: lineY, style: STYLE.muted, color: theme.ink2, align: 'right', maxWidth: CW })
     const settled = paidCount === debtors.length
     const leftW = CW - rightW - 24
-    const left = settled ? 'All settled up' : `${money(collected)} of ${money(owed)} collected`
+    const left = settled ? t('share.card.allSettled') : t('share.card.collected', { collected: money(collected), owed: money(owed) })
     if (settled) {
       ops.push({ kind: 'icon', paths: CHECK_ICON_PATHS, x: X0, y: lineY - 26, size: 30, color: theme.positive, lineWidth: 3 })
       text({ text: fitText(left, leftW - 40, STYLE.strong, measure), x: X0 + 40, y: lineY, style: STYLE.strong, color: theme.positive, align: 'left', maxWidth: leftW - 40 })

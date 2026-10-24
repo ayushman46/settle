@@ -14,6 +14,7 @@
  *   └──────────────────────────────┘   …or "Everyone's settled up" with a tick
  */
 import type { GroupKind, Minor } from '../../domain/types'
+import { t } from '../../i18n'
 import { formatMoney } from '../../lib/money'
 import { cleanText, firstName } from '../text'
 import { ARROW_ICON_PATHS, CHECK_ICON_PATHS } from './icons'
@@ -35,7 +36,6 @@ import {
   drawTicket,
   heroGeometry,
   maxCardHeight,
-  plural,
   STYLE,
   textOp,
   TILE,
@@ -74,12 +74,23 @@ export interface GroupCardInput {
   transfers: GroupCardTransfer[]
 }
 
+/** Each kind's name in the UI language (read when drawn, not at import). */
 export const GROUP_KIND_LABELS: Readonly<Record<GroupKind, string>> = {
-  trip: 'Trip',
-  home: 'Home',
-  couple: 'Couple',
-  event: 'Event',
-  other: 'Group',
+  get trip() {
+    return t('share.card.kind.trip')
+  },
+  get home() {
+    return t('share.card.kind.home')
+  },
+  get couple() {
+    return t('share.card.kind.couple')
+  },
+  get event() {
+    return t('share.card.kind.event')
+  },
+  get other() {
+    return t('share.card.kind.other')
+  },
 }
 
 const FALLBACK_EMOJI = '👥'
@@ -113,11 +124,11 @@ interface Row {
 
 /** "Riya Kapoor pays Sam", first names when that's too wide, cut with "…" as a last resort. */
 function payLine(row: Row, width: number, style: TextStyle, measure: Measure): string {
-  const from = cleanText(row.from.name, 40) || 'Someone'
-  const to = cleanText(row.to.name, 40) || 'someone'
-  const full = `${from} pays ${to}`
+  const from = cleanText(row.from.name, 40) || t('share.card.someone')
+  const to = cleanText(row.to.name, 40) || t('share.card.someone.object')
+  const full = t('share.card.pays', { from, to })
   if (measure(full, style) <= width) return full
-  return fitText(`${firstName(from)} pays ${firstName(to)}`, width, style, measure)
+  return fitText(t('share.card.pays', { from: firstName(from), to: firstName(to) }), width, style, measure)
 }
 
 export function layoutGroupCard(input: GroupCardInput, opts: CardLayoutOptions, measure: Measure): CardScene {
@@ -129,7 +140,7 @@ export function layoutGroupCard(input: GroupCardInput, opts: CardLayoutOptions, 
   }
 
   const transfers = input.transfers.filter((t) => t.amount > 0)
-  const title = cleanText(input.name, 120) || GROUP_KIND_LABELS[input.kind] || 'Group'
+  const title = cleanText(input.name, 120) || GROUP_KIND_LABELS[input.kind] || t('share.card.kind.other')
   const amountText = money(input.total)
   const amountSize = fitFontSize(amountText, CW, AMOUNT_SIZES, STYLE.amount, measure)
   const amountStyle = STYLE.amount(amountSize)
@@ -169,15 +180,15 @@ export function layoutGroupCard(input: GroupCardInput, opts: CardLayoutOptions, 
   const emoji = cleanText(input.emoji, 1, 16) || FALLBACK_EMOJI
   text({ text: emoji, x: X0 + TILE / 2, y: top(hero.tileY) + TILE / 2 + 2, style: { size: 48, weight: 400 }, color: theme.ink, align: 'center', baseline: 'middle', maxWidth: TILE })
   const counts = [
-    input.memberCount > 0 ? plural(input.memberCount, 'person', 'people') : null,
-    plural(Math.max(0, input.expenseCount), 'expense', 'expenses'),
+    input.memberCount > 0 ? t('share.card.people', { count: input.memberCount }) : null,
+    t('share.card.expenses', { count: Math.max(0, input.expenseCount) }),
   ]
     .filter(Boolean)
     .join(' · ')
-  drawHeadText(ops, top(hero.tileY), { text: GROUP_KIND_LABELS[input.kind] ?? 'Group', color: theme.accentInk }, { text: counts, color: theme.ink2 }, measure)
+  drawHeadText(ops, top(hero.tileY), { text: GROUP_KIND_LABELS[input.kind] ?? t('share.card.kind.other'), color: theme.accentInk }, { text: counts, color: theme.ink2 }, measure)
 
   /* ---- name, "Total spent", total, tear ---- */
-  drawHero(ops, theme, cardY, hero, { titleLines, subtitle: 'Total spent', amount: amountText, amountStyle }, measure)
+  drawHero(ops, theme, cardY, hero, { titleLines, subtitle: t('share.card.totalSpent'), amount: amountText, amountStyle }, measure)
 
   const bodyTop = top(hero.bodyTop)
   if (rows.length === 0) {
@@ -188,16 +199,19 @@ export function layoutGroupCard(input: GroupCardInput, opts: CardLayoutOptions, 
     ops.push({ kind: 'icon', paths: CHECK_ICON_PATHS, x: X0 + r - 17, y: cy - 17, size: 34, color: theme.onPositive, lineWidth: 3 })
     const textX = X0 + 2 * r + 24
     const textW = CW - 2 * r - 24
-    const [headline, detail] = input.expenseCount > 0 ? ["Everyone's settled up", 'No payments needed'] : ['Nothing to settle yet', 'No expenses so far']
+    const [headline, detail] =
+      input.expenseCount > 0
+        ? [t('share.card.settled'), t('share.card.settled.body')]
+        : [t('share.card.empty'), t('share.card.empty.body')]
     text({ text: fitText(headline, textW, STYLE.strong, measure), x: textX, y: cy - 6, style: STYLE.strong, color: theme.positive, align: 'left', maxWidth: textW })
     text({ text: fitText(detail, textW, STYLE.muted, measure), x: textX, y: cy + 30, style: STYLE.muted, color: theme.ink2, align: 'left', maxWidth: textW })
   } else {
     /* ---- to settle up ---- */
     const labelY = bodyTop + 30
-    const count = plural(transfers.length, 'payment', 'payments')
+    const count = t('share.card.payments', { count: transfers.length })
     const countW = measure(count, STYLE.muted)
     text({ text: count, x: X0 + CW, y: labelY, style: STYLE.muted, color: theme.ink2, align: 'right', maxWidth: CW })
-    text({ text: fitText('To settle up', CW - countW - 24, STYLE.strong, measure), x: X0, y: labelY, style: STYLE.strong, color: theme.ink, align: 'left', maxWidth: CW - countW - 24 })
+    text({ text: fitText(t('share.card.toSettle'), CW - countW - 24, STYLE.strong, measure), x: X0, y: labelY, style: STYLE.strong, color: theme.ink, align: 'left', maxWidth: CW - countW - 24 })
 
     rows.forEach((row, i) => {
       const rowTop = bodyTop + SECTION_H + i * m.height
@@ -220,7 +234,7 @@ export function layoutGroupCard(input: GroupCardInput, opts: CardLayoutOptions, 
       const baseline = cy + Math.round(m.name.size * 0.35)
       text({ text: amountLabel, x: X0 + CW, y: cy + Math.round(m.amount.size * 0.35), style: m.amount, color: theme.ink, align: 'right', maxWidth: CW / 2 })
       const lineW = Math.max(0, X0 + CW - amountW - 28 - textX)
-      const label = row.more !== undefined ? fitText(plural(row.more, 'more payment', 'more payments'), lineW, m.name, measure) : payLine(row, lineW, m.name, measure)
+      const label = row.more !== undefined ? fitText(t('share.card.morePayments', { count: row.more }), lineW, m.name, measure) : payLine(row, lineW, m.name, measure)
       if (label) text({ text: label, x: textX, y: baseline, style: m.name, color: row.more !== undefined ? theme.ink2 : theme.ink, align: 'left', maxWidth: lineW })
       if (i < rows.length - 1) {
         ops.push({ kind: 'line', x1: textX, y1: rowTop + m.height, x2: X0 + CW, y2: rowTop + m.height, color: theme.line, width: 2 })

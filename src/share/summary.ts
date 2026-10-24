@@ -1,5 +1,6 @@
 /** The plain-text versions of a split: the full summary ("Copy summary") and the short group-chat message that carries a pay link. */
 import { BRAND } from '../domain/types'
+import { t } from '../i18n'
 import { formatBillDate } from '../lib/format'
 import { formatMoney } from '../lib/money'
 import { graphemes } from '../lib/people'
@@ -46,14 +47,14 @@ export function summaryText(payload: PayLinkPayload, link?: string | null): stri
   const date = formatBillDate(payload.d)
   lines.push(`🧾 ${date ? `${payload.t} · ${date}` : payload.t}`)
   const ways = payload.p.length
-  lines.push(ways > 0 ? `Total ${money(payload.tot)} · split ${ways} ${ways === 1 ? 'way' : 'ways'}` : `Total ${money(payload.tot)}`)
+  lines.push(ways > 0 ? t('share.summary.totalSplit', { amount: money(payload.tot), count: ways }) : t('share.summary.total', { amount: money(payload.tot) }))
   if (payload.note) lines.push(payload.note)
 
   if (ways > 0) {
     lines.push('')
     const width = Math.min(MAX_PAD, Math.max(...payload.p.map((p) => graphemes(p.n).length))) + MIN_GAP
     payload.p.forEach((person, i) => {
-      const status = i === payload.pi ? ' · paid the bill' : person.paid ? ' ✓' : ''
+      const status = i === payload.pi ? ` · ${t('share.summary.paidTheBill')}` : person.paid ? ' ✓' : ''
       lines.push(`${padName(person.n, width)}${money(person.a)}${status}`)
     })
   }
@@ -61,11 +62,11 @@ export function summaryText(payload: PayLinkPayload, link?: string | null): stri
   const owing = payload.p.some((p, i) => i !== payload.pi && !p.paid && p.a > 0)
   const upi = usableUpi(payload)
   const pay: string[] = []
-  if (owing && upi) pay.push(`Pay ${payload.to.n} on UPI: ${upi}`)
-  if (owing && link?.trim()) pay.push(`Pay in a tap: ${link.trim()}`)
+  if (owing && upi) pay.push(t('share.summary.payUpi', { name: payload.to.n, upi }))
+  if (owing && link?.trim()) pay.push(t('share.summary.payTap', { link: link.trim() }))
   if (pay.length > 0) lines.push('', ...pay)
 
-  lines.push('', `— split with ${BRAND.name}`)
+  lines.push('', t('share.summary.footer', { brand: BRAND.name }))
   return lines.join('\n')
 }
 
@@ -93,20 +94,22 @@ export function payLinkMessage(payload: PayLinkPayload, link: string | null, opt
   const owing = outstanding > 0
   const headline =
     peopleCount > 0 && !owing
-      ? `🧾 ${title} · all settled up ✓`
-      : `🧾 ${title} · ${money(payload.tot)}${ways > 1 ? ` split ${ways} ways` : ''}`
+      ? t('share.message.settled', { title })
+      : ways > 1
+        ? t('share.message.split', { title, amount: money(payload.tot), count: ways })
+        : t('share.message.total', { title, amount: money(payload.tot) })
 
   const url = link?.trim() || null
   const upi = usableUpi(payload)
-  const payee = opts.fromPayee ? 'me' : firstName(payload.to.n)
+  const payee = firstName(payload.to.n)
   const lines = [headline]
   if (url) {
-    if (!owing) lines.push('See the split 👇')
-    else if (upi) lines.push(`Tap your name to pay ${payee} with any UPI app 👇`)
-    else lines.push('Tap your name to see your share 👇')
+    if (!owing) lines.push(t('share.message.see'))
+    else if (upi) lines.push(opts.fromPayee ? t('share.message.payMe') : t('share.message.pay', { name: payee }))
+    else lines.push(t('share.message.seeShare'))
     lines.push(url)
   } else if (owing && upi) {
-    lines.push(opts.fromPayee ? `My UPI: ${upi}` : `Pay ${payee} on UPI: ${upi}`)
+    lines.push(opts.fromPayee ? t('share.nudge.upi.mine', { upi }) : t('share.nudge.upi', { name: payee, upi }))
   }
   return lines.join('\n')
 }

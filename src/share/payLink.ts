@@ -14,6 +14,7 @@ import { buildUpiLink, isValidUpiId, normalizeUpiId } from '../lib/upi'
 import { categoryLabel } from './categories'
 import { decodeFragment, encodeFragment } from './fragment'
 import { outsideName } from './names'
+import { friendFallback, personFallback } from './fallbacks'
 import { cleanText, utf8Length } from './text'
 
 export interface PayLinkPerson {
@@ -158,7 +159,7 @@ function normalizePayload(raw: PayLinkPayload): PayLinkPayload {
   const cat: CategoryId = (CATEGORY_IDS as readonly string[]).includes(raw.cat) ? raw.cat : 'other'
   const people = raw.p.slice(0, L.people).map((person, i) => {
     const out: PayLinkPerson = {
-      n: cleanText(person.n, L.name.graphemes, L.name.units) || `Person ${i + 1}`,
+      n: cleanText(person.n, L.name.graphemes, L.name.units) || personFallback(i + 1),
       a: clampAmount(person.a),
     }
     if (person.paid === true) out.paid = true
@@ -173,7 +174,7 @@ function normalizePayload(raw: PayLinkPayload): PayLinkPayload {
     c: /^[A-Z]{3}$/.test(currency) ? currency : 'INR',
     d: /^\d{4}-\d{2}-\d{2}$/.test(raw.d) ? raw.d : '',
     to: {
-      n: cleanText(raw.to.n, L.name.graphemes, L.name.units) || PAYEE_FALLBACK,
+      n: cleanText(raw.to.n, L.name.graphemes, L.name.units) || friendFallback(),
       u: upi && isValidUpiId(upi) ? upi : null,
     },
     tot: clampAmount(raw.tot),
@@ -305,7 +306,7 @@ export function payLinkFromExpense(
 ): PayLinkPayload {
   const ids = keptParticipants(e)
   const p: PayLinkPerson[] = ids.map((id, i) => {
-    const fallback = id === ME_ID ? PAYEE_FALLBACK : `Person ${i + 1}`
+    const fallback = id === ME_ID ? friendFallback() : personFallback(i + 1)
     const person: PayLinkPerson = { n: outsideName(id, friendsById, profile, fallback), a: e.shares[id] ?? 0 }
     if (id === e.payerId || e.paidBack[id] !== undefined) person.paid = true
     return person
@@ -317,7 +318,7 @@ export function payLinkFromExpense(
     cat: e.category,
     c: e.currency,
     d: e.date,
-    to: { n: outsideName(e.payerId, friendsById, profile, PAYEE_FALLBACK), u: upi },
+    to: { n: outsideName(e.payerId, friendsById, profile, friendFallback()), u: upi },
     tot: e.total,
     p,
   }

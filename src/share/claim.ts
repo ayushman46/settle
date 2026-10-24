@@ -19,6 +19,7 @@ import { decodeFragment, encodeFragment } from './fragment'
 import { macB64u, timingSafeEqual } from './hmac'
 import { normalizePhone } from './links'
 import { outsideName } from './names'
+import { friendFallback, personFallback, someoneFallback } from './fallbacks'
 import { sha256, sha256Hex, utf8 } from './sha256'
 import { cleanText, utf8Length } from './text'
 
@@ -169,7 +170,7 @@ function cleanFix(fix: ClaimLinkPayload['fix'], items: number, people: number): 
 
 function normalizeLink(raw: ClaimLinkPayload): ClaimLinkPayload {
   const it = raw.it.slice(0, L.items).map(cleanItem)
-  const p = raw.p.slice(0, L.people).map((name, i) => cleanName(name, i === 0 ? ORGANISER_FALLBACK : `Person ${i + 1}`))
+  const p = raw.p.slice(0, L.people).map((name, i) => cleanName(name, i === 0 ? friendFallback() : personFallback(i + 1)))
   const upi = raw.to.u ? normalizeUpiId(raw.to.u) : ''
   const phone = raw.to.ph ? normalizePhone(raw.to.ph) : null
   const currency = raw.c.trim().toUpperCase()
@@ -181,7 +182,7 @@ function normalizeLink(raw: ClaimLinkPayload): ClaimLinkPayload {
     t: cleanText(raw.t, L.title.graphemes, L.title.units) || 'Bill',
     c: /^[A-Z]{3}$/.test(currency) ? currency : 'INR',
     d: /^\d{4}-\d{2}-\d{2}$/.test(raw.d) ? raw.d : '',
-    to: { n: cleanName(raw.to.n, ORGANISER_FALLBACK), u: upi && isValidUpiId(upi) ? upi : null },
+    to: { n: cleanName(raw.to.n, friendFallback()), u: upi && isValidUpiId(upi) ? upi : null },
     tot: clampAmount(raw.tot),
     it,
     p,
@@ -222,7 +223,7 @@ function normalizeReply<T extends Omit<ClaimReplyPayload, 'm'>>(raw: T): Omit<Cl
     r: raw.r,
     h: raw.h,
     w: raw.w === null || !isWhole(raw.w, 0, L.people - 1) ? null : raw.w,
-    n: cleanName(raw.n, 'Someone'),
+    n: cleanName(raw.n, someoneFallback()),
     x: raw.z ? [] : cleanPicks(raw.x),
     at: isWhole(raw.at, 0, 1e11) ? raw.at : 0,
   }
@@ -401,7 +402,7 @@ export function claimLinkFromRound(
 ): ClaimLinkPayload {
   const it = claimLinkItems(expense, round.itemIds)
   const people = round.peopleIds.slice(0, L.people)
-  const organiser = outsideName(ME_ID, friendsById, profile, ORGANISER_FALLBACK)
+  const organiser = outsideName(ME_ID, friendsById, profile, friendFallback())
   const upi = expense.payerId === ME_ID ? (profile.upiId ?? friendsById[ME_ID]?.upiId ?? null) : (friendsById[expense.payerId]?.upiId ?? null)
   const fixed = new Set(round.fixedItemIds)
   const fix: Array<[number, Array<[number, number]>]> = []
@@ -426,7 +427,7 @@ export function claimLinkFromRound(
     to: { n: organiser, u: upi },
     tot: expense.total,
     it,
-    p: people.map((id, i) => (i === 0 ? organiser : outsideName(id, friendsById, profile, `Person ${i + 1}`))),
+    p: people.map((id, i) => (i === 0 ? organiser : outsideName(id, friendsById, profile, personFallback(i + 1)))),
     h: itemsHash(expense.currency, clampAmount(expense.total), it),
   }
   const phone = friendsById[ME_ID]?.phone

@@ -18,6 +18,7 @@ import { decodeFragment, encodeFragment } from './fragment'
 import { macB64u, timingSafeEqual } from './hmac'
 import { normalizePhone } from './links'
 import { outsideName } from './names'
+import { friendFallback, personFallback, someoneFallback } from './fallbacks'
 import { sha256, utf8 } from './sha256'
 import { cleanText, utf8Length } from './text'
 
@@ -186,7 +187,7 @@ export function normalizePoolLink(raw: PoolLinkPayload): PoolLinkPayload {
   const perPerson = clampAmount(raw.pp)
   const mode: PoolMode = raw.m === 'fixed' && perPerson > 0 ? 'fixed' : 'target'
   const people = raw.p.slice(0, L.people).map((person, i) => {
-    const out: PoolLinkPerson = { n: cleanName(person.n) || `Person ${i + 1}` }
+    const out: PoolLinkPerson = { n: cleanName(person.n) || personFallback(i + 1) }
     if (person.ok) out.ok = 1
     const amount = clampAmount(person.a)
     if (amount > 0) out.a = amount
@@ -202,7 +203,7 @@ export function normalizePoolLink(raw: PoolLinkPayload): PoolLinkPayload {
     e: cleanEmojiChar(raw.e, OCCASION_EMOJI[occasion]),
     o: occasion,
     c: currency,
-    to: { n: cleanName(raw.to.n) || ORGANISER_FALLBACK, u: upi && isValidUpiId(upi) ? upi : null },
+    to: { n: cleanName(raw.to.n) || friendFallback(), u: upi && isValidUpiId(upi) ? upi : null },
     m: mode,
     p: people,
     col: clampAmount(raw.col),
@@ -296,7 +297,7 @@ function normalizeReplyFields(r: Omit<PoolReplyPayload, 'm'>): Omit<PoolReplyPay
     k: 'chip',
     id: r.id,
     w: wholeIn(r.w ?? undefined, 0, L.people - 1),
-    n: cleanName(r.n) || 'Someone',
+    n: cleanName(r.n) || someoneFallback(),
     a: clampAmount(r.a),
     at: wholeIn(Math.round(r.at), 0, 32_503_680_000) ?? 0,
   }
@@ -371,13 +372,13 @@ export function poolPeopleRows(pool: Pool, friendsById: Readonly<Record<string, 
     if (id === ME_ID || seen.has(id)) continue
     seen.add(id)
     const amount = paid.get(id) ?? 0
-    rows.push({ name: outsideName(id, friendsById, profile, stored.get(id) ?? 'Someone'), paid: amount, ok: isIn(pool, amount) })
+    rows.push({ name: outsideName(id, friendsById, profile, stored.get(id) ?? someoneFallback()), paid: amount, ok: isIn(pool, amount) })
   }
   for (const [key, amount] of paid) {
     if (seen.has(key)) continue
     seen.add(key)
     const friend = friendsById[key]
-    const name = friend && key !== ME_ID ? outsideName(key, friendsById, profile, stored.get(key) ?? 'Someone') : (stored.get(key) ?? 'Someone')
+    const name = friend && key !== ME_ID ? outsideName(key, friendsById, profile, stored.get(key) ?? someoneFallback()) : (stored.get(key) ?? someoneFallback())
     rows.push({ name, paid: amount, ok: isIn(pool, amount) })
   }
   return rows
@@ -406,7 +407,7 @@ export function poolLinkFromPool(pool: Pool, friendsById: Readonly<Record<string
     e: pool.emoji,
     o: pool.occasion,
     c: pool.currency,
-    to: { n: outsideName(ME_ID, friendsById, profile, ORGANISER_FALLBACK), u: upi, ...(phone ? { ph: phone } : {}) },
+    to: { n: outsideName(ME_ID, friendsById, profile, friendFallback()), u: upi, ...(phone ? { ph: phone } : {}) },
     m: pool.mode,
     p: kept.map((r) => ({ n: r.name, ...(r.ok ? { ok: 1 as const } : {}), ...(pool.showAmounts && r.paid > 0 ? { a: r.paid } : {}) })),
     col: collected,

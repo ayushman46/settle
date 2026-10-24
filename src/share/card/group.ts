@@ -1,6 +1,7 @@
 /** The group summary card: its data from a group's books, and its PNG. */
 import { BRAND, ME_ID, type Expense, type Friend, type Group, type Profile } from '../../domain/types'
 import { groupBalances, simplifyDebts } from '../../engine/balances'
+import { t } from '../../i18n'
 import { formatMoney } from '../../lib/money'
 import { outsideName } from '../names'
 import { GROUP_KIND_LABELS, layoutGroupCard, type GroupCardInput, type GroupCardPerson } from './groupLayout'
@@ -18,7 +19,7 @@ export function groupCardInputFromGroup(
 ): GroupCardInput {
   const own = expenses.filter((e) => e.groupId === group.id && e.currency === group.currency)
   const person = (id: string): GroupCardPerson => ({
-    name: outsideName(id, friendsById, profile, id === ME_ID ? 'Me' : 'Friend'),
+    name: outsideName(id, friendsById, profile, id === ME_ID ? t('share.card.me') : t('share.card.friend')),
     color: friendsById[id]?.color ?? 0,
   })
   return {
@@ -43,6 +44,18 @@ export function groupCardCharacters(input: GroupCardInput): string {
     money(input.total),
     ...input.transfers.flatMap((t) => [t.from.name, t.to.name, money(t.amount)]),
     `Total spent To settle up Everyone's settled up No payments needed people expenses more pays ${BRAND.name} ${BRAND.tagline} 0123456789 +…·`,
+    // The card's own words in the UI language (Geist fetches subsets by the characters it's asked for).
+    t('share.card.totalSpent'),
+    t('share.card.toSettle'),
+    t('share.card.settled'),
+    t('share.card.settled.body'),
+    t('share.card.empty'),
+    t('share.card.empty.body'),
+    t('share.card.people', { count: 2 }),
+    t('share.card.expenses', { count: 2 }),
+    t('share.card.morePayments', { count: 2 }),
+    t('share.card.pays', { from: '', to: '' }),
+    t('share.card.madeWith', { brand: BRAND.name }),
   ].join(' ')
   return [...new Set(Array.from(text))].join('')
 }

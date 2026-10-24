@@ -4,6 +4,7 @@
  * operations, so each card's layout is tested without a canvas and `paint.ts` draws them all.
  */
 import { BRAND, type AccentId } from '../../domain/types'
+import { t } from '../../i18n'
 import { initials } from '../../lib/people'
 import { cleanText } from '../text'
 import { CHECK_ICON_PATHS } from './icons'
@@ -242,7 +243,7 @@ export function drawMoreAvatar(ops: CardOp[], theme: CardTheme, x: number, y: nu
 
 /** "✓ Made with Settle · settle.app", centred under the card. */
 export function drawFooter(ops: CardOp[], theme: CardTheme, siteLabel: string, measure: Measure): void {
-  const brand = `Made with ${BRAND.name}`
+  const brand = t('share.card.madeWith', { brand: BRAND.name })
   const mark = 40
   const gap = 14
   const brandW = measure(brand, STYLE.footerBrand)
