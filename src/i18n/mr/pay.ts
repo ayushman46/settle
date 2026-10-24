@@ -1,0 +1,87 @@
+/** Marathi copy for the public pay page (opened from a friend's link). Keys: `pay.<area>.<element>`. */
+import type { Messages } from '../types'
+
+export const pay = {
+  // The frame of every public page a friend opens from a link (/pay, /claim, /pool).
+  'pay.shell.home.aria': '{brand} होम',
+  'pay.shell.what': '{brand} म्हणजे काय?',
+  'pay.shell.pitch.title': 'पुढच्या वेळी बिल वाटायचे?',
+  'pay.shell.pitch.body': 'बिलाचा फोटो घ्या, अशीच एक लिंक शेअर करा, आणि UPI ने परत मिळवा. साइन-अप नाही, जाहिराती नाहीत.',
+  'pay.shell.pitch.cta': '{brand} वापरून तुमची बिले वाटा — मोफत',
+  'pay.shell.privacy': 'गोपनीयता',
+  'pay.shell.terms': 'अटी',
+
+  // The request card, the page's h1. <by> is the small line, <what> the big title (user content).
+  'pay.request.title': '<by>{name} यांनी पैसे मागितले</by> <what>{title}</what>',
+  // In the line under the title: "21 Oct · Food · Total ₹2,766".
+  'pay.request.total': 'एकूण {amount}',
+  'pay.request.collected': '{owed} पैकी {collected} जमा',
+  'pay.request.paidCount': '{count} पैकी {paid} जणांनी दिले',
+
+  // "Which one are you?" — the list of everyone on the link.
+  'pay.who.title': 'तुम्ही कोण आहात?',
+  'pay.who.empty': 'या लिंकवर कोणाचेही काही देणे नाही.',
+  'pay.who.hint': 'तुमचा हिस्सा पाहण्यासाठी आणि पैसे देण्यासाठी तुमच्या नावावर टॅप करा.',
+  // Badge next to someone the payee has marked as paid.
+  'pay.who.paid': 'दिले',
+
+  // Paying by UPI (also used on the claim and pool pages).
+  'pay.upi.cta': 'कोणत्याही UPI ॲपने {amount} द्या',
+  'pay.upi.cta.caption': 'GPay, PhonePe, Paytm किंवा BHIM सगळे भरलेले उघडेल.',
+  'pay.upi.qr.show.cta': 'दुसऱ्या फोनवरून द्या',
+  'pay.upi.qr.hide.cta': 'QR कोड लपवा',
+  'pay.upi.qr.aria': '{name} यांना {amount} देण्यासाठी UPI QR कोड',
+  'pay.upi.qr.caption.touch': 'दुसऱ्या फोनमधील UPI ॲपने स्कॅन करा.',
+  'pay.upi.qr.caption.desktop': 'तुमच्या फोनमधील कोणत्याही UPI ॲपने स्कॅन करा — GPay, PhonePe, Paytm, BHIM.',
+  // Label above the payee's name and UPI ID.
+  'pay.upi.payee.label': 'यांना पैसे दिले जात आहेत',
+  'pay.upi.copy.cta': 'कॉपी करा',
+  'pay.upi.copied.cta': 'कॉपी झाले',
+  'pay.upi.copy.aria': 'UPI ID कॉपी करा',
+  'pay.upi.copied.aria': 'UPI ID कॉपी झाला',
+  'pay.upi.copy.error': 'कॉपी करता आले नाही — ID कॉपी करण्यासाठी दाबून धरा.',
+  'pay.upi.copied.status': 'UPI ID कॉपी झाला',
+  'pay.upi.safety': 'पैसे देण्यापूर्वी तुमच्या UPI ॲपमध्ये <b>{name}</b> दिसत आहे का ते तपासा. {brand} तुमच्या पैशांना कधीही हात लावत नाही.',
+
+  // One person's share.
+  'pay.panel.notYou.cta': '{name} नाही? तुमचे नाव निवडा',
+  'pay.panel.share.title': '{name} यांचा हिस्सा',
+  'pay.panel.paid.title': 'तुमचा हिशोब मिटला आहे',
+  'pay.panel.paid.body': '{name} यांनी तुमचा हिस्सा दिला म्हणून चिन्हांकित केले आहे.',
+  'pay.panel.reveal.cta': 'तरीही पेमेंट तपशील दाखवा',
+  'pay.panel.nothing.title': 'देण्यासारखे काही नाही',
+  'pay.panel.nothing.body': 'यातील तुमचा हिस्सा {amount} आहे.',
+  'pay.panel.noUpi.title': '{name} यांनी UPI ID जोडलेला नाही',
+  'pay.panel.noUpi.body': 'नेहमीप्रमाणे त्यांना पैसे द्या — किंवा त्यांचा UPI ID विचारून कोणत्याही UPI ॲपने द्या.',
+  'pay.panel.notInr.title': 'नेहमीच्या पद्धतीने द्या',
+  'pay.panel.notInr.body': 'UPI फक्त रुपयांत चालतो, म्हणून {name} यांना नेहमीच्या पद्धतीने द्या.',
+  'pay.panel.breakdown.title': 'तुमच्या हिश्यात काय आहे',
+  'pay.panel.breakdown.share': 'तुमचा हिस्सा',
+  // Under an item someone shared: "Shared 3 ways", or "2 of 3 shares" for unequal shares.
+  'pay.breakdown.sharedWays': '{count} जणांत वाटले',
+  'pay.breakdown.shares': '{total} पैकी {shares} हिस्से',
+  'pay.breakdown.extras.added': 'कर, शुल्क आणि राउंड-ऑफ',
+  'pay.breakdown.extras.taken': 'सवलती आणि राउंड-ऑफ',
+
+  // "Paid? Tell them" — a ready message the payer sends to the payee's chat.
+  'pay.tell.title': 'पैसे दिले?',
+  'pay.tell.cta': '{name} यांना सांगा की तुम्ही दिले आहेत',
+  'pay.tell.copied.status': 'संदेश कॉपी झाला — तुमच्या चॅटमध्ये पेस्ट करा.',
+  'pay.tell.shared.status': 'पाठवला. हिशोब मिटवल्याबद्दल धन्यवाद!',
+  'pay.tell.failed.status': 'संदेश शेअर करता आला नाही. पुन्हा प्रयत्न करा.',
+  // The message itself ({title} is what the bill was for).
+  'pay.tell.message': 'नमस्कार {name}! {title} साठी आत्ताच {amount} दिले ✓',
+  'pay.tell.message.noName': 'नमस्कार! {title} साठी आत्ताच {amount} दिले ✓',
+
+  // A link that can't be shown.
+  'pay.problem.invalid.title': 'ही पे लिंक चालत नाही',
+  'pay.problem.invalid.body': 'कॉपी करताना लिंक कापली गेली असेल. ज्यांनी पाठवली त्यांना पुन्हा शेअर करायला सांगा.',
+  'pay.problem.empty.title': 'येथे पे लिंक नाही',
+  'pay.problem.empty.body': 'मित्राने शेअर केलेली लिंक उघडा — त्यात त्यांना पैसे देण्यासाठी सर्व माहिती आहे.',
+  'pay.loading.status': 'पे लिंक उघडत आहे…',
+
+  // The browser tab title and the link preview.
+  'pay.meta.title': '{name} यांना पैसे द्या · {title} · {brand}',
+  'pay.meta.title.empty': 'पे लिंक · {brand}',
+  'pay.meta.description': 'कोणत्याही UPI ॲपने एका टॅपमध्ये तुमचा हिस्सा द्या. {brand} द्वारे पाठवले.',
+} as const satisfies Messages
