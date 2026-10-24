@@ -1,0 +1,70 @@
+/** Kannada copy for Activity. Keys: `activity.<screen>.<element>`. */
+import type { Messages } from '../types'
+
+export const activity = {
+  'activity.title': 'ಚಟುವಟಿಕೆ',
+  'activity.newSplit.cta': 'ಹೊಸ ಸ್ಪ್ಲಿಟ್',
+
+  'activity.firstRun.title': 'ನಿಮ್ಮ ಸ್ಪ್ಲಿಟ್‌ಗಳು ಇಲ್ಲಿ ಇರುತ್ತವೆ',
+  'activity.firstRun.body': 'ನೀವು ಹಂಚಿದ ಪ್ರತಿ ಖರ್ಚೂ ಇಲ್ಲಿ ಹೊಸದು ಮೊದಲು ತೋರಿಸುತ್ತದೆ — ಯಾರು ಹಣ ಹಿಂತಿರುಗಿಸಿದ್ದಾರೆ ಮತ್ತು ಯಾರು ಇಲ್ಲ ಎಂಬುದರೊಂದಿಗೆ.',
+  'activity.firstRun.split.cta': 'ಮೊತ್ತ ಹಂಚಿ',
+  'activity.firstRun.scan.cta': 'ಬಿಲ್ ಸ್ಕ್ಯಾನ್ ಮಾಡಿ',
+
+  'activity.empty.all.title': 'ಇನ್ನೂ ಯಾವ ಖರ್ಚೂ ಇಲ್ಲ',
+  'activity.empty.all.body': 'ಏನಾದರೂ ಹಂಚಿ, ಅದು ಇಲ್ಲಿ ತೋರಿಸುತ್ತದೆ.',
+  'activity.empty.collect.title': 'ವಸೂಲಿ ಮಾಡಲು ಏನೂ ಇಲ್ಲ',
+  'activity.empty.collect.body': 'ಎಲ್ಲರೂ ನಿಮಗೆ ಹಣ ಹಿಂತಿರುಗಿಸಿದ್ದಾರೆ. ಒಳ್ಳೆಯದು.',
+  'activity.empty.pay.title': 'ನೀವು ಸಮವಾಗಿದ್ದೀರಿ',
+  'activity.empty.pay.body': 'ಈಗ ನೀವು ಯಾರಿಗೂ ಕೊಡಬೇಕಿಲ್ಲ.',
+  'activity.empty.bills.title': 'ಇನ್ನೂ ಬಿಲ್‌ಗಳಿಲ್ಲ',
+  'activity.empty.bills.body': 'ರೆಸ್ಟೋರೆಂಟ್ ಬಿಲ್‌ನ ಫೋಟೋ ತೆಗೆಯಿರಿ, {brand} ಅದನ್ನು ಐಟಂ ಐಟಂ ಆಗಿ ಹಂಚುತ್ತದೆ.',
+  'activity.empty.groups.title': 'ಇನ್ನೂ ಗುಂಪು ಖರ್ಚುಗಳಿಲ್ಲ',
+  'activity.empty.groups.body': 'ಪ್ರವಾಸ, ಫ್ಲ್ಯಾಟ್, ಜೋಡಿ — ಹಂಚಿದ ಖರ್ಚುಗಳನ್ನು ಗುಂಪಿನಲ್ಲಿ ಒಟ್ಟಿಗೆ ಇಡಿ.',
+  'activity.empty.settled.title': 'ಇನ್ನೂ ಯಾವುದೂ ಚುಕ್ತಾ ಆಗಿಲ್ಲ',
+  'activity.empty.settled.body': 'ಎಲ್ಲರೂ ಸಮವಾದ ಮೇಲೆ ಸ್ಪ್ಲಿಟ್‌ಗಳು ಇಲ್ಲಿ ಬರುತ್ತವೆ.',
+  'activity.empty.scan.cta': 'ಬಿಲ್ ಸ್ಕ್ಯಾನ್ ಮಾಡಿ',
+  'activity.empty.groups.cta': 'ಗುಂಪುಗಳಿಗೆ ಹೋಗಿ',
+
+  'activity.noMatches.title': '“{query}” ಗೆ ಯಾವುದೇ ಹೊಂದಾಣಿಕೆ ಇಲ್ಲ',
+  'activity.noMatches.body': 'ಒಂದು ಹೆಸರು, ಸ್ಥಳ ಅಥವಾ ಮೊತ್ತವನ್ನು ಪ್ರಯತ್ನಿಸಿ.',
+  'activity.noMatches.cta': 'ಎಲ್ಲಾ ಚಟುವಟಿಕೆ ತೋರಿಸಿ',
+
+  'activity.groups.owed.title': 'ಗುಂಪುಗಳಲ್ಲಿ ನಿಮಗೆ ಬರಬೇಕಾದದ್ದು',
+  'activity.groups.owe.title': 'ಗುಂಪುಗಳಲ್ಲಿ ನೀವು ಕೊಡಬೇಕಾದದ್ದು',
+  'activity.groups.description': 'ಗುಂಪಿನ ಖರ್ಚುಗಳನ್ನು ಒಟ್ಟಾಗಿ ಚುಕ್ತಾ ಮಾಡಲಾಗುತ್ತದೆ.',
+  'activity.groups.row.subtitle': 'ಲೆಕ್ಕ ಚುಕ್ತಾ ಮಾಡಿ',
+  'activity.groups.row.owed.aria': '{group}: ನಿಮಗೆ {amount} ಬರಬೇಕು. ಲೆಕ್ಕ ಚುಕ್ತಾ ಮಾಡಿ',
+  'activity.groups.row.owe.aria': '{group}: ನೀವು {amount} ಕೊಡಬೇಕು. ಲೆಕ್ಕ ಚುಕ್ತಾ ಮಾಡಿ',
+
+  'activity.filters.aria': 'ತೋರಿಸು',
+  'activity.filter.all.chip': 'ಎಲ್ಲ',
+  'activity.filter.collect.chip': 'ವಸೂಲಿ ಮಾಡಬೇಕಾದದ್ದು',
+  'activity.filter.pay.chip': 'ಕೊಡಬೇಕಾದದ್ದು',
+  'activity.filter.bills.chip': 'ಬಿಲ್‌ಗಳು',
+  'activity.filter.groups.chip': 'ಗುಂಪುಗಳು',
+  'activity.filter.settled.chip': 'ಚುಕ್ತಾ ಆಗಿದ್ದು',
+  'activity.filter.counted.aria': '{label}, {count}',
+
+  'activity.search.label': 'ಚಟುವಟಿಕೆ ಹುಡುಕಿ',
+  'activity.search.placeholder': 'ಹೆಸರು, ಸ್ಥಳ ಅಥವಾ ಮೊತ್ತ ಹುಡುಕಿ',
+  'activity.search.clear.aria': 'ಹುಡುಕಾಟ ಅಳಿಸಿ',
+
+  'activity.results.noMatches': '“{query}” ಗೆ ಯಾವುದೇ ಹೊಂದಾಣಿಕೆ ಇಲ್ಲ',
+  'activity.results.matches': '“{query}” ಗೆ {count, plural, one {# ಹೊಂದಾಣಿಕೆ} other {# ಹೊಂದಾಣಿಕೆಗಳು}}',
+  'activity.results.nothing.all': 'ಇನ್ನೂ ಯಾವ ಖರ್ಚೂ ಇಲ್ಲ',
+  'activity.results.nothing.collect': 'ವಸೂಲಿ ಮಾಡಲು ಏನೂ ಇಲ್ಲ',
+  'activity.results.nothing.pay': 'ಕೊಡಲು ಏನೂ ಇಲ್ಲ',
+  'activity.results.nothing.bills': 'ಇನ್ನೂ ಬಿಲ್‌ಗಳಿಲ್ಲ',
+  'activity.results.nothing.groups': 'ಇನ್ನೂ ಗುಂಪು ಖರ್ಚುಗಳಿಲ್ಲ',
+  'activity.results.nothing.settled': 'ಇನ್ನೂ ಯಾವುದೂ ಚುಕ್ತಾ ಆಗಿಲ್ಲ',
+  'activity.results.all': '{count, plural, one {# ಖರ್ಚು} other {# ಖರ್ಚುಗಳು}}',
+  'activity.results.collect': '{count, plural, one {# ಸ್ಪ್ಲಿಟ್} other {# ಸ್ಪ್ಲಿಟ್‌ಗಳು}} ರಲ್ಲಿ {sum} ವಸೂಲಿ ಮಾಡಬೇಕು',
+  'activity.results.pay': '{count, plural, one {# ಸ್ಪ್ಲಿಟ್} other {# ಸ್ಪ್ಲಿಟ್‌ಗಳು}} ರಲ್ಲಿ ನೀವು {sum} ಕೊಡಬೇಕು',
+  'activity.results.bills': '{count, plural, one {# ಬಿಲ್} other {# ಬಿಲ್‌ಗಳು}}',
+  'activity.results.groups': '{count, plural, one {# ಗುಂಪು ಖರ್ಚು} other {# ಗುಂಪು ಖರ್ಚುಗಳು}}',
+  'activity.results.settled': '{count, plural, one {# ಖರ್ಚು} other {# ಖರ್ಚುಗಳು}} ಚುಕ್ತಾ ಆಗಿದೆ',
+  'activity.results.owedInGroups': '{count, plural, one {# ಗುಂಪಿನಲ್ಲಿ} other {# ಗುಂಪುಗಳಲ್ಲಿ}} ನಿಮಗೆ ಬರಬೇಕು',
+  'activity.results.oweInGroups': '{count, plural, one {# ಗುಂಪಿನಲ್ಲಿ} other {# ಗುಂಪುಗಳಲ್ಲಿ}} ನೀವು ಕೊಡಬೇಕು',
+
+  'activity.month.undated': 'ದಿನಾಂಕವಿಲ್ಲದ',
+} as const satisfies Messages

@@ -1,0 +1,51 @@
+/** Kannada copy for the app shell (src/app). Keys: `app.<screen>.<element>`. */
+import type { Messages } from '../types'
+
+export const app = {
+  'app.tab.home': 'ಮುಖಪುಟ',
+  'app.tab.groups': 'ಗುಂಪುಗಳು',
+  'app.tab.activity': 'ಇತಿಹಾಸ',
+  'app.tab.you': 'ನೀವು',
+
+  'app.title.format': '{page} · {brand}',
+  'app.title.home': 'ಮುಖಪುಟ',
+  'app.title.welcome': 'ಸ್ವಾಗತ',
+  'app.title.groups': 'ಗುಂಪುಗಳು',
+  'app.title.group': 'ಗುಂಪು',
+  'app.title.settleUp': 'ಲೆಕ್ಕ ಚುಕ್ತಾ ಮಾಡಿ',
+  'app.title.activity': 'ಇತಿಹಾಸ',
+  'app.title.you': 'ನೀವು',
+  'app.title.newSplit': 'ಹೊಸ ಸ್ಪ್ಲಿಟ್',
+  'app.title.editSplit': 'ಸ್ಪ್ಲಿಟ್ ಬದಲಿಸಿ',
+  'app.title.fromSms': 'SMS ನಿಂದ',
+  'app.title.lend': 'ಸಾಲ ಕೊಡಿ ಅಥವಾ ಪಡೆಯಿರಿ',
+  'app.title.editLend': 'ಸಾಲ ಬದಲಿಸಿ',
+  'app.title.expense': 'ಖರ್ಚು',
+  'app.title.claims': 'ಕ್ಲೇಮ್‌ಗಳು',
+  'app.title.people': 'ಜನರು',
+  'app.title.person': 'ವ್ಯಕ್ತಿ',
+  'app.title.insights': 'ಇನ್‌ಸೈಟ್‌ಗಳು',
+  'app.title.recurring': 'ಪುನರಾವರ್ತಿತ ಸ್ಪ್ಲಿಟ್‌ಗಳು',
+  'app.title.newRecurring': 'ಹೊಸ ಪುನರಾವರ್ತಿತ ಸ್ಪ್ಲಿಟ್',
+  'app.title.recurringOne': 'ಪುನರಾವರ್ತಿತ ಸ್ಪ್ಲಿಟ್',
+  'app.title.collections': 'ಸಂಗ್ರಹಗಳು',
+  'app.title.newCollection': 'ಹೊಸ ಸಂಗ್ರಹ',
+  'app.title.collection': 'ಸಂಗ್ರಹ',
+  'app.title.editCollection': 'ಸಂಗ್ರಹ ಬದಲಿಸಿ',
+  'app.title.pro': 'Pro',
+
+  'app.storage.title': 'ಈ ಫೋನ್ ನಿಮ್ಮ ಬದಲಾವಣೆಗಳನ್ನು ಉಳಿಸುತ್ತಿಲ್ಲ',
+  'app.storage.body': 'ಇದರ ಸಂಗ್ರಹಣೆ ತುಂಬಿರಬಹುದು ಅಥವಾ ತಡೆಹಿಡಿಯಲಾಗಿರಬಹುದು. ಸ್ವಲ್ಪ ಜಾಗ ಖಾಲಿ ಮಾಡಿ — {brand} ತೆರೆದಿರುವಾಗ ಎಲ್ಲವೂ ಇಲ್ಲೇ ಉಳಿಯುತ್ತದೆ.',
+
+  'app.loading.aria': 'ಲೋಡ್ ಆಗುತ್ತಿದೆ',
+
+  'app.crash.title': 'ಏನೋ ತಪ್ಪಾಗಿದೆ',
+  'app.crash.body': 'ಕ್ಷಮಿಸಿ. ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ, ಅಥವಾ ಮುಖಪುಟಕ್ಕೆ ಹಿಂತಿರುಗಿ — ನಿಮ್ಮ ಸ್ಪ್ಲಿಟ್‌ಗಳು ಸುರಕ್ಷಿತವಾಗಿವೆ.',
+  'app.crash.retry.cta': 'ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ',
+  'app.crash.home.cta': 'ಮುಖಪುಟಕ್ಕೆ ಹೋಗಿ',
+  'app.crash.offline.title': 'ನೀವು ಆಫ್‌ಲೈನ್‌ನಲ್ಲಿದ್ದೀರಿ',
+  'app.crash.offline.body': 'ಈ ಸ್ಕ್ರೀನ್ ಮೊದಲ ಬಾರಿ ತೆರೆಯಲು ಇಂಟರ್ನೆಟ್ ಬೇಕು. ಮತ್ತೆ ಸಂಪರ್ಕಿಸಿ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.',
+  'app.crash.updated.title': '{brand} ಅನ್ನು ನವೀಕರಿಸಲಾಗಿದೆ',
+  'app.crash.updated.body': 'ಇತ್ತೀಚಿನ ಆವೃತ್ತಿ ಪಡೆಯಲು ಮರುಲೋಡ್ ಮಾಡಿ — ನಿಮ್ಮ ಸ್ಪ್ಲಿಟ್‌ಗಳು ಈ ಫೋನ್‌ನಲ್ಲಿ ಸುರಕ್ಷಿತವಾಗಿವೆ.',
+  'app.crash.reload.cta': 'ಮರುಲೋಡ್ ಮಾಡಿ',
+} as const satisfies Messages
