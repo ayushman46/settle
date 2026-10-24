@@ -53,7 +53,7 @@ export const PROOF_USER_PROMPT = `Read this screenshot and return one JSON objec
   "payee_upi": string | null,    // the receiver's UPI ID exactly as shown, e.g. "riya.k@okicici", lower case; null if no UPI ID is shown
   "utr": string | null,          // the UPI transaction reference / UTR / transaction ID: usually 12 digits, digits only, no spaces. Labels: "UPI transaction ID", "UTR", "UPI Ref. No.", "Transaction ID", "Ref No.". null if not shown.
   "date": "YYYY-MM-DD" | null,   // the payment date, year first
-  "time": "HH:MM" | null         // the payment time in 24-hour form, e.g. "18:42"
+  "time": "HH:MM" | null         // the payment time in 24-hour form: 6:42 pm is "18:42", 2:10 pm is "14:10", 9:05 am is "09:05", 12:30 am is "00:30"
 }
 Return only the JSON object.`
 

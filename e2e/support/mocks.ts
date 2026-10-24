@@ -17,6 +17,8 @@ import type {
   OrderRequest,
   OrderResponse,
   PlanId,
+  ProofRequest,
+  ProofResponse,
   RatesResponse,
   ScanRequest,
   ScanResponse,
@@ -150,6 +152,21 @@ export const SAMPLE_DESCRIBE: DescribeResponse = {
   model: MOCK_MODEL,
 }
 
+/** A finished GPay payment of ₹420 from Riya to the owner (the reading the server gives for a clear screenshot). */
+export const SAMPLE_PROOF: ProofResponse = {
+  app: 'gpay',
+  status: 'success',
+  amount: 420,
+  currency: 'INR',
+  payerName: 'Riya Sharma',
+  payeeName: 'Ayush',
+  payeeUpi: null,
+  utr: '431287654321',
+  date: '2026-10-23',
+  time: '18:42',
+  model: MOCK_MODEL,
+}
+
 export const MOCK_RAZORPAY_KEY_ID = 'rzp_test_E2eMockKey0001'
 
 export type CheckoutOutcome = 'paid' | 'dismissed' | 'failed'
@@ -161,6 +178,8 @@ export interface MockApi {
   describe: Reply<DescribeResponse>
   /** `POST /api/scan`. Default: `SAMPLE_SCAN` (`SAMPLE_DELIVERY_SCAN` for a delivery order). */
   scan: Reply<ScanResponse>
+  /** `POST /api/proof` (a payment screenshot). Default: `SAMPLE_PROOF` (a finished GPay payment of ₹420 to the owner). */
+  proof: Reply<ProofResponse>
   /**
    * `GET /api/rates`. 'fixture' (default) answers `mockRates(asked date or MOCK_RATES_DATE)`; a
    * Reply answers as given; null makes the request fail like a phone that's offline.
@@ -176,6 +195,7 @@ export interface MockApi {
     /** Each request body as sent (including `lang` and `source` when the app sends them). */
     describe: DescribeRequest[]
     scan: ScanRequest[]
+    proof: ProofRequest[]
     /** The `date` asked for on each `GET /api/rates` (null when none). */
     rates: Array<string | null>
     order: OrderRequest[]
@@ -235,9 +255,10 @@ export async function installMockApi(context: BrowserContext): Promise<MockApi> 
     health: { body: { ok: true, configured: true, models: [MOCK_MODEL] } },
     describe: { body: SAMPLE_DESCRIBE, delayMs: 300 },
     scan: { body: SAMPLE_SCAN, delayMs: 600 },
+    proof: { body: SAMPLE_PROOF, delayMs: 300 },
     rates: 'fixture',
     checkout: null,
-    calls: { describe: [], scan: [], rates: [], order: [], verify: [], licenseHeaders: [] },
+    calls: { describe: [], scan: [], proof: [], rates: [], order: [], verify: [], licenseHeaders: [] },
   }
 
   await context.route('**/api/health', async (route) => {
@@ -250,6 +271,13 @@ export async function installMockApi(context: BrowserContext): Promise<MockApi> 
     api.calls.describe.push(bodyOf<DescribeRequest>(route))
     api.calls.licenseHeaders.push(route.request().headers()['x-settle-license'] ?? null)
     return fulfill(route, api.describe)
+  })
+
+  await context.route('**/api/proof', async (route) => {
+    if (route.request().method() !== 'POST') return route.fallback()
+    api.calls.proof.push(bodyOf<ProofRequest>(route))
+    api.calls.licenseHeaders.push(route.request().headers()['x-settle-license'] ?? null)
+    return fulfill(route, api.proof)
   })
 
   await context.route('**/api/scan', async (route) => {

@@ -14,6 +14,7 @@ import { forgetReference, proofLedgerStore, rememberReference } from './proofLed
 import { matchProof, AMOUNT_TOLERANCE, type Owed, type ProofVerdict } from './proofMatch'
 import { readPaymentScreenshot } from './readScreenshot'
 import type { ProofResponse } from '../../../shared/api'
+import type { Friend } from '../../domain/types'
 import styles from './ProofScreen.module.css'
 
 type Phase =
@@ -176,7 +177,7 @@ export function ProofScreen() {
         <Verdict
           proof={phase.proof}
           verdict={phase.verdict}
-          owed={owed}
+          names={friends}
           onMark={(target) => markPaid(target, phase.proof)}
           onAgain={again}
         />
@@ -197,13 +198,14 @@ export function ProofScreen() {
 function Verdict({
   proof,
   verdict,
-  owed,
+  names,
   onMark,
   onAgain,
 }: {
   proof: Omit<ProofResponse, 'model'>
   verdict: ProofVerdict
-  owed: readonly Owed[]
+  /** Everyone in the friends list: a duplicate names its person even once they're square. */
+  names: readonly Friend[]
   onMark: (target: { friendId: string; name: string; utr: string | null }) => void
   onAgain: () => void
 }) {
@@ -279,7 +281,7 @@ function Verdict({
   }
 
   function duplicateName(friendId: string | null): string {
-    const name = friendId === null ? null : owed.find((o) => o.friendId === friendId)?.name
+    const name = friendId === null ? null : names.find((f) => f.id === friendId)?.name
     return name ?? t('proof.verdict.duplicate.someone')
   }
 }
