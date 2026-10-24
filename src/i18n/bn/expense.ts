@@ -40,7 +40,7 @@ export const expense = {
 
   // Sections.
   'expense.shares.title': 'সবার ভাগ',
-  'expense.shares.markAll.cta': 'সবাইকে দেওয়া হয়েছে বলে চিহ্নিত করুন',
+  'expense.shares.markAll.cta': 'সবাইকে দেওয়া হয়েছে',
   'expense.note.title': 'নোট',
 
   // The small print: "Added 18 Oct, 9:41 pm · from a scanned bill · last changed 19 Oct, 8:02 am".
