@@ -40,7 +40,7 @@ export const trip = {
   'trip.sheet.bankHint': 'कार्ड या फ़ॉरेक्स मार्कअप? बैंक SMS में लिखी रुपये की रकम डालें — वही सही है।',
   'trip.sheet.bankHintOther': 'कार्ड या फ़ॉरेक्स मार्कअप? बैंक SMS में लिखी रकम डालें — वही सही है।',
   'trip.sheet.preview': '{paid} यानी {amount}',
-  'trip.sheet.rateError': '0 से ज़्यादा रेट डालें, जैसे 2.4108',
+  'trip.sheet.rateError': '0 से ज़्यादा रेट डालें, जैसे 2.4108।',
   'trip.sheet.bankError': 'बैंक ने जितना काटा, वो डालें।',
   'trip.sheet.save': 'सेव करें',
   // "Spending in" on the group sheets.
