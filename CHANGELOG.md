@@ -1,5 +1,24 @@
 # Changelog
 
+## v5 — 24 Oct 2026
+
+### New
+- **Eight languages.** English (the default), Hindi, Bengali, Marathi, Tamil, Telugu, Kannada and Gujarati. Every app screen reads from a message catalog; each language loads as its own file only when it is chosen, and English ships with the screens that use it. Chosen on the first onboarding screen or in You → Language, and kept on the phone. Public pages (pay links, claim links, collections) use the phone's language with a small switcher. Money and dates keep Indian grouping with Latin digits.
+- **Paid? Drop the screenshot.** Drop a GPay, PhonePe, Paytm or BHIM payment screenshot. `POST /api/proof` reads the status, amount, payee, UTR and date, and Settle matches it to who owes you. It marks the person paid after you confirm, and refuses pending or failed payments, payments to someone else, payments whose UTR is already recorded, and screenshots that are not payments. Android can share a screenshot straight to Settle; elsewhere, use the picker.
+- **Entry points.** "Got a payment screenshot?" on the friend page and the Settle-up page.
+- **Install Settle.** An install card on Home (after the first split or the second visit) and a You row. Android and desktop Chrome use the browser's install prompt; iPhone Safari gets the two Share → Add to Home Screen steps. Hidden once installed; dismissible for 30 days.
+
+### Fixes
+- Accessibility: the language tiles keep their contrast, radio chips use `aria-checked`, the currency button and the people pills read their visible text.
+- Pay links: the "Which one are you?" area holds its place while the link loads, so the page does not jump on a slow connection.
+- Pro checkout messages, scan busy and offline messages, the Just-say-it errors and data errors read through the catalog too.
+
+### Not in this release
+- **Shagun book.** Only the "What should I give?" rule is in the code (`src/features/shagun/suggest.ts`, unit-tested). The ledger, the screens and the reminders are not built, and the feature is off.
+- **Offline, straight after the first visit.** The split screen can say "You're offline" on the first trip until the app has been opened once more online. The fix in progress waits for the service worker before preloading; the scenario test is still red.
+- **Translation review.** The Indian-language catalogs are complete but have not been reviewed by native speakers.
+- **English-only copy.** The public landing page and the policy text on the privacy and terms pages stay in English.
+
 ## v4 — 23 Oct 2026
 
 ### New

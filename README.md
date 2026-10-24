@@ -17,10 +17,13 @@ Settle is a mobile-first web app for splitting any expense — a restaurant bill
 - **From SMS.** Paste or share a bank or UPI alert and it's ready to split; OTP messages are refused.
 - **Food orders, fairly.** A Swiggy, Zomato, Blinkit or Zepto screenshot keeps delivery, platform, packaging and small-order fees apart from the food, and shares them in proportion or equally.
 - **Speak to split.** Say it in Hindi, Bengali, Marathi, Tamil, Telugu, Kannada, Gujarati or English — "dhai hazaar" becomes ₹2,500.
+- **Eight languages.** English (the default), Hindi, Bengali, Marathi, Tamil, Telugu, Kannada and Gujarati. Pick one on the first screen or in You → Language; the choice is kept on the phone. Numbers and money stay in Indian format with Latin digits.
 - **Collections (chanda).** One link for a birthday gift, a farewell, a Diwali party or a puja; everyone pays by UPI and you tick them off.
 - **Udhaar.** Lend or borrow in two taps, record part payments, and send a polite (or firm) reminder.
 - **Next round's on you.** Groups that take turns paying see whose round it is and what squares everyone up.
 - **Trips abroad.** Spend in baht or dirhams, settle in ₹ at that day's ECB rate (cached for offline) or at what your bank actually charged.
+- **Paid? Drop the screenshot.** Drop a GPay, PhonePe, Paytm or BHIM payment screenshot. Settle reads the amount, payee and UTR, matches it to who owes you, and marks it paid after you confirm. Pending, failed, mis-addressed and already-recorded payments are refused.
+- **Install Settle.** Android and desktop Chrome get a one-tap install card; iPhone users get the two Share → Add to Home Screen steps. Hidden once installed.
 
 ## Quick start
 
