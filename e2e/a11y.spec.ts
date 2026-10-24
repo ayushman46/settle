@@ -20,8 +20,9 @@ test.describe('accessibility', () => {
     await expectAccessible(page)
   })
 
-  // Several full axe scans in one test: give it room on a busy machine (the assertions are unchanged).
-  test('a new split, the saved expense and its share sheet', { timeout: 180_000 }, async ({ page, shared }) => {
+  test('a new split, the saved expense and its share sheet', async ({ page, shared }) => {
+    // Several full axe scans in one test: give it room on a busy machine (the assertions are unchanged).
+    test.setTimeout(180_000)
     await onboard(page)
     await page.getByRole('button', { name: 'Split an expense' }).click()
     await page.getByRole('textbox', { name: 'Amount' }).fill('1000')

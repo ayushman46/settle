@@ -17,6 +17,7 @@ const KEYS = {
   recurring: 'settle.v3.recurring',
   claims: 'settle.v4.claims',
   pools: 'settle.v4.pools',
+  proofRefs: 'settle-proof-refs',
 } as const satisfies typeof STORAGE_KEYS
 const STORAGE_VERSION = 1 satisfies typeof STORE_VERSION
 
