@@ -27,7 +27,7 @@ export const you = {
   'you.about.terms.subtitle': 'સરળ ભાષામાં નિયમો',
   'you.footer.small': 'દિલથી બનાવ્યું · કોઈ જાહેરાત નહીં · કોઈ ટ્રેકિંગ નહીં',
   'you.theme.label': 'થીમ',
-  'you.theme.system': 'ફોન પ્રમાણે',
+  'you.theme.system': 'ફોન',
   'you.theme.light': 'લાઇટ',
   'you.theme.dark': 'ડાર્ક',
   'you.accent.label': 'રંગ',
