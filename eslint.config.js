@@ -43,7 +43,7 @@ const settle = {
 const LOOKBEHIND_MESSAGE = 'No regex lookbehind in client code: Safari before 16.4 cannot even parse it (server/ may use it).'
 
 export default tseslint.config(
-  { ignores: ['dist', 'coverage', 'node_modules', '.e2e-build', 'test-results', 'playwright-report', 'blob-report', '.wrangler'] },
+  { ignores: ['dist', 'coverage', 'node_modules', '.e2e-build', '.e2e-build-qa', '.vercel', 'test-results', 'playwright-report', 'blob-report', '.wrangler'] },
   {
     files: ['**/*.{ts,tsx,js}'],
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
