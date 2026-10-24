@@ -1,0 +1,70 @@
+/** Tamil copy for S3 · food-delivery splits. Keys: `delivery.<screen>.<element>` (see i18n-plan §3). */
+import type { Messages } from '../types'
+
+export const delivery = {
+  // The scan step opened from Home's "Food order" tile.
+  'delivery.scan.title': 'உணவு ஆர்டரைப் பிரி',
+  'delivery.scan.subtitle': 'Swiggy, Zomato, Blinkit, Zepto அல்லது Instamart ஆர்டர் ஸ்கிரீன்ஷாட்டை இடுங்கள் — பொருட்கள், கட்டணங்கள், கூப்பன் ஆகியவற்றை நாங்கள் எடுத்துக்கொள்வோம்.',
+  'delivery.scan.choose.cta': 'ஸ்கிரீன்ஷாட்டைத் தேர்ந்தெடு',
+  'delivery.scan.camera.cta': 'புகைப்படம் எடு',
+  // Extra lines in the rotating "reading" status while a delivery order is read.
+  'delivery.scan.status.fees': 'கட்டணங்களைத் தேடுகிறது…',
+  'delivery.scan.status.coupon': 'கூப்பனைச் சரிபார்க்கிறது…',
+  // The fees section on the bill review step.
+  'delivery.review.fees.title': 'கட்டணங்கள் & சார்ஜ்கள்',
+  'delivery.review.fees.add.cta': 'கட்டணம் சேர்',
+  'delivery.review.fees.hint': 'அடுத்த படியில் கட்டணங்களை எப்படிப் பகிர்வது என்பதைத் தேர்ந்தெடுப்பீர்கள்.',
+  // A fee row's accessible name: "Delivery fee, ₹35, edit".
+  'delivery.review.fees.row.aria': '{label}, {amount}, திருத்து',
+  'delivery.review.fees.removed.toast': '{label} நீக்கப்பட்டது',
+  'delivery.review.fees.full.toast': 'ஒரு பில்லில் அதிகபட்சம் {max} கட்டணங்கள் வைக்கலாம்.',
+  'delivery.review.fees.converted.toast': '{label} இப்போது ஒரு பொருள் — அடுத்த படிகளில் அதை யார் எடுத்தார்கள் என்று சொல்லுங்கள்',
+  'delivery.review.fees.undoFailed.toast': 'செயல்தவிர்க்க முடியவில்லை — பில் மாறிவிட்டது',
+  // The sheet for one fee.
+  'delivery.fee.title': 'கட்டணம்',
+  'delivery.fee.name.label': 'பெயர்',
+  'delivery.fee.amount.label': 'தொகை',
+  'delivery.fee.amount.error': 'கட்டணத்தை உள்ளிடுங்கள் (0-ஐ விட அதிகம்)',
+  'delivery.fee.kind.label': 'வகை',
+  'delivery.fee.kind.delivery': 'டெலிவரி',
+  'delivery.fee.kind.platform': 'ப்ளாட்ஃபார்ம்',
+  'delivery.fee.kind.packaging': 'பேக்கேஜிங்',
+  'delivery.fee.kind.surge': 'அதிக தேவை / மழை',
+  'delivery.fee.kind.smallOrder': 'சிறிய ஆர்டர்',
+  'delivery.fee.kind.tip': 'டிப்',
+  'delivery.fee.kind.donation': 'நன்கொடை',
+  'delivery.fee.kind.feeTax': 'கட்டணங்கள் மீதான GST',
+  'delivery.fee.kind.other': 'மற்றவை',
+  // The name a fee gets when none is typed (also the field's placeholder).
+  'delivery.fee.default.delivery': 'டெலிவரி கட்டணம்',
+  'delivery.fee.default.platform': 'ப்ளாட்ஃபார்ம் கட்டணம்',
+  'delivery.fee.default.packaging': 'பேக்கேஜிங்',
+  'delivery.fee.default.surge': 'மழைக் கட்டணம்',
+  'delivery.fee.default.smallOrder': 'சிறிய ஆர்டர் கட்டணம்',
+  'delivery.fee.default.tip': 'டிப்',
+  'delivery.fee.default.donation': 'நன்கொடை',
+  'delivery.fee.default.feeTax': 'கட்டணங்கள் மீதான GST',
+  'delivery.fee.default.other': 'கட்டணம்',
+  'delivery.fee.add.cta': 'கட்டணம் சேர்',
+  'delivery.fee.save.cta': 'சேமி',
+  'delivery.fee.remove.cta': 'கட்டணத்தை நீக்கு',
+  'delivery.fee.tip.hint': 'ஒருவர் மட்டும் டிப் கொடுக்கிறாரா? அதை ஒரு பொருளாகச் சேருங்கள்.',
+  'delivery.fee.tip.cta': 'பொருளாக மாற்று',
+  // The fee policy on the "What you paid" step.
+  'delivery.paid.policy.label': 'கட்டணங்களை எப்படிப் பகிர்வது?',
+  'delivery.paid.policy.equal': 'சமமாக',
+  'delivery.paid.policy.proportional': 'ஒவ்வொருவர் எடுத்ததன்படி',
+  'delivery.paid.explain.equal': 'ஆர்டர் செய்த அனைவருக்கும் சமமாகப் பிரியும் கட்டணங்கள் {fees} — வரியும், கூப்பன் {coupon} ஆகியவையும் ஒவ்வொருவர் எடுத்ததன்படி பிரியும்.',
+  'delivery.paid.explain.equal.coupon': 'ஆர்டர் செய்த அனைவருக்கும் சமமாகப் பிரியும் கட்டணங்கள் {fees} — கூப்பன் {coupon} ஒவ்வொருவர் எடுத்ததன்படி பிரியும்.',
+  'delivery.paid.explain.equal.tax': 'ஆர்டர் செய்த அனைவருக்கும் சமமாகப் பிரியும் கட்டணங்கள் {fees} — வரி ஒவ்வொருவர் எடுத்ததன்படி பிரியும்.',
+  'delivery.paid.explain.equal.only': 'ஆர்டர் செய்த அனைவருக்கும் சமமாகப் பிரியும் கட்டணங்கள் {fees}.',
+  'delivery.paid.explain.proportional': 'கட்டணங்கள், வரி, கூப்பன் அனைத்தும் ஒவ்வொருவர் எடுத்ததன்படி பகிரப்படும்.',
+  'delivery.paid.explain.proportional.coupon': 'கட்டணங்களும் கூப்பனும் ஒவ்வொருவர் எடுத்ததன்படி பகிரப்படும்.',
+  'delivery.paid.explain.proportional.tax': 'கட்டணங்களும் வரியும் ஒவ்வொருவர் எடுத்ததன்படி பகிரப்படும்.',
+  'delivery.paid.explain.proportional.only': 'கட்டணங்கள் ஒவ்வொருவர் எடுத்ததன்படி பகிரப்படும்.',
+  // Each person's lines on the result step.
+  'delivery.result.fees': 'கட்டணங்கள்',
+  'delivery.result.other': 'வரி, சார்ஜ்கள் & சலுகைகள்',
+  'delivery.result.total': 'மொத்தம்',
+  'delivery.result.none': 'ஆர்டர் செய்யவில்லை · {amount}',
+} as const satisfies Messages

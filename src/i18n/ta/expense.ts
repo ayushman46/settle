@@ -1,0 +1,80 @@
+/** Tamil copy for the expense page (src/features/expense). Keys: `expense.<screen>.<element>` (see i18n-plan §3). */
+import type { Messages } from '../types'
+
+export const expense = {
+  // `/app/expense/:id` when the expense no longer exists.
+  'expense.gone.title': 'இந்தச் செலவு இல்லை',
+  'expense.gone.subtitle': 'இது நீக்கப்பட்டிருக்கலாம் — இந்த ஃபோனில் அல்லது வேறொரு டேபில்.',
+  'expense.gone.cta': 'வரலாற்றைப் பார்',
+  // The standing pill under the big amount (owner's side).
+  'expense.standing.notIn': 'இதில் நீங்கள் இல்லை',
+  'expense.standing.lent': 'நீங்கள் {amount} கொடுத்தீர்கள்',
+  'expense.standing.borrowed': 'நீங்கள் {amount} வாங்கினீர்கள்',
+  'expense.standing.owed': 'உங்களுக்கு {amount} வர வேண்டும்',
+  'expense.standing.settled': 'தீர்ந்தது',
+  'expense.standing.owe': 'நீங்கள் {name} அவர்களுக்கு {amount} தர வேண்டும்',
+  'expense.standing.paidBack': 'நீங்கள் {name} அவர்களுக்குத் திருப்பிச் செலுத்திவிட்டீர்கள்',
+  // The hero (receipt header).
+  'expense.hero.group.aria': '{name} குழுவில்',
+  'expense.hero.paidBy': '{who, select, me {நீங்கள் செலுத்தினீர்கள்} other {{name} செலுத்தினார்}}',
+  // Toasts when someone is ticked off (or back on).
+  'expense.toast.allBack': 'எல்லோரும் செலுத்திவிட்டனர் — {amount} முழுவதும் திரும்பியது',
+  'expense.toast.allSettled': '{name} உடன் எல்லாம் தீர்ந்தது',
+  'expense.toast.markedPaid': '{who, select, me {நீங்கள் செலுத்தியதாகக் குறிக்கப்பட்டது} other {{name} செலுத்தியதாகக் குறிக்கப்பட்டது}}',
+  'expense.toast.markedUnpaid': '{who, select, me {நீங்கள் இன்னும் செலுத்தவில்லை என்று குறிக்கப்பட்டது} other {{name} இன்னும் செலுத்தவில்லை என்று குறிக்கப்பட்டது}}',
+  'expense.toast.deleted': '{title} நீக்கப்பட்டது',
+  'expense.toast.undo': 'செயல்தவிர்',
+  // The main button.
+  'expense.primary.group.cta': '{group} இல் கணக்கு தீர்',
+  'expense.primary.pay.cta': '{name} அவர்களுக்கு {amount} செலுத்து',
+  'expense.primary.markPaid.cta': 'நான் {name} அவர்களுக்குத் திருப்பிக் கொடுத்துவிட்டேன்',
+  'expense.primary.payLink.cta': 'பணம் செலுத்தும் இணைப்பைப் பகிர்',
+  'expense.primary.share.cta': 'பகிர்',
+  'expense.share.aria': 'பகிர்',
+  'expense.edit.aria': '{title} ஐத் திருத்து',
+  'expense.more.aria': 'மேலும் விருப்பங்கள்',
+  // Sections.
+  'expense.shares.title': 'எல்லோரின் பங்கும்',
+  'expense.shares.markAll.cta': 'எல்லோரையும் செலுத்தியதாகக் குறி',
+  'expense.note.title': 'குறிப்பு',
+  // The small print: "Added 18 Oct, 9:41 pm · from a scanned bill · last changed 19 Oct, 8:02 am".
+  'expense.added': 'சேர்க்கப்பட்டது {date}',
+  'expense.added.changed': 'கடைசியாக மாற்றப்பட்டது {date}',
+  'expense.added.source.scan': 'ஸ்கேன் செய்த பில்லிலிருந்து',
+  'expense.added.source.describe': '“சொல்லுங்கள்” மூலம்',
+  'expense.added.source.sample': 'மாதிரி பில்லிலிருந்து',
+  'expense.added.source.recurring': 'தொடர் பிரிப்பிலிருந்து',
+  'expense.added.source.sms': 'வங்கி SMS இலிருந்து',
+  'expense.added.source.voice': 'குரல் மூலம்',
+  // The bill as printed.
+  'expense.bill.title': 'பில்',
+  'expense.bill.description': '{count, plural, one {# பொருள் · யார் எதை எடுத்தார்கள்} other {# பொருட்கள் · யார் எதை எடுத்தார்கள்}}',
+  'expense.bill.items.aria': 'பொருட்கள்',
+  'expense.bill.everyone': 'எல்லோரும் சேர்ந்து பகிர்ந்தது',
+  'expense.bill.showAll.cta': 'எல்லா {count} பொருட்களையும் காட்டு',
+  'expense.bill.items': 'பொருட்கள்',
+  'expense.bill.totalPaid': 'மொத்தம் செலுத்தியது',
+  'expense.bill.fees.equal.aria': 'கட்டணங்கள், சமமாகப் பகிரப்பட்டவை',
+  'expense.bill.fees.proportional.aria': 'கட்டணங்கள், ஒவ்வொருவர் எடுத்ததன்படி',
+  // One person's part of the delivery fees: "Fees · Riya".
+  'expense.bill.fees.person': 'கட்டணங்கள் · {name}',
+  'expense.bill.tax': 'வரி',
+  'expense.bill.service': 'சேவைக் கட்டணம்',
+  'expense.bill.tip': 'டிப்',
+  'expense.bill.discount': 'தள்ளுபடி',
+  'expense.bill.roundOff': 'வட்டமிடல்',
+  'expense.bill.otherCharges': 'மற்ற கட்டணங்கள்',
+  'expense.bill.otherDiscounts': 'மற்ற தள்ளுபடிகள்',
+  // The ⋮ menu.
+  'expense.actions.eyebrow': 'செலவு',
+  'expense.actions.editBill': 'பில்லைத் திருத்து',
+  'expense.actions.editBill.detail': 'பொருட்கள், யார் எதை எடுத்தார்கள், யார் செலுத்தினார்கள்',
+  'expense.actions.edit': 'திருத்து',
+  'expense.actions.edit.detail': 'தொகை, நபர்கள், பிரிக்கும் முறை',
+  'expense.actions.duplicate': 'நகல் எடு',
+  'expense.actions.duplicate.detail': 'இன்றைய தேதியுடன் ஒரு நகல், மாற்றிச் சேமிக்க',
+  'expense.actions.markAll': 'எல்லோரையும் செலுத்தியதாகக் குறி',
+  'expense.actions.markAll.detail': 'எல்லாம் திரும்பி வந்த பிறகு',
+  'expense.actions.delete': 'நீக்கு',
+  'expense.actions.delete.detail': 'நீக்கிய உடனே செயல்தவிர்க்கலாம்',
+} as const satisfies Messages
