@@ -3,6 +3,7 @@ import { Badge, Button, CategoryIcon, SectionHeader } from '../../components'
 import { useDueRecurring } from '../../data'
 import { today } from '../../engine/dates'
 import type { RecurringDue } from '../../engine/recurring'
+import { useT } from '../../i18n'
 import { formatMoney } from '../../lib/money'
 import { dueLabel, monthName } from '../recurring/recurringLabels'
 import { useSplitNow } from '../recurring/useSplitNow'
@@ -38,6 +39,7 @@ export function DueSplits() {
 }
 
 function DueCard({ due, day, onSplit }: { due: RecurringDue; day: string; onSplit: () => void }) {
+  const t = useT()
   const { template, period } = due
   const titleId = useId()
   const month = monthName(period, day)
@@ -54,7 +56,7 @@ function DueCard({ due, day, onSplit }: { due: RecurringDue; day: string; onSpli
         </p>
       </div>
       <Button variant="accent" size="sm" onClick={onSplit} aria-label={`Split ${template.title} for ${month} now`}>
-        Split now
+        {t('home.due.splitNow')}
       </Button>
     </article>
   )

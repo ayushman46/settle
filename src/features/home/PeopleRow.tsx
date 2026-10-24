@@ -4,6 +4,7 @@ import { Avatar, SectionHeader } from '../../components'
 import { useFriends, useSummary } from '../../data'
 import { ME_ID, type Friend, type Minor } from '../../domain/types'
 import { cx } from '../../lib/cx'
+import { useT } from '../../i18n'
 import { formatMoney } from '../../lib/money'
 import { firstName } from '../../share/text'
 import { ADD_FRIEND_PATH, FRIENDS_PATH, friendPath, PEOPLE_SHOWN } from './homeLinks'
@@ -22,6 +23,7 @@ function spokenName(friend: Friend, balance: Minor, currency: string): string {
  * your people with the add sheet.
  */
 export function PeopleRow() {
+  const t = useT()
   const friends = useFriends()
   const summary = useSummary()
   const others = friends.filter((f) => f.id !== ME_ID)
@@ -56,7 +58,7 @@ export function PeopleRow() {
             <span className={styles.addDisc} aria-hidden="true">
               <UserPlus strokeWidth={2.25} />
             </span>
-            <span className={styles.personName}>Add</span>
+            <span className={styles.personName}>{t('home.people.add')}</span>
           </Link>
         </li>
       </ul>

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Combine, Replace, type LucideIcon } from 'lucide-react'
+import { useT, type MessageKey } from '../../i18n'
 import { Banner, BottomSheet, Button } from '../../components'
 import type { BackupFile } from '../../data'
 import { cx } from '../../lib/cx'
@@ -18,17 +19,17 @@ export interface RestoreSheetProps {
   onRestore: (mode: RestoreMode) => void
 }
 
-const MODES: ReadonlyArray<{ id: RestoreMode; title: string; text: string; icon: LucideIcon }> = [
+const MODES: ReadonlyArray<{ id: RestoreMode; title: MessageKey; text: MessageKey; icon: LucideIcon }> = [
   {
     id: 'merge',
-    title: 'Merge',
-    text: "Keep what's on this phone and add what's new. People with the same name become one.",
+    title: 'you.restore.merge',
+    text: 'you.restore.merge.body',
     icon: Combine,
   },
   {
     id: 'replace',
-    title: 'Replace',
-    text: 'Swap everything on this phone for the backup.',
+    title: 'you.restore.replace',
+    text: 'you.restore.replace.body',
     icon: Replace,
   },
 ]
@@ -38,6 +39,7 @@ const MODES: ReadonlyArray<{ id: RestoreMode; title: string; text: string; icon:
  * already has data). Nothing changes until the button is pressed, and Undo follows it.
  */
 export function RestoreSheet({ open, backup, hasLocalData, onClose, onRestore }: RestoreSheetProps) {
+  const t = useT()
   const [mode, setMode] = useState<RestoreMode>('merge')
   const [wasOpen, setWasOpen] = useState(open)
   if (open !== wasOpen) {
@@ -53,7 +55,7 @@ export function RestoreSheet({ open, backup, hasLocalData, onClose, onRestore }:
     <BottomSheet
       open={open}
       onClose={onClose}
-      title="Restore this backup?"
+      title={t('you.restore.title')}
       description={description}
       footer={
         <Button block onClick={() => onRestore(chosen)} disabled={!backup}>
@@ -63,8 +65,10 @@ export function RestoreSheet({ open, backup, hasLocalData, onClose, onRestore }:
     >
       {hasLocalData ? (
         <div className={styles.body}>
-          <div role="radiogroup" aria-label="How to restore" className={styles.modes}>
-            {MODES.map(({ id, title, text, icon: Icon }) => {
+          <div role="radiogroup" aria-label={t('you.restore.how')} className={styles.modes}>
+            {MODES.map(({ id, title: titleKey, text: textKey, icon: Icon }) => {
+              const title = t(titleKey)
+              const text = t(textKey)
               const checked = id === mode
               return (
                 <button
@@ -99,14 +103,14 @@ export function RestoreSheet({ open, backup, hasLocalData, onClose, onRestore }:
             })}
           </div>
           {mode === 'replace' && (
-            <Banner tone="warning" title="This replaces everything here">
+            <Banner tone="warning" title={t('you.restore.replace.title')}>
               Your profile, people, expenses, groups and recurring splits on this phone are swapped for the backup's. You can
               undo it straight after.
             </Banner>
           )}
         </div>
       ) : (
-        <p className={styles.fresh}>Everything in the backup comes back onto this phone, profile included.</p>
+        <p className={styles.fresh}>{t('you.restore.fresh')}</p>
       )}
     </BottomSheet>
   )

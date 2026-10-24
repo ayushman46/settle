@@ -1,5 +1,6 @@
 import { useRef, useState, type ChangeEvent } from 'react'
 import { DatabaseBackup, Download, FileSpreadsheet, Trash2 } from 'lucide-react'
+import { useT } from '../../i18n'
 import { Link, navigate } from '../../app/router'
 import { Badge, Card, List, ListRow, useToast } from '../../components'
 import {
@@ -53,6 +54,7 @@ function restoredMessage(mode: RestoreMode, result: { added: number; updated: nu
  * with Undo), export to CSV (Pro), and clear everything (with a backup offered first, and Undo).
  */
 export function DataSettings() {
+  const t = useT()
   const toast = useToast()
   const expenses = useExpenses()
   const friends = useFriends()
@@ -169,7 +171,7 @@ export function DataSettings() {
   return (
     <section className={styles.section} aria-labelledby="you-data">
       <h2 id="you-data" className={styles.sectionTitle}>
-        Your data
+        {t('you.data.title')}
       </h2>
       <Card padding="none">
         <List>
@@ -179,8 +181,8 @@ export function DataSettings() {
                 <Download />
               </SettingIcon>
             }
-            title="Save a backup"
-            subtitle={busy === 'backup' ? 'Preparing your backup…' : backupLine}
+            title={t('you.data.backup')}
+            subtitle={busy === 'backup' ? t('you.data.backup.busy') : backupLine}
             onClick={() => void saveBackup()}
             disabled={busy === 'backup'}
             chevron
@@ -191,8 +193,8 @@ export function DataSettings() {
                 <DatabaseBackup />
               </SettingIcon>
             }
-            title="Restore a backup"
-            subtitle={busy === 'read' ? 'Reading the file…' : 'Merge it in, or replace what’s here'}
+            title={t('you.data.restore')}
+            subtitle={busy === 'read' ? t('you.data.restore.busy') : t('you.data.restore.body')}
             onClick={() => fileInput.current?.click()}
             disabled={busy === 'read'}
             chevron
@@ -203,13 +205,13 @@ export function DataSettings() {
                 <FileSpreadsheet />
               </SettingIcon>
             }
-            title="Export to CSV"
+            title={t('you.data.csv')}
             subtitle={
               expenses.length === 0
-                ? 'Nothing to export yet'
+                ? t('you.data.csv.empty')
                 : busy === 'csv'
-                  ? 'Preparing your spreadsheet…'
-                  : 'Every expense, for Excel or Google Sheets'
+                  ? t('you.data.csv.busy')
+                  : t('you.data.csv.body')
             }
             trailing={csvUnlocked ? undefined : <Badge tone="pro">Pro</Badge>}
             onClick={() => withPro('export', () => void exportCsv())}
@@ -222,8 +224,8 @@ export function DataSettings() {
                 <Trash2 />
               </SettingIcon>
             }
-            title={<span className={styles.danger}>Clear all data</span>}
-            subtitle="Delete everything from this phone"
+            title={<span className={styles.danger}>{t('you.data.clear')}</span>}
+            subtitle={t('you.data.clear.body')}
             onClick={() => setClearing(true)}
             chevron
           />

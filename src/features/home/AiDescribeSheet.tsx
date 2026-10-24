@@ -285,10 +285,10 @@ export function AiDescribeSheet({ open, onClose, startWith }: AiDescribeSheetPro
         view ? (
           <div className={styles.actions}>
             <Button block onClick={useDraft} iconEnd={<ArrowRight strokeWidth={2.5} />}>
-              Looks right
+              {t('home.describe.looksRight')}
             </Button>
             <Button block variant="ghost" onClick={rewrite} iconStart={<PenLine />}>
-              Change what I said
+              {t('home.describe.changeWords')}
             </Button>
           </div>
         ) : undefined
@@ -363,8 +363,8 @@ export function AiDescribeSheet({ open, onClose, startWith }: AiDescribeSheetPro
         )}
 
         {aiOff ? (
-          <Banner tone="info" title="The AI helper is off right now" action={{ label: 'Split it by hand', onAction: byHand }}>
-            You can still split anything by hand — it only takes a moment.
+          <Banner tone="info" title={t('home.describe.off.title')} action={{ label: t('home.describe.off.cta'), onAction: byHand }}>
+            {t('home.describe.off.body')}
           </Banner>
         ) : (
           <QuotaLine limited={limited} remaining={quota.remaining} onUpgrade={() => openPaywall('unlimited_ai')} />
@@ -384,11 +384,11 @@ export function AiDescribeSheet({ open, onClose, startWith }: AiDescribeSheetPro
                 <div className={styles.errorActions}>
                   {RETRYABLE.has(phase.error.code) && (
                     <Button size="sm" variant="secondary" iconStart={<RotateCcw />} onClick={() => void read(phase.text)}>
-                      Try again
+                      {t('home.describe.retry')}
                     </Button>
                   )}
                   <Button size="sm" variant="ghost" onClick={byHand}>
-                    Split it by hand
+                    {t('home.describe.off.cta')}
                   </Button>
                 </div>
               }
@@ -401,7 +401,7 @@ export function AiDescribeSheet({ open, onClose, startWith }: AiDescribeSheetPro
 
         {phase.kind === 'idle' && text.trim() === '' && !aiOff && !voice.listening && (
           <div className={styles.examples}>
-            <p className={styles.examplesLabel}>Try one</p>
+            <p className={styles.examplesLabel}>{t('home.describe.tryOne')}</p>
             <ul role="list" className={styles.exampleList}>
               {CHIP_EXAMPLES.map((example) => (
                 <li key={example}>
@@ -465,11 +465,12 @@ function announce(view: DescribeView): string {
 }
 
 function QuotaLine({ limited, remaining, onUpgrade }: { limited: boolean; remaining: number; onUpgrade: () => void }) {
+  const t = useT()
   if (!limited) {
     return (
       <p className={styles.quota}>
         <Badge tone="pro">Pro</Badge>
-        <span>Unlimited AI splits</span>
+        <span>{t('home.describe.unlimited')}</span>
       </p>
     )
   }
@@ -484,6 +485,7 @@ function QuotaLine({ limited, remaining, onUpgrade }: { limited: boolean; remain
 }
 
 function Reading() {
+  const t = useT()
   return (
     <div className={styles.reading} role="status">
       <div className={styles.readingTop} aria-hidden="true">
@@ -496,13 +498,14 @@ function Reading() {
       <Skeleton shape="md" width="45%" height={36} className={styles.readingAmount} />
       <p className={styles.readingText}>
         <Sparkles aria-hidden="true" className={styles.readingSpark} />
-        Reading your split…
+        {t('home.describe.reading')}
       </p>
     </div>
   )
 }
 
 function DraftCard({ view }: { view: DescribeView }) {
+  const t = useT()
   const titleId = useId()
   const date = view.date ? relativeDateLabel(view.date) : 'Today'
   return (
@@ -521,10 +524,10 @@ function DraftCard({ view }: { view: DescribeView }) {
         {view.total !== null ? (
           <Money value={view.total} currency={view.currency} size="xl" trimZeros strong className={styles.amount} />
         ) : (
-          <p className={styles.noAmount}>Add the amount on the next screen</p>
+          <p className={styles.noAmount}>{t('home.describe.noAmount')}</p>
         )}
         <p className={styles.howLine}>
-          Paid by {view.payerName} · {view.modeLabel}
+          {t('home.describe.paidBy', { name: view.payerName, mode: view.modeLabel })}
         </p>
       </div>
 

@@ -17,6 +17,7 @@ import {
   type VoiceLang,
 } from '../../shared/api'
 import type { DescribedSplit } from '../domain/types'
+import { t, type MessageKey } from '../i18n'
 import { callApi, isOffline, isRecord, PRO_ALLOWANCE_MIN_WAIT_SECONDS, waitPhrase, type CallResult } from '../api/http'
 import { isIsoDate } from '../engine/dates'
 import { isKnownCurrency } from '../lib/currencies'
@@ -68,6 +69,36 @@ export const DESCRIBE_OFFLINE_MESSAGE = "You're offline — you can still split 
 
 export const DESCRIBE_TOO_LONG_MESSAGE = `That's a lot to read — keep it under ${DESCRIBE_LIMITS.maxTextChars} characters.`
 
+/** The message keys for each failure (the English copy is in `DESCRIBE_ERROR_MESSAGES`). */
+const DESCRIBE_ERROR_KEYS: Readonly<Record<DescribeErrorCode, MessageKey>> = {
+  bad_request: 'home.describe.error.badRequest',
+  not_a_split: 'home.describe.error.notSplit',
+  unreadable: 'home.describe.error.unreadable',
+  not_configured: 'home.describe.error.notConfigured',
+  upstream_auth: 'home.describe.error.upstreamAuth',
+  rate_limited: 'home.describe.error.rateLimited',
+  timeout: 'home.describe.error.timeout',
+  upstream_error: 'home.describe.error.upstream',
+  network: 'home.describe.error.network',
+  aborted: 'home.describe.error.aborted',
+}
+
+/** A failure's copy in the UI language. */
+export function describeErrorMessage(code: DescribeErrorCode): string {
+  if (code === 'bad_request' || code === 'not_a_split') return t(DESCRIBE_ERROR_KEYS[code], { example: DESCRIBE_EXAMPLE })
+  return t(DESCRIBE_ERROR_KEYS[code])
+}
+
+/** The offline copy in the UI language. */
+export function describeOfflineMessage(): string {
+  return t('home.describe.offline')
+}
+
+/** The too-long copy in the UI language. */
+export function describeTooLongMessage(): string {
+  return t('home.describe.tooLong', { max: DESCRIBE_LIMITS.maxTextChars })
+}
+
 /**
  * The client waits a little longer than the server's own budget, so the server's answer —
  * a draft or a friendly `timeout` — always arrives before the browser gives up.
@@ -77,7 +108,7 @@ export const DESCRIBE_TIMEOUT_MS = DESCRIBE_BUDGET_MS + 10_000
 export class DescribeError extends Error {
   readonly code: DescribeErrorCode
 
-  constructor(code: DescribeErrorCode, message: string = DESCRIBE_ERROR_MESSAGES[code]) {
+  constructor(code: DescribeErrorCode, message: string = describeErrorMessage(code)) {
     super(message)
     this.name = 'DescribeError'
     this.code = code
@@ -89,11 +120,11 @@ export class DescribeError extends Error {
  * for a request sent with Pro (`pro`), says the day's fair-use allowance is used up.
  */
 export function describeRateLimitedMessage(seconds: number | null, pro = false): string {
-  if (seconds === null || seconds < 60) return DESCRIBE_ERROR_MESSAGES.rate_limited
+  if (seconds === null || seconds < 60) return describeErrorMessage('rate_limited')
   if (pro && seconds > PRO_ALLOWANCE_MIN_WAIT_SECONDS) {
-    return `You've reached today's fair-use AI limit. It resets in ${waitPhrase(seconds)} — you can still split it by hand.`
+    return t('home.describe.limit.proDay', { wait: waitPhrase(seconds) })
   }
-  return `Too many AI splits for now. Try again in ${waitPhrase(seconds)} — or split it by hand.`
+  return t('home.describe.limit.wait', { wait: waitPhrase(seconds) })
 }
 
 const DESCRIBE_API_CODES: ReadonlySet<string> = new Set<DescribeErrorCode>([
@@ -123,7 +154,7 @@ function describeErrorFrom(result: Exclude<CallResult, { ok: true }>, pro: boole
     case 'aborted':
       return new DescribeError('aborted')
     case 'network':
-      return new DescribeError('network', isOffline() ? DESCRIBE_OFFLINE_MESSAGE : DESCRIBE_ERROR_MESSAGES.network)
+      return new DescribeError('network', isOffline() ? describeOfflineMessage() : describeErrorMessage('network'))
     case 'bad_body':
       return new DescribeError('upstream_error')
     case 'http': {
@@ -228,7 +259,7 @@ export async function describeSplit(text: string, ctx: DescribeHints, signal?: A
   if (signal?.aborted) throw new DescribeError('aborted')
   const body = describeRequest(typeof text === 'string' ? text : '', ctx)
   if (!/[\p{L}\p{N}]/u.test(body.text)) throw new DescribeError('bad_request')
-  if (Array.from(body.text).length > DESCRIBE_LIMITS.maxTextChars) throw new DescribeError('bad_request', DESCRIBE_TOO_LONG_MESSAGE)
+  if (Array.from(body.text).length > DESCRIBE_LIMITS.maxTextChars) throw new DescribeError('bad_request', describeTooLongMessage())
 
   const headers = licenseHeaders()
   const result = await callApi('/api/describe', {

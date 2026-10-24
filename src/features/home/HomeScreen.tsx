@@ -48,15 +48,15 @@ export function HomeScreen() {
       <div className={styles.say}>
         <p className={styles.sayHead}>
           <span className={styles.sayTitle} aria-hidden="true">
-            Just say it
+            {t('home.say.title')}
           </span>
           <span className={styles.sayQuota}>{allowanceLabel(quota.remaining)}</span>
         </p>
         <div className={styles.sayRow}>
           <SearchPill
             asButton
-            placeholder="Just say it…"
-            label="Just say it: describe an expense for the AI to split"
+            placeholder={t('home.say.placeholder')}
+            label={t('home.say.label')}
             examples={DESCRIBE_EXAMPLES}
             onClick={() => setSaying('type')}
             className={styles.sayPill}
@@ -83,7 +83,7 @@ export function HomeScreen() {
 
       <p className={styles.trust}>
         <ShieldCheck aria-hidden="true" className={styles.trustIcon} />
-        Private by design — your splits stay on this phone. No account, no ads.
+        {t('home.trust')}
       </p>
 
       <AiDescribeSheet open={saying !== false} startWith={saying === 'voice' ? 'voice' : undefined} onClose={() => setSaying(false)} />

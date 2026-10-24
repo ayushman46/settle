@@ -1,4 +1,5 @@
 import { useId, type CSSProperties } from 'react'
+import { useT, type MessageKey } from '../../i18n'
 import { Check, Lock, Monitor, Moon, Sun } from 'lucide-react'
 import { effectiveAccent } from '../../app/appearance'
 import { Badge, SegmentedControl, type SegmentedOption } from '../../components'
@@ -11,19 +12,21 @@ import { CARD_ACCENTS } from '../../share/card/theme'
 import { withPro } from '../pro/paywall'
 import styles from './AppearanceSettings.module.css'
 
-const THEMES: readonly SegmentedOption<ThemePref>[] = [
-  { value: 'system', label: 'System', icon: <Monitor /> },
-  { value: 'light', label: 'Light', icon: <Sun /> },
-  { value: 'dark', label: 'Dark', icon: <Moon /> },
-]
+function themeOptions(t: ReturnType<typeof useT>): readonly SegmentedOption<ThemePref>[] {
+  return [
+  { value: 'system', label: t('you.theme.system'), icon: <Monitor /> },
+  { value: 'light', label: t('you.theme.light'), icon: <Sun /> },
+  { value: 'dark', label: t('you.theme.dark'), icon: <Moon /> },
+  ]
+}
 
 /** Lime is free; the rest come with Pro. */
-const ACCENTS: ReadonlyArray<{ id: AccentId; name: string }> = [
-  { id: 'lime', name: 'Lime' },
-  { id: 'mint', name: 'Mint' },
-  { id: 'sky', name: 'Sky' },
-  { id: 'violet', name: 'Violet' },
-  { id: 'coral', name: 'Coral' },
+const ACCENTS: ReadonlyArray<{ id: AccentId; name: MessageKey }> = [
+  { id: 'lime', name: 'you.accent.lime' },
+  { id: 'mint', name: 'you.accent.mint' },
+  { id: 'sky', name: 'you.accent.sky' },
+  { id: 'violet', name: 'you.accent.violet' },
+  { id: 'coral', name: 'you.accent.coral' },
 ]
 
 const FREE_ACCENT: AccentId = 'lime'
@@ -33,6 +36,7 @@ const FREE_ACCENT: AccentId = 'lime'
  * paywall and applies it the moment Pro is on. A saved accent shows again whenever Pro is back.
  */
 export function AppearanceSettings() {
+  const t = useT()
   const profile = useProfile()
   const unlocked = useHasFeature('themes')
   const shown = effectiveAccent(profile.accent, unlocked)
@@ -52,15 +56,15 @@ export function AppearanceSettings() {
     <div className={styles.appearance}>
       <div className={styles.block}>
         <p className={styles.label} aria-hidden="true">
-          Theme
+          {t('you.theme.label')}
         </p>
-        <SegmentedControl ariaLabel="Theme" options={THEMES} value={profile.theme} onChange={(theme) => updateProfile({ theme })} />
+        <SegmentedControl ariaLabel={t('you.theme.label')} options={themeOptions(t)} value={profile.theme} onChange={(theme) => updateProfile({ theme })} />
       </div>
 
       <div className={styles.block}>
         <div className={styles.labelRow}>
           <p id={accentLabel} className={styles.label}>
-            Accent colour
+            {t('you.accent.label')}
           </p>
           {!unlocked && <Badge tone="pro">Pro</Badge>}
         </div>
@@ -70,7 +74,8 @@ export function AppearanceSettings() {
           aria-describedby={unlocked ? undefined : accentNote}
           className={styles.swatches}
         >
-          {ACCENTS.map(({ id, name }) => {
+          {ACCENTS.map(({ id, name: key }) => {
+            const name = t(key)
             const selected = id === shown
             const locked = !unlocked && id !== FREE_ACCENT
             return (
@@ -78,7 +83,7 @@ export function AppearanceSettings() {
                 key={id}
                 type="button"
                 aria-pressed={selected}
-                aria-label={locked ? `${name}, Pro` : name}
+                aria-label={locked ? t('you.accent.locked', { name }) : name}
                 className={cx(styles.swatch, selected && styles.selected)}
                 style={{ '--swatch': CARD_ACCENTS[id].accent } as CSSProperties}
                 onClick={() => pick(id)}
@@ -95,7 +100,7 @@ export function AppearanceSettings() {
         </div>
         {!unlocked && (
           <p id={accentNote} className={styles.note}>
-            Lime is free. Mint, sky, violet and coral come with Pro.
+            {t('you.accent.note')}
           </p>
         )}
       </div>

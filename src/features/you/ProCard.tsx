@@ -2,6 +2,7 @@ import { ChartPie, FileSpreadsheet, Palette, Repeat, Sparkles, type LucideIcon }
 import { navigate } from '../../app/router'
 import { Badge, Button } from '../../components'
 import { BRAND } from '../../domain/types'
+import { useT, type MessageKey } from '../../i18n'
 import { useBillingConfig, usePro } from '../../pro'
 import { cheapestPrice, endsInLabel, passDate, passSummary } from '../pro/plans'
 import styles from './ProCard.module.css'
@@ -9,12 +10,12 @@ import styles from './ProCard.module.css'
 const PRO_PATH = '/app/pro'
 
 /** The headline perks, shown as small pills on the free card. */
-const HIGHLIGHTS: ReadonlyArray<{ icon: LucideIcon; label: string }> = [
-  { icon: Sparkles, label: 'Unlimited AI' },
-  { icon: Repeat, label: 'Recurring' },
-  { icon: ChartPie, label: 'Insights' },
-  { icon: FileSpreadsheet, label: 'CSV export' },
-  { icon: Palette, label: 'Accents' },
+const HIGHLIGHTS: ReadonlyArray<{ icon: LucideIcon; label: MessageKey }> = [
+  { icon: Sparkles, label: 'you.pro.perk.ai' },
+  { icon: Repeat, label: 'you.pro.perk.recurring' },
+  { icon: ChartPie, label: 'you.pro.perk.insights' },
+  { icon: FileSpreadsheet, label: 'you.pro.perk.csv' },
+  { icon: Palette, label: 'you.pro.perk.accents' },
 ]
 
 /**
@@ -22,6 +23,7 @@ const HIGHLIGHTS: ReadonlyArray<{ icon: LucideIcon; label: string }> = [
  * Pro: the pass on this phone and when it ends. Ended: a calm nudge to renew (nothing was lost).
  */
 export function ProCard() {
+  const t = useT()
   const pro = usePro()
   const config = useBillingConfig()
   const from = cheapestPrice(config)
@@ -39,11 +41,11 @@ export function ProCard() {
         </h2>
         {pro.isPro && license ? (
           <Badge tone="accent" size="md">
-            {license.exp === null ? 'Lifetime' : 'Active'}
+            {license.exp === null ? t('pro.plan.lifetime') : t('you.pro.active')}
           </Badge>
         ) : ended && pro.expiresAt !== null ? (
           <Badge tone="warning" size="md">
-            Ended {passDate(pro.expiresAt)}
+            {t('you.pro.ended', { date: passDate(pro.expiresAt) })}
           </Badge>
         ) : null}
       </div>
@@ -55,31 +57,31 @@ export function ProCard() {
             {pro.expiresAt !== null && <p className={styles.small}>{endsInLabel(pro.expiresAt)}</p>}
           </div>
           <Button variant="tonal" size="md" className={styles.action} onClick={() => navigate(PRO_PATH)}>
-            Manage Pro
+            {t('you.pro.manage')}
           </Button>
         </>
       ) : (
         <>
           <p className={styles.lede}>
             {ended
-              ? 'Your pass has run out. Your recurring splits and settings are all still here — renew to switch them back on.'
-              : 'Unlimited AI, recurring splits, insights and more. Pay once — nothing renews.'}
+              ? t('you.pro.ended.body')
+              : t('you.pro.body')}
           </p>
           {!ended && (
-            <ul className={styles.perks} aria-label="Pro includes">
+            <ul className={styles.perks} aria-label={t('you.pro.includes')}>
               {HIGHLIGHTS.map(({ icon: Icon, label }) => (
                 <li key={label} className={styles.perk}>
                   <Icon aria-hidden="true" strokeWidth={2.25} />
-                  {label}
+                  {t(label)}
                 </li>
               ))}
             </ul>
           )}
           <div className={styles.cta}>
             <Button variant="accent" size="md" className={styles.action} onClick={() => navigate(PRO_PATH)}>
-              {ended ? 'Renew Pro' : 'See Pro'}
+              {ended ? t('you.pro.renew') : t('you.pro.see')}
             </Button>
-            {from && <span className={styles.small}>From {from} · one-time</span>}
+            {from && <span className={styles.small}>{t('you.pro.from', { price: from })}</span>}
           </div>
         </>
       )}

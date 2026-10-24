@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Download } from 'lucide-react'
+import { useT } from '../../i18n'
 import { BottomSheet, Button, Switch } from '../../components'
 import styles from './ClearDataSheet.module.css'
 
@@ -19,6 +20,7 @@ export interface ClearDataSheetProps {
  * asked (it was paid for). Undo follows for a few seconds.
  */
 export function ClearDataSheet({ open, onClose, hasPro, offerBackup, onBackup, onClear }: ClearDataSheetProps) {
+  const t = useT()
   const [removePro, setRemovePro] = useState(false)
   const [wasOpen, setWasOpen] = useState(open)
   if (open !== wasOpen) {
@@ -30,15 +32,15 @@ export function ClearDataSheet({ open, onClose, hasPro, offerBackup, onBackup, o
     <BottomSheet
       open={open}
       onClose={onClose}
-      title="Clear everything?"
-      description="Your profile, people, expenses, groups, recurring splits and any bill in progress are deleted from this phone."
+      title={t('you.clear.title')}
+      description={t('you.clear.body')}
       footer={
         <div className={styles.footer}>
           <Button block variant="danger" className={styles.clear} onClick={() => onClear({ removePro: hasPro && removePro })}>
-            Clear everything
+            {t('you.clear.confirm')}
           </Button>
           <Button block variant="ghost" onClick={onClose}>
-            Keep my data
+            {t('you.clear.keep')}
           </Button>
         </div>
       }
@@ -46,9 +48,9 @@ export function ClearDataSheet({ open, onClose, hasPro, offerBackup, onBackup, o
       <div className={styles.body}>
         {offerBackup && (
           <div className={styles.backup}>
-            <p className={styles.backupText}>Might you want it back one day? Save a backup file first.</p>
+            <p className={styles.backupText}>{t('you.clear.backupBody')}</p>
             <Button variant="secondary" size="md" iconStart={<Download />} onClick={onBackup}>
-              Save a backup first
+              {t('you.clear.backupCta')}
             </Button>
           </div>
         )}
@@ -56,8 +58,8 @@ export function ClearDataSheet({ open, onClose, hasPro, offerBackup, onBackup, o
           <Switch
             checked={removePro}
             onChange={setRemovePro}
-            label="Remove Pro from this phone too"
-            description="Your pass stays unless you switch this on. Copy your Pro code first if you'll use it on another phone."
+            label={t('you.clear.removePro')}
+            description={t('you.clear.removePro.body')}
           />
         )}
       </div>

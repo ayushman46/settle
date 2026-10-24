@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { AtSign, Copy, Pencil } from 'lucide-react'
+import { useT } from '../../i18n'
 import { Button, IconButton, useToast } from '../../components'
 import { useProfile } from '../../data'
 import { ME_ID } from '../../domain/types'
@@ -14,6 +15,7 @@ import styles from './ProfileCard.module.css'
  * pay links and QR codes need it.
  */
 export function ProfileCard() {
+  const t = useT()
   const profile = useProfile()
   const toast = useToast()
   const [sheet, setSheet] = useState<{ open: boolean; focus: ProfileField }>({ open: false, focus: 'name' })
@@ -22,7 +24,7 @@ export function ProfileCard() {
 
   const copy = async (upiId: string): Promise<void> => {
     const ok = await copyText(upiId)
-    toast(ok ? 'UPI ID copied' : "Couldn't copy. Long-press your UPI ID to copy it instead.", { tone: ok ? 'success' : 'warning' })
+    toast(ok ? t('you.profile.copied') : t('you.profile.copyFailed'), { tone: ok ? 'success' : 'warning' })
   }
 
   return (
@@ -33,31 +35,31 @@ export function ProfileCard() {
           <h1 id="you-name" className={styles.name} tabIndex={-1}>
             {name}
           </h1>
-          <p className={styles.caption}>Your profile stays on this phone</p>
+          <p className={styles.caption}>{t('you.profile.caption')}</p>
         </div>
-        <IconButton label="Edit profile" variant="secondary" onClick={() => edit('name')}>
+        <IconButton label={t('you.profile.edit')} variant="secondary" onClick={() => edit('name')}>
           <Pencil />
         </IconButton>
       </div>
 
       {profile.upiId ? (
         <div className={styles.upiRow}>
-          <button type="button" className={styles.upiButton} onClick={() => edit('upi')} aria-label={`UPI ID ${profile.upiId}. Edit`}>
+          <button type="button" className={styles.upiButton} onClick={() => edit('upi')} aria-label={t('you.profile.upi.edit', { id: profile.upiId ?? '' })}>
             <AtSign aria-hidden="true" className={styles.upiIcon} />
             <span className={styles.upiText}>
-              <span className={styles.upiLabel}>UPI ID</span>{' '}
+              <span className={styles.upiLabel}>{t('you.profile.upi')}</span>{' '}
               <span className={styles.upiId}>{profile.upiId}</span>
             </span>
           </button>
-          <IconButton label="Copy UPI ID" size="sm" onClick={() => void copy(profile.upiId ?? '')}>
+          <IconButton label={t('you.profile.copy')} size="sm" onClick={() => void copy(profile.upiId ?? '')}>
             <Copy />
           </IconButton>
         </div>
       ) : (
         <div className={styles.addUpi}>
-          <p className={styles.addText}>Add your UPI ID so friends can pay you back in one tap.</p>
+          <p className={styles.addText}>{t('you.profile.add.body')}</p>
           <Button variant="accent" size="md" iconStart={<AtSign />} onClick={() => edit('upi')}>
-            Add UPI ID
+            {t('you.profile.add')}
           </Button>
         </div>
       )}
