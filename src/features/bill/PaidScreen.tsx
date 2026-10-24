@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
 import { ArrowRight, Bike, ChevronDown, Equal, PiggyBank, Scale } from 'lucide-react'
 import { ActionBar, AmountInput, Button, Card, Chip, Money, PageTitle, Screen, TopBar } from '../../components'
+import { t, useT } from '../../i18n'
 import { currencyName } from '../../lib/currencies'
 import { cx } from '../../lib/cx'
 import { formatPercent } from '../../lib/format'
@@ -43,22 +44,27 @@ function explainFees(session: Session, fees: Minor): Explanation {
 function explain(paid: Minor, items: Minor, currency: string): Explanation | null {
   if (paid <= 0) return null
   if (items <= 0) {
-    return { tone: 'same', icon: <Equal />, text: 'Everything on the bill is free, so this is shared equally.' }
+    return { tone: 'same', icon: <Equal />, text: t('bill.paid.explain.free') }
   }
   const diff = paid - items
-  if (diff === 0) return { tone: 'same', icon: <Equal />, text: 'Same as the items — no extras to share.' }
+  if (diff === 0) return { tone: 'same', icon: <Equal />, text: t('bill.paid.explain.same') }
   const rate = Math.abs(diff) / items
   const amount = formatMoney(Math.abs(diff), currency)
   if (diff > 0) {
-    const extra = rate < TINY_RATE ? `${amount} more than the items` : `+${formatPercent(rate)} on top of the items`
     return {
       tone: 'extra',
       icon: <Scale />,
-      text: `${extra} for tax & charges — shared in proportion to what each person had.`,
+      text:
+        rate < TINY_RATE
+          ? t('bill.paid.explain.extra.amount', { amount })
+          : t('bill.paid.explain.extra.percent', { percent: formatPercent(rate) }),
     }
   }
-  const off = rate < TINY_RATE ? '' : ` (${formatPercent(rate)} off)`
-  return { tone: 'saving', icon: <PiggyBank />, text: `${amount} less than the items${off} — everyone saves in proportion.` }
+  const text =
+    rate < TINY_RATE
+      ? t('bill.paid.explain.saving', { amount })
+      : t('bill.paid.explain.saving.percent', { amount, percent: formatPercent(rate) })
+  return { tone: 'saving', icon: <PiggyBank />, text }
 }
 
 interface QuickAmount {
@@ -69,6 +75,7 @@ interface QuickAmount {
 
 /** Step 2: what actually left the wallet. Everything else is shared in proportion to it. */
 export function PaidScreen() {
+  const t = useT()
   const { session, dispatch } = useSession()
   const flow = useFlow()
   const { currency, meta } = session
@@ -122,13 +129,13 @@ export function PaidScreen() {
 
   const quick: QuickAmount[] = []
   if (meta.total !== null && meta.total > 0) {
-    quick.push({ key: 'total', label: 'Bill total', value: meta.total })
+    quick.push({ key: 'total', label: t('bill.paid.quick.total'), value: meta.total })
   } else {
     // No printed total: what the bill's own lines add up to (items + tax/service/tip − discounts).
     const computed = computedBillTotal(session)
-    if (computed > 0 && computed !== items) quick.push({ key: 'computed', label: 'Bill adds up to', value: computed })
+    if (computed > 0 && computed !== items) quick.push({ key: 'computed', label: t('bill.paid.quick.computed'), value: computed })
   }
-  if (items > 0 && items !== meta.total) quick.push({ key: 'items', label: 'Items only', value: items })
+  if (items > 0 && items !== meta.total) quick.push({ key: 'items', label: t('bill.paid.quick.items'), value: items })
 
   const rows = billBreakdown(session)
   const totalRow = rows.find((row) => row.kind === 'total')
@@ -138,22 +145,22 @@ export function PaidScreen() {
     <Screen
       header={<TopBar onBack={flow.back} progress={stepProgress('paid') ?? undefined} />}
       footer={
-        <ActionBar hint={ready ? undefined : 'Enter the amount you paid'}>
+        <ActionBar hint={ready ? undefined : t('bill.paid.missing.hint')}>
           <Button block disabled={!ready} iconEnd={<ArrowRight />} onClick={flow.next}>
-            Next: who's splitting
+            {t('bill.paid.next.cta')}
           </Button>
         </ActionBar>
       }
     >
       <PageTitle
-        title="What did you actually pay?"
-        subtitle="After discounts, coupons, tips — whatever left your wallet."
+        title={t('bill.paid.title')}
+        subtitle={t('bill.paid.subtitle')}
       />
 
       <div className={styles.amount}>
         <AmountInput
           size="hero"
-          label={`Amount you paid, in ${currencyName(currency)}`}
+          label={t('bill.paid.amount.label', { currency: currencyName(currency) })}
           currency={currency}
           value={text}
           onChange={setAmountText}
@@ -164,7 +171,7 @@ export function PaidScreen() {
         />
 
         {quick.length > 0 && (
-          <div className={styles.chips} role="group" aria-label="Quick amounts">
+          <div className={styles.chips} role="group" aria-label={t('bill.paid.quick.aria')}>
             {quick.map((choice) => (
               <Chip key={choice.key} selected={paid === choice.value} onClick={() => pick(choice.value)}>
                 {choice.label} <Money value={choice.value} currency={currency} size="inherit" trimZeros />
@@ -208,7 +215,7 @@ export function PaidScreen() {
             aria-controls={breakdownId}
             onClick={() => setBreakdownOpen((open) => !open)}
           >
-            <span className={styles.toggleTitle}>What the bill says</span>
+            <span className={styles.toggleTitle}>{t('bill.paid.breakdown.title')}</span>
             <Money value={totalRow.amount} currency={currency} strong />
             <ChevronDown aria-hidden="true" className={cx(styles.chevron, breakdownOpen && styles.chevronOpen)} />
           </button>

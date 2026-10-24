@@ -51,7 +51,7 @@ import { DELIVERY_ENABLED } from './delivery.enabled'
 import { takeScanHint, type ScanHint } from './launch'
 import { useOwnerAvatarName, withOwnerAvatar } from './ownerAvatar'
 import { QUICK_SPLIT_PATH, scanPrefill } from './scanPrefill'
-import { focusScreenHeading, plural, revokeUrl } from './screenUtils'
+import { focusScreenHeading, revokeUrl } from './screenUtils'
 import styles from './ScanScreen.module.css'
 
 /* ---------- Connectivity ---------- */
@@ -80,7 +80,7 @@ function useOnline(): boolean {
 type Recovery = 'retry' | 'photo' | 'manual'
 
 /** Why there are no photo buttons when the service can't scan (no key, or the key was rejected). */
-const SCANNING_OFF = 'Photo scanning is off right now — typing a bill in takes about a minute.'
+const scanningOff = (): string => t('bill.scan.off')
 
 interface Problem {
   title: string
@@ -91,7 +91,7 @@ interface Problem {
 /** Friendly copy + next step for a failed scan; null when the person cancelled. */
 function describeProblem(error: unknown): Problem | null {
   if (error instanceof ImageError) {
-    return { title: "That photo didn't work", message: error.message, recovery: 'photo' }
+    return { title: t('bill.scan.problem.photo'), message: error.message, recovery: 'photo' }
   }
   if (error instanceof ScanError) {
     const { message } = error
@@ -100,32 +100,32 @@ function describeProblem(error: unknown): Problem | null {
         return null
       case 'network':
         return isOnline()
-          ? { title: 'Connection problem', message, recovery: 'retry' }
-          : { title: "You're offline", message: OFFLINE_MESSAGE, recovery: 'manual' }
+          ? { title: t('bill.scan.problem.connection'), message, recovery: 'retry' }
+          : { title: t('bill.scan.problem.offline'), message: OFFLINE_MESSAGE, recovery: 'manual' }
       case 'not_configured':
       case 'upstream_auth':
         // The same words as the home screen's "scanning is off" note, which this visit now shows.
-        return { title: "Scanning isn't available", message: SCANNING_OFF, recovery: 'manual' }
+        return { title: t('bill.scan.problem.unavailable'), message: scanningOff(), recovery: 'manual' }
       case 'not_a_bill':
-        return { title: 'Is that a bill?', message, recovery: 'photo' }
+        return { title: t('bill.scan.problem.notBill'), message, recovery: 'photo' }
       case 'unreadable':
-        return { title: "Couldn't read that bill", message, recovery: 'photo' }
+        return { title: t('bill.scan.problem.unreadable'), message, recovery: 'photo' }
       case 'bad_request':
       case 'unsupported_image':
       case 'image_too_large':
-        return { title: "That photo didn't work", message, recovery: 'photo' }
+        return { title: t('bill.scan.problem.photo'), message, recovery: 'photo' }
       case 'timeout':
-        return { title: 'That took too long', message, recovery: 'retry' }
+        return { title: t('bill.scan.problem.timeout'), message, recovery: 'retry' }
       case 'rate_limited':
         // A short "busy" wait isn't the diner's doing; only our per-device limit is "too many scans".
-        return { title: message === SCANS_BUSY_MESSAGE ? 'Busy right now' : 'Too many scans', message, recovery: 'retry' }
+        return { title: t(message === SCANS_BUSY_MESSAGE ? 'bill.scan.problem.busy' : 'bill.scan.problem.tooMany'), message, recovery: 'retry' }
       case 'upstream_error':
-        return { title: 'Something went wrong', message, recovery: 'retry' }
+        return { title: t('bill.scan.problem.generic'), message, recovery: 'retry' }
     }
   }
   return {
-    title: 'Something went wrong',
-    message: "We couldn't read that photo. Please try again — or type the items in.",
+    title: t('bill.scan.problem.generic'),
+    message: t('bill.scan.problem.generic.body'),
     recovery: 'retry',
   }
 }
@@ -413,7 +413,7 @@ export function ScanScreen() {
     const changes = latest.current.expenseId !== null
     flow.startOver()
     haptic('warning')
-    toast(changes ? 'Changes discarded' : 'Bill discarded')
+    toast(t(changes ? 'bill.scan.changesDiscarded.toast' : 'bill.scan.discarded.toast'))
     // The resume card (and its ✕) is gone: keep focus on the page's heading, not the body.
     focusScreenHeading()
   }
@@ -479,7 +479,7 @@ export function ScanScreen() {
         capture="environment"
         hidden
         tabIndex={-1}
-        aria-label="Take a photo of the bill"
+        aria-label={t('bill.scan.camera.aria')}
         onChange={onFileChosen}
       />
       <input
@@ -488,7 +488,7 @@ export function ScanScreen() {
         accept="image/*"
         hidden
         tabIndex={-1}
-        aria-label="Choose a photo of the bill"
+        aria-label={t('bill.scan.gallery.aria')}
         onChange={onFileChosen}
       />
     </>
@@ -505,7 +505,7 @@ export function ScanScreen() {
 
   const { problem } = phase
   const showResume = hasProgress(session)
-  const billName = session.meta.merchant ?? 'Your last bill'
+  const billName = session.meta.merchant ?? t('bill.start.lastBill')
   // Changes to a bill that is already saved: discarding them leaves the saved bill as it was.
   const changingSaved = session.expenseId !== null
 
@@ -516,14 +516,14 @@ export function ScanScreen() {
           <ReceiptText />
         </span>
         <div className={styles.resumeText}>
-          <p className={styles.resumeEyebrow}>{changingSaved ? 'Finish changing a saved bill' : 'Pick up where you left off'}</p>
+          <p className={styles.resumeEyebrow}>{t(changingSaved ? 'bill.scan.resume.saved.eyebrow' : 'bill.scan.resume.eyebrow')}</p>
           <p className={styles.resumeTitle}>{billName}</p>
           <p className={styles.resumeMeta}>
-            {plural(session.items.length, 'item')} · {formatMoney(effectivePaid(session), session.currency)}
+            {t('bill.count.items', { count: session.items.length })} · {formatMoney(effectivePaid(session), session.currency)}
           </p>
         </div>
         <IconButton
-          label={changingSaved ? 'Discard your changes' : 'Discard this bill'}
+          label={t(changingSaved ? 'bill.scan.resume.discardChanges.aria' : 'bill.scan.resume.discard.aria')}
           size="sm"
           onClick={() => setConfirmDiscard(true)}
         >
@@ -534,10 +534,10 @@ export function ScanScreen() {
         {session.people.length > 0 ? (
           <AvatarStack people={withOwnerAvatar(session.people, ownerName)} size="sm" max={4} />
         ) : (
-          <span className={styles.resumeHint}>No one added yet</span>
+          <span className={styles.resumeHint}>{t('bill.scan.resume.noOne')}</span>
         )}
         <Button size="md" variant="accent" iconEnd={<ArrowRight />} onClick={flow.resume}>
-          Continue
+          {t('bill.scan.resume.cta')}
         </Button>
       </div>
     </Card>
@@ -545,7 +545,7 @@ export function ScanScreen() {
 
   // "2 of 3 free AI splits left today" while there are some; Pro needs no counting.
   const quotaHint =
-    canScan && quotaKnown && !pro.isPro ? `${quota.remaining} of ${quota.limit} free AI splits left today` : undefined
+    canScan && quotaKnown && !pro.isPro ? t('bill.scan.quota.hint', { remaining: quota.remaining, limit: quota.limit }) : undefined
 
   return (
     <>
@@ -574,7 +574,7 @@ export function ScanScreen() {
                 ) : (
                   <>
                     <Button block iconStart={<Camera />} onClick={() => startNewBill({ kind: 'photo', source: 'camera' })}>
-                      Scan a bill
+                      {t('bill.scan.camera.cta')}
                     </Button>
                     <Button
                       block
@@ -582,26 +582,26 @@ export function ScanScreen() {
                       iconStart={<ImageUp />}
                       onClick={() => startNewBill({ kind: 'photo', source: 'gallery' })}
                     >
-                      Upload a photo
+                      {t('bill.scan.upload.cta')}
                     </Button>
                   </>
                 )}
                 <div className={styles.altActions}>
                   <Button variant="ghost" size="md" iconStart={<Keyboard />} onClick={() => startNewBill({ kind: 'manual' })}>
-                    Type it in
+                    {t('bill.scan.typeIn.cta')}
                   </Button>
                   <Button variant="ghost" size="md" iconStart={<Sparkles />} onClick={() => startNewBill({ kind: 'sample' })}>
-                    Try a sample
+                    {t('bill.scan.sample.cta')}
                   </Button>
                 </div>
               </>
             ) : (
               <>
                 <Button ref={typeInRef} block iconStart={<Keyboard />} onClick={() => startNewBill({ kind: 'manual' })}>
-                  Type the items in
+                  {t('bill.scan.typeItems.cta')}
                 </Button>
                 <Button block variant="secondary" iconStart={<Sparkles />} onClick={() => startNewBill({ kind: 'sample' })}>
-                  Try a sample bill
+                  {t('bill.scan.sampleBill.cta')}
                 </Button>
               </>
             )}
@@ -612,13 +612,13 @@ export function ScanScreen() {
         {showResume ? resumeCard : !problem && <BillArt scanning={canScan} />}
 
         <PageTitle
-          title={delivery ? t('delivery.scan.title') : 'Scan a bill'}
+          title={delivery ? t('delivery.scan.title') : t('bill.scan.title')}
           subtitle={
             delivery && canScan
               ? t('delivery.scan.subtitle')
               : canScan
-              ? 'Snap it, tap who had what — tax, tips and discounts are shared fairly. A cab or power bill becomes a quick split.'
-              : 'Type the items in, tap who had what — tax, tips and discounts are shared fairly.'
+              ? t('bill.scan.subtitle')
+              : t('bill.scan.manual.subtitle')
           }
         />
 
@@ -630,12 +630,12 @@ export function ScanScreen() {
               <div className={styles.problemActions}>
                 {problem.recovery === 'retry' && canScan && (
                   <Button size="sm" onClick={() => startNewBill({ kind: 'retry' })}>
-                    Try again
+                    {t('bill.scan.retry.cta')}
                   </Button>
                 )}
                 {problem.recovery === 'photo' && canScan && (
                   <Button size="sm" onClick={() => startNewBill({ kind: 'photo', source: lastSource.current })}>
-                    Try another photo
+                    {t('bill.scan.anotherPhoto.cta')}
                   </Button>
                 )}
                 <Button
@@ -643,7 +643,7 @@ export function ScanScreen() {
                   variant={problem.recovery === 'manual' || !canScan ? 'primary' : 'secondary'}
                   onClick={() => startNewBill({ kind: 'manual' })}
                 >
-                  Type it in
+                  {t('bill.scan.typeIn.cta')}
                 </Button>
               </div>
             }
@@ -653,29 +653,29 @@ export function ScanScreen() {
         )}
 
         {!online && !problem && (
-          <Banner tone="warning" icon={<WifiOff />} title="You're offline">
-            You can still type the items in or try the sample — scanning comes back with your connection.
+          <Banner tone="warning" icon={<WifiOff />} title={t('bill.scan.offline.title')}>
+            {t('bill.scan.offline.body')}
           </Banner>
         )}
 
         {online && scanningDown && !problem && (
-          <Banner tone="info">{SCANNING_OFF}</Banner>
+          <Banner tone="info">{scanningOff()}</Banner>
         )}
 
         {online && !scanningDown && outOfScans && !problem && (
           <Banner
             tone="info"
             icon={<Crown />}
-            title="That's today's free AI splits"
+            title={t('bill.scan.outOfScans.title')}
             actions={
               <div className={styles.problemActions}>
                 <Button size="sm" variant="accent" onClick={() => openPaywall('unlimited_ai')}>
-                  Get unlimited with Pro
+                  {t('bill.scan.outOfScans.cta')}
                 </Button>
               </div>
             }
           >
-            {`You get ${FREE_AI_PER_DAY} a day, and they're back tomorrow. Typing this one in takes about a minute.`}
+            {t('bill.scan.outOfScans.body', { count: FREE_AI_PER_DAY })}
           </Banner>
         )}
       </Screen>
@@ -687,28 +687,29 @@ export function ScanScreen() {
           <span className={styles.dropIcon}>
             <ImageUp />
           </span>
-          Drop the photo to scan it
+          {t('bill.scan.drop')}
         </div>
       )}
 
       <BottomSheet
         open={pendingNew !== null}
         onClose={() => setPendingNew(null)}
-        title="Start a new bill?"
+        title={t('bill.start.new.title')}
         description={
           changingSaved
-            ? `Your changes to ${billName} will be dropped — the saved bill stays as it was.`
-            : `${billName} (${plural(session.items.length, 'item')}) will be replaced.${
-                session.people.length > 0 ? ' The people you added stay.' : ''
-              }`
+            ? t('bill.scan.replace.saved.description', { name: billName })
+            : t('bill.start.new.description', {
+                what: t('bill.start.what', { name: billName, count: session.items.length }),
+                people: session.people.length > 0 ? 'yes' : 'no',
+              })
         }
         footer={
           <ActionBar>
             <Button block onClick={confirmNewBill}>
-              Start new bill
+              {t('bill.start.new.cta')}
             </Button>
             <Button block variant="ghost" onClick={() => setPendingNew(null)}>
-              Keep it
+              {t('bill.scan.keep.cta')}
             </Button>
           </ActionBar>
         }
@@ -717,19 +718,15 @@ export function ScanScreen() {
       <BottomSheet
         open={confirmDiscard}
         onClose={() => setConfirmDiscard(false)}
-        title={changingSaved ? 'Discard your changes?' : 'Discard this bill?'}
-        description={
-          changingSaved
-            ? 'The saved bill stays as it was.'
-            : 'Its items and split will be cleared. The people stay in your people list.'
-        }
+        title={t(changingSaved ? 'bill.scan.discardChanges.title' : 'bill.scan.discard.title')}
+        description={t(changingSaved ? 'bill.scan.discardChanges.description' : 'bill.scan.discard.description')}
         footer={
           <ActionBar>
             <Button block variant="primary" onClick={discard}>
-              {changingSaved ? 'Discard changes' : 'Discard bill'}
+              {t(changingSaved ? 'bill.scan.discardChanges.cta' : 'bill.scan.discard.cta')}
             </Button>
             <Button block variant="ghost" onClick={() => setConfirmDiscard(false)}>
-              Keep it
+              {t('bill.scan.keep.cta')}
             </Button>
           </ActionBar>
         }
@@ -740,24 +737,34 @@ export function ScanScreen() {
 
 /* ---------- Scanning ---------- */
 
-const STATUS = ['Reading the bill…', 'Finding the items…', 'Checking the totals…', 'Almost there…'] as const
+/** The rotating status lines while a bill is read. */
+function billStatus(): readonly string[] {
+  return [t('bill.scan.status.reading'), t('bill.scan.status.items'), t('bill.scan.status.totals'), t('bill.scan.status.almost')]
+}
 /** A delivery order also has its fees and coupon picked out. */
 function deliveryStatus(): readonly string[] {
-  return ['Reading the bill…', 'Finding the items…', t('delivery.scan.status.fees'), t('delivery.scan.status.coupon'), 'Checking the totals…', 'Almost there…']
+  return [
+    t('bill.scan.status.reading'),
+    t('bill.scan.status.items'),
+    t('delivery.scan.status.fees'),
+    t('delivery.scan.status.coupon'),
+    t('bill.scan.status.totals'),
+    t('bill.scan.status.almost'),
+  ]
 }
-const SLOW_STATUS = 'Still working — longer bills take a little more time…'
 const STATUS_MS = 1800
 /** Ticks after which the "still working" reassurance replaces "Almost there…". */
 const SLOW_AFTER_TICKS = 9
 
 function statusText(previewUrl: string | null, tick: number, delivery = false): string {
-  if (previewUrl === null) return 'Getting your photo ready…'
-  if (tick >= SLOW_AFTER_TICKS) return SLOW_STATUS
-  const lines = delivery ? deliveryStatus() : STATUS
-  return lines[Math.min(tick, lines.length - 1)] ?? STATUS[0]
+  if (previewUrl === null) return t('bill.scan.status.preparing')
+  if (tick >= SLOW_AFTER_TICKS) return t('bill.scan.status.slow')
+  const lines = delivery ? deliveryStatus() : billStatus()
+  return lines[Math.min(tick, lines.length - 1)] ?? t('bill.scan.status.reading')
 }
 
 function ScanningView({ previewUrl, onCancel, delivery }: { previewUrl: string | null; onCancel: () => void; delivery: boolean }) {
+  const t = useT()
   const [tick, setTick] = useState(0)
   const [prevPreview, setPrevPreview] = useState(previewUrl)
   if (prevPreview !== previewUrl) {
@@ -767,7 +774,7 @@ function ScanningView({ previewUrl, onCancel, delivery }: { previewUrl: string |
 
   useEffect(() => {
     if (previewUrl === null) return
-    const timer = setInterval(() => setTick((t) => t + 1), STATUS_MS)
+    const timer = setInterval(() => setTick((n) => n + 1), STATUS_MS)
     return () => clearInterval(timer)
   }, [previewUrl])
 
@@ -788,17 +795,17 @@ function ScanningView({ previewUrl, onCancel, delivery }: { previewUrl: string |
       footer={
         <ActionBar>
           <Button block variant="ghost" onClick={onCancel}>
-            Cancel
+            {t('bill.scan.reading.cancel')}
           </Button>
         </ActionBar>
       }
     >
-      <PageTitle title="Reading your bill" subtitle="Picking out every item and total." align="center" />
+      <PageTitle title={t('bill.scan.reading.title')} subtitle={t('bill.scan.reading.subtitle')} align="center" />
       <div className={cx(styles.photoFrame, previewUrl === null && styles.photoFramePending)}>
         {previewUrl === null ? (
           <Skeleton shape="md" className={styles.photoPlaceholder} />
         ) : (
-          <img className={styles.photo} src={previewUrl} alt="The bill being read" />
+          <img className={styles.photo} src={previewUrl} alt={t('bill.scan.reading.alt')} />
         )}
         <span className={styles.beam} aria-hidden="true" />
       </div>

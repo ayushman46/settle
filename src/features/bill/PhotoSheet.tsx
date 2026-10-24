@@ -1,6 +1,7 @@
 import { useLayoutEffect, useRef, useState, type MouseEvent } from 'react'
 import { ImageOff } from 'lucide-react'
 import { BottomSheet, EmptyState } from '../../components'
+import { useT } from '../../i18n'
 import { cx } from '../../lib/cx'
 import styles from './PhotoSheet.module.css'
 
@@ -25,6 +26,7 @@ const clamp01 = (n: number): number => Math.min(1, Math.max(0, Number.isFinite(n
 
 /** The bill photo, full height. Tap to zoom in on a spot (and back); pinch works on touch screens. */
 export function PhotoSheet({ open, url, onClose }: PhotoSheetProps) {
+  const t = useT()
   const [zoom, setZoom] = useState<Zoom | null>(null)
   const [failedUrl, setFailedUrl] = useState<string | null>(null)
   const [wasOpen, setWasOpen] = useState(open)
@@ -76,16 +78,16 @@ export function PhotoSheet({ open, url, onClose }: PhotoSheetProps) {
       onClose={onClose}
       size="tall"
       fill
-      title="Your bill photo"
-      description={broken ? undefined : zoom ? 'Tap to see the whole bill.' : 'Tap anywhere to zoom in.'}
+      title={t('bill.photo.title')}
+      description={broken ? undefined : t(zoom ? 'bill.photo.zoomed.hint' : 'bill.photo.hint')}
     >
       {broken ? (
         <EmptyState
           size="sm"
           headingLevel={3}
           icon={<ImageOff />}
-          title="Photo not available"
-          text="Photos aren't kept after a refresh — your items are all still here."
+          title={t('bill.photo.missing.title')}
+          text={t('bill.photo.missing.body')}
         />
       ) : (
         <div ref={viewportRef} className={cx(styles.viewport, zoom && styles.zoomed)}>
@@ -93,14 +95,14 @@ export function PhotoSheet({ open, url, onClose }: PhotoSheetProps) {
             type="button"
             className={styles.zoomButton}
             style={zoom ? { width: `${Math.round(zoom.width)}px` } : undefined}
-            aria-label={zoom ? 'Zoom out' : 'Zoom in'}
+            aria-label={t(zoom ? 'bill.photo.zoomOut.aria' : 'bill.photo.zoomIn.aria')}
             aria-pressed={zoom !== null}
             onClick={toggleZoom}
           >
             <img
               ref={imageRef}
               src={url}
-              alt="Photo of the bill"
+              alt={t('bill.photo.alt')}
               className={styles.image}
               draggable={false}
               onError={() => setFailedUrl(url)}

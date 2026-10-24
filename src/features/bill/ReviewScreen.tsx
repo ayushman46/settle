@@ -1,6 +1,6 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
 import { ChevronDown, Image as ImageIcon, ListPlus, Pencil, Plus, ReceiptText } from 'lucide-react'
-import { useT } from '../../i18n'
+import { t, tx, useT } from '../../i18n'
 import {
   ActionBar,
   Banner,
@@ -33,7 +33,7 @@ import { FEE_EMOJI, feeAsItem, feeRowLabel, restoreFee } from './feeView'
 import { ItemEditorSheet, type ItemDraft } from './ItemEditorSheet'
 import { MerchantSheet } from './MerchantSheet'
 import { PhotoSheet } from './PhotoSheet'
-import { focusScreenHeading, plural } from './screenUtils'
+import { focusScreenHeading } from './screenUtils'
 import { CURRENCY_KEYS, ITEM_KEYS, restoreCurrency, restoreItem } from './undoMerge'
 import styles from './ReviewScreen.module.css'
 
@@ -55,9 +55,9 @@ interface FeeEditorState {
 /** "Qty 4 · ₹75.00 each" (unit price only when it is exact), or nothing for single items. */
 function quantityLine(item: BillItem, currency: string): string | undefined {
   if (item.quantity === 1) return undefined
-  const qty = `Qty ${formatQuantity(item.quantity)}`
-  if (!Number.isInteger(item.quantity) || item.quantity <= 1 || item.amount % item.quantity !== 0) return qty
-  return `${qty} · ${formatMoney(item.amount / item.quantity, currency)} each`
+  const qty = formatQuantity(item.quantity)
+  if (!Number.isInteger(item.quantity) || item.quantity <= 1 || item.amount % item.quantity !== 0) return t('bill.review.qty', { qty })
+  return t('bill.review.qty.each', { qty, amount: formatMoney(item.amount / item.quantity, currency) })
 }
 
 /** Step 1: check (and fix) what the AI read, or type the bill in. */
@@ -117,13 +117,13 @@ export function ReviewScreen() {
     if (editing) {
       dispatch({ type: 'updateItem', item: { ...editing, ...draft } })
     } else if (items.length >= MAX_ITEMS) {
-      toast(`A bill can hold up to ${MAX_ITEMS} items.`, { tone: 'warning' })
+      toast(t('bill.review.full.toast', { max: MAX_ITEMS }), { tone: 'warning' })
       closeEditor()
       return
     } else {
       dispatch({ type: 'addItem', item: { id: newId(), ...draft } })
     }
-    if (addAnother) toast(`Added ${draft.name}`, { tone: 'success' })
+    if (addAnother) toast(t('bill.review.added.toast', { name: draft.name }), { tone: 'success' })
     else closeEditor()
   }
 
@@ -138,14 +138,14 @@ export function ReviewScreen() {
     closeEditor()
     dispatch({ type: 'removeItem', itemId: item.id })
     haptic('warning')
-    toast(`Removed ${item.name || 'item'}`, {
+    toast(item.name ? t('bill.review.removed.toast', { name: item.name }) : t('bill.review.removedUnnamed.toast'), {
       action: {
-        label: 'Undo',
+        label: t('bill.undo.cta'),
         onAction: () => {
           // Merge into the latest state, so edits made since the delete survive the undo.
           const restored = restoreItem(latest.current, before, item.id)
           if (restored) dispatch({ type: 'restore', session: restored, keys: ITEM_KEYS })
-          else if (latest.current.items.length >= MAX_ITEMS) toast("Couldn't undo — the bill is full", { tone: 'info' })
+          else if (latest.current.items.length >= MAX_ITEMS) toast(t('bill.review.undoFull.toast'), { tone: 'info' })
         },
       },
     })
@@ -156,9 +156,9 @@ export function ReviewScreen() {
     if (code === currency) return
     const before = latest.current
     dispatch({ type: 'setCurrency', currency: code })
-    toast(`Switched to ${code}`, {
+    toast(t('bill.review.currency.toast', { code }), {
       action: {
-        label: 'Undo',
+        label: t('bill.undo.cta'),
         onAction: () => {
           // Exact amounts back (switching to a currency without decimals rounded them), unless
           // something changed since — then just switch back.
@@ -226,7 +226,7 @@ export function ReviewScreen() {
     if (!fee) return
     const item = feeAsItem(session, { ...fee, ...draft })
     if (!item) {
-      toast(`A bill can hold up to ${MAX_ITEMS} items.`, { tone: 'warning' })
+      toast(t('bill.review.full.toast', { max: MAX_ITEMS }), { tone: 'warning' })
       return
     }
     const before = session
@@ -254,8 +254,8 @@ export function ReviewScreen() {
   }
 
   let hint: string | undefined
-  if (items.length === 0) hint = 'Add at least one item'
-  else if (!ready) hint = 'Every item needs a name'
+  if (items.length === 0) hint = t('bill.review.needItem.hint')
+  else if (!ready) hint = t('bill.review.needName.hint')
 
   return (
     <Screen
@@ -268,7 +268,7 @@ export function ReviewScreen() {
               type="button"
               className={styles.currency}
               aria-haspopup="dialog"
-              aria-label={`Currency ${currency}, ${currencyName(currency)}. Change`}
+              aria-label={t('bill.review.currency.aria', { code: currency, name: currencyName(currency) })}
               onClick={() => setCurrencyOpen(true)}
             >
               {symbol !== currency && <span className={styles.currencySymbol}>{symbol}</span>}
@@ -281,21 +281,21 @@ export function ReviewScreen() {
       footer={
         <ActionBar hint={hint}>
           <Button block disabled={!ready} onClick={flow.next}>
-            Looks good
+            {t('bill.review.next.cta')}
           </Button>
         </ActionBar>
       }
     >
       <PageTitle
         eyebrow={eyebrow}
-        title="Check the items"
-        subtitle={
+        title={t('bill.review.title')}
+        subtitle={t(
           items.length === 0
-            ? "Add what's on the bill, one line at a time."
+            ? 'bill.review.empty.subtitle'
             : session.source === 'manual'
-              ? 'Tap an item to change it, or add more.'
-              : 'Tap anything that looks off.'
-        }
+              ? 'bill.review.manual.subtitle'
+              : 'bill.review.scanned.subtitle',
+        )}
       />
 
       <div className={styles.tools}>
@@ -304,21 +304,21 @@ export function ReviewScreen() {
           leading={<ReceiptText />}
           trailing={<Pencil />}
           aria-haspopup="dialog"
-          aria-label={meta.merchant ? `Rename bill, ${meta.merchant}` : 'Name this bill'}
+          aria-label={meta.merchant ? t('bill.name.rename.aria', { name: meta.merchant }) : t('bill.name.empty')}
           className={styles.billName}
           onClick={() => setNameSheet((n) => ({ key: n.key + 1, open: true }))}
         >
-          {meta.merchant ?? 'Name this bill'}
+          {meta.merchant ?? t('bill.name.empty')}
         </Chip>
         {photo && (
           <Chip leading={<ImageIcon />} onClick={() => setPhotoOpen(true)} aria-haspopup="dialog">
-            View photo
+            {t('bill.review.photo.cta')}
           </Chip>
         )}
       </div>
 
       {warnings.length > 0 && (
-        <Banner tone="warning" title="Worth a quick check" onDismiss={dismissWarnings}>
+        <Banner tone="warning" title={t('bill.review.warnings.title')} onDismiss={dismissWarnings}>
           {warnings.length === 1 ? (
             warnings[0]
           ) : (
@@ -335,11 +335,11 @@ export function ReviewScreen() {
         <Card tone="sunken" padding="none">
           <EmptyState
             icon={<ListPlus />}
-            title="Add the first item"
-            text="Type each item and its price — tax and discounts come next."
+            title={t('bill.review.empty.title')}
+            text={t('bill.review.empty.body')}
             action={
               <Button id={addRowId} size="md" iconStart={<Plus />} onClick={() => openEditor(null)}>
-                Add item
+                {t('bill.review.add.cta')}
               </Button>
             }
           />
@@ -347,13 +347,13 @@ export function ReviewScreen() {
       ) : (
         <section className={styles.section} aria-labelledby="review-items-heading">
           <h2 id="review-items-heading" className={styles.sectionTitle}>
-            {plural(items.length, 'item')}
+            {t('bill.count.items', { count: items.length })}
           </h2>
           <Card padding="none">
             <List>
               {items.map((item) => {
                 const free = item.amount === 0
-                const name = item.name || 'Unnamed item'
+                const name = item.name || t('bill.review.unnamed')
                 // The name says what the row shows ("Qty 4 · ₹75.00 each"), so voice control can find it.
                 const subtitle = quantityLine(item, currency)
                 const qty = subtitle ? `, ${subtitle}` : ''
@@ -365,13 +365,17 @@ export function ReviewScreen() {
                     subtitle={subtitle}
                     trailing={
                       free ? (
-                        <span className={styles.free}>Free</span>
+                        <span className={styles.free}>{t('bill.review.free')}</span>
                       ) : (
                         <Money value={item.amount} currency={currency} />
                       )
                     }
                     pending={item.name.trim() === ''}
-                    aria-label={`Edit ${name}${qty}, ${free ? 'free' : formatMoney(item.amount, currency)}`}
+                    aria-label={t('bill.review.item.aria', {
+                      name,
+                      qty,
+                      amount: free ? t('bill.review.item.free.aria') : formatMoney(item.amount, currency),
+                    })}
                     onClick={() => openEditor(item)}
                   />
                 )
@@ -383,7 +387,7 @@ export function ReviewScreen() {
                     <Plus strokeWidth={2.5} />
                   </span>
                 }
-                title="Add item"
+                title={t('bill.review.add.cta')}
                 onClick={() => openEditor(null)}
                 disabled={items.length >= MAX_ITEMS}
               />
@@ -392,12 +396,14 @@ export function ReviewScreen() {
 
           <div className={styles.summary}>
             <div className={styles.totalRow}>
-              <span className={styles.totalLabel}>Items total</span>
+              <span className={styles.totalLabel}>{t('bill.review.total')}</span>
               <Money value={total} currency={currency} size="lg" strong />
             </div>
             {subtotalOff && meta.subtotal !== null && (
               <p className={styles.subtotalNote}>
-                Bill subtotal says <Money value={meta.subtotal} currency={currency} size="inherit" />
+                {tx('bill.review.subtotal', { amount: formatMoney(meta.subtotal, currency) }, {
+                  m: () => <Money value={meta.subtotal ?? 0} currency={currency} size="inherit" />,
+                })}
               </p>
             )}
           </div>

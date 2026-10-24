@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { ActionBar, BottomSheet, Button, TextField } from '../../components'
+import { useT } from '../../i18n'
 import { haptic } from '../../lib/haptics'
 import { MAX_MERCHANT } from '../../state/reducer'
 
@@ -14,6 +15,7 @@ export interface MerchantSheetProps {
 
 /** Names the bill (restaurant or shop) — it heads the split people get. */
 export function MerchantSheet({ open, merchant, onClose, onSave }: MerchantSheetProps) {
+  const t = useT()
   const [name, setName] = useState(merchant ?? '')
 
   const save = (event?: FormEvent): void => {
@@ -26,20 +28,20 @@ export function MerchantSheet({ open, merchant, onClose, onSave }: MerchantSheet
     <BottomSheet
       open={open}
       onClose={onClose}
-      title={merchant ? 'Rename this bill' : 'Name this bill'}
-      description="It heads the split you share."
+      title={t(merchant ? 'bill.merchant.rename.title' : 'bill.merchant.name.title')}
+      description={t('bill.merchant.description')}
       footer={
         <ActionBar>
           <Button block onClick={() => save()}>
-            Save
+            {t('bill.merchant.save.cta')}
           </Button>
         </ActionBar>
       }
     >
       <form onSubmit={save} noValidate>
         <TextField
-          label="Restaurant or shop"
-          placeholder="e.g. Saffron Table"
+          label={t('bill.merchant.label')}
+          placeholder={t('bill.merchant.placeholder')}
           value={name}
           onChange={(event) => setName(event.target.value)}
           autoFocus

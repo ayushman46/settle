@@ -57,16 +57,16 @@ export function PeopleScreen() {
     dispatch({ type: 'removePerson', personId: person.id })
     // Unticking someone who had nothing yet loses nothing: the picker says "removed" itself.
     if (!hasStake(before, person.id)) return
-    toast(`Removed ${person.name}`, {
+    toast(t('bill.people.removed.toast', { name: person.name }), {
       action: {
-        label: 'Undo',
+        label: t('bill.undo.cta'),
         onAction: () => {
           const current = sessionRef.current
           const restored = restorePerson(current, before, person.id)
           if (restored) dispatch({ type: 'restore', session: restored, keys: PERSON_KEYS })
           // Never a silent no-op: say why it couldn't be undone.
-          else if (current.people.some((p) => p.id === person.id)) toast(`${person.name} is already back`, { tone: 'info' })
-          else if (current.people.length >= MAX_PEOPLE) toast("Couldn't undo — the table is full", { tone: 'info' })
+          else if (current.people.some((p) => p.id === person.id)) toast(t('bill.people.back.toast', { name: person.name }), { tone: 'info' })
+          else if (current.people.length >= MAX_PEOPLE) toast(t('bill.people.undoFull.toast'), { tone: 'info' })
         },
       },
     })
@@ -102,7 +102,7 @@ export function PeopleScreen() {
 
   const count = people.length
   const canNext = count >= 2
-  const hint = canNext ? undefined : count === 0 ? 'Pick at least 2 people' : 'Pick one more person'
+  const hint = canNext ? undefined : t(count === 0 ? 'bill.people.needTwo.hint' : 'bill.people.needOne.hint')
   const canClaim = CLAIMS_ENABLED && session.items.length > 0 && count >= 1
 
   return (
@@ -111,7 +111,7 @@ export function PeopleScreen() {
       footer={
         <ActionBar hint={hint}>
           <Button block iconEnd={<ArrowRight />} disabled={!canNext} onClick={flow.next}>
-            Next: who had what
+            {t('bill.people.next.cta')}
           </Button>
           {canClaim && (
             <div className={styles.claim}>
@@ -126,14 +126,14 @@ export function PeopleScreen() {
         </ActionBar>
       }
     >
-      <PageTitle title="Who's splitting?" subtitle="Everyone at the table — you're in already." />
+      <PageTitle title={t('bill.people.title')} subtitle={t('bill.people.subtitle')} />
 
       <PeoplePicker
         selectedIds={people.map((p) => p.id)}
         onChange={onChange}
         max={MAX_PEOPLE}
         groupMemberIds={group?.memberIds}
-        label="Search or add people at the table"
+        label={t('bill.people.search.label')}
         className={styles.picker}
       />
     </Screen>

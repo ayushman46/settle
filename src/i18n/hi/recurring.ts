@@ -20,7 +20,7 @@ export const recurring = {
   'recurring.forMonth': '{month} के लिए',
 
   'recurring.preset.rent': 'किराया',
-  'recurring.preset.wifi': 'Wi-Fi',
+  'recurring.preset.wifi': 'वाई-फ़ाई',
   'recurring.preset.electricity': 'बिजली',
   'recurring.preset.netflix': 'Netflix',
   'recurring.preset.help': 'घर की मेड',

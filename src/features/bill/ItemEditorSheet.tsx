@@ -5,6 +5,7 @@ import { formatQuantity } from '../../lib/format'
 import { haptic } from '../../lib/haptics'
 import { cleanAmountText, formatMoney, parseMoneyInput, toInputString } from '../../lib/money'
 import { MAX_ITEM_NAME } from '../../state/reducer'
+import { useT } from '../../i18n'
 import type { BillItem, Minor } from '../../types'
 import styles from './ItemEditorSheet.module.css'
 
@@ -32,6 +33,7 @@ const MAX_QUANTITY = 99
 
 /** Bottom-sheet form for one bill line: name, quantity and the price for the whole line. */
 export function ItemEditorSheet({ open, item, currency, onClose, onSave, onDelete }: ItemEditorSheetProps) {
+  const t = useT()
   const isNew = item === null
   const [name, setName] = useState(item?.name ?? '')
   const [quantity, setQuantity] = useState(item?.quantity ?? 1)
@@ -81,36 +83,36 @@ export function ItemEditorSheet({ open, item, currency, onClose, onSave, onDelet
   if (amount !== null && quantity > 1) {
     const unit = Math.round(amount / quantity)
     const exact = unit * quantity === amount
-    unitHint = `${exact ? '' : '≈ '}${formatMoney(unit, currency)} each`
+    unitHint = t('bill.item.unit.hint', { exact: exact ? 'yes' : 'no', amount: formatMoney(unit, currency) })
   }
 
   let footerHint: string | undefined
-  if (touched && !valid) footerHint = trimmed === '' ? 'Give the item a name' : 'Add the price for this line'
+  if (touched && !valid) footerHint = t(trimmed === '' ? 'bill.item.name.error' : 'bill.item.price.missing')
 
   return (
     <BottomSheet
       open={open}
       onClose={onClose}
-      title={isNew ? 'Add an item' : 'Edit item'}
-      eyebrow={isNew && added > 0 ? `${added} added` : undefined}
+      title={t(isNew ? 'bill.item.new.title' : 'bill.item.edit.title')}
+      eyebrow={isNew && added > 0 ? t('bill.item.added', { count: added }) : undefined}
       contentKey={added}
       footer={
         isNew ? (
           <ActionBar hint={footerHint}>
             <Button block disabled={!valid} onClick={() => submit(false)}>
-              Save item
+              {t('bill.item.save.cta')}
             </Button>
             <Button block variant="ghost" size="md" iconStart={<Plus />} disabled={!valid} onClick={() => submit(true)}>
-              Save and add another
+              {t('bill.item.saveAnother.cta')}
             </Button>
           </ActionBar>
         ) : (
           <ActionBar hint={footerHint} direction="row">
             <Button variant="danger" iconStart={<Trash2 />} onClick={onDelete}>
-              Delete
+              {t('bill.item.delete.cta')}
             </Button>
             <Button disabled={!valid} onClick={() => submit(false)}>
-              Save
+              {t('bill.item.saveEdit.cta')}
             </Button>
           </ActionBar>
         )
@@ -119,8 +121,8 @@ export function ItemEditorSheet({ open, item, currency, onClose, onSave, onDelet
       <div className={styles.form}>
         <TextField
           ref={nameRef}
-          label="Item"
-          placeholder="e.g. Masala dosa"
+          label={t('bill.item.name.label')}
+          placeholder={t('bill.item.name.placeholder')}
           value={name}
           onChange={(event) => setName(event.target.value)}
           onKeyDown={onNameKeyDown}
@@ -129,16 +131,16 @@ export function ItemEditorSheet({ open, item, currency, onClose, onSave, onDelet
           autoComplete="off"
           autoCapitalize="words"
           enterKeyHint="next"
-          error={showErrors && trimmed === '' ? 'Give the item a name' : undefined}
+          error={showErrors && trimmed === '' ? t('bill.item.name.error') : undefined}
         />
         <div className={styles.row}>
           <div className={styles.qty}>
             <span className={styles.qtyLabel} aria-hidden="true">
-              Qty
+              {t('bill.item.qty.label')}
             </span>
             <div className={styles.qtyControl}>
               <Stepper
-                label="Quantity"
+                label={t('bill.item.qty.aria')}
                 size="md"
                 value={quantity}
                 min={Math.min(1, quantity)}
@@ -151,7 +153,7 @@ export function ItemEditorSheet({ open, item, currency, onClose, onSave, onDelet
           <AmountInput
             ref={amountRef}
             size="field"
-            label="Price for this line"
+            label={t('bill.item.price.label')}
             currency={currency}
             value={amountText}
             onChange={(text) => setAmountText(cleanAmountText(text, currency))}
@@ -159,7 +161,7 @@ export function ItemEditorSheet({ open, item, currency, onClose, onSave, onDelet
             placeholder="0"
             enterKeyHint="done"
             hint={unitHint}
-            error={showErrors && amount === null ? 'Enter the price (0 if it was free)' : undefined}
+            error={showErrors && amount === null ? t('bill.item.price.error') : undefined}
             containerClassName={styles.amount}
           />
         </div>

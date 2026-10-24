@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { ActionBar, BottomSheet, Button } from '../../components'
 import { useExpense } from '../../data'
+import { useT } from '../../i18n'
 import { haptic } from '../../lib/haptics'
 import { setPhoto } from '../../state/photo'
 import { useSession } from '../../state/store'
 import { editingSession, newBillAction, type ReplacingStart } from './boot'
-import { plural } from './screenUtils'
 
 export interface StartIntentProps {
   /** What `openBill` asked for, which would replace the bill in progress. */
@@ -18,13 +18,14 @@ export interface StartIntentProps {
  * person on the scan step, their bill waiting under "Pick up where you left off".
  */
 export function StartIntent({ start }: StartIntentProps) {
+  const t = useT()
   const { session, dispatch } = useSession()
   const [open, setOpen] = useState(true)
   const expense = useExpense(start.kind === 'edit' ? start.expenseId : null)
 
-  const name = session.meta.merchant ?? 'Your last bill'
-  const what = `${name} (${plural(session.items.length, 'item')})`
-  const editTitle = expense?.title ?? 'that bill'
+  const name = session.meta.merchant ?? t('bill.start.lastBill')
+  const what = t('bill.start.what', { name, count: session.items.length })
+  const editTitle = expense?.title ?? t('bill.start.thatBill')
 
   const go = (): void => {
     setOpen(false)
@@ -44,19 +45,21 @@ export function StartIntent({ start }: StartIntentProps) {
     <BottomSheet
       open={open}
       onClose={() => setOpen(false)}
-      title={start.kind === 'edit' ? `Edit ${editTitle} instead?` : 'Start a new bill?'}
+      title={start.kind === 'edit' ? t('bill.start.edit.title', { title: editTitle }) : t('bill.start.new.title')}
       description={
         start.kind === 'edit'
-          ? `${what} isn't saved yet — editing ${editTitle} replaces it.`
-          : `${what} will be replaced.${session.people.length > 0 ? ' The people you added stay.' : ''}`
+          ? t('bill.start.edit.description', { what, title: editTitle })
+          : t('bill.start.new.description', { what, people: session.people.length > 0 ? 'yes' : 'no' })
       }
       footer={
         <ActionBar>
           <Button block onClick={go}>
-            {start.kind === 'edit' ? `Edit ${editTitle}` : start.kind === 'sample' ? 'Try the sample' : 'Start new bill'}
+            {start.kind === 'edit'
+              ? t('bill.start.edit.cta', { title: editTitle })
+              : t(start.kind === 'sample' ? 'bill.start.sample.cta' : 'bill.start.new.cta')}
           </Button>
           <Button block variant="ghost" onClick={() => setOpen(false)}>
-            Keep my bill
+            {t('bill.start.keep.cta')}
           </Button>
         </ActionBar>
       }

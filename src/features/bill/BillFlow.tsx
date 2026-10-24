@@ -11,6 +11,7 @@ import { RotateCcw } from 'lucide-react'
 import { Button, EmptyState, ScreenTransition, useDismissToast, type NavDirection } from '../../components'
 import { useFriendsById, useProfile } from '../../data'
 import { BRAND } from '../../domain/types'
+import { t, type MessageKey } from '../../i18n'
 import { prefetchHealth } from '../../state/health'
 import { SESSION_KEY } from '../../state/persist'
 import { SessionProvider, useFlow, useSession } from '../../state/store'
@@ -36,13 +37,13 @@ const SCREENS: Readonly<Record<StepId, ComponentType>> = {
 }
 
 /** Tab titles per step (also what screen readers announce, and what the long-press Back menu lists). */
-const STEP_TITLES: Readonly<Record<StepId, string>> = {
-  scan: `Scan a bill · ${BRAND.name}`,
-  review: `Check the items · ${BRAND.name}`,
-  paid: `What you paid · ${BRAND.name}`,
-  people: `Who's splitting · ${BRAND.name}`,
-  assign: `Who had what · ${BRAND.name}`,
-  result: `The split · ${BRAND.name}`,
+const STEP_TITLES: Readonly<Record<StepId, MessageKey>> = {
+  scan: 'bill.step.scan.docTitle',
+  review: 'bill.step.review.docTitle',
+  paid: 'bill.step.paid.docTitle',
+  people: 'bill.step.people.docTitle',
+  assign: 'bill.step.assign.docTitle',
+  result: 'bill.step.result.docTitle',
 }
 
 /**
@@ -60,7 +61,7 @@ function CurrentStep() {
   // effects run after their children's) and before any sheet pushes one, so every entry is saved
   // with the right title (shown in the tab and the long-press Back menu).
   useLayoutEffect(() => {
-    document.title = STEP_TITLES[step]
+    document.title = t(STEP_TITLES[step], { brand: BRAND.name })
   }, [step])
 
   // Toasts belong to the step that raised them (an "Undo" shouldn't follow you to the next step).
@@ -183,16 +184,16 @@ class BillErrorBoundary extends Component<BoundaryProps, BoundaryState> {
         <h1 className="visually-hidden">{BRAND.name}</h1>
         <EmptyState
           icon={<RotateCcw />}
-          title="Something went wrong"
-          text="Sorry about that. Try again — or start over with a fresh bill."
+          title={t('bill.crash.title')}
+          text={t('bill.crash.body')}
           headingLevel={2}
         />
         <div className={styles.crashActions}>
           <Button block onClick={this.retry}>
-            Try again
+            {t('bill.crash.retry.cta')}
           </Button>
           <Button block variant="ghost" onClick={this.startOver}>
-            Start a fresh bill
+            {t('bill.crash.startOver.cta')}
           </Button>
         </div>
       </main>

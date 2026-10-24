@@ -9,6 +9,7 @@ import { itemShareAmounts, validShares } from '../../lib/split'
 import { MAX_WEIGHT } from '../../state/reducer'
 import { isAssigned } from '../../state/selectors'
 import { useSession } from '../../state/store'
+import { useT } from '../../i18n'
 import type { Session, Shares } from '../../types'
 import { useOwnerAvatarName } from './ownerAvatar'
 import styles from './AssignSheet.module.css'
@@ -64,6 +65,7 @@ export function AssignSheet({
 }: AssignSheetProps) {
   const { session, dispatch } = useSession()
   const { items, people, currency } = session
+  const t = useT()
   const ownerName = useOwnerAvatarName()
   const [unevenItemId, setUnevenItemId] = useState<string | null>(null)
   const anchorRef = useRef<HTMLDivElement>(null)
@@ -135,18 +137,22 @@ export function AssignSheet({
 
   const nameOf = (id: string | undefined) => people.find((p) => p.id === id)?.name ?? ''
   let summary: string
-  if (selected === 0) summary = 'Tap everyone who had some.'
-  else if (selected === 1) summary = `${nameOf(selectedIds[0])} had all of it.`
-  else if (uneven) summary = `Split by shares · ${totalShares} in all`
+  if (selected === 0) summary = t('bill.assign.summary.none')
+  else if (selected === 1) summary = t('bill.assign.summary.one', { name: nameOf(selectedIds[0]) })
+  else if (uneven) summary = t('bill.assign.summary.shares', { count: totalShares })
   else {
     const amounts = Object.values(preview)
     const each = amounts[0] ?? 0
     const equal = amounts.every((a) => a === each)
-    const who = everyone ? 'Shared by everyone' : `Split ${selected} ways`
-    summary = equal ? `${who} · ${formatMoney(each, currency)} each` : who
+    if (equal) {
+      const amount = formatMoney(each, currency)
+      summary = everyone ? t('bill.assign.summary.everyoneEach', { amount }) : t('bill.assign.summary.waysEach', { count: selected, amount })
+    } else {
+      summary = everyone ? t('bill.assign.summary.everyone') : t('bill.assign.summary.ways', { count: selected })
+    }
   }
 
-  const position = `Item ${at + 1} of ${count}`
+  const position = t('bill.assign.position', { n: at + 1, count })
   // "4 × ₹75.00" only when the line splits exactly; "3 × ₹33.33" for ₹100 would be a lie.
   const unitPrice = wholeQty !== null && item.amount % wholeQty === 0 ? item.amount / wholeQty : null
 
@@ -185,16 +191,16 @@ export function AssignSheet({
       footer={
         <>
           <p className="visually-hidden" aria-live="polite">
-            {open ? `${position}: ${item.name}` : ''}
+            {open ? t('bill.assign.position.live', { n: at + 1, count, name: item.name }) : ''}
           </p>
-          <ActionBar hint={canGo ? undefined : 'Pick who had this'} direction="row">
+          <ActionBar hint={canGo ? undefined : t('bill.assign.pick.hint')} direction="row">
             {!isFirst && (
               <Button variant="secondary" iconStart={<ArrowLeft />} onClick={goBack}>
-                Back
+                {t('bill.assign.back.cta')}
               </Button>
             )}
             <Button disabled={!canGo} iconEnd={finishing ? undefined : <ArrowRight />} onClick={goNext}>
-              {finishing ? 'Done' : 'Next'}
+              {t(finishing ? 'bill.assign.done.cta' : 'bill.assign.next.cta')}
             </Button>
           </ActionBar>
         </>
@@ -209,12 +215,12 @@ export function AssignSheet({
             selected={everyone}
             onClick={() => dispatch({ type: 'setEveryone', itemId: item.id, on: !everyone })}
           >
-            Everyone
+            {t('bill.assign.everyone.chip')}
           </Chip>
         )}
       </div>
 
-      <div role="group" aria-label={`Who had ${item.name}?`} className={styles.grid}>
+      <div role="group" aria-label={t('bill.assign.who.aria', { name: item.name })} className={styles.grid}>
         {people.map((person) => {
           const on = Object.hasOwn(shares, person.id)
           const amount = preview[person.id]
@@ -230,7 +236,7 @@ export function AssignSheet({
               trailing={
                 uneven && on ? (
                   <Stepper
-                    label={`Shares for ${person.id === ME_ID ? 'you' : person.name}`}
+                    label={t('bill.assign.shares.aria', { who: person.id === ME_ID ? 'me' : 'other', name: person.name })}
                     value={shares[person.id] ?? 1}
                     min={1}
                     max={maxShares}
@@ -251,10 +257,10 @@ export function AssignSheet({
             ) : (
               <SlidersHorizontal aria-hidden="true" strokeWidth={2.25} />
             )}
-            {uneven ? 'Split evenly' : 'Split unevenly'}
+            {t(uneven ? 'bill.assign.even.cta' : 'bill.assign.uneven.cta')}
           </button>
           {uneven && wholeQty !== null && wholeQty <= maxShares && (
-            <span className={styles.qtyHint}>{wholeQty} on the bill</span>
+            <span className={styles.qtyHint}>{t('bill.assign.qty.hint', { count: wholeQty })}</span>
           )}
         </div>
       )}

@@ -3,9 +3,9 @@ import { Check, ChevronDown, UsersRound } from 'lucide-react'
 import { BottomSheet } from '../../components'
 import { useGroup, useGroups } from '../../data'
 import type { Group } from '../../domain/types'
+import { useT } from '../../i18n'
 import { cx } from '../../lib/cx'
 import { haptic } from '../../lib/haptics'
-import { plural } from './screenUtils'
 import styles from './GroupPicker.module.css'
 
 export interface GroupPickerProps {
@@ -20,6 +20,7 @@ export interface GroupPickerProps {
  * Renders nothing when you have no groups (and the bill isn't in one).
  */
 export function GroupPicker({ value, onChange, className }: GroupPickerProps) {
+  const t = useT()
   const groups = useGroups({ archived: false })
   const current = useGroup(value)
   const [open, setOpen] = useState(false)
@@ -82,7 +83,7 @@ export function GroupPicker({ value, onChange, className }: GroupPickerProps) {
           setOpen(true)
         }}
       >
-        <span className={styles.lead}>Group</span>{' '}
+        <span className={styles.lead}>{t('bill.group.lead')}</span>{' '}
         {current ? (
           <>
             <span className={styles.emoji} aria-hidden="true">
@@ -91,7 +92,7 @@ export function GroupPicker({ value, onChange, className }: GroupPickerProps) {
             <span className={styles.name}>{current.name}</span>
           </>
         ) : (
-          <span className={styles.name}>None</span>
+          <span className={styles.name}>{t('bill.group.none')}</span>
         )}
         <ChevronDown className={styles.chevron} aria-hidden="true" strokeWidth={2.5} />
       </button>
@@ -99,11 +100,11 @@ export function GroupPicker({ value, onChange, className }: GroupPickerProps) {
       <BottomSheet
         open={open}
         onClose={() => setOpen(false)}
-        title="Add to a group?"
-        description="The group's balances then include this bill."
+        title={t('bill.group.sheet.title')}
+        description={t('bill.group.sheet.description')}
         initialFocus={selectedRef}
       >
-        <div role="radiogroup" aria-label="Group" className={styles.list} onKeyDown={onKeyDown}>
+        <div role="radiogroup" aria-label={t('bill.group.list.aria')} className={styles.list} onKeyDown={onKeyDown}>
           {options.map((group, i) => {
             const checked = i === selectedIndex
             return (
@@ -124,9 +125,9 @@ export function GroupPicker({ value, onChange, className }: GroupPickerProps) {
                   {group ? group.emoji : <UsersRound />}
                 </span>
                 <span className={styles.text}>
-                  <span className={styles.optionName}>{group ? group.name : 'No group'}</span>{' '}
+                  <span className={styles.optionName}>{group ? group.name : t('bill.group.noGroup')}</span>{' '}
                   <span className={styles.optionSub}>
-                    {group ? plural(group.memberIds.length, 'member') : 'Just the people on this bill'}
+                    {group ? t('bill.group.members', { count: group.memberIds.length }) : t('bill.group.noGroup.detail')}
                   </span>
                 </span>
                 <span className={styles.check} aria-hidden="true">

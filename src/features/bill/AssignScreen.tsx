@@ -98,7 +98,7 @@ export function AssignScreen() {
       return
     }
     haptic('warning')
-    toast(left === 1 ? '1 item still needs someone' : `${left} items still need someone`, { tone: 'info' })
+    toast(t('bill.assign.stillNeeds.toast', { count: left }), { tone: 'info' })
     moveTo(first, first < cursor ? 'back' : 'forward')
   }
 
@@ -117,10 +117,10 @@ export function AssignScreen() {
     if (first) document.getElementById(rowId(first.id))?.focus()
     haptic('success')
     const n = targets.length
-    toast(n === 1 ? 'Shared 1 item between everyone' : `Shared ${n} items between everyone`, {
+    toast(t('bill.assign.sharedRest.toast', { count: n }), {
       tone: 'success',
       action: {
-        label: 'Undo',
+        label: t('bill.undo.cta'),
         onAction: () => {
           const restored = restoreAssignments(sessionRef.current, before, expected)
           if (restored) dispatch({ type: 'restore', session: restored, keys: ASSIGNMENT_KEYS })
@@ -148,22 +148,22 @@ export function AssignScreen() {
     total === 0
       ? undefined
       : left === 0
-        ? 'All set — every item has someone.'
-        : `${assigned} of ${total} items assigned`
+        ? t('bill.assign.allSet')
+        : t('bill.assign.progress', { assigned, total })
 
   return (
     <Screen
       header={<TopBar onBack={flow.back} progress={stepProgress('assign') ?? undefined} />}
       footer={
-        <ActionBar hint={canAssign && left > 0 ? `${left} ${left === 1 ? 'item' : 'items'} left` : undefined}>
+        <ActionBar hint={canAssign && left > 0 ? t('bill.assign.left.hint', { count: left }) : undefined}>
           <Button block iconEnd={<ArrowRight />} disabled={!canAssign || left > 0} onClick={() => flow.goTo('result')}>
-            See the split
+            {t('bill.assign.result.cta')}
           </Button>
         </ActionBar>
       }
     >
       <div className={styles.titleBlock}>
-        <PageTitle title="Who had what?" subtitle={subtitle} />
+        <PageTitle title={t('bill.assign.title')} subtitle={subtitle} />
         {total > 0 && (
           <div className={styles.meter} aria-hidden="true">
             <span className={styles.meterFill} style={{ transform: `scaleX(${assigned / total})` }} />
@@ -174,22 +174,22 @@ export function AssignScreen() {
       {total === 0 ? (
         <EmptyState
           icon={<ListChecks />}
-          title="No items to split"
-          text="Add the bill's items first."
+          title={t('bill.assign.noItems.title')}
+          text={t('bill.assign.noItems.body')}
           action={
             <Button size="md" onClick={() => flow.goTo('review')}>
-              Add items
+              {t('bill.assign.noItems.cta')}
             </Button>
           }
         />
       ) : people.length === 0 ? (
         <EmptyState
           icon={<UsersRound />}
-          title="Who's splitting?"
-          text="Add the people at the table first."
+          title={t('bill.people.title')}
+          text={t('bill.assign.noPeople.body')}
           action={
             <Button size="md" onClick={() => flow.goTo('people')}>
-              Add people
+              {t('bill.assign.noPeople.cta')}
             </Button>
           }
         />
@@ -209,26 +209,29 @@ export function AssignScreen() {
 
           {left > 0 && people.length > 1 && (
             <Button variant="secondary" size="md" iconStart={<UsersRound />} className={styles.quick} onClick={shareRest}>
-              {left === total ? 'Everyone shared everything' : 'Everyone shared the rest'}
+              {t(left === total ? 'bill.assign.shareAll.cta' : 'bill.assign.shareRest.cta')}
             </Button>
           )}
 
           <Card padding="none">
-            <List aria-label="Items">
+            <List aria-label={t('bill.assign.list.aria')}>
               {items.map((item, index) => {
                 const shares = validShares(session.assignments[item.id], people)
                 const on = people.filter((p) => Object.hasOwn(shares, p.id))
                 const all = on.length === people.length && people.length > 1
                 const qty = item.quantity !== 1 ? ` × ${formatQuantity(item.quantity)}` : ''
-                const who =
+                const rowVars = { name: item.name, amount: formatMoney(item.amount, currency), qty }
+                const rowLabel =
                   on.length === 0
-                    ? 'not assigned yet'
-                    : `shared by ${all ? 'everyone' : describePeople(on.map((p) => p.name), 3)}`
+                    ? t('bill.assign.row.none.aria', rowVars)
+                    : all
+                      ? t('bill.assign.row.everyone.aria', rowVars)
+                      : t('bill.assign.row.some.aria', { ...rowVars, names: describePeople(on.map((p) => p.name), 3) })
                 return (
                   <ListRow
                     key={item.id}
                     id={rowId(item.id)}
-                    aria-label={`${item.name}, ${formatMoney(item.amount, currency)}${qty}, ${who}`}
+                    aria-label={rowLabel}
                     title={item.name}
                     subtitle={
                       <>
@@ -241,10 +244,10 @@ export function AssignScreen() {
                         <AvatarStack
                           people={withOwnerAvatar(on, ownerName)}
                           size="sm"
-                          label={all ? 'Everyone' : undefined}
+                          label={all ? t('bill.assign.row.everyone') : undefined}
                         />
                       ) : (
-                        <span className={styles.pending}>Tap to assign</span>
+                        <span className={styles.pending}>{t('bill.assign.row.pending')}</span>
                       )
                     }
                     pending={on.length === 0}

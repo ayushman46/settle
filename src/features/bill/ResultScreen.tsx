@@ -14,7 +14,7 @@ import {
   TopBar,
   useToast,
 } from '../../components'
-import { useT } from '../../i18n'
+import { t, tx, useT } from '../../i18n'
 import { ExpenseError, saveExpense, useFriendsById, useProfile, type ExpenseDraft } from '../../data'
 import { ME_ID, type Expense } from '../../domain/types'
 import { today } from '../../engine/dates'
@@ -36,7 +36,7 @@ import { linkToFriends } from './billPeople'
 import { countUp, useEntranceProgress } from './entranceMotion'
 import { GroupPicker } from './GroupPicker'
 import { MerchantSheet } from './MerchantSheet'
-import { plural, TINY_RATE } from './screenUtils'
+import { TINY_RATE } from './screenUtils'
 import styles from './ResultScreen.module.css'
 
 /** The receipt's "what's on top of the items" line, or null when paid equals the items. */
@@ -46,13 +46,13 @@ function adjustmentLine(split: SplitResult, currency: string): string | null {
   const abs = Math.abs(adjustment)
   const amount = formatMoney(abs, currency)
   // Up to one whole rupee/dollar/…: that's the bill being rounded, not tax or a discount.
-  if (abs <= 10 ** currencyDigits(currency)) return `Includes ${amount} round-off`
-  const what = adjustment > 0 ? 'tax & charges' : 'discounts'
-  if (split.itemsTotal <= 0) return `Includes ${what}`
+  if (abs <= 10 ** currencyDigits(currency)) return t('bill.result.adjust.roundOff', { amount })
+  const charges = adjustment > 0
+  if (split.itemsTotal <= 0) return t(charges ? 'bill.result.adjust.charges' : 'bill.result.adjust.discounts')
   const rate = Math.abs(split.adjustmentRate)
   // "+0%" says nothing; the amount does.
-  if (rate < TINY_RATE) return `Includes ${amount} of ${what}`
-  return `Includes ${what} (${adjustment > 0 ? '+' : '−'}${formatPercent(rate)})`
+  if (rate < TINY_RATE) return t(charges ? 'bill.result.adjust.charges.amount' : 'bill.result.adjust.discounts.amount', { amount })
+  return t(charges ? 'bill.result.adjust.charges.percent' : 'bill.result.adjust.discounts.percent', { percent: formatPercent(rate) })
 }
 
 /** The success moment's line: what happens to the money now. */
@@ -62,11 +62,11 @@ function outcomeLine(split: SplitResult, payerId: string, payerName: string, cur
   const getsBack = split.paid - payerShare
   const owing = split.people.filter((p) => p.person.id !== payerId && p.total > 0).length
   if (payerId === ME_ID) {
-    return getsBack > 0 ? `You get back ${money(getsBack)} from ${plural(owing, 'person', 'people')}` : 'Nobody owes anything'
+    return getsBack > 0 ? t('bill.result.outcome.getBack', { amount: money(getsBack), count: owing }) : t('bill.result.outcome.nobody')
   }
   const mine = split.people.find((p) => p.person.id === ME_ID)?.total ?? 0
-  if (mine > 0) return `You owe ${payerName} ${money(mine)}`
-  return `${payerName} gets back ${money(getsBack)}`
+  if (mine > 0) return t('bill.result.outcome.owe', { name: payerName, amount: money(mine) })
+  return t('bill.result.outcome.getsBack', { name: payerName, amount: money(getsBack) })
 }
 
 /**
@@ -74,6 +74,7 @@ function outcomeLine(split: SplitResult, payerId: string, payerName: string, cur
  * for and when, then "Save split" saves it as an expense and opens it (pay links, who's paid).
  */
 export function ResultScreen() {
+  const t = useT()
   const { session, dispatch } = useSession()
   const split = useSplit()
   const flow = useFlow()
@@ -152,14 +153,14 @@ export function ResultScreen() {
   if (people.length === 0) {
     return (
       <Screen header={header}>
-        <PageTitle title="Here's the split" />
+        <PageTitle title={t('bill.result.title')} />
         <EmptyState
           icon={<UsersRound />}
-          title="No one to split with"
-          text="Add the people at the table to see everyone's share."
+          title={t('bill.result.noPeople.title')}
+          text={t('bill.result.noPeople.body')}
           action={
             <Button size="md" onClick={() => flow.goTo('people')}>
-              Add people
+              {t('bill.result.noPeople.cta')}
             </Button>
           }
         />
@@ -171,29 +172,27 @@ export function ResultScreen() {
     <Screen
       header={header}
       footer={
-        <ActionBar hint={adds ? 'Next: share a pay link and see who has paid' : undefined}>
+        <ActionBar hint={adds ? t('bill.result.next.hint') : undefined}>
           <Button block iconStart={<CircleCheck />} disabled={!adds} onClick={save}>
-            {updating ? 'Save changes' : 'Save split'}
+            {t(updating ? 'bill.result.saveChanges.cta' : 'bill.result.save.cta')}
           </Button>
         </ActionBar>
       }
     >
       <PageTitle
-        title="Here's the split"
-        subtitle={updating ? 'Change anything, then save — it updates the saved bill.' : 'Check it, say who paid, and save.'}
+        title={t('bill.result.title')}
+        subtitle={t(updating ? 'bill.result.updating.subtitle' : 'bill.result.subtitle')}
       />
 
       {unassigned > 0 && (
-        <Banner tone="info" action={{ label: 'Assign', onAction: () => flow.goTo('assign') }}>
-          {unassigned === 1
-            ? "1 item wasn't assigned, so it's split between everyone."
-            : `${unassigned} items weren't assigned, so they're split between everyone.`}
+        <Banner tone="info" action={{ label: t('bill.result.unassigned.cta'), onAction: () => flow.goTo('assign') }}>
+          {t('bill.result.unassigned.body', { count: unassigned })}
         </Banner>
       )}
 
       {!adds && (
-        <Banner tone="error" title="Something doesn't add up">
-          The shares don't match what was paid. Go back and check the items.
+        <Banner tone="error" title={t('bill.result.mismatch.title')}>
+          {t('bill.result.mismatch.body')}
         </Banner>
       )}
 
@@ -203,17 +202,17 @@ export function ResultScreen() {
             type="button"
             className={styles.merchantButton}
             aria-haspopup="dialog"
-            aria-label={meta.merchant ? `Rename bill, ${meta.merchant}` : 'Name this bill'}
+            aria-label={meta.merchant ? t('bill.name.rename.aria', { name: meta.merchant }) : t('bill.name.empty')}
             onClick={() => setNameSheet((n) => ({ key: n.key + 1, open: true }))}
           >
-            <span className={styles.merchant}>{meta.merchant ?? 'Name this bill'}</span>
+            <span className={styles.merchant}>{meta.merchant ?? t('bill.name.empty')}</span>
             <Pencil aria-hidden="true" className={styles.merchantIcon} strokeWidth={2.25} />
           </button>
           {shownDate && <p className={styles.date}>{shownDate}</p>}
         </div>
 
         <div className={styles.totalBlock}>
-          <p className={styles.totalLabel}>Total paid</p>
+          <p className={styles.totalLabel}>{t('bill.result.totalPaid')}</p>
           <Money
             value={countUp(split.paid, progress)}
             fitValue={split.paid}
@@ -222,14 +221,14 @@ export function ResultScreen() {
             className={styles.total}
           />
           <p className={styles.meta}>
-            {plural(people.length, 'person', 'people')} · {plural(items.length, 'item')}
+            {t('bill.result.meta', { people: people.length, items: items.length })}
           </p>
           {adjustment && <p className={styles.adjustment}>{adjustment}</p>}
         </div>
 
         <Receipt.Divider />
 
-        <ul role="list" className={styles.people} aria-label="Everyone's share">
+        <ul role="list" className={styles.people} aria-label={t('bill.result.people.aria')}>
           {split.people.map((personSplit, index) => (
             <PersonRow
               key={personSplit.person.id}
@@ -253,14 +252,16 @@ export function ResultScreen() {
             <p className={styles.check}>
               <CircleCheck aria-hidden="true" className={styles.checkIcon} strokeWidth={2.25} />
               <span>
-                Adds up to <Money value={split.paid} currency={currency} size="inherit" strong />
+                {tx('bill.result.addsUpTo', { amount: formatMoney(split.paid, currency) }, {
+                  m: () => <Money value={split.paid} currency={currency} size="inherit" strong />,
+                })}
               </span>
             </p>
           </>
         )}
       </Receipt>
 
-      <section className={styles.choices} aria-label="Details">
+      <section className={styles.choices} aria-label={t('bill.result.details.aria')}>
         <div className={styles.chips}>
           <PayerPicker
             value={payerId}
@@ -274,7 +275,7 @@ export function ResultScreen() {
           value={category}
           suggested={session.category === null ? suggestedCategory(session) : null}
           onChange={(value) => dispatch({ type: 'setCategory', category: value })}
-          label="What was it for?"
+          label={t('bill.result.category.label')}
         />
       </section>
 
@@ -291,7 +292,7 @@ export function ResultScreen() {
 
       {saved && (
         <SuccessBurst
-          title={saved.updated ? 'Changes saved' : 'Split saved'}
+          title={t(saved.updated ? 'bill.result.changesSaved.title' : 'bill.result.saved.title')}
           amount={<Money value={saved.expense.total} currency={saved.expense.currency} size="xl" />}
           subtitle={outcomeLine(split, payerId, payerName, currency)}
           onDone={open}
@@ -328,12 +329,12 @@ function PersonRow({ split, index, currency, progress, payerId, payerObject, pai
 
   const money = (minor: number) => formatMoney(minor, currency)
   const status = isPayer
-    ? `paid ${money(paid)} · gets back ${money(paid - total)}`
+    ? t('bill.result.person.payer', { paid: money(paid), amount: money(paid - total) })
     : total > 0
-      ? `owes ${payerObject} ${money(total)}`
+      ? t('bill.result.person.owes', { name: payerObject, amount: money(total) })
       : feeLines?.none
         ? t('delivery.result.none', { amount: formatMoney(0, currency, { trimZeros: true }) })
-        : 'owes nothing'
+        : t('bill.result.person.nothing')
 
   return (
     <li className={styles.person} style={{ '--i': index } as CSSProperties}>
@@ -342,7 +343,7 @@ function PersonRow({ split, index, currency, progress, payerId, payerObject, pai
         className={styles.personHead}
         aria-expanded={expanded}
         aria-controls={detailsId}
-        aria-label={`${person.name}, ${money(total)}, ${status}`}
+        aria-label={t('bill.result.person.aria', { name: person.name, amount: money(total), status })}
         onClick={onToggle}
       >
         <FriendAvatar friendId={person.id} size="md" className={styles.personAvatar} />
@@ -353,7 +354,7 @@ function PersonRow({ split, index, currency, progress, payerId, payerObject, pai
             {person.name}
             {isPayer && (
               <span className={styles.paidBadge} aria-hidden="true">
-                Paid
+                {t('bill.result.person.paid')}
               </span>
             )}
           </span>
@@ -372,7 +373,7 @@ function PersonRow({ split, index, currency, progress, payerId, payerObject, pai
               <ul role="list" className={styles.lines}>
                 {lines.map((line) => {
                   const label = shareLabel(line)
-                  const note = [label, line.everyone ? 'everyone' : null].filter(Boolean).join(' · ')
+                  const note = [label, line.everyone ? t('bill.result.person.everyone') : null].filter(Boolean).join(' · ')
                   return (
                     <li key={line.itemId} className={styles.line}>
                       <span className={styles.lineName}>
@@ -390,12 +391,12 @@ function PersonRow({ split, index, currency, progress, payerId, payerObject, pai
                 })}
               </ul>
             ) : (
-              <p className={styles.noLines}>Nothing assigned to them.</p>
+              <p className={styles.noLines}>{t('bill.result.person.noLines')}</p>
             )}
             {feeLines ? (
               <div className={styles.subtotals}>
                 <ReceiptRow
-                  label="Items"
+                  label={t('bill.result.person.items')}
                   value={<Money value={itemsSubtotal} currency={currency} size="inherit" />}
                   emphasis="muted"
                 />
@@ -430,26 +431,26 @@ function PersonRow({ split, index, currency, progress, payerId, payerObject, pai
             ) : (
             <div className={styles.subtotals}>
               <ReceiptRow
-                label="Items"
+                label={t('bill.result.person.items')}
                 value={<Money value={itemsSubtotal} currency={currency} size="inherit" />}
                 emphasis="muted"
               />
               {adjustment > 0 && (
                 <ReceiptRow
-                  label="Tax & charges"
+                  label={t('bill.result.person.charges')}
                   value={<Money value={adjustment} currency={currency} size="inherit" sign="always" />}
                   emphasis="muted"
                 />
               )}
               {adjustment < 0 && (
                 <ReceiptRow
-                  label="Discount"
+                  label={t('bill.result.person.discount')}
                   value={<Money value={adjustment} currency={currency} size="inherit" sign="always" tone="positive" />}
                   emphasis="muted"
                 />
               )}
               <ReceiptRow
-                label="Total"
+                label={t('bill.result.person.total')}
                 value={<Money value={total} currency={currency} size="inherit" />}
                 emphasis="strong"
               />

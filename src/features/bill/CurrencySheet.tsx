@@ -1,15 +1,12 @@
 import { useId, useMemo, useState } from 'react'
 import { Check, Search, SearchX } from 'lucide-react'
 import { BottomSheet, EmptyState, TextField } from '../../components'
+import { useT } from '../../i18n'
 import { COMMON_CURRENCIES, currencyName, isKnownCurrency } from '../../lib/currencies'
 import { cx } from '../../lib/cx'
 import { haptic } from '../../lib/haptics'
 import { currencySymbol } from '../../lib/money'
 import styles from './CurrencySheet.module.css'
-
-/** What changing a bill's currency does to its amounts (the default description). */
-const BILL_CURRENCY_NOTE =
-  'Numbers stay the same — only the currency changes. Currencies without decimals round to whole amounts.'
 
 export interface CurrencySheetProps {
   open: boolean
@@ -71,9 +68,10 @@ export function CurrencySheet({
   currency,
   onClose,
   onSelect,
-  title = 'Currency',
-  description = BILL_CURRENCY_NOTE,
+  title,
+  description,
 }: CurrencySheetProps) {
+  const t = useT()
   const [query, setQuery] = useState('')
   const [wasOpen, setWasOpen] = useState(open)
   if (open !== wasOpen) {
@@ -88,15 +86,15 @@ export function CurrencySheet({
       open={open}
       onClose={onClose}
       size="tall"
-      title={title}
-      description={description ?? undefined}
+      title={title ?? t('bill.currency.title')}
+      description={description === undefined ? t('bill.currency.note') : (description ?? undefined)}
     >
       <div className={styles.search}>
         <TextField
           type="search"
-          label="Search currencies"
+          label={t('bill.currency.search.label')}
           hideLabel
-          placeholder="Search name or code"
+          placeholder={t('bill.currency.search.placeholder')}
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           startAdornment={<Search aria-hidden="true" className={styles.searchIcon} />}
@@ -112,11 +110,11 @@ export function CurrencySheet({
           size="sm"
           headingLevel={3}
           icon={<SearchX />}
-          title="No matches"
-          text="Try a name like “Euro” or a code like “EUR”."
+          title={t('bill.currency.empty.title')}
+          text={t('bill.currency.empty.body')}
         />
       ) : (
-        <ul id={listId} role="list" className={styles.list} aria-label="Currencies">
+        <ul id={listId} role="list" className={styles.list} aria-label={t('bill.currency.list.aria')}>
           {options.map((option) => {
             const selected = option.code === currency
             const symbol = currencySymbol(option.code)
