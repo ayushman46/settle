@@ -4,7 +4,7 @@ import type { Messages } from '../types'
 export const pools = {
   // Occasions (editor grid, fallbacks).
   'pools.occasion.birthday': 'बर्थडे गिफ़्ट',
-  'pools.occasion.farewell': 'फ़ेयरवेल',
+  'pools.occasion.farewell': 'विदाई',
   'pools.occasion.diwali': 'दिवाली पार्टी',
   'pools.occasion.shagun': 'शादी का शगुन',
   'pools.occasion.office': 'ऑफ़िस कलेक्शन',
@@ -15,7 +15,7 @@ export const pools = {
   'pools.occasion.other': 'कुछ और',
   // Title templates ({name} = "For whom or what?").
   'pools.template.birthday': '{name} का बर्थडे गिफ़्ट',
-  'pools.template.farewell': '{name} की फ़ेयरवेल',
+  'pools.template.farewell': '{name} की विदाई',
   'pools.template.diwali': 'दिवाली पार्टी',
   'pools.template.shagun': '{name} की शादी का शगुन',
   'pools.template.office': 'टीम कलेक्शन',
