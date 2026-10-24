@@ -1,0 +1,70 @@
+/** Telugu copy for S3 · food-delivery splits. Keys: `delivery.<screen>.<element>` (see i18n-plan §3). */
+import type { Messages } from '../types'
+
+export const delivery = {
+  // The scan step opened from Home's "Food order" tile.
+  'delivery.scan.title': 'ఫుడ్ ఆర్డర్‌ను పంచండి',
+  'delivery.scan.subtitle': 'Swiggy, Zomato, Blinkit, Zepto లేదా Instamart ఆర్డర్ స్క్రీన్‌షాట్ అప్‌లోడ్ చేయండి — ఐటమ్‌లు, ఫీజులు, కూపన్‌ను మేము తీసుకుంటాం.',
+  'delivery.scan.choose.cta': 'స్క్రీన్‌షాట్ ఎంచుకోండి',
+  'delivery.scan.camera.cta': 'ఫోటో తీయండి',
+  // Extra lines in the rotating "reading" status while a delivery order is read.
+  'delivery.scan.status.fees': 'ఫీజులు వెతుకుతోంది…',
+  'delivery.scan.status.coupon': 'కూపన్ చెక్ చేస్తోంది…',
+  // The fees section on the bill review step.
+  'delivery.review.fees.title': 'ఫీజులు & ఛార్జీలు',
+  'delivery.review.fees.add.cta': 'ఫీజు జోడించండి',
+  'delivery.review.fees.hint': 'తర్వాతి అడుగులో ఫీజులను ఎలా పంచాలో మీరు ఎంచుకుంటారు.',
+  // A fee row's accessible name: "Delivery fee, ₹35, edit".
+  'delivery.review.fees.row.aria': '{label}, {amount}, మార్చండి',
+  'delivery.review.fees.removed.toast': '{label} తీసేయబడింది',
+  'delivery.review.fees.full.toast': 'ఒక బిల్లులో గరిష్టంగా {max} ఫీజులు ఉండవచ్చు.',
+  'delivery.review.fees.converted.toast': '{label} ఇప్పుడు ఒక ఐటమ్ — తర్వాతి అడుగుల్లో ఎవరు తీసుకున్నారో చెప్పండి',
+  'delivery.review.fees.undoFailed.toast': 'వెనక్కి తీసుకోలేకపోయాం — బిల్లు మారిపోయింది',
+  // The sheet for one fee.
+  'delivery.fee.title': 'ఫీజు',
+  'delivery.fee.name.label': 'పేరు',
+  'delivery.fee.amount.label': 'మొత్తం',
+  'delivery.fee.amount.error': 'ఫీజు నమోదు చేయండి (0 కంటే ఎక్కువ)',
+  'delivery.fee.kind.label': 'రకం',
+  'delivery.fee.kind.delivery': 'డెలివరీ',
+  'delivery.fee.kind.platform': 'ప్లాట్‌ఫామ్',
+  'delivery.fee.kind.packaging': 'ప్యాకేజింగ్',
+  'delivery.fee.kind.surge': 'సర్జ్ / వర్షం',
+  'delivery.fee.kind.smallOrder': 'చిన్న ఆర్డర్',
+  'delivery.fee.kind.tip': 'టిప్',
+  'delivery.fee.kind.donation': 'విరాళం',
+  'delivery.fee.kind.feeTax': 'ఫీజులపై GST',
+  'delivery.fee.kind.other': 'ఇతర',
+  // The name a fee gets when none is typed (also the field's placeholder).
+  'delivery.fee.default.delivery': 'డెలివరీ ఫీజు',
+  'delivery.fee.default.platform': 'ప్లాట్‌ఫామ్ ఫీజు',
+  'delivery.fee.default.packaging': 'ప్యాకేజింగ్',
+  'delivery.fee.default.surge': 'వర్షం ఫీజు',
+  'delivery.fee.default.smallOrder': 'చిన్న ఆర్డర్ ఫీజు',
+  'delivery.fee.default.tip': 'టిప్',
+  'delivery.fee.default.donation': 'విరాళం',
+  'delivery.fee.default.feeTax': 'ఫీజులపై GST',
+  'delivery.fee.default.other': 'ఫీజు',
+  'delivery.fee.add.cta': 'ఫీజు జోడించండి',
+  'delivery.fee.save.cta': 'సేవ్ చేయండి',
+  'delivery.fee.remove.cta': 'ఫీజు తీసేయండి',
+  'delivery.fee.tip.hint': 'ఒక్కరే టిప్ ఇస్తున్నారా? దాన్ని ఐటమ్‌గా జోడించండి.',
+  'delivery.fee.tip.cta': 'ఐటమ్‌గా మార్చండి',
+  // The fee policy on the "What you paid" step.
+  'delivery.paid.policy.label': 'ఫీజులను ఎలా పంచాలి?',
+  'delivery.paid.policy.equal': 'సమానంగా',
+  'delivery.paid.policy.proportional': 'ఎవరు తీసుకున్నదాని ప్రకారం',
+  'delivery.paid.explain.equal': 'ఆర్డర్ చేసిన అందరికీ సమానంగా {fees} ఫీజులు పంచబడతాయి — పన్ను, {coupon} కూపన్ ఎవరు ఏది తీసుకున్నారో దాని ప్రకారం పంచబడతాయి.',
+  'delivery.paid.explain.equal.coupon': 'ఆర్డర్ చేసిన అందరికీ సమానంగా {fees} ఫీజులు పంచబడతాయి — {coupon} కూపన్ ఎవరు ఏది తీసుకున్నారో దాని ప్రకారం పంచబడుతుంది.',
+  'delivery.paid.explain.equal.tax': 'ఆర్డర్ చేసిన అందరికీ సమానంగా {fees} ఫీజులు పంచబడతాయి — పన్ను ఎవరు ఏది తీసుకున్నారో దాని ప్రకారం పంచబడుతుంది.',
+  'delivery.paid.explain.equal.only': 'ఆర్డర్ చేసిన అందరికీ సమానంగా {fees} ఫీజులు పంచబడతాయి.',
+  'delivery.paid.explain.proportional': 'ఫీజులు, పన్ను, కూపన్ అన్నీ ఎవరు ఏది తీసుకున్నారో దాని ప్రకారం పంచబడతాయి.',
+  'delivery.paid.explain.proportional.coupon': 'ఫీజులు, కూపన్ రెండూ ఎవరు ఏది తీసుకున్నారో దాని ప్రకారం పంచబడతాయి.',
+  'delivery.paid.explain.proportional.tax': 'ఫీజులు, పన్ను రెండూ ఎవరు ఏది తీసుకున్నారో దాని ప్రకారం పంచబడతాయి.',
+  'delivery.paid.explain.proportional.only': 'ఫీజులు ఎవరు ఏది తీసుకున్నారో దాని ప్రకారం పంచబడతాయి.',
+  // Each person's lines on the result step.
+  'delivery.result.fees': 'ఫీజులు',
+  'delivery.result.other': 'పన్ను, ఛార్జీలు & ఆఫర్లు',
+  'delivery.result.total': 'మొత్తం',
+  'delivery.result.none': 'ఆర్డర్ చేయలేదు · {amount}',
+} as const satisfies Messages

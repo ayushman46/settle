@@ -1,0 +1,80 @@
+/** Telugu copy for the expense page (src/features/expense). Keys: `expense.<screen>.<element>` (see i18n-plan §3). */
+import type { Messages } from '../types'
+
+export const expense = {
+  // `/app/expense/:id` when the expense no longer exists.
+  'expense.gone.title': 'ఈ ఖర్చు లేదు',
+  'expense.gone.subtitle': 'ఇది తొలగించబడి ఉండవచ్చు — ఈ ఫోన్‌లో లేదా మరో ట్యాబ్‌లో.',
+  'expense.gone.cta': 'చరిత్ర చూడండి',
+  // The standing pill under the big amount (owner's side).
+  'expense.standing.notIn': 'ఇందులో మీరు లేరు',
+  'expense.standing.lent': 'మీరు {amount} ఇచ్చారు',
+  'expense.standing.borrowed': 'మీరు {amount} తీసుకున్నారు',
+  'expense.standing.owed': 'మీకు {amount} రావాలి',
+  'expense.standing.settled': 'తేలింది',
+  'expense.standing.owe': 'మీరు {name} గారికి {amount} ఇవ్వాలి',
+  'expense.standing.paidBack': 'మీరు {name} గారికి తిరిగి ఇచ్చేశారు',
+  // The hero (receipt header).
+  'expense.hero.group.aria': '{name} గ్రూప్‌లో',
+  'expense.hero.paidBy': '{who, select, me {మీరు చెల్లించారు} other {{name} చెల్లించారు}}',
+  // Toasts when someone is ticked off (or back on).
+  'expense.toast.allBack': 'అందరూ చెల్లించారు — మొత్తం {amount} తిరిగి వచ్చింది',
+  'expense.toast.allSettled': '{name} తో అంతా తేలింది',
+  'expense.toast.markedPaid': '{who, select, me {మీరు చెల్లించినట్లు గుర్తించబడింది} other {{name} చెల్లించినట్లు గుర్తించబడింది}}',
+  'expense.toast.markedUnpaid': '{who, select, me {మీరు ఇంకా చెల్లించలేదని గుర్తించబడింది} other {{name} ఇంకా చెల్లించలేదని గుర్తించబడింది}}',
+  'expense.toast.deleted': '{title} తొలగించబడింది',
+  'expense.toast.undo': 'వెనక్కి తీసుకోండి',
+  // The main button.
+  'expense.primary.group.cta': '{group} లో లెక్క తేల్చండి',
+  'expense.primary.pay.cta': '{name} గారికి {amount} చెల్లించండి',
+  'expense.primary.markPaid.cta': 'నేను {name} గారికి తిరిగి ఇచ్చేశాను',
+  'expense.primary.payLink.cta': 'పే లింక్ షేర్ చేయండి',
+  'expense.primary.share.cta': 'షేర్ చేయండి',
+  'expense.share.aria': 'షేర్ చేయండి',
+  'expense.edit.aria': '{title} మార్చండి',
+  'expense.more.aria': 'ఇతర ఎంపికలు',
+  // Sections.
+  'expense.shares.title': 'అందరి వాటా',
+  'expense.shares.markAll.cta': 'అందరినీ చెల్లించినట్లు గుర్తించండి',
+  'expense.note.title': 'నోట్',
+  // The small print: "Added 18 Oct, 9:41 pm · from a scanned bill · last changed 19 Oct, 8:02 am".
+  'expense.added': 'జోడించబడింది {date}',
+  'expense.added.changed': 'చివరిసారి మార్చబడింది {date}',
+  'expense.added.source.scan': 'స్కాన్ చేసిన బిల్లు నుంచి',
+  'expense.added.source.describe': '“చెప్పేయండి” ద్వారా',
+  'expense.added.source.sample': 'నమూనా బిల్లు నుంచి',
+  'expense.added.source.recurring': 'రిపీట్ స్ప్లిట్ నుంచి',
+  'expense.added.source.sms': 'బ్యాంక్ SMS నుంచి',
+  'expense.added.source.voice': 'వాయిస్ ద్వారా',
+  // The bill as printed.
+  'expense.bill.title': 'బిల్లు',
+  'expense.bill.description': '{count, plural, one {# ఐటమ్ · ఎవరు ఏది తీసుకున్నారు} other {# ఐటమ్‌లు · ఎవరు ఏది తీసుకున్నారు}}',
+  'expense.bill.items.aria': 'ఐటమ్‌లు',
+  'expense.bill.everyone': 'అందరూ కలిసి పంచుకున్నారు',
+  'expense.bill.showAll.cta': 'అన్ని {count} ఐటమ్‌లు చూపించు',
+  'expense.bill.items': 'ఐటమ్‌లు',
+  'expense.bill.totalPaid': 'మొత్తం చెల్లించింది',
+  'expense.bill.fees.equal.aria': 'ఫీజులు, సమానంగా పంచినవి',
+  'expense.bill.fees.proportional.aria': 'ఫీజులు, ఎవరు తీసుకున్నదాని ప్రకారం',
+  // One person's part of the delivery fees: "Fees · Riya".
+  'expense.bill.fees.person': 'ఫీజులు · {name}',
+  'expense.bill.tax': 'పన్ను',
+  'expense.bill.service': 'సర్వీస్ ఛార్జ్',
+  'expense.bill.tip': 'టిప్',
+  'expense.bill.discount': 'డిస్కౌంట్',
+  'expense.bill.roundOff': 'రౌండ్-ఆఫ్',
+  'expense.bill.otherCharges': 'ఇతర ఛార్జీలు',
+  'expense.bill.otherDiscounts': 'ఇతర డిస్కౌంట్లు',
+  // The ⋮ menu.
+  'expense.actions.eyebrow': 'ఖర్చు',
+  'expense.actions.editBill': 'బిల్లు మార్చండి',
+  'expense.actions.editBill.detail': 'ఐటమ్‌లు, ఎవరు ఏది తీసుకున్నారు, ఎవరు చెల్లించారు',
+  'expense.actions.edit': 'మార్చండి',
+  'expense.actions.edit.detail': 'మొత్తం, వ్యక్తులు, పంచే విధానం',
+  'expense.actions.duplicate': 'కాపీ చేయండి',
+  'expense.actions.duplicate.detail': 'ఈ రోజు తేదీతో ఒక కాపీ, మార్చి సేవ్ చేయడానికి',
+  'expense.actions.markAll': 'అందరినీ చెల్లించినట్లు గుర్తించండి',
+  'expense.actions.markAll.detail': 'అన్నీ తిరిగి వచ్చాక',
+  'expense.actions.delete': 'తొలగించండి',
+  'expense.actions.delete.detail': 'వెంటనే వెనక్కి తీసుకోవచ్చు',
+} as const satisfies Messages
