@@ -175,6 +175,17 @@
   --tracking-tight: -0.025em;
   --tracking-display: -0.04em;
 
+  /* ---------- Indian scripts (system fonts only, no downloads) ----------
+     Geist stays first so Latin (names, ₹ and digits) keeps the brand look; Indic glyphs fall back
+     per character to the phone's own Indic font (Noto on Android, Kohinoor/Sangam on iOS, Nirmala UI
+     on Windows). Checked at 320 px per script (scratchpad/v5/i18n-core). */
+  --font-sans-hi: 'Geist Variable', 'Noto Sans Devanagari', 'Kohinoor Devanagari', 'Nirmala UI', 'Mangal', ui-sans-serif, system-ui, sans-serif;
+  --font-sans-bn: 'Geist Variable', 'Noto Sans Bengali', 'Kohinoor Bangla', 'Nirmala UI', 'Vrinda', ui-sans-serif, system-ui, sans-serif;
+  --font-sans-ta: 'Geist Variable', 'Noto Sans Tamil', 'Tamil Sangam MN', 'Nirmala UI', 'Latha', ui-sans-serif, system-ui, sans-serif;
+  --font-sans-te: 'Geist Variable', 'Noto Sans Telugu', 'Kohinoor Telugu', 'Telugu Sangam MN', 'Nirmala UI', 'Gautami', ui-sans-serif, system-ui, sans-serif;
+  --font-sans-kn: 'Geist Variable', 'Noto Sans Kannada', 'Kannada Sangam MN', 'Nirmala UI', 'Tunga', ui-sans-serif, system-ui, sans-serif;
+  --font-sans-gu: 'Geist Variable', 'Noto Sans Gujarati', 'Gujarati Sangam MN', 'Nirmala UI', 'Shruti', ui-sans-serif, system-ui, sans-serif;
+
   /* ---------- Space (4px grid) ---------- */
   --s-1: 4px;
   --s-2: 8px;
@@ -227,6 +238,45 @@
   --fab-size: 56px;
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+
+:root:lang(hi),
+:root:lang(mr) {
+  --font-sans: var(--font-sans-hi);
+}
+:root:lang(bn) {
+  --font-sans: var(--font-sans-bn);
+}
+:root:lang(ta) {
+  --font-sans: var(--font-sans-ta);
+}
+:root:lang(te) {
+  --font-sans: var(--font-sans-te);
+}
+:root:lang(kn) {
+  --font-sans: var(--font-sans-kn);
+}
+:root:lang(gu) {
+  --font-sans: var(--font-sans-gu);
+}
+
+/* Indic scripts need room for matras: line-heights up, same sizes; letter-spacing breaks conjuncts
+   and uppercase means nothing in these scripts. */
+:root:not(:lang(en)) {
+  --tracking-tight: 0;
+  --tracking-display: 0;
+  --text-title: 650 1.75rem/1.35 var(--font-sans);
+  --text-headline: 600 1.25rem/1.4 var(--font-sans);
+  --text-section: 650 1.0625rem/1.45 var(--font-sans);
+  --text-body: 400 1rem/1.6 var(--font-sans);
+  --text-label: 550 0.9375rem/1.45 var(--font-sans);
+  --text-caption: 450 0.8125rem/1.5 var(--font-sans);
+  --text-micro: 550 0.75rem/1.4 var(--font-sans);
+}
+:root:not(:lang(en)) body * {
+  letter-spacing: normal !important;
+  text-transform: none !important;
 }
 
 /* Explicit light (overrides a dark system preference — the dark media block skips it). */

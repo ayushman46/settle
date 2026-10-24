@@ -1,12 +1,12 @@
 import { useState } from 'react'
-import { ChartPie, Coins, FileText, HandCoins, KeyRound, Repeat, ShieldCheck, Users } from 'lucide-react'
+import { ChartPie, Coins, FileText, HandCoins, KeyRound, Languages, Repeat, ShieldCheck, Users } from 'lucide-react'
 import { navigate } from '../../app/router'
 import { Badge, Card, List, ListRow, Screen, SuccessBurst, Switch, useToast } from '../../components'
 import { updateProfile, useDueRecurring, useFriends, usePools, useProfile, useRecurring } from '../../data'
 import { BRAND, type License } from '../../domain/types'
 import { currencyName } from '../../lib/currencies'
 import { currencySymbol } from '../../lib/money'
-import { useT } from '../../i18n'
+import { languageInfo, useLang, useT } from '../../i18n'
 import { useHasFeature } from '../../pro'
 import { POOLS_ENABLED } from '../pools/enabled'
 import { CurrencySheet } from '../bill/CurrencySheet'
@@ -16,6 +16,7 @@ import { passSummary } from '../pro/plans'
 import { RedeemSheet } from '../pro/RedeemSheet'
 import { AppearanceSettings } from './AppearanceSettings'
 import { DataSettings } from './DataSettings'
+import { LanguageSheet } from './LanguageSheet'
 import { ProCard } from './ProCard'
 import { ProfileCard } from './ProfileCard'
 import { SettingIcon } from './SettingIcon'
@@ -31,6 +32,7 @@ import styles from './YouScreen.module.css'
 export function YouScreen() {
   const [redeemOpen, setRedeemOpen] = useState(false)
   const [celebrate, setCelebrate] = useState<License | null>(null)
+  const t = useT()
 
   return (
     <Screen contentClassName={styles.content}>
@@ -50,7 +52,7 @@ export function YouScreen() {
           setCelebrate(license)
         }}
       />
-      {celebrate && <SuccessBurst title="Pro unlocked" subtitle={passSummary(celebrate)} onDone={() => setCelebrate(null)} />}
+      {celebrate && <SuccessBurst title={t('you.celebrate.title')} subtitle={passSummary(celebrate)} onDone={() => setCelebrate(null)} />}
       <PaywallHost />
     </Screen>
   )
@@ -62,17 +64,18 @@ function Shortcuts() {
   const due = useDueRecurring()
   const recurringOn = useHasFeature('recurring')
   const insightsOn = useHasFeature('insights')
+  const t = useT()
 
   return (
     <Card padding="none">
-      <List aria-label="Shortcuts">
+      <List aria-label={t('you.shortcuts.label')}>
         <ListRow
           leading={
             <SettingIcon>
               <Users />
             </SettingIcon>
           }
-          title="People"
+          title={t('you.shortcuts.people.title')}
           subtitle={peopleLine(friends)}
           onClick={() => navigate('/app/friends')}
           chevron
@@ -83,7 +86,7 @@ function Shortcuts() {
               <Repeat />
             </SettingIcon>
           }
-          title="Recurring splits"
+          title={t('you.shortcuts.recurring.title')}
           subtitle={recurringLine(recurring, due.length, recurringOn)}
           trailing={recurringOn ? undefined : <Badge tone="pro">Pro</Badge>}
           onClick={() => navigate('/app/recurring')}
@@ -95,8 +98,8 @@ function Shortcuts() {
               <ChartPie />
             </SettingIcon>
           }
-          title="Insights"
-          subtitle="Where your money goes, by category and month"
+          title={t('you.shortcuts.insights.title')}
+          subtitle={t('you.shortcuts.insights.subtitle')}
           trailing={insightsOn ? undefined : <Badge tone="pro">Pro</Badge>}
           onClick={() => navigate('/app/insights')}
           chevron
@@ -130,23 +133,37 @@ function Preferences() {
   const profile = useProfile()
   const toast = useToast()
   const [currencyOpen, setCurrencyOpen] = useState(false)
+  const [languageOpen, setLanguageOpen] = useState(false)
+  const t = useT()
+  const lang = useLang()
   const code = profile.currency
   const symbol = currencySymbol(code)
 
   return (
     <section className={settings.section} aria-labelledby="you-preferences">
       <h2 id="you-preferences" className={settings.sectionTitle}>
-        Preferences
+        {t('you.pref.title')}
       </h2>
       <Card padding="none">
         <List>
           <ListRow
             leading={
               <SettingIcon>
+                <Languages />
+              </SettingIcon>
+            }
+            title={t('common.language.label')}
+            subtitle={languageInfo(lang).native}
+            onClick={() => setLanguageOpen(true)}
+            chevron
+          />
+          <ListRow
+            leading={
+              <SettingIcon>
                 <Coins />
               </SettingIcon>
             }
-            title="Default currency"
+            title={t('you.pref.currency.title')}
             subtitle={`${currencyName(code)} · ${code}`}
             trailing={
               symbol !== code ? (
@@ -167,22 +184,23 @@ function Preferences() {
             className={settings.switch}
             checked={profile.haptics}
             onChange={(haptics) => updateProfile({ haptics })}
-            label="Haptics"
-            description="A light buzz as you tap and finish things, on phones that support it."
+            label={t('you.pref.haptics.title')}
+            description={t('you.pref.haptics.description')}
           />
         </div>
       </Card>
+      <LanguageSheet open={languageOpen} saved={profile.language ?? null} onClose={() => setLanguageOpen(false)} />
       <CurrencySheet
         open={currencyOpen}
         currency={code}
-        title="Default currency"
-        description="New splits start in this currency. Existing ones keep theirs."
+        title={t('you.pref.currency.title')}
+        description={t('you.pref.currency.description')}
         onClose={() => setCurrencyOpen(false)}
         onSelect={(next) => {
           setCurrencyOpen(false)
           if (next === code) return
           updateProfile({ currency: next })
-          toast(`New splits will be in ${currencyName(next)}`, { tone: 'success' })
+          toast(t('you.pref.currency.toast', { currency: currencyName(next) }), { tone: 'success' })
         }}
       />
     </section>
@@ -190,10 +208,11 @@ function Preferences() {
 }
 
 function About({ onRedeem }: { onRedeem: () => void }) {
+  const t = useT()
   return (
     <section className={settings.section} aria-labelledby="you-about">
       <h2 id="you-about" className={settings.sectionTitle}>
-        About
+        {t('you.about.title')}
       </h2>
       <Card padding="none">
         <List>
@@ -203,8 +222,8 @@ function About({ onRedeem }: { onRedeem: () => void }) {
                 <KeyRound />
               </SettingIcon>
             }
-            title="Redeem a code"
-            subtitle="A promo code, or Pro from your old phone"
+            title={t('you.about.redeem.title')}
+            subtitle={t('you.about.redeem.subtitle')}
             onClick={onRedeem}
             chevron
           />
@@ -214,8 +233,8 @@ function About({ onRedeem }: { onRedeem: () => void }) {
                 <ShieldCheck />
               </SettingIcon>
             }
-            title="Privacy"
-            subtitle="No account, no tracking — your data stays here"
+            title={t('you.about.privacy.title')}
+            subtitle={t('you.about.privacy.subtitle')}
             onClick={() => navigate('/privacy')}
             chevron
           />
@@ -225,8 +244,8 @@ function About({ onRedeem }: { onRedeem: () => void }) {
                 <FileText />
               </SettingIcon>
             }
-            title="Terms"
-            subtitle="The plain-English rules"
+            title={t('you.about.terms.title')}
+            subtitle={t('you.about.terms.subtitle')}
             onClick={() => navigate('/terms')}
             chevron
           />
@@ -237,11 +256,12 @@ function About({ onRedeem }: { onRedeem: () => void }) {
 }
 
 function Footer() {
+  const t = useT()
   return (
     <footer className={styles.footer}>
       <BrandMark size="sm" />
       <p className={styles.tagline}>{BRAND.tagline}</p>
-      <p className={styles.small}>Made with care · no ads · no tracking</p>
+      <p className={styles.small}>{t('you.footer.small')}</p>
     </footer>
   )
 }
