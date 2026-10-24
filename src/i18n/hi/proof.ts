@@ -52,4 +52,6 @@ export const proof = {
   'proof.shared.note': 'दूसरे ऐप से शेयर किया गया',
   'proof.more.title': 'पैसे आए? स्क्रीनशॉट डालें',
   'proof.more.subtitle': 'UPI पेमेंट का स्क्रीनशॉट डालकर उसे पेड मार्क करें',
+  // The link on a friend, a group's settle-up page: a screenshot of a payment to you.
+  'proof.entry.cta': 'पेमेंट का स्क्रीनशॉट है?',
 } as const satisfies Messages

@@ -52,4 +52,6 @@ export const proof = {
   'proof.shared.note': 'Shared from another app',
   'proof.more.title': 'Paid? Drop the screenshot',
   'proof.more.subtitle': 'Mark a UPI payment as paid from its screenshot',
+  // The link on a friend, a group's settle-up page: a screenshot of a payment to you.
+  'proof.entry.cta': 'Got a payment screenshot?',
 } as const satisfies Messages

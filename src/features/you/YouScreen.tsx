@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ChartPie, Coins, FileText, HandCoins, KeyRound, Languages, Repeat, ShieldCheck, Users } from 'lucide-react'
+import { ChartPie, CircleCheck, Coins, FileText, HandCoins, KeyRound, Languages, Repeat, ShieldCheck, Users } from 'lucide-react'
 import { navigate } from '../../app/router'
 import { Badge, Card, List, ListRow, Screen, SuccessBurst, Switch, useToast } from '../../components'
 import { updateProfile, useDueRecurring, useFriends, usePools, useProfile, useRecurring } from '../../data'
@@ -9,6 +9,8 @@ import { currencySymbol } from '../../lib/money'
 import { languageInfo, useLang, useT } from '../../i18n'
 import { useHasFeature } from '../../pro'
 import { POOLS_ENABLED } from '../pools/enabled'
+import { InstallRow } from '../install'
+import { PROOF_ENABLED, PROOF_PATH } from '../proof/enabled'
 import { CurrencySheet } from '../bill/CurrencySheet'
 import { BrandMark } from '../landing/BrandMark'
 import { PaywallHost } from '../pro/PaywallSheet'
@@ -105,7 +107,21 @@ function Shortcuts() {
           chevron
         />
         {POOLS_ENABLED && <CollectionsRow />}
+        {PROOF_ENABLED && (
+          <ListRow
+            leading={
+              <SettingIcon>
+                <CircleCheck />
+              </SettingIcon>
+            }
+            title={t('proof.more.title')}
+            subtitle={t('proof.more.subtitle')}
+            onClick={() => navigate(PROOF_PATH)}
+            chevron
+          />
+        )}
       </List>
+      <InstallRow />
     </Card>
   )
 }

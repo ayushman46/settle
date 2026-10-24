@@ -20,7 +20,19 @@ import {
   withMe,
 } from './schemas'
 import { flushAllStores, localStore, unreadableKey } from './store'
-import { claimsStore, expensesStore, friendsStore, groupsStore, poolsStore, profileStore, recurringStore, STORAGE_KEYS } from './stores'
+import {
+  claimsStore,
+  expensesStore,
+  friendsStore,
+  groupsStore,
+  poolsStore,
+  profileStore,
+  proofRefsSchema,
+  proofRefsStore,
+  recurringStore,
+  STORAGE_KEYS,
+  type ProofRef,
+} from './stores'
 import { LEGACY_KEYS } from './legacy'
 
 export const BACKUP_VERSION = 4
@@ -39,6 +51,8 @@ export interface BackupFile {
   pools: Pool[]
   /** Claim rounds ("Claim your items" links). Absent in version 3 files. */
   claims: ClaimRound[]
+  /** UPI references marked paid from screenshots (the duplicate guard). Absent in older files. */
+  proofRefs: ProofRef[]
 }
 
 const backupSchema = z.object({
@@ -53,6 +67,7 @@ const backupSchema = z.object({
   recurring: z.catch(recurringListSchema, []),
   pools: z.catch(poolsSchema, []),
   claims: z.catch(claimRoundsSchema, []),
+  proofRefs: z.catch(proofRefsSchema, []),
 })
 
 export function exportBackup(): BackupFile {
@@ -67,6 +82,7 @@ export function exportBackup(): BackupFile {
     recurring: recurringStore.get(),
     pools: poolsStore.get(),
     claims: claimsStore.get(),
+    proofRefs: proofRefsStore.get(),
   }
 }
 
@@ -94,6 +110,7 @@ export function parseBackup(json: unknown): BackupFile | null {
     recurring: data.recurring,
     pools: data.pools,
     claims: data.claims,
+    proofRefs: data.proofRefs,
   }
 }
 
@@ -209,6 +226,7 @@ export function importBackup(file: BackupFile, mode: 'merge' | 'replace'): { add
     recurringStore.set([...file.recurring])
     poolsStore.set([...file.pools])
     claimsStore.set([...file.claims])
+    proofRefsStore.set([...file.proofRefs])
     clearSplitPrefill()
     flushAllStores()
     const added =
@@ -302,6 +320,10 @@ export function importBackup(file: BackupFile, mode: 'merge' | 'replace'): { add
   })
   claimsStore.set(claims.list)
 
+  // Payment references: a reference marked on either phone stays marked (the duplicate guard).
+  const knownRefs = new Set(proofRefsStore.get().map((r) => r.utr))
+  proofRefsStore.set([...proofRefsStore.get(), ...file.proofRefs.filter((r) => !knownRefs.has(r.utr))])
+
   flushAllStores()
   return {
     added: added + expenses.added + groups.added + recurring.added + pools.added + claims.added,
@@ -324,6 +346,7 @@ export function clearAllData(): void {
       // Blocked storage — the in-memory reset below still applies.
     }
   }
-  for (const store of [profileStore, friendsStore, expensesStore, groupsStore, recurringStore, poolsStore, claimsStore]) store.reload()
+  for (const store of [profileStore, friendsStore, expensesStore, groupsStore, recurringStore, poolsStore, claimsStore, proofRefsStore])
+    store.reload()
   clearSplitPrefill()
 }

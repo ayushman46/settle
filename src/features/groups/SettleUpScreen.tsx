@@ -1,6 +1,6 @@
 import { useMemo, useState, type ReactNode } from 'react'
-import { Share2 } from 'lucide-react'
-import { goBack, useRoute } from '../../app/router'
+import { CircleCheck, Share2 } from 'lucide-react'
+import { goBack, navigate, useRoute } from '../../app/router'
 import { Button, Card, Money, PageTitle, Screen, SectionHeader, SuccessBurst, SuccessCheck, TopBar, useToast } from '../../components'
 import { DataError, recordSettlement, useExpenses, useFriendsById, useGroup } from '../../data'
 import { BRAND, ME_ID, type Group, type Settlement } from '../../domain/types'
@@ -9,6 +9,7 @@ import { today } from '../../engine/dates'
 import { useT } from '../../i18n'
 import { friendLabel, friendObjectLabel } from '../../kit/index-a'
 import { NudgeSheet, TransferRow, UpiPaySheet, upiPaymentForTransfer } from '../../kit/index-b'
+import { PROOF_ENABLED, PROOF_PATH } from '../proof/enabled'
 import { haptic } from '../../lib/haptics'
 import { GroupGone } from './GroupGone'
 import { GroupShareSheet } from './GroupShareSheet'
@@ -114,6 +115,12 @@ function SettleUp({ group }: { group: Group }) {
         title={tr('groups.settle.title')}
         subtitle={count > 0 ? tr('groups.settle.subtitle', { count }) : undefined}
       />
+
+      {PROOF_ENABLED && (
+        <Button variant="ghost" block iconStart={<CircleCheck />} onClick={() => navigate(PROOF_PATH)}>
+          {tr('proof.entry.cta')}
+        </Button>
+      )}
 
       {count === 0 ? (
         <div className={styles.square}>

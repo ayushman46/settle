@@ -25,6 +25,8 @@ export const STORAGE_KEYS = {
   recurring: 'settle.v3.recurring',
   claims: 'settle.v4.claims',
   pools: 'settle.v4.pools',
+  /** Payment references marked paid from UPI screenshots (src/features/proof). Keeps the name it was written under. */
+  proofRefs: 'settle-proof-refs',
 } as const
 
 /** Accepts a bare, un-enveloped value (e.g. hand-edited storage) when the schema can read it. */
@@ -91,4 +93,30 @@ export const poolsStore = createStore<Pool[]>({
   initial: () => [],
   version: STORAGE_VERSION,
   migrate: bare(poolsSchema),
+})
+
+/** One UPI payment reference this phone has marked paid from a screenshot (the duplicate guard). */
+export interface ProofRef {
+  utr: string
+  friendId: string
+  amount: number
+  at: number
+}
+
+export const proofRefsSchema = z.array(
+  z.object({
+    utr: z.string().check(z.regex(/^\d{10,22}$/)),
+    friendId: z.string().check(z.minLength(1)),
+    amount: z.int().check(z.positive()),
+    at: z.number(),
+  }),
+)
+
+/** The payment references already marked from screenshots. Kept on this phone; backed up with the rest. */
+export const proofRefsStore = createStore<ProofRef[]>({
+  key: STORAGE_KEYS.proofRefs,
+  schema: proofRefsSchema,
+  initial: () => [],
+  version: STORAGE_VERSION,
+  migrate: bare(proofRefsSchema),
 })

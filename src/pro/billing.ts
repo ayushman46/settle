@@ -9,6 +9,7 @@
 import type { OrderResponse } from '../../shared/api'
 import { BRAND, type License, type PlanId } from '../domain/types'
 import { callApi, isOffline, isRecord } from '../api/http'
+import { t, type MessageKey } from '../i18n'
 import { hasFreshBillingConfig, loadBillingConfig, planById } from './config'
 import { claimPayment } from './store'
 import { isPlanId } from './token'
@@ -56,9 +57,25 @@ export const CHECKOUT_MESSAGES = {
   pending: "Payment received! We're still switching on Pro — it'll finish by itself once you're back online.",
 } as const
 
+const CHECKOUT_KEYS = {
+  offline: 'pro.checkout.error.offline',
+  network: 'pro.checkout.error.network',
+  busy: 'pro.checkout.error.busy',
+  planMissing: 'pro.checkout.error.planMissing',
+  orderFailed: 'pro.checkout.error.orderFailed',
+  script: 'pro.checkout.error.script',
+  paymentFailed: 'pro.checkout.error.paymentFailed',
+  pending: 'pro.checkout.pending',
+} as const satisfies Record<keyof typeof CHECKOUT_MESSAGES, MessageKey>
+
+/** A checkout message in the UI language (`CHECKOUT_MESSAGES` is the English copy). */
+export function checkoutMessage(which: keyof typeof CHECKOUT_MESSAGES): string {
+  return t(CHECKOUT_KEYS[which])
+}
+
 /** When the server couldn't confirm a payment Razorpay says went through. */
 export function unconfirmedPaymentMessage(paymentId: string): string {
-  return `We couldn't confirm this payment. If you were charged, write to us with payment ID ${paymentId} and we'll sort it out.`
+  return t('pro.checkout.unconfirmed', { paymentId })
 }
 
 /* ------------------------------------------------------------------ Razorpay Checkout (typed surface we use) */
@@ -154,17 +171,17 @@ async function createOrder(plan: PlanId): Promise<OrderOutcome> {
   const result = await callApi('/api/billing/order', { body: { plan }, timeoutMs: ORDER_TIMEOUT_MS })
   if (result.ok) {
     const order = parseOrder(result.body)
-    return order ? { ok: true, order } : { ok: false, result: failed(CHECKOUT_MESSAGES.orderFailed) }
+    return order ? { ok: true, order } : { ok: false, result: failed(checkoutMessage('orderFailed')) }
   }
   if (result.kind === 'http') {
     if (result.code === 'billing_unavailable' || result.status === 503) return { ok: false, result: { status: 'unavailable' } }
-    if (result.status === 429) return { ok: false, result: failed(CHECKOUT_MESSAGES.busy) }
-    return { ok: false, result: failed(CHECKOUT_MESSAGES.orderFailed) }
+    if (result.status === 429) return { ok: false, result: failed(checkoutMessage('busy')) }
+    return { ok: false, result: failed(checkoutMessage('orderFailed')) }
   }
   if (result.kind === 'network' || result.kind === 'timeout') {
-    return { ok: false, result: failed(isOffline() ? CHECKOUT_MESSAGES.offline : CHECKOUT_MESSAGES.network) }
+    return { ok: false, result: failed(isOffline() ? checkoutMessage('offline') : checkoutMessage('network')) }
   }
-  return { ok: false, result: failed(CHECKOUT_MESSAGES.orderFailed) }
+  return { ok: false, result: failed(checkoutMessage('orderFailed')) }
 }
 
 type PaymentOutcome =
@@ -208,7 +225,7 @@ function pay(Razorpay: RazorpayConstructor, order: OrderResponse, planName: stri
       })
       checkout.on('payment.failed', (response) => {
         const description = response.error?.description?.trim()
-        lastError = description && description.length <= 200 ? description : CHECKOUT_MESSAGES.paymentFailed
+        lastError = description && description.length <= 200 ? description : checkoutMessage('paymentFailed')
       })
       checkout.open()
     } catch {
@@ -218,24 +235,24 @@ function pay(Razorpay: RazorpayConstructor, order: OrderResponse, planName: stri
 }
 
 async function runCheckout(planId: PlanId, opts: CheckoutOptions): Promise<CheckoutResult> {
-  if (isOffline()) return failed(CHECKOUT_MESSAGES.offline)
+  if (isOffline()) return failed(checkoutMessage('offline'))
   const config = await loadBillingConfig({ fresh: true })
   if (config.checkout !== 'razorpay') {
     // Only the server's own answer means "not set up"; a remembered or built-in config can't tell.
-    return hasFreshBillingConfig() ? { status: 'unavailable' } : failed(CHECKOUT_MESSAGES.network)
+    return hasFreshBillingConfig() ? { status: 'unavailable' } : failed(checkoutMessage('network'))
   }
   const plan = planById(config, planId)
-  if (!plan) return failed(CHECKOUT_MESSAGES.planMissing)
+  if (!plan) return failed(checkoutMessage('planMissing'))
 
   const ordered = await createOrder(planId)
   if (!ordered.ok) return ordered.result
   const { order } = ordered
 
   const Razorpay = await loadRazorpay()
-  if (!Razorpay) return failed(CHECKOUT_MESSAGES.script)
+  if (!Razorpay) return failed(checkoutMessage('script'))
 
   const outcome = await pay(Razorpay, order, plan.name, opts)
-  if (outcome.kind === 'broken') return failed(CHECKOUT_MESSAGES.orderFailed)
+  if (outcome.kind === 'broken') return failed(checkoutMessage('orderFailed'))
   if (outcome.kind === 'dismissed') return outcome.error ? failed(outcome.error) : { status: 'cancelled' }
 
   const paymentId = outcome.response.razorpay_payment_id
@@ -247,7 +264,7 @@ async function runCheckout(planId: PlanId, opts: CheckoutOptions): Promise<Check
     at: Date.now(),
   })
   if (claim.ok) return { status: 'success', license: claim.license }
-  return failed(claim.pending ? CHECKOUT_MESSAGES.pending : unconfirmedPaymentMessage(paymentId))
+  return failed(claim.pending ? checkoutMessage('pending') : unconfirmedPaymentMessage(paymentId))
 }
 
 let inflight: Promise<CheckoutResult> | null = null
@@ -258,7 +275,7 @@ let inflight: Promise<CheckoutResult> | null = null
  */
 export function startCheckout(plan: PlanId, opts: CheckoutOptions = {}): Promise<CheckoutResult> {
   if (inflight) return inflight
-  const run = runCheckout(plan, opts).catch((): CheckoutResult => failed(CHECKOUT_MESSAGES.orderFailed))
+  const run = runCheckout(plan, opts).catch((): CheckoutResult => failed(checkoutMessage('orderFailed')))
   inflight = run.finally(() => {
     inflight = null
   })

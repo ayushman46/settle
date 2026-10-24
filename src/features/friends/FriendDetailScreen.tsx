@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { ArrowLeftRight, BellRing, Copy, Pencil, Phone, QrCode, Receipt, Split, UserMinus } from 'lucide-react'
+import { ArrowLeftRight, BellRing, CircleCheck, Copy, Pencil, Phone, QrCode, Receipt, Split, UserMinus } from 'lucide-react'
 import { goBack, navigate, Redirect, useRoute } from '../../app/router'
 import {
   ActionBar,
@@ -32,6 +32,7 @@ import { firstName } from '../../share/text'
 import { GroupEmoji } from '../groups/GroupEmoji'
 import { expensePath, FRIENDS_PATH, groupPath, newSplitPath, settleUpPath, YOU_PATH } from '../groups/paths'
 import { LEND_ENABLED } from '../lend/enabled'
+import { PROOF_ENABLED, PROOF_PATH } from '../proof/enabled'
 import {
   blockedText,
   friendBalance,
@@ -218,6 +219,12 @@ function FriendDetail({ friend, onLeaving }: { friend: Friend; onLeaving: (frien
         onPay={iOweRupees ? () => setSheet('pay') : undefined}
         rest={rest}
       />
+
+      {PROOF_ENABLED && (
+        <Button variant="ghost" block iconStart={<CircleCheck />} onClick={() => navigate(PROOF_PATH)}>
+          {t('proof.entry.cta')}
+        </Button>
+      )}
 
       {balance.sources.length > 0 && (
         <section className={styles.section} aria-labelledby="friend-sources">

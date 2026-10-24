@@ -8,7 +8,7 @@ import {
   type ChangeEvent,
 } from 'react'
 import { ArrowRight, Camera, Crown, ImageUp, Keyboard, ReceiptText, Sparkles, WifiOff, X } from 'lucide-react'
-import { OFFLINE_MESSAGE, SCANS_BUSY_MESSAGE, ScanError, scanBill } from '../../api/client'
+import { isScansBusyMessage, offlineMessage, ScanError, scanBill } from '../../api/client'
 import { scanToBill } from '../../api/mapScan'
 import { SAMPLE_SCAN } from '../../api/sample'
 import {
@@ -101,7 +101,7 @@ function describeProblem(error: unknown): Problem | null {
       case 'network':
         return isOnline()
           ? { title: t('bill.scan.problem.connection'), message, recovery: 'retry' }
-          : { title: t('bill.scan.problem.offline'), message: OFFLINE_MESSAGE, recovery: 'manual' }
+          : { title: t('bill.scan.problem.offline'), message: offlineMessage(), recovery: 'manual' }
       case 'not_configured':
       case 'upstream_auth':
         // The same words as the home screen's "scanning is off" note, which this visit now shows.
@@ -118,7 +118,7 @@ function describeProblem(error: unknown): Problem | null {
         return { title: t('bill.scan.problem.timeout'), message, recovery: 'retry' }
       case 'rate_limited':
         // A short "busy" wait isn't the diner's doing; only our per-device limit is "too many scans".
-        return { title: t(message === SCANS_BUSY_MESSAGE ? 'bill.scan.problem.busy' : 'bill.scan.problem.tooMany'), message, recovery: 'retry' }
+        return { title: t(isScansBusyMessage(message) ? 'bill.scan.problem.busy' : 'bill.scan.problem.tooMany'), message, recovery: 'retry' }
       case 'upstream_error':
         return { title: t('bill.scan.problem.generic'), message, recovery: 'retry' }
     }
@@ -238,7 +238,7 @@ export function ScanScreen() {
 
       let image: PreparedImage | null = null
       try {
-        if (!isOnline()) throw new ScanError('network', OFFLINE_MESSAGE)
+        if (!isOnline()) throw new ScanError('network', offlineMessage())
         image = await getImage()
         if (signal.aborted) throw new ScanError('aborted')
         // A new photo replaces the one kept for "Try again".
