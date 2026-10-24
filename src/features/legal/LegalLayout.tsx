@@ -3,6 +3,7 @@ import { ChevronLeft } from 'lucide-react'
 import { goBack, Link } from '../../app/router'
 import { IconButton } from '../../components'
 import { BRAND } from '../../domain/types'
+import { tx, useLang, useT } from '../../i18n'
 import { formatBillDate } from '../../lib/format'
 import { BrandMark } from '../landing/BrandMark'
 import { usePageMeta } from '../landing/pageMeta'
@@ -26,15 +27,17 @@ export interface LegalLayoutProps {
  */
 export function LegalLayout({ title, description, summary, children }: LegalLayoutProps) {
   const summaryId = useId()
+  const t = useT()
+  const lang = useLang()
   usePageMeta({ title: `${title} · ${BRAND.name}`, description })
   return (
     <div className={styles.page}>
       <header className={styles.bar}>
         <div className={styles.barInner}>
-          <IconButton label="Back" onClick={() => goBack('/')}>
+          <IconButton label={t('legal.back.label')} onClick={() => goBack('/')}>
             <ChevronLeft strokeWidth={2.25} />
           </IconButton>
-          <Link to="/" className={styles.brand} aria-label={`${BRAND.name} home`}>
+          <Link to="/" className={styles.brand} aria-label={t('legal.home.label', { brand: BRAND.name })}>
             <BrandMark size="sm" />
           </Link>
         </div>
@@ -44,11 +47,12 @@ export function LegalLayout({ title, description, summary, children }: LegalLayo
         <article className={styles.article}>
           <h1 className={styles.title}>{title}</h1>
           <p className={styles.updated}>
-            Last updated <time dateTime={POLICIES_UPDATED}>{formatBillDate(POLICIES_UPDATED)}</time>
+            {tx('legal.updated', { date: formatBillDate(POLICIES_UPDATED) ?? POLICIES_UPDATED }, { time: (chunk) => <time dateTime={POLICIES_UPDATED}>{chunk}</time> })}
           </p>
+          {lang !== 'en' && <p className={styles.updated}>{t('legal.englishBody')}</p>}
           <section className={styles.summary} aria-labelledby={summaryId}>
             <h2 id={summaryId} className={styles.summaryTitle}>
-              The short version
+              {t('legal.summary.title')}
             </h2>
             <ul className={styles.summaryList}>
               {summary.map((line) => (

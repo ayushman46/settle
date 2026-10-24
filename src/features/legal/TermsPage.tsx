@@ -1,25 +1,22 @@
 import { BRAND, FREE_AI_PER_DAY } from '../../domain/types'
+import { useT } from '../../i18n'
 import { SUPPORT_EMAIL } from './contact'
 import { LegalLayout, LegalSection } from './LegalLayout'
 
 const NAME = BRAND.name
 
-const SUMMARY = [
-  `${NAME} works out and tracks who owes what. It never holds or moves money — payments happen in your UPI app.`,
-  'Check amounts, names and AI results before you pay or ask anyone to pay.',
-  'Pro passes are one-time payments. They never renew by themselves.',
-  'Your data lives on your device, so keeping a backup is up to you.',
-]
-
 /** `/terms` — the rules of the road, short and plain. */
 export function TermsPage() {
+  const t = useT()
+  const summary = [
+    t('legal.terms.summary.0', { brand: NAME }),
+    t('legal.terms.summary.1'),
+    t('legal.terms.summary.2'),
+    t('legal.terms.summary.3'),
+  ]
   return (
-    <LegalLayout
-      title="Terms of use"
-      description={`The terms for using ${NAME}: a free tool for splitting costs, with optional one-time Pro passes.`}
-      summary={SUMMARY}
-    >
-      <LegalSection title={`Using ${NAME}`}>
+    <LegalLayout title={t('legal.terms.title')} description={t('legal.terms.description', { brand: NAME })} summary={summary}>
+      <LegalSection title={t('legal.terms.section.using', { brand: NAME })}>
         <p>
           By using {NAME} you agree to these terms. Use it to split and track shared costs with people you know, and
           only in lawful ways. Please don’t try to break, overload or misuse the service — for example by automating
@@ -27,7 +24,7 @@ export function TermsPage() {
         </p>
       </LegalSection>
 
-      <LegalSection title="Money and UPI">
+      <LegalSection title={t('legal.terms.section.money')}>
         <p>
           {NAME} doesn’t process, hold or transfer money. When someone pays through a pay link or a QR code, their UPI
           app moves the money between banks; {NAME} only fills in the payee and the amount.
@@ -39,7 +36,7 @@ export function TermsPage() {
         </p>
       </LegalSection>
 
-      <LegalSection title="AI features">
+      <LegalSection title={t('legal.terms.section.ai')}>
         <p>
           Reading bills and “Just say it” use AI, which can make mistakes. {NAME} always shows you the result before
           anything is saved — please check it. Free use includes {FREE_AI_PER_DAY} AI reads a day; Pro removes that
@@ -48,7 +45,7 @@ export function TermsPage() {
         </p>
       </LegalSection>
 
-      <LegalSection title={`${NAME} Pro`}>
+      <LegalSection title={t('legal.terms.section.pro', { brand: NAME })}>
         <ul>
           <li>
             Pro is sold as one-time passes — for a month, a year or for life — at the price shown before you pay. A pass
@@ -67,7 +64,7 @@ export function TermsPage() {
         </ul>
       </LegalSection>
 
-      <LegalSection title="Your data">
+      <LegalSection title={t('legal.terms.section.data')}>
         <p>
           Your splits are stored on your device, not with us, so we can’t recover them if they’re deleted or the
           device is lost. Keeping a backup file is your choice and your responsibility. See the privacy policy for
@@ -75,7 +72,7 @@ export function TermsPage() {
         </p>
       </LegalSection>
 
-      <LegalSection title="The service">
+      <LegalSection title={t('legal.terms.section.service')}>
         <p>
           We work to keep {NAME} running smoothly, but it’s provided as it is, and features may change or be paused.
           To the extent the law allows, we aren’t liable for indirect or unforeseeable losses, and our total liability
@@ -83,7 +80,7 @@ export function TermsPage() {
         </p>
       </LegalSection>
 
-      <LegalSection title="Changes and contact">
+      <LegalSection title={t('legal.terms.section.changes')}>
         <p>
           If these terms change, the date at the top changes with them, and using {NAME} after that means you accept
           the new version.

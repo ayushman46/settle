@@ -1,4 +1,37 @@
-/** Hindi copy for privacy and terms (src/features/legal). Keys: `legal.<screen>.<element>` (see i18n-plan §3). */
+/** Hindi copy for privacy and terms (src/features/legal). The long policy text stays in English for now (see `legal.englishBody`). */
 import type { Messages } from '../types'
 
-export const legal = {} as const satisfies Messages
+export const legal = {
+  'legal.back.label': 'वापस',
+  'legal.home.label': '{brand} होम',
+  'legal.updated': 'आखिरी बार अपडेट: <time>{date}</time>',
+  'legal.summary.title': 'एक नज़र में',
+  'legal.englishBody': 'इस नीति का पूरा पाठ अभी अंग्रेज़ी में है।',
+  'legal.privacy.title': 'प्राइवेसी नीति',
+  'legal.privacy.description': '{brand} आपका डेटा कैसे संभालता है: सब कुछ आपके फ़ोन में रहता है, AI की रीडिंग सेव नहीं होती, और कोई ट्रैकिंग नहीं है।',
+  'legal.privacy.summary.0': '{brand} में कोई अकाउंट या डेटाबेस नहीं है। आपके स्प्लिट, दोस्त और ग्रुप इसी फ़ोन में रहते हैं।',
+  'legal.privacy.summary.1': 'बिल की फ़ोटो और “Just say it” वाला टेक्स्ट NVIDIA के एक AI मॉडल को सिर्फ़ पढ़ने के लिए भेजे जाते हैं, और सेव नहीं होते।',
+  'legal.privacy.summary.2': 'पे लिंक में स्प्लिट लिंक के अंदर ही होता है — वह हिस्सा हमारे सर्वर तक नहीं पहुँचता।',
+  'legal.privacy.summary.3': 'Pro का पेमेंट Razorpay से होता है। आपका कार्ड या UPI PIN हम कभी नहीं देखते।',
+  'legal.privacy.summary.4': 'कोई विज्ञापन नहीं, कोई एनालिटिक्स नहीं, कोई ट्रैकिंग कुकी नहीं।',
+  'legal.privacy.section.device': 'आपके फ़ोन में क्या रहता है',
+  'legal.privacy.section.leaves': 'फ़ोन से बाहर क्या जाता है, और क्यों',
+  'legal.privacy.section.server': 'हमारा सर्वर क्या रखता है',
+  'legal.privacy.section.cookies': 'कुकी और ट्रैकिंग',
+  'legal.privacy.section.choices': 'आपके विकल्प',
+  'legal.privacy.section.children': 'बच्चे',
+  'legal.privacy.section.changes': 'बदलाव और संपर्क',
+  'legal.terms.title': 'उपयोग की शर्तें',
+  'legal.terms.description': '{brand} इस्तेमाल करने की शर्तें: खर्च बाँटने का मुफ़्त टूल, साथ में चाहें तो एक बार वाले Pro पास।',
+  'legal.terms.summary.0': '{brand} यह हिसाब रखता है कि किसे कितना देना है। यह कभी पैसे नहीं रखता या भेजता — पेमेंट आपके UPI ऐप में होता है।',
+  'legal.terms.summary.1': 'पे करने या किसी से पेमेंट माँगने से पहले रकम, नाम और AI के नतीजे ज़रूर जाँच लें।',
+  'legal.terms.summary.2': 'Pro पास एक बार का पेमेंट है। वह अपने-आप रिन्यू नहीं होता।',
+  'legal.terms.summary.3': 'आपका डेटा आपके फ़ोन में रहता है, इसलिए बैकअप रखना आपकी ज़िम्मेदारी है।',
+  'legal.terms.section.using': '{brand} का इस्तेमाल',
+  'legal.terms.section.money': 'पैसे और UPI',
+  'legal.terms.section.ai': 'AI फ़ीचर',
+  'legal.terms.section.pro': '{brand} Pro',
+  'legal.terms.section.data': 'आपका डेटा',
+  'legal.terms.section.service': 'सेवा',
+  'legal.terms.section.changes': 'बदलाव और संपर्क',
+} as const satisfies Messages

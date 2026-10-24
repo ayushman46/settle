@@ -1,4 +1,38 @@
 /** English copy for privacy and terms (src/features/legal). Keys: `legal.<screen>.<element>` (see i18n-plan §3). */
 import type { Messages } from '../types'
 
-export const legal = {} as const satisfies Messages
+export const legal = {
+  'legal.back.label': 'Back',
+  'legal.home.label': '{brand} home',
+  // The date is formatted by code; <time> wraps it for screen readers.
+  'legal.updated': 'Last updated <time>{date}</time>',
+  'legal.summary.title': 'The short version',
+  'legal.englishBody': 'The full text of this policy is in English.',
+  'legal.privacy.title': 'Privacy policy',
+  'legal.privacy.description': "How {brand} handles your data: everything stays on your device, AI reads are not kept, and there's no tracking.",
+  'legal.privacy.summary.0': '{brand} has no accounts and no database. Your splits, friends and groups stay on your device.',
+  'legal.privacy.summary.1': 'Bill photos and “Just say it” text are sent to an AI model hosted by NVIDIA only to be read, and are not kept.',
+  'legal.privacy.summary.2': 'A pay link carries its split inside the link itself — that part never reaches our server.',
+  'legal.privacy.summary.3': 'Pro payments are handled by Razorpay. We never see your card details or UPI PIN.',
+  'legal.privacy.summary.4': 'No ads, no analytics, no tracking cookies.',
+  'legal.privacy.section.device': 'What stays on your device',
+  'legal.privacy.section.leaves': 'What leaves your device, and why',
+  'legal.privacy.section.server': 'What our server keeps',
+  'legal.privacy.section.cookies': 'Cookies and tracking',
+  'legal.privacy.section.choices': 'Your choices',
+  'legal.privacy.section.children': 'Children',
+  'legal.privacy.section.changes': 'Changes and contact',
+  'legal.terms.title': 'Terms of use',
+  'legal.terms.description': 'The terms for using {brand}: a free tool for splitting costs, with optional one-time Pro passes.',
+  'legal.terms.summary.0': '{brand} works out and tracks who owes what. It never holds or moves money — payments happen in your UPI app.',
+  'legal.terms.summary.1': 'Check amounts, names and AI results before you pay or ask anyone to pay.',
+  'legal.terms.summary.2': 'Pro passes are one-time payments. They never renew by themselves.',
+  'legal.terms.summary.3': 'Your data lives on your device, so keeping a backup is up to you.',
+  'legal.terms.section.using': 'Using {brand}',
+  'legal.terms.section.money': 'Money and UPI',
+  'legal.terms.section.ai': 'AI features',
+  'legal.terms.section.pro': '{brand} Pro',
+  'legal.terms.section.data': 'Your data',
+  'legal.terms.section.service': 'The service',
+  'legal.terms.section.changes': 'Changes and contact',
+} as const satisfies Messages

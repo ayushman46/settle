@@ -7,6 +7,7 @@ import { fireEvent, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { profileStore, updateProfile } from '../data'
 import { OnboardingScreen } from '../features/onboarding/OnboardingScreen'
+import { PrivacyPage } from '../features/legal/PrivacyPage'
 import { chooseAppLanguage } from '../features/you/appLanguage'
 import { YouScreen } from '../features/you/YouScreen'
 import { renderAt, resetProScreens } from '../features/pro/testing'
@@ -89,5 +90,15 @@ describe('Hindi: public language switcher', () => {
     await waitFor(() => expect(getLanguage()).toBe('hi'))
     expect(window.localStorage.getItem(PUBLIC_LANG_KEY)).toBe('hi')
     expect(profileStore.get().language).toBeNull()
+  })
+})
+
+describe('Hindi: privacy policy', () => {
+  it('has a Hindi heading and summary, with the full text noted as English', async () => {
+    renderAt('/privacy', <PrivacyPage />)
+    expect(await screen.findByRole('heading', { level: 1, name: 'प्राइवेसी नीति' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 2, name: 'एक नज़र में' })).toBeInTheDocument()
+    expect(screen.getByText('इस नीति का पूरा पाठ अभी अंग्रेज़ी में है।')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 2, name: 'आपके फ़ोन में क्या रहता है' })).toBeInTheDocument()
   })
 })

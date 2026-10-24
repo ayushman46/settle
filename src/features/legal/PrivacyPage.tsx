@@ -1,26 +1,23 @@
 import { BRAND } from '../../domain/types'
+import { useT } from '../../i18n'
 import { SUPPORT_EMAIL } from './contact'
 import { LegalLayout, LegalSection } from './LegalLayout'
 
 const NAME = BRAND.name
 
-const SUMMARY = [
-  `${NAME} has no accounts and no database. Your splits, friends and groups stay on your device.`,
-  'Bill photos and “Just say it” text are sent to an AI model hosted by NVIDIA only to be read, and are not kept.',
-  'A pay link carries its split inside the link itself — that part never reaches our server.',
-  'Pro payments are handled by Razorpay. We never see your card details or UPI PIN.',
-  'No ads, no analytics, no tracking cookies.',
-]
-
 /** `/privacy` — what stays on the phone, what leaves it and why, in plain words. */
 export function PrivacyPage() {
+  const t = useT()
+  const summary = [
+    t('legal.privacy.summary.0', { brand: NAME }),
+    t('legal.privacy.summary.1'),
+    t('legal.privacy.summary.2'),
+    t('legal.privacy.summary.3'),
+    t('legal.privacy.summary.4'),
+  ]
   return (
-    <LegalLayout
-      title="Privacy policy"
-      description={`How ${NAME} handles your data: everything stays on your device, AI reads are not kept, and there's no tracking.`}
-      summary={SUMMARY}
-    >
-      <LegalSection title="What stays on your device">
+    <LegalLayout title={t('legal.privacy.title')} description={t('legal.privacy.description', { brand: NAME })} summary={summary}>
+      <LegalSection title={t('legal.privacy.section.device')}>
         <p>
           Everything you put into {NAME} — your name and UPI ID, the people you split with (their names, UPI IDs and
           phone numbers), expenses, groups, recurring splits, settings and your Pro pass — is saved in your
@@ -32,7 +29,7 @@ export function PrivacyPage() {
         </p>
       </LegalSection>
 
-      <LegalSection title="What leaves your device, and why">
+      <LegalSection title={t('legal.privacy.section.leaves')}>
         <ul>
           <li>
             <strong>Reading a bill.</strong> When you scan a bill, the photo goes over an encrypted connection to our
@@ -62,7 +59,7 @@ export function PrivacyPage() {
         </ul>
       </LegalSection>
 
-      <LegalSection title="What our server keeps">
+      <LegalSection title={t('legal.privacy.section.server')}>
         <p>
           Our server has no database. To stop abuse, it counts requests per IP address (and per Pro pass, for AI) in
           memory for up to a day; the counts disappear when the server restarts. It writes short technical logs —
@@ -71,14 +68,14 @@ export function PrivacyPage() {
         </p>
       </LegalSection>
 
-      <LegalSection title="Cookies and tracking">
+      <LegalSection title={t('legal.privacy.section.cookies')}>
         <p>
           {NAME} uses no cookies, no analytics and no advertising trackers. Its fonts and icons are served from our own
           site, so opening it doesn’t tell anyone else you did.
         </p>
       </LegalSection>
 
-      <LegalSection title="Your choices">
+      <LegalSection title={t('legal.privacy.section.choices')}>
         <ul>
           <li>Export a backup of everything, any time, under You → Backup.</li>
           <li>Delete everything with You → Clear all data, or by clearing this site’s data in your browser.</li>
@@ -86,11 +83,11 @@ export function PrivacyPage() {
         </ul>
       </LegalSection>
 
-      <LegalSection title="Children">
+      <LegalSection title={t('legal.privacy.section.children')}>
         <p>{NAME} is made for adults sharing costs and isn’t directed at children.</p>
       </LegalSection>
 
-      <LegalSection title="Changes and contact">
+      <LegalSection title={t('legal.privacy.section.changes')}>
         <p>
           If this policy changes, the date at the top changes with it. We don’t have your email, so we can’t write to
           you about it — the newest version is always here.
