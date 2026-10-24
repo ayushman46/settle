@@ -34,7 +34,7 @@ test('lends to someone new, borrows from Sam, then takes some back', async ({ pa
   const riyaEntry = page.url()
 
   await page.goto('/app')
-  await expect(page.getByRole('link', { name: 'Riya, owes you ₹500' })).toBeVisible(SLOW)
+  await expect(page.getByRole('link', { name: 'Riya ₹500, owes you' })).toBeVisible(SLOW)
 
   // I got: Sam paid for my auto.
   await page.getByRole('button', { name: 'Lend / borrow' }).click()
@@ -46,8 +46,8 @@ test('lends to someone new, borrows from Sam, then takes some back', async ({ pa
   await page.getByRole('button', { name: 'Save', exact: true }).click()
   await expect(page).toHaveURL(/\/app\/expense\//, SLOW)
   await page.goto('/app')
-  await expect(page.getByRole('link', { name: 'Riya, owes you ₹500' })).toBeVisible(SLOW)
-  await expect(page.getByRole('link', { name: 'Sam, you owe ₹120' })).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Riya ₹500, owes you' })).toBeVisible(SLOW)
+  await expect(page.getByRole('link', { name: 'Sam ₹120, you owe' })).toBeVisible()
 
   // Riya returns ₹200.
   await page.goto(riyaEntry)

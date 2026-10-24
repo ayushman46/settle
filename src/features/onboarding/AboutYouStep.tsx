@@ -145,7 +145,7 @@ export function AboutYouStep({ onBack, onDone, onSkip }: AboutYouStepProps) {
           <button
             type="button"
             className={styles.currencyButton}
-            aria-labelledby={`${formId}-currency ${formId}-currency-value`}
+            aria-labelledby={`${formId}-currency ${formId}-currency-value ${formId}-currency-change`}
             aria-haspopup="dialog"
             onClick={() => setPicking(true)}
           >
@@ -155,7 +155,7 @@ export function AboutYouStep({ onBack, onDone, onSkip }: AboutYouStepProps) {
             <span id={`${formId}-currency-value`} className={styles.currencyText}>
               {currencyName(currency)} <span className={styles.currencyCode}>{currency}</span>
             </span>
-            <span className={styles.currencyChange} aria-hidden="true">
+            <span id={`${formId}-currency-change`} className={styles.currencyChange} aria-hidden="true">
               {t('onboarding.about.currency.change')}
               <ChevronRight strokeWidth={2.5} />
             </span>

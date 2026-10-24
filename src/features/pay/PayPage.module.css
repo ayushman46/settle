@@ -4,6 +4,8 @@
   display: grid;
   justify-items: center;
   gap: var(--s-3);
+  /* About the height of the loaded request and choices, so they do not push the page down when they arrive. */
+  min-height: 26rem;
   padding: var(--s-8) var(--s-5);
   border-radius: var(--radius-sheet);
   background: var(--surface);

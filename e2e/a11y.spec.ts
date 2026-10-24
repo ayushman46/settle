@@ -13,11 +13,15 @@ test.describe('accessibility', () => {
     await expectAccessible(page)
 
     await page.goto('/app')
+    // The first onboarding screen is the language step; Continue leads to the intro slides.
+    await expect(page.getByRole('heading', { level: 1, name: 'Choose your language' })).toBeVisible()
+    await page.getByRole('button', { name: 'Continue' }).click()
     await expect(page.getByRole('heading', { name: 'Snap the bill' })).toBeVisible()
     await expectAccessible(page)
   })
 
-  test('a new split, the saved expense and its share sheet', async ({ page, shared }) => {
+  // Several full axe scans in one test: give it room on a busy machine (the assertions are unchanged).
+  test('a new split, the saved expense and its share sheet', { timeout: 180_000 }, async ({ page, shared }) => {
     await onboard(page)
     await page.getByRole('button', { name: 'Split an expense' }).click()
     await page.getByRole('textbox', { name: 'Amount' }).fill('1000')

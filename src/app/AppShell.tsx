@@ -71,6 +71,25 @@ function whenIdle(task: () => void): () => void {
   return () => clearTimeout(id)
 }
 
+/**
+ * `whenIdle`, but on a first visit only once the service worker controls the page. Screens fetched before
+ * that never reach the offline cache, so an offline first trip to a preloaded screen would fail.
+ */
+function whenControlled(task: () => void): () => void {
+  const sw = typeof navigator !== 'undefined' && 'serviceWorker' in navigator ? navigator.serviceWorker : null
+  if (!sw || sw.controller) return whenIdle(task)
+  let cancelIdle: () => void = () => {}
+  const onControl = (): void => {
+    sw.removeEventListener('controllerchange', onControl)
+    cancelIdle = whenIdle(task)
+  }
+  sw.addEventListener('controllerchange', onControl)
+  return () => {
+    sw.removeEventListener('controllerchange', onControl)
+    cancelIdle()
+  }
+}
+
 /** Tab roots switch in place: Back from any tab leaves the app, as on a phone's own apps. */
 function switchTab(href: string): void {
   navigate(href, { replace: true })
@@ -115,7 +134,7 @@ export function AppShell({ preloadScreens = import.meta.env.PROD }: AppShellProp
 
   useEffect(() => {
     if (!preloadScreens) return
-    return whenIdle(() => void preloadCoreScreens())
+    return whenControlled(() => void preloadCoreScreens())
   }, [preloadScreens])
 
   // A language change re-renders every screen (helpers outside React read it at render time).

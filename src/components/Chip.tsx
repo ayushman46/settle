@@ -32,12 +32,15 @@ export function Chip({
   ...rest
 }: ChipProps) {
   const isToggle = selected !== undefined
+  // Inside a radio group (role="radio") the state is aria-checked; aria-pressed is not allowed there.
+  const isRadio = rest.role === 'radio'
   const lead = selected ? <Check strokeWidth={2.75} /> : leading
   return (
     <button
       {...rest}
       type={type}
-      aria-pressed={isToggle ? selected : undefined}
+      aria-pressed={isToggle && !isRadio ? selected : undefined}
+      aria-checked={isToggle && isRadio ? selected : undefined}
       className={cx(styles.chip, styles[size], selected && styles.selected, className)}
       onClick={(event) => {
         haptic('select')

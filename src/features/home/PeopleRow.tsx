@@ -10,11 +10,15 @@ import { firstName } from '../../share/text'
 import { ADD_FRIEND_PATH, FRIENDS_PATH, friendPath, PEOPLE_SHOWN } from './homeLinks'
 import styles from './HomeScreen.module.css'
 
-/** "Riya, owes you ₹540" / "Sam, you owe ₹120" / "Neha". */
+/**
+ * "Riya ₹540, owes you" / "Sam ₹120, you owe" / "Neha". The visible first name and amount come first, so the
+ * accessible name contains what is on screen (WCAG 2.5.3).
+ */
 function spokenName(friend: Friend, balance: Minor, currency: string): string {
-  if (balance > 0) return `${friend.name}, owes you ${formatMoney(balance, currency, { trimZeros: true })}`
-  if (balance < 0) return `${friend.name}, you owe ${formatMoney(-balance, currency, { trimZeros: true })}`
-  return friend.name
+  if (balance === 0) return friend.name
+  const amount = formatMoney(Math.abs(balance), currency, { trimZeros: true })
+  const who = firstName(friend.name)
+  return balance > 0 ? `${who} ${amount}, owes you` : `${who} ${amount}, you owe`
 }
 
 /**

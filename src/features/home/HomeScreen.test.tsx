@@ -185,12 +185,12 @@ describe('HomeScreen — balances, people and activity', SLOW, () => {
     const { user } = renderHome()
 
     const people = screen.getByRole('region', { name: 'People' })
-    expect(within(people).getByRole('link', { name: 'Riya Sharma, owes you ₹450' })).toHaveTextContent('Riya₹450')
-    expect(within(people).getByRole('link', { name: 'Sam, you owe ₹200' })).toBeInTheDocument()
+    expect(within(people).getByRole('link', { name: 'Riya ₹450, owes you' })).toHaveTextContent('Riya₹450')
+    expect(within(people).getByRole('link', { name: 'Sam ₹200, you owe' })).toBeInTheDocument()
     expect(within(people).getByRole('link', { name: 'Neha' })).not.toHaveTextContent('₹')
     expect(within(people).queryByRole('link', { name: /^You/ })).not.toBeInTheDocument()
 
-    await user.click(within(people).getByRole('link', { name: /^Riya Sharma/ }))
+    await user.click(within(people).getByRole('link', { name: /^Riya ₹450/ }))
     expect(currentUrl()).toBe(`/app/friends/${riya}`)
   })
 
