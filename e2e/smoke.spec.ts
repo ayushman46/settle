@@ -13,6 +13,9 @@ test.describe('smoke', () => {
 
     await page.getByRole('link', { name: /Open Settle/ }).first().click()
     await expect(page).toHaveURL(/\/app\/welcome/)
+    // The language step comes first (its own Continue), then the intro slides.
+    await expect(page.getByRole('button', { name: 'Continue' })).toBeVisible()
+    await page.getByRole('button', { name: 'Continue' }).click()
     await expect(page.getByRole('heading', { name: 'Snap the bill' })).toBeVisible()
 
     // Through every intro slide with Next, then "Get started".
