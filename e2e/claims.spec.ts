@@ -8,7 +8,7 @@ import type { Page } from '@playwright/test'
 import { claimShare } from '../src/engine/claims'
 import type { ClaimPick, Expense } from '../src/domain/types'
 import { formatMoney } from '../src/lib/money'
-import { onboard, OWNER, readUpiLink } from './support/app'
+import { onboard, OWNER, readUpiLink, upiAppLink } from './support/app'
 import { expectAccessible } from './support/a11y'
 import { expectNoSideScroll, replyLinkIn, sampleBillToPeople } from './support/claims'
 import { expect, test } from './support/fixtures'
@@ -77,7 +77,7 @@ test.describe('claim your items', () => {
     await slowExpect(riya.getByText(`Your share, ${rupees(riyaShare)}, after the discount`, { exact: true })).toBeAttached()
     await expectAccessible(riya)
 
-    const upi = readUpiLink((await riya.getByRole('link', { name: /with any UPI app/ }).getAttribute('href')) ?? '')
+    const upi = readUpiLink((await (await upiAppLink(riya, /^Pay ₹/)).getAttribute('href')) ?? '')
     expect(upi.params.pa).toBe(OWNER.upiId)
     expect(upi.params.am).toBe((riyaShare / 100).toFixed(2))
     await riya.getByRole('checkbox', { name: `Paid ${rupees(riyaShare)}?` }).check()

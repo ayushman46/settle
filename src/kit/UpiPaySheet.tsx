@@ -1,5 +1,5 @@
 import { useRef, useState, type ReactNode } from 'react'
-import { ArrowRight, Check, Copy, ExternalLink, Share2 } from 'lucide-react'
+import { ArrowRight, Check, Copy, Share2 } from 'lucide-react'
 import { ActionBar, Avatar, Banner, BottomSheet, Button, IconButton, Money, QrCode, useToast } from '../components'
 import { updateFriend, useFriend, useFriendsById, useProfile } from '../data'
 import { ME_ID, type Minor } from '../domain/types'
@@ -10,6 +10,7 @@ import { copyText, shareResult } from '../lib/share'
 import { buildUpiLink, buildUpiRequestText, isValidUpiId, normalizeUpiId } from '../lib/upi'
 import { outsideName } from '../share/names'
 import { FINE_POINTER, useMediaQuery } from './media'
+import { PayAppChooser } from './PayAppChooser'
 import { UpiIdForm } from './UpiIdForm'
 import styles from './UpiPaySheet.module.css'
 
@@ -169,15 +170,9 @@ export function UpiPaySheet({ open, onClose, payee, payer, amount, currency, not
   const openApp = ready && perspective === 'paying' && !computer
   const sendRequest = ready && perspective !== 'paying'
   let footer: ReactNode = null
-  if (openApp || sendRequest || onMarkPaid) {
+  if (sendRequest || onMarkPaid) {
     footer = (
       <ActionBar>
-        {openApp && (
-          <a className={styles.openApp} href={link}>
-            <ExternalLink aria-hidden="true" strokeWidth={2.25} />
-            {t('kit.upi.openApp.cta', { what: amount > 0 ? amountText : payee.name })}
-          </a>
-        )}
         {sendRequest && (
           <Button block iconStart={<Share2 />} onClick={share}>
             {t('kit.upi.sendRequest.cta')}
@@ -230,6 +225,11 @@ export function UpiPaySheet({ open, onClose, payee, payer, amount, currency, not
           </div>
         ) : (
           <>
+            {openApp && (
+              <div className={styles.apps}>
+                <PayAppChooser input={{ vpa, payeeName: payeeOutside, amountMinor: amount, note }} />
+              </div>
+            )}
             <QrCode
               value={link}
               size={216}

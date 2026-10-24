@@ -2,7 +2,7 @@
  * Journeys through the app the way a person takes them — by role and visible name, never by CSS
  * class — so a test reads like what someone does on their phone.
  */
-import { expect, type Page } from '@playwright/test'
+import { expect, type Locator, type Page } from '@playwright/test'
 
 export interface Owner {
   name: string
@@ -70,6 +70,16 @@ export async function copyPayLink(page: Page, readClipboard: () => Promise<strin
 }
 
 /** A `upi://pay?…` link, decoded. */
+/**
+ * On a phone, "Pay ₹…" opens the UPI apps (one row per app on Android). Opens the list if it's
+ * closed and returns the generic row, which carries the same `upi://pay` link the old button did.
+ */
+export async function upiAppLink(page: Page, cta: string | RegExp): Promise<Locator> {
+  const button = page.getByRole('button', typeof cta === 'string' ? { name: cta, exact: true } : { name: cta })
+  if ((await button.getAttribute('aria-expanded')) !== 'true') await button.click()
+  return page.getByRole('link', { name: /Any UPI app/ })
+}
+
 export function readUpiLink(href: string): { scheme: string; target: string; params: Record<string, string> } {
   const url = new URL(href)
   return { scheme: url.protocol, target: url.host || url.pathname, params: Object.fromEntries(url.searchParams) }

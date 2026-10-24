@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react'
-import { Check, Copy, ExternalLink, QrCode as QrIcon, ShieldCheck } from 'lucide-react'
+import { useEffect, useId, useState } from 'react'
+import { Check, ChevronDown, Copy, QrCode as QrIcon, ShieldCheck } from 'lucide-react'
 import { Avatar, Button, QrCode } from '../../components'
 import type { Minor } from '../../domain/types'
 import { BRAND } from '../../domain/types'
 import { tx, useT } from '../../i18n'
+import { PayAppChooser } from '../../kit/PayAppChooser'
 import { haptic } from '../../lib/haptics'
 import { formatMoney } from '../../lib/money'
 import { copyText } from '../../lib/share'
@@ -39,6 +40,8 @@ export interface UpiPayBlockProps {
 export function UpiPayBlock({ payeeName, vpa, amount, note, currency, color }: UpiPayBlockProps) {
   const t = useT()
   const touch = useTouchFirst()
+  const appsId = useId()
+  const [appsOpen, setAppsOpen] = useState(false)
   const [qrOnTouch, setQrOnTouch] = useState(false)
   const [copied, setCopied] = useState<'idle' | 'done' | 'failed'>('idle')
   const uri = buildUpiLink({ vpa, payeeName, amountMinor: amount, note })
@@ -61,13 +64,29 @@ export function UpiPayBlock({ payeeName, vpa, amount, note, currency, color }: U
     <div className={styles.pay}>
       {touch && (
         <>
-          <a href={uri} className={ctaClassName({ block: true })} onClick={() => haptic('tap')}>
-            <span>{t('pay.upi.cta', { amount: money })}</span>
-            <span className={ctaParts.iconEnd} aria-hidden="true">
-              <ExternalLink strokeWidth={2.25} />
+          <button
+            type="button"
+            className={ctaClassName({ block: true })}
+            aria-expanded={appsOpen}
+            aria-controls={appsId}
+            onClick={() => {
+              haptic('tap')
+              setAppsOpen((open) => !open)
+            }}
+          >
+            <span>{t('pay.upi.choose.cta', { amount: money })}</span>
+            <span className={ctaParts.iconEnd} aria-hidden="true" style={{ transform: appsOpen ? 'rotate(180deg)' : undefined }}>
+              <ChevronDown strokeWidth={2.25} />
             </span>
-          </a>
-          <p className={styles.caption}>{t('pay.upi.cta.caption')}</p>
+          </button>
+          {appsOpen ? (
+            <div id={appsId} className={styles.apps}>
+              <PayAppChooser input={{ vpa, payeeName, amountMinor: amount, note }} />
+              <p className={styles.caption}>{t('pay.upi.choose.caption')}</p>
+            </div>
+          ) : (
+            <p className={styles.caption}>{t('pay.upi.cta.caption')}</p>
+          )}
           <Button variant="ghost" size="md" iconStart={<QrIcon />} aria-expanded={qrOnTouch} onClick={() => setQrOnTouch((open) => !open)}>
             {qrOnTouch ? t('pay.upi.qr.hide.cta') : t('pay.upi.qr.show.cta')}
           </Button>

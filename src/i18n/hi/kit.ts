@@ -285,4 +285,8 @@ export const kit = {
   'kit.share.image.share.cta': 'इमेज शेयर करें',
   'kit.share.image.save.cta': 'इमेज सेव करें',
   'kit.share.image.upgrade': '<pro>Pro</pro> से लाइन हटाएँ',
+  'kit.payApp.list.label': 'पेमेंट ऐप',
+  'kit.payApp.sub': '{amount} पहले से भरा होगा',
+  'kit.payApp.sub.noAmount': 'नाम पहले से भरा होगा — रकम खुद डालें',
+  'kit.payApp.any': 'कोई भी UPI ऐप',
 } as const satisfies Messages

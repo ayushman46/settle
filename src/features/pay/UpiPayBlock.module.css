@@ -100,3 +100,11 @@
 }
 
 /* ---------- Tell them ---------- */
+
+/* The app list that opens under "Pay ₹…" on phones. */
+.apps {
+  display: grid;
+  gap: var(--s-3);
+  width: 100%;
+  animation: enter var(--dur-3) var(--ease-out) both;
+}

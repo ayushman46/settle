@@ -7,7 +7,7 @@
  */
 import type { Page } from '@playwright/test'
 import { expectAccessible } from './support/a11y'
-import { readUpiLink } from './support/app'
+import { readUpiLink, upiAppLink } from './support/app'
 import { expect, test } from './support/fixtures'
 import { friend, seed } from './support/seed'
 import type { Contribution, Pool } from '../src/domain/types'
@@ -66,7 +66,7 @@ test.describe('collections', () => {
     await other.getByRole('button', { name: 'Sam' }).click()
     await expect(other.getByText('Your part')).toBeVisible()
 
-    const pay = other.getByRole('link', { name: 'Pay ₹500 with any UPI app' })
+    const pay = await upiAppLink(other, 'Pay ₹500')
     const upi = readUpiLink((await pay.getAttribute('href')) ?? '')
     expect(upi.scheme).toBe('upi:')
     expect(upi.params).toMatchObject({ pa: UPI, am: '500.00', tn: "Chanda Riya's farewell", cu: 'INR' })
@@ -157,10 +157,10 @@ test.describe('collections', () => {
     await other.getByRole('button', { name: 'I’m not on the list' }).click()
     await other.getByRole('textbox', { name: 'Your name' }).fill('Priya')
     await expect(other.getByRole('radio', { name: '₹1,300 (suggested)' })).toHaveAttribute('aria-checked', 'true')
-    const upi = readUpiLink((await other.getByRole('link', { name: 'Pay ₹1,300 with any UPI app' }).getAttribute('href')) ?? '')
+    const upi = readUpiLink((await (await upiAppLink(other, 'Pay ₹1,300')).getAttribute('href')) ?? '')
     expect(upi.params).toMatchObject({ am: '1300.00', tn: 'Chanda Ganpati puja chanda' })
     await other.getByRole('radio', { name: '₹251' }).click()
-    await expect(other.getByRole('link', { name: 'Pay ₹251 with any UPI app' })).toBeVisible()
+    await expect(await upiAppLink(other, 'Pay ₹251')).toBeVisible()
   })
 
   test.describe('at 320 px', () => {

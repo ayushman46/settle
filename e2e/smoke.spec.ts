@@ -3,7 +3,7 @@
  * is saved and shows up everywhere, and a friend opening the pay link sees exactly their share
  * with a UPI link that pays the right person the right amount.
  */
-import { copyPayLink, onboard, OWNER, readUpiLink, splitEqually } from './support/app'
+import { copyPayLink, onboard, OWNER, readUpiLink, splitEqually, upiAppLink } from './support/app'
 import { expect, test } from './support/fixtures'
 
 test.describe('smoke', () => {
@@ -98,7 +98,7 @@ test.describe('smoke', () => {
 
     await friend.page.getByRole('button', { name: /Riya/ }).click()
     await expect(friend.page.getByRole('heading', { name: 'Riya’s share' })).toBeVisible()
-    const pay = friend.page.getByRole('link', { name: 'Pay ₹333.33 with any UPI app' })
+    const pay = await upiAppLink(friend.page, 'Pay ₹333.33')
     await expect(pay).toBeVisible()
 
     const upi = readUpiLink((await pay.getAttribute('href')) ?? '')

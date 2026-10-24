@@ -82,7 +82,7 @@ describe('UpiPaySheet', () => {
     const sheet = screen.getByRole('dialog', { name: 'Pay Riya' })
     // What it's for leads, as on a payments app's pay screen.
     expect(within(sheet).getByText('Dinner at Toit')).toBeInTheDocument()
-    const app = within(sheet).getByRole('link', { name: 'Pay ₹691.50 in your UPI app' })
+    const app = within(sheet).getByRole('link', { name: /Any UPI app/ })
     expect(app).toHaveAttribute('href', 'upi://pay?pa=riya%40okicici&pn=Riya&am=691.50&cu=INR&tn=Dinner%20at%20Toit')
     expect(within(sheet).queryByRole('button', { name: 'Send request' })).not.toBeInTheDocument()
   })
@@ -123,7 +123,7 @@ describe('UpiPaySheet', () => {
     expect(friendsStore.get().find((f) => f.id === 'sam')?.upiId).toBe('sam@ybl')
     expect(await screen.findByText('UPI ID saved')).toBeInTheDocument()
     expect(within(sheet).getByRole('img', { name: 'UPI QR code to pay ₹691.50 to Sam' })).toBeInTheDocument()
-    expect(within(sheet).getByRole('link', { name: 'Pay ₹691.50 in your UPI app' })).toHaveAttribute(
+    expect(within(sheet).getByRole('link', { name: /Any UPI app/ })).toHaveAttribute(
       'href',
       expect.stringContaining('pa=sam%40ybl'),
     )
@@ -220,7 +220,7 @@ describe('UpiPaySheet', () => {
       <Harness {...DINNER} payee={{ id: 'riya', name: 'Riya', upiId: null }} payer={{ id: ME_ID, name: 'You', color: 2 }} onMarkPaid={onMarkPaid} />,
     )
     // The UPI app comes first; "I've paid" is the quieter follow-up.
-    const app = screen.getByRole('link', { name: 'Pay ₹691.50 in your UPI app' })
+    const app = screen.getByRole('link', { name: /Any UPI app/ })
     const paid = screen.getByRole('button', { name: 'I’ve paid' })
     expect(app.compareDocumentPosition(paid) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     await user.click(paid)

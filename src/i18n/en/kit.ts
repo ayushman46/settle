@@ -316,4 +316,9 @@ export const kit = {
   'kit.share.image.save.cta': 'Save image',
   // <pro>…</pro> becomes the Pro badge.
   'kit.share.image.upgrade': 'Remove the line with <pro>Pro</pro>',
+  // The app chooser ("Pay with"): one row per UPI app, the payment already filled in.
+  'kit.payApp.list.label': 'Payment apps',
+  'kit.payApp.sub': 'Opens with {amount} filled in',
+  'kit.payApp.sub.noAmount': 'Opens with the name filled in — type the amount',
+  'kit.payApp.any': 'Any UPI app',
 } as const satisfies Messages

@@ -84,4 +84,6 @@ export const pay = {
   'pay.meta.title': 'Pay {name} · {title} · {brand}',
   'pay.meta.title.empty': 'Pay link · {brand}',
   'pay.meta.description': 'Pay your share in a tap with any UPI app. Sent with {brand}.',
+  'pay.upi.choose.cta': 'Pay {amount}',
+  'pay.upi.choose.caption': 'Pick your app. It opens with the amount and name already filled in.',
 } as const satisfies Messages
