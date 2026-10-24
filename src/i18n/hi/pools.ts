@@ -45,7 +45,7 @@ export const pools = {
   'pools.list.row.inOf': '{expected} में से {in} ने दिए',
   'pools.list.row.in': '{in, plural, =0 {अभी कोई नहीं} one {# ने दिए} other {# ने दिए}}',
   'pools.list.empty.title': 'आसानी से पैसे इकट्ठा करें',
-  'pools.list.empty.text': 'बर्थडे गिफ़्ट, फ़ेयरवेल, दिवाली पार्टी या ट्रिप के लिए — एक लिंक, सब UPI से पे करें।',
+  'pools.list.empty.text': 'बर्थडे गिफ़्ट, विदाई, दिवाली पार्टी या ट्रिप के लिए — एक लिंक, सब UPI से पे करें।',
   'pools.list.empty.action': 'कलेक्शन शुरू करें',
   'pools.list.fab': 'नया कलेक्शन',
 
