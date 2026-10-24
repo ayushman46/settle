@@ -1,0 +1,54 @@
+/* A pill with the language's own name; the native <select> on top does the picking (the phone's own list). */
+.pill {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+  min-height: 36px;
+  padding: 0 var(--s-3);
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+  background: var(--surface);
+  color: var(--ink-2);
+  font: var(--text-caption);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.pill:hover {
+  color: var(--ink);
+  border-color: var(--line-strong);
+}
+
+.pill:focus-within {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.pill[data-busy='true'] {
+  opacity: 0.7;
+}
+
+.name {
+  max-width: 9em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.select {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  /* 16px stops iOS zooming into the page when the list opens. */
+  font-size: 16px;
+}
+
+/* placement="page": a row of its own at the top of the page's content, the pill on the right. */
+.row {
+  display: flex;
+  justify-content: flex-end;
+  margin-block-end: var(--s-3);
+}

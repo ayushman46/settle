@@ -27,4 +27,13 @@ export const common = {
   'common.people.someone': 'Someone',
   'common.count.people': '{count, plural, one {# person} other {# people}}',
   'common.count.items': '{count, plural, one {# item} other {# items}}',
+  // The language pickers (onboarding, You → Language) and the switcher on public pages.
+  'common.language.label': 'Language',
+  'common.language.title': 'Choose your language',
+  'common.language.automatic': 'Automatic',
+  // Under "Automatic": which language the phone gives ({language} is its own name, e.g. हिन्दी).
+  'common.language.automatic.hint': 'Phone language · {language}',
+  // On a language that isn't translated yet ({language} = its English name).
+  'common.language.soon': '{language} · coming soon',
+  'common.language.failed': 'Couldn’t load that language. Check your connection and try again.',
 } as const satisfies Messages

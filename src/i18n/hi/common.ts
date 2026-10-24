@@ -27,4 +27,10 @@ export const common = {
   'common.people.someone': 'कोई',
   'common.count.people': '{count, plural, one {# व्यक्ति} other {# लोग}}',
   'common.count.items': '{count, plural, one {# आइटम} other {# आइटम}}',
+  'common.language.label': 'भाषा',
+  'common.language.title': 'अपनी भाषा चुनें',
+  'common.language.automatic': 'अपने-आप',
+  'common.language.automatic.hint': 'फ़ोन की भाषा · {language}',
+  'common.language.soon': '{language} · जल्द आ रही है',
+  'common.language.failed': 'यह भाषा लोड नहीं हो पाई। इंटरनेट चेक करके फिर से कोशिश करें।',
 } as const satisfies Messages

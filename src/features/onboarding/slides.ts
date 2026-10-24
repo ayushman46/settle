@@ -1,26 +1,15 @@
 import type { IllustrationName } from '../../components'
+import type { MessageKey } from '../../i18n'
 
 export interface IntroSlide {
   art: IllustrationName
-  title: string
-  text: string
+  title: MessageKey
+  text: MessageKey
 }
 
 /** The three things Settle does, one per slide: read a bill, split anything, get paid back. */
 export const INTRO_SLIDES: readonly IntroSlide[] = [
-  {
-    art: 'welcome-scan',
-    title: 'Snap the bill',
-    text: 'AI reads every item. Tap who had what, and the split is done in seconds.',
-  },
-  {
-    art: 'welcome-split',
-    title: 'Split anything',
-    text: 'Rent, trips, cabs, Netflix. Or just say it: “Cab 840 with Riya and Sam”.',
-  },
-  {
-    art: 'welcome-settle',
-    title: 'Get paid back by UPI',
-    text: 'Send one link to the group. Friends tap their name and pay with any UPI app.',
-  },
+  { art: 'welcome-scan', title: 'onboarding.slide.scan.title', text: 'onboarding.slide.scan.text' },
+  { art: 'welcome-split', title: 'onboarding.slide.split.title', text: 'onboarding.slide.split.text' },
+  { art: 'welcome-settle', title: 'onboarding.slide.settle.title', text: 'onboarding.slide.settle.text' },
 ]

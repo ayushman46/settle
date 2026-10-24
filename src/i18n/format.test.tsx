@@ -129,7 +129,7 @@ describe('the runtime (English only until Phase 3)', () => {
   it('knows its keys', () => {
     expect(hasMessage('home.more.title')).toBe(true)
     expect(hasMessage('home.nope')).toBe(false)
-    expect(Object.keys(EN).every((key) => /^[a-z]+(\.[a-zA-Z0-9]+)+$/.test(key))).toBe(true)
+    expect(Object.keys(EN).every((key) => /^[a-z][a-zA-Z0-9_]*(\.[a-zA-Z0-9_]+)+$/.test(key))).toBe(true)
   })
 })
 

@@ -6,6 +6,7 @@ import { BRAND } from '../../domain/types'
 import { suggestedContribution } from '../../engine/pools'
 import { today } from '../../engine/dates'
 import { useT } from '../../i18n'
+import { LanguageSwitcher } from '../../i18n/ui/LanguageSwitcher'
 import { avatarColorIndex } from '../../components/helpers'
 import { haptic } from '../../lib/haptics'
 import { formatMoney, parseMoneyInput, toInputString } from '../../lib/money'
@@ -58,6 +59,7 @@ export function PoolPage() {
   })
   return (
     <PublicShell>
+      <LanguageSwitcher placement="page" />
       {link.status === 'loading' && (
         <div className={styles.loading}>
           <p role="status" className="visually-hidden">

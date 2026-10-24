@@ -5,6 +5,7 @@ import { Avatar, Banner, Button, Skeleton, SuccessCheck, TextField } from '../..
 import { BRAND } from '../../domain/types'
 import { claimShare } from '../../engine/claims'
 import { useT } from '../../i18n'
+import { LanguageSwitcher } from '../../i18n/ui/LanguageSwitcher'
 import { formatBillDate } from '../../lib/format'
 import { haptic } from '../../lib/haptics'
 import { graphemes } from '../../lib/people'
@@ -456,6 +457,7 @@ export function ClaimPage() {
   })
   return (
     <PublicShell>
+      <LanguageSwitcher placement="page" />
       {link.status === 'loading' && <Loading />}
       {link.status === 'empty' && <PublicProblem title={t('claim.page.emptyTitle')} text={t('claim.page.emptyText')} />}
       {link.status === 'invalid' && <PublicProblem title={t('claim.page.invalidTitle')} text={t('claim.page.invalidText')} />}

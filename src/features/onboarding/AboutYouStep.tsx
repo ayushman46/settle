@@ -3,6 +3,7 @@ import { ChevronRight, ShieldCheck } from 'lucide-react'
 import { ActionBar, Button, PageTitle, Screen, TextField, TopBar } from '../../components'
 import { legacyUpiIdFor, useProfile } from '../../data'
 import { BRAND } from '../../domain/types'
+import { t, useT } from '../../i18n'
 import { currencyName } from '../../lib/currencies'
 import { haptic } from '../../lib/haptics'
 import { currencySymbol } from '../../lib/money'
@@ -29,8 +30,10 @@ export interface AboutYouStepProps {
 /** Placeholder names that don't say who the owner is (an earlier skip saves "You"). */
 const PLACEHOLDER_NAMES: ReadonlySet<string> = new Set(['', 'you', 'me'])
 
-export const NAME_ERROR = 'Add your name — friends see it on the requests you send.'
-export const UPI_ERROR = 'That doesn’t look like a UPI ID. It looks like name@bank.'
+/** "Add your name — …", in the current language. */
+export const nameErrorText = (): string => t('onboarding.about.name.error')
+/** "That doesn't look like a UPI ID…", in the current language. */
+export const upiErrorText = (): string => t('onboarding.about.upi.error')
 
 function startingName(saved: string): string {
   return PLACEHOLDER_NAMES.has(nameKey(saved)) ? '' : saved
@@ -41,6 +44,7 @@ function startingName(saved: string): string {
  * you made in the old app) and your currency. Nothing leaves the phone.
  */
 export function AboutYouStep({ onBack, onDone, onSkip }: AboutYouStepProps) {
+  const t = useT()
   const profile = useProfile()
   const formId = useId()
   const nameRef = useRef<HTMLInputElement>(null)
@@ -84,26 +88,27 @@ export function AboutYouStep({ onBack, onDone, onSkip }: AboutYouStepProps) {
       footer={
         <ActionBar>
           <Button block type="submit" form={formId}>
-            Start splitting
+            {t('onboarding.about.start.cta')}
           </Button>
+          {/* A skipped name is saved as "You" (data, not copy: see PLACEHOLDER_NAMES). */}
           <Button block variant="ghost" onClick={() => onSkip(details('You'))}>
-            Skip for now
+            {t('onboarding.about.skip.cta')}
           </Button>
         </ActionBar>
       }
     >
-      <PageTitle title="Let’s set you up" subtitle="Friends see your name on the requests you send." />
+      <PageTitle title={t('onboarding.about.title')} subtitle={t('onboarding.about.subtitle')} />
       <form id={formId} className={styles.form} noValidate onSubmit={submit}>
         <TextField
           ref={nameRef}
-          label="Your name"
-          placeholder="e.g. Ayush"
+          label={t('onboarding.about.name.label')}
+          placeholder={t('onboarding.about.name.placeholder')}
           autoComplete="given-name"
           autoCapitalize="words"
           enterKeyHint="next"
           maxLength={MAX_NAME_LENGTH * 2}
           value={name}
-          error={nameError ? NAME_ERROR : undefined}
+          error={nameError ? t('onboarding.about.name.error') : undefined}
           onChange={(event) => {
             setName(event.target.value)
             if (nameError && normalizeName(event.target.value) !== '') setNameError(false)
@@ -111,8 +116,8 @@ export function AboutYouStep({ onBack, onDone, onSkip }: AboutYouStepProps) {
         />
         <TextField
           ref={upiRef}
-          label="Your UPI ID (optional)"
-          placeholder="name@bank"
+          label={t('onboarding.about.upi.label')}
+          placeholder={t('onboarding.about.upi.placeholder')}
           inputMode="email"
           autoComplete="off"
           autoCapitalize="none"
@@ -123,10 +128,10 @@ export function AboutYouStep({ onBack, onDone, onSkip }: AboutYouStepProps) {
           value={upi}
           hint={
             remembered !== null
-              ? 'From a split you made on this phone. Change it if it isn’t yours.'
-              : 'So friends can pay you back in one tap. You can add it later.'
+              ? t('onboarding.about.upi.hint.remembered')
+              : t('onboarding.about.upi.hint')
           }
-          error={showUpiError ? UPI_ERROR : undefined}
+          error={showUpiError ? t('onboarding.about.upi.error') : undefined}
           onChange={(event) => {
             setTypedUpi(event.target.value)
             if (upiChecked && (event.target.value.trim() === '' || isValidUpiId(event.target.value))) setUpiChecked(false)
@@ -135,7 +140,7 @@ export function AboutYouStep({ onBack, onDone, onSkip }: AboutYouStepProps) {
         />
         <div className={styles.currencyField}>
           <span className={styles.fieldLabel} id={`${formId}-currency`}>
-            Currency
+            {t('onboarding.about.currency.label')}
           </span>
           <button
             type="button"
@@ -151,7 +156,7 @@ export function AboutYouStep({ onBack, onDone, onSkip }: AboutYouStepProps) {
               {currencyName(currency)} <span className={styles.currencyCode}>{currency}</span>
             </span>
             <span className={styles.currencyChange} aria-hidden="true">
-              Change
+              {t('onboarding.about.currency.change')}
               <ChevronRight strokeWidth={2.5} />
             </span>
           </button>
@@ -159,13 +164,13 @@ export function AboutYouStep({ onBack, onDone, onSkip }: AboutYouStepProps) {
       </form>
       <p className={styles.privacy}>
         <ShieldCheck aria-hidden="true" className={styles.privacyIcon} />
-        <span>No sign-up, no ads. Everything you add stays on this phone — {BRAND.name} has no database.</span>
+        <span>{t('onboarding.about.privacy', { brand: BRAND.name })}</span>
       </p>
       <CurrencySheet
         open={picking}
         currency={currency}
-        title="Your currency"
-        description="New splits start in this currency. You can pick another for any split."
+        title={t('onboarding.about.currency.sheet.title')}
+        description={t('onboarding.about.currency.sheet.body')}
         onClose={() => setPicking(false)}
         onSelect={(code) => {
           setCurrency(code)

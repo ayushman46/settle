@@ -1,0 +1,108 @@
+/* Eight big tiles, two to a row: the language's own name large, its English name small. */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s-2);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-inline-size: 0;
+}
+
+.automatic {
+  grid-column: 1 / -1;
+}
+
+.tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  min-height: 68px;
+  padding: var(--s-3) var(--s-8) var(--s-3) var(--s-4);
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius-tile);
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+  transition:
+    border-color var(--dur-1) var(--ease-out),
+    background-color var(--dur-1) var(--ease-out),
+    transform var(--dur-1) var(--ease-out);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.tile:active {
+  transform: scale(0.98);
+}
+
+.tile[data-checked='true'] {
+  border-color: var(--accent-edge);
+  background: var(--accent-soft);
+}
+
+.tile[data-disabled='true'] {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.tile:has(input:focus-visible) {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.input {
+  position: absolute;
+  opacity: 0;
+  inline-size: 1px;
+  block-size: 1px;
+  pointer-events: none;
+}
+
+.native {
+  font: 600 1.1875rem/1.45 var(--font-sans);
+  overflow-wrap: anywhere;
+}
+
+.english {
+  font: var(--text-caption);
+  color: var(--ink-3);
+}
+
+.mark {
+  position: absolute;
+  inset-block-start: 50%;
+  inset-inline-end: var(--s-3);
+  display: grid;
+  place-items: center;
+  inline-size: 22px;
+  block-size: 22px;
+  margin-block-start: -11px;
+  border-radius: 50%;
+  color: var(--on-accent);
+  background: var(--accent);
+}
+
+.mark svg {
+  inline-size: 14px;
+  block-size: 14px;
+}
+
+.busy {
+  position: absolute;
+  inset-block-start: 50%;
+  inset-inline-end: var(--s-3);
+  margin-block-start: -10px;
+  color: var(--ink-2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tile {
+    transition: none;
+  }
+
+  .tile:active {
+    transform: none;
+  }
+}

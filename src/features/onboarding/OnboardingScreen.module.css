@@ -213,3 +213,8 @@
   margin-top: 1px;
   color: var(--positive);
 }
+
+/* The language tiles under the title. */
+.languages {
+  margin-block-start: var(--s-4);
+}

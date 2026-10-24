@@ -4,7 +4,8 @@ import { friendsStore, profileStore, updateProfile } from '../../data'
 import { ME_ID } from '../../domain/types'
 import { saveUpiId } from '../../lib/upi'
 import { currentUrl, renderAt, resetProScreens } from '../pro/testing'
-import { NAME_ERROR, UPI_ERROR } from './AboutYouStep'
+import { getLanguage, resetI18nForTests } from '../../i18n'
+import { nameErrorText, upiErrorText } from './AboutYouStep'
 import { onboardingDestination, welcomePath } from './destination'
 import { OnboardingScreen } from './OnboardingScreen'
 
@@ -19,6 +20,7 @@ beforeEach(() => {
 afterEach(() => {
   vi.unstubAllGlobals()
   resetProScreens()
+  resetI18nForTests()
 })
 
 function renderWelcome(path = '/app/welcome') {
@@ -30,7 +32,12 @@ function currentDot(): string | null {
   return dot?.getAttribute('aria-label') ?? null
 }
 
-/** Through the slides to the details step. */
+/** From the language step on to the slides. */
+function toSlides(): void {
+  fireEvent.click(screen.getByRole('button', { name: 'Continue' }))
+}
+
+/** Straight to the details step (Skip on the first screen). */
 async function toDetails(user: ReturnType<typeof renderWelcome>['user']) {
   await user.click(screen.getByRole('button', { name: 'Skip' }))
   return screen.findByRole('heading', { level: 1, name: 'Let’s set you up' })
@@ -39,7 +46,8 @@ async function toDetails(user: ReturnType<typeof renderWelcome>['user']) {
 describe('OnboardingScreen — slides', SLOW, () => {
   it('walks through three slides to the details step', async () => {
     const { user } = renderWelcome()
-    expect(screen.getByRole('heading', { level: 1, name: 'Welcome to Settle' })).toBeInTheDocument()
+    toSlides()
+    expect(await screen.findByRole('heading', { level: 1, name: 'Welcome to Settle' })).toBeInTheDocument()
     expect(screen.getByRole('region', { name: 'What Settle does' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Snap the bill' })).toBeInTheDocument()
     expect(currentDot()).toBe('Slide 1: Snap the bill')
@@ -56,6 +64,7 @@ describe('OnboardingScreen — slides', SLOW, () => {
 
   it('only exposes the slide on show to assistive tech', async () => {
     const { user } = renderWelcome()
+    toSlides()
     const slides = screen.getAllByRole('group', { hidden: true })
     expect(slides.map((s) => s.getAttribute('aria-hidden'))).toEqual([null, 'true', 'true'])
     await user.click(screen.getByRole('button', { name: 'Slide 3: Get paid back by UPI' }))
@@ -64,6 +73,7 @@ describe('OnboardingScreen — slides', SLOW, () => {
 
   it('moves with the arrow keys, Home and End', () => {
     renderWelcome()
+    toSlides()
     const track = screen.getByRole('region', { name: 'What Settle does' })
     fireEvent.keyDown(track, { key: 'ArrowRight' })
     expect(currentDot()).toBe('Slide 2: Split anything')
@@ -81,6 +91,7 @@ describe('OnboardingScreen — slides', SLOW, () => {
     vi.useFakeTimers()
     try {
       renderWelcome()
+      toSlides()
       const track = screen.getByRole('region', { name: 'What Settle does' })
       Object.defineProperty(track, 'clientWidth', { configurable: true, value: 360 })
       track.scrollLeft = 700
@@ -97,7 +108,47 @@ describe('OnboardingScreen — slides', SLOW, () => {
 
   it('skips straight to the details', async () => {
     const { user } = renderWelcome()
+    toSlides()
     expect(await toDetails(user)).toBeInTheDocument()
+  })
+
+})
+
+describe('OnboardingScreen — language', SLOW, () => {
+  it('opens on “Choose your language”: eight tiles in their own scripts, the phone’s language picked', () => {
+    renderWelcome()
+    expect(screen.getByRole('heading', { level: 1, name: 'Choose your language' })).toBeInTheDocument()
+    const group = screen.getByRole('radiogroup', { name: 'Language' })
+    const tiles = within(group).getAllByRole('radio')
+    expect(tiles).toHaveLength(8)
+    expect(within(group).getByRole('radio', { name: /English/ })).toBeChecked()
+    expect(within(group).getByRole('radio', { name: /हिन्दी/ })).not.toBeChecked()
+    for (const name of ['বাংলা', 'मराठी', 'தமிழ்', 'తెలుగు', 'ಕನ್ನಡ', 'ગુજરાતી']) expect(within(group).getByText(name)).toHaveAttribute('lang')
+  })
+
+  it('a tap switches the whole app to that language and saves it', async () => {
+    const { user } = renderWelcome()
+    await user.click(screen.getByRole('radio', { name: /हिन्दी/ }))
+    // The Hindi chunk loads first (a dynamic import), then everything switches at once.
+    expect(await screen.findByRole('heading', { level: 1, name: 'अपनी भाषा चुनें' }, { timeout: 10_000 })).toBeInTheDocument()
+    expect(getLanguage()).toBe('hi')
+    expect(document.documentElement.lang).toBe('hi')
+    expect(profileStore.get().language).toBe('hi')
+    expect(screen.getByRole('radio', { name: /हिन्दी/ })).toBeChecked()
+
+    // On through the slides, in Hindi.
+    await user.click(screen.getByRole('button', { name: 'आगे बढ़ें' }))
+    expect(await screen.findByRole('heading', { level: 1, name: 'Settle में आपका स्वागत है' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'बिल की फ़ोटो लें' })).toBeInTheDocument()
+  })
+
+  it('back to English with a tap', async () => {
+    const { user } = renderWelcome()
+    await user.click(screen.getByRole('radio', { name: /हिन्दी/ }))
+    await screen.findByRole('heading', { level: 1, name: 'अपनी भाषा चुनें' }, { timeout: 10_000 })
+    await user.click(screen.getByRole('radio', { name: /English/ }))
+    expect(await screen.findByRole('heading', { level: 1, name: 'Choose your language' })).toBeInTheDocument()
+    expect(profileStore.get().language).toBe('en')
   })
 })
 
@@ -128,7 +179,7 @@ describe('OnboardingScreen — about you', SLOW, () => {
     await user.click(screen.getByRole('button', { name: 'Start splitting' }))
     const name = screen.getByLabelText('Your name')
     expect(name).toHaveAttribute('aria-invalid', 'true')
-    expect(name).toHaveAccessibleDescription(NAME_ERROR)
+    expect(name).toHaveAccessibleDescription(nameErrorText())
     expect(name).toHaveFocus()
     expect(profileStore.get().onboarded).toBe(false)
 
@@ -145,7 +196,7 @@ describe('OnboardingScreen — about you', SLOW, () => {
     expect(upi).not.toHaveAttribute('aria-invalid')
     await user.tab()
     expect(upi).toHaveAttribute('aria-invalid', 'true')
-    expect(upi).toHaveAccessibleDescription(UPI_ERROR)
+    expect(upi).toHaveAccessibleDescription(upiErrorText())
 
     await user.click(screen.getByRole('button', { name: 'Start splitting' }))
     expect(upi).toHaveFocus()

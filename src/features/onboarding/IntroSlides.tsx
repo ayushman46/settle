@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
 import { ArrowRight } from 'lucide-react'
 import { ActionBar, Button, Illustration, Screen } from '../../components'
 import { BRAND } from '../../domain/types'
+import { useT } from '../../i18n'
 import { cx } from '../../lib/cx'
 import { haptic } from '../../lib/haptics'
 import { BrandMark } from '../landing/BrandMark'
@@ -30,6 +31,7 @@ function prefersReducedMotion(): boolean {
  * move it too.
  */
 export function IntroSlides({ onDone }: IntroSlidesProps) {
+  const t = useT()
   const trackRef = useRef<HTMLDivElement>(null)
   const steering = useRef(false)
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -91,7 +93,7 @@ export function IntroSlides({ onDone }: IntroSlidesProps) {
         <div className={styles.topRow}>
           <BrandMark size="sm" />
           <Button variant="ghost" size="sm" onClick={onDone}>
-            Skip
+            {t('common.action.skip')}
           </Button>
         </div>
       }
@@ -103,7 +105,7 @@ export function IntroSlides({ onDone }: IntroSlidesProps) {
                 key={slide.art}
                 type="button"
                 className={cx(styles.dot, i === index && styles.dotActive)}
-                aria-label={`Slide ${i + 1}: ${slide.title}`}
+                aria-label={t('onboarding.intro.dot.aria', { number: i + 1, title: t(slide.title) })}
                 aria-current={i === index ? 'step' : undefined}
                 onClick={() => show(i)}
               >
@@ -112,21 +114,21 @@ export function IntroSlides({ onDone }: IntroSlidesProps) {
             ))}
           </div>
           <Button block onClick={next} iconEnd={index >= last ? <ArrowRight strokeWidth={2.5} /> : undefined}>
-            {index >= last ? 'Get started' : 'Next'}
+            {index >= last ? t('onboarding.intro.start.cta') : t('common.action.next')}
           </Button>
         </ActionBar>
       }
       contentClassName={styles.introContent}
     >
       <h1 className="visually-hidden" tabIndex={-1}>
-        Welcome to {BRAND.name}
+        {t('onboarding.intro.heading', { brand: BRAND.name })}
       </h1>
       <div
         ref={trackRef}
         className={styles.track}
         role="region"
         aria-roledescription="carousel"
-        aria-label={`What ${BRAND.name} does`}
+        aria-label={t('onboarding.intro.carousel.aria', { brand: BRAND.name })}
         tabIndex={0}
         onScroll={onScroll}
         onKeyDown={onKeyDown}
@@ -137,19 +139,19 @@ export function IntroSlides({ onDone }: IntroSlidesProps) {
             className={styles.slide}
             role="group"
             aria-roledescription="slide"
-            aria-label={`${i + 1} of ${INTRO_SLIDES.length}`}
+            aria-label={t('onboarding.intro.slide.aria', { number: i + 1, total: INTRO_SLIDES.length })}
             aria-hidden={i === index ? undefined : true}
           >
             <div className={styles.stage}>
               <Illustration name={slide.art} size={232} className={styles.art} />
             </div>
-            <h2 className={styles.slideTitle}>{slide.title}</h2>
-            <p className={styles.slideText}>{slide.text}</p>
+            <h2 className={styles.slideTitle}>{t(slide.title)}</h2>
+            <p className={styles.slideText}>{t(slide.text)}</p>
           </section>
         ))}
       </div>
       <p className="visually-hidden" aria-live="polite">
-        {`Slide ${index + 1} of ${INTRO_SLIDES.length}: ${current?.title ?? ''}`}
+        {t('onboarding.intro.live', { number: index + 1, total: INTRO_SLIDES.length, title: current ? t(current.title) : '' })}
       </p>
     </Screen>
   )

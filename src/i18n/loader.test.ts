@@ -36,6 +36,8 @@ vi.mock('./load', () => ({
   hasCatalog: (code: LanguageCode) => code === 'en' || CATALOGS[code] !== undefined,
 }))
 
+// The setup file already loaded the runtime (through the data layer), so load it again under the mock.
+vi.resetModules()
 const { getLanguage, loadLanguage, resetI18nForTests, setLanguage, subscribe, t } = await import('./runtime')
 
 afterEach(() => {
