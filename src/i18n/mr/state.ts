@@ -19,4 +19,18 @@ export const state = {
   // The last row when the bill printed no total: what its lines add up to.
   'state.breakdown.addsUpTo': 'बेरीज',
   'state.breakdown.total': 'बिलाची एकूण रक्कम',
+
+  // Why a split can't be saved yet (the expense and the saved data).
+  'state.error.expense.noPeople': 'वाटण्यासाठी किमान एक व्यक्ती जोडा.',
+  'state.error.expense.badTotal': 'शून्यापेक्षा जास्त रक्कम टाका.',
+  'state.error.expense.exactMismatch': 'रकमा अजून एकूणाशी जुळत नाहीत.',
+  'state.error.expense.percentMismatch': 'टक्केवारी अजून 100% पर्यंत जुळत नाही.',
+  'state.error.expense.payerMissing': 'कोणी दिले ते निवडा.',
+  'state.error.expense.zeroWeights': 'किमान एका व्यक्तीला हिस्सा द्या.',
+  'state.error.expense.notFound': 'तो खर्च आता नाही.',
+  'state.error.data.notFound': 'ते सापडले नाही — कदाचित हटवले गेले असेल.',
+  'state.error.data.emptyName': 'आधी नाव जोडा.',
+  'state.error.data.duplicateName': 'त्या नावाची व्यक्ती आधीच तुमच्या लोकांमध्ये आहे.',
+  'state.error.data.limit': 'इथली मर्यादा संपली आहे — ज्याची गरज नाही ते काढा.',
+  'state.error.data.invalid': 'हे बरोबर वाटत नाही — तपासून पुन्हा प्रयत्न करा.',
 } as const satisfies Messages

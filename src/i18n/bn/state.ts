@@ -19,4 +19,18 @@ export const state = {
   // The last row when the bill printed no total: what its lines add up to.
   'state.breakdown.addsUpTo': 'যোগফল',
   'state.breakdown.total': 'বিলের মোট',
+
+  // Why a split can't be saved yet (the expense and the saved data).
+  'state.error.expense.noPeople': 'ভাগ করার জন্য অন্তত একজন মানুষ যোগ করুন।',
+  'state.error.expense.badTotal': 'শূন্যের বেশি একটি পরিমাণ লিখুন।',
+  'state.error.expense.exactMismatch': 'পরিমাণগুলো এখনও মোটের সঙ্গে মিলছে না।',
+  'state.error.expense.percentMismatch': 'শতাংশগুলো এখনও 100%-এ মিলছে না।',
+  'state.error.expense.payerMissing': 'কে দিয়েছেন বেছে নিন।',
+  'state.error.expense.zeroWeights': 'অন্তত একজনকে একটি অংশ দিন।',
+  'state.error.expense.notFound': 'ওই খরচটি আর নেই।',
+  'state.error.data.notFound': 'সেটি খুঁজে পাওয়া যায়নি — হয়তো মুছে ফেলা হয়েছে।',
+  'state.error.data.emptyName': 'আগে একটি নাম যোগ করুন।',
+  'state.error.data.duplicateName': 'ওই নামে একজন আগে থেকেই আপনার লোকজনের মধ্যে আছেন।',
+  'state.error.data.limit': 'এখানে সীমায় পৌঁছে গেছেন — যা আর লাগে না তা সরান।',
+  'state.error.data.invalid': 'এটি ঠিক মনে হচ্ছে না — দেখে আবার চেষ্টা করুন।',
 } as const satisfies Messages
