@@ -69,6 +69,17 @@ export const pro = {
   'pro.checkout.cancelled.toast': 'Checkout closed. No payment was made.',
   'pro.checkout.off.title': "Checkout isn't set up yet",
   'pro.checkout.off.body': "Payments aren't switched on here yet, so passes can't be bought right now. Got a Pro code? You can redeem it.",
+  // Why a payment didn't start or finish (src/pro/billing.ts, shown on the checkout sheet and the upgrade screen).
+  'pro.checkout.error.offline': "You're offline. Connect to the internet to get Pro.",
+  'pro.checkout.error.network': "Couldn't reach Settle. Check your connection and try again.",
+  'pro.checkout.error.busy': 'Too many tries in a row. Wait a minute, then try again.',
+  'pro.checkout.error.planMissing': "That plan isn't available right now.",
+  'pro.checkout.error.orderFailed': "Couldn't start the payment. Please try again in a moment.",
+  'pro.checkout.error.script': "Couldn't open the payment window. Check your connection and try again.",
+  'pro.checkout.error.paymentFailed': "The payment didn't go through. Try again, or pick another way to pay.",
+  'pro.checkout.pending': "Payment received! We're still switching on Pro — it'll finish by itself once you're back online.",
+  // {paymentId}: Razorpay's payment ID, so the person can quote it.
+  'pro.checkout.unconfirmed': "We couldn't confirm this payment. If you were charged, write to us with payment ID {paymentId} and we'll sort it out.",
   'pro.trust.aria': 'How paying works',
   'pro.trust.once': 'One-time payment',
   'pro.trust.noAccount': 'No account needed',

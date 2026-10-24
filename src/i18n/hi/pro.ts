@@ -70,6 +70,17 @@ export const pro = {
   'pro.checkout.cancelled.toast': 'पेमेंट बंद हो गया। कोई पेमेंट नहीं हुआ।',
   'pro.checkout.off.title': 'पेमेंट अभी चालू नहीं हुआ है',
   'pro.checkout.off.body': 'यहाँ पेमेंट अभी चालू नहीं हुआ है, इसलिए अभी पास नहीं खरीदे जा सकते। Pro कोड है? उसे रिडीम कर सकते हैं।',
+  'pro.checkout.error.offline': 'आप ऑफ़लाइन हैं। Pro लेने के लिए इंटरनेट से जुड़ें।',
+  'pro.checkout.error.network': 'Settle तक नहीं पहुँच पाए। कनेक्शन देखें और फिर से कोशिश करें।',
+  'pro.checkout.error.busy': 'बार-बार कोशिश हो रही है। एक मिनट रुकें, फिर से कोशिश करें।',
+  'pro.checkout.error.planMissing': 'यह पास अभी उपलब्ध नहीं है।',
+  'pro.checkout.error.orderFailed': 'पेमेंट शुरू नहीं हो पाया। थोड़ी देर में फिर कोशिश करें।',
+  'pro.checkout.error.script': 'पेमेंट विंडो नहीं खुल पाई। कनेक्शन देखें और फिर से कोशिश करें।',
+  'pro.checkout.error.paymentFailed': 'पेमेंट नहीं हुआ। फिर से कोशिश करें, या पेमेंट का कोई और तरीका चुनें।',
+  'pro.checkout.pending': 'पेमेंट मिल गया! Pro अभी चालू हो रहा है — ऑनलाइन आते ही अपने-आप पूरा हो जाएगा।',
+  // {paymentId}: Razorpay's payment ID, so the person can quote it.
+  'pro.checkout.unconfirmed':
+    'हम यह पेमेंट कन्फ़र्म नहीं कर पाए। अगर पैसे कटे हैं, तो पेमेंट ID {paymentId} के साथ हमें लिखें, हम ठीक कर देंगे।',
   'pro.trust.aria': 'पेमेंट कैसे होता है',
   'pro.trust.once': 'एक बार का पेमेंट',
   'pro.trust.noAccount': 'अकाउंट की ज़रूरत नहीं',
