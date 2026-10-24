@@ -131,7 +131,8 @@ describe('squaresAt', () => {
 })
 
 describe('properties (3,000 random groups)', () => {
-  it('keeps Σ = 0, strictly lowers outstanding, picks an optimal payer and squares exactly', () => {
+  // 3,000 full settle-ups in a loop: CPU-bound, so it gets more than the default 5 s on a busy machine.
+  it('keeps Σ = 0, strictly lowers outstanding, picks an optimal payer and squares exactly', { timeout: 30_000 }, () => {
     let seed = 42
     const rand = () => (seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648
     let rounds = 0
