@@ -1,0 +1,38 @@
+/** Telugu copy for privacy and terms (src/features/legal). Keys: `legal.<screen>.<element>` (see i18n-plan §3). */
+import type { Messages } from '../types'
+
+export const legal = {
+  'legal.back.label': 'వెనక్కి',
+  'legal.home.label': '{brand} హోమ్',
+  // The date is formatted by code; <time> wraps it for screen readers.
+  'legal.updated': 'చివరిసారి నవీకరించబడింది <time>{date}</time>',
+  'legal.summary.title': 'సంక్షిప్తంగా',
+  'legal.englishBody': 'ఈ విధానం పూర్తి పాఠ్యం ఇంగ్లీష్‌లో ఉంది.',
+  'legal.privacy.title': 'గోప్యతా విధానం',
+  'legal.privacy.description': '{brand} మీ డేటాను ఎలా నిర్వహిస్తుంది: అన్నీ మీ పరికరంలోనే ఉంటాయి, AI రీడ్స్ నిల్వ చేయబడవు, ట్రాకింగ్ లేదు.',
+  'legal.privacy.summary.0': '{brand} కు ఖాతాలు, డేటాబేస్ లేవు. మీ స్ప్లిట్‌లు, స్నేహితులు, గ్రూప్‌లు మీ పరికరంలోనే ఉంటాయి.',
+  'legal.privacy.summary.1': 'బిల్లు ఫోటోలు మరియు “చెప్పేయండి” టెక్స్ట్ చదవడం కోసం మాత్రమే NVIDIA హోస్ట్ చేసే AI మోడల్‌కు పంపబడతాయి; అవి నిల్వ చేయబడవు.',
+  'legal.privacy.summary.2': 'పే లింక్ తన స్ప్లిట్‌ను లింక్ లోపలే కలిగి ఉంటుంది — ఆ భాగం మా సర్వర్‌కు ఎప్పుడూ చేరదు.',
+  'legal.privacy.summary.3': 'Pro చెల్లింపులు Razorpay ద్వారా నిర్వహించబడతాయి. మీ కార్డ్ వివరాలు లేదా UPI PIN మేము ఎప్పుడూ చూడము.',
+  'legal.privacy.summary.4': 'ప్రకటనలు లేవు, అనలిటిక్స్ లేదు, ట్రాకింగ్ కుకీలు లేవు.',
+  'legal.privacy.section.device': 'మీ పరికరంలో ఉండేవి',
+  'legal.privacy.section.leaves': 'మీ పరికరం నుంచి బయటకు వెళ్లేవి, ఎందుకు',
+  'legal.privacy.section.server': 'మా సర్వర్ ఉంచేవి',
+  'legal.privacy.section.cookies': 'కుకీలు మరియు ట్రాకింగ్',
+  'legal.privacy.section.choices': 'మీ ఎంపికలు',
+  'legal.privacy.section.children': 'పిల్లలు',
+  'legal.privacy.section.changes': 'మార్పులు మరియు సంప్రదింపు',
+  'legal.terms.title': 'ఉపయోగ నిబంధనలు',
+  'legal.terms.description': '{brand} ఉపయోగించడానికి నిబంధనలు: ఖర్చులు పంచుకునే ఉచిత సాధనం, ఐచ్ఛికంగా ఒకసారి చెల్లించే Pro పాస్‌లు.',
+  'legal.terms.summary.0': '{brand} ఎవరు ఎంత బాకీ ఉన్నారో లెక్కించి ట్రాక్ చేస్తుంది. డబ్బును ఎప్పుడూ ఉంచదు లేదా తరలించదు — చెల్లింపులు మీ UPI యాప్‌లో జరుగుతాయి.',
+  'legal.terms.summary.1': 'చెల్లించే ముందు లేదా ఎవరినైనా చెల్లించమని అడిగే ముందు మొత్తాలు, పేర్లు, AI ఫలితాలను చెక్ చేయండి.',
+  'legal.terms.summary.2': 'Pro పాస్‌లు ఒకసారి చెల్లింపులు. అవి వాటంతట అవే పునరుద్ధరించబడవు.',
+  'legal.terms.summary.3': 'మీ డేటా మీ పరికరంలోనే ఉంటుంది, కాబట్టి బ్యాకప్ ఉంచుకోవడం మీ ఇష్టం.',
+  'legal.terms.section.using': '{brand} ఉపయోగించడం',
+  'legal.terms.section.money': 'డబ్బు మరియు UPI',
+  'legal.terms.section.ai': 'AI ఫీచర్లు',
+  'legal.terms.section.pro': '{brand} Pro',
+  'legal.terms.section.data': 'మీ డేటా',
+  'legal.terms.section.service': 'సేవ',
+  'legal.terms.section.changes': 'మార్పులు మరియు సంప్రదింపు',
+} as const satisfies Messages

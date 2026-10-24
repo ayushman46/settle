@@ -52,4 +52,6 @@ export const proof = {
   'proof.shared.note': 'మరో యాప్ నుంచి షేర్ చేయబడింది',
   'proof.more.title': 'చెల్లించారా? స్క్రీన్‌షాట్ వేయండి',
   'proof.more.subtitle': 'UPI చెల్లింపును స్క్రీన్‌షాట్ నుంచి చెల్లించినట్లు గుర్తించండి',
+  // The link on Settle-up and friend pages that opens the screenshot flow.
+  'proof.entry.cta': 'చెల్లింపు స్క్రీన్‌షాట్ వచ్చిందా?',
 } as const satisfies Messages
