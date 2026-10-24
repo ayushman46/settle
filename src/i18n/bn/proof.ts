@@ -52,4 +52,6 @@ export const proof = {
   'proof.shared.note': 'অন্য অ্যাপ থেকে শেয়ার করা',
   'proof.more.title': 'পৌঁছে গেছে? স্ক্রিনশট দিন',
   'proof.more.subtitle': 'স্ক্রিনশট থেকে UPI পেমেন্ট পরিশোধিত বলে চিহ্নিত করুন',
+  // The link on a friend, a group's settle-up page: a screenshot of a payment to you.
+  'proof.entry.cta': 'পেমেন্টের স্ক্রিনশট পেয়েছেন?',
 } as const satisfies Messages
