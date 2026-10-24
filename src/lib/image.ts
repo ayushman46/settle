@@ -2,6 +2,7 @@
  * Turns a picked/taken photo into a JPEG data URL small enough to upload quickly, without
  * losing the detail the AI needs to read a receipt. Runs entirely in the browser.
  */
+import { t, type MessageKey } from '../i18n'
 
 export interface PreparedImage {
   /** `data:image/jpeg;base64,…` for `POST /api/scan` (PNG only on browsers that can't encode JPEG). */
@@ -17,17 +18,17 @@ export interface PreparedImage {
 
 export type ImageErrorCode = 'not_image' | 'decode_failed' | 'too_large'
 
-const MESSAGES: Readonly<Record<ImageErrorCode, string>> = {
-  not_image: "That file isn't a photo. Please choose a JPG or PNG image.",
-  decode_failed: "We couldn't open that image. Try a JPG or PNG — or take a screenshot of it.",
-  too_large: 'That photo is too large (over 25 MB). Try a smaller one — or take a screenshot of it.',
+const MESSAGE_KEYS: Readonly<Record<ImageErrorCode, MessageKey>> = {
+  not_image: 'api.image.error.not_image',
+  decode_failed: 'api.image.error.decode_failed',
+  too_large: 'api.image.error.too_large',
 }
 
 /** A photo we can't use. `message` is friendly and safe to show as-is. */
 export class ImageError extends Error {
   readonly code: ImageErrorCode
 
-  constructor(code: ImageErrorCode, message: string = MESSAGES[code]) {
+  constructor(code: ImageErrorCode, message: string = t(MESSAGE_KEYS[code])) {
     super(message)
     this.name = 'ImageError'
     this.code = code

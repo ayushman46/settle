@@ -2,6 +2,7 @@
  * UPI payment requests (India). A `upi://pay` link opens GPay/PhonePe/Paytm/BHIM with the
  * payee and amount filled in; the same link as a QR code can be scanned by any UPI app.
  */
+import { t } from '../i18n'
 import type { Minor } from '../types'
 import { formatMoney, toInputString } from './money'
 import { nameKey } from './people'
@@ -71,7 +72,7 @@ export function buildUpiLink({ vpa, payeeName, amountMinor, note }: UpiLinkInput
     params.push(['am', toInputString(Math.round(amountMinor), 'INR')])
   }
   params.push(['cu', 'INR'])
-  params.push(['tn', cleanText(note ?? '', MAX_NOTE) || 'Bill split'])
+  params.push(['tn', cleanText(note ?? '', MAX_NOTE) || t('share.upi.note')])
   return `upi://pay?${params.map(([k, v]) => `${k}=${encodeURIComponent(v)}`).join('&')}`
 }
 
@@ -106,12 +107,13 @@ export function buildUpiRequestText({
   merchant,
   link,
 }: UpiRequestTextInput): string {
-  const what = merchant?.trim() ? `for ${merchant.trim()}` : 'of the bill'
   const amount = formatMoney(amountMinor, 'INR')
   return [
-    `Hi ${debtorName}, your share ${what} is ${amount}.`,
-    `Pay ${payerName} on UPI: ${normalizeUpiId(vpa)}`,
-    `Or tap to pay: ${link}`,
+    merchant?.trim()
+      ? t('share.upiRequest.for', { name: debtorName, merchant: merchant.trim(), amount })
+      : t('share.upiRequest.bill', { name: debtorName, amount }),
+    t('share.nudge.upi', { name: payerName, upi: normalizeUpiId(vpa) }),
+    t('share.upiRequest.tap', { link }),
   ].join('\n')
 }
 

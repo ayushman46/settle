@@ -1,12 +1,25 @@
 /** Small display formatters (user locale) that aren't money. */
+import { getLanguage, intlLocale } from '../i18n'
 
-const dateFormatter: Intl.DateTimeFormat | null = (() => {
-  try {
-    return new Intl.DateTimeFormat(undefined, { day: 'numeric', month: 'short', year: 'numeric' })
-  } catch {
-    return null
+const dateFormatters = new Map<string, Intl.DateTimeFormat | null>()
+
+/** Bill dates in the UI language: English keeps the phone's own order; others their Indian locale, Latin digits. */
+function dateFormatterFor(): Intl.DateTimeFormat | null {
+  const lang = getLanguage()
+  let formatter = dateFormatters.get(lang)
+  if (formatter === undefined) {
+    try {
+      formatter =
+        lang === 'en'
+          ? new Intl.DateTimeFormat(undefined, { day: 'numeric', month: 'short', year: 'numeric' })
+          : new Intl.DateTimeFormat(intlLocale(lang), { day: 'numeric', month: 'short', year: 'numeric', numberingSystem: 'latn' })
+    } catch {
+      formatter = null
+    }
+    dateFormatters.set(lang, formatter)
   }
-})()
+  return formatter
+}
 
 /**
  * A bill date for display. ISO dates ("2026-10-18") become "18 Oct 2026" / "Oct 18, 2026" per
@@ -16,6 +29,7 @@ export function formatBillDate(date: string | null | undefined): string | null {
   const text = date?.trim()
   if (!text) return null
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(text)
+  const dateFormatter = match ? dateFormatterFor() : null
   if (match && dateFormatter) {
     const year = Number(match[1])
     const month = Number(match[2]) - 1

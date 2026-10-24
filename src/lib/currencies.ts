@@ -1,3 +1,5 @@
+import { getLanguage, intlLocale } from '../i18n'
+
 export interface CurrencyOption {
   code: string
   name: string
@@ -156,17 +158,21 @@ export function isKnownCurrency(code: string): boolean {
  * (~90 ms of main thread on a budget phone), and most starts never show a currency name.
  * `undefined` = not tried yet, `null` = this browser can't.
  */
-let displayNames: Intl.DisplayNames | null | undefined
+const displayNames = new Map<string, Intl.DisplayNames | null>()
 
+/** Currency names in the UI language (English keeps the browser's own locale, as before). */
 function currencyNames(): Intl.DisplayNames | null {
-  if (displayNames === undefined) {
+  const lang = getLanguage()
+  let names = displayNames.get(lang)
+  if (names === undefined) {
     try {
-      displayNames = new Intl.DisplayNames(undefined, { type: 'currency' })
+      names = new Intl.DisplayNames(lang === 'en' ? undefined : intlLocale(lang), { type: 'currency' })
     } catch {
-      displayNames = null
+      names = null
     }
+    displayNames.set(lang, names)
   }
-  return displayNames
+  return names
 }
 
 /** Human name for a currency ("Indian Rupee"), localised when the browser can. */

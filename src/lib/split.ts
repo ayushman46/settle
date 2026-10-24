@@ -8,6 +8,7 @@
  * 3. Delivery-app fees (part of `paid`) follow the bill's fee split: in proportion (the default,
  *    same totals as step 2) or equally between the people who had anything.
  */
+import { t } from '../i18n'
 import type { BillItem, FeeSplit, Minor, Person, Shares } from '../types'
 import { allocate } from './money'
 
@@ -220,5 +221,5 @@ const EVEN_FRACTIONS: Readonly<Record<number, string>> = { 2: '½', 3: '⅓', 4:
 export function shareLabel(line: SplitLine): string | null {
   if (line.sharedWith <= 1) return null
   if (line.even) return EVEN_FRACTIONS[line.sharedWith] ?? `1/${line.sharedWith}`
-  return `${line.shares} of ${line.totalShares} shares`
+  return t('kit.shares.portion', { shares: String(line.shares), total: String(line.totalShares) })
 }
