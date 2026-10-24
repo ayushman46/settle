@@ -1,7 +1,7 @@
 import { useState, type FormEvent, type ReactNode } from 'react'
 import { Button, TextField } from '../components'
 import { ME_ID } from '../domain/types'
-import { t, useT } from '../i18n'
+import { useT } from '../i18n'
 import { cx } from '../lib/cx'
 import { isValidUpiId, normalizeUpiId } from '../lib/upi'
 import styles from './UpiIdForm.module.css'
@@ -21,13 +21,8 @@ export interface UpiIdFormProps {
   className?: string
 }
 
-/** English only (kept for older callers): use `upiIdError()`, which reads in the UI language. */
+/** English only (kept for older callers): `upiIdError()` in `upiErrors.ts` reads in the UI language. */
 export const UPI_ID_ERROR = 'That doesn’t look like a UPI ID. It’s like name@bank.'
-
-/** `UPI_ID_ERROR` in the UI language. */
-export function upiIdError(): string {
-  return t('kit.upiForm.error')
-}
 
 /**
  * Adds a UPI ID in place, where one is missing (a pay sheet, a share sheet asking for yours):
