@@ -1,4 +1,51 @@
 /** Hindi copy for the app shell (src/app). Keys: `app.<screen>.<element>` (see i18n-plan §3). */
 import type { Messages } from '../types'
 
-export const app = {} as const satisfies Messages
+export const app = {
+  'app.tab.home': 'होम',
+  'app.tab.groups': 'ग्रुप',
+  'app.tab.activity': 'लेन-देन',
+  'app.tab.you': 'आप',
+
+  'app.title.format': '{page} · {brand}',
+  'app.title.home': 'होम',
+  'app.title.welcome': 'स्वागत है',
+  'app.title.groups': 'ग्रुप',
+  'app.title.group': 'ग्रुप',
+  'app.title.settleUp': 'हिसाब बराबर करें',
+  'app.title.activity': 'लेन-देन',
+  'app.title.you': 'आप',
+  'app.title.newSplit': 'नया स्प्लिट',
+  'app.title.editSplit': 'स्प्लिट बदलें',
+  'app.title.fromSms': 'SMS से',
+  'app.title.lend': 'उधार दें या लें',
+  'app.title.editLend': 'उधार बदलें',
+  'app.title.expense': 'खर्च',
+  'app.title.claims': 'क्लेम',
+  'app.title.people': 'लोग',
+  'app.title.person': 'व्यक्ति',
+  'app.title.insights': 'इनसाइट्स',
+  'app.title.recurring': 'बार-बार वाले स्प्लिट',
+  'app.title.newRecurring': 'नया बार-बार वाला स्प्लिट',
+  'app.title.recurringOne': 'बार-बार वाला स्प्लिट',
+  'app.title.collections': 'चंदा',
+  'app.title.newCollection': 'नया चंदा',
+  'app.title.collection': 'चंदा',
+  'app.title.editCollection': 'चंदा बदलें',
+  'app.title.pro': 'Pro',
+
+  'app.storage.title': 'यह फ़ोन आपके बदलाव सेव नहीं कर रहा',
+  'app.storage.body': 'शायद स्टोरेज भर गई है या ब्लॉक है। थोड़ी जगह खाली करें — {brand} खुला रहने तक सब यहीं रहेगा।',
+
+  'app.loading.aria': 'लोड हो रहा है',
+
+  'app.crash.title': 'कुछ गड़बड़ हो गई',
+  'app.crash.body': 'माफ़ कीजिए। फिर कोशिश करें, या होम पर जाएँ — आपके स्प्लिट सुरक्षित हैं।',
+  'app.crash.retry.cta': 'फिर कोशिश करें',
+  'app.crash.home.cta': 'होम पर जाएँ',
+  'app.crash.offline.title': 'आप ऑफ़लाइन हैं',
+  'app.crash.offline.body': 'यह स्क्रीन पहली बार खुलने पर इंटरनेट माँगती है। कनेक्ट करके फिर कोशिश करें।',
+  'app.crash.updated.title': '{brand} अपडेट हो गया है',
+  'app.crash.updated.body': 'नया वर्ज़न पाने के लिए रीलोड करें — आपके स्प्लिट इस फ़ोन पर सुरक्षित हैं।',
+  'app.crash.reload.cta': 'रीलोड करें',
+} as const satisfies Messages

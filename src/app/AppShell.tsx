@@ -3,6 +3,7 @@ import { CircleUserRound, House, ReceiptText, RefreshCw, RotateCcw, UsersRound, 
 import { AppFrame, Banner, Button, EmptyState, ScreenTransition, Skeleton, TabBar, type NavDirection, type TabBarItem } from '../components'
 import { migrateLegacy, profileStore, useStorageWritable, useStore } from '../data'
 import { BRAND, type Profile } from '../domain/types'
+import { hasMessage, t, useLang, type MessageKey } from '../i18n'
 import { onboardingDestination, welcomePath } from '../features/onboarding/destination'
 import { usePaywall } from '../features/pro/paywall'
 import { prefetchHealth } from '../state/health'
@@ -11,12 +12,51 @@ import { HOME_PATH, matchAppRoute, PaywallHost, preloadCoreScreens, WELCOME_PATT
 import { navigate, Redirect, useLocation, useNavDirection } from './router'
 import styles from '../App.module.css'
 
-const TABS: readonly TabBarItem[] = [
-  { key: 'home', label: 'Home', icon: <House />, href: HOME_PATH },
-  { key: 'groups', label: 'Groups', icon: <UsersRound />, href: '/app/groups' },
-  { key: 'activity', label: 'Activity', icon: <ReceiptText />, href: '/app/activity' },
-  { key: 'you', label: 'You', icon: <CircleUserRound />, href: '/app/you' },
-]
+/** The bottom tabs, named in the UI language. */
+function tabs(): readonly TabBarItem[] {
+  return [
+    { key: 'home', label: t('app.tab.home'), icon: <House />, href: HOME_PATH },
+    { key: 'groups', label: t('app.tab.groups'), icon: <UsersRound />, href: '/app/groups' },
+    { key: 'activity', label: t('app.tab.activity'), icon: <ReceiptText />, href: '/app/activity' },
+    { key: 'you', label: t('app.tab.you'), icon: <CircleUserRound />, href: '/app/you' },
+  ]
+}
+
+/** Route titles (English, from routes.tsx) → their catalog keys, for the browser tab's title. */
+const TITLE_KEYS: Readonly<Record<string, MessageKey>> = {
+  Home: 'app.title.home',
+  Welcome: 'app.title.welcome',
+  Groups: 'app.title.groups',
+  Group: 'app.title.group',
+  'Settle up': 'app.title.settleUp',
+  Activity: 'app.title.activity',
+  You: 'app.title.you',
+  'New split': 'app.title.newSplit',
+  'Edit split': 'app.title.editSplit',
+  'From SMS': 'app.title.fromSms',
+  'Lend or borrow': 'app.title.lend',
+  'Edit udhaar': 'app.title.editLend',
+  Expense: 'app.title.expense',
+  Claims: 'app.title.claims',
+  People: 'app.title.people',
+  Person: 'app.title.person',
+  Insights: 'app.title.insights',
+  'Recurring splits': 'app.title.recurring',
+  'New recurring split': 'app.title.newRecurring',
+  'Recurring split': 'app.title.recurringOne',
+  Collections: 'app.title.collections',
+  'New collection': 'app.title.newCollection',
+  Collection: 'app.title.collection',
+  'Edit collection': 'app.title.editCollection',
+  Pro: 'app.title.pro',
+}
+
+/** A route's title in the UI language: an English title we know, or a catalog key; anything else as is. */
+function pageTitle(title: string): string {
+  if (Object.hasOwn(TITLE_KEYS, title)) return t(TITLE_KEYS[title] as MessageKey)
+  if (hasMessage(title)) return t(title as MessageKey)
+  return title
+}
 
 const selectOnboarded = (p: Profile) => p.onboarded
 
@@ -78,12 +118,15 @@ export function AppShell({ preloadScreens = import.meta.env.PROD }: AppShellProp
     return whenIdle(() => void preloadCoreScreens())
   }, [preloadScreens])
 
+  // A language change re-renders every screen (helpers outside React read it at render time).
+  const lang = useLang()
+
   // Before paint and after the screen's own layout effects; screens that name the page more
   // precisely (a group's name) set it in a passive effect, which runs after this.
   const title = route?.title ?? null
   useLayoutEffect(() => {
-    if (title !== null) document.title = `${title} · ${BRAND.name}`
-  }, [title, location.path])
+    if (title !== null) document.title = t('app.title.format', { page: pageTitle(title), brand: BRAND.name })
+  }, [title, location.path, lang])
 
   let content: ReactNode
   if (!onboarded && route?.pattern !== WELCOME_PATTERN) {
@@ -103,7 +146,7 @@ export function AppShell({ preloadScreens = import.meta.env.PROD }: AppShellProp
             </Suspense>
           </ScreenTransition>
         </ShellErrorBoundary>
-        {tab !== null && <TabBar items={TABS} activeKey={tab} onNavigate={switchTab} />}
+        {tab !== null && <TabBar items={tabs()} activeKey={tab} onNavigate={switchTab} />}
       </>
     )
   }
@@ -130,12 +173,13 @@ function PaywallMount() {
 
 /** Shown while the phone refuses to save (storage full or blocked) — never silently lose work. */
 function StorageNotice() {
+  useLang()
   const writable = useStorageWritable()
   if (writable) return null
   return (
     <div className={styles.notice}>
-      <Banner tone="warning" title="This phone isn’t saving your changes">
-        Its storage may be full or blocked. Free up some space — everything stays here while {BRAND.name} is open.
+      <Banner tone="warning" title={t('app.storage.title')}>
+        {t('app.storage.body', { brand: BRAND.name })}
       </Banner>
     </div>
   )
@@ -144,7 +188,7 @@ function StorageNotice() {
 /** A quiet placeholder while a screen's code loads (it only fades in if that takes a moment). */
 function RouteFallback() {
   return (
-    <div className={styles.fallback} role="status" aria-label="Loading">
+    <div className={styles.fallback} role="status" aria-label={t('app.loading.aria')}>
       <div className={styles.fallbackTop} aria-hidden="true">
         <Skeleton shape="circle" width={40} height={40} />
       </div>
@@ -208,33 +252,33 @@ function ShellCrash({ error, onRetry }: { error: unknown; onRetry: () => void })
   const chunk = isChunkLoadError(error)
 
   let icon: ReactNode = <RotateCcw />
-  let title = 'Something went wrong'
-  let text = 'Sorry about that. Try again, or head back Home — your splits are safe.'
+  let title = t('app.crash.title')
+  let text = t('app.crash.body')
   let actions: ReactNode = (
     <>
       <Button block onClick={onRetry}>
-        Try again
+        {t('app.crash.retry.cta')}
       </Button>
       <Button block variant="ghost" onClick={goHome}>
-        Go to Home
+        {t('app.crash.home.cta')}
       </Button>
     </>
   )
   if (chunk && isOffline()) {
     icon = <WifiOff />
-    title = 'You’re offline'
-    text = 'This screen needs a connection the first time it opens. Reconnect and try again.'
+    title = t('app.crash.offline.title')
+    text = t('app.crash.offline.body')
   } else if (chunk) {
     icon = <RefreshCw />
-    title = `${BRAND.name} has been updated`
-    text = 'Reload to get the latest version — your splits are safe on this phone.'
+    title = t('app.crash.updated.title', { brand: BRAND.name })
+    text = t('app.crash.updated.body')
     actions = (
       <>
         <Button block onClick={() => window.location.reload()}>
-          Reload
+          {t('app.crash.reload.cta')}
         </Button>
         <Button block variant="ghost" onClick={goHome}>
-          Go to Home
+          {t('app.crash.home.cta')}
         </Button>
       </>
     )
