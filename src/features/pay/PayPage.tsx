@@ -3,6 +3,7 @@ import { useBackClose, useLocation } from '../../app/router'
 import { Skeleton } from '../../components'
 import { BRAND } from '../../domain/types'
 import { useT } from '../../i18n'
+import { LanguageSwitcher } from '../../i18n/ui/LanguageSwitcher'
 import type { PayLinkPayload } from '../../share/payLink'
 import { usePageMeta } from '../landing/pageMeta'
 import { PayPanel } from './PayPanel'
@@ -126,6 +127,7 @@ export function PayPage() {
 
   return (
     <PublicShell>
+      <LanguageSwitcher placement="page" />
       {link.status === 'loading' && <Loading />}
       {(link.status === 'empty' || link.status === 'invalid') && <Problem kind={link.status} />}
       {link.status === 'ok' && <PayRequest key={link.fragment} payload={link.payload} />}
