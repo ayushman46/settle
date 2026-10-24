@@ -1,0 +1,51 @@
+/** Gujarati copy for the app shell (src/app). Keys: `app.<screen>.<element>`. */
+import type { Messages } from '../types'
+
+export const app = {
+  'app.tab.home': 'હોમ',
+  'app.tab.groups': 'ગ્રુપ',
+  'app.tab.activity': 'વ્યવહાર',
+  'app.tab.you': 'તમે',
+
+  'app.title.format': '{page} · {brand}',
+  'app.title.home': 'હોમ',
+  'app.title.welcome': 'સ્વાગત',
+  'app.title.groups': 'ગ્રુપ',
+  'app.title.group': 'ગ્રુપ',
+  'app.title.settleUp': 'હિસાબ પતાવો',
+  'app.title.activity': 'વ્યવહાર',
+  'app.title.you': 'તમે',
+  'app.title.newSplit': 'નવી સ્પ્લિટ',
+  'app.title.editSplit': 'સ્પ્લિટ બદલો',
+  'app.title.fromSms': 'SMS થી',
+  'app.title.lend': 'ઉધાર આપો કે લો',
+  'app.title.editLend': 'ઉધાર બદલો',
+  'app.title.expense': 'ખર્ચ',
+  'app.title.claims': 'ક્લેઇમ',
+  'app.title.people': 'લોકો',
+  'app.title.person': 'વ્યક્તિ',
+  'app.title.insights': 'ઇનસાઇટ્સ',
+  'app.title.recurring': 'રિકરિંગ સ્પ્લિટ',
+  'app.title.newRecurring': 'નવી રિકરિંગ સ્પ્લિટ',
+  'app.title.recurringOne': 'રિકરિંગ સ્પ્લિટ',
+  'app.title.collections': 'કલેક્શન',
+  'app.title.newCollection': 'નવું કલેક્શન',
+  'app.title.collection': 'કલેક્શન',
+  'app.title.editCollection': 'કલેક્શન બદલો',
+  'app.title.pro': 'Pro',
+
+  'app.storage.title': 'આ ફોન તમારા ફેરફારો સાચવી રહ્યો નથી',
+  'app.storage.body': 'એની સ્ટોરેજ ભરાઈ ગઈ હોઈ શકે અથવા બ્લૉક થયેલી હોઈ શકે. થોડી જગ્યા ખાલી કરો — {brand} ખુલ્લું હોય ત્યાં સુધી બધું અહીં જ રહેશે.',
+
+  'app.loading.aria': 'લોડ થઈ રહ્યું છે',
+
+  'app.crash.title': 'કંઈક ખોટું થયું',
+  'app.crash.body': 'માફ કરજો. ફરી પ્રયાસ કરો, અથવા હોમ પર પાછા જાઓ — તમારા સ્પ્લિટ સુરક્ષિત છે.',
+  'app.crash.retry.cta': 'ફરી પ્રયાસ કરો',
+  'app.crash.home.cta': 'હોમ પર જાઓ',
+  'app.crash.offline.title': 'તમે ઑફલાઇન છો',
+  'app.crash.offline.body': 'આ સ્ક્રીન પહેલી વાર ખોલવા ઇન્ટરનેટ જોઈએ. ફરી કનેક્ટ કરીને ફરી પ્રયાસ કરો.',
+  'app.crash.updated.title': '{brand} અપડેટ થયું છે',
+  'app.crash.updated.body': 'નવી આવૃત્તિ મેળવવા ફરી લોડ કરો — તમારા સ્પ્લિટ આ ફોન પર સુરક્ષિત છે.',
+  'app.crash.reload.cta': 'ફરી લોડ કરો',
+} as const satisfies Messages

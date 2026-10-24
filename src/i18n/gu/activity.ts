@@ -1,0 +1,70 @@
+/** Gujarati copy for Activity. Keys: `activity.<screen>.<element>`. */
+import type { Messages } from '../types'
+
+export const activity = {
+  'activity.title': 'વ્યવહાર',
+  'activity.newSplit.cta': 'નવી સ્પ્લિટ',
+
+  'activity.firstRun.title': 'તમારી સ્પ્લિટ અહીં રહેશે',
+  'activity.firstRun.body': 'તમે વહેંચેલો દરેક ખર્ચ અહીં નવાથી જૂના ક્રમમાં દેખાય છે — કોણે પૈસા પાછા આપ્યા અને કોણે નહીં.',
+  'activity.firstRun.split.cta': 'રકમ વહેંચો',
+  'activity.firstRun.scan.cta': 'બિલ સ્કેન કરો',
+
+  'activity.empty.all.title': 'હજી કોઈ ખર્ચ નથી',
+  'activity.empty.all.body': 'કંઈક વહેંચો, તે અહીં દેખાશે.',
+  'activity.empty.collect.title': 'વસૂલવાનું કંઈ નથી',
+  'activity.empty.collect.body': 'બધાએ તમને પાછા ચૂકવ્યા છે. સરસ.',
+  'activity.empty.pay.title': 'તમે બરાબર છો',
+  'activity.empty.pay.body': 'અત્યારે તમારે કોઈને આપવાનું નથી.',
+  'activity.empty.bills.title': 'હજી કોઈ બિલ નથી',
+  'activity.empty.bills.body': 'રેસ્ટોરન્ટનું બિલ સ્નેપ કરો, {brand} તેને આઇટમ પ્રમાણે વહેંચી દેશે.',
+  'activity.empty.groups.title': 'હજી ગ્રુપ ખર્ચ નથી',
+  'activity.empty.groups.body': 'ટ્રિપ, ફ્લેટ, કપલ — વહેંચેલા ખર્ચ ગ્રુપમાં સાથે રાખો.',
+  'activity.empty.settled.title': 'હજી કંઈ પતાવ્યું નથી',
+  'activity.empty.settled.body': 'બધા બરાબર થાય પછી સ્પ્લિટ અહીં આવે છે.',
+  'activity.empty.scan.cta': 'બિલ સ્કેન કરો',
+  'activity.empty.groups.cta': 'ગ્રુપ પર જાઓ',
+
+  'activity.noMatches.title': '“{query}” માટે કોઈ મેળ નથી',
+  'activity.noMatches.body': 'નામ, જગ્યા કે રકમ અજમાવો.',
+  'activity.noMatches.cta': 'બધી પ્રવૃત્તિ બતાવો',
+
+  'activity.groups.owed.title': 'ગ્રુપમાં તમને લેવાના છે',
+  'activity.groups.owe.title': 'ગ્રુપમાં તમારે આપવાના છે',
+  'activity.groups.description': 'ગ્રુપના ખર્ચ સાથે મળીને પતાવાય છે.',
+  'activity.groups.row.subtitle': 'હિસાબ પતાવો',
+  'activity.groups.row.owed.aria': '{group}: તમારે {amount} લેવાના છે. હિસાબ પતાવો',
+  'activity.groups.row.owe.aria': '{group}: તમારે {amount} આપવાના છે. હિસાબ પતાવો',
+
+  'activity.filters.aria': 'બતાવો',
+  'activity.filter.all.chip': 'બધું',
+  'activity.filter.collect.chip': 'લેવાના',
+  'activity.filter.pay.chip': 'આપવાના',
+  'activity.filter.bills.chip': 'બિલ',
+  'activity.filter.groups.chip': 'ગ્રુપ',
+  'activity.filter.settled.chip': 'પતી ગયેલું',
+  'activity.filter.counted.aria': '{label}, {count}',
+
+  'activity.search.label': 'પ્રવૃત્તિ શોધો',
+  'activity.search.placeholder': 'નામ, જગ્યા કે રકમ શોધો',
+  'activity.search.clear.aria': 'શોધ સાફ કરો',
+
+  'activity.results.noMatches': '“{query}” માટે કોઈ મેળ નથી',
+  'activity.results.matches': '“{query}” માટે {count, plural, one {# મેળ} other {# મેળ}}',
+  'activity.results.nothing.all': 'હજી કોઈ ખર્ચ નથી',
+  'activity.results.nothing.collect': 'વસૂલવાનું કંઈ નથી',
+  'activity.results.nothing.pay': 'ચૂકવવાનું કંઈ નથી',
+  'activity.results.nothing.bills': 'હજી કોઈ બિલ નથી',
+  'activity.results.nothing.groups': 'હજી ગ્રુપ ખર્ચ નથી',
+  'activity.results.nothing.settled': 'હજી કંઈ પતાવ્યું નથી',
+  'activity.results.all': '{count, plural, one {# ખર્ચ} other {# ખર્ચ}}',
+  'activity.results.collect': '{count, plural, one {# સ્પ્લિટ} other {# સ્પ્લિટ}} પર {sum} લેવાના છે',
+  'activity.results.pay': '{count, plural, one {# સ્પ્લિટ} other {# સ્પ્લિટ}} પર તમારે {sum} આપવાના છે',
+  'activity.results.bills': '{count, plural, one {# બિલ} other {# બિલ}}',
+  'activity.results.groups': '{count, plural, one {# ગ્રુપ ખર્ચ} other {# ગ્રુપ ખર્ચ}}',
+  'activity.results.settled': '{count, plural, one {# ખર્ચ} other {# ખર્ચ}} પતી ગયો',
+  'activity.results.owedInGroups': '{count, plural, one {# ગ્રુપમાં} other {# ગ્રુપમાં}} તમને લેવાના છે',
+  'activity.results.oweInGroups': '{count, plural, one {# ગ્રુપમાં} other {# ગ્રુપમાં}} તમારે આપવાના છે',
+
+  'activity.month.undated': 'તારીખ વગરનું',
+} as const satisfies Messages
