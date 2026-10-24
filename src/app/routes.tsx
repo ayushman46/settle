@@ -147,6 +147,11 @@ const ShareInScreen = lazyScreen(
   () => import('../features/sharein/ShareInScreen'),
   (m) => m.ShareInScreen,
 )
+const ProofScreen = lazyScreen(
+  'ProofScreen',
+  () => import('../features/proof/ProofScreen'),
+  (m) => m.ProofScreen,
+)
 const LendScreen = lazyScreen(
   'LendScreen',
   () => import('../features/lend/LendScreen'),
@@ -212,6 +217,7 @@ export const APP_ROUTES: readonly AppRoute[] = [
   { pattern: '/app/split/:id/edit', screen: NewSplitScreen, title: 'Edit split', tab: null },
   { pattern: '/app/share', screen: ShareInScreen, title: 'From SMS', tab: null },
   { pattern: '/app/lend', screen: LendScreen, title: 'Lend or borrow', tab: null },
+  { pattern: '/app/proof', screen: ProofScreen, title: 'Paid? Drop the screenshot', tab: null },
   { pattern: '/app/lend/:id/edit', screen: LendScreen, title: 'Edit udhaar', tab: null },
   { pattern: '/app/expense/:id', screen: ExpenseDetailScreen, title: 'Expense', tab: null },
   { pattern: '/app/bill', screen: BillFlow, title: null, tab: null },

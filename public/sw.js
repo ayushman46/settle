@@ -228,17 +228,22 @@ async function receiveShare(request) {
     await dropOldShares(cache, now).catch(() => undefined)
     let total = 0
     let count = 0
+    let images = 0
     for (const file of form.getAll('media')) {
       if (count >= MAX_SHARED_FILES || typeof file === 'string') continue
       if (file.size > MAX_SHARED_FILE_BYTES || total + file.size > MAX_SHARED_TOTAL_BYTES) continue
       total += file.size
       const headers = { 'Content-Type': file.type || 'application/octet-stream', 'X-File-Name': encodeURIComponent(file.name || 'shared'), 'X-Stored-At': String(now) }
       await cache.put(`${SHARE_PATH}/${id}/file-${count}`, new Response(file, { headers }))
+      if (String(file.type).startsWith('image/')) images++
       count++
     }
     const meta = { title: clip(form.get('title')), text: clip(form.get('text')), url: clip(form.get('url')), files: count }
     await cache.put(`${SHARE_PATH}/${id}/meta`, new Response(JSON.stringify(meta), { headers: { 'Content-Type': 'application/json', 'X-Stored-At': String(now) } }))
-    return Response.redirect(new URL(`/app/share?k=${id}`, self.location.origin).href, 303)
+    // A screenshot on its own is a payment to check (Paid? Drop the screenshot); anything else is the paste-and-split screen.
+    const onlyScreenshots = images > 0 && images === count && !meta.title && !meta.text && !meta.url
+    const opens = onlyScreenshots ? `/app/proof?k=${id}` : `/app/share?k=${id}`
+    return Response.redirect(new URL(opens, self.location.origin).href, 303)
   } catch {
     return Response.redirect(missed, 303)
   }

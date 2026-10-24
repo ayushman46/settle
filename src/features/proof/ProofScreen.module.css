@@ -1,0 +1,51 @@
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.note {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--text-muted, #4b5563);
+}
+
+.drop,
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  border-radius: 16px;
+  background: var(--surface-raised, #fff);
+  border: 1px solid var(--border, #e5e7eb);
+}
+
+.cardTitle {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.cardText,
+.hint {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--text-muted, #4b5563);
+  overflow-wrap: anywhere;
+}
+
+.error {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--danger, #b42318);
+  overflow-wrap: anywhere;
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
