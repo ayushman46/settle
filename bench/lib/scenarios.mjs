@@ -381,6 +381,10 @@ export async function scrollRun(env, profile, { list, mode }) {
     }
     await waitSettled(s, requests, { quiet: 1000 })
     const r = await scrollToOldest(s, list === 'activity' ? OLDEST.activity : OLDEST.group, { mode })
+    // JS heap once there, after a full GC: what the list costs in memory.
+    await s.send('HeapProfiler.collectGarbage').catch(() => {})
+    const heap = await s.send('Runtime.getHeapUsage').catch(() => null)
+    r.heapMb = heap ? heap.usedSize / (1024 * 1024) : null
     requests.stop()
     if (!r.reached) r.timeToOldest = null
     return r

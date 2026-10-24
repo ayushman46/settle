@@ -1,0 +1,41 @@
+[
+  {
+    "dist": "C:\\Users\\Ayush\\Downloads\\Billsplit-AI\\node_modules\\.cache\\settle-bench\\dist-fp-6acbb80",
+    "app": {
+      "js": 189799,
+      "css": 23808,
+      "files": 27
+    },
+    "pay": {
+      "js": 202772,
+      "css": 26737,
+      "files": 42
+    }
+  },
+  {
+    "dist": "C:\\Users\\Ayush\\Downloads\\Billsplit-AI\\node_modules\\.cache\\settle-bench\\dist-fp-963e285",
+    "app": {
+      "js": 189799,
+      "css": 23808,
+      "files": 27
+    },
+    "pay": {
+      "js": 202772,
+      "css": 26737,
+      "files": 42
+    }
+  },
+  {
+    "dist": "C:\\Users\\Ayush\\Downloads\\Billsplit-AI\\node_modules\\.cache\\settle-bench\\dist-fp-head",
+    "app": {
+      "js": 205710,
+      "css": 24758,
+      "files": 36
+    },
+    "pay": {
+      "js": 218322,
+      "css": 27687,
+      "files": 51
+    }
+  }
+]

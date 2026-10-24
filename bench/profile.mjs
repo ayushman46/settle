@@ -227,7 +227,8 @@ try {
         await new Promise((r) => setTimeout(r, 1500))
       }
     } else if (scenario.startsWith('scroll:')) {
-      const list = scenario.slice(7)
+      // scroll:<activity|group>[:fling] — fling scrolls at 10,000 px/s like repeated flings; the default jumps to the bottom.
+      const [list, mode = 'jump'] = scenario.slice(7).split(':')
       const tapList = list === 'activity' ? [[TAP.tab('/app/activity'), READY.activity]] : [[TAP.tab('/app/groups'), READY.groups], [TAP.ariaPrefix('Flat 302, Koramangala,'), READY.groupDetail]]
       for (const [tap, ready] of tapList) {
         await evaluate(s, `(async () => { const el = ${tap}; const ready = ${ready}; el.click(); for (;;) { await new Promise((r) => requestAnimationFrame(r)); try { if (ready()) break } catch {} } })()`)
@@ -237,7 +238,7 @@ try {
       const target = list === 'activity' ? OLDEST.activity : OLDEST.group
       const ms = await evaluate(
         s,
-        `(async () => { const t0 = performance.now(); for (;;) { await new Promise((r) => requestAnimationFrame(r)); const el = ${target}; if (el) { const r = el.getBoundingClientRect(); if (r.top < innerHeight && r.bottom > 0) break } window.scrollTo(0, document.documentElement.scrollHeight) ; if (performance.now() - t0 > 200000) break } return performance.now() - t0 })()`,
+        `(async () => { const t0 = performance.now(); let last = t0; for (;;) { await new Promise((r) => requestAnimationFrame(r)); const now = performance.now(); const dt = now - last; last = now; const el = ${target}; if (el) { const r = el.getBoundingClientRect(); if (r.top < innerHeight && r.bottom > 0) break } if (${JSON.stringify(mode)} === 'fling') window.scrollBy(0, Math.max(1, (10000 * dt) / 1000)); else window.scrollTo(0, document.documentElement.scrollHeight); if (performance.now() - t0 > 200000) break } return performance.now() - t0 })()`,
         { timeout: 240_000 },
       )
       console.log(`scrolled to the oldest ${list} row in ${ms.toFixed(0)} ms`)

@@ -91,6 +91,7 @@ const KEYS = [
   'longTaskMs',
   'stalledMs',
   'domNodes',
+  'heapMb',
 ]
 
 const servers = []
@@ -147,7 +148,7 @@ try {
         const a = summarize(records.A.map((r) => r[k]))
         const b = summarize(records.B.map((r) => r[k]))
         if (a.p50 === null && b.p50 === null) continue
-        const isMs = !/Kb$|Frames|domNodes/.test(k)
+        const isMs = !/Kb$|Mb$|Frames|domNodes/.test(k)
         const f = (s) => (s.p50 === null ? '—' : isMs ? `${fmtMs(s.p50)} (${fmtMs(s.min)}–${fmtMs(s.max)})` : `${s.p50.toFixed(1)} (${s.min.toFixed(1)}–${s.max.toFixed(1)})`)
         const delta = a.p50 && b.p50 !== null ? `${b.p50 - a.p50 > 0 ? '+' : ''}${(((b.p50 - a.p50) / a.p50) * 100).toFixed(0)}%` : '—'
         console.log(`| ${k} | ${f(a)} | ${f(b)} | ${delta} |`)

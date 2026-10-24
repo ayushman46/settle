@@ -311,6 +311,48 @@ The control moved too (machine noise), so read the `/pay` win as ~10%, not 13%.
 
 Pages still cost a long task each on a budget phone; list virtualisation is the next step (open).
 
+## Third pass (24 Oct, perf-3): Activity's fling, and the first-paint budget
+
+Same method: measure, fix, interleaved A/B (`bench/ab.mjs`, low profile), keep only measured wins. Both sides are clean `git archive` trees (`scratchpad` tools `buildrev.sh` / `buildwith.sh`), so other agents' work-in-progress never enters a measurement.
+
+### Activity with 1,500 expenses: the windowed list, measured both ways
+
+The windowing itself landed earlier tonight (8e9871d, see the note there). Its A/B is `bench/results/ab-perf3-t1-activity-window.json` (7 runs, jump to the oldest row): time to the oldest 43.6 s → 1.6 s, long-task time 41.7 s → 1.6 s, DOM 26,081 → 611 elements.
+
+The jump is not what a user does. **Fling** (10,000 px/s, the scroll a user actually makes) is the number to compare with the 59 s in the task. `bench/results/ab-perf3-t1b-activity-window-fling.json`, low profile, 5 runs, medians (min–max):
+
+| metric (Activity, 1,500 expenses) | before (the paged list, the build before 8e9871d) | after (8e9871d) | change |
+| --- | --- | --- | --- |
+| time to the oldest row | 58.13 s (40.86–59.25 s) | 14.87 s (14.03–15.33 s) | −74% |
+| long-task time while scrolling | 55.02 s | 14.46 s | −74% |
+| long frames / dropped frames | 95 / 3,368 | 22 / 872 | −77% / −74% |
+| stalled at the bottom | 2.30 s | 0 ms | −100% |
+| DOM elements | 26,081 | 611–1,005 | −96% |
+| JS heap after GC | 19.6 MB | 6.2 MB | −68% |
+
+Mid profile (no throttling), same runs: time to the oldest 14.05 s both sides (it is the scroll distance: ~140,000 px at 10,000 px/s), long frames 9 → 0, DOM 26,081 → 823, heap 19.7 → 6.6 MB. So on a phone without a CPU throttle the list no longer janks; the remaining 14.9 s on the budget profile is frame time.
+
+**Where the remaining fling time goes** (low profile, `node bench/profile.mjs --scenario scroll:activity:fling --trace`, source positions mapped by hand): 22 frames of ~650 ms each carry the 14.5 s. In the trace, 1,881 forced style-and-layout calls cost 6.5 s, of which only 16 are full layouts (3.7 s). About 560 of the forced calls (6.2 s) sit under React's scheduler and commit, and 1,150 (0.25 s) under the layout-effect height read in `MonthList`. The cost tracks mounting rows (each row mounted once while the fling passes it), not the number of window moves.
+
+Two changes were tried and reverted, with one trace each (not an A/B, so not kept): (1) asking for a window check only when a commit measured a new height or changed rows: 1,808 forced calls, 14.6 s, no change; (2) a wider window (two screens either way, hysteresis three): 1,567 forced calls, 16.2 s, no gain. The next step is to find what in React's commit forces the style recalculation (candidates: selection and focus restore around commits; per-row `ExpenseRow` markup, 20 or so elements per row) before changing the list again.
+
+### First-paint JavaScript against tonight's start (`bench/firstpaint.mjs`, `bench/results/firstpaint-24oct-0630.json`)
+
+What the HTML shell loads before first paint (entry plus its static imports and modulepreloads, CSS included), brotli bytes, from production builds:
+
+| build | `/app` JS | `/app` CSS | `/app` files | `/pay` JS (+ link preloads) | `/pay` CSS | `/pay` files |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| `6acbb80` — tonight's start | 185.35 KB | 23.25 KB | 27 | 198.02 KB | 26.11 KB | 42 |
+| `963e285` — the commit before the i18n work (no code change from `6acbb80`) | 185.35 KB | 23.25 KB | 27 | 198.02 KB | 26.11 KB | 42 |
+| `4c6eaa7` — HEAD at 06:25 | 200.89 KB | 24.18 KB | 36 | 213.21 KB | 27.04 KB | 51 |
+| delta vs tonight's start | **+15.5 KB** | +0.9 KB | +9 | **+15.2 KB** | +0.9 KB | +9 |
+
+**The i18n budget (+3 KB brotli on first paint) is exceeded by about 12.5 KB** on both `/app` and `/pay`. Where it comes from (names from the build manifest): a shared `people` chunk that now holds React's runtime and is statically imported by the entry (30.1 KB brotli, absent from tonight's start's shell); `index-a` (8.2 KB, new in the shell); `router` and `format`/`amountWords`/`FriendAvatar` (about 2 KB together); `schemas` grew by 2 KB; and `rolldown-runtime` split out. The old `runtime` chunk (13.1 KB) is gone into `index`. The main chunk shrank by about 8 KB, so the module graph moved more than it grew. Reported to `i18n-core` as a Needs item (a chunking change to keep the shared runtime with the entry, or to make the catalog-bearing modules lazy).
+
+Also on the first-paint path: zod. `schemas-DDhCsTSD.js` (the zod runtime, 7.9 KB brotli) and the app's own schema module (10.6 KB brotli) are in every shell. Taking zod off first paint needs the schema modules loaded lazily, which the data layer's synchronous load does not allow yet (open).
+
+Second checkpoint (07:15) is in the Final section below.
+
 ## Deferred wins (files the perf agent doesn't own — ready for the lead to apply)
 
 Each is measured the same way as the fixes above: build before/after into `node_modules/.cache/settle-bench/dist-*` and run `node bench/ab.mjs --a <before> --b <after> …` (interleaved, 5 runs, medians). Numbers below come from the low-profile CPU profile / trace of a cold start with heavy data (`node bench/profile.mjs --sourcemap --scenario cold --data heavy --trace`), so "expected" = self time that goes away, not yet an A/B result.
