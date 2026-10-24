@@ -141,7 +141,10 @@ test.describe('switching language in You', () => {
     const available = (await tamil.isDisabled()) === false
     test.skip(!available, 'Tamil catalog is not in this build yet (tile is "coming soon")')
 
-    await tamil.check({ force: true })
+    // The tile is a controlled radio: it becomes checked once its catalog has loaded, so wait for that.
+    await tamil.click({ force: true })
+    // Once Tamil is on, the group is named in Tamil too: check the tile by its own name.
+    await expect(page.getByRole('radio', { name: /தமிழ்/ })).toBeChecked({ timeout: 20_000 })
     await expect(page.locator('html')).toHaveAttribute('lang', 'ta')
     await page.keyboard.press('Escape')
     await openPath(page, '/app')
@@ -150,7 +153,10 @@ test.describe('switching language in You', () => {
 
     await openPath(page, '/app/you')
     await page.getByRole('button', { name: /மொழி|Language/ }).first().click()
-    await grid.getByRole('radio', { name: /English/ }).check({ force: true })
+    // The sheet is in Tamil now, so its group is no longer named "Language": find the tile by its own name.
+    const english = page.getByRole('radiogroup').getByRole('radio', { name: 'English', exact: true })
+    await english.click({ force: true })
+    await expect(english).toBeChecked({ timeout: 20_000 })
     await expect(page.locator('html')).toHaveAttribute('lang', 'en')
     await page.keyboard.press('Escape')
     await openPath(page, '/app')
