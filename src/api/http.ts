@@ -3,6 +3,7 @@
  * Never throws: every outcome is a value, so each caller (scan, describe, billing, licences)
  * maps failures onto its own friendly copy instead of leaking transport details.
  */
+import { t } from '../i18n'
 
 export function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
@@ -32,9 +33,9 @@ export function retryAfterSeconds(response: Response, now: number = Date.now()):
  */
 export function waitPhrase(seconds: number): string {
   const minutes = Math.max(1, Math.ceil(seconds / 60))
-  if (minutes === 1) return 'about a minute'
-  if (minutes < 90) return `about ${minutes} minutes`
-  return `about ${Math.ceil(minutes / 60)} hours`
+  if (minutes === 1) return t('api.wait.minute')
+  if (minutes < 90) return t('api.wait.minutes', { count: minutes })
+  return t('api.wait.hours', { count: Math.ceil(minutes / 60) })
 }
 
 /**

@@ -14,6 +14,7 @@ import {
   type ScanResponse,
   type ScannedItem,
 } from '../../shared/api'
+import { t, type MessageKey } from '../i18n'
 import { licenseHeaders } from '../pro/store'
 import { callApi, isOffline, isRecord, PRO_ALLOWANCE_MIN_WAIT_SECONDS, waitPhrase, type CallResult } from './http'
 
@@ -24,23 +25,41 @@ export type ScanErrorCode = Exclude<ApiErrorCode, 'not_a_split' | 'billing_unava
  * What we tell diners for every error. The server's own `message` is never shown: these are written
  * for the person holding the phone (no keys, env files or "server"), whatever answers `/api/scan`.
  */
-export const SCAN_ERROR_MESSAGES: Readonly<Record<ScanErrorCode, string>> = {
-  bad_request: "Something about that photo didn't work. Please try another one.",
-  unsupported_image: 'Please use a JPG or PNG photo.',
-  image_too_large: 'That photo is too large. Try a smaller one — or take a screenshot of it.',
-  not_a_bill: "That doesn't look like a bill. Try a clear photo of the full receipt.",
-  unreadable: "We couldn't read any items. Try a clearer, well-lit photo — or enter them manually.",
-  not_configured: "Photo scanning isn't available right now — you can type the items in.",
-  upstream_auth: "Photo scanning isn't working right now — you can type the items in.",
-  rate_limited: 'Too many scans right now. Try again in a few minutes — or type the items in.',
-  timeout: 'Reading the bill took too long. Try again with a sharper, closer photo.',
-  upstream_error: "Couldn't reach the AI service. Please try again.",
-  network: 'You seem to be offline. Check your connection and try again.',
-  aborted: 'Scan cancelled.',
+const SCAN_ERROR_KEYS: Readonly<Record<ScanErrorCode, MessageKey>> = {
+  bad_request: 'api.scan.error.bad_request',
+  unsupported_image: 'api.scan.error.unsupported_image',
+  image_too_large: 'api.scan.error.image_too_large',
+  not_a_bill: 'api.scan.error.not_a_bill',
+  unreadable: 'api.scan.error.unreadable',
+  not_configured: 'api.scan.error.not_configured',
+  upstream_auth: 'api.scan.error.upstream_auth',
+  rate_limited: 'api.scan.error.rate_limited',
+  timeout: 'api.scan.error.timeout',
+  upstream_error: 'api.scan.error.upstream_error',
+  network: 'api.scan.error.network',
+  aborted: 'api.scan.error.aborted',
 }
 
-/** A short wait (the server's in-flight cap, or a brief upstream back-off): nobody did anything wrong. */
+/** Each code's message, read in the UI language whenever it's looked up. */
+export const SCAN_ERROR_MESSAGES: Readonly<Record<ScanErrorCode, string>> = Object.defineProperties(
+  {} as Record<ScanErrorCode, string>,
+  Object.fromEntries(
+    (Object.keys(SCAN_ERROR_KEYS) as ScanErrorCode[]).map((code) => [code, { enumerable: true, get: () => t(SCAN_ERROR_KEYS[code]) }]),
+  ),
+)
+
+/** A short wait (the server's in-flight cap, or a brief upstream back-off): nobody did anything wrong. English; see `scansBusyMessage`. */
 export const SCANS_BUSY_MESSAGE = 'Lots of bills are being read right now — try again in a moment.'
+
+/** `SCANS_BUSY_MESSAGE` in the UI language. */
+export function scansBusyMessage(): string {
+  return t('api.scan.busy')
+}
+
+/** True for the busy message, in English or in the UI language (callers compare text, not codes). */
+export function isScansBusyMessage(message: string): boolean {
+  return message === SCANS_BUSY_MESSAGE || message === scansBusyMessage()
+}
 
 /**
  * The `rate_limited` copy for a `Retry-After` of `seconds`: a short wait is "busy", a long one is our
@@ -49,15 +68,20 @@ export const SCANS_BUSY_MESSAGE = 'Lots of bills are being read right now — tr
  */
 export function rateLimitedMessage(seconds: number | null, pro = false): string {
   if (seconds === null) return SCAN_ERROR_MESSAGES.rate_limited
-  if (seconds < 60) return SCANS_BUSY_MESSAGE
+  if (seconds < 60) return scansBusyMessage()
   if (pro && seconds > PRO_ALLOWANCE_MIN_WAIT_SECONDS) {
-    return `You've reached today's fair-use AI limit. It resets in ${waitPhrase(seconds)} — you can still type the items in.`
+    return t('api.scan.proLimit', { wait: waitPhrase(seconds) })
   }
-  return `Too many scans. Try again in ${waitPhrase(seconds)} — or type the items in.`
+  return t('api.scan.limit', { wait: waitPhrase(seconds) })
 }
 
-/** Shown instead of trying at all when the browser knows it's offline. */
+/** Shown instead of trying at all when the browser knows it's offline. English; see `offlineMessage`. */
 export const OFFLINE_MESSAGE = "You're offline — you can still type the items in."
+
+/** `OFFLINE_MESSAGE` in the UI language. */
+export function offlineMessage(): string {
+  return t('api.scan.offline')
+}
 
 const SCAN_API_CODES: ReadonlySet<string> = new Set<ScanErrorCode>([
   'bad_request',
@@ -106,7 +130,7 @@ function scanErrorFrom(result: Exclude<CallResult, { ok: true }>, pro: boolean):
     case 'aborted':
       return new ScanError('aborted')
     case 'network':
-      return new ScanError('network', isOffline() ? OFFLINE_MESSAGE : SCAN_ERROR_MESSAGES.network)
+      return new ScanError('network', isOffline() ? offlineMessage() : SCAN_ERROR_MESSAGES.network)
     case 'bad_body':
       return new ScanError('upstream_error')
     case 'http': {
