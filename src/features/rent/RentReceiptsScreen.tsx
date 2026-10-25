@@ -1,12 +1,13 @@
 import { useState } from 'react'
 import { Printer } from 'lucide-react'
 import { goBack, navigate, Redirect, useRoute } from '../../app/router'
-import { ActionBar, Banner, Button, Card, PageTitle, Screen, SegmentedControl, TextField, TopBar } from '../../components'
+import { Banner, Button, Card, PageTitle, Screen, SegmentedControl, TextField, TopBar } from '../../components'
 import { useFriendsById, useProfile } from '../../data'
 import { ME_ID } from '../../domain/types'
 import { today } from '../../engine/dates'
 import { useT, type MessageKey } from '../../i18n'
 import { formatMoney } from '../../lib/money'
+import { ChoiceChips } from './ChoiceChips'
 import { RENT_ENABLED, RENT_PATH, rentEditPath, rentPath } from './enabled'
 import { buildReceipts, financialYearOf, isMonth, monthsBetween, needsLandlordPan, RENT_PAYMENT_MODES, type RentPaymentMode } from './hra'
 import { RentReceiptDoc } from './RentReceiptDoc'
@@ -85,32 +86,18 @@ function Receipts({ rent }: { rent: Rent }) {
   }
 
   return (
-    <Screen
-      header={<TopBar onBack={() => goBack(rentPath(rent.id))} />}
-      footer={
-        <ActionBar>
-          <Button block iconStart={<Printer />} disabled={receipts.length === 0} onClick={() => window.print()}>
-            {t('rent.receipts.print')}
-          </Button>
-        </ActionBar>
-      }
-      contentClassName={styles.content}
-    >
+    <Screen header={<TopBar onBack={() => goBack(rentPath(rent.id))} />} contentClassName={styles.content}>
       <PageTitle title={t('rent.receipts.title')} subtitle={t('rent.receipts.subtitle')} />
 
       <Card>
         <div className={styles.fields}>
           {rent.tenants.length > 1 && (
-            <div className={styles.section}>
-              <span className={styles.lead}>{t('rent.receipts.who.label')}</span>
-              <SegmentedControl
-                ariaLabel={t('rent.receipts.who.label')}
-                size="sm"
-                value={tenant.friendId}
-                onChange={setTenantId}
-                options={rent.tenants.map((tn, i) => ({ value: tn.friendId, label: shownName(tn.friendId, i) }))}
-              />
-            </div>
+            <ChoiceChips
+              label={t('rent.receipts.who.label')}
+              value={tenant.friendId}
+              onChange={setTenantId}
+              options={rent.tenants.map((tn, i) => ({ value: tn.friendId, label: shownName(tn.friendId, i) }))}
+            />
           )}
           <TextField
             label={t('rent.receipts.name.label')}
@@ -120,20 +107,16 @@ function Receipts({ rent }: { rent: Rent }) {
             onChange={(e) => setNames((n) => ({ ...n, [tenant.friendId]: e.target.value }))}
             onBlur={rememberName}
           />
-          <div className={styles.section}>
-            <span className={styles.lead}>{t('rent.receipts.period.label')}</span>
-            <SegmentedControl
-              ariaLabel={t('rent.receipts.period.label')}
-              size="sm"
-              value={period}
-              onChange={setPeriod}
-              options={[
-                { value: 'this', label: t('rent.receipts.period.fy', { label: thisYear.label }) },
-                { value: 'last', label: t('rent.receipts.period.fy', { label: lastYear.label }) },
-                { value: 'custom', label: t('rent.receipts.period.custom') },
-              ]}
-            />
-          </div>
+          <ChoiceChips
+            label={t('rent.receipts.period.label')}
+            value={period}
+            onChange={setPeriod}
+            options={[
+              { value: 'this', label: t('rent.receipts.period.fy', { label: thisYear.label }) },
+              { value: 'last', label: t('rent.receipts.period.fy', { label: lastYear.label }) },
+              { value: 'custom', label: t('rent.receipts.period.custom') },
+            ]}
+          />
           {period === 'custom' && (
             <div className={styles.row}>
               <TextField type="month" label={t('rent.receipts.from.label')} value={from} onChange={(e) => setFrom(e.target.value)} />
@@ -153,18 +136,18 @@ function Receipts({ rent }: { rent: Rent }) {
               ]}
             />
           </div>
-          <div className={styles.section}>
-            <span className={styles.lead}>{t('rent.receipts.mode.label')}</span>
-            <SegmentedControl
-              ariaLabel={t('rent.receipts.mode.label')}
-              size="sm"
-              value={mode}
-              onChange={setMode}
-              options={RENT_PAYMENT_MODES.map((m) => ({ value: m, label: t(MODE_KEYS[m]) }))}
-            />
-          </div>
+          <ChoiceChips
+            label={t('rent.receipts.mode.label')}
+            value={mode}
+            onChange={setMode}
+            options={RENT_PAYMENT_MODES.map((m) => ({ value: m, label: t(MODE_KEYS[m]) }))}
+          />
         </div>
       </Card>
+
+      <Button block iconStart={<Printer />} disabled={receipts.length === 0} onClick={() => window.print()}>
+        {t('rent.receipts.print')}
+      </Button>
 
       {panMissing && (
         <Banner

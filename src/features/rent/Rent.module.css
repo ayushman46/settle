@@ -186,3 +186,10 @@
     page-break-inside: avoid;
   }
 }
+
+/* Choice chips (ChoiceChips): wrap whole, never break a word. */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}

@@ -8,7 +8,6 @@ import {
   Button,
   PageTitle,
   Screen,
-  SegmentedControl,
   Stepper,
   TextField,
   TopBar,
@@ -20,6 +19,7 @@ import { useT, type MessageKey } from '../../i18n'
 import { FriendAvatar, friendLabel, PeoplePicker } from '../../kit/index-a'
 import { haptic } from '../../lib/haptics'
 import { formatMoney, parseMoneyInput, toInputString } from '../../lib/money'
+import { ChoiceChips } from './ChoiceChips'
 import { RENT_ENABLED, RENT_PATH, rentPath } from './enabled'
 import { equalShares, needsLandlordPan, RENT_PAYMENT_MODES, type RentPaymentMode } from './hra'
 import { deleteRent, rentIssue, saveRent, useRent, type Rent, type RentInput, type RentIssue } from './store'
@@ -290,16 +290,12 @@ function Editor({ rent }: { rent: Rent | null }) {
           <span className={styles.lead}>{t('rent.editor.due.label')}</span>
           <Stepper label={t('rent.editor.due.label')} value={form.dueDay} min={1} max={28} onChange={(dueDay) => update({ dueDay })} />
         </div>
-        <div className={styles.section}>
-          <span className={styles.lead}>{t('rent.editor.mode.label')}</span>
-          <SegmentedControl
-            ariaLabel={t('rent.editor.mode.label')}
-            size="sm"
-            value={form.mode}
-            onChange={(mode) => update({ mode })}
-            options={RENT_PAYMENT_MODES.map((mode) => ({ value: mode, label: t(MODE_KEYS[mode]) }))}
-          />
-        </div>
+        <ChoiceChips
+          label={t('rent.editor.mode.label')}
+          value={form.mode}
+          onChange={(mode) => update({ mode })}
+          options={RENT_PAYMENT_MODES.map((mode) => ({ value: mode, label: t(MODE_KEYS[mode]) }))}
+        />
       </section>
 
       {rent && (
