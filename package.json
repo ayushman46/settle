@@ -23,7 +23,8 @@
     "e2e:report": "playwright show-report",
     "bench": "node bench/run.mjs",
     "build:pages": "vite build && node scripts/pages-build.mjs",
-    "build:vercel": "node scripts/vercel-build.mjs"
+    "build:vercel": "node scripts/vercel-build.mjs",
+    "vercel:env": "node scripts/vercel-env.mjs"
   },
   "dependencies": {
     "@fontsource-variable/geist": "5.3.0",
