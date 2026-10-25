@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ChartPie, CircleCheck, Coins, FileText, HandCoins, KeyRound, Languages, Repeat, ShieldCheck, Users } from 'lucide-react'
+import { Building2, ChartPie, CircleCheck, Coins, FileText, HandCoins, KeyRound, Languages, Repeat, ShieldCheck, Users } from 'lucide-react'
 import { navigate } from '../../app/router'
 import { Badge, Card, List, ListRow, Screen, SuccessBurst, Switch, useToast } from '../../components'
 import { updateProfile, useDueRecurring, useFriends, usePools, useProfile, useRecurring } from '../../data'
@@ -11,6 +11,7 @@ import { useHasFeature } from '../../pro'
 import { POOLS_ENABLED } from '../pools/enabled'
 import { InstallRow } from '../install'
 import { PROOF_ENABLED, PROOF_PATH } from '../proof/enabled'
+import { RENT_ENABLED, RENT_PATH } from '../rent/enabled'
 import { CurrencySheet } from '../bill/CurrencySheet'
 import { BrandMark } from '../landing/BrandMark'
 import { PaywallHost } from '../pro/PaywallSheet'
@@ -117,6 +118,19 @@ function Shortcuts() {
             title={t('proof.more.title')}
             subtitle={t('proof.more.subtitle')}
             onClick={() => navigate(PROOF_PATH)}
+            chevron
+          />
+        )}
+        {RENT_ENABLED && (
+          <ListRow
+            leading={
+              <SettingIcon>
+                <Building2 />
+              </SettingIcon>
+            }
+            title={t('rent.more.title')}
+            subtitle={t('rent.more.subtitle')}
+            onClick={() => navigate(RENT_PATH)}
             chevron
           />
         )}

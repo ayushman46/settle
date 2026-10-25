@@ -1,8 +1,9 @@
-import { CircleCheck } from 'lucide-react'
+import { Building2, CircleCheck } from 'lucide-react'
 import { navigate } from '../../app/router'
 import { BottomSheet, QuickAction, QuickActionGrid } from '../../components'
 import { useT } from '../../i18n'
 import { PROOF_ENABLED, PROOF_PATH } from '../proof/enabled'
+import { RENT_ENABLED, RENT_PATH } from '../rent/enabled'
 import { templateActionDefs } from './quickActions'
 
 export interface MoreActionsSheetProps {
@@ -28,6 +29,18 @@ export function MoreActionsSheet({ open, onClose }: MoreActionsSheetProps) {
             onClick={() => {
               onClose()
               navigate(PROOF_PATH)
+            }}
+          />
+        )}
+        {RENT_ENABLED && (
+          <QuickAction
+            key="rent"
+            icon={<Building2 />}
+            label={t('rent.more.title')}
+            tone="rent"
+            onClick={() => {
+              onClose()
+              navigate(RENT_PATH)
             }}
           />
         )}

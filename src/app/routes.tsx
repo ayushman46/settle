@@ -152,6 +152,26 @@ const ProofScreen = lazyScreen(
   () => import('../features/proof/ProofScreen'),
   (m) => m.ProofScreen,
 )
+const RentListScreen = lazyScreen(
+  'RentListScreen',
+  () => import('../features/rent/RentListScreen'),
+  (m) => m.RentListScreen,
+)
+const RentEditorScreen = lazyScreen(
+  'RentEditorScreen',
+  () => import('../features/rent/RentEditorScreen'),
+  (m) => m.RentEditorScreen,
+)
+const RentDetailScreen = lazyScreen(
+  'RentDetailScreen',
+  () => import('../features/rent/RentDetailScreen'),
+  (m) => m.RentDetailScreen,
+)
+const RentReceiptsScreen = lazyScreen(
+  'RentReceiptsScreen',
+  () => import('../features/rent/RentReceiptsScreen'),
+  (m) => m.RentReceiptsScreen,
+)
 const LendScreen = lazyScreen(
   'LendScreen',
   () => import('../features/lend/LendScreen'),
@@ -235,6 +255,11 @@ export const APP_ROUTES: readonly AppRoute[] = [
   { pattern: '/app/pools/:id', screen: PoolDetailScreen, title: 'Collection', tab: null },
   { pattern: '/app/pools/:id/edit', screen: PoolEditorScreen, title: 'Edit collection', tab: null },
   { pattern: '/app/pro', screen: UpgradeScreen, title: 'Pro', tab: null },
+  { pattern: '/app/rent', screen: RentListScreen, title: 'Rent', tab: null },
+  { pattern: '/app/rent/new', screen: RentEditorScreen, title: 'Set up your rent', tab: null },
+  { pattern: '/app/rent/:id', screen: RentDetailScreen, title: 'Rent', tab: null },
+  { pattern: '/app/rent/:id/edit', screen: RentEditorScreen, title: 'Edit rent', tab: null },
+  { pattern: '/app/rent/:id/receipts', screen: RentReceiptsScreen, title: 'Rent receipts', tab: null },
 ]
 
 /** The app route for `path`, or null for an unknown `/app/*` path. */

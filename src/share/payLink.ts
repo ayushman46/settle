@@ -295,6 +295,14 @@ function titleWithPaid(e: Expense): string {
 }
 
 /**
+ * A payload a feature builds itself (rent: the landlord collects each flatmate's share), cleaned
+ * and capped exactly like an expense's.
+ */
+export function payLinkFor(raw: PayLinkPayload): PayLinkPayload {
+  return normalizePayload(raw)
+}
+
+/**
  * The pay-link payload for an expense. The payer is `to` (UPI ID from their friend record, or
  * the profile when the payer is the owner); everyone in the split is in `p` with their share
  * and paid-back state; bills carry their items (up to 40, none when paid in another currency).

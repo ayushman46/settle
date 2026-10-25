@@ -39,6 +39,7 @@ import { activity } from './activity'
 import { proof } from './proof'
 import { shagun } from './shagun'
 import { install } from './install'
+import { rent } from './rent'
 
 export const HI: Messages = {
   ...common,
@@ -74,6 +75,7 @@ export const HI: Messages = {
   ...proof,
   ...shagun,
   ...install,
+  ...rent,
 }
 
 export default HI

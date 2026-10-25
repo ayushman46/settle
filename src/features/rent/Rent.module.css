@@ -1,0 +1,188 @@
+/* Rent & HRA: the list, the editor, the rent page and the receipts (with their print layout). */
+
+.content {
+  display: grid;
+  gap: var(--s-5);
+  padding-bottom: var(--s-6);
+}
+
+.section {
+  display: grid;
+  gap: var(--s-3);
+}
+
+.sectionTitle {
+  font: var(--text-section);
+  color: var(--ink);
+}
+
+.lead {
+  font: var(--text-body);
+  color: var(--ink-2);
+}
+
+.fields {
+  display: grid;
+  gap: var(--s-4);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+}
+
+.shareRow {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--s-3);
+}
+
+.shareStatus {
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
+.shareStatusBad {
+  color: var(--negative, var(--ink));
+  font-weight: 600;
+}
+
+.month {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2);
+}
+
+.monthName {
+  font: var(--text-label);
+  font-weight: 650;
+}
+
+.actions {
+  display: grid;
+  gap: var(--s-2);
+}
+
+.tips {
+  display: grid;
+  gap: var(--s-2);
+  margin: 0;
+  padding-inline-start: var(--s-5);
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
+.total {
+  font: var(--text-label);
+  font-weight: 650;
+}
+
+/* ---------- Receipts: paper on screen, the only thing on the page when printed ---------- */
+
+.printArea {
+  display: grid;
+  gap: var(--s-4);
+}
+
+.receipt {
+  display: grid;
+  gap: 10px;
+  padding: 18px 20px;
+  border: 1px solid #c9ced6;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #111418;
+  font-family: var(--font-sans, system-ui, sans-serif);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.receiptHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #dde1e7;
+}
+
+.receiptTitle {
+  font-size: 15px;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.receiptNo {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 12px;
+}
+
+.receiptBody {
+  margin: 0;
+}
+
+.receiptMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 20px;
+}
+
+.receiptSign {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.stamp {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  border: 1px dashed #8a929e;
+  font-size: 10px;
+  text-align: center;
+}
+
+.signature {
+  display: grid;
+  justify-items: end;
+  gap: 4px;
+  margin-inline-start: auto;
+}
+
+.signatureLine {
+  width: 180px;
+  border-bottom: 1px solid #111418;
+  height: 28px;
+}
+
+@media print {
+  :global(body) * {
+    visibility: hidden;
+  }
+
+  .printArea,
+  .printArea * {
+    visibility: visible;
+  }
+
+  .printArea {
+    position: absolute;
+    inset: 0 0 auto;
+    display: block;
+  }
+
+  .receipt {
+    margin: 0 0 14px;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}
