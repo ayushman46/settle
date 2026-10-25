@@ -89,4 +89,7 @@ export const home = {
   'home.recent.allAria': 'সব কার্যকলাপ দেখুন',
   'home.draft.finish': 'বিল বদলানো শেষ করুন',
   'home.draft.continue': 'আপনার বিল চালিয়ে যান',
+  'home.allowance.left': '{count, plural, one {আজ # টি ফ্রি স্প্লিট} other {আজ # টি ফ্রি স্প্লিট}}',
+  'home.allowance.used': 'আজকের ফ্রি AI স্প্লিট শেষ',
+  'home.allowance.unlimited': 'Pro-তে আনলিমিটেড',
 } as const satisfies Messages

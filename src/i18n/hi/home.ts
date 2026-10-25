@@ -86,4 +86,13 @@ export const home = {
   'home.recent.allAria': 'सारी गतिविधि देखें',
   'home.draft.finish': 'बिल में बदलाव पूरे करें',
   'home.draft.continue': 'अपना बिल आगे बढ़ाएँ',
+  'home.allowance.left': '{count, plural, one {आज # फ़्री स्प्लिट} other {आज # फ़्री स्प्लिट}}',
+  'home.allowance.used': 'आज के फ़्री AI स्प्लिट ख़त्म',
+  'home.allowance.unlimited': 'Pro के साथ अनलिमिटेड',
+  'home.draft.saved': 'सेव किया बिल',
+  'home.draft.inProgress': 'बिल अधूरा है',
+  'home.draft.items': '{count, plural, one {# आइटम} other {# आइटम}}',
+  'home.people.seeAllAria': 'सभी लोग देखें',
+  'home.due.title': 'जल्द देय',
+  'home.due.seeAllAria': 'सभी रिकरिंग स्प्लिट देखें',
 } as const satisfies Messages

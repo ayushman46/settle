@@ -37,8 +37,8 @@ export function PeopleRow() {
     <section className={styles.section} aria-labelledby="home-people">
       <SectionHeader
         id="home-people"
-        title="People"
-        action={others.length > 0 ? { label: 'See all', href: FRIENDS_PATH, 'aria-label': 'See all people' } : undefined}
+        title={t('friends.list.title')}
+        action={others.length > 0 ? { label: t('common.action.seeAll'), href: FRIENDS_PATH, 'aria-label': t('home.people.seeAllAria') } : undefined}
       />
       <ul role="list" className={styles.people}>
         {shown.map((friend) => {

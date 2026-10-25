@@ -1,4 +1,5 @@
 /** Where Home's tiles, rows and cards lead, and the small labels they share. */
+import { t } from '../../i18n'
 import type { CategoryId } from '../../domain/types'
 import { formatMoney } from '../../lib/money'
 import type { BillDraftSummary } from '../bill/launch'
@@ -39,17 +40,17 @@ export function expensePath(id: string): string {
   return `/app/expense/${encodeURIComponent(id)}`
 }
 
-/** Today's AI allowance, beside "Just say it": "3 free today", or unlimited with Pro. */
+/** Today's AI allowance, beside "Just say it": "3 free splits today", or unlimited with Pro. */
 export function allowanceLabel(remaining: number): string {
-  if (!Number.isFinite(remaining)) return 'Unlimited with Pro'
-  if (remaining <= 0) return 'Free AI splits used today'
-  return `${remaining} free ${remaining === 1 ? 'split' : 'splits'} today`
+  if (!Number.isFinite(remaining)) return t('home.allowance.unlimited')
+  if (remaining <= 0) return t('home.allowance.used')
+  return t('home.allowance.left', { count: remaining })
 }
 
 /** "Taj Café · 6 items · ₹2,340" — what's in the bill being split. */
 export function draftLine(draft: BillDraftSummary): string {
-  const parts = [draft.title?.trim() || (draft.editing ? 'Saved bill' : 'Bill in progress')]
-  if (draft.items > 0) parts.push(`${draft.items} ${draft.items === 1 ? 'item' : 'items'}`)
+  const parts = [draft.title?.trim() || (draft.editing ? t('home.draft.saved') : t('home.draft.inProgress'))]
+  if (draft.items > 0) parts.push(t('home.draft.items', { count: draft.items }))
   if (draft.total > 0) parts.push(formatMoney(draft.total, draft.currency, { trimZeros: true }))
   return parts.join(' · ')
 }

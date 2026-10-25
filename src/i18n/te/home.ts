@@ -87,4 +87,7 @@ export const home = {
   'home.recent.allAria': 'అన్ని కార్యకలాపాలు చూడండి',
   'home.draft.finish': 'మీ బిల్లు మార్చడం పూర్తి చేయండి',
   'home.draft.continue': 'మీ బిల్లును కొనసాగించండి',
+  'home.allowance.left': '{count, plural, one {ఈరోజు # ఉచిత స్ప్లిట్} other {ఈరోజు # ఉచిత స్ప్లిట్‌లు}}',
+  'home.allowance.used': 'ఈరోజు ఉచిత AI స్ప్లిట్‌లు అయిపోయాయి',
+  'home.allowance.unlimited': 'Pro తో అపరిమితం',
 } as const satisfies Messages

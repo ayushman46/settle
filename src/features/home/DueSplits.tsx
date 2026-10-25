@@ -15,6 +15,7 @@ import styles from './HomeScreen.module.css'
  * that creates this month's expense, celebrates and opens it. Nothing when none are due.
  */
 export function DueSplits() {
+  const t = useT()
   const day = today()
   const due = useDueRecurring(day)
   const { splitNow, moment } = useSplitNow()
@@ -23,8 +24,8 @@ export function DueSplits() {
     <section className={styles.section} aria-labelledby="home-due">
       <SectionHeader
         id="home-due"
-        title="Due soon"
-        action={due.length > DUE_SHOWN ? { label: 'See all', href: RECURRING_PATH, 'aria-label': 'See all recurring splits' } : undefined}
+        title={t('home.due.title')}
+        action={due.length > DUE_SHOWN ? { label: t('common.action.seeAll'), href: RECURRING_PATH, 'aria-label': t('home.due.seeAllAria') } : undefined}
       />
       <ul role="list" className={styles.dueList}>
         {due.slice(0, DUE_SHOWN).map((item) => (

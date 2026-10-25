@@ -86,4 +86,14 @@ export const home = {
   'home.recent.allAria': 'See all activity',
   'home.draft.finish': 'Finish editing your bill',
   'home.draft.continue': 'Continue your bill',
+  // Today's AI allowance beside "Just say it", the bill-in-progress card, and section headers.
+  'home.allowance.left': '{count, plural, one {# free split today} other {# free splits today}}',
+  'home.allowance.used': 'Free AI splits used today',
+  'home.allowance.unlimited': 'Unlimited with Pro',
+  'home.draft.saved': 'Saved bill',
+  'home.draft.inProgress': 'Bill in progress',
+  'home.draft.items': '{count, plural, one {# item} other {# items}}',
+  'home.people.seeAllAria': 'See all people',
+  'home.due.title': 'Due soon',
+  'home.due.seeAllAria': 'See all recurring splits',
 } as const satisfies Messages
