@@ -321,4 +321,5 @@ export const kit = {
   'kit.payApp.sub': 'Opens with {amount} filled in',
   'kit.payApp.sub.noAmount': 'Opens with the name filled in — type the amount',
   'kit.payApp.any': 'Any UPI app',
+  'kit.payApp.notOpened': 'If {app} didn’t open, it may not be installed — pick another app.',
 } as const satisfies Messages

@@ -112,3 +112,30 @@ test.describe('smoke', () => {
     expect(stored).toEqual([])
   })
 })
+
+test.describe('on an iPhone', () => {
+  test.use({
+    userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1',
+  })
+
+  test('a friend’s Pay lists the UPI apps, each opened by its own scheme with the amount filled in', async ({ page, shared, openPhone }) => {
+    await onboard(page)
+    await splitEqually(page, { amount: '1000', title: 'Goa cab', people: ['Riya', 'Sam'] })
+    const link = await copyPayLink(page, async () => (await shared()).clipboard)
+
+    const friend = await openPhone()
+    await friend.page.goto(link)
+    await friend.page.getByRole('button', { name: /Riya/ }).click()
+    await friend.page.getByRole('button', { name: 'Pay ₹333.33', exact: true }).click()
+
+    const apps = friend.page.getByRole('list', { name: 'Payment apps' })
+    await expect(apps.getByRole('link')).toHaveCount(5)
+    for (const [name, scheme] of [['Google Pay', 'gpay'], ['PhonePe', 'phonepe'], ['Paytm', 'paytmmp'], ['BHIM', 'bhim']] as const) {
+      const href = (await apps.getByRole('link', { name: new RegExp(name) }).getAttribute('href')) ?? ''
+      expect(href.startsWith(`${scheme}://upi/pay?`), `${name}: ${href}`).toBe(true)
+      const upi = readUpiLink(href.replace(`${scheme}://upi/pay?`, 'upi://pay?'))
+      expect(upi.params).toMatchObject({ pa: OWNER.upiId, am: '333.33', cu: 'INR' })
+    }
+    await expect(apps.getByRole('link', { name: /Any UPI app/ })).toHaveAttribute('href', /^upi:\/\/pay\?/)
+  })
+})

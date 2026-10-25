@@ -73,3 +73,16 @@
     transition: none;
   }
 }
+
+.chooser {
+  display: grid;
+  gap: var(--s-2);
+  width: 100%;
+}
+
+/* "If PhonePe didn't open…" — iPhones can't tell us whether an app is installed. */
+.hint {
+  font: var(--text-caption);
+  color: var(--ink-2);
+  text-align: center;
+}

@@ -3,7 +3,7 @@
 ## Unreleased — 25 Oct 2026
 
 ### New
-- **Pay with your UPI app.** On a pay link, "Pay ₹…" lists Google Pay, PhonePe, Paytm, BHIM and any UPI app; tap one and it opens with the amount and name already filled in. The pay sheet shows the same list. Android only; iPhones keep the generic link.
+- **Pay with your UPI app.** On a pay link, "Pay ₹…" lists Google Pay, PhonePe, Paytm, BHIM and any UPI app; tap one and it opens with the amount and name already filled in. The pay sheet shows the same list. Works on Android (opens the app directly, Play Store if missing) and on iPhone / iPad (each app by its own scheme; if Safari is still showing the page after the tap, it suggests another app).
 
 ## v5 — 24 Oct 2026
 

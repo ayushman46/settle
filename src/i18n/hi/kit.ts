@@ -289,4 +289,5 @@ export const kit = {
   'kit.payApp.sub': '{amount} पहले से भरा होगा',
   'kit.payApp.sub.noAmount': 'नाम पहले से भरा होगा — रकम खुद डालें',
   'kit.payApp.any': 'कोई भी UPI ऐप',
+  'kit.payApp.notOpened': 'अगर {app} नहीं खुला, तो शायद वह फ़ोन में नहीं है — कोई और ऐप चुनें।',
 } as const satisfies Messages
