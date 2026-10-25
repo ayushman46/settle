@@ -1,6 +1,6 @@
 # Settle — what works and what doesn't
 
-Live: **https://settleupi.vercel.app** · last checked 24 Oct 2026, 09:40 IST (deploy `settle-5sxzwzh3l`).
+Live: **https://settleupi.vercel.app** · last checked 25 Oct 2026, 12:40 IST.
 
 Legend: ✅ works on the live site · ⚠️ works with a limit · ❌ not working yet
 
@@ -30,12 +30,12 @@ Legend: ✅ works on the live site · ⚠️ works with a limit · ❌ not worki
 
 | Area | Status | Why / what's needed |
 | --- | --- | --- |
-| AI on the live site (scan a bill photo, "Just say it", speak to split, "let AI read" an SMS) | ❌ | The NVIDIA API key isn't set on Vercel yet. Add `NVIDIA_API_KEY` in Vercel → settle → Settings → Environment Variables, then redeploy. Everything else works without it. |
-| Pro (paid plan) on the live site | ❌ | Needs `LICENSE_PRIVATE_KEY` (and Razorpay keys to sell it) on Vercel; see [DEPLOY.md](DEPLOY.md) step 0 and 6. Without them the Pro page shows the plans but can't unlock. |
+| AI on the live site (scan a bill photo, "Just say it", speak to split, "let AI read" an SMS) | ✅ | The NVIDIA key is on Vercel (25 Oct). Checked live: a restaurant bill photo read in 4.4 s (7 items, ₹2,766 total) and "Dinner 2400 with Riya and Sam" turned into an equal ₹2,400 split. Free plan: 3 AI splits a day per phone. |
+| Pro (paid plan) on the live site | ⚠️ | Licence keys are on Vercel, so **Redeem a code** works (`npm run license issue …` makes codes). Selling Pro needs Razorpay keys (`RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`); until then the Pro page shows the plans without checkout. |
 | Indian languages for the screens | ⚠️ | Eight languages (English, Hindi, Bengali, Marathi, Tamil, Telugu, Kannada, Gujarati) on every app screen; pick on the first onboarding screen or in You → Language. **Translations not yet reviewed by native speakers**, and the landing page and the privacy / terms text stay in English. |
 | Pay with your UPI app | ✅ on Android | Tap "Pay ₹…" on a pay link (or the pay sheet) and pick Google Pay, PhonePe, Paytm, BHIM or any UPI app: it opens with the amount and name already filled in. Not installed → its Play Store page. On iPhone it opens the phone's UPI app (per-app links for iPhone are not verified yet). |
 | "Install Settle" card | ✅ | On Home after the first split or second visit, and a You row. Android / desktop Chrome use the install prompt; iPhone gets the two Share → Add to Home Screen steps. Hidden once installed; dismissible for 30 days. |
-| Paid? Drop the screenshot | ⚠️ | Drop a GPay / PhonePe / Paytm / BHIM payment screenshot: the AI reads status, amount, payee, UTR and date and matches it to who owes you. Refuses pending or failed payments, payments to someone else and duplicate UTRs. Needs the NVIDIA key on the live site (see below). |
+| Paid? Drop the screenshot | ✅ | Drop a GPay / PhonePe / Paytm / BHIM payment screenshot: the AI reads status, amount, payee, UTR and date and matches it to who owes you. Refuses pending or failed payments, payments to someone else and duplicate UTRs. Uses the same AI key, now live. |
 | Shagun book (gifts ledger) | ❌ | Only the "What should I give?" suggestion rule is in the code and tested. The ledger screens and reminders are not built, and the feature is off. |
 | Very long histories on budget phones | ⚠️ | Scrolling Activity to the oldest of 1,500 entries takes ~59 s on the budget-phone profile (was 165 s). |
 | Speak to split | ⚠️ | Needs a browser with speech recognition (Chrome, Edge, Safari; not Firefox) and the AI key. |
