@@ -62,6 +62,12 @@ if (toSend.length === 0) {
   process.exit(1)
 }
 
+// Signed in? Checked once up front, so an expired sign-in is one clear message, not one per variable.
+if (!process.argv.includes('--dry-run') && vercel(['whoami']).status !== 0) {
+  console.error('[vercel-env] Not signed in to Vercel (or the sign-in expired). Run `npx vercel login`, approve it in the browser, then run this again.')
+  process.exit(1)
+}
+
 if (process.argv.includes('--dry-run')) {
   for (const [name, type] of toSend) console.log(`[vercel-env] would set ${name} (${type}, ${env[name].trim().length} characters)`)
   process.exit(0)
