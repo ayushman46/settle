@@ -2,6 +2,8 @@
   "name": "settle",
   "private": true,
   "version": "2.0.0",
+  "license": "UNLICENSED",
+  "author": "Ayush",
   "description": "Split anything and settle in a tap: AI bill splitting, groups and one UPI pay link for everyone. No sign-up, no ads, no database.",
   "type": "module",
   "engines": {
