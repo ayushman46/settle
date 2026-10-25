@@ -1,29 +1,81 @@
+<div align="center">
+
+<img src="public/icon.svg" alt="Settle" width="76" height="76">
+
 # Settle
 
 **Split anything. Settle in a tap.**
 
-**Live: [settleupi.vercel.app](https://settleupi.vercel.app)** · [What works and what doesn't](STATUS.md)
+The bill-splitting app built for India: friends pay their exact share by UPI — in their own app, in their own language — without installing anything.
 
-Settle is a mobile-first web app for splitting any expense — a restaurant bill, the rent, a Goa trip, a cab, Netflix — and actually getting paid back over UPI. No sign-up, no ads, and no database: everything lives on your phone.
+[![Live](https://img.shields.io/badge/live-settleupi.vercel.app-D8F57C?style=flat-square&labelColor=141413)](https://settleupi.vercel.app)
+[![Languages](https://img.shields.io/badge/languages-8%20Indian-D8F57C?style=flat-square&labelColor=141413)](#built-for-india)
+[![Tests](https://img.shields.io/badge/tests-4%2C800%2B%20passing-D8F57C?style=flat-square&labelColor=141413)](STATUS.md)
+[![License](https://img.shields.io/badge/license-proprietary-D8F57C?style=flat-square&labelColor=141413)](LICENSE)
 
-- **AI that reads the bill.** Snap a restaurant bill and every item, tax, service charge and discount is filled in; tap who had what. Snap any other bill (electricity, cab, hotel) and the total and category are ready to split.
-- **Just say it.** Type "Cab 840 with Riya and Sam, Sam pays double" and get a ready-to-save split.
-- **One pay link for the group.** Each friend taps their name and pays their exact share with GPay, PhonePe, Paytm or BHIM. Friends don't need the app or an account.
-- **Five ways to split.** Equally, exact amounts, percentages, shares ("pays double") or item by item, with optional rounding to whole rupees.
-- **Groups that settle themselves.** Trips, flats and couples keep a running tab with different payers; Settle works out the fewest payments to square everyone up, with a UPI QR for each.
-- **Collect and nudge.** See "₹1,840 of ₹2,766 collected", tick people off, and send a friendly, funny or firm reminder on WhatsApp or SMS.
-- **Share cards, recurring splits and insights.** A receipt image for the group chat; rent and subscriptions reminded monthly; where your money goes by category and month.
-- **Everyone claims their own items.** Send one claim link for a scanned bill; each friend ticks what they had on their own phone and the replies merge into the split.
-- **From SMS.** Paste or share a bank or UPI alert and it's ready to split; OTP messages are refused.
-- **Food orders, fairly.** A Swiggy, Zomato, Blinkit or Zepto screenshot keeps delivery, platform, packaging and small-order fees apart from the food, and shares them in proportion or equally.
-- **Speak to split.** Say it in Hindi, Bengali, Marathi, Tamil, Telugu, Kannada, Gujarati or English — "dhai hazaar" becomes ₹2,500.
-- **Eight languages.** English (the default), Hindi, Bengali, Marathi, Tamil, Telugu, Kannada and Gujarati. Pick one on the first screen or in You → Language; the choice is kept on the phone. Numbers and money stay in Indian format with Latin digits.
-- **Collections (chanda).** One link for a birthday gift, a farewell, a Diwali party or a puja; everyone pays by UPI and you tick them off.
-- **Udhaar.** Lend or borrow in two taps, record part payments, and send a polite (or firm) reminder.
-- **Next round's on you.** Groups that take turns paying see whose round it is and what squares everyone up.
-- **Trips abroad.** Spend in baht or dirhams, settle in ₹ at that day's ECB rate (cached for offline) or at what your bank actually charged.
-- **Paid? Drop the screenshot.** Drop a GPay, PhonePe, Paytm or BHIM payment screenshot. Settle reads the amount, payee and UTR, matches it to who owes you, and marks it paid after you confirm. Pending, failed, mis-addressed and already-recorded payments are refused.
-- **Install Settle.** Android and desktop Chrome get a one-tap install card; iPhone users get the two Share → Add to Home Screen steps. Hidden once installed.
+**[Open the app](https://settleupi.vercel.app)** · **[Watch the film](docs/media/settle-promo.mp4)** · [What works and what doesn't](STATUS.md) · [Deploy your own](DEPLOY.md)
+
+</div>
+
+## Watch the film
+
+<a href="docs/media/settle-promo.mp4"><img src="docs/media/settle-promo-preview.gif" alt="Settle promo film — the first eight seconds: split anything, then AI bill reading" width="100%"></a>
+
+<p align="center"><sub>The first 8 seconds — <a href="docs/media/settle-promo.mp4"><b>watch the full film (1:16, 1080p)</b></a>. Music: "Hard - Hard Trap Beat" by vaitsez, <a href="https://pixabay.com/music/trap-hard-hard-trap-beat-582809/">Pixabay</a>.</sub></p>
+
+## A look inside
+
+<table>
+  <tr>
+    <td align="center" width="20%"><img src="docs/media/screens/home.png" alt="Home: you're owed ₹1,600, quick actions, people" width="100%"><br><sub><b>Home</b><br>What you're owed, one tap to settle</sub></td>
+    <td align="center" width="20%"><img src="docs/media/screens/pay-apps.png" alt="A friend's pay page listing Google Pay, PhonePe, Paytm, BHIM and any UPI app, each with ₹800 filled in" width="100%"><br><sub><b>Pay with your app</b><br>₹800 filled in — just enter your PIN</sub></td>
+    <td align="center" width="20%"><img src="docs/media/screens/rent.png" alt="A flat's rent: send one link, each flatmate pays the landlord directly" width="100%"><br><sub><b>Rent, split right</b><br>Everyone pays the landlord directly</sub></td>
+    <td align="center" width="20%"><img src="docs/media/screens/rent-receipts.png" alt="HRA rent receipts for one flatmate's share, ready to print" width="100%"><br><sub><b>HRA rent receipts</b><br>For your share, ready to sign</sub></td>
+    <td align="center" width="20%"><img src="docs/media/screens/home-hindi.png" alt="Home in Hindi" width="100%"><br><sub><b>हिन्दी + 6 more</b><br>Every screen, eight languages</sub></td>
+  </tr>
+</table>
+
+## Why Settle
+
+Most split apps stop at *who owes whom* and leave the paying — and the chasing — to you. Settle is built around actually getting paid back, the way India pays.
+
+- **Friends don't install anything.** One link in the WhatsApp group. Each friend taps their name, sees their exact share, picks **Google Pay, PhonePe, Paytm or BHIM**, and their app opens with the amount and your UPI ID already filled in. They only enter their PIN.
+- **Rent, split right — with HRA receipts.** *New.* Each flatmate pays the landlord their own share directly from one rent link, so nobody fronts the whole rent and chases the others, and everyone has their own payment trail. Then Settle makes **HRA rent receipts for each flatmate's share** — monthly or quarterly, amount in words, the landlord's PAN when a share is over ₹1,00,000 a year, a revenue stamp for cash over ₹5,000 — ready for the landlord to sign and HR to file. We couldn't find another split app that does this.
+- **Built for India.** Eight languages, voice that understands "dhai hazaar ka dinner", ₹ with lakh grouping, rupees by default, UPI everywhere, and fast on budget phones and slow networks.
+- **AI that does the tedious part.** Snap a restaurant bill and every item, tax and discount is filled in; snap a Swiggy order and the delivery and platform fees are split fairly; drop a friend's payment screenshot and they're marked paid.
+- **Private by design.** No sign-up, no ads, no database: your splits live on your phone.
+- **Fair pricing.** Free for everyday splitting. Pro is a one-time pass — no auto-renewing subscription.
+
+## Features
+
+**Split anything**
+- **Five ways to split** — equally, exact amounts, percentages, shares ("pays double") or item by item, with optional rounding to whole rupees.
+- **AI bill reading** — every item, tax, service charge and discount; then tap who had what. What you actually paid (after discounts and round-off) is shared in proportion.
+- **Just say it** — type or speak "Cab 840 with Riya and Sam, Sam pays double" and get a ready-to-save split.
+- **Food orders, fairly** — Swiggy, Zomato, Blinkit and Zepto fees kept apart and shared in proportion or equally.
+- **From SMS** — paste or share a bank or UPI alert and it's ready to split; OTPs are refused.
+- **Everyone claims their own items** — one claim link; friends tick what they had on their phones and the replies merge into the split.
+
+**Get paid back**
+- **One pay link per split** with each friend's exact share, and a **UPI app chooser** (Android and iPhone) that opens their app with the amount filled in.
+- **Paid? Drop the screenshot** — a GPay, PhonePe, Paytm or BHIM screenshot is read, matched to who owes you and marked paid after you confirm; pending, failed, mis-addressed and duplicate payments are refused.
+- **Collect and nudge** — "₹1,840 of ₹2,766 collected", tick people off, send a friendly, funny or firm reminder.
+- **Groups that settle themselves** — trips, flats and couples; the fewest payments to square everyone up, with a UPI QR for each.
+
+**Everyday money with friends**
+- **Rent & HRA receipts** — the flat's rent, paid to the landlord directly by each flatmate, with receipts for each share.
+- **Collections (chanda)** — one link for a birthday gift, a farewell, a Diwali party or a puja.
+- **Udhaar** — lend or borrow in two taps, part payments, reminders.
+- **Next round's on you** — groups that take turns paying see whose round it is.
+- **Trips abroad** — spend in baht or dirhams, settle in ₹ at that day's ECB rate or at what your bank charged.
+- **Share cards, recurring splits and insights** — a receipt image for the group chat, rent and subscriptions reminded monthly, spending by category and month.
+
+### Built for India
+
+- **Eight languages** on every screen: English, हिन्दी, বাংলা, मराठी, தமிழ், తెలుగు, ಕನ್ನಡ, ગુજરાતી — picked on the first screen or in You → Language. Pay links open in the friend's own language.
+- **Speak to split** in all eight; number words like "dhai hazaar" become ₹2,500.
+- **Indian formats** — ₹, lakh grouping (₹1,92,000), dates day-first.
+- **Install it like an app** — straight from the browser (Android one tap, iPhone two steps), works offline after the first visit. No Play Store needed.
 
 ## Quick start
 
@@ -100,8 +152,8 @@ Set these in `.env` (for `npm run dev` and `npm start`) or in your host's enviro
 
 ```
 src/
-  features/   screens: home, onboarding, split, expense, bill, groups, friends, activity,
-              you, pro, insights, recurring, landing, legal, pay
+  features/   screens: home, onboarding, split, expense, bill, groups, friends, activity, you,
+              pro, insights, recurring, landing, legal, pay, claim, pools, lend, trip, proof, rent…
   kit/        feature components (people picker, split editor, share & UPI sheets…)
   components/ design system (buttons, sheets, charts, tab bar…)
   data/       on-device stores, actions and hooks (localStorage, no database)
@@ -139,3 +191,11 @@ Serve it over **HTTPS**: browsers only enable offline mode, the native share she
 - **Photos and "Just say it" text go to NVIDIA only to be read**, and the server keeps nothing.
 - **Pay links carry the split in the link itself** (after the `#`), which browsers never send to the server.
 - **Everything else stays in your browser** — people, expenses, groups and settings — with a backup file you can export and restore.
+
+## License
+
+Settle is **proprietary software — all rights reserved.** You may use the app at [settleupi.vercel.app](https://settleupi.vercel.app), but the source code, design and assets in this repository may not be copied, modified, redistributed or used to build another product without written permission. See [LICENSE](LICENSE). Open-source components keep their own licences: [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
+
+## Credits
+
+Made by Ayush. Promo film music: "Hard - Hard Trap Beat" by vaitsez, from [Pixabay](https://pixabay.com/music/trap-hard-hard-trap-beat-582809/) (Pixabay Content License). Type: Geist (Vercel). Icons: Lucide. Bill reading: NVIDIA models. Exchange rates: European Central Bank.

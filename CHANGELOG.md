@@ -3,6 +3,8 @@
 ## Unreleased — 25 Oct 2026
 
 ### New
+- **Rent, split right — with HRA receipts.** A flat's rent with each flatmate's share and the landlord's UPI ID and PAN. One rent link a month makes the landlord the payee: each flatmate pays their own share directly (nobody fronts the whole rent), and has their own payment trail. HRA rent receipts for each flatmate's share — a month or a quarter of the financial year, amount in words, landlord PAN (needed above ₹1,00,000 a year), a ₹1 revenue stamp on cash receipts above ₹5,000 — printed or saved as PDF. Home → More and You → Shortcuts.
+- **Proprietary licence.** All rights reserved (LICENSE); open-source components listed in THIRD-PARTY-NOTICES.md.
 - **Pay with your UPI app.** On a pay link, "Pay ₹…" lists Google Pay, PhonePe, Paytm, BHIM and any UPI app; tap one and it opens with the amount and name already filled in. The pay sheet shows the same list. Works on Android (opens the app directly, Play Store if missing) and on iPhone / iPad (each app by its own scheme; if Safari is still showing the page after the tap, it suggests another app).
 
 ## v5 — 24 Oct 2026
