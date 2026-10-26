@@ -48,6 +48,7 @@ import styles from './RecurringEditorScreen.module.css'
 
 const ROUTES = ['/app/recurring/:id'] as const
 const LIST = '/app/recurring'
+const RECURRING_MODES = ['equal', 'exact', 'percent', 'shares'] as const
 
 /**
  * `/app/recurring/new` and `/app/recurring/:id` (Pro) — set up or change a recurring split: the
@@ -98,7 +99,8 @@ interface Form {
   total: Minor | null
   currency: string
   participants: Participant[]
-  mode: AmountSplitMode
+  /** A monthly split repeats a fixed amount: no "what each had". */
+  mode: Exclude<AmountSplitMode, 'had'>
   payerId: string
   dayOfMonth: number
   active: boolean
@@ -341,7 +343,8 @@ function Editor({ template, preset, onDeleting }: EditorProps) {
           total={form.total}
           currency={form.currency}
           mode={form.mode}
-          onModeChange={(mode) => change({ mode })}
+          modes={RECURRING_MODES}
+          onModeChange={(mode) => change({ mode: mode === 'had' ? 'exact' : mode })}
           participants={form.participants}
           onParticipantsChange={(participants) => change({ participants })}
           payerId={form.payerId}

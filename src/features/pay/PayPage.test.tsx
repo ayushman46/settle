@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { historyDriver } from '../../app/nav/historyDriver'
 import { navigate, resetNavForTests, useLocation } from '../../app/router'
 import { BRAND } from '../../domain/types'
+import { decodePaidReply } from '../../share/paidReply'
 import { encodePayLink, payLinkUpiRequest, type PayLinkPayload } from '../../share/payLink'
 import { PayPage } from './PayPage'
 
@@ -193,6 +194,52 @@ describe('PayPage — paying', () => {
     }
   })
 
+  it('sends a reply link with the UPI reference, which ticks them off in the payee’s Settle', async () => {
+    const { user } = await openLink(dinner({ id: 'e1' }))
+    await user.click(await screen.findByRole('button', { name: /^S?Sam/ }))
+    expect(screen.getByRole('radio', { name: 'By UPI' })).toHaveAttribute('aria-checked', 'true')
+    const ref = screen.getByLabelText('UPI reference (optional)')
+    await user.type(ref, '4321 5678')
+    expect(screen.getByText('A UPI reference has 12 digits.')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Tell Ayush you’ve paid' })).toBeDisabled()
+    await user.type(ref, ' 9012')
+    const tell = screen.getByRole('button', { name: 'Tell Ayush you’ve paid' })
+    await waitFor(() => expect(tell).toBeEnabled())
+    await user.click(tell)
+    const [hi, upiRef, tap, link] = (await navigator.clipboard.readText()).split('\n')
+    expect([hi, upiRef, tap]).toEqual(['Hi Ayush! Just paid you ₹691.50 for Friday dinner ✓', 'UPI ref: 4321 5678 9012', 'Tap to mark me as paid 👇'])
+    expect(await decodePaidReply(link ?? '')).toEqual({ v: 1, k: 'paid', e: 'e1', i: 2, n: 'Sam', a: 69_150, c: 'INR', t: 'Friday dinner', h: 'upi', r: '432156789012' })
+  })
+
+  it('says "in cash" when they paid cash', async () => {
+    const { user } = await openLink(dinner({ id: 'e1' }))
+    await user.click(await screen.findByRole('button', { name: /^S?Sam/ }))
+    await user.click(screen.getByRole('radio', { name: 'In cash' }))
+    expect(screen.queryByLabelText('UPI reference (optional)')).not.toBeInTheDocument()
+    const tell = screen.getByRole('button', { name: 'Tell Ayush you’ve paid' })
+    await waitFor(() => expect(tell).toBeEnabled())
+    await user.click(tell)
+    const text = await navigator.clipboard.readText()
+    expect(text.split('\n')[0]).toBe('Hi Ayush! Paid you ₹691.50 in cash for Friday dinner ✓')
+    expect((await decodePaidReply(text))?.h).toBe('cash')
+  })
+
+  it('goes straight to the payee’s WhatsApp when the link carries their number', async () => {
+    const tab = { opener: {} as unknown }
+    const open = vi.fn((_url: string, _target: string) => tab)
+    vi.stubGlobal('open', open)
+    const { user } = await openLink(dinner({ id: 'e1', to: { n: 'Ayush', u: 'ayush@okaxis', ph: '919876500000' } }))
+    await user.click(await screen.findByRole('button', { name: /^S?Sam/ }))
+    const tell = screen.getByRole('button', { name: 'Tell Ayush you’ve paid' })
+    await waitFor(() => expect(tell).toBeEnabled())
+    await user.click(tell)
+    const url = new URL(open.mock.calls[0]?.[0] ?? '')
+    expect(url.origin + url.pathname).toBe('https://wa.me/919876500000')
+    expect(await decodePaidReply(url.searchParams.get('text') ?? '')).toMatchObject({ n: 'Sam', e: 'e1' })
+    expect(tab.opener).toBeNull()
+    expect(screen.getByText('WhatsApp is open — send it to Ayush.')).toBeInTheDocument()
+  })
+
   it('tells someone already marked paid that they’re square — details on request', async () => {
     const { user } = await openLink(dinner())
     await user.click(await screen.findByRole('button', { name: /^R?Riya/ }))
@@ -281,6 +328,14 @@ describe('PayPage — choosing who you are', () => {
     expect(await screen.findByRole('heading', { level: 2, name: 'Sam’s share' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /Pick your name/ })).not.toBeInTheDocument()
     expect(screen.queryByText(/collected/)).not.toBeInTheDocument()
+  })
+
+  it('a personal link opens straight on that person’s share, and "Not Sam?" still shows the names', async () => {
+    const { user } = await openLink(dinner({ f: 2 }))
+    expect(await screen.findByRole('heading', { level: 2, name: 'Sam’s share' })).toBeInTheDocument()
+    expect(screen.queryByRole('region', { name: 'Which one are you?' })).not.toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Not Sam? Pick your name' }))
+    expect(await screen.findByRole('region', { name: 'Which one are you?' })).toBeInTheDocument()
   })
 
   it('opens a new link pasted into the same tab', async () => {

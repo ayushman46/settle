@@ -4,6 +4,8 @@ import { MAX_MINOR } from '../lib/money'
 import {
   expenseShares,
   FULL_PERCENT_BPS,
+  hadSum,
+  isMoneyMode,
   isValidTotal,
   roundSharesToWhole,
   splitAmount,
@@ -163,6 +165,51 @@ describe('splitAmount — shares', () => {
   })
 })
 
+describe('splitAmount — what each had', () => {
+  const had = { a: 40_000, b: 30_000, c: 50_000 }
+
+  it('shares tax and tip in proportion to what each had', () => {
+    // ₹400 + ₹300 + ₹500 = ₹1,200 had; ₹1,380 paid with tax and tip.
+    const r = split({ mode: 'had', total: 138_000, participants: withInputs(had) })
+    expect(r.ok).toBe(true)
+    expect(r.shares).toEqual({ a: 46_000, b: 34_500, c: 57_500 })
+  })
+
+  it('shares a discount in proportion too', () => {
+    const r = split({ mode: 'had', total: 90_000, participants: withInputs(had) })
+    expect(r.shares).toEqual({ a: 30_000, b: 22_500, c: 37_500 })
+  })
+
+  it('is exactly what each had when that is what was paid', () => {
+    expect(split({ mode: 'had', total: 120_000, participants: withInputs(had) }).shares).toEqual(had)
+  })
+
+  it('leaves out whoever had nothing', () => {
+    const r = split({ mode: 'had', total: 1_100, participants: withInputs({ a: 600, b: null, c: 400 }) })
+    expect(r.shares).toEqual({ a: 660, b: 0, c: 440 })
+    expect(r.ok).toBe(true)
+  })
+
+  it('needs someone to have had something', () => {
+    const r = split({ mode: 'had', participants: withInputs({ a: null, b: 0 }) })
+    expect(r).toMatchObject({ ok: false, issues: ['nothing_had'], shares: { a: 0, b: 0 } })
+  })
+
+  it('gives leftover paise to the payer first', () => {
+    const r = split({ mode: 'had', total: 1_000, participants: withInputs({ a: 100, b: 100, c: 100 }), payerId: 'b' })
+    expect(r.shares).toEqual({ a: 333, b: 334, c: 333 })
+  })
+
+  it('adds up what everyone had, once a person', () => {
+    expect(hadSum(withInputs(had))).toBe(120_000)
+    expect(hadSum([{ friendId: 'a', input: 500 }, { friendId: 'a', input: 900 }, { friendId: 'b', input: null }, { friendId: 'c', input: -5 }])).toBe(500)
+  })
+
+  it('counts exact and had inputs as money', () => {
+    expect(['equal', 'exact', 'percent', 'shares', 'had', 'items'].filter((m) => isMoneyMode(m as AmountSplitInput['mode']))).toEqual(['exact', 'had'])
+  })
+})
+
 describe('splitAmount — problems', () => {
   it('needs people', () => {
     const r = split({ participants: [] })
@@ -293,7 +340,7 @@ describe('splitRestEqually', () => {
 })
 
 describe('splitAmount — properties (seeded)', () => {
-  const modes = ['equal', 'exact', 'percent', 'shares'] as const
+  const modes = ['equal', 'exact', 'percent', 'shares', 'had'] as const
 
   function randomInput(next: () => number): AmountSplitInput {
     const n = 1 + Math.floor(next() * 12)
@@ -313,6 +360,9 @@ describe('splitAmount — properties (seeded)', () => {
       inputs = ids.map((_, i) => (bounds[i + 1] ?? 0) - (bounds[i] ?? 0))
     } else if (mode === 'shares') {
       inputs = ids.map((_, i) => (i === 0 ? 1 + Math.floor(next() * 5) : next() < 0.2 ? null : Math.floor(next() * 6)))
+    } else if (mode === 'had') {
+      // What each had, unrelated to the total (tax and tip on top, or a discount off).
+      inputs = ids.map((_, i) => (i === 0 ? 1 + Math.floor(next() * scale) : next() < 0.2 ? null : Math.floor(next() * scale)))
     } else {
       inputs = ids.map(() => null)
     }

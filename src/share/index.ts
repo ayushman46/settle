@@ -9,6 +9,7 @@ export {
   PAY_PATH,
   PAYEE_FALLBACK,
   payLinkDebtors,
+  payLinkForPerson,
   payLinkFromExpense,
   payLinkItemLines,
   payLinkProgress,
@@ -34,7 +35,7 @@ export { GROUP_KIND_LABELS, type GroupCardInput, type GroupCardPerson, type Grou
 export { NUDGE_MAX_LENGTH, NUDGE_TONES, nudgeText, nudgeVariantCount, type NudgeInput, type NudgeTone } from './nudge'
 export { normalizePhone, smsUrl, whatsappUrl } from './links'
 export { safeFilename, shareFile, type ShareFileOptions, type ShareFileOutcome } from './shareFile'
-export { payLinkMessage, summaryText, type PayLinkMessageOptions } from './summary'
+export { payLinkMessage, personalPayMessage, summaryText, type PayLinkMessageOptions } from './summary'
 export { decodeFragment, encodeFragment, fragmentOf, JSON_PREFIX, MAX_FRAGMENT_LENGTH } from './fragment'
 export { hmacSha256, macB64u, timingSafeEqual } from './hmac'
 export { sha256, sha256Hex, toHex, utf8 } from './sha256'

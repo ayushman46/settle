@@ -6,6 +6,7 @@ import {
   encodePayLink,
   PAY_LINK_LIMITS,
   payLinkDebtors,
+  payLinkForPerson,
   payLinkFromExpense,
   payLinkItemLines,
   payLinkProgress,
@@ -360,7 +361,22 @@ describe('payLinkFromExpense', () => {
         { n: 'Neha Sharma', a: 69_150 },
       ],
       pi: 0,
+      id: 'e1',
     })
+  })
+
+  it('carries your own phone for “I’ve paid” replies, never anyone else’s', async () => {
+    const friends = { ...FRIENDS, [ME_ID]: makeFriend(ME_ID, 'You', { phone: '98765 00000' }) }
+    const mine = payLinkFromExpense(makeExpense(), friends, profile)
+    expect(mine.to.ph).toBe('919876500000')
+    expect((await decodePayLink(fragment(await encodePayLink(mine, ORIGIN))))?.to.ph).toBe('919876500000')
+    expect(payLinkFromExpense(makeExpense({ payerId: 'riya', paidBack: {} }), friends, profile).to.ph).toBeUndefined()
+    expect((await decodePayLink(fragment(await encodePayLink(payload({ to: { n: 'A', u: null, ph: 'call me' } }), ORIGIN))))?.to.ph).toBeUndefined()
+  })
+
+  it('names the expense, so a reply finds it, and drops an id that is not one', async () => {
+    expect((await decodePayLink(fragment(await encodePayLink(payload({ id: 'e_1-x' }), ORIGIN))))?.id).toBe('e_1-x')
+    expect((await decodePayLink(fragment(await encodePayLink(payload({ id: 'not an id!' }), ORIGIN))))?.id).toBeUndefined()
   })
 
   it("uses the payer's own UPI ID when a friend paid", () => {
@@ -497,6 +513,29 @@ describe('payLinkFromExpense', () => {
   it('produces links that survive the round trip', async () => {
     const link = payLinkFromExpense(makeExpense({ payerId: 'riya' }), FRIENDS, profile)
     expect(await decodePayLink(await encodePayLink(link, ORIGIN))).toEqual(link)
+  })
+})
+
+describe('personal links', () => {
+  it('carries who the link is for, and keeps only a valid person who is not the payee', async () => {
+    const forSam = await encodePayLink(payload({ f: 2 }), ORIGIN)
+    expect((await decodePayLink(fragment(forSam)))?.f).toBe(2)
+    for (const f of [0, 9, -1, 1.5]) {
+      const url = await encodePayLink(payload({ f }), ORIGIN)
+      expect((await decodePayLink(fragment(url)))?.f, String(f)).toBeUndefined()
+    }
+  })
+
+  it('makes an expense link personal, and the same link personal for anyone', () => {
+    const e = makeExpense()
+    expect(payLinkFromExpense(e, FRIENDS, makeProfile()).f).toBeUndefined()
+    const forSam = payLinkFromExpense(e, FRIENDS, makeProfile(), 'sam')
+    expect(forSam.f).toBe(2)
+    expect(payLinkFromExpense(e, FRIENDS, makeProfile(), ME_ID).f).toBeUndefined()
+    expect(payLinkFromExpense(e, FRIENDS, makeProfile(), 'stranger').f).toBeUndefined()
+    expect(payLinkForPerson(forSam, 3).f).toBe(3)
+    expect(payLinkForPerson(forSam, null).f).toBeUndefined()
+    expect(payLinkForPerson(forSam, null)).toEqual(payLinkFromExpense(e, FRIENDS, makeProfile()))
   })
 })
 

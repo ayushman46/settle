@@ -24,15 +24,19 @@ function prefersReducedMotion(): boolean {
 
 /**
  * The request and the person paying it. Picking a name opens their share; Back (or "Not you?")
- * returns to the names. With just one person on the link, their share opens straight away.
+ * returns to the names. With just one person on the link, or a personal link (`f`), their share
+ * opens straight away.
  */
 function PayRequest({ payload }: { payload: PayLinkPayload }) {
   const people = payPeople(payload)
   const only = people.length === 1 ? (people[0] ?? null) : null
-  const [picked, setPicked] = useState<number | null>(null)
+  const forIndex = payload.f !== undefined && people.some((p) => p.index === payload.f) ? payload.f : null
+  const [picked, setPicked] = useState<number | null>(forIndex)
   const listRef = useRef<HTMLDivElement>(null)
   const headingRef = useRef<HTMLHeadingElement>(null)
-  const lastPicked = useRef<number | null>(null)
+  const lastPicked = useRef<number | null>(forIndex)
+  // A personal link opens on its share like any page opens: focus moves only once the person picks.
+  const opened = useRef(false)
   const person = only ?? people.find((p) => p.index === picked) ?? null
 
   // The share sits on its own history entry, so the phone's Back button returns to the names.
@@ -40,6 +44,9 @@ function PayRequest({ payload }: { payload: PayLinkPayload }) {
 
   useEffect(() => {
     if (only) return
+    const first = !opened.current
+    opened.current = true
+    if (first && picked !== null) return
     if (picked !== null) {
       const heading = headingRef.current
       if (!heading) return

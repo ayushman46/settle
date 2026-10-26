@@ -110,6 +110,40 @@ describe('NewSplitScreen — a new split', SCREEN, () => {
     })
   })
 
+  it('splits a meal with no bill: what each had, the total from that, tax and tip in proportion', async () => {
+    const { user } = renderApp('/app/split/new')
+    await user.type(screen.getByLabelText("What's it for?"), 'Dinner')
+    await pickPerson(user, 'Riya')
+    await pickPerson(user, 'Sam')
+    await user.click(screen.getByRole('radio', { name: 'What each had' }))
+    await user.type(screen.getByLabelText('What you had'), '400')
+    await user.type(screen.getByLabelText('What Riya had'), '300')
+    await user.type(screen.getByLabelText('What Sam had'), '500')
+    expect(saveButton()).toBeDisabled()
+
+    // No total typed: one tap uses what everyone had.
+    await user.click(screen.getByRole('button', { name: 'Use ₹1,200' }))
+    expect(amountField()).toHaveValue('1,200')
+    expect(screen.getByText('You’ll get back ₹800 from Riya and Sam')).toBeInTheDocument()
+
+    // Tax and tip on top: type what was really paid, and it's shared in proportion.
+    await user.clear(amountField())
+    await user.type(amountField(), '1380')
+    expect(screen.getByText('₹180 tax & tip shared in proportion')).toBeInTheDocument()
+    await user.click(saveButton())
+    await screen.findByRole('dialog', { name: 'Split saved' })
+    expect(expensesStore.get()[0]).toMatchObject({
+      mode: 'had',
+      total: 138_000,
+      participants: [
+        { friendId: ME_ID, input: 40_000 },
+        { friendId: 'riya', input: 30_000 },
+        { friendId: 'sam', input: 50_000 },
+      ],
+      shares: { [ME_ID]: 46_000, riya: 34_500, sam: 57_500 },
+    })
+  })
+
   it('records who paid', async () => {
     const { user } = renderApp('/app/split/new')
     await user.type(amountField(), '1000')

@@ -19,7 +19,7 @@ import {
 import { isCategoryId } from '../../engine/categories'
 import { isIsoDate } from '../../engine/dates'
 import { convertMinor, isValidRate, rateFromTotals } from '../../engine/fx'
-import { expenseShares, isValidTotal, uniqueParticipants, type AmountSplitMode } from '../../engine/split'
+import { expenseShares, isMoneyMode, isValidTotal, uniqueParticipants, type AmountSplitMode } from '../../engine/split'
 import type { RateLookup, RateState } from '../../api/rates'
 import { isKnownCurrency } from '../../lib/currencies'
 import { formatMoney, rescaleMinor } from '../../lib/money'
@@ -78,7 +78,7 @@ export interface FormConversion {
 
 export const NO_CONVERSION: FormConversion = { convert: null, settle: null, manual: null, frozen: null }
 
-const AMOUNT_MODES: readonly AmountSplitMode[] = ['equal', 'exact', 'percent', 'shares']
+const AMOUNT_MODES: readonly AmountSplitMode[] = ['equal', 'exact', 'percent', 'shares', 'had']
 
 /** An empty split: just you, split equally, paid by you, today. */
 export function blankForm(currency: string, day: string): SplitForm {
@@ -125,7 +125,7 @@ export function changeCurrency(form: SplitForm, currency: string, trip?: TripCon
   return {
     ...moved,
     participants:
-      form.mode === 'exact'
+      isMoneyMode(form.mode)
         ? form.participants.map((p) => (p.input === null ? p : { ...p, input: rescaleMinor(p.input, from, currency) }))
         : form.participants,
   }
@@ -171,7 +171,7 @@ function rebase(before: SplitForm, beforeSettle: string, after: SplitForm, after
   const samePair = before.currency === after.currency && beforeSettle === afterSettle
   const conversion = samePair ? after.conversion : { ...after.conversion, manual: null, frozen: null }
   const next = { ...after, conversion }
-  if (next.mode !== 'exact') return next
+  if (!isMoneyMode(next.mode)) return next
   return { ...next, participants: rescaleInputs(next.participants, splitCurrency(before, beforeSettle), splitCurrency(next, afterSettle)) }
 }
 

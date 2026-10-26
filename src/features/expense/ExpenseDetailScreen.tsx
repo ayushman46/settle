@@ -91,7 +91,8 @@ function ExpenseDetail({ expense, onDeleting }: ExpenseDetailProps) {
   const owing = owingIds(expense)
   const canMarkAll = expense.payerId === ME_ID && action.kind === 'share' && owing.length > 0
   const back = group ? `/app/groups/${encodeURIComponent(group.id)}` : '/app/activity'
-  const { link } = usePayLink(expense, { enabled: nudge?.open === true })
+  // A reminder carries that person's own link, which opens straight on their share.
+  const { link } = usePayLink(expense, { enabled: nudge?.open === true, forId: nudge?.friendId ?? null })
   const payment = upi ? upiPaymentForShare(expense, upi.friendId, friendsById) : null
 
   // The tab names the expense ("Dinner at Toit · Settle"), after the shell's generic title.

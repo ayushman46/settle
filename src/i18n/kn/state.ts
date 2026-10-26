@@ -21,6 +21,7 @@ export const state = {
   'state.error.expense.percentMismatch': 'ಶೇಕಡಾವಾರುಗಳು ಇನ್ನೂ 100% ಗೆ ಸರಿಹೊಂದುತ್ತಿಲ್ಲ.',
   'state.error.expense.payerMissing': 'ಯಾರು ಪಾವತಿಸಿದರು ಆರಿಸಿ.',
   'state.error.expense.zeroWeights': 'ಕನಿಷ್ಠ ಒಬ್ಬ ವ್ಯಕ್ತಿಗೆ ಪಾಲು ನೀಡಿ.',
+  'state.error.expense.nothingHad': 'ಕನಿಷ್ಠ ಒಬ್ಬರು ಎಷ್ಟು ತಿಂದರು ಎಂದು ಬರೆಯಿರಿ.',
   'state.error.expense.notFound': 'ಆ ಖರ್ಚು ಇನ್ನು ಇಲ್ಲ.',
   'state.error.data.notFound': 'ಅದು ಸಿಗಲಿಲ್ಲ — ಅದನ್ನು ಅಳಿಸಿರಬಹುದು.',
   'state.error.data.emptyName': 'ಮೊದಲು ಹೆಸರು ಸೇರಿಸಿ.',

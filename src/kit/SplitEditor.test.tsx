@@ -26,7 +26,9 @@ afterEach(() => {
 
 const inr = (minor: number) => formatMoney(minor, 'INR', { trimZeros: true })
 
-interface HarnessProps extends Partial<Pick<SplitEditorProps, 'currency' | 'payerId'>> {
+interface HarnessProps extends Partial<Pick<SplitEditorProps, 'currency' | 'payerId' | 'modes'>> {
+  /** Shows "Use ₹…" (the screen's amount field). */
+  withTotal?: boolean
   total?: Minor | null
   mode?: AmountSplitMode
   ids: string[]
@@ -35,7 +37,8 @@ interface HarnessProps extends Partial<Pick<SplitEditorProps, 'currency' | 'paye
   onRoundSpy?: (v: boolean) => void
 }
 
-function Harness({ total = 100_000, mode: initialMode = 'equal', ids, inputs, round = false, onRoundSpy, currency = 'INR', payerId = ME_ID }: HarnessProps) {
+function Harness({ total: initialTotal = 100_000, mode: initialMode = 'equal', ids, inputs, round = false, onRoundSpy, currency = 'INR', payerId = ME_ID, withTotal = false, modes }: HarnessProps) {
+  const [total, setTotal] = useState<Minor | null>(initialTotal)
   const [mode, setMode] = useState<AmountSplitMode>(initialMode)
   const [participants, setParticipants] = useState<Participant[]>(ids.map((friendId, i) => ({ friendId, input: inputs?.[i] ?? null })))
   const [roundToWhole, setRoundToWhole] = useState(round)
@@ -54,14 +57,16 @@ function Harness({ total = 100_000, mode: initialMode = 'equal', ids, inputs, ro
           onRoundSpy?.(v)
           setRoundToWhole(v)
         }}
+        onTotalChange={withTotal ? setTotal : undefined}
+        modes={modes}
       />
-      <output data-testid="state">{JSON.stringify({ mode, participants })}</output>
+      <output data-testid="state">{JSON.stringify({ mode, participants, total })}</output>
     </>
   )
 }
 
-function state(): { mode: AmountSplitMode; participants: Participant[] } {
-  return JSON.parse(screen.getByTestId('state').textContent ?? '{}') as { mode: AmountSplitMode; participants: Participant[] }
+function state(): { mode: AmountSplitMode; participants: Participant[]; total: Minor | null } {
+  return JSON.parse(screen.getByTestId('state').textContent ?? '{}') as { mode: AmountSplitMode; participants: Participant[]; total: Minor | null }
 }
 
 const inputsOf = () => state().participants.map((p) => p.input)
@@ -238,6 +243,79 @@ describe('SplitEditor', () => {
   it('has no rounding for currencies without minor units', () => {
     render(<Harness ids={seed().slice(0, 2)} currency="JPY" total={1000} />)
     expect(screen.queryByRole('switch')).not.toBeInTheDocument()
+  })
+
+  it('says what each way of splitting is for, under the choices', async () => {
+    const user = userEvent.setup()
+    render(<Harness ids={seed()} />)
+    const group = screen.getByRole('radiogroup', { name: 'How to split' })
+    expect(within(group).getAllByRole('radio').map((r) => r.textContent)).toEqual(['Equally', 'What each had', 'Exact', 'Percentages', 'Shares'])
+    expect(group).toHaveAccessibleDescription('Everyone pays the same.')
+    await user.click(screen.getByRole('radio', { name: 'Percentages' }))
+    expect(group).toHaveAccessibleDescription(/rent by room size/)
+    await user.click(screen.getByRole('radio', { name: 'Shares' }))
+    expect(group).toHaveAccessibleDescription(/counts double/)
+  })
+
+  it('moves between ways of splitting with the arrow keys', async () => {
+    const user = userEvent.setup()
+    render(<Harness ids={seed()} />)
+    const equally = screen.getByRole('radio', { name: 'Equally' })
+    expect(equally).toHaveAttribute('tabindex', '0')
+    expect(screen.getByRole('radio', { name: 'Shares' })).toHaveAttribute('tabindex', '-1')
+    equally.focus()
+    await user.keyboard('{ArrowRight}')
+    expect(state().mode).toBe('had')
+    expect(screen.getByRole('radio', { name: 'What each had' })).toHaveFocus()
+    await user.keyboard('{ArrowLeft}{ArrowLeft}')
+    expect(state().mode).toBe('shares')
+    await user.keyboard('{Home}')
+    expect(state().mode).toBe('equal')
+  })
+
+  it('what each had: no bill — type what each had and use it as the total', async () => {
+    const user = userEvent.setup()
+    render(<Harness ids={seed().slice(0, 3)} total={null} withTotal />)
+    await user.click(screen.getByRole('radio', { name: 'What each had' }))
+    expect(screen.getByText(/No bill\? Type what each person had/)).toBeInTheDocument()
+    expect(statusText()).toBe('Type what each person had')
+    await user.type(screen.getByRole('textbox', { name: 'What you had' }), '400')
+    await user.type(screen.getByRole('textbox', { name: 'What Riya had' }), '300')
+    await user.type(screen.getByRole('textbox', { name: 'What Sam had' }), '500')
+    expect(statusText()).toBe(`Comes to ${inr(120_000)} · use it as the total, or type what you paid above`)
+    await user.click(screen.getByRole('button', { name: `Use ${inr(120_000)}` }))
+    expect(state().total).toBe(120_000)
+    expect(statusText()).toBe('Adds up')
+    expect(screen.queryByRole('button', { name: /^Use / })).not.toBeInTheDocument()
+  })
+
+  it('what each had: shares tax and tip in proportion and says what each pays', async () => {
+    const user = userEvent.setup()
+    const ids = seed()
+    render(<Harness ids={ids.slice(0, 4)} total={138_000} mode="had" />)
+    await user.type(screen.getByRole('textbox', { name: 'What you had' }), '400')
+    await user.type(screen.getByRole('textbox', { name: 'What Riya had' }), '300')
+    await user.type(screen.getByRole('textbox', { name: 'What Sam had' }), '500')
+    expect(statusText()).toBe(`${inr(18_000)} tax & tip shared in proportion · ${inr(120_000)} had · ${inr(138_000)} paid`)
+    expect(rows()[1]).toHaveTextContent(`Pays ${inr(34_500)}`)
+    expect(rows()[2]).toHaveTextContent(`Pays ${inr(57_500)}`)
+    expect(rows()[3]).toHaveTextContent('Not paying')
+    expect(screen.queryByRole('button', { name: /^Use / })).not.toBeInTheDocument()
+  })
+
+  it('carries amounts between Exact and What each had', async () => {
+    const user = userEvent.setup()
+    render(<Harness ids={seed().slice(0, 2)} mode="exact" />)
+    await user.type(screen.getByRole('textbox', { name: 'Amount for Riya' }), '300')
+    await user.click(screen.getByRole('radio', { name: 'What each had' }))
+    expect(inputsOf()).toEqual([null, 30_000])
+    expect(screen.getByRole('textbox', { name: 'What Riya had' })).toHaveValue('300')
+  })
+
+  it('offers only the modes it is given', () => {
+    render(<Harness ids={seed()} modes={['equal', 'exact', 'percent', 'shares']} />)
+    expect(screen.queryByRole('radio', { name: 'What each had' })).not.toBeInTheDocument()
+    expect(screen.getAllByRole('radio')).toHaveLength(4)
   })
 
   it('keeps its status above the screen’s sticky action bar', () => {

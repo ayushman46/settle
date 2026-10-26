@@ -103,6 +103,38 @@ describe('ShareSheet', () => {
     expect(tab.opener).toBeNull()
   })
 
+  it('asks each person who still owes on their own, with a link that opens on their share', async () => {
+    render(<Harness />)
+    const each = await screen.findByRole('region', { name: 'Or ask each person' })
+    expect(within(each).getByText('Their own link opens straight on their share — one tap to pay.')).toBeInTheDocument()
+    expect(within(each).getAllByRole('listitem').map((row) => row.textContent)).toEqual([
+      expect.stringContaining('Sam'),
+      expect.stringContaining('Neha Sharma'),
+    ])
+    const ask = await within(each).findByRole('link', { name: 'Ask Sam on WhatsApp' })
+    const url = new URL(ask.getAttribute('href') ?? '')
+    expect(url.origin + url.pathname).toBe('https://wa.me/')
+    const [hi, tap, link] = (url.searchParams.get('text') ?? '').split('\n')
+    expect(hi).toBe('Hi Sam! Your share of Dinner at Toit is ₹691.50 🧾')
+    expect(tap).toBe('Pay me in one tap — any UPI app, amount already filled in 👇')
+    expect((await decodePayLink(link ?? ''))?.f).toBe(2)
+    expect(within(each).getByRole('link', { name: 'Ask Neha Sharma on WhatsApp' })).toHaveAttribute('target', '_blank')
+  })
+
+  it('goes straight to their chat when you have their number', async () => {
+    const expense = makeExpense({ paidBack: { sam: 1 } })
+    render(<Harness expense={expense} />)
+    const each = await screen.findByRole('region', { name: 'Or ask each person' })
+    const ask = await within(each).findByRole('link', { name: 'Ask Riya on WhatsApp' })
+    expect(ask.getAttribute('href')).toMatch(/^https:\/\/wa\.me\/919876543210\?text=/)
+  })
+
+  it('leaves out asking one by one when only one person owes', async () => {
+    render(<Harness expense={makeExpense({ paidBack: { riya: 1, sam: 1 } })} />)
+    await payLink()
+    expect(screen.queryByRole('region', { name: 'Or ask each person' })).not.toBeInTheDocument()
+  })
+
   it('copies the message when the WhatsApp tab is blocked', async () => {
     const user = userEvent.setup()
     vi.stubGlobal('open', vi.fn(() => null))

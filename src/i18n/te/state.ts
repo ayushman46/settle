@@ -26,6 +26,7 @@ export const state = {
   'state.error.expense.percentMismatch': 'శాతాలు ఇంకా 100% గా సరిపోలడం లేదు.',
   'state.error.expense.payerMissing': 'ఎవరు చెల్లించారో ఎంచుకోండి.',
   'state.error.expense.zeroWeights': 'కనీసం ఒకరికి ఒక వాటా ఇవ్వండి.',
+  'state.error.expense.nothingHad': 'కనీసం ఒకరు ఎంత తిన్నారో రాయండి.',
   'state.error.expense.notFound': 'ఆ ఖర్చు ఇక లేదు.',
   'state.error.data.notFound': 'అది కనుగొనలేకపోయాం — తొలగించబడి ఉండవచ్చు.',
   'state.error.data.emptyName': 'ముందుగా ఒక పేరు జోడించండి.',

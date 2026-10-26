@@ -66,6 +66,10 @@ export const share = {
   'share.message.payMe': 'যেকোনো UPI অ্যাপে আমাকে পে করতে আপনার নামে ট্যাপ করুন 👇',
   'share.message.pay': 'যেকোনো UPI অ্যাপে {name}-কে পে করতে আপনার নামে ট্যাপ করুন 👇',
   'share.message.seeShare': 'আপনার অংশ দেখতে আপনার নামে ট্যাপ করুন 👇',
+  'share.message.yourShare': 'হাই {name}! {title}-এ আপনার অংশ {amount} 🧾',
+  'share.message.oneTapMe': 'এক ট্যাপে আমাকে পাঠান — যেকোনো UPI অ্যাপ, টাকা আগে থেকেই ভরা 👇',
+  'share.message.oneTap': 'এক ট্যাপে {name}-কে পাঠান — যেকোনো UPI অ্যাপ, টাকা আগে থেকেই ভরা 👇',
+  'share.message.seeYours': 'আপনার অংশ দেখুন 👇',
 
   // The share card image of a split (drawn in the sender's language).
   'share.card.morePeople': '{count, plural, one {আরও # জন} other {আরও # জন}}',

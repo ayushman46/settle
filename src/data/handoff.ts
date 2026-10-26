@@ -50,7 +50,7 @@ const prefillSchema = z.object({
   currency: z.optional(z.string().check(z.regex(/^[A-Z]{3}$/))),
   date: z.optional(z.string()),
   payerId: z.optional(z.string()),
-  mode: z.optional(z.enum(['equal', 'exact', 'percent', 'shares'])),
+  mode: z.optional(z.enum(['equal', 'exact', 'percent', 'shares', 'had'])),
   participants: z.optional(z.array(z.object({ friendId: z.string(), input: z.nullable(z.number()) }))),
   groupId: z.optional(z.nullable(z.string())),
   note: z.optional(z.nullable(z.string())),

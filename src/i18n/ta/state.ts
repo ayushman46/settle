@@ -26,6 +26,7 @@ export const state = {
   'state.error.expense.percentMismatch': 'சதவீதங்கள் இன்னும் 100% ஆகச் சரியாகக் கூடவில்லை.',
   'state.error.expense.payerMissing': 'யார் செலுத்தினார் என்று தேர்ந்தெடுங்கள்.',
   'state.error.expense.zeroWeights': 'குறைந்தது ஒருவருக்காவது பங்கு கொடுங்கள்.',
+  'state.error.expense.nothingHad': 'குறைந்தது ஒருவர் எவ்வளவு சாப்பிட்டார் என்று உள்ளிடுங்கள்.',
   'state.error.expense.notFound': 'அந்தச் செலவு இனி இல்லை.',
   'state.error.data.notFound': 'அது கண்டுபிடிக்கப்படவில்லை — நீக்கப்பட்டிருக்கலாம்.',
   'state.error.data.emptyName': 'முதலில் ஒரு பெயரைச் சேருங்கள்.',

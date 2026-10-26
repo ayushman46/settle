@@ -121,6 +121,38 @@ describe('splitStatus', () => {
   })
 })
 
+describe('splitStatus — what each had', () => {
+  it('asks what each had, then offers what it comes to as the total', () => {
+    expect(status('had', null, people(null, null))).toMatchObject({ tone: 'pending', message: 'Type what each person had' })
+    expect(status('had', 100_000, people(0, null))).toMatchObject({ tone: 'pending', message: 'Type what each person had' })
+    expect(status('had', null, people(40_000, 30_000))).toMatchObject({
+      tone: 'pending',
+      message: `Comes to ${inr(70_000)}`,
+      detail: 'use it as the total, or type what you paid above',
+      useTotal: 70_000,
+    })
+  })
+
+  it('says how tax and tip or a discount are shared', () => {
+    expect(status('had', 70_000, people(40_000, 30_000))).toMatchObject({ tone: 'ok', message: 'Adds up', detail: null })
+    expect(status('had', 80_500, people(40_000, 30_000))).toMatchObject({
+      tone: 'ok',
+      message: `${inr(10_500)} tax & tip shared in proportion`,
+      detail: `${inr(70_000)} had · ${inr(80_500)} paid`,
+    })
+    expect(status('had', 56_000, people(40_000, 30_000))).toMatchObject({ tone: 'ok', message: `${inr(14_000)} off shared in proportion` })
+    expect(status('had', 80_500, people(40_000, 30_000)).useTotal).toBeUndefined()
+  })
+
+  it('flags a total far above what everyone had', () => {
+    expect(status('had', 200_000, people(40_000, 30_000))).toMatchObject({
+      tone: 'pending',
+      message: `${inr(130_000)} more than what everyone had`,
+      detail: 'did someone miss an item?',
+    })
+  })
+})
+
 describe('restPreview', () => {
   const base: Omit<AmountSplitInput, 'participants' | 'mode'> = { total: 100_000, currency: 'INR', payerId: ME_ID }
 

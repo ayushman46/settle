@@ -14,6 +14,7 @@ import {
   type PayLinkPayload,
   type PayLinkUpiRequest,
 } from '../../share/payLink'
+import { formatUtr, type PaidHow } from '../../share/paidReply'
 import { firstName } from '../../share/text'
 import { AVATAR_COLORS } from '../../types'
 
@@ -100,10 +101,29 @@ export function extrasLabel(extras: Minor): string {
   return extras > 0 ? t('pay.breakdown.extras.added') : t('pay.breakdown.extras.taken')
 }
 
-/** "Hi Ayush! Just paid you ₹691.50 for Friday dinner ✓" — for the group chat, once they've paid. */
-export function paidMessage(payload: PayLinkPayload, person: Pick<PayPerson, 'amount'>): string {
+export interface PaidMessageOptions {
+  /** By UPI (the default) or in cash. */
+  how?: PaidHow
+  /** The UPI reference they added, cleaned (see `cleanUtr`). */
+  utr?: string | null
+  /** Their "I've paid" reply link: the payee taps it to tick them off. */
+  link?: string | null
+}
+
+/**
+ * "Hi Ayush! Just paid you ₹691.50 for Friday dinner ✓" — once they've paid — with the UPI
+ * reference to check against the bank app and the reply link that ticks them off in Settle.
+ */
+export function paidMessage(payload: PayLinkPayload, person: Pick<PayPerson, 'amount'>, opts: PaidMessageOptions = {}): string {
   const amount = formatMoney(person.amount, payload.c, { trimZeros: true })
-  return payload.to.n === PAYEE_FALLBACK
-    ? t('pay.tell.message.noName', { amount, title: payload.t })
-    : t('pay.tell.message', { name: firstName(payload.to.n), amount, title: payload.t })
+  const named = payload.to.n !== PAYEE_FALLBACK
+  const vars = { name: firstName(payload.to.n), amount, title: payload.t }
+  const lines =
+    opts.how === 'cash'
+      ? [named ? t('pay.tell.message.cash', vars) : t('pay.tell.message.cash.noName', vars)]
+      : [named ? t('pay.tell.message', vars) : t('pay.tell.message.noName', vars)]
+  if (opts.how !== 'cash' && opts.utr) lines.push(t('pay.tell.message.ref', { ref: formatUtr(opts.utr) }))
+  const link = opts.link?.trim()
+  if (link) lines.push(t('pay.tell.message.link'), link)
+  return lines.join('\n')
 }

@@ -6,6 +6,7 @@ import type { Minor, Participant } from '../domain/types'
 import { t } from '../i18n'
 import {
   FULL_PERCENT_BPS,
+  hadSum,
   isValidTotal,
   splitAmount,
   splitRestEqually,
@@ -72,6 +73,8 @@ export interface SplitStatus {
   progress: number | null
   /** Whether "Split the rest equally" has something to hand out. */
   canSplitRest: boolean
+  /** What everyone had, offered as the total when none is typed yet (had mode). */
+  useTotal?: Minor
 }
 
 export interface SplitStatusInput {
@@ -96,6 +99,7 @@ export function splitStatus({ total, currency, mode, participants, result }: Spl
   if (people.length === 0) {
     return { tone: 'idle', message: t('kit.split.status.pickPeople'), detail: null, progress: null, canSplitRest: false }
   }
+  if (mode === 'had') return hadStatus(total, currency, people, result)
   if (!isValidTotal(total)) {
     return { tone: 'idle', message: t('kit.split.status.enterAmount'), detail: null, progress: null, canSplitRest: false }
   }
@@ -155,6 +159,30 @@ export function splitStatus({ total, currency, mode, participants, result }: Spl
       }
     }
   }
+}
+
+/** Extra on top of what everyone had above this share of it looks like a missed item, not tax and tip. */
+const MUCH_MORE = 0.35
+
+/**
+ * What each had: what it comes to with no total yet (offered as the total), then how the total
+ * differs — tax and tip or a discount, shared in proportion.
+ */
+function hadStatus(total: Minor | null, currency: string, people: readonly Participant[], result: AmountSplitResult): SplitStatus {
+  const none = { progress: null, canSplitRest: false }
+  const sum = hadSum(people)
+  if (sum <= 0 || result.issues.includes('nothing_had')) {
+    return { tone: 'pending', message: t('kit.split.status.typeHad'), detail: null, ...none }
+  }
+  if (!isValidTotal(total)) {
+    return { tone: 'pending', message: t('kit.split.status.hadComes', { amount: money(sum, currency) }), detail: t('kit.split.status.hadUseHint'), ...none, useTotal: sum }
+  }
+  const detail = t('kit.split.status.hadOf', { had: money(sum, currency), total: money(total, currency) })
+  const diff = total - sum
+  if (diff === 0) return { tone: 'ok', message: t('kit.split.status.addsUp'), detail: null, ...none }
+  if (diff < 0) return { tone: 'ok', message: t('kit.split.status.hadLess', { amount: money(-diff, currency) }), detail, ...none }
+  if (diff > sum * MUCH_MORE) return { tone: 'pending', message: t('kit.split.status.hadMuchMore', { amount: money(diff, currency) }), detail: t('kit.split.status.hadMuchMoreHint'), ...none }
+  return { tone: 'ok', message: t('kit.split.status.hadMore', { amount: money(diff, currency) }), detail, ...none }
 }
 
 /* ------------------------------------------------------------------ helpers for the rows */

@@ -143,7 +143,7 @@ describe('RecurringEditorScreen — new', () => {
   it('hides round-to-whole, which recurring splits can’t keep', async () => {
     const { user } = renderEditor('/app/recurring/new')
     await user.type(screen.getByLabelText('Amount each month'), '1000')
-    const editor = screen.getByRole('radiogroup', { name: 'How to split' }).parentElement!
+    const editor = screen.getByRole('radiogroup', { name: 'How to split' }).closest<HTMLElement>('[class*="split"]')!
     const round = within(editor).getByRole('switch', { name: /Round to whole/ })
     expect(round.parentElement).toBe(editor)
     expect(editor.className).toMatch(/split/)

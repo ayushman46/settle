@@ -5,10 +5,23 @@
   min-width: 0;
 }
 
-/* Mode labels stay whole words on 320px phones (four columns leave ~60px each). */
-.modes button {
-  padding-inline: var(--s-1);
-  white-space: nowrap;
+.modePicker {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+/* Five ways to split wrap onto a second line on narrow phones rather than squeezing words. */
+.modes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+.modeHint {
+  margin: 0;
+  color: var(--ink-2);
+  font: var(--text-caption);
 }
 
 /* ---------- People rows ---------- */

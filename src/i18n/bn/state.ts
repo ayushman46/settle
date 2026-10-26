@@ -27,6 +27,7 @@ export const state = {
   'state.error.expense.percentMismatch': 'শতাংশগুলো এখনও 100%-এ মিলছে না।',
   'state.error.expense.payerMissing': 'কে দিয়েছেন বেছে নিন।',
   'state.error.expense.zeroWeights': 'অন্তত একজনকে একটি অংশ দিন।',
+  'state.error.expense.nothingHad': 'অন্তত একজন কত খেয়েছে লিখুন।',
   'state.error.expense.notFound': 'ওই খরচটি আর নেই।',
   'state.error.data.notFound': 'সেটি খুঁজে পাওয়া যায়নি — হয়তো মুছে ফেলা হয়েছে।',
   'state.error.data.emptyName': 'আগে একটি নাম যোগ করুন।',

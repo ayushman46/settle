@@ -6,7 +6,8 @@ const INDIAN_MOBILE = /^[6-9]\d{9}$/
 /** Zero code points of decimal digit blocks people may type (Devanagari, Bengali, Gujarati, …). */
 const DIGIT_ZEROS = [0x0660, 0x06f0, 0x0966, 0x09e6, 0x0a66, 0x0ae6, 0x0b66, 0x0be6, 0x0c66, 0x0ce6, 0x0d66, 0xff10]
 
-function asciiDigits(text: string): string {
+/** Any script's decimal digits as ASCII ("४२" → "42"). */
+export function asciiDigits(text: string): string {
   return text.replace(/\p{Nd}/gu, (ch) => {
     const cp = ch.codePointAt(0) ?? 0
     const zero = DIGIT_ZEROS.find((z) => cp >= z && cp <= z + 9)

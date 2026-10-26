@@ -4,6 +4,7 @@ import {
   Badge,
   BottomSheet,
   Button,
+  Money,
   QuickAction,
   QuickActionGrid,
   Skeleton,
@@ -19,6 +20,7 @@ import {
   copyText,
   payLinkMessage,
   payLinkProgress,
+  personalPayMessage,
   renderShareCard,
   shareCardFilename,
   shareCardInputFromExpense,
@@ -29,10 +31,12 @@ import {
   type ShareCardInput,
 } from '../share'
 import { firstName } from '../share/text'
+import { pendingIds } from './collectLabels'
+import { FriendAvatar } from './FriendAvatar'
 import { friendLabel } from './friendName'
 import { DARK_SCHEME, TOUCH_FIRST, useMediaQuery } from './media'
 import { UpiIdForm } from './UpiIdForm'
-import { usePayLink } from './usePayLink'
+import { usePayLink, usePersonalPayLinks } from './usePayLink'
 import styles from './ShareSheet.module.css'
 
 export interface ShareSheetProps {
@@ -105,6 +109,7 @@ function useShareCard(open: boolean, input: ShareCardInput, opts: CardOptions): 
 export function ShareSheet({ expense, open, onClose, onUpgrade }: ShareSheetProps) {
   const t = useT()
   const imageHeadingId = useId()
+  const eachHeadingId = useId()
   const toast = useToast()
   const profile = useProfile()
   const friendsById = useFriendsById()
@@ -135,6 +140,9 @@ export function ShareSheet({ expense, open, onClose, onUpgrade }: ShareSheetProp
   const record = useMemo(() => summaryText({ ...payload, to: { ...payload.to, u: null } }), [payload])
   const summary = settlesIn ? record : link ? summaryText(payload, link) : null
   const message = settlesIn ? record : link ? payLinkMessage(payload, link, { fromPayee }) : null
+  // Or one by one: each person gets their own message and link, straight to their chat.
+  const askIds = settlesIn === null && owing ? pendingIds(expense) : []
+  const personal = usePersonalPayLinks(expense, askIds, open && askIds.length > 1)
 
   const description = settlesIn
     ? t('kit.share.description.group', { group: settlesIn.name })
@@ -257,6 +265,50 @@ export function ShareSheet({ expense, open, onClose, onUpgrade }: ShareSheetProp
           {settlesIn === null && <QuickAction tone="ink" icon={<Copy />} label={t('kit.share.copyLink')} onClick={copyLink} disabled={!link} />}
           <QuickAction tone="entertainment" icon={<FileText />} label={t('kit.share.copyText')} onClick={copySummary} disabled={!summary} />
         </QuickActionGrid>
+
+        {askIds.length > 1 && (
+          <section className={styles.each} aria-labelledby={eachHeadingId}>
+            <div>
+              <h3 id={eachHeadingId} className={styles.eachTitle}>
+                {t('kit.share.each.title')}
+              </h3>
+              <p className={styles.eachSub}>{t('kit.share.each.body')}</p>
+            </div>
+            <ul className={styles.eachList}>
+              {askIds.map((id) => {
+                const friend = friendsById[id] ?? null
+                const name = friendLabel(id, friend)
+                const own = personal[id]
+                const index = own?.payload.f
+                const text = own && own.link && index !== undefined ? personalPayMessage(own.payload, index, own.link, { fromPayee }) : null
+                return (
+                  <li key={id} className={styles.eachRow}>
+                    <FriendAvatar friendId={id} size="sm" />
+                    <span className={styles.eachName}>{name}</span>
+                    <Money value={expense.shares[id] ?? 0} currency={expense.currency} trimZeros strong className={styles.eachAmount} />
+                    {text ? (
+                      <a
+                        className={styles.eachSend}
+                        href={whatsappUrl(text, friend?.phone)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={t('kit.share.each.aria', { name })}
+                        onClick={() => haptic('success')}
+                      >
+                        <MessageCircle aria-hidden="true" strokeWidth={2.25} />
+                        {t('kit.share.each.cta')}
+                      </a>
+                    ) : (
+                      <span className={styles.eachPending}>
+                        <Skeleton width="4.5rem" height={36} shape="md" />
+                      </span>
+                    )}
+                  </li>
+                )
+              })}
+            </ul>
+          </section>
+        )}
 
         <section className={styles.image} aria-labelledby={imageHeadingId}>
           <div className={styles.preview}>

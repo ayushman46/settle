@@ -21,6 +21,7 @@ export const state = {
   'state.error.expense.percentMismatch': 'ટકા હજી 100% સુધી બરાબર થતા નથી.',
   'state.error.expense.payerMissing': 'કોણે ચૂકવ્યું તે પસંદ કરો.',
   'state.error.expense.zeroWeights': 'ઓછામાં ઓછી એક વ્યક્તિને હિસ્સો આપો.',
+  'state.error.expense.nothingHad': 'ઓછામાં ઓછી એક વ્યક્તિએ કેટલું ખાધું તે લખો.',
   'state.error.expense.notFound': 'એ ખર્ચ હવે અસ્તિત્વમાં નથી.',
   'state.error.data.notFound': 'એ મળ્યું નહીં — તે કાઢી નખાયું હશે.',
   'state.error.data.emptyName': 'પહેલાં નામ ઉમેરો.',

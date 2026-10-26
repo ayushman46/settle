@@ -1,10 +1,10 @@
-import { useLayoutEffect, useRef, useState, type KeyboardEvent, type RefObject } from 'react'
+import { useId, useLayoutEffect, useRef, useState, type KeyboardEvent, type RefObject } from 'react'
 import { CircleAlert, CircleCheck, CircleDashed, RotateCcw, Wand2 } from 'lucide-react'
-import { Button, Money, SegmentedControl, Stepper, Switch, type SegmentedOption } from '../components'
+import { Button, Chip, Money, Stepper, Switch } from '../components'
 import { useFriendsById } from '../data'
 import { ME_ID, type Minor, type Participant } from '../domain/types'
-import { t, useT } from '../i18n'
-import { isValidTotal, splitAmount, splitRestEqually, uniqueParticipants, type AmountSplitMode } from '../engine/split'
+import { t, useT, type MessageKey } from '../i18n'
+import { hadSum, isMoneyMode, isValidTotal, splitAmount, splitRestEqually, uniqueParticipants, type AmountSplitMode } from '../engine/split'
 import { cx } from '../lib/cx'
 import { haptic } from '../lib/haptics'
 import { cleanAmountText, currencyDigits, currencySymbol, formatMoney, MAX_MINOR, parseMoneyInput, toInputString } from '../lib/money'
@@ -37,16 +37,87 @@ export interface SplitEditorProps {
   payerId: string
   roundToWhole: boolean
   onRoundToWholeChange: (roundToWhole: boolean) => void
+  /** Sets the amount being split — "Use ₹1,200" in What each had when none is typed. Omit to hide it. */
+  onTotalChange?: (total: Minor) => void
+  /** The ways to split on offer, in order. Default: all of them. */
+  modes?: readonly AmountSplitMode[]
   className?: string
 }
 
-function modeOptions(): readonly SegmentedOption<AmountSplitMode>[] {
-  return [
-    { value: 'equal', label: t('kit.split.mode.equal') },
-    { value: 'exact', label: t('kit.split.mode.exact') },
-    { value: 'percent', label: '%', 'aria-label': t('kit.split.mode.percent.aria') },
-    { value: 'shares', label: t('kit.split.mode.shares') },
-  ]
+const SPLIT_MODES: readonly AmountSplitMode[] = ['equal', 'had', 'exact', 'percent', 'shares']
+
+const MODE_LABELS: Readonly<Record<AmountSplitMode, MessageKey>> = {
+  equal: 'kit.split.mode.equal',
+  had: 'kit.split.mode.had',
+  exact: 'kit.split.mode.exact',
+  percent: 'kit.split.mode.percent.aria',
+  shares: 'kit.split.mode.shares',
+}
+
+/** One line under the modes on what each is for — "what's the point of percentages?" answered in place. */
+const MODE_HINTS: Readonly<Record<AmountSplitMode, MessageKey>> = {
+  equal: 'kit.split.mode.equal.hint',
+  had: 'kit.split.mode.had.hint',
+  exact: 'kit.split.mode.exact.hint',
+  percent: 'kit.split.mode.percent.hint',
+  shares: 'kit.split.mode.shares.hint',
+}
+
+interface ModePickerProps {
+  modes: readonly AmountSplitMode[]
+  value: AmountSplitMode
+  onChange: (mode: AmountSplitMode) => void
+  describedBy: string
+}
+
+/**
+ * The ways to split as chips that wrap (five don't fit a segmented bar on a 320 px phone), with
+ * radio-group keys: arrows move the choice, Home/End jump to the ends, one stop in the tab order.
+ */
+function ModePicker({ modes, value, onChange, describedBy }: ModePickerProps) {
+  const refs = useRef<Array<HTMLButtonElement | null>>([])
+  const index = Math.max(0, modes.indexOf(value))
+  const select = (i: number): void => {
+    const n = modes.length
+    const at = ((i % n) + n) % n
+    refs.current[at]?.focus()
+    const next = modes[at]
+    if (next !== undefined && next !== value) onChange(next)
+  }
+  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>): void => {
+    const moves: Readonly<Record<string, number>> = {
+      ArrowRight: index + 1,
+      ArrowDown: index + 1,
+      ArrowLeft: index - 1,
+      ArrowUp: index - 1,
+      Home: 0,
+      End: modes.length - 1,
+    }
+    const to = moves[event.key]
+    if (to === undefined) return
+    event.preventDefault()
+    select(to)
+  }
+  return (
+    <div role="radiogroup" aria-label={t('kit.split.mode.aria')} aria-describedby={describedBy} className={styles.modes} onKeyDown={onKeyDown}>
+      {modes.map((mode, i) => (
+        <Chip
+          key={mode}
+          ref={(el) => {
+            refs.current[i] = el
+          }}
+          role="radio"
+          selected={mode === value}
+          tabIndex={i === index ? 0 : -1}
+          onClick={() => {
+            if (mode !== value) onChange(mode)
+          }}
+        >
+          {t(MODE_LABELS[mode])}
+        </Chip>
+      ))}
+    </div>
+  )
 }
 
 const MAX_SHARES = 99
@@ -114,7 +185,7 @@ interface MoneyCellProps {
   onChange: (value: Minor | null) => void
 }
 
-/** A compact amount field for one person (exact mode). Keeps typing as typed ("12."). */
+/** A compact amount field for one person (exact and had modes). Keeps typing as typed ("12."). */
 function MoneyCell({ value, currency, label, placeholder, onChange }: MoneyCellProps) {
   const shown = shownMinor(value)
   const [text, setText] = useState(() => toInputString(shown, currency, { trimZeros: true }))
@@ -197,8 +268,8 @@ function PercentCell({ value, label, placeholder, onChange }: PercentCellProps) 
 }
 
 /**
- * How a total is divided: Equally / Exact / % / Shares, one row per person with their live
- * share, and a sticky status that says whether it adds up ("₹200 left to assign", "Adds up to
+ * How a total is divided: Equally / What each had / Exact / Percentages / Shares, one row per
+ * person with their live share, and a sticky status that says whether it adds up ("₹200 left to assign", "Adds up to
  * 100%") with "Split the rest equally" and "Reset" right there. Switching modes remembers what
  * was typed in each, so flicking back and forth never loses work.
  */
@@ -212,9 +283,12 @@ export function SplitEditor({
   payerId,
   roundToWhole,
   onRoundToWholeChange,
+  onTotalChange,
+  modes = SPLIT_MODES,
   className,
 }: SplitEditorProps) {
   useT()
+  const hintId = useId()
   const friendsById = useFriendsById()
   const statusRef = useRef<HTMLDivElement>(null)
   /** What was typed in each mode, by friendId — restored when coming back to that mode. */
@@ -231,6 +305,8 @@ export function SplitEditor({
   const digits = currencyDigits(currency)
   const symbol = currencySymbol(currency)
   const canReset = mode !== 'equal' && people.some((p) => p.input !== null)
+  const someoneHad = mode === 'had' && hadSum(people) > 0
+  const useTotal = onTotalChange && status.useTotal !== undefined ? status.useTotal : null
 
   const nameOf = (id: string) => friendLabel(id, friendsById[id] ?? null)
   const objectOf = (id: string) => friendObjectLabel(id, friendsById[id] ?? null)
@@ -242,8 +318,11 @@ export function SplitEditor({
 
   const switchMode = (next: AmountSplitMode): void => {
     if (next === mode) return
-    memory.current[mode] = Object.fromEntries(people.map((p) => [p.friendId, p.input]))
-    onParticipantsChange(next === 'equal' ? clearedInputs(people) : restoreInputs(people, memory.current[next]))
+    const typed = Object.fromEntries(people.map((p) => [p.friendId, p.input]))
+    memory.current[mode] = typed
+    // Exact amounts and what each had are both money: what's typed in one carries over to the other.
+    const saved = memory.current[next] ?? (isMoneyMode(mode) && isMoneyMode(next) ? typed : undefined)
+    onParticipantsChange(next === 'equal' ? clearedInputs(people) : restoreInputs(people, saved))
     onModeChange(next)
   }
 
@@ -274,7 +353,12 @@ export function SplitEditor({
 
   return (
     <div className={cx(styles.editor, className)}>
-      <SegmentedControl className={styles.modes} options={modeOptions()} value={mode} onChange={switchMode} ariaLabel={t('kit.split.mode.aria')} />
+      <div className={styles.modePicker}>
+        <ModePicker modes={modes} value={mode} onChange={switchMode} describedBy={hintId} />
+        <p id={hintId} className={styles.modeHint}>
+          {t(MODE_HINTS[mode])}
+        </p>
+      </div>
 
       {people.length > 0 ? (
         <ul className={styles.rows} aria-label={t('kit.split.rows.aria')} data-split-rows="">
@@ -282,12 +366,15 @@ export function SplitEditor({
             const id = p.friendId
             const share = result.shares[id] ?? 0
             const weight = p.input === null ? 1 : p.input
-            const out = mode === 'shares' && weight <= 0
+            const had = mode === 'had' && p.input !== null && p.input > 0 ? p.input : 0
+            const out = (mode === 'shares' && weight <= 0) || (mode === 'had' && had === 0 && someoneHad)
             let sub: string | null = null
             if (validTotal) {
               if (mode === 'exact' && p.input !== null && p.input > 0) sub = formatBps(Math.round((p.input / (total ?? 1)) * 10_000))
               else if (mode === 'percent' || mode === 'shares') sub = out ? t('kit.split.notPaying') : money(share)
+              else if (mode === 'had' && had > 0 && share !== had) sub = t('kit.split.pays', { amount: money(share) })
             }
+            if (mode === 'had' && out) sub = t('kit.split.notPaying')
             return (
               <li key={id} className={cx(styles.row, out && styles.out)}>
                 <FriendAvatar friendId={id} size="md" />
@@ -311,6 +398,15 @@ export function SplitEditor({
                       currency={currency}
                       label={t('kit.split.amountFor', { name: objectOf(id) })}
                       placeholder={preview[id] !== undefined ? toInputString(preview[id], currency, { trimZeros: true }) : '0'}
+                      onChange={(minor) => setInput(id, minor)}
+                    />
+                  )}
+                  {mode === 'had' && (
+                    <MoneyCell
+                      value={p.input}
+                      currency={currency}
+                      label={t('kit.split.hadFor', { name: objectOf(id) })}
+                      placeholder="0"
                       onChange={(minor) => setInput(id, minor)}
                     />
                   )}
@@ -357,8 +453,13 @@ export function SplitEditor({
               </>
             )}
           </p>
-          {(status.canSplitRest || canReset) && (
+          {(status.canSplitRest || canReset || useTotal !== null) && (
             <span className={styles.actions}>
+              {useTotal !== null && (
+                <Button size="sm" variant="accent" iconStart={<CircleCheck aria-hidden="true" />} onClick={() => onTotalChange?.(useTotal)}>
+                  {t('kit.split.useTotal.cta', { amount: money(useTotal) })}
+                </Button>
+              )}
               {status.canSplitRest && (
                 <Button size="sm" variant="accent" iconStart={<Wand2 aria-hidden="true" />} onClick={splitRest}>
                   {t('kit.split.rest.cta')}

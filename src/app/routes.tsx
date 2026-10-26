@@ -197,6 +197,11 @@ const PoolReplyScreen = lazyScreen(
   () => import('../features/pools/PoolReplyScreen'),
   (m) => m.PoolReplyScreen,
 )
+const PaidReplyScreen = lazyScreen(
+  'PaidReplyScreen',
+  () => import('../features/expense/PaidReplyScreen'),
+  (m) => m.PaidReplyScreen,
+)
 const UpgradeScreen = lazyScreen(
   'UpgradeScreen',
   () => import('../features/pro/UpgradeScreen'),
@@ -240,6 +245,7 @@ export const APP_ROUTES: readonly AppRoute[] = [
   { pattern: '/app/proof', screen: ProofScreen, title: 'Paid? Drop the screenshot', tab: null },
   { pattern: '/app/lend/:id/edit', screen: LendScreen, title: 'Edit udhaar', tab: null },
   { pattern: '/app/expense/:id', screen: ExpenseDetailScreen, title: 'Expense', tab: null },
+  { pattern: '/app/paid', screen: PaidReplyScreen, title: 'Payment', tab: null },
   { pattern: '/app/bill', screen: BillFlow, title: null, tab: null },
   { pattern: '/app/claims/in', screen: ClaimReplyScreen, title: 'Claims', tab: null },
   { pattern: '/app/claims/:id', screen: ClaimRoundScreen, title: 'Claims', tab: null },

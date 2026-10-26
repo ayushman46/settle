@@ -32,6 +32,7 @@ const ISSUE_TO_CODE: Readonly<Record<SplitIssue, ExpenseErrorCode>> = {
   exact_mismatch: 'exact_mismatch',
   percent_mismatch: 'percent_mismatch',
   zero_weights: 'zero_weights',
+  nothing_had: 'nothing_had',
 }
 
 type NormalizedDraft = Omit<Expense, 'id' | 'createdAt' | 'updatedAt' | 'paidBack'>
@@ -133,7 +134,7 @@ export function expenseDraftIssue(draft: ExpenseDraft): ExpenseErrorCode | null 
  * up to the total. Editing keeps who has already paid back (unless their share went up, or the
  * draft says otherwise).
  * Throws ExpenseError: 'no_people' | 'bad_total' | 'exact_mismatch' | 'percent_mismatch' |
- * 'zero_weights' | 'payer_missing'.
+ * 'zero_weights' | 'nothing_had' | 'payer_missing'.
  */
 export function saveExpense(draft: ExpenseDraft): Expense {
   const expense = normalizeDraft(draft)

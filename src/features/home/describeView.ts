@@ -69,6 +69,7 @@ const MODE_LABELS: Readonly<Record<Exclude<SplitMode, 'items'>, string>> = {
   exact: 'Exact amounts',
   percent: 'By percentage',
   shares: 'By shares',
+  had: 'What each had',
 }
 
 /** The people a draft names (and the payer) as a dry run of `describedToPrefill`: nobody is saved. */

@@ -70,6 +70,32 @@ export function summaryText(payload: PayLinkPayload, link?: string | null): stri
   return lines.join('\n')
 }
 
+/**
+ * One person's own ask, with their personal link (which opens on their share):
+ *
+ * ```
+ * Hi Riya! Your share of Dinner at Toit is ₹460 🧾
+ * Pay me in one tap — any UPI app, amount already filled in 👇
+ * https://…/pay#…
+ * ```
+ */
+export function personalPayMessage(payload: PayLinkPayload, index: number, link: string | null, opts: PayLinkMessageOptions): string {
+  const person = payload.p[index]
+  if (!person) return payLinkMessage(payload, link, opts)
+  const title = ellipsize(payload.t, 48, 120)
+  const lines = [t('share.message.yourShare', { name: firstName(person.n), title, amount: moneyOf(payload)(person.a) })]
+  const url = link?.trim() || null
+  const upi = usableUpi(payload)
+  const payee = firstName(payload.to.n)
+  if (url) {
+    lines.push(upi ? (opts.fromPayee ? t('share.message.oneTapMe') : t('share.message.oneTap', { name: payee })) : t('share.message.seeYours'))
+    lines.push(url)
+  } else if (upi) {
+    lines.push(opts.fromPayee ? t('share.nudge.upi.mine', { upi }) : t('share.nudge.upi', { name: payee, upi }))
+  }
+  return lines.join('\n')
+}
+
 export interface PayLinkMessageOptions {
   /** The sender is the payee (they paid and are collecting): "pay me" rather than "pay Riya". */
   fromPayee: boolean

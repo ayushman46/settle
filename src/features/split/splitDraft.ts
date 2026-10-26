@@ -67,7 +67,7 @@ const formSchema = z.object({
   date: z.string(),
   groupId: z.nullable(z.string()),
   participants: z.array(z.object({ friendId: z.string(), input: z.nullable(z.number()) })).check(z.maxLength(200)),
-  mode: z.enum(['equal', 'exact', 'percent', 'shares']),
+  mode: z.enum(['equal', 'exact', 'percent', 'shares', 'had']),
   payerId: z.string(),
   roundToWhole: z.boolean(),
   note: z.string().check(z.maxLength(4000)),

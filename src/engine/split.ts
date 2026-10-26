@@ -10,7 +10,12 @@ import { computeSplit } from '../lib/split'
 
 export type AmountSplitMode = Exclude<SplitMode, 'items'>
 
-export type SplitIssue = 'no_people' | 'bad_total' | 'exact_mismatch' | 'percent_mismatch' | 'zero_weights'
+export type SplitIssue = 'no_people' | 'bad_total' | 'exact_mismatch' | 'percent_mismatch' | 'zero_weights' | 'nothing_had'
+
+/** Modes whose inputs are money (minor units in the split's currency), so they move with it. */
+export function isMoneyMode(mode: SplitMode): boolean {
+  return mode === 'exact' || mode === 'had'
+}
 
 /** 100% in basis points. Percent inputs are basis points: 2500 = 25%. */
 export const FULL_PERCENT_BPS = 10_000
@@ -56,6 +61,14 @@ export function uniqueParticipants(participants: readonly Participant[]): Partic
 function wholeInput(value: number | null): number {
   if (value === null || !Number.isFinite(value) || value <= 0) return 0
   return Math.min(Math.round(value), MAX_MINOR)
+}
+
+/** What everyone had, added up (had mode): the total to suggest when none is typed. */
+export function hadSum(participants: readonly Participant[]): Minor {
+  return Math.min(
+    uniqueParticipants(participants).reduce((sum, p) => sum + wholeInput(p.input), 0),
+    MAX_MINOR,
+  )
 }
 
 /** A share weight: null means the default of 1; anything unusable counts as 0. */
@@ -104,6 +117,8 @@ export function roundSharesToWhole(shares: Readonly<Record<string, Minor>>, paye
  * - exact: each input is that person's amount; inputs must add up to the total.
  * - percent: inputs are basis points that must add up to 10 000; amounts by largest remainder.
  * - shares: inputs are weights (null = 1, 0 = left out); at least one must be positive.
+ * - had: inputs are what each person had (no bill needed); the total — what was actually paid,
+ *   with tax, tip or a discount — is shared in proportion to them. Someone must have had something.
  * When not `ok`, `shares` is still a live preview of what was typed (for editors).
  */
 export function splitAmount(input: AmountSplitInput): AmountSplitResult {
@@ -143,6 +158,16 @@ export function splitAmount(input: AmountSplitInput): AmountSplitResult {
         amounts = weights.map(() => 0)
       } else {
         amounts = allocatePayerFirst(total, weights, ids, input.payerId)
+      }
+      break
+    }
+    case 'had': {
+      const had = people.map((p) => wholeInput(p.input))
+      if (people.length > 0 && !had.some((a) => a > 0)) {
+        issues.push('nothing_had')
+        amounts = had.map(() => 0)
+      } else {
+        amounts = allocatePayerFirst(total, had, ids, input.payerId)
       }
       break
     }

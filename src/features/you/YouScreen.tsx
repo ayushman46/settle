@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Building2, ChartPie, CircleCheck, Coins, FileText, HandCoins, KeyRound, Languages, Repeat, ShieldCheck, Users } from 'lucide-react'
+import { Building2, ChartPie, CircleCheck, ClipboardPaste, Coins, FileText, HandCoins, KeyRound, Languages, Repeat, ShieldCheck, Users } from 'lucide-react'
 import { navigate } from '../../app/router'
 import { Badge, Card, List, ListRow, Screen, SuccessBurst, Switch, useToast } from '../../components'
 import { updateProfile, useDueRecurring, useFriends, usePools, useProfile, useRecurring } from '../../data'
@@ -8,6 +8,7 @@ import { currencyName } from '../../lib/currencies'
 import { currencySymbol } from '../../lib/money'
 import { languageInfo, useLang, useT } from '../../i18n'
 import { useHasFeature } from '../../pro'
+import { PastePaidReplySheet } from '../expense/PastePaidReplySheet'
 import { POOLS_ENABLED } from '../pools/enabled'
 import { InstallRow } from '../install'
 import { PROOF_ENABLED, PROOF_PATH } from '../proof/enabled'
@@ -68,6 +69,7 @@ function Shortcuts() {
   const recurringOn = useHasFeature('recurring')
   const insightsOn = useHasFeature('insights')
   const t = useT()
+  const [pasting, setPasting] = useState(false)
 
   return (
     <Card padding="none">
@@ -134,8 +136,20 @@ function Shortcuts() {
             chevron
           />
         )}
+        <ListRow
+          leading={
+            <SettingIcon>
+              <ClipboardPaste />
+            </SettingIcon>
+          }
+          title={t('expense.paidReply.paste.row')}
+          subtitle={t('expense.paidReply.paste.rowSub')}
+          aria-haspopup="dialog"
+          onClick={() => setPasting(true)}
+        />
       </List>
       <InstallRow />
+      <PastePaidReplySheet open={pasting} onClose={() => setPasting(false)} />
     </Card>
   )
 }

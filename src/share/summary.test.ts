@@ -3,7 +3,7 @@ import { BRAND } from '../domain/types'
 import { formatBillDate } from '../lib/format'
 import { formatMoney } from '../lib/money'
 import type { PayLinkPayload } from './payLink'
-import { payLinkMessage, summaryText } from './summary'
+import { payLinkMessage, personalPayMessage, summaryText } from './summary'
 
 const LINK = 'https://settle.example/pay#abc'
 
@@ -83,6 +83,22 @@ describe('summaryText', () => {
     // A name past the cap still keeps a gap before its amount.
     expect(text).toContain(`Bartholomew Alexander  ${money(100)}`)
     expect(text).toContain(`${'Al'.padEnd(16)}${money(100)}`)
+  })
+})
+
+describe('personalPayMessage', () => {
+  it('greets the person with their own share and a one-tap link', () => {
+    const share = money(payload().p[2]?.a ?? 0)
+    expect(personalPayMessage(payload(), 2, LINK, { fromPayee: true })).toBe(
+      [`Hi Sam! Your share of Dinner at Toit is ${share} 🧾`, 'Pay me in one tap — any UPI app, amount already filled in 👇', LINK].join('\n'),
+    )
+    expect(personalPayMessage(payload(), 2, LINK, { fromPayee: false }).split('\n')[1]).toBe('Pay Ayush in one tap — any UPI app, amount already filled in 👇')
+  })
+
+  it('says "see your share" without a UPI ID, gives the UPI ID without a link, and falls back for a stranger', () => {
+    expect(personalPayMessage(payload({ to: { n: 'Ayush', u: null } }), 2, LINK, { fromPayee: true }).split('\n')[1]).toBe('See your share 👇')
+    expect(personalPayMessage(payload(), 2, null, { fromPayee: true }).split('\n')[1]).toBe('My UPI: ayush@okaxis')
+    expect(personalPayMessage(payload(), 42, LINK, { fromPayee: true })).toBe(payLinkMessage(payload(), LINK, { fromPayee: true }))
   })
 })
 

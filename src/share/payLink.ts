@@ -15,6 +15,7 @@ import { categoryLabel } from './categories'
 import { decodeFragment, encodeFragment } from './fragment'
 import { outsideName } from './names'
 import { friendFallback, personFallback } from './fallbacks'
+import { normalizePhone } from './links'
 import { cleanText, utf8Length } from './text'
 
 export interface PayLinkPerson {
@@ -46,14 +47,21 @@ export interface PayLinkPayload {
   c: string
   /** Local date, YYYY-MM-DD ('' if unknown). */
   d: string
-  /** The payee — who paid and is collecting — and their UPI ID. */
-  to: { n: string; u: string | null }
+  /**
+   * The payee — who paid and is collecting — their UPI ID, and their phone (international digits,
+   * only when the link is their own) so "I've paid" goes straight to their chat.
+   */
+  to: { n: string; u: string | null; ph?: string }
   /** What was paid in total. */
   tot: Minor
   /** Everyone in the split, in the expense's order (the payee included when they took part). */
   p: PayLinkPerson[]
   /** Index in `p` of the payee, when they took part in the split. Not one of "who's paying". */
   pi?: number
+  /** A personal copy of the link: index in `p` of the person it was sent to — it opens on their share. */
+  f?: number
+  /** The expense's id on the payee's phone, so an "I've paid" reply finds it. */
+  id?: string
   note?: string
   /** Itemized bills only. */
   items?: PayLinkItem[]
@@ -93,6 +101,7 @@ const payloadSchema = z.object({
   to: z.object({
     n: z.string().check(z.maxLength(L.name.units)),
     u: z.catch(z.nullable(z.string().check(z.maxLength(330))), null),
+    ph: z.optional(z.catch(z.string().check(z.maxLength(20)), '')),
   }),
   tot: amount,
   p: z
@@ -105,6 +114,8 @@ const payloadSchema = z.object({
     )
     .check(z.maxLength(L.people)),
   pi: z.optional(index),
+  f: z.optional(index),
+  id: z.optional(z.catch(z.string().check(z.maxLength(64)), '')),
   note: z.optional(z.string().check(z.maxLength(L.note.units))),
   items: z.optional(
     z
@@ -185,6 +196,10 @@ function normalizePayload(raw: PayLinkPayload): PayLinkPayload {
     const payee = people[raw.pi]
     if (payee) payee.paid = true
   }
+  const phone = normalizePhone(raw.to.ph)
+  if (phone) payload.to.ph = phone
+  if (raw.id && /^[A-Za-z0-9_-]{1,64}$/.test(raw.id)) payload.id = raw.id
+  if (raw.f !== undefined && Number.isInteger(raw.f) && raw.f >= 0 && raw.f < people.length && raw.f !== payload.pi) payload.f = raw.f
   const note = raw.note ? cleanText(raw.note, L.note.graphemes, L.note.units) : ''
   if (note) payload.note = note
   const items = cleanItems(raw.items, people.length)
@@ -196,8 +211,8 @@ function normalizePayload(raw: PayLinkPayload): PayLinkPayload {
 
 function serialize(payload: PayLinkPayload): string {
   // Explicit key order keeps links stable for the same payload.
-  const { v, t, cat, c, d, to, tot, p, pi, note, items } = payload
-  return JSON.stringify({ v, t, cat, c, d, to, tot, p, pi, note, items })
+  const { v, id, t, cat, c, d, to, tot, p, pi, f, note, items } = payload
+  return JSON.stringify({ v, id, t, cat, c, d, to: { n: to.n, u: to.u, ph: to.ph }, tot, p, pi, f, note, items })
 }
 
 /** The canonical JSON for a payload, shrunk (items, then the note) until it fits the size cap. */
@@ -254,9 +269,10 @@ export async function decodePayLink(hash: string): Promise<PayLinkPayload | null
 
 /**
  * Who goes in a link with more than `PAY_LINK_LIMITS.people` participants: the payer and the
- * people who still owe come first; the original order is kept.
+ * people who still owe come first; the original order is kept. Index `i` in a link's `p` is
+ * `payLinkPeopleIds(e)[i]`.
  */
-function keptParticipants(e: Expense): string[] {
+export function payLinkPeopleIds(e: Expense): string[] {
   const ids: string[] = []
   for (const p of e.participants) if (!ids.includes(p.friendId)) ids.push(p.friendId)
   if (ids.length <= L.people) return ids
@@ -306,13 +322,15 @@ export function payLinkFor(raw: PayLinkPayload): PayLinkPayload {
  * The pay-link payload for an expense. The payer is `to` (UPI ID from their friend record, or
  * the profile when the payer is the owner); everyone in the split is in `p` with their share
  * and paid-back state; bills carry their items (up to 40, none when paid in another currency).
+ * `forId`: a personal copy for that person, opening straight on their share.
  */
 export function payLinkFromExpense(
   e: Expense,
   friendsById: Readonly<Record<string, Friend>>,
   profile: Profile,
+  forId?: string,
 ): PayLinkPayload {
-  const ids = keptParticipants(e)
+  const ids = payLinkPeopleIds(e)
   const p: PayLinkPerson[] = ids.map((id, i) => {
     const fallback = id === ME_ID ? friendFallback() : personFallback(i + 1)
     const person: PayLinkPerson = { n: outsideName(id, friendsById, profile, fallback), a: e.shares[id] ?? 0 }
@@ -320,18 +338,23 @@ export function payLinkFromExpense(
     return person
   })
   const upi = e.payerId === ME_ID ? (profile.upiId ?? friendsById[ME_ID]?.upiId ?? null) : (friendsById[e.payerId]?.upiId ?? null)
+  // Your own number only: a link never hands out someone else's.
+  const phone = e.payerId === ME_ID ? (friendsById[ME_ID]?.phone ?? null) : null
   const payload: PayLinkPayload = {
     v: 1,
     t: titleWithPaid(e),
     cat: e.category,
     c: e.currency,
     d: e.date,
-    to: { n: outsideName(e.payerId, friendsById, profile, friendFallback()), u: upi },
+    to: { n: outsideName(e.payerId, friendsById, profile, friendFallback()), u: upi, ...(phone ? { ph: phone } : {}) },
     tot: e.total,
     p,
+    id: e.id,
   }
   const payerIndex = ids.indexOf(e.payerId)
   if (payerIndex !== -1) payload.pi = payerIndex
+  const forIndex = forId === undefined ? -1 : ids.indexOf(forId)
+  if (forIndex !== -1) payload.f = forIndex
   if (e.note) payload.note = e.note
   const items = billItems(e, ids)
   if (items) payload.items = items
@@ -346,6 +369,12 @@ export interface PayLinkDebtor {
   name: string
   amount: Minor
   paid: boolean
+}
+
+/** The same link made personal for the person at `index` (opens on their share); null clears it. */
+export function payLinkForPerson(payload: PayLinkPayload, index: number | null): PayLinkPayload {
+  const { f: _drop, ...rest } = payload
+  return normalizePayload(index === null ? rest : { ...rest, f: index })
 }
 
 /** The people who pay the payee back (everyone in `p` except the payee), in order. */

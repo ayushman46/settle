@@ -8,6 +8,7 @@ export type ExpenseErrorCode =
   | 'percent_mismatch'
   | 'payer_missing'
   | 'zero_weights'
+  | 'nothing_had'
   | 'not_found'
 
 /** The copy for each expense problem (English in `en/state.ts`). */
@@ -18,6 +19,7 @@ const EXPENSE_MESSAGES: Readonly<Record<ExpenseErrorCode, MessageKey>> = {
   percent_mismatch: 'state.error.expense.percentMismatch',
   payer_missing: 'state.error.expense.payerMissing',
   zero_weights: 'state.error.expense.zeroWeights',
+  nothing_had: 'state.error.expense.nothingHad',
   not_found: 'state.error.expense.notFound',
 }
 

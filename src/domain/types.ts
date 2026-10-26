@@ -52,9 +52,11 @@ export interface Friend {
  * - exact: each person's `input` is a Minor amount; inputs must sum to the total.
  * - percent: each `input` is basis points (2500 = 25%); inputs must sum to 10 000.
  * - shares: each `input` is a positive integer weight (2 = pays double).
+ * - had: each `input` is a Minor amount the person had (no bill needed); the total (what was
+ *   actually paid, with tax, tip or a discount) is shared in proportion to them.
  * - items: itemized bill (`kind: 'bill'`), shares come from per-item assignment.
  */
-export type SplitMode = 'equal' | 'exact' | 'percent' | 'shares' | 'items'
+export type SplitMode = 'equal' | 'exact' | 'percent' | 'shares' | 'had' | 'items'
 
 export interface Participant {
   friendId: string
@@ -304,7 +306,7 @@ export interface RecurringTemplate {
   currency: string
   total: Minor
   payerId: string
-  mode: Exclude<SplitMode, 'items'>
+  mode: Exclude<SplitMode, 'items' | 'had'>
   participants: Participant[]
   /** Day of month it's due (1..28 so it exists in every month). */
   dayOfMonth: number

@@ -72,6 +72,16 @@ export const pay = {
   // The message itself ({title} is what the bill was for).
   'pay.tell.message': 'Hi {name}! Just paid you {amount} for {title} ✓',
   'pay.tell.message.noName': 'Hi! Just paid you {amount} for {title} ✓',
+  'pay.tell.message.cash': 'Hi {name}! Paid you {amount} in cash for {title} ✓',
+  'pay.tell.message.cash.noName': 'Hi! Paid you {amount} in cash for {title} ✓',
+  'pay.tell.message.ref': 'UPI ref: {ref}',
+  'pay.tell.message.link': 'Tap to mark me as paid 👇',
+  'pay.tell.how.upi': 'By UPI',
+  'pay.tell.how.cash': 'In cash',
+  'pay.tell.utr.label': 'UPI reference (optional)',
+  'pay.tell.utr.hint': '12 digits, in your UPI app’s payment details',
+  'pay.tell.utr.error': 'A UPI reference has 12 digits.',
+  'pay.tell.opened.status': 'WhatsApp is open — send it to {name}.',
 
   // A link that can't be shown.
   'pay.problem.invalid.title': 'This pay link doesn’t work',

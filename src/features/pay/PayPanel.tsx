@@ -1,20 +1,24 @@
-import { useId, useState, type Ref } from 'react'
-import { ArrowRight, ChevronLeft, Send } from 'lucide-react'
+import { useEffect, useId, useMemo, useState, type Ref } from 'react'
+import { ArrowRight, ChevronLeft, MessageCircle, Send } from 'lucide-react'
 import {
   Avatar,
   Banner,
   Button,
+  Chip,
   Money,
   Receipt,
   ReceiptDivider,
   ReceiptRow,
   SuccessCheck,
+  TextField,
 } from '../../components'
 import { useLang, useT } from '../../i18n'
 import { amountInWords } from '../../kit/amountWords'
 import { haptic } from '../../lib/haptics'
 import { formatMoney } from '../../lib/money'
 import { shareResult } from '../../lib/share'
+import { whatsappUrl } from '../../share/links'
+import { cleanUtr, encodePaidReply, paidReplyFor, type PaidHow } from '../../share/paidReply'
 import type { PayLinkPayload, PayLinkUpiRequest } from '../../share/payLink'
 import { firstName } from '../../share/text'
 import { extrasLabel, itemBreakdown, paidMessage, payeeColor, payOption, type PayPerson } from './payView'
@@ -146,23 +150,91 @@ function UpiPay({ payload, request }: { payload: PayLinkPayload; request: PayLin
   return <UpiPayBlock payeeName={payload.to.n} vpa={request.vpa} amount={request.amount} note={payload.t} currency={payload.c} color={payeeColor(payload)} />
 }
 
-/** "Paid? Let them know" — a ready message for the group chat (share sheet on phones, clipboard elsewhere). */
+/** The "I've paid" reply link for these answers, packed ahead of the tap (a share sheet needs a fresh tap). */
+function useReplyLink(payload: PayLinkPayload, index: number, how: PaidHow, utr: string | null): { key: string; link: string | null } {
+  const reply = useMemo(() => paidReplyFor(payload, index, how, utr), [payload, index, how, utr])
+  const key = reply ? JSON.stringify(reply) : ''
+  const [packed, setPacked] = useState<{ key: string; link: string } | null>(null)
+  const ready = packed !== null && packed.key === key ? packed.link : null
+  useEffect(() => {
+    if (reply === null || ready !== null) return
+    let live = true
+    void encodePaidReply(reply).then((link) => {
+      if (live) setPacked({ key, link })
+    })
+    return () => {
+      live = false
+    }
+  }, [reply, key, ready])
+  return { key, link: ready }
+}
+
+/**
+ * "Paid? Tell them" — how they paid (UPI, with the reference if they have it, or cash) and a
+ * ready message with a link that ticks them off in the payee's Settle: straight to the payee's
+ * WhatsApp when the link carries their number, else the share sheet (clipboard on computers).
+ */
 function TellThem({ payload, person }: { payload: PayLinkPayload; person: PayPerson }) {
   const t = useT()
-  const [status, setStatus] = useState<'idle' | 'shared' | 'copied' | 'failed'>('idle')
+  const groupId = useId()
+  const [how, setHow] = useState<PaidHow>('upi')
+  const [utrText, setUtrText] = useState('')
+  const [status, setStatus] = useState<'idle' | 'shared' | 'copied' | 'failed' | 'opened'>('idle')
+  const utr = how === 'upi' ? cleanUtr(utrText) : null
+  const utrBad = how === 'upi' && utrText.trim() !== '' && utr === null
+  const reply = useReplyLink(payload, person.index, how, utr)
+  // Links without an expense id (older ones) still get the plain message.
+  const ready = reply.key === '' || reply.link !== null
+  const name = firstName(payload.to.n)
+  const phone = payload.to.ph ?? null
+
   const send = async () => {
-    const outcome = await shareResult(paidMessage(payload, person), { title: payload.t })
+    const message = paidMessage(payload, person, { how, utr, link: reply.link })
+    if (phone) {
+      const win = window.open(whatsappUrl(message, phone), '_blank')
+      if (win) {
+        win.opener = null
+        haptic('success')
+        setStatus('opened')
+        return
+      }
+    }
+    const outcome = await shareResult(message, { title: payload.t })
     if (outcome === 'cancelled') return
     haptic(outcome === 'failed' ? 'error' : 'success')
     setStatus(outcome)
   }
+
   return (
     <div className={styles.tell}>
-      <p className={styles.tellTitle}>{t('pay.tell.title')}</p>
-      <Button variant="secondary" size="md" iconStart={<Send />} onClick={send} block>
-        {t('pay.tell.cta', { name: firstName(payload.to.n) })}
+      <p className={styles.tellTitle} id={groupId}>
+        {t('pay.tell.title')}
+      </p>
+      <div role="radiogroup" aria-labelledby={groupId} className={styles.tellHow}>
+        {(['upi', 'cash'] as const).map((value) => (
+          <Chip key={value} role="radio" selected={how === value} onClick={() => setHow(value)}>
+            {value === 'upi' ? t('pay.tell.how.upi') : t('pay.tell.how.cash')}
+          </Chip>
+        ))}
+      </div>
+      {how === 'upi' && (
+        <TextField
+          label={t('pay.tell.utr.label')}
+          hint={t('pay.tell.utr.hint')}
+          error={utrBad ? t('pay.tell.utr.error') : undefined}
+          inputMode="numeric"
+          autoComplete="off"
+          enterKeyHint="send"
+          maxLength={20}
+          value={utrText}
+          onChange={(event) => setUtrText(event.target.value)}
+        />
+      )}
+      <Button variant="secondary" size="md" iconStart={phone ? <MessageCircle /> : <Send />} onClick={send} disabled={!ready || utrBad} block>
+        {t('pay.tell.cta', { name })}
       </Button>
       <p className={styles.tellStatus} role="status">
+        {status === 'opened' && t('pay.tell.opened.status', { name })}
         {status === 'copied' && t('pay.tell.copied.status')}
         {status === 'shared' && t('pay.tell.shared.status')}
         {status === 'failed' && t('pay.tell.failed.status')}

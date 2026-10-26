@@ -66,6 +66,10 @@ export const share = {
   'share.message.payMe': 'Tap your name to pay me with any UPI app 👇',
   'share.message.pay': 'Tap your name to pay {name} with any UPI app 👇',
   'share.message.seeShare': 'Tap your name to see your share 👇',
+  'share.message.yourShare': 'Hi {name}! Your share of {title} is {amount} 🧾',
+  'share.message.oneTapMe': 'Pay me in one tap — any UPI app, amount already filled in 👇',
+  'share.message.oneTap': 'Pay {name} in one tap — any UPI app, amount already filled in 👇',
+  'share.message.seeYours': 'See your share 👇',
 
   // The share card image of a split (drawn in the sender's language).
   'share.card.morePeople': '{count, plural, one {# more person} other {# more people}}',

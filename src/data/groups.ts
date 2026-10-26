@@ -80,9 +80,10 @@ function reprice(e: Expense, from: string, to: string): Expense {
   ids.forEach((id, i) => {
     shares[id] = parts[i] ?? 0
   })
-  const inputs = e.mode === 'exact' ? allocate(total, e.participants.map((p) => p.input ?? 0)) : null
-  const participants = e.participants.map((p, i) => (inputs ? { ...p, input: inputs[i] ?? 0 } : p))
   const rescale = (v: number | null) => (v === null ? null : rescaleMinor(v, from, to))
+  const inputs = e.mode === 'exact' ? allocate(total, e.participants.map((p) => p.input ?? 0)) : null
+  // What each had is in money too, but needn't add up to the total: each amount moves on its own.
+  const participants = e.participants.map((p, i) => (inputs ? { ...p, input: inputs[i] ?? 0 } : e.mode === 'had' ? { ...p, input: rescale(p.input) } : p))
   const bill = e.bill && {
     ...e.bill,
     items: e.bill.items.map((item) => ({ ...item, amount: rescaleMinor(item.amount, from, to) })),

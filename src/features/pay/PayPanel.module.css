@@ -122,6 +122,13 @@
   color: var(--ink-2);
 }
 
+.tellHow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  padding-inline: var(--s-1);
+}
+
 .tellStatus {
   min-height: 1.35em;
   font: var(--text-caption);

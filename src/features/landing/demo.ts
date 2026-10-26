@@ -31,7 +31,7 @@ export const HERO_BILL = {
   people: [YOU, RIYA, SAM] as readonly DemoPerson[],
 } as const
 
-export type DemoMode = AmountSplitMode
+export type DemoMode = Exclude<AmountSplitMode, 'had'>
 
 export interface DemoModeOption {
   value: DemoMode

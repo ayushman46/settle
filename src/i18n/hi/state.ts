@@ -20,6 +20,7 @@ export const state = {
   'state.error.expense.percentMismatch': 'प्रतिशत अभी 100% के बराबर नहीं हैं।',
   'state.error.expense.payerMissing': 'चुनें किसने पैसे दिए।',
   'state.error.expense.zeroWeights': 'कम से कम एक व्यक्ति को हिस्सा दें।',
+  'state.error.expense.nothingHad': 'कम से कम एक व्यक्ति का कितना हुआ, लिखें।',
   'state.error.expense.notFound': 'यह खर्च अब मौजूद नहीं है।',
   'state.error.data.notFound': 'यह नहीं मिला — शायद मिटा दिया गया है।',
   'state.error.data.emptyName': 'पहले नाम लिखें।',

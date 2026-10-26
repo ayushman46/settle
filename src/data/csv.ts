@@ -31,6 +31,7 @@ const MODE_LABEL: Readonly<Record<Expense['mode'], string>> = {
   exact: 'Exact amounts',
   percent: 'Percentages',
   shares: 'Shares',
+  had: 'What each had',
   items: 'By item',
 }
 

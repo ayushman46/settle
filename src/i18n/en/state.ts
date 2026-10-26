@@ -25,6 +25,7 @@ export const state = {
   'state.error.expense.percentMismatch': "The percentages don't add up to 100% yet.",
   'state.error.expense.payerMissing': 'Choose who paid.',
   'state.error.expense.zeroWeights': 'Give at least one person a share.',
+  'state.error.expense.nothingHad': 'Type what at least one person had.',
   'state.error.expense.notFound': 'That expense no longer exists.',
   'state.error.data.notFound': "That couldn't be found — it may have been deleted.",
   'state.error.data.emptyName': 'Add a name first.',

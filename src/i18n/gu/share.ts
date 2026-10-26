@@ -55,6 +55,10 @@ export const share = {
   'share.message.payMe': 'કોઈ પણ UPI એપથી મને ચૂકવવા તમારું નામ ટૅપ કરો 👇',
   'share.message.pay': 'કોઈ પણ UPI એપથી {name} ને ચૂકવવા તમારું નામ ટૅપ કરો 👇',
   'share.message.seeShare': 'તમારો હિસ્સો જોવા તમારું નામ ટૅપ કરો 👇',
+  'share.message.yourShare': 'હાય {name}! {title}માં તમારો હિસ્સો {amount} છે 🧾',
+  'share.message.oneTapMe': 'એક ટૅપમાં મને મોકલો — કોઈ પણ UPI એપ, રકમ પહેલેથી ભરેલી 👇',
+  'share.message.oneTap': 'એક ટૅપમાં {name}ને મોકલો — કોઈ પણ UPI એપ, રકમ પહેલેથી ભરેલી 👇',
+  'share.message.seeYours': 'તમારો હિસ્સો જુઓ 👇',
 
   'share.card.morePeople': '{count, plural, one {# બીજી વ્યક્તિ} other {# બીજા લોકો}}',
   'share.card.paidBy': '{name} એ ચૂકવ્યું',

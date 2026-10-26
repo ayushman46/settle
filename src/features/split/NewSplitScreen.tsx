@@ -564,6 +564,7 @@ function SplitScreen({ editing, url }: SplitScreenProps) {
               payerId={form.payerId}
               roundToWhole={form.roundToWhole}
               onRoundToWholeChange={(roundToWhole) => change({ roundToWhole })}
+              onTotalChange={converting ? undefined : (total) => change({ total })}
             />
           </section>
         </>

@@ -27,6 +27,7 @@ export const state = {
   'state.error.expense.percentMismatch': 'टक्केवारी अजून 100% पर्यंत जुळत नाही.',
   'state.error.expense.payerMissing': 'कोणी दिले ते निवडा.',
   'state.error.expense.zeroWeights': 'किमान एका व्यक्तीला हिस्सा द्या.',
+  'state.error.expense.nothingHad': 'किमान एका व्यक्तीचे किती झाले ते लिहा.',
   'state.error.expense.notFound': 'तो खर्च आता नाही.',
   'state.error.data.notFound': 'ते सापडले नाही — कदाचित हटवले गेले असेल.',
   'state.error.data.emptyName': 'आधी नाव जोडा.',

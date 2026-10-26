@@ -498,7 +498,7 @@ const expenseShape = z.object({
   createdAt: timestamp,
   updatedAt: timestamp,
   payerId: id,
-  mode: z.enum(['equal', 'exact', 'percent', 'shares', 'items']),
+  mode: z.enum(['equal', 'exact', 'percent', 'shares', 'had', 'items']),
   participants: z.array(participantShape),
   shares: z.catch(z.record(z.string(), z.number()), {}),
   roundedToWhole: z.catch(z.boolean(), false),
@@ -600,7 +600,7 @@ const PARTICIPANT_KEYS: readonly (keyof Participant)[] = ['friendId', 'input']
 const CATEGORY_SET: ReadonlySet<unknown> = new Set(CATEGORY_IDS)
 const SOURCE_SET: ReadonlySet<unknown> = new Set(EXPENSE_SOURCES)
 const FX_SOURCE_SET: ReadonlySet<unknown> = new Set(FX_SOURCES)
-const MODE_SET: ReadonlySet<unknown> = new Set(['equal', 'exact', 'percent', 'shares', 'items'])
+const MODE_SET: ReadonlySet<unknown> = new Set(['equal', 'exact', 'percent', 'shares', 'had', 'items'])
 const CURRENCY_CODE = /^[A-Z]{3}$/
 
 type Plain = Record<string, unknown>
