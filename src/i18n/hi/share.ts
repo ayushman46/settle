@@ -28,7 +28,7 @@ export const share = {
   'share.nudge.funny.3': 'कहानी में ट्विस्ट, {to}: {what} फ़्री नहीं था 🍿 आपका हिस्सा {amount} है 😅',
   'share.nudge.firm.0': 'हाय {to}, याद दिला दूँ कि {what} के {amount} अभी बाक़ी हैं। कृपया आज चुका दें।',
   'share.nudge.firm.1': 'हाय {to}, {what} के लिए आपका {amount} का हिस्सा बाक़ी है। कृपया जल्द से जल्द पे करें।',
-  'share.nudge.firm.2': '{to}, {what} के {amount} के बारे में याद दिला रहा हूँ। क्या आज चुका देंगे, प्लीज़?',
+  'share.nudge.firm.2': '{to}, {what} के {amount} की एक याद। क्या आज चुका देंगे, प्लीज़?',
   'share.nudge.link.friendly': 'पे करने के लिए टैप करें',
   'share.nudge.link.funny': 'एक टैप और हिसाब बराबर',
   'share.nudge.link.firm': 'यहाँ पे करें',

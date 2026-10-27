@@ -1,0 +1,28 @@
+import type { Messages } from '../types'
+
+export const collect: Messages = {
+  'collect.title': 'రావలసినవి',
+  'collect.subtitle': '{count, plural, one {# మంది నుంచి} other {# మంది నుంచి}} {amount} రావాలి. గుర్తు చేయండి, లేదా చెల్లించినవారిని టిక్ చేయండి.',
+  'collect.empty.title': 'రావలసింది ఏమీ లేదు',
+  'collect.empty.text': 'ఎవరైనా మీకు బాకీ ఉంటే వారు ఇక్కడ ఉంటారు — గుర్తు చేసే మెసేజ్ సిద్ధంగా ఉంటుంది.',
+  'collect.home': 'హోమ్‌కి వెళ్లండి',
+  'collect.quiet.title': 'ఆలస్యమైంది',
+  'collect.quiet.text': 'ఇప్పుడు పంపితే మెసేజ్ రాత్రి చేరుతుంది. ఉదయం వరకు ఆగవచ్చు.',
+  'collect.age.today': 'ఈరోజు నుంచి',
+  'collect.age.days': '{count, plural, one {# రోజుగా} other {# రోజులుగా}}',
+  'collect.reminded.never': 'ఇంకా గుర్తు చేయలేదు',
+  'collect.reminded.once.today': 'ఈరోజు గుర్తు చేశారు',
+  'collect.reminded.once.days': '{days, plural, one {నిన్న గుర్తు చేశారు} other {# రోజుల క్రితం గుర్తు చేశారు}}',
+  'collect.reminded.many.today': '{count} సార్లు గుర్తు చేశారు, చివరిగా ఈరోజు',
+  'collect.reminded.many.days': '{count} సార్లు గుర్తు చేశారు, చివరిగా {days, plural, one {నిన్న} other {# రోజుల క్రితం}}',
+  'collect.soon': 'ఒకటి రెండు రోజులు ఆగండి',
+  'collect.next.friendly': 'తర్వాతది: స్నేహపూర్వకంగా',
+  'collect.next.funny': 'తర్వాతది: హాస్యంగా',
+  'collect.next.firm': 'తర్వాతది: కఠినంగా',
+  'collect.remind.cta': 'గుర్తు చేయండి',
+  'collect.remind.aria': '{name}కి గుర్తు చేయండి',
+  'collect.paid.cta': 'వచ్చాయి',
+  'collect.paid.aria': '{name} చెల్లించారు',
+  'collect.paid.toast': '{name} చెల్లించినట్టు మార్క్ అయింది',
+  'collect.home.cta': 'డబ్బు తిరిగి పొందండి',
+}

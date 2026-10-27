@@ -41,6 +41,7 @@ import { shagun } from './shagun'
 import { install } from './install'
 import { bijli } from './bijli'
 import { whospaid } from './whospaid'
+import { collect } from './collect'
 
 export const MR: Messages = {
   ...common,
@@ -78,6 +79,7 @@ export const MR: Messages = {
   ...install,
   ...bijli,
   ...whospaid,
+  ...collect,
 }
 
 export default MR

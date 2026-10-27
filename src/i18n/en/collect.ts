@@ -1,0 +1,29 @@
+/** English copy for "To collect" (src/features/collect): everyone who owes you, with a reminder and a "paid" each. */
+import type { Messages } from '../types'
+
+export const collect = {
+  'collect.title': 'To collect',
+  'collect.subtitle': '{amount} from {count, plural, one {# person} other {# people}}. Remind them, or tick off whoever paid.',
+  'collect.empty.title': 'Nothing to collect',
+  'collect.empty.text': 'When someone owes you, they’ll be here — with a reminder ready to send.',
+  'collect.home': 'Go to Home',
+  'collect.quiet.title': 'It’s late',
+  'collect.quiet.text': 'A reminder sent now lands at night. It can wait till the morning.',
+  'collect.age.today': 'from today',
+  'collect.age.days': '{count, plural, one {# day} other {# days}} waiting',
+  'collect.reminded.never': 'Not reminded yet',
+  'collect.reminded.once.today': 'Reminded today',
+  'collect.reminded.once.days': 'Reminded {days, plural, one {yesterday} other {# days ago}}',
+  'collect.reminded.many.today': 'Reminded {count} times, last today',
+  'collect.reminded.many.days': 'Reminded {count} times, last {days, plural, one {yesterday} other {# days ago}}',
+  'collect.soon': 'give it a day',
+  'collect.next.friendly': 'next: friendly',
+  'collect.next.funny': 'next: funny',
+  'collect.next.firm': 'next: firm',
+  'collect.remind.cta': 'Remind',
+  'collect.remind.aria': 'Remind {name}',
+  'collect.paid.cta': 'Paid',
+  'collect.paid.aria': '{name} paid you',
+  'collect.paid.toast': '{name} marked paid',
+  'collect.home.cta': 'Get paid back',
+} as const satisfies Messages

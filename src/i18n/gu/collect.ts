@@ -1,0 +1,28 @@
+import type { Messages } from '../types'
+
+export const collect: Messages = {
+  'collect.title': 'લેવાના બાકી',
+  'collect.subtitle': '{count, plural, one {# વ્યક્તિ પાસેથી} other {# લોકો પાસેથી}} {amount} લેવાના છે. યાદ અપાવો, કે જેમણે મોકલ્યા તેમને ટિક કરો.',
+  'collect.empty.title': 'લેવાનું કંઈ બાકી નથી',
+  'collect.empty.text': 'કોઈ પાસે તમારા પૈસા બાકી હશે ત્યારે તેઓ અહીં દેખાશે — યાદ અપાવવાનો મેસેજ તૈયાર હશે.',
+  'collect.home': 'હોમ પર જાઓ',
+  'collect.quiet.title': 'મોડું થયું છે',
+  'collect.quiet.text': 'અત્યારે મોકલેલો મેસેજ રાત્રે પહોંચશે. સવાર સુધી રાહ જોઈ શકાય.',
+  'collect.age.today': 'આજથી',
+  'collect.age.days': '{count, plural, one {# દિવસથી} other {# દિવસથી}}',
+  'collect.reminded.never': 'હજુ યાદ નથી અપાવ્યું',
+  'collect.reminded.once.today': 'આજે યાદ અપાવ્યું',
+  'collect.reminded.once.days': '{days, plural, one {ગઈકાલે યાદ અપાવ્યું} other {# દિવસ પહેલાં યાદ અપાવ્યું}}',
+  'collect.reminded.many.today': '{count} વાર યાદ અપાવ્યું, છેલ્લે આજે',
+  'collect.reminded.many.days': '{count} વાર યાદ અપાવ્યું, છેલ્લે {days, plural, one {ગઈકાલે} other {# દિવસ પહેલાં}}',
+  'collect.soon': 'એક-બે દિવસ રાહ જુઓ',
+  'collect.next.friendly': 'હવે પછી: મિલનસાર',
+  'collect.next.funny': 'હવે પછી: મજેદાર',
+  'collect.next.firm': 'હવે પછી: કડક',
+  'collect.remind.cta': 'યાદ અપાવો',
+  'collect.remind.aria': '{name}ને યાદ અપાવો',
+  'collect.paid.cta': 'મળી ગયા',
+  'collect.paid.aria': '{name}એ પૈસા આપ્યા',
+  'collect.paid.toast': '{name}નું પેમેન્ટ માર્ક થયું',
+  'collect.home.cta': 'પૈસા પાછા મેળવો',
+}

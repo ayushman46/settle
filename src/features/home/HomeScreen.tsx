@@ -9,6 +9,7 @@ import { useT } from '../../i18n'
 import { isSpeechSupported } from '../../lib/speech'
 import { useAiQuota } from '../../pro/quota'
 import { useHealth } from '../../state/health'
+import { COLLECT_PATH } from '../collect/paths'
 import { AiDescribeSheet } from './AiDescribeSheet'
 import { BillDraftCard } from './BillDraftCard'
 import { DueSplits } from './DueSplits'
@@ -32,6 +33,7 @@ import styles from './HomeScreen.module.css'
 export function HomeScreen() {
   const hasData = useHasData()
   const summary = useSummary()
+  const onlyOwed = summary.owedToMe > 0 && summary.iOwe === 0
   const quota = useAiQuota()
   const health = useHealth()
   const t = useT()
@@ -71,7 +73,16 @@ export function HomeScreen() {
 
       <InstallCard />
 
-      {hasData ? <BalanceCard summary={summary} onSettle={() => navigate(FRIENDS_PATH)} /> : <FirstRunCard />}
+      {hasData ? (
+        // Only owed money: the way forward is getting it back (everyone who owes you, each with a reminder).
+        onlyOwed ? (
+          <BalanceCard summary={summary} onSettle={() => navigate(COLLECT_PATH)} settleLabel={t('collect.home.cta')} />
+        ) : (
+          <BalanceCard summary={summary} onSettle={() => navigate(FRIENDS_PATH)} />
+        )
+      ) : (
+        <FirstRunCard />
+      )}
 
       <DueSplits />
 

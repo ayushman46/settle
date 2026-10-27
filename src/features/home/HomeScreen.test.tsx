@@ -148,7 +148,7 @@ describe('HomeScreen — quick actions', SLOW, () => {
 })
 
 describe('HomeScreen — balances, people and activity', SLOW, () => {
-  it('shows what you’re owed and settles up with your people', async () => {
+  it('shows what you’re owed and goes to getting it back', async () => {
     const riya = addFriend({ name: 'Riya Sharma' }).id
     const sam = addFriend({ name: 'Sam' }).id
     seedExpense({ title: 'Dinner', total: 90000, with: [riya, sam] })
@@ -156,8 +156,8 @@ describe('HomeScreen — balances, people and activity', SLOW, () => {
 
     const card = screen.getByRole('region', { name: 'Your balance' })
     expect(card).toHaveTextContent('₹600')
-    await user.click(within(card).getByRole('button', { name: /Settle up/ }))
-    expect(currentUrl()).toBe('/app/friends')
+    await user.click(within(card).getByRole('button', { name: /Get paid back/ }))
+    expect(currentUrl()).toBe('/app/collect')
   })
 
   it('says all settled once everyone has paid back', () => {

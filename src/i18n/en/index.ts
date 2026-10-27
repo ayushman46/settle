@@ -38,6 +38,7 @@ import { install } from './install'
 import { rent } from './rent'
 import { bijli } from './bijli'
 import { whospaid } from './whospaid'
+import { collect } from './collect'
 
 export const EN = {
   ...common,
@@ -76,6 +77,7 @@ export const EN = {
   ...rent,
   ...bijli,
   ...whospaid,
+  ...collect,
 } as const
 
 /** Every message key the app may ask for. */

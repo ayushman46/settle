@@ -42,6 +42,7 @@ import { install } from './install'
 import { rent } from './rent'
 import { bijli } from './bijli'
 import { whospaid } from './whospaid'
+import { collect } from './collect'
 
 export const HI: Messages = {
   ...common,
@@ -80,6 +81,7 @@ export const HI: Messages = {
   ...rent,
   ...bijli,
   ...whospaid,
+  ...collect,
 }
 
 export default HI

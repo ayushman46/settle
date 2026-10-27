@@ -1,0 +1,28 @@
+import type { Messages } from '../types'
+
+export const collect: Messages = {
+  'collect.title': 'लेना बाक़ी',
+  'collect.subtitle': '{count, plural, one {# व्यक्ति से} other {# लोगों से}} {amount} लेने हैं। याद दिलाएँ, या जिसने भेज दिए उसे टिक करें।',
+  'collect.empty.title': 'लेने को कुछ बाक़ी नहीं',
+  'collect.empty.text': 'जब किसी पर आपके पैसे बाक़ी होंगे, वे यहाँ दिखेंगे — याद दिलाने का मैसेज तैयार मिलेगा।',
+  'collect.home': 'होम पर जाएँ',
+  'collect.quiet.title': 'देर हो गई है',
+  'collect.quiet.text': 'अभी भेजा मैसेज रात में पहुँचेगा। सुबह तक रुक सकते हैं।',
+  'collect.age.today': 'आज से',
+  'collect.age.days': '{count, plural, one {# दिन से} other {# दिन से}}',
+  'collect.reminded.never': 'अभी याद नहीं दिलाया',
+  'collect.reminded.once.today': 'आज याद दिलाया',
+  'collect.reminded.once.days': '{days, plural, one {कल याद दिलाया} other {# दिन पहले याद दिलाया}}',
+  'collect.reminded.many.today': '{count} बार याद दिलाया, आख़िरी बार आज',
+  'collect.reminded.many.days': '{count} बार याद दिलाया, आख़िरी बार {days, plural, one {कल} other {# दिन पहले}}',
+  'collect.soon': 'एक-दो दिन रुकें',
+  'collect.next.friendly': 'अगला: प्यार से',
+  'collect.next.funny': 'अगला: मज़ाक में',
+  'collect.next.firm': 'अगला: सख़्ती से',
+  'collect.remind.cta': 'याद दिलाएँ',
+  'collect.remind.aria': '{name} को याद दिलाएँ',
+  'collect.paid.cta': 'मिल गए',
+  'collect.paid.aria': '{name} से पैसे मिल गए',
+  'collect.paid.toast': '{name} का भुगतान मार्क हुआ',
+  'collect.home.cta': 'पैसे वापस लें',
+}

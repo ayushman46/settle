@@ -1,0 +1,28 @@
+import type { Messages } from '../types'
+
+export const collect: Messages = {
+  'collect.title': 'येणे बाकी',
+  'collect.subtitle': '{count, plural, one {# व्यक्तीकडून} other {# लोकांकडून}} {amount} येणे आहे. आठवण करून द्या, किंवा ज्यांनी पाठवले त्यांना टिक करा.',
+  'collect.empty.title': 'काहीही येणे बाकी नाही',
+  'collect.empty.text': 'कोणाकडे तुमचे पैसे बाकी असतील तेव्हा ते इथे दिसतील — आठवणीचा मेसेज तयार असेल.',
+  'collect.home': 'होमवर जा',
+  'collect.quiet.title': 'उशीर झाला आहे',
+  'collect.quiet.text': 'आत्ता पाठवलेला मेसेज रात्री पोहोचेल. सकाळपर्यंत थांबता येईल.',
+  'collect.age.today': 'आजपासून',
+  'collect.age.days': '{count, plural, one {# दिवसापासून} other {# दिवसांपासून}}',
+  'collect.reminded.never': 'अजून आठवण दिलेली नाही',
+  'collect.reminded.once.today': 'आज आठवण दिली',
+  'collect.reminded.once.days': '{days, plural, one {काल आठवण दिली} other {# दिवसांपूर्वी आठवण दिली}}',
+  'collect.reminded.many.today': '{count} वेळा आठवण दिली, शेवटची आज',
+  'collect.reminded.many.days': '{count} वेळा आठवण दिली, शेवटची {days, plural, one {काल} other {# दिवसांपूर्वी}}',
+  'collect.soon': 'एक-दोन दिवस थांबा',
+  'collect.next.friendly': 'पुढची: मैत्रीपूर्ण',
+  'collect.next.funny': 'पुढची: गमतीशीर',
+  'collect.next.firm': 'पुढची: ठाम',
+  'collect.remind.cta': 'आठवण द्या',
+  'collect.remind.aria': '{name} यांना आठवण द्या',
+  'collect.paid.cta': 'मिळाले',
+  'collect.paid.aria': '{name} यांच्याकडून पैसे मिळाले',
+  'collect.paid.toast': '{name} यांचे पैसे मिळाले म्हणून मार्क झाले',
+  'collect.home.cta': 'पैसे परत मिळवा',
+}

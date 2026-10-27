@@ -29,6 +29,8 @@ export const STORAGE_KEYS = {
   proofRefs: 'settle-proof-refs',
   /** Bank names confirmed as your people in "Who's paid?" (src/features/whospaid). */
   payerAliases: 'settle.v5.payer-aliases',
+  /** Reminders you've sent, for "To collect" (src/features/collect). */
+  reminders: 'settle.v5.reminders',
 } as const
 
 /** Accepts a bare, un-enveloped value (e.g. hand-edited storage) when the schema can read it. */
@@ -137,6 +139,33 @@ export const payerAliasesStore = createStore<PayerAlias[]>({
   initial: () => [],
   version: STORAGE_VERSION,
   migrate: bare(payerAliasesSchema),
+})
+
+export const REMINDER_TONES = ['friendly', 'funny', 'firm'] as const
+export type ReminderTone = (typeof REMINDER_TONES)[number]
+
+/** A reminder you sent someone who owes you: when, and in what tone. */
+export interface Reminder {
+  friendId: string
+  at: number
+  tone: ReminderTone
+}
+
+export const remindersSchema = z.array(
+  z.object({
+    friendId: z.string().check(z.minLength(1)),
+    at: z.number(),
+    tone: z.enum(REMINDER_TONES),
+  }),
+)
+
+/** Reminders you've sent. Kept on this phone; backed up with the rest. */
+export const remindersStore = createStore<Reminder[]>({
+  key: STORAGE_KEYS.reminders,
+  schema: remindersSchema,
+  initial: () => [],
+  version: STORAGE_VERSION,
+  migrate: bare(remindersSchema),
 })
 
 /** The payment references already marked from screenshots. Kept on this phone; backed up with the rest. */

@@ -29,11 +29,14 @@ import {
   profileStore,
   payerAliasesSchema,
   payerAliasesStore,
+  remindersSchema,
+  remindersStore,
   proofRefsSchema,
   proofRefsStore,
   recurringStore,
   STORAGE_KEYS,
   type PayerAlias,
+  type Reminder,
   type ProofRef,
 } from './stores'
 import { LEGACY_KEYS } from './legacy'
@@ -58,6 +61,8 @@ export interface BackupFile {
   proofRefs: ProofRef[]
   /** Bank names confirmed as people in "Who's paid?". Absent in older files. */
   payerAliases: PayerAlias[]
+  /** Reminders sent to people who owe you. Absent in older files. */
+  reminders: Reminder[]
 }
 
 const backupSchema = z.object({
@@ -74,6 +79,7 @@ const backupSchema = z.object({
   claims: z.catch(claimRoundsSchema, []),
   proofRefs: z.catch(proofRefsSchema, []),
   payerAliases: z.catch(z.optional(payerAliasesSchema), []),
+  reminders: z.catch(z.optional(remindersSchema), []),
 })
 
 export function exportBackup(): BackupFile {
@@ -90,6 +96,7 @@ export function exportBackup(): BackupFile {
     claims: claimsStore.get(),
     proofRefs: proofRefsStore.get(),
     payerAliases: payerAliasesStore.get(),
+    reminders: remindersStore.get(),
   }
 }
 
@@ -119,6 +126,7 @@ export function parseBackup(json: unknown): BackupFile | null {
     claims: data.claims,
     proofRefs: data.proofRefs,
     payerAliases: data.payerAliases ?? [],
+    reminders: data.reminders ?? [],
   }
 }
 
@@ -236,6 +244,7 @@ export function importBackup(file: BackupFile, mode: 'merge' | 'replace'): { add
     claimsStore.set([...file.claims])
     proofRefsStore.set([...file.proofRefs])
     payerAliasesStore.set([...file.payerAliases])
+    remindersStore.set([...file.reminders])
     clearSplitPrefill()
     flushAllStores()
     const added =
@@ -340,6 +349,13 @@ export function importBackup(file: BackupFile, mode: 'merge' | 'replace'): { add
     ...file.payerAliases.filter((a) => !knownNames.has(a.name)).map((a) => ({ ...a, friendId: idMap.get(a.friendId) ?? a.friendId })),
   ])
 
+  // Reminders: every one sent from either phone (people matched as above).
+  const sent = new Set(remindersStore.get().map((r) => `${r.friendId}|${r.at}`))
+  remindersStore.set([
+    ...remindersStore.get(),
+    ...file.reminders.map((r) => ({ ...r, friendId: idMap.get(r.friendId) ?? r.friendId })).filter((r) => !sent.has(`${r.friendId}|${r.at}`)),
+  ])
+
   flushAllStores()
   return {
     added: added + expenses.added + groups.added + recurring.added + pools.added + claims.added,
@@ -362,7 +378,7 @@ export function clearAllData(): void {
       // Blocked storage — the in-memory reset below still applies.
     }
   }
-  for (const store of [profileStore, friendsStore, expensesStore, groupsStore, recurringStore, poolsStore, claimsStore, proofRefsStore, payerAliasesStore])
+  for (const store of [profileStore, friendsStore, expensesStore, groupsStore, recurringStore, poolsStore, claimsStore, proofRefsStore, payerAliasesStore, remindersStore])
     store.reload()
   clearSplitPrefill()
 }

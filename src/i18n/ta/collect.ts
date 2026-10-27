@@ -1,0 +1,28 @@
+import type { Messages } from '../types'
+
+export const collect: Messages = {
+  'collect.title': 'வர வேண்டியவை',
+  'collect.subtitle': '{count, plural, one {# பேரிடமிருந்து} other {# பேரிடமிருந்து}} {amount} வர வேண்டும். நினைவூட்டுங்கள், அல்லது செலுத்தியவர்களை டிக் செய்யுங்கள்.',
+  'collect.empty.title': 'வர வேண்டியது எதுவும் இல்லை',
+  'collect.empty.text': 'யாராவது உங்களுக்குத் தர வேண்டியிருந்தால் இங்கே இருப்பார்கள் — நினைவூட்டல் செய்தி தயாராக இருக்கும்.',
+  'collect.home': 'முகப்புக்குச் செல்',
+  'collect.quiet.title': 'நேரமாகிவிட்டது',
+  'collect.quiet.text': 'இப்போது அனுப்பினால் செய்தி இரவில் சேரும். காலை வரை காத்திருக்கலாம்.',
+  'collect.age.today': 'இன்றிலிருந்து',
+  'collect.age.days': '{count, plural, one {# நாளாக} other {# நாட்களாக}}',
+  'collect.reminded.never': 'இன்னும் நினைவூட்டவில்லை',
+  'collect.reminded.once.today': 'இன்று நினைவூட்டப்பட்டது',
+  'collect.reminded.once.days': '{days, plural, one {நேற்று நினைவூட்டப்பட்டது} other {# நாட்களுக்கு முன் நினைவூட்டப்பட்டது}}',
+  'collect.reminded.many.today': '{count} முறை நினைவூட்டப்பட்டது, கடைசியாக இன்று',
+  'collect.reminded.many.days': '{count} முறை நினைவூட்டப்பட்டது, கடைசியாக {days, plural, one {நேற்று} other {# நாட்களுக்கு முன்}}',
+  'collect.soon': 'ஓரிரு நாள் காத்திருங்கள்',
+  'collect.next.friendly': 'அடுத்தது: நட்பாக',
+  'collect.next.funny': 'அடுத்தது: நகைச்சுவையாக',
+  'collect.next.firm': 'அடுத்தது: உறுதியாக',
+  'collect.remind.cta': 'நினைவூட்டு',
+  'collect.remind.aria': '{name}-க்கு நினைவூட்டு',
+  'collect.paid.cta': 'பெற்றேன்',
+  'collect.paid.aria': '{name} பணம் செலுத்தினார்',
+  'collect.paid.toast': '{name} செலுத்தியதாகக் குறிக்கப்பட்டது',
+  'collect.home.cta': 'பணத்தைத் திரும்பப் பெறுங்கள்',
+}

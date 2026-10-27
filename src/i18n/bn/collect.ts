@@ -1,0 +1,28 @@
+import type { Messages } from '../types'
+
+export const collect: Messages = {
+  'collect.title': 'পাওনা আদায়',
+  'collect.subtitle': '{count, plural, one {#জনের কাছে} other {#জনের কাছে}} {amount} পাওনা। মনে করিয়ে দিন, বা যিনি দিয়েছেন তাঁকে টিক করুন।',
+  'collect.empty.title': 'আদায়ের কিছু নেই',
+  'collect.empty.text': 'কারও কাছে পাওনা থাকলে তাঁরা এখানে থাকবেন — মনে করানোর মেসেজ তৈরি থাকবে।',
+  'collect.home': 'হোমে যান',
+  'collect.quiet.title': 'অনেক রাত হয়েছে',
+  'collect.quiet.text': 'এখন পাঠালে মেসেজ রাতে পৌঁছবে। সকাল পর্যন্ত অপেক্ষা করা যায়।',
+  'collect.age.today': 'আজ থেকে',
+  'collect.age.days': '{count, plural, one {# দিন ধরে} other {# দিন ধরে}}',
+  'collect.reminded.never': 'এখনো মনে করানো হয়নি',
+  'collect.reminded.once.today': 'আজ মনে করানো হয়েছে',
+  'collect.reminded.once.days': '{days, plural, one {গতকাল মনে করানো হয়েছে} other {# দিন আগে মনে করানো হয়েছে}}',
+  'collect.reminded.many.today': '{count} বার মনে করানো হয়েছে, শেষবার আজ',
+  'collect.reminded.many.days': '{count} বার মনে করানো হয়েছে, শেষবার {days, plural, one {গতকাল} other {# দিন আগে}}',
+  'collect.soon': 'এক-দু’দিন অপেক্ষা করুন',
+  'collect.next.friendly': 'পরেরটা: বন্ধুত্বপূর্ণ',
+  'collect.next.funny': 'পরেরটা: মজার',
+  'collect.next.firm': 'পরেরটা: কড়া',
+  'collect.remind.cta': 'মনে করান',
+  'collect.remind.aria': '{name}-কে মনে করান',
+  'collect.paid.cta': 'পেয়েছি',
+  'collect.paid.aria': '{name} টাকা দিয়েছেন',
+  'collect.paid.toast': '{name}-এর পেমেন্ট চিহ্নিত হল',
+  'collect.home.cta': 'টাকা ফেরত নিন',
+}

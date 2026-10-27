@@ -1,0 +1,28 @@
+import type { Messages } from '../types'
+
+export const collect: Messages = {
+  'collect.title': 'ಬರಬೇಕಾದದ್ದು',
+  'collect.subtitle': '{count, plural, one {# ಜನರಿಂದ} other {# ಜನರಿಂದ}} {amount} ಬರಬೇಕು. ನೆನಪಿಸಿ, ಅಥವಾ ಪಾವತಿಸಿದವರನ್ನು ಟಿಕ್ ಮಾಡಿ.',
+  'collect.empty.title': 'ಬರಬೇಕಾದದ್ದು ಏನೂ ಇಲ್ಲ',
+  'collect.empty.text': 'ಯಾರಾದರೂ ನಿಮಗೆ ಬಾಕಿ ಇದ್ದರೆ ಅವರು ಇಲ್ಲಿರುತ್ತಾರೆ — ನೆನಪಿಸುವ ಸಂದೇಶ ಸಿದ್ಧವಾಗಿರುತ್ತದೆ.',
+  'collect.home': 'ಮುಖಪುಟಕ್ಕೆ ಹೋಗಿ',
+  'collect.quiet.title': 'ತಡವಾಗಿದೆ',
+  'collect.quiet.text': 'ಈಗ ಕಳುಹಿಸಿದರೆ ಸಂದೇಶ ರಾತ್ರಿ ತಲುಪುತ್ತದೆ. ಬೆಳಗಿನವರೆಗೆ ಕಾಯಬಹುದು.',
+  'collect.age.today': 'ಇಂದಿನಿಂದ',
+  'collect.age.days': '{count, plural, one {# ದಿನದಿಂದ} other {# ದಿನಗಳಿಂದ}}',
+  'collect.reminded.never': 'ಇನ್ನೂ ನೆನಪಿಸಿಲ್ಲ',
+  'collect.reminded.once.today': 'ಇಂದು ನೆನಪಿಸಲಾಗಿದೆ',
+  'collect.reminded.once.days': '{days, plural, one {ನಿನ್ನೆ ನೆನಪಿಸಲಾಗಿದೆ} other {# ದಿನಗಳ ಹಿಂದೆ ನೆನಪಿಸಲಾಗಿದೆ}}',
+  'collect.reminded.many.today': '{count} ಬಾರಿ ನೆನಪಿಸಲಾಗಿದೆ, ಕೊನೆಯದಾಗಿ ಇಂದು',
+  'collect.reminded.many.days': '{count} ಬಾರಿ ನೆನಪಿಸಲಾಗಿದೆ, ಕೊನೆಯದಾಗಿ {days, plural, one {ನಿನ್ನೆ} other {# ದಿನಗಳ ಹಿಂದೆ}}',
+  'collect.soon': 'ಒಂದೆರಡು ದಿನ ಕಾಯಿರಿ',
+  'collect.next.friendly': 'ಮುಂದಿನದು: ಸ್ನೇಹಪರ',
+  'collect.next.funny': 'ಮುಂದಿನದು: ತಮಾಷೆ',
+  'collect.next.firm': 'ಮುಂದಿನದು: ಕಟ್ಟುನಿಟ್ಟು',
+  'collect.remind.cta': 'ನೆನಪಿಸಿ',
+  'collect.remind.aria': '{name} ಅವರಿಗೆ ನೆನಪಿಸಿ',
+  'collect.paid.cta': 'ಬಂತು',
+  'collect.paid.aria': '{name} ಪಾವತಿಸಿದರು',
+  'collect.paid.toast': '{name} ಪಾವತಿಸಿದ್ದಾರೆ ಎಂದು ಗುರುತಿಸಲಾಗಿದೆ',
+  'collect.home.cta': 'ಹಣ ವಾಪಸ್ ಪಡೆಯಿರಿ',
+}

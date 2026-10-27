@@ -38,6 +38,7 @@ import { shagun } from './shagun'
 import { install } from './install'
 import { bijli } from './bijli'
 import { whospaid } from './whospaid'
+import { collect } from './collect'
 
 export const GU: Messages = {
   ...common,
@@ -75,6 +76,7 @@ export const GU: Messages = {
   ...install,
   ...bijli,
   ...whospaid,
+  ...collect,
 }
 
 export default GU

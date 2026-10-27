@@ -10,7 +10,7 @@ import { MIGRATION_KEY } from './legacy'
 import { updateProfile } from './profile'
 import { saveRecurring } from './recurring'
 import { flushAllStores } from './store'
-import { expensesStore, friendsStore, groupsStore, profileStore, recurringStore, STORAGE_KEYS } from './stores'
+import { expensesStore, friendsStore, groupsStore, payerAliasesStore, profileStore, recurringStore, remindersStore, STORAGE_KEYS } from './stores'
 import { draft, everyone } from './testKit'
 import { resetDataForTests } from './testing'
 import { setSplitPrefill, peekSplitPrefill } from './handoff'
@@ -161,6 +161,38 @@ describe('importBackup — merge', () => {
     expect(expensesStore.get().find((e) => e.id === solo.id)?.title).toBe('Cab (edited elsewhere)')
     expect(groupsStore.get().find((x) => x.id === g.id)?.settlements.map((s) => s.id)).toContain('remote-payment')
     expect(groupsStore.get().find((x) => x.id === g.id)?.settlements).toHaveLength(2)
+  })
+
+  it('keeps bank names and reminders from both phones, with people matched', () => {
+    const { riya } = seed()
+    payerAliasesStore.set([{ name: 'riya s', friendId: riya.id, at: 1 }])
+    remindersStore.set([{ friendId: riya.id, at: 10, tone: 'friendly' }])
+    const file = roundTrip(exportBackup()) as BackupFile
+    expect(parseBackup(file)).toMatchObject({ payerAliases: [{ name: 'riya s' }], reminders: [{ at: 10 }] })
+    // The other phone knows Riya by another id, and sent her one more reminder.
+    file.friends = file.friends.map((x) => (x.id === riya.id ? { ...x, id: 'riya-on-phone-2' } : x))
+    file.payerAliases = [{ name: 'riya sharma', friendId: 'riya-on-phone-2', at: 2 }]
+    file.reminders = [
+      { friendId: 'riya-on-phone-2', at: 10, tone: 'friendly' },
+      { friendId: 'riya-on-phone-2', at: 20, tone: 'funny' },
+    ]
+    importBackup(parseBackup(file) as BackupFile, 'merge')
+    expect(payerAliasesStore.get().map((a) => [a.name, a.friendId])).toEqual([
+      ['riya s', riya.id],
+      ['riya sharma', riya.id],
+    ])
+    expect(remindersStore.get().map((r) => [r.friendId, r.at])).toEqual([
+      [riya.id, 10],
+      [riya.id, 20],
+    ])
+  })
+
+  it('reads older backups without bank names or reminders', () => {
+    seed()
+    const file = roundTrip(exportBackup()) as Record<string, unknown>
+    delete file.payerAliases
+    delete file.reminders
+    expect(parseBackup(file)).toMatchObject({ payerAliases: [], reminders: [] })
   })
 
   it('only fills in a blank profile and advances recurring progress', () => {

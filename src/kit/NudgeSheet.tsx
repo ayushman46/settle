@@ -3,6 +3,7 @@ import { Copy, MessageCircle, MessageSquareText, Shuffle } from 'lucide-react'
 import { ActionBar, BottomSheet, Button, SegmentedControl, useToast, type SegmentedOption } from '../components'
 import { useProfile } from '../data'
 import { shortDateLabel } from '../data/loans'
+import { noteReminder } from '../data/reminders'
 import type { Friend, Minor } from '../domain/types'
 import { useT } from '../i18n'
 import { cx } from '../lib/cx'
@@ -34,6 +35,8 @@ export interface NudgeSheetProps {
   kind?: 'loan'
   /** The loan's date (YYYY-MM-DD), for wordings that mention it ("the ₹500 from 21 Oct"). */
   date?: string | null
+  /** The tone it opens on (default friendly), e.g. the next step after earlier reminders. */
+  initialTone?: NudgeTone
 }
 
 // The emoji sits inside the label (one unbreakable line) and steps aside on 320px phones.
@@ -57,12 +60,12 @@ function toneOptions(): ReadonlyArray<SegmentedOption<NudgeTone>> {
  * exact message, shuffle the wording, then send it on WhatsApp or SMS — straight to their chat
  * when you have their number — or copy it. The message carries your UPI ID and the pay link.
  */
-export function NudgeSheet({ open, onClose, friend, amount, currency, title, link, onSent, kind, date }: NudgeSheetProps) {
+export function NudgeSheet({ open, onClose, friend, amount, currency, title, link, onSent, kind, date, initialTone = 'friendly' }: NudgeSheetProps) {
   const t = useT()
   const previewId = useId()
   const toast = useToast()
   const profile = useProfile()
-  const [tone, setTone] = useState<NudgeTone>('friendly')
+  const [tone, setTone] = useState<NudgeTone>(initialTone)
   // "Try another" moves off the wording picked for these inputs — for this person and tone only.
   const wordingKey = `${friend?.id ?? ''}\u0000${tone}`
   const [shuffled, setShuffled] = useState<{ key: string; variant: number } | null>(null)
@@ -97,6 +100,8 @@ export function NudgeSheet({ open, onClose, friend, amount, currency, title, lin
 
   const sent = (channel: NudgeChannel): void => {
     haptic('success')
+    // Remembered, so the next reminder can say when you last asked (and in what tone).
+    if (friend) noteReminder(friend.id, tone)
     onSent?.(channel)
   }
 
