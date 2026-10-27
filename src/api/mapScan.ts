@@ -1,6 +1,6 @@
 /** Converts a scan (major-unit decimals) into domain data (integer minor units, new ids). */
 import { isCategoryId, type CategoryId, type ScanResponse } from '../../shared/api'
-import { BILL_FEE_KINDS, type BillFee, type BillFeeKind } from '../types'
+import { BILL_FEE_KINDS, type BillFee, type BillFeeKind, type BillTaxLine } from '../types'
 import { isKnownCurrency } from '../lib/currencies'
 import { newId } from '../lib/ids'
 import { MAX_MINOR, toMinor } from '../lib/money'
@@ -36,6 +36,23 @@ function scanFees(res: ScanResponse, currency: string): BillFee[] {
     fees.push({ id: newId(), kind, label: textOrNull(raw.label, MAX_FEE_LABEL) ?? 'Fee', amount })
   }
   return fees
+}
+
+/** Most tax lines kept for one bill, and the longest label. */
+const MAX_TAX_LINES = 12
+const MAX_TAX_LABEL = 40
+
+/** The scan's printed tax lines in minor units, with new ids; zero, unlabelled or unreadable ones are dropped. */
+function scanTaxLines(res: ScanResponse, currency: string): BillTaxLine[] {
+  const lines: BillTaxLine[] = []
+  for (const raw of res.taxLines ?? []) {
+    if (lines.length >= MAX_TAX_LINES) break
+    const amount = amountOrNull(raw.amount, currency)
+    const label = textOrNull(raw.label, MAX_TAX_LABEL)
+    if (amount === null || amount <= 0 || label === null) continue
+    lines.push({ id: newId(), label, amount })
+  }
+  return lines
 }
 
 /** Non-negative amount in minor units (sign dropped, capped), or null when absent/invalid. */
@@ -81,6 +98,9 @@ export function scanToBill(res: ScanResponse, fallbackCurrency: string): MappedB
   }
   const fees = scanFees(res, currency)
   if (fees.length > 0) meta.fees = fees
+  const taxLines = scanTaxLines(res, currency)
+  if (taxLines.length > 0) meta.taxLines = taxLines
+  if (res.billOfSupply === true) meta.billOfSupply = true
 
   const warnings = res.warnings
     .map((w) => textOrNull(w, 200))

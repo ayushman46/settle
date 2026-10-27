@@ -18,6 +18,7 @@ export const BILL_SCHEMA = {
   additionalProperties: false,
   required: [
     'isBill',
+    'billOfSupply',
     'merchant',
     'category',
     'date',
@@ -25,6 +26,7 @@ export const BILL_SCHEMA = {
     'items',
     'subtotal',
     'tax',
+    'taxLines',
     'serviceCharge',
     'fees',
     'discount',
@@ -33,6 +35,7 @@ export const BILL_SCHEMA = {
   ],
   properties: {
     isBill: { type: 'boolean', description: 'false only if the photo is clearly not a bill, receipt or invoice' },
+    billOfSupply: { type: 'boolean', description: 'true only if the bill is titled "Bill of Supply" or says "composition taxable person"' },
     merchant: nullableString('Restaurant, shop or company name'),
     category: { type: 'string', enum: [...CATEGORY_IDS], description: 'What the bill is for' },
     date: nullableString('Bill date as YYYY-MM-DD when unambiguous, otherwise as printed'),
@@ -53,6 +56,19 @@ export const BILL_SCHEMA = {
     },
     subtotal: nullableNumber('Printed subtotal before taxes and charges'),
     tax: nullableNumber('Sum of all taxes added on top of the item prices'),
+    taxLines: {
+      type: 'array',
+      description: 'Each tax line as printed (CGST, SGST, VAT, cess...), adding up to tax; empty when none',
+      items: {
+        type: 'object',
+        additionalProperties: false,
+        required: ['label', 'amount'],
+        properties: {
+          label: { type: 'string' },
+          amount: { type: 'number' },
+        },
+      },
+    },
     serviceCharge: nullableNumber('Restaurant service charge only — not delivery, platform or packaging fees'),
     fees: {
       type: 'array',
@@ -117,6 +133,7 @@ FOOD DELIVERY AND QUICK COMMERCE (Swiggy, Zomato, Blinkit, Zepto, Swiggy Instama
 
 TOTALS
 - subtotal: the printed subtotal (items before taxes and charges), or null.
+- taxLines: one entry per printed tax line, with its label as printed and its money amount — "CGST @ 2.5%" 28.81 and "SGST @ 2.5%" 28.81 are two entries; VAT on drinks, cess and service tax lines too. They add up to tax. Empty when tax is null.
 - tax: the sum of the tax lines ADDED ON TOP of the item prices. If the prices already include tax ("incl. VAT", "MwSt enthalten", "TVA incluse", "inclusive of all taxes", or a VAT breakdown printed under the total — common in Europe, the UK and Australia), set tax to null, because that tax is already inside the item amounts.
 - serviceCharge, discount, tip: the sums described above, or null when absent. fees: an empty list when there are none. A blank tip line on a card slip is null. "Service included" / "service compris" with no separate amount means serviceCharge is null.
 - total: the final amount payable — the grand total after taxes, charges, discounts and round-off. If the total was corrected or written by hand, use the final handwritten amount. On card slips with a handwritten tip and total, use those.
@@ -132,6 +149,7 @@ OTHER FIELDS
 - date: YYYY-MM-DD when unambiguous. Dates are day-first in India, Europe, the UK, Australia and most of Asia, and month-first in the USA. If it is still ambiguous, copy it as printed. Null if absent.
 - currency: the ISO 4217 code from symbols, words or country clues: ₹, Rs, INR, a GSTIN or an Indian address → "INR"; € → "EUR"; £ → "GBP"; $ → "USD" unless the country says otherwise (S$ → "SGD", A$ → "AUD", C$ → "CAD", HK$ → "HKD", NZ$ → "NZD"); ¥ → "JPY" or "CNY" depending on the country; AED or د.إ → "AED"; RM → "MYR"; Rp → "IDR"; ฿ → "THB". Null if there is no clue at all.
 - isBill: false only when the photo is clearly not a bill, receipt or invoice (a person, a plate of food, a menu, a screenshot of something else). When isBill is false, return an empty items list, category "other" and null for every other field.
+- billOfSupply: true only when the bill is titled "Bill of Supply" or says the seller is a "composition taxable person"; otherwise false.
 - If the photo shows more than one bill, read the most complete one.
 
 Answer with ONLY the JSON object — no markdown, no code fences, no comments, no explanations.`

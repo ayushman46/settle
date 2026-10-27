@@ -20,6 +20,7 @@ import {
   type BillItem,
   type BillMeta,
   type BillSource,
+  type BillTaxLine,
   type FeeSplit,
   type Minor,
   type Person,
@@ -57,6 +58,23 @@ export type Action =
   | { type: 'removeItem'; itemId: string }
   | { type: 'dismissWarnings' }
   | { type: 'setPaid'; paid: Minor | null }
+  /**
+   * Bill check: takes disputed charges off the bill — the service charge, a tip the restaurant
+   * printed, `tax` worth of tax (GST worked out on the service charge, an abolished tax, GST on a
+   * bill of supply; those tax lines go too), and lines or fees that are a charge by another name.
+   * The printed total, and an amount already typed as paid, come down by the same.
+   */
+  | {
+      type: 'takeOff'
+      serviceCharge: boolean
+      tip: boolean
+      tax: Minor
+      taxLineIds: readonly string[]
+      itemIds: readonly string[]
+      feeIds: readonly string[]
+    }
+  /** Bill check: the table keeps this finding's charge ("We'll pay it") or says it looks right. */
+  | { type: 'keepFinding'; key: string }
   | { type: 'addPerson'; person: Person }
   | { type: 'renamePerson'; personId: string; name: string }
   /** Strips them from every item (empty ones become unassigned) and clears them as payer. */
@@ -128,6 +146,7 @@ const RESTORABLE_KEYS: readonly RestorableKey[] = [
   'date',
   'groupId',
   'feeSplit',
+  'checkKept',
 ]
 
 /** Most delivery-app fees one bill can hold, and the longest fee label. */
@@ -135,6 +154,13 @@ export const MAX_FEES = 15
 export const MAX_FEE_LABEL = 40
 
 const FEE_KINDS: ReadonlySet<unknown> = new Set(BILL_FEE_KINDS)
+
+/** Most tax lines one bill keeps, and the longest tax-line label. */
+export const MAX_TAX_LINES = 12
+const MAX_TAX_LABEL = 40
+/** Most Bill check findings remembered as kept, and the longest key. */
+const MAX_KEPT = 40
+const MAX_KEPT_KEY = 120
 
 /** A fee as the bill keeps it: tidy label (blank → "Fee"), known kind (else 'other'), amount 1…MAX_MINOR; null when unusable. */
 export function sanitizeFee(fee: BillFee): BillFee | null {
@@ -167,6 +193,42 @@ function cleanFees(fees: readonly BillFee[] | undefined): { fees: BillFee[]; sam
     out.push(same ? raw : fee)
   }
   return { fees: out, same: same && out.length === fees.length }
+}
+
+/** Clean, unique tax lines (at most 12, amounts > 0); `same` says whether `lines` was already exactly that. */
+function cleanTaxLines(lines: readonly BillTaxLine[] | undefined): { lines: BillTaxLine[]; same: boolean } {
+  if (lines === undefined) return { lines: [], same: true }
+  const seen = new Set<string>()
+  const out: BillTaxLine[] = []
+  let same = Array.isArray(lines)
+  for (const raw of Array.isArray(lines) ? lines : []) {
+    const ok = out.length < MAX_TAX_LINES && raw && typeof raw === 'object' && typeof raw.id === 'string' && raw.id !== '' && !seen.has(raw.id)
+    const amount = ok ? toAmount(raw.amount) : 0
+    const label = ok && typeof raw.label === 'string' ? collapse(raw.label, MAX_TAX_LABEL) : ''
+    if (!ok || amount < 1 || label === '') {
+      same = false
+      continue
+    }
+    seen.add(raw.id)
+    if (label !== raw.label || amount !== raw.amount) same = false
+    out.push(label === raw.label && amount === raw.amount ? raw : { id: raw.id, label, amount })
+  }
+  return { lines: out, same: same && out.length === lines.length }
+}
+
+/** `meta` with these tax lines (the key is left out when there are none). */
+function withTaxLines(meta: BillMeta, lines: readonly BillTaxLine[]): BillMeta {
+  const { taxLines: _old, ...rest } = meta
+  return lines.length > 0 ? { ...rest, taxLines: [...lines] } : rest
+}
+
+/** Kept Bill check keys: unique non-empty strings, at most 40; null when `kept` is already that. */
+function cleanKept(kept: unknown): string[] | null {
+  if (kept === undefined) return null
+  const out = Array.isArray(kept)
+    ? [...new Set(kept.filter((k): k is string => typeof k === 'string' && k !== '' && k.length <= MAX_KEPT_KEY))].slice(-MAX_KEPT)
+    : []
+  return Array.isArray(kept) && out.length === kept.length ? null : out
 }
 
 /** `meta` with these fees (the key is left out when there are none). */
@@ -288,9 +350,12 @@ function rescaleMeta(meta: BillMeta, from: string, to: string): BillMeta {
     tip: scale(meta.tip),
     total: scale(meta.total),
   }
-  // A fee that rounds away to nothing (₹0.40 → ¥0) is dropped.
-  if (meta.fees) return withFees(rescaled, meta.fees.map((fee) => ({ ...fee, amount: toAmount(rescaleMinor(fee.amount, from, to)) })).filter((fee) => fee.amount > 0))
-  return rescaled
+  // A fee or tax line that rounds away to nothing (₹0.40 → ¥0) is dropped.
+  const withLines = meta.taxLines
+    ? withTaxLines(rescaled, meta.taxLines.map((line) => ({ ...line, amount: toAmount(rescaleMinor(line.amount, from, to)) })).filter((line) => line.amount > 0))
+    : rescaled
+  if (meta.fees) return withFees(withLines, meta.fees.map((fee) => ({ ...fee, amount: toAmount(rescaleMinor(fee.amount, from, to)) })).filter((fee) => fee.amount > 0))
+  return withLines
 }
 
 /**
@@ -316,10 +381,23 @@ export function repairSession(state: Session): Session {
   const fees = cleanFees(state.meta.fees)
   const feesOk = fees.same && (state.meta.fees === undefined || fees.fees.length > 0)
   const feeSplitOk = state.feeSplit === undefined || state.feeSplit === 'proportional' || state.feeSplit === 'equal'
-  if (!changed && payerId === state.payerId && assignCursor === state.assignCursor && feesOk && feeSplitOk) return state
+  const taxLines = cleanTaxLines(state.meta.taxLines)
+  const taxLinesOk = taxLines.same && (state.meta.taxLines === undefined || taxLines.lines.length > 0)
+  const supplyOk = state.meta.billOfSupply === undefined || state.meta.billOfSupply === true
+  const kept = cleanKept(state.checkKept)
+  const metaOk = feesOk && taxLinesOk && supplyOk
+  if (!changed && payerId === state.payerId && assignCursor === state.assignCursor && metaOk && feeSplitOk && kept === null) return state
   const next: Session = { ...state, assignments: changed ? assignments : state.assignments, payerId, assignCursor }
-  if (!feesOk) next.meta = withFees(state.meta, fees.fees)
+  if (!metaOk) {
+    const meta = withTaxLines(withFees(state.meta, fees.fees), taxLines.lines)
+    if (!supplyOk) delete meta.billOfSupply
+    next.meta = meta
+  }
   if (!feeSplitOk) delete next.feeSplit
+  if (kept !== null) {
+    if (kept.length > 0) next.checkKept = kept
+    else delete next.checkKept
+  }
   return next
 }
 
@@ -379,6 +457,8 @@ export function reducer(state: Session, action: Action): Session {
         items.push(sanitizeItem(raw))
       }
       const fees = cleanFees(action.meta.fees).fees
+      const meta = withTaxLines(withFees({ ...EMPTY_META, ...action.meta }, fees), cleanTaxLines(action.meta.taxLines).lines)
+      if (meta.billOfSupply !== true) delete meta.billOfSupply
       const loaded: Session = {
         ...state,
         id: newId(),
@@ -386,7 +466,7 @@ export function reducer(state: Session, action: Action): Session {
         step: 'review',
         source: action.source,
         currency,
-        meta: withFees({ ...EMPTY_META, ...action.meta }, fees),
+        meta,
         warnings: action.warnings.filter((w) => typeof w === 'string' && w.trim() !== ''),
         items,
         paid: null,
@@ -400,6 +480,7 @@ export function reducer(state: Session, action: Action): Session {
       // A delivery order's fees are shared equally by default; everything else by what each had.
       if (action.source === 'scan' && fees.length > 0) loaded.feeSplit = 'equal'
       else delete loaded.feeSplit
+      delete loaded.checkKept
       return loaded
     }
 
@@ -473,6 +554,43 @@ export function reducer(state: Session, action: Action): Session {
       const assignments = { ...state.assignments }
       delete assignments[action.itemId]
       return { ...state, items, assignments, assignCursor: clampCursor(state.assignCursor, items) }
+    }
+
+    case 'takeOff': {
+      const { meta } = state
+      const service = action.serviceCharge ? Math.max(0, meta.serviceCharge ?? 0) : 0
+      const tip = action.tip ? Math.max(0, meta.tip ?? 0) : 0
+      const taxNow = Math.max(0, meta.tax ?? 0)
+      const tax = Math.min(taxNow, toAmount(action.tax))
+      const dropItems = state.items.filter((i) => action.itemIds.includes(i.id))
+      const dropFees = (meta.fees ?? []).filter((f) => action.feeIds.includes(f.id))
+      const off = service + tip + tax + dropItems.reduce((sum, i) => sum + i.amount, 0) + dropFees.reduce((sum, f) => sum + f.amount, 0)
+      if (off <= 0) return state
+      const items = dropItems.length > 0 ? state.items.filter((i) => !action.itemIds.includes(i.id)) : state.items
+      const assignments = { ...state.assignments }
+      for (const item of dropItems) delete assignments[item.id]
+      const next = withTaxLines(
+        withFees(
+          {
+            ...meta,
+            serviceCharge: service > 0 ? null : meta.serviceCharge,
+            tip: tip > 0 ? null : meta.tip,
+            tax: meta.tax === null ? null : taxNow - tax,
+            total: meta.total === null ? null : Math.max(0, meta.total - off),
+          },
+          (meta.fees ?? []).filter((f) => !action.feeIds.includes(f.id)),
+        ),
+        (meta.taxLines ?? []).filter((line) => !action.taxLineIds.includes(line.id)),
+      )
+      const paid = state.paid === null ? null : Math.max(0, state.paid - off)
+      return { ...state, meta: next, items, assignments, paid, assignCursor: clampCursor(state.assignCursor, items) }
+    }
+
+    case 'keepFinding': {
+      const key = typeof action.key === 'string' ? action.key : ''
+      const kept = state.checkKept ?? []
+      if (key === '' || key.length > MAX_KEPT_KEY || kept.includes(key)) return state
+      return { ...state, checkKept: [...kept, key].slice(-MAX_KEPT) }
     }
 
     case 'dismissWarnings':

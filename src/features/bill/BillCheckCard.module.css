@@ -1,0 +1,139 @@
+/* ---------- Bill check ---------- */
+
+.card {
+  overflow: hidden;
+}
+
+.head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-3);
+  padding: var(--s-4) var(--s-4) var(--s-3);
+  background: var(--warning-soft);
+}
+
+.icon {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: var(--s-10);
+  height: var(--s-10);
+  border-radius: var(--r-pill);
+  background: var(--surface);
+  color: var(--warning-ink);
+}
+
+.icon > svg {
+  width: var(--s-5);
+  height: var(--s-5);
+}
+
+.headText {
+  min-width: 0;
+}
+
+.eyebrow {
+  font: var(--text-micro);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--warning-ink);
+}
+
+.title {
+  margin-top: 2px;
+  font: var(--text-title);
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.sub {
+  margin-top: var(--s-1);
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.finding {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  padding: var(--s-3) var(--s-4);
+  border-top: 1px solid var(--line);
+}
+
+.findingText {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  min-width: 0;
+}
+
+.findingTitle {
+  font: var(--text-label);
+  font-weight: 600;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.findingBody {
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
+.findingActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  padding: var(--s-3) var(--s-4) var(--s-2);
+  border-top: 1px solid var(--line);
+}
+
+.why {
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  padding: var(--s-2) var(--s-4) var(--s-3);
+  font: var(--text-caption);
+  font-weight: 600;
+  color: var(--ink-2);
+  text-align: center;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.why:focus-visible {
+  outline-offset: -2px;
+}
+
+/* All clear: one quiet line. */
+.clear {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  padding: var(--s-2) var(--s-4);
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
+.clear > svg {
+  flex: none;
+  width: var(--s-4);
+  height: var(--s-4);
+  color: var(--positive);
+}

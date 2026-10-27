@@ -28,6 +28,14 @@ export interface ScannedFee {
   amount: number
 }
 
+/** One printed tax line ("CGST @ 2.5%  28.81"). */
+export interface ScannedTaxLine {
+  /** As printed. */
+  label: string
+  /** MAJOR units, > 0. */
+  amount: number
+}
+
 /** One printed line of the bill. Amounts are in MAJOR units (e.g. rupees), as decimals. */
 export interface ScannedItem {
   name: string
@@ -57,6 +65,10 @@ export interface ScanResponse {
   subtotal: number | null
   /** All taxes combined (GST, CGST+SGST, VAT, sales tax...). */
   tax: number | null
+  /** Each tax line as printed, adding up to `tax`. Only when the bill prints them (older servers send none). */
+  taxLines?: ScannedTaxLine[]
+  /** True when the bill calls itself a "Bill of Supply" (a GST composition-scheme seller). Absent otherwise. */
+  billOfSupply?: boolean
   /** Restaurant service charge only — delivery-app fees are in `fees`. */
   serviceCharge: number | null
   /** Delivery-app fees, each on its own (never also in serviceCharge). Older servers send none. */

@@ -58,6 +58,15 @@ export interface BillFee {
   amount: Minor
 }
 
+/** One printed tax line ("CGST @ 2.5%  28.81"), as read. `meta.tax` is still their sum; these are for Bill check. */
+export interface BillTaxLine {
+  id: string
+  /** As printed ("CGST 2.5%", "VAT on liquor", "Service tax"). */
+  label: string
+  /** Minor, > 0. */
+  amount: Minor
+}
+
 /** How fees are shared: in proportion to what each person had (default), or equally between people who had anything. */
 export type FeeSplit = 'proportional' | 'equal'
 
@@ -74,6 +83,10 @@ export interface BillMeta {
   total: Minor | null
   /** Delivery-app fees, kept apart from `serviceCharge`. Absent on older bills (and when there are none). */
   fees?: BillFee[]
+  /** The tax lines as printed (CGST, SGST, VAT, cess…). Absent on older bills and typed ones. */
+  taxLines?: BillTaxLine[]
+  /** The bill says "Bill of Supply" (a GST composition-scheme seller: it can't add GST). */
+  billOfSupply?: boolean
 }
 
 export type BillSource = 'scan' | 'manual' | 'sample'
@@ -110,6 +123,8 @@ export interface Session {
   expenseId: string | null
   /** How delivery-app fees are shared. Absent = 'proportional'. */
   feeSplit?: FeeSplit
+  /** Bill check findings the table chose to keep ("We'll pay it", "Looks right"), by key. */
+  checkKept?: string[]
 }
 
 export const EMPTY_META: BillMeta = {

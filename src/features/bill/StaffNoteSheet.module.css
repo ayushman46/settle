@@ -1,0 +1,81 @@
+.langs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+/* The note itself: big enough to read across the table. */
+.note {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  margin: var(--s-4) 0 0;
+  padding: var(--s-4);
+  border-radius: var(--r-lg);
+  background: var(--surface-2);
+  font: var(--text-headline);
+  font-size: 1.25rem;
+  line-height: 1.45;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.sources {
+  font: var(--text-micro);
+  color: var(--ink-3);
+}
+
+.section {
+  margin-top: var(--s-5);
+}
+
+.heading {
+  font: var(--text-label);
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.text {
+  margin-top: var(--s-1);
+  font: var(--text-body);
+  color: var(--ink-2);
+}
+
+.help {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  margin: var(--s-2) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.link {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  min-height: 44px;
+  padding: var(--s-2) 0;
+  font: var(--text-body);
+  font-weight: 500;
+  color: var(--ink);
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+
+.link > svg {
+  flex: none;
+  width: var(--s-5);
+  height: var(--s-5);
+  color: var(--ink-2);
+}
+
+.link:hover span {
+  text-decoration: underline;
+}
+
+.disclaimer {
+  margin-top: var(--s-5);
+  font: var(--text-micro);
+  color: var(--ink-3);
+}

@@ -19,6 +19,7 @@ import {
 } from '../../state/selectors'
 import { useFlow, useSession } from '../../state/store'
 import type { FeeSplit, Minor, Session } from '../../types'
+import { BillCheckCard } from './BillCheckCard'
 import { DELIVERY_ENABLED } from './delivery.enabled'
 import { FeePolicy } from './FeePolicy'
 import { explainFeePolicy, feePolicyFacts } from './feeView'
@@ -205,6 +206,8 @@ export function PaidScreen() {
           {spoken}
         </p>
       </div>
+
+      <BillCheckCard onPaidChange={(next) => setText(toInputString(next, currency, { trimZeros: true }))} />
 
       {showBreakdown && totalRow && (
         <Card ref={breakdownRef} padding="none">

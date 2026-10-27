@@ -8,7 +8,7 @@
  * no JSON at all).
  */
 import { z } from 'zod'
-import { SCANNED_FEE_KINDS, type CategoryId, type ScanResponse, type ScannedFee, type ScannedFeeKind, type ScannedItem } from '../shared/api'
+import { SCANNED_FEE_KINDS, type CategoryId, type ScanResponse, type ScannedFee, type ScannedFeeKind, type ScannedItem, type ScannedTaxLine } from '../shared/api'
 import { inferCategory, toCategory } from './category'
 
 export class ParseError extends Error {
@@ -40,12 +40,14 @@ const BILL_FIELDS: AliasTable = [
   ['items', ['items', 'lineitems', 'lines', 'products', 'orderitems']],
   ['subtotal', ['subtotal', 'itemtotal', 'itemstotal']],
   ['tax', ['tax', 'taxes', 'totaltax', 'taxtotal', 'taxamount']],
+  ['taxLines', ['taxlines', 'taxbreakdown', 'taxdetails', 'taxlist']],
   ['serviceCharge', ['servicecharge', 'servicecharges', 'servicefee', 'fees']],
   // A list of delivery-app fees (a plain "fees" number still means serviceCharge, as before).
   ['fees', ['fees', 'fee', 'charges', 'deliveryfees', 'appfees']],
   ['discount', ['discount', 'discounts', 'totaldiscount', 'discountamount']],
   ['tip', ['tip', 'tips', 'gratuity', 'tipamount']],
   ['total', ['total', 'grandtotal', 'totalamount', 'amountdue', 'totalpayable', 'amountpayable', 'finaltotal', 'billtotal']],
+  ['billOfSupply', ['billofsupply', 'isbillofsupply', 'compositionscheme']],
 ]
 
 const ITEM_FIELDS: AliasTable = [
@@ -340,6 +342,12 @@ function toBoolean(value: unknown): boolean {
   return true // missing or null: assume it is a bill and let the items decide
 }
 
+/** A yes only when the model said yes: missing, null or anything unclear is no. */
+function toFlag(value: unknown): boolean {
+  if (typeof value === 'boolean') return value
+  return typeof value === 'string' && /^s*(?:true|yes|y)s*$/i.test(value)
+}
+
 const MAX_QUANTITY = 9999
 
 function toQuantity(value: unknown): number {
@@ -413,6 +421,25 @@ function toFees(value: unknown): ScannedFee[] {
   return fees
 }
 
+/** Most tax lines kept from one scan, and the longest tax-line label. */
+const MAX_TAX_LINES = 12
+const MAX_TAX_LABEL = 40
+
+/** Tax lines: a list of objects with a positive amount and a label (unlabelled lines are dropped). */
+function toTaxLines(value: unknown): ScannedTaxLine[] {
+  if (!Array.isArray(value)) return []
+  const lines: ScannedTaxLine[] = []
+  for (const entry of value) {
+    if (lines.length >= MAX_TAX_LINES) break
+    if (!isRecord(entry)) continue
+    const amount = parseNumber(entry.amount ?? entry.value)
+    const label = Array.from(cleanText(entry.label ?? entry.name ?? entry.title) ?? '').slice(0, MAX_TAX_LABEL).join('').trim()
+    if (amount === null || !(amount > 0) || label === '') continue
+    lines.push({ label, amount: roundMoney(amount) })
+  }
+  return lines
+}
+
 export const ExtractionSchema = z.preprocess(
   (value: unknown) => canonicalize(BILL_FIELDS)(unwrapBill(value)),
   z.object({
@@ -424,11 +451,13 @@ export const ExtractionSchema = z.preprocess(
     items: lenient(toItems),
     subtotal: lenient(parseNumber),
     tax: lenient(parseNumber),
+    taxLines: lenient(toTaxLines),
     serviceCharge: lenient(parseNumber),
     fees: lenient(toFees),
     discount: lenient(parseNumber),
     tip: lenient(parseNumber),
     total: lenient(parseNumber),
+    billOfSupply: lenient(toFlag),
   }),
 )
 
@@ -447,11 +476,13 @@ export function parseExtraction(raw: unknown): Extraction {
     items: [],
     subtotal: null,
     tax: null,
+    taxLines: [],
     serviceCharge: null,
     fees: [],
     discount: null,
     tip: null,
     total: null,
+    billOfSupply: false,
   }
 }
 
@@ -791,6 +822,8 @@ export function normalize(extraction: Extraction, model: string): ScanResponse {
   const extras: Record<Charge, number> = { tax: 0, serviceCharge: 0, tip: 0, discount: 0 }
   const printedTotals: number[] = []
   const printedSubtotals: number[] = []
+  // Tax lines the model listed as items: kept as tax lines when it gave none of its own.
+  const taxItems: ScannedTaxLine[] = []
 
   for (const line of extraction.items) {
     const name = tidyName(line.name)
@@ -801,7 +834,10 @@ export function normalize(extraction: Extraction, model: string): ScanResponse {
     if (kind === 'total') printedTotals.push(Math.abs(amount))
     else if (kind === 'subtotal') printedSubtotals.push(Math.abs(amount))
     else if (kind === 'discount' || (kind === null && amount < 0)) extras.discount += Math.abs(amount)
-    else if (kind !== null) extras[kind] += Math.abs(amount)
+    else if (kind !== null) {
+      extras[kind] += Math.abs(amount)
+      if (kind === 'tax' && amount !== 0) taxItems.push({ label: Array.from(name).slice(0, MAX_TAX_LABEL).join('').trim(), amount: Math.abs(amount) })
+    }
     else if (items.length < MAX_ITEMS) items.push({ name, quantity: line.quantity, amount })
   }
 
@@ -831,6 +867,9 @@ export function normalize(extraction: Extraction, model: string): ScanResponse {
   }
   if (totals.total === null) warnings.push(WARNINGS.noTotal)
 
+  // Tax lines: never more than the tax they add up to (a line the model invented is dropped).
+  const taxCap = totals.tax === null ? 0 : totals.tax + 1
+  const taxLines = (extraction.taxLines.length > 0 ? extraction.taxLines : taxItems).filter((line) => line.amount > 0 && line.amount <= taxCap)
   const merchant = tidyName(extraction.merchant)
   return {
     merchant,
@@ -839,6 +878,8 @@ export function normalize(extraction: Extraction, model: string): ScanResponse {
     category: extraction.category ?? inferCategory(merchant) ?? inferCategory(items.map((item) => item.name).join(' · ')),
     items,
     ...totals,
+    ...(taxLines.length > 0 ? { taxLines } : {}),
+    ...(extraction.billOfSupply ? { billOfSupply: true } : {}),
     fees,
     warnings: warnings.slice(0, 2),
     model,

@@ -304,3 +304,51 @@ describe('PaidScreen — delivery fees', () => {
     ])
   })
 })
+
+describe('PaidScreen — Bill check', () => {
+  const card = () => screen.getByRole('region', { name: 'Possible saving ₹121.01' })
+
+  it('shows the service charge and the GST on it, and splits without them in one tap — with Undo', async () => {
+    const { user, probe } = renderScreen(<PaidScreen />, sampleSession('paid'))
+    expect(within(card()).getByText('Service charge ₹115.25')).toBeInTheDocument()
+    expect(within(card()).getByText('About ₹5.76 of GST seems to be worked out on it too, and that comes off with it.')).toBeInTheDocument()
+
+    await user.click(within(card()).getByRole('button', { name: 'Split without these' }))
+    expect(amountField()).toHaveValue('2,177.99')
+    expect(probe.current.meta).toMatchObject({ serviceCharge: null, total: 217799 })
+    expect(screen.queryByRole('region', { name: 'Possible saving ₹121.01' })).not.toBeInTheDocument()
+    expect(screen.getByText('Bill check: no service charge or tax surprises.')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Undo: Took ₹121.01 off the bill' }))
+    expect(amountField()).toHaveValue('2,299')
+    expect(probe.current.meta).toMatchObject({ serviceCharge: 11525, total: 229900 })
+    expect(card()).toBeInTheDocument()
+  })
+
+  it('keeps the charge when the table is happy to pay it', async () => {
+    const { user, probe } = renderScreen(<PaidScreen />, sampleSession('paid'))
+    await user.click(within(card()).getByRole('button', { name: 'We’ll pay it' }))
+    expect(probe.current.checkKept).toEqual(['service_charge'])
+    expect(screen.queryByRole('region', { name: /Possible saving/ })).not.toBeInTheDocument()
+    expect(screen.queryByText('Bill check: no service charge or tax surprises.')).not.toBeInTheDocument()
+    expect(amountField()).toHaveValue('2,299')
+  })
+
+  it('shows the staff a note in their language, with where to complain', async () => {
+    const { user } = renderScreen(<PaidScreen />, sampleSession('paid'))
+    await user.click(within(card()).getByRole('button', { name: 'Show the staff' }))
+    const sheet = await screen.findByRole('dialog', { name: 'Show this to the staff' })
+    expect(within(sheet).getByText('Hello! Could you please take the service charge (₹115.25) and the GST worked out on it (₹5.76) off our bill?')).toBeInTheDocument()
+    expect(within(sheet).getByRole('link', { name: /Call 1915/ })).toHaveAttribute('href', 'tel:1915')
+    expect(within(sheet).getByRole('link', { name: /WhatsApp \+91 88000 01915/ })).toHaveAttribute('href', 'https://wa.me/918800001915')
+
+    await user.click(within(sheet).getByRole('button', { name: 'हिन्दी' }))
+    expect(within(sheet).getByText('नमस्ते! कृपया हमारे बिल से सर्विस चार्ज (₹115.25) और उस पर लगा GST (₹5.76) हटा दें।')).toBeInTheDocument()
+  })
+
+  it('says nothing on a typed bill', () => {
+    renderScreen(<PaidScreen />, sampleSession('paid', { source: 'manual' }))
+    expect(screen.queryByRole('region', { name: /Possible saving/ })).not.toBeInTheDocument()
+    expect(screen.queryByText(/Bill check/)).not.toBeInTheDocument()
+  })
+})

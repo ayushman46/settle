@@ -383,11 +383,13 @@ describe('parseExtraction', () => {
       items: [{ name: 'Tea', quantity: 1, amount: null }],
       subtotal: null,
       tax: null,
+      taxLines: [],
       serviceCharge: null,
       fees: [],
       discount: null,
       tip: null,
       total: null,
+      billOfSupply: false,
     })
   })
 
@@ -833,5 +835,32 @@ describe('delivery-app fees (spec 08 §5)', () => {
   it('drops a fee bigger than the bill', () => {
     const result = normalize(parseExtraction({ ...SWIGGY, fees: [...SWIGGY.fees, { label: 'Misread', kind: 'other', amount: 5000 }] }), 'm')
     expect(result.fees).toHaveLength(4)
+  })
+})
+
+describe('tax lines and bills of supply (for Bill check)', () => {
+  const base = { isBill: true, merchant: 'Dhaba', currency: 'INR', items: [{ name: 'Thali', quantity: 1, amount: 200 }], subtotal: 200, total: 210 }
+
+  it('keeps each printed tax line, and a bill of supply only when the model says so', () => {
+    const out = normalize(parseExtraction({ ...base, tax: 10, taxLines: [{ label: 'CGST @ 2.5%', amount: '5.00' }, { label: 'SGST @ 2.5%', amount: 5 }, { label: '', amount: 3 }, { label: 'Cess', amount: 0 }], billOfSupply: 'true' }), 'm')
+    expect(out.taxLines).toEqual([
+      { label: 'CGST @ 2.5%', amount: 5 },
+      { label: 'SGST @ 2.5%', amount: 5 },
+    ])
+    expect(out.billOfSupply).toBe(true)
+    const plain = normalize(parseExtraction({ ...base, tax: 10 }), 'm')
+    expect(plain).not.toHaveProperty('taxLines')
+    expect(plain).not.toHaveProperty('billOfSupply')
+  })
+
+  it('turns tax lines the model listed as items into tax lines', () => {
+    const out = normalize(parseExtraction({ ...base, items: [...base.items, { name: 'Service Tax 6%', amount: 12 }], tax: null, total: 212 }), 'm')
+    expect(out.items.map((i) => i.name)).toEqual(['Thali'])
+    expect(out.taxLines).toEqual([{ label: 'Service Tax 6%', amount: 12 }])
+  })
+
+  it('drops a tax line bigger than the tax', () => {
+    const out = normalize(parseExtraction({ ...base, tax: 10, taxLines: [{ label: 'VAT', amount: 50 }] }), 'm')
+    expect(out).not.toHaveProperty('taxLines')
   })
 })

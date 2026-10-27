@@ -7,7 +7,7 @@ import * as z from 'zod/mini'
 import { isKnownCurrency } from '../lib/currencies'
 import { MAX_MINOR } from '../lib/money'
 import { MAX_PEOPLE, nextColor, normalizeName } from '../lib/people'
-import { AVATAR_COLORS, type BillFee, type BillItem, type Person, type Session } from '../types'
+import { AVATAR_COLORS, type BillFee, type BillItem, type BillTaxLine, type Person, type Session } from '../types'
 import { createSession, isCategory, isIsoDay, MAX_ITEMS, repairSession, sanitizeItem } from './reducer'
 import { clampStep } from './selectors'
 
@@ -34,6 +34,9 @@ const sessionSchema = z.object({
     total: nullableMinor,
     // Added in Settle v4 (delivery fees). Checked leniently by repairSession.
     fees: z.optional(z.unknown()),
+    // Added with Bill check. Checked leniently by repairSession.
+    taxLines: z.optional(z.unknown()),
+    billOfSupply: z.optional(z.unknown()),
   }),
   warnings: z.array(z.string()),
   items: z.array(
@@ -62,6 +65,7 @@ const sessionSchema = z.object({
   groupId: z.optional(z.unknown()),
   expenseId: z.optional(z.unknown()),
   feeSplit: z.optional(z.unknown()),
+  checkKept: z.optional(z.unknown()),
 })
 
 function storage(): Storage | null {
@@ -111,8 +115,8 @@ export function parseSession(value: unknown): Session | null {
   if (!parsed.success) return null
   const data = parsed.data
   const fresh = createSession()
-  const { feeSplit, ...rest } = data
-  const { fees, ...printed } = data.meta
+  const { feeSplit, checkKept, ...rest } = data
+  const { fees, taxLines, billOfSupply, ...printed } = data.meta
   const session: Session = {
     ...rest,
     currency: isKnownCurrency(data.currency) ? data.currency : fresh.currency,
@@ -121,6 +125,8 @@ export function parseSession(value: unknown): Session | null {
       ...printed,
       // Cleaned by repairSession (a list that isn't one is dropped).
       ...(Array.isArray(fees) ? { fees: fees as BillFee[] } : {}),
+      ...(Array.isArray(taxLines) ? { taxLines: taxLines as BillTaxLine[] } : {}),
+      ...(billOfSupply === true ? { billOfSupply: true } : {}),
       subtotal: cleanAmount(data.meta.subtotal),
       tax: cleanAmount(data.meta.tax),
       serviceCharge: cleanAmount(data.meta.serviceCharge),
@@ -138,6 +144,7 @@ export function parseSession(value: unknown): Session | null {
     expenseId: cleanId(data.expenseId),
   }
   if (feeSplit === 'equal' || feeSplit === 'proportional') session.feeSplit = feeSplit
+  if (Array.isArray(checkKept)) session.checkKept = checkKept as string[]
   const repaired = repairSession(session)
   const step = clampStep(repaired, repaired.step)
   return step === repaired.step ? repaired : { ...repaired, step }
