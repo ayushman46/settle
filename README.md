@@ -27,11 +27,16 @@ The bill-splitting app built for India: friends pay their exact share by UPI —
 
 <table>
   <tr>
-    <td align="center" width="20%"><img src="docs/media/screens/home.png" alt="Home: you're owed ₹1,600, quick actions, people" width="100%"><br><sub><b>Home</b><br>What you're owed, one tap to settle</sub></td>
-    <td align="center" width="20%"><img src="docs/media/screens/pay-apps.png" alt="A friend's pay page listing Google Pay, PhonePe, Paytm, BHIM and any UPI app, each with ₹800 filled in" width="100%"><br><sub><b>Pay with your app</b><br>₹800 filled in — just enter your PIN</sub></td>
-    <td align="center" width="20%"><img src="docs/media/screens/rent.png" alt="A flat's rent: send one link, each flatmate pays the landlord directly" width="100%"><br><sub><b>Rent, split right</b><br>Everyone pays the landlord directly</sub></td>
-    <td align="center" width="20%"><img src="docs/media/screens/rent-receipts.png" alt="HRA rent receipts for one flatmate's share, ready to print" width="100%"><br><sub><b>HRA rent receipts</b><br>For your share, ready to sign</sub></td>
-    <td align="center" width="20%"><img src="docs/media/screens/home-hindi.png" alt="Home in Hindi" width="100%"><br><sub><b>हिन्दी + 6 more</b><br>Every screen, eight languages</sub></td>
+    <td align="center" width="25%"><img src="docs/media/screens/home.png" alt="Home: you're owed ₹1,600, quick actions, people" width="100%"><br><sub><b>Home</b><br>What you're owed, one tap to get it back</sub></td>
+    <td align="center" width="25%"><img src="docs/media/screens/pay.png" alt="A friend's pay page: their ₹800 share, a QR to save to the gallery, and the UPI ID to copy" width="100%"><br><sub><b>Pay, the ways UPI allows</b><br>QR, saved QR or UPI ID — no app to install</sub></td>
+    <td align="center" width="25%"><img src="docs/media/screens/whos-paid.png" alt="Who's paid: three payments from a bank statement, Riya ticked, Asha's part payment picked, a stranger set aside" width="100%"><br><sub><b>Who's paid?</b><br>Your statement ticks everyone off</sub></td>
+    <td align="center" width="25%"><img src="docs/media/screens/collect.png" alt="To collect: everyone who owes you, how long it's been and when you last reminded them" width="100%"><br><sub><b>To collect</b><br>A reminder each, in the right tone</sub></td>
+  </tr>
+  <tr>
+    <td align="center" width="25%"><img src="docs/media/screens/bijli.png" alt="Fair bijli: a 450-unit Delhi bill, the AC user pays ₹2,193.65 and the others ₹199.27" width="100%"><br><sub><b>Fair bijli</b><br>The AC user pays for the AC</sub></td>
+    <td align="center" width="25%"><img src="docs/media/screens/rent.png" alt="A flat's rent: send one link, each flatmate pays the landlord directly" width="100%"><br><sub><b>Rent, split right</b><br>Everyone pays the landlord directly</sub></td>
+    <td align="center" width="25%"><img src="docs/media/screens/rent-receipts.png" alt="HRA rent receipts for one flatmate's share, ready to print" width="100%"><br><sub><b>HRA rent receipts</b><br>For your share, ready to sign</sub></td>
+    <td align="center" width="25%"><img src="docs/media/screens/home-hindi.png" alt="Home in Hindi" width="100%"><br><sub><b>हिन्दी + 6 more</b><br>Every screen, eight languages</sub></td>
   </tr>
 </table>
 
@@ -39,7 +44,12 @@ The bill-splitting app built for India: friends pay their exact share by UPI —
 
 Most split apps stop at *who owes whom* and leave the paying — and the chasing — to you. Settle is built around actually getting paid back, the way India pays.
 
-- **Friends don't install anything.** One link in the WhatsApp group. Each friend taps their name, sees their exact share, picks **Google Pay, PhonePe, Paytm or BHIM**, and their app opens with the amount and your UPI ID already filled in. They only enter their PIN.
+- **Payments tick themselves off.** *New — Auto-settle, Android.* No split app knows when you've been paid: since UPI collect requests ended (Oct 2025), friends pay from whatever UPI app they like, and GPay, PhonePe and Paytm splits only see payments made inside their own app. In the Settle Android app, when Google Pay, PhonePe, Paytm, BHIM (or, if you allow it, your bank's SMS) tells you money arrived, Settle matches it to whoever owed you that amount and ticks them off — with Undo. A payment it isn't sure of waits for one tap. Nothing is uploaded: the alerts are read on your phone and every other notification is ignored. Friends still install nothing.
+
+- **Friends don't install anything.** One link in the WhatsApp group, or a personal one each. Each friend taps their name, sees their exact share and pays it in their own UPI app — by your QR, a QR saved to their gallery, or your UPI ID, the ways UPI allows a payment to a person — then tells you **"I've paid"** in one tap.
+- **Know who's paid, on any phone.** *New.* On iPhone and the web, drop your UPI app's history screenshots, a bank statement or your bank SMS, and Settle ticks off everyone who paid you back in one go — names, UPI IDs and amounts matched, part payments recognised, nothing ticked that it isn't sure of. Statements and SMS never leave your phone. Then **To collect** lists whoever's left, longest wait first, with a reminder each that gets firmer only as it needs to.
+- **A second look at the bill.** *New.* Before a restaurant bill is split, Settle checks it for a service charge added by default (optional under the CCPA's 2022 guidelines), GST charged on it, service tax that ended in 2017 and totals that don't add up — with a polite note for the staff in eight languages.
+- **Fair bijli.** *New.* The flat's electricity bill split by the tariff's slabs, days at home and AC nights, so whoever ran the AC pays for it — with ten Indian tariffs built in.
 - **Rent, split right — with HRA receipts.** *New.* Each flatmate pays the landlord their own share directly from one rent link, so nobody fronts the whole rent and chases the others, and everyone has their own payment trail. Then Settle makes **HRA rent receipts for each flatmate's share** — monthly or quarterly, amount in words, the landlord's PAN when a share is over ₹1,00,000 a year, a revenue stamp for cash over ₹5,000 — ready for the landlord to sign and HR to file. We couldn't find another split app that does this.
 - **Built for India.** Eight languages, voice that understands "dhai hazaar ka dinner", ₹ with lakh grouping, rupees by default, UPI everywhere, and fast on budget phones and slow networks.
 - **AI that does the tedious part.** Snap a restaurant bill and every item, tax and discount is filled in; snap a Swiggy order and the delivery and platform fees are split fairly; drop a friend's payment screenshot and they're marked paid.
@@ -49,7 +59,8 @@ Most split apps stop at *who owes whom* and leave the paying — and the chasing
 ## Features
 
 **Split anything**
-- **Five ways to split** — equally, exact amounts, percentages, shares ("pays double") or item by item, with optional rounding to whole rupees.
+- **Six ways to split** — equally, exact amounts, percentages, shares ("pays double"), item by item, or **what each had** for a meal with no bill (tax and tip shared in proportion), with optional rounding to whole rupees.
+- **Bill check** — a default service charge, GST on it, old taxes and totals that don't add up, found before you split; one tap to split without them.
 - **AI bill reading** — every item, tax, service charge and discount; then tap who had what. What you actually paid (after discounts and round-off) is shared in proportion.
 - **Just say it** — type or speak "Cab 840 with Riya and Sam, Sam pays double" and get a ready-to-save split.
 - **Food orders, fairly** — Swiggy, Zomato, Blinkit and Zepto fees kept apart and shared in proportion or equally.
@@ -57,13 +68,17 @@ Most split apps stop at *who owes whom* and leave the paying — and the chasing
 - **Everyone claims their own items** — one claim link; friends tick what they had on their phones and the replies merge into the split.
 
 **Get paid back**
-- **One pay link per split** with each friend's exact share, and a **UPI app chooser** (Android and iPhone) that opens their app with the amount filled in.
+- **One pay link per split**, or a personal link for each friend, with their exact share. On a computer they scan your QR (amount filled in); on a phone they save the QR to the gallery and upload it in their UPI app (up to ₹2,000, as UPI allows) or copy your UPI ID. They reply **"I've paid"** with the UPI reference, and you tick them off in one tap.
+- **Auto-settle** (Android app) — UPI app and bank alerts that say money arrived tick off whoever paid, as it happens; unsure ones wait for a tap. Read on the phone, never uploaded.
+- **Who's paid?** — UPI history screenshots (read by AI, not kept), a bank statement (CSV or Excel) or bank SMS (read on the phone) tick off everyone who paid you back at once, with Undo. Share a statement from your bank's app straight to Settle.
+- **To collect** — everyone who owes you, the longest wait first, when you last reminded them, and the next reminder in the right tone; late at night it says the reminder can wait.
 - **Paid? Drop the screenshot** — a GPay, PhonePe, Paytm or BHIM screenshot is read, matched to who owes you and marked paid after you confirm; pending, failed, mis-addressed and duplicate payments are refused.
 - **Collect and nudge** — "₹1,840 of ₹2,766 collected", tick people off, send a friendly, funny or firm reminder.
 - **Groups that settle themselves** — trips, flats and couples; the fewest payments to square everyone up, with a UPI QR for each.
 
 **Everyday money with friends**
 - **Rent & HRA receipts** — the flat's rent, paid to the landlord directly by each flatmate, with receipts for each share.
+- **Fair bijli** — the electricity bill split by slabs, subsidies, AC nights and days at home, reconciled to the bill to the paisa.
 - **Collections (chanda)** — one link for a birthday gift, a farewell, a Diwali party or a puja.
 - **Udhaar** — lend or borrow in two taps, part payments, reminders.
 - **Next round's on you** — groups that take turns paying see whose round it is.
@@ -153,7 +168,8 @@ Set these in `.env` (for `npm run dev` and `npm start`) or in your host's enviro
 ```
 src/
   features/   screens: home, onboarding, split, expense, bill, groups, friends, activity, you,
-              pro, insights, recurring, landing, legal, pay, claim, pools, lend, trip, proof, rent…
+              pro, insights, recurring, landing, legal, pay, claim, pools, lend, trip, proof, rent,
+              bijli, whospaid, collect…
   kit/        feature components (people picker, split editor, share & UPI sheets…)
   components/ design system (buttons, sheets, charts, tab bar…)
   data/       on-device stores, actions and hooks (localStorage, no database)
@@ -161,7 +177,8 @@ src/
   share/      pay links, share-card images, nudges
   pro/ ai/    Pro licenses, checkout, AI quota, "Just say it" client
   app/        router, app shell, theming
-server/       Hono API: NVIDIA scan + describe, Razorpay orders, licenses, security headers
+server/       Hono API: NVIDIA scan, describe, payment proof and history, Razorpay orders, licenses,
+              security headers
 shared/       types shared by the client and the server
 scripts/      license CLI
 ```

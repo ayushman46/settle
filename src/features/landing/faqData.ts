@@ -42,8 +42,16 @@ export const FAQ: readonly FaqEntry[] = [
     id: 'upi',
     question: `Does ${NAME} touch the money?`,
     answer: [
-      `Never. ${NAME} opens your friend’s UPI app — GPay, PhonePe, Paytm, BHIM or any other — with your UPI ID and their exact amount filled in. The money goes straight from their bank to yours.`,
+      `Never. Your friend pays you in their own UPI app — GPay, PhonePe, Paytm, BHIM or any other — by your QR code or your UPI ID, the ways UPI allows a payment to a person. The money goes straight from their bank to yours.`,
       'UPI works in rupees. Splits in other currencies are still worked out and tracked; friends just pay you the usual way.',
+    ],
+  },
+  {
+    id: 'paid',
+    question: `How does ${NAME} know who’s paid?`,
+    answer: [
+      `In the ${NAME} Android app, turn on Auto-settle: when Google Pay, PhonePe, Paytm or BHIM (or, if you allow it, your bank’s SMS) says money arrived, ${NAME} ticks off whoever owed you that — with Undo. It reads only those alerts, on your phone; nothing is uploaded.`,
+      'On iPhone or the web, drop your UPI app’s history screenshots, a bank statement or your bank SMS into Who’s paid? and everyone who paid is ticked off at once. Friends can also tap “I’ve paid” on their pay link.',
     ],
   },
   {

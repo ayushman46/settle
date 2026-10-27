@@ -194,6 +194,27 @@ It prints a code anyone can redeem under **You → Redeem a code**.
 
 ---
 
+## The Android app (Auto-settle)
+
+Settle's Android app is the same site in a native shell (`android/`, made with Capacitor), plus one native part: **Auto-settle**, which reads the "money received" alerts of UPI apps (and, if the user allows it, bank SMS) on the phone and ticks off whoever paid. The shell loads `https://settleupi.vercel.app/app` (`capacitor.config.json`), so every web deploy updates the app too; only changes under `android/` need a new APK.
+
+**Try it on a phone (debug build).** Every push to `main` that touches `android/` runs **Actions → Android**, which builds `app-debug.apk` (download **settle-android-debug** from the run). Copy it to an Android phone, open it, allow installing from that app, then in Settle open **To collect → Turn on Auto-settle**.
+
+**Build it yourself.** Install Android Studio (it brings the SDK and Java 21), then:
+
+```sh
+npm ci
+npx cap sync android
+cd android && ./gradlew assembleDebug    # gradlew.bat on Windows
+```
+
+**Publish on Google Play.**
+
+1. Make an upload key once (`keytool -genkey -v -keystore settle-upload.jks -alias settle -keyalg RSA -keysize 2048 -validity 10000`) and keep it out of the repository.
+2. Build a signed App Bundle in Android Studio (**Build → Generate Signed Bundle**) and upload it in Play Console.
+3. In the store listing and the in-app disclosure (already in the app), say what notification access is for: only payment alerts from the listed UPI apps (and bank SMS when allowed) are read, on the phone, to mark who paid; nothing is uploaded. Play reviews apps that read notifications, so expect questions; the soundbox apps that announce UPI payments are the closest precedent.
+4. If you change the site's address, change `server.url` in `capacitor.config.json` and the links in `native/www/`.
+
 ## Updating Settle
 
 Push changes to the `main` branch on GitHub. Then, automatically:

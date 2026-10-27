@@ -49,9 +49,9 @@ export const FEATURES: readonly Feature[] = [
   },
   {
     id: 'collect',
-    eyebrow: 'Collect tracker',
-    title: 'See who’s paid. Nudge who hasn’t.',
-    text: 'Watch the money come in, tick people off, and send a friendly, funny or firm reminder on WhatsApp or SMS.',
+    eyebrow: 'Auto-settle',
+    title: 'Payments tick themselves off.',
+    text: 'In the Android app, when GPay, PhonePe, Paytm or BHIM says money arrived, whoever paid is ticked off — read on your phone, nothing uploaded. Whoever’s left gets a reminder, friendly first.',
     size: 'regular',
   },
   {
@@ -63,9 +63,9 @@ export const FEATURES: readonly Feature[] = [
   },
   {
     id: 'modes',
-    eyebrow: 'Five ways to split',
+    eyebrow: 'Six ways to split',
     title: 'Fair, however you define it.',
-    text: 'Equally, exact amounts, percentages, shares or item by item. Round to whole rupees and the payer keeps the paise.',
+    text: 'Equally, exact amounts, percentages, shares, item by item, or what each had when there’s no bill. Round to whole rupees and the payer keeps the paise.',
     size: 'regular',
   },
   {

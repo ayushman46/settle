@@ -27,6 +27,14 @@ export function PrivacyPage() {
           Clearing this site’s data in your browser, or removing the app, deletes it. Keep a backup file (under
           You → Backup) if you’d like to move to a new phone or be safe.
         </p>
+        <p>
+          <strong>Auto-settle (the Android app).</strong> If you turn it on, the app reads the alerts Google Pay,
+          PhonePe, Paytm, BHIM, Amazon Pay, MobiKwik and CRED show when money arrives — and, only if you allow it,
+          bank SMS that say money was credited — to tick off whoever paid you. Those alerts are kept on your phone
+          until {NAME} reads them, then deleted; every other notification is ignored, never stored and never sent.
+          Turn it off any time in Android’s notification access settings. Bank statements and SMS you add to “Who’s
+          paid?” are read on your phone too.
+        </p>
       </LegalSection>
 
       <LegalSection title={t('legal.privacy.section.leaves')}>
@@ -40,6 +48,11 @@ export function PrivacyPage() {
             <strong>“Just say it”.</strong> The sentence you type, your default currency, today’s date and the names in
             your people list (so the AI can match them) are sent the same way, for the same reason, and aren’t kept by
             us either.
+          </li>
+          <li>
+            <strong>Payment screenshots.</strong> A payment screenshot in “Paid? Drop the screenshot”, or screenshots
+            of your UPI app’s history in “Who’s paid?”, go the same way to be read (amounts, names, dates and UPI
+            references) and aren’t kept by us.
           </li>
           <li>
             <strong>Pay links.</strong> Everything a pay link shows lives after the “#” in the link, a part browsers
