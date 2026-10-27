@@ -6,9 +6,11 @@
  */
 import { callApi, isRecord } from '../../api/http'
 import { HISTORY_CUES, PAYMENT_STATUSES, type HistoryRow } from '../../../shared/api'
-import { setPaidBack } from '../../data'
+import { recordPartPayment, recordSettlement, deleteSettlement, setPaidBack } from '../../data'
 import { payerAliasesStore, type PayerAlias } from '../../data/stores'
-import { ME_ID, type Expense, type Friend } from '../../domain/types'
+import { ME_ID, type Expense, type Friend, type Group, type Minor } from '../../domain/types'
+import { groupBalances, isSettledInGroup, simplifyDebts, stillOwed } from '../../engine/balances'
+import { today } from '../../engine/dates'
 import { licenseHeaders } from '../../pro/store'
 import { forgetReference, proofLedgerStore, rememberReference } from '../proof/proofLedger'
 import { nameKey, type Credit, type Due, type MatchOption, type Payer } from './match'
@@ -18,18 +20,52 @@ export const HISTORY_TIMEOUT_MS = 70_000
 /** Most screenshots read in one go. */
 export const MAX_SCREENSHOTS = 6
 
-/** Each split you paid where someone still owes you their share (rupees only: UPI moves rupees). */
-export function openDues(expenses: readonly Expense[], me: string = ME_ID): Due[] {
+/**
+ * What people owe you, in rupees (UPI moves rupees): each split you paid outside a group, as much
+ * of their share as is still unpaid; and each group's simplified payments to you (a group's
+ * expenses are settled through its balances, by recording a payment there).
+ */
+export function openDues(expenses: readonly Expense[], groups: readonly Group[] = [], me: string = ME_ID): Due[] {
   const dues: Due[] = []
   for (const expense of expenses) {
-    if (expense.payerId !== me || expense.currency !== 'INR') continue
-    for (const [friendId, share] of Object.entries(expense.shares)) {
-      if (friendId === me || share <= 0 || expense.paidBack[friendId] !== undefined) continue
-      dues.push({ id: `${expense.id}:${friendId}`, expenseId: expense.id, friendId, amount: share, title: expense.title, since: expense.date })
+    if (expense.payerId !== me || expense.currency !== 'INR' || isSettledInGroup(expense, groups)) continue
+    for (const friendId of Object.keys(expense.shares)) {
+      const amount = friendId === me ? 0 : stillOwed(expense, friendId)
+      if (amount > 0) dues.push({ id: `${expense.id}:${friendId}`, expenseId: expense.id, groupId: null, friendId, amount, title: expense.title, since: expense.date })
+    }
+  }
+  for (const group of groups) {
+    if (group.currency !== 'INR') continue
+    const own = expenses.filter((e) => e.groupId === group.id)
+    if (own.length === 0) continue
+    const since = own.reduce((oldest, e) => (e.date < oldest ? e.date : oldest), own[0]?.date ?? '')
+    for (const t of simplifyDebts(groupBalances(group, expenses))) {
+      if (t.toId === me && t.amount > 0) {
+        dues.push({ id: `group:${group.id}:${t.fromId}`, expenseId: '', groupId: group.id, friendId: t.fromId, amount: t.amount, title: group.name, since })
+      }
     }
   }
   // Oldest first: when a payment could settle either of two equal dues, it settles the older.
   return dues.sort((a, b) => a.since.localeCompare(b.since))
+}
+
+/** Marks a due paid in full: the split's share ticked off, or the payment recorded in the group. Returns its undo. */
+export function settleDue(due: Due, date: string = today(), method: 'upi' | 'cash' = 'upi', me: string = ME_ID): () => void {
+  if (due.groupId === null) {
+    setPaidBack(due.expenseId, due.friendId, true)
+    return () => void setPaidBack(due.expenseId, due.friendId, false)
+  }
+  const groupId = due.groupId
+  const s = recordSettlement(groupId, { fromId: due.friendId, toId: me, amount: due.amount, date, method })
+  return () => deleteSettlement(groupId, s.id)
+}
+
+/** Records part of a due (`amount` < what's owed): a part payment on the split, or a smaller payment in the group. */
+export function settlePartOfDue(due: Due, amount: Minor, date: string = today(), me: string = ME_ID): () => void {
+  if (due.groupId === null) return recordPartPayment(due.expenseId, due.friendId, amount).undo
+  const groupId = due.groupId
+  const s = recordSettlement(groupId, { fromId: due.friendId, toId: me, amount, date, method: 'upi' })
+  return () => deleteSettlement(groupId, s.id)
 }
 
 /** Your people, as the matcher sees them, with the bank names confirmed as theirs. */
@@ -119,9 +155,12 @@ export async function readHistoryScreenshot(dataUrl: string, today: string, shot
 
 /** What applying matches changed, so Undo can put it back exactly. */
 export interface Applied {
+  /** Dues settled in full or in part. */
   dues: Due[]
   refs: string[]
   aliases: PayerAlias[]
+  /** Puts back each change to the splits and groups (newest first). */
+  undo: Array<() => void>
 }
 
 /** The UPI references already marked (the duplicate guard). */
@@ -129,14 +168,22 @@ export function knownReferences(): Set<string> {
   return new Set(proofLedgerStore.get().map((e) => e.utr))
 }
 
-/** Ticks the chosen dues, remembers their references and the bank names confirmed as people. */
+/**
+ * Settles the chosen dues — in full, or (a part payment) by what was paid, so the rest stays owed —
+ * and remembers their references and the bank names confirmed as people.
+ */
 export function applyMatches(chosen: readonly { credit: Credit; option: MatchOption }[], now: number = Date.now()): Applied {
-  const applied: Applied = { dues: [], refs: [], aliases: [] }
+  const applied: Applied = { dues: [], refs: [], aliases: [], undo: [] }
   const known = new Set(payerAliasesStore.get().map((a) => a.name))
   for (const { credit, option } of chosen) {
+    const date = credit.date ?? today()
     for (const due of option.dues) {
-      setPaidBack(due.expenseId, due.friendId, true)
-      applied.dues.push(due)
+      try {
+        applied.undo.push(option.kind === 'part' && credit.amount < due.amount ? settlePartOfDue(due, credit.amount, date) : settleDue(due, date))
+        applied.dues.push(due)
+      } catch {
+        // Gone meanwhile (deleted in another tab): nothing to settle.
+      }
     }
     if (credit.utr) {
       rememberReference({ utr: credit.utr, friendId: option.friendId, amount: credit.amount, at: now })
@@ -154,7 +201,7 @@ export function applyMatches(chosen: readonly { credit: Credit; option: MatchOpt
 
 /** Puts back what `applyMatches` changed. */
 export function undoMatches(applied: Applied): void {
-  for (const due of applied.dues) setPaidBack(due.expenseId, due.friendId, false)
+  for (const undo of [...applied.undo].reverse()) undo()
   for (const utr of applied.refs) forgetReference(utr)
   if (applied.aliases.length > 0) {
     const learned = new Set(applied.aliases.map((a) => `${a.name}\u0000${a.friendId}`))

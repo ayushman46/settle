@@ -34,7 +34,8 @@ function payerOf(id: string, friendsById: FriendsById): UpiPayer {
  * Null for the payer themselves or anyone with nothing to pay.
  */
 export function upiPaymentForShare(e: Expense, friendId: string, friendsById: FriendsById): UpiPayment | null {
-  const amount = e.shares[friendId] ?? 0
+  // What's left of their share (they may have paid part of it already).
+  const amount = Math.max(0, (e.shares[friendId] ?? 0) - (e.partPaid?.[friendId] ?? 0))
   if (friendId === e.payerId || !(amount > 0)) return null
   return {
     payee: payeeOf(e.payerId, friendsById),

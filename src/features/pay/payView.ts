@@ -22,7 +22,10 @@ export interface PayPerson {
   /** Index in `payload.p`. */
   index: number
   name: string
+  /** What they pay: their share, less any part already paid. */
   amount: Minor
+  /** Already paid of their share (a part payment), not yet in full. */
+  paidSoFar: Minor
   /** The payee has marked them as paid. */
   paid: boolean
   /** Avatar palette index (links carry no colours, so it's by position — stable for everyone opening it). */
@@ -35,6 +38,7 @@ export function payPeople(payload: PayLinkPayload): PayPerson[] {
     index: d.index,
     name: d.name,
     amount: d.amount,
+    paidSoFar: d.paidSoFar,
     paid: d.paid,
     color: d.index % AVATAR_COLORS,
   }))

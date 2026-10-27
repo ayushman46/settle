@@ -28,6 +28,7 @@ export const pay = {
   // One person's share.
   'pay.panel.notYou.cta': 'Not {name}? Pick your name',
   'pay.panel.share.title': '{name}’s share',
+  'pay.panel.partPaid': '{paid} of {share} already paid — this is the rest',
   'pay.panel.paid.title': 'You’re all square',
   'pay.panel.paid.body': '{name} has marked your share as paid.',
   'pay.panel.reveal.cta': 'Show payment details anyway',

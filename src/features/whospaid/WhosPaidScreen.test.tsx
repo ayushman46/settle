@@ -48,6 +48,7 @@ function pickStatement(file: File = statementFile()): void {
 }
 
 const paid = (friendId: string) => expensesStore.get().find((e) => e.id === dinner)?.paidBack[friendId] !== undefined
+const partPaid = (friendId: string) => expensesStore.get().find((e) => e.id === dinner)?.partPaid?.[friendId] ?? 0
 
 beforeEach(() => {
   vi.useFakeTimers({ toFake: ['Date'] })
@@ -95,7 +96,7 @@ describe('WhosPaidScreen', () => {
     const which = within(check).getByRole('radiogroup', { name: 'Who paid ₹400?' })
     expect(within(which).getByRole('radio', { name: 'Not for a split' })).toBeChecked()
     // Asha paid ₹400 of her ₹420: a part payment, which you can take as settled.
-    await user.click(within(which).getByRole('radio', { name: 'Asha · Goa dinner — part of ₹420; marks it paid' }))
+    await user.click(within(which).getByRole('radio', { name: 'Asha · Goa dinner — part of ₹420; the rest stays owed' }))
     expect(within(check).getByText(/Same name · Part payment/)).toBeInTheDocument()
 
     // Karan owes nothing: set aside, folded away.
@@ -106,18 +107,22 @@ describe('WhosPaidScreen', () => {
 
     await user.click(screen.getByRole('button', { name: 'Mark 2 as paid' }))
     expect(paid(riya)).toBe(true)
-    expect(paid(asha)).toBe(true)
+    // ₹400 of her ₹420: recorded as paid so far, the ₹20 still owed.
+    expect(paid(asha)).toBe(false)
+    expect(partPaid(asha)).toBe(40_000)
     expect(paid(sam)).toBe(false)
     // "ASHA IYER" is plainly Asha: nothing to learn.
     expect(payerAliasesStore.get()).toEqual([])
     expect(proofLedgerStore.get().map((r) => r.utr).sort()).toEqual(['629618427311', '629712345678'])
 
     expect(await screen.findByRole('heading', { level: 1, name: '2 payments ticked off' })).toBeInTheDocument()
-    expect(screen.getByText('1 person still owes you')).toBeInTheDocument()
+    // Sam (₹420) and Asha (the ₹20 left).
+    expect(screen.getByText('2 people still owe you')).toBeInTheDocument()
+    expect(screen.getByText('₹20')).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: /^Undo/ }))
     expect(paid(riya)).toBe(false)
-    expect(paid(asha)).toBe(false)
+    expect(partPaid(asha)).toBe(0)
     expect(payerAliasesStore.get()).toEqual([])
     expect(proofLedgerStore.get()).toEqual([])
   })

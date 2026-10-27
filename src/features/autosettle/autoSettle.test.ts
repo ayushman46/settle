@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import { addFriend, expensesStore, saveExpense } from '../../data'
+import { addFriend, createGroup, expensesStore, groupsStore, saveExpense } from '../../data'
+import { groupBalances } from '../../engine/balances'
 import { autoSettleStore } from '../../data/stores'
 import { draft, everyone } from '../../data/testKit'
 import { resetDataForTests } from '../../data/testing'
@@ -75,6 +76,25 @@ describe('settleAlerts', () => {
     const result = settleAlerts([alert(GPAY, 'Riya Sharma paid you ₹420')], AT)
     if (result.applied) undoMatches(result.applied)
     expect(paid(riya)).toBe(false)
+  })
+
+  it('money owed in a group is paid by recording the payment in the group, with Undo', () => {
+    const goa = createGroup({ name: 'Goa', emoji: '🏖️', kind: 'trip', currency: 'INR', memberIds: [riya] })
+    saveExpense(draft({ groupId: goa.id, title: 'Villa', total: 200_000, date: '2026-10-25', participants: everyone(ME_ID, riya) }))
+    const result = settleAlerts([alert(GPAY, 'Riya Sharma paid you ₹1,000')], AT)
+    expect(result.ticked).toEqual([{ friendId: riya, amount: 100_000, titles: ['Goa'] }])
+    const group = () => groupsStore.get().find((g) => g.id === goa.id)
+    expect(group()?.settlements).toEqual([expect.objectContaining({ fromId: riya, toId: ME_ID, amount: 100_000, method: 'upi' })])
+    expect(groupBalances(group()!, expensesStore.get())).toEqual({ [ME_ID]: 0, [riya]: 0 })
+    if (result.applied) undoMatches(result.applied)
+    expect(group()?.settlements).toEqual([])
+  })
+
+  it('part of a share: what was paid is recorded and the rest stays owed', () => {
+    const result = settleAlerts([alert(PHONEPE, 'Received ₹400 from Asha Iyer')], AT)
+    expect(result.waiting).toBe(1)
+    // (A part payment waits for a tap; once confirmed, it's recorded — see the screen test.)
+    expect(expensesStore.get().find((e) => e.id === dinner)?.partPaid).toBeUndefined()
   })
 
   it('waiting payments are let go after two weeks', () => {

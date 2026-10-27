@@ -25,6 +25,8 @@ export interface PayLinkPerson {
   a: Minor
   /** Already settled with the payee. Always set on the payee's own entry (see `pi`). */
   paid?: true
+  /** Not settled yet, but this much of `a` is already paid (a part payment): they pay the rest. */
+  pp?: Minor
 }
 
 export interface PayLinkItem {
@@ -110,6 +112,7 @@ const payloadSchema = z.object({
         n: z.string().check(z.maxLength(L.name.units)),
         a: amount,
         paid: z.optional(z.literal(true)),
+        pp: z.optional(amount),
       }),
     )
     .check(z.maxLength(L.people)),
@@ -174,6 +177,7 @@ function normalizePayload(raw: PayLinkPayload): PayLinkPayload {
       a: clampAmount(person.a),
     }
     if (person.paid === true) out.paid = true
+    else if (typeof person.pp === 'number' && person.pp > 0 && person.pp < out.a) out.pp = clampAmount(person.pp)
     return out
   })
   const upi = raw.to.u ? normalizeUpiId(raw.to.u) : ''
@@ -335,6 +339,7 @@ export function payLinkFromExpense(
     const fallback = id === ME_ID ? friendFallback() : personFallback(i + 1)
     const person: PayLinkPerson = { n: outsideName(id, friendsById, profile, fallback), a: e.shares[id] ?? 0 }
     if (id === e.payerId || e.paidBack[id] !== undefined) person.paid = true
+    else if ((e.partPaid?.[id] ?? 0) > 0) person.pp = e.partPaid?.[id]
     return person
   })
   const upi = e.payerId === ME_ID ? (profile.upiId ?? friendsById[ME_ID]?.upiId ?? null) : (friendsById[e.payerId]?.upiId ?? null)
@@ -367,8 +372,18 @@ export interface PayLinkDebtor {
   /** Index in `payload.p`. */
   index: number
   name: string
+  /** What they pay: their share, less any part already paid. */
   amount: Minor
+  /** Their whole share. */
+  share: Minor
+  /** Already paid of it (a part payment), not yet in full. */
+  paidSoFar: Minor
   paid: boolean
+}
+
+/** What someone in the link still pays: their share less any part paid (all of it once they're settled). */
+function leftToPay(person: PayLinkPerson): Minor {
+  return person.paid ? person.a : Math.max(0, person.a - (person.pp ?? 0))
 }
 
 /** The same link made personal for the person at `index` (opens on their share); null clears it. */
@@ -381,7 +396,9 @@ export function payLinkForPerson(payload: PayLinkPayload, index: number | null):
 export function payLinkDebtors(payload: PayLinkPayload): PayLinkDebtor[] {
   const out: PayLinkDebtor[] = []
   payload.p.forEach((person, index) => {
-    if (index !== payload.pi) out.push({ index, name: person.n, amount: person.a, paid: person.paid === true })
+    if (index !== payload.pi) {
+      out.push({ index, name: person.n, amount: leftToPay(person), share: person.a, paidSoFar: person.paid ? 0 : (person.pp ?? 0), paid: person.paid === true })
+    }
   })
   return out
 }
@@ -398,12 +415,13 @@ export function payLinkProgress(payload: PayLinkPayload): {
   let paidCount = 0
   let peopleCount = 0
   for (const debtor of payLinkDebtors(payload)) {
-    if (debtor.amount <= 0) continue
+    if (debtor.share <= 0) continue
     peopleCount++
     if (debtor.paid) {
-      collected += debtor.amount
+      collected += debtor.share
       paidCount++
     } else {
+      collected += debtor.paidSoFar
       outstanding += debtor.amount
     }
   }
@@ -459,5 +477,6 @@ export function payLinkUpiRequest(payload: PayLinkPayload, personIndex: number):
   const person = payload.p[personIndex]
   const vpa = payload.to.u ? normalizeUpiId(payload.to.u) : ''
   if (!person || personIndex === payload.pi || person.a <= 0 || payload.c !== 'INR' || !isValidUpiId(vpa)) return null
-  return { uri: buildUpiLink({ vpa, payeeName: payload.to.n, amountMinor: person.a, note: payload.t }), vpa, amount: person.a }
+  const amount = leftToPay(person)
+  return { uri: buildUpiLink({ vpa, payeeName: payload.to.n, amountMinor: amount, note: payload.t }), vpa, amount }
 }

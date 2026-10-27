@@ -25,9 +25,9 @@ function payload(extra: Partial<PayLinkPayload> = {}): PayLinkPayload {
 describe('payPeople', () => {
   it('lists everyone who pays the payee back, with a colour by position', () => {
     expect(payPeople(payload())).toEqual([
-      { index: 1, name: 'Riya', amount: 69_150, paid: true, color: 1 },
-      { index: 2, name: 'Sam', amount: 69_150, paid: false, color: 2 },
-      { index: 3, name: 'Neha', amount: 69_150, paid: false, color: 3 },
+      { index: 1, name: 'Riya', amount: 69_150, paidSoFar: 0, paid: true, color: 1 },
+      { index: 2, name: 'Sam', amount: 69_150, paidSoFar: 0, paid: false, color: 2 },
+      { index: 3, name: 'Neha', amount: 69_150, paidSoFar: 0, paid: false, color: 3 },
     ])
   })
 

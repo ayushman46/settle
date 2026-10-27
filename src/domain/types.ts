@@ -139,6 +139,12 @@ export interface Expense {
   bill: BillSnapshot | null
   /** friendId -> epoch ms when they paid the payer back (collection tracking; payer never listed). */
   paidBack: Record<string, number>
+  /**
+   * friendId -> what they've paid so far toward a share not yet paid in full ("₹200 of ₹420").
+   * Always more than 0 and less than their share; paying the rest moves them to `paidBack`.
+   * Stored only when someone has: plain expenses (and every older record) have no `partPaid` key.
+   */
+  partPaid?: Record<string, Minor>
   recurringId: string | null
   source: ExpenseSource
   /**

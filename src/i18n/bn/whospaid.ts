@@ -55,7 +55,7 @@ export const whospaid: Messages = {
   'whospaid.which': '{amount} কে পাঠিয়েছেন?',
   'whospaid.option.one': '{name} · {title}',
   'whospaid.option.several': '{name} · একসঙ্গে {count}টা ভাগ',
-  'whospaid.option.part': '{name} · {title} — {due}-এর অংশ; পুরোটা পেমেন্ট হয়েছে বলে চিহ্নিত করবে',
+  'whospaid.option.part': '{name} · {title} — {due}-এর অংশ; বাকিটা পাওনা থাকবে',
   'whospaid.option.over': '{name} · {title} — {due}-এর বেশি',
   'whospaid.option.none': 'কোনো ভাগের নয়',
   'whospaid.learn': '“{printed}”-কে {name} হিসেবে মনে রাখবে',

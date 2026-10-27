@@ -68,7 +68,11 @@ interface ShareRowProps extends Omit<ShareListProps, 'className'> {
 }
 
 /** What the line says under the name. */
-function statusText(line: ShareLine, payerObject: string, groupName: string | null): string {
+function statusText(line: ShareLine, payerObject: string, groupName: string | null, currency: string): string {
+  if (line.state === 'owes' && line.paidSoFar > 0) {
+    const money = (minor: number) => formatMoney(minor, currency, { trimZeros: true })
+    return t('kit.shares.status.part', { paid: money(line.paidSoFar), left: money(line.share - line.paidSoFar) })
+  }
   switch (line.state) {
     case 'payer':
       return t('kit.shares.status.payer')
@@ -112,7 +116,7 @@ function ShareRow({ line, expense, friend, payer, groupName, onTogglePaid, onPay
           <span className={styles.name}>{name}</span>
           <span className={styles.status}>
             {(paid || line.state === 'payer') && <Check aria-hidden="true" className={styles.statusIcon} strokeWidth={3} />}
-            {statusText(line, payerObject, groupName)}
+            {statusText(line, payerObject, groupName, expense.currency)}
           </span>
         </span>
         <Money

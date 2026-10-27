@@ -6,7 +6,7 @@
  */
 import { setPaidBack, recordSettlement, deleteSettlement } from '../../data'
 import { ME_ID, type Expense, type Group, type Minor, type RecurringTemplate, type Settlement } from '../../domain/types'
-import { groupBalances, isSettledInGroup, simplifyDebts } from '../../engine/balances'
+import { groupBalances, isSettledInGroup, simplifyDebts, stillOwed } from '../../engine/balances'
 import { t } from '../../i18n'
 
 /** One share to tick off: `debtorId` paid back the payer of `expenseId`. */
@@ -69,16 +69,17 @@ export function friendBalance(
     if (friendId === meId || isSettledInGroup(e, groups)) continue
     let amount = 0
     let mark: PaidBackMark | null = null
+    // What's still owed: a share, less any part of it already paid.
     if (e.payerId === meId) {
-      const share = e.shares[friendId] ?? 0
-      if (share > 0 && e.paidBack[friendId] === undefined) {
-        amount = share
+      const owed = stillOwed(e, friendId)
+      if (owed > 0) {
+        amount = owed
         mark = { expenseId: e.id, debtorId: friendId }
       }
     } else if (e.payerId === friendId) {
-      const share = e.shares[meId] ?? 0
-      if (share > 0 && e.paidBack[meId] === undefined) {
-        amount = -share
+      const owed = stillOwed(e, meId)
+      if (owed > 0) {
+        amount = -owed
         mark = { expenseId: e.id, debtorId: meId }
       }
     }

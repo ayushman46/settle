@@ -33,6 +33,15 @@ function shareOf(e: Pick<Expense, 'shares'>, id: string): Minor {
   return typeof v === 'number' && Number.isFinite(v) ? v : 0
 }
 
+/**
+ * What `id` still owes the payer on a standalone expense: their share, less what they've paid of it
+ * (`partPaid`); 0 once they're ticked off as paid back.
+ */
+export function stillOwed(e: Pick<Expense, 'shares' | 'paidBack' | 'partPaid'>, id: string): Minor {
+  if (e.paidBack[id] !== undefined) return 0
+  return Math.max(0, shareOf(e, id) - (e.partPaid?.[id] ?? 0))
+}
+
 /** One expense's effect on everyone: payer +(total − own share), everyone else −share. Σ === 0. */
 export function expenseNet(e: Expense): Record<string, Minor> {
   const net: Record<string, Minor> = {}
@@ -141,13 +150,13 @@ export function overallSummary(
     if (isSettledInGroup(e, groups)) continue
     const map = netsIn(e.currency)
     if (e.payerId === meId) {
-      for (const [id, share] of Object.entries(e.shares)) {
-        if (id === meId || share <= 0 || e.paidBack[id] !== undefined) continue
-        add(map, id, share)
+      for (const id of Object.keys(e.shares)) {
+        const owed = id === meId ? 0 : stillOwed(e, id)
+        if (owed > 0) add(map, id, owed)
       }
     } else {
-      const mine = shareOf(e, meId)
-      if (mine > 0 && e.paidBack[meId] === undefined) add(map, e.payerId, -mine)
+      const mine = stillOwed(e, meId)
+      if (mine > 0) add(map, e.payerId, -mine)
     }
   }
 
@@ -203,6 +212,8 @@ export function collectProgress(e: Expense): {
     if (e.paidBack[id] !== undefined) {
       collected += share
       paidCount += 1
+    } else {
+      collected += share - stillOwed(e, id)
     }
   }
   return { collected, outstanding: total - collected, total, paidCount, peopleCount }
@@ -234,6 +245,6 @@ export function expenseStanding(e: Expense, meId: string, groups: readonly Group
     const progress = collectProgress(e)
     return { role, myShare, net, outstanding: progress.outstanding, pending: progress.peopleCount - progress.paidCount }
   }
-  const outstanding = role === 'owe' && e.paidBack[meId] === undefined ? -myShare : 0
+  const outstanding = role === 'owe' ? -stillOwed(e, meId) : 0
   return { role, myShare, net, outstanding: outstanding === 0 ? 0 : outstanding, pending: 0 }
 }

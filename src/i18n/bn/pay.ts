@@ -28,6 +28,7 @@ export const pay = {
   // One person's share.
   'pay.panel.notYou.cta': '{name} নন? আপনার নাম বেছে নিন',
   'pay.panel.share.title': '{name}-এর ভাগ',
+  'pay.panel.partPaid': '{share}-এর মধ্যে {paid} আগেই দেওয়া — এটা বাকিটা',
   'pay.panel.paid.title': 'আপনার হিসাব মিটে গেছে',
   'pay.panel.paid.body': '{name} আপনার ভাগ দেওয়া হয়েছে বলে চিহ্নিত করেছেন।',
   'pay.panel.reveal.cta': 'তবু পেমেন্টের বিবরণ দেখান',

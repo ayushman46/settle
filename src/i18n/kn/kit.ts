@@ -82,6 +82,7 @@ export const kit = {
   'kit.shares.status.paid': '{name} ಅವರಿಗೆ ವಾಪಸ್ ಕೊಟ್ಟಿದ್ದಾರೆ',
   'kit.shares.status.youOwe': 'ನೀವು {name} ಅವರಿಗೆ ಕೊಡಬೇಕು',
   'kit.shares.status.owes': '{name} ಅವರಿಗೆ ಕೊಡಬೇಕು',
+  'kit.shares.status.part': '{paid} ಪಾವತಿಸಿದರು · {left} ಬಾಕಿ',
   'kit.shares.status.zero': 'ಕೊಡಲು ಏನೂ ಇಲ್ಲ',
   'kit.shares.status.group': '{group} ನಲ್ಲಿ ಚುಕ್ತಾ ಆಗುತ್ತದೆ',
   'kit.shares.status.groupUnnamed': 'ಗುಂಪಿನಲ್ಲಿ ಚುಕ್ತಾ ಆಗುತ್ತದೆ',

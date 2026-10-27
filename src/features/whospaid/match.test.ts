@@ -5,6 +5,7 @@ const payer = (friendId: string, name: string, extra: Partial<Payer> = {}): Paye
 const due = (friendId: string, rupees: number, expenseId = 'goa', since = '2026-10-20'): Due => ({
   id: `${expenseId}:${friendId}`,
   expenseId,
+  groupId: null,
   friendId,
   amount: Math.round(rupees * 100),
   title: expenseId,

@@ -25,6 +25,7 @@ export const pay = {
   // One person's share.
   'pay.panel.notYou.cta': '{name} కాదా? మీ పేరు ఎంచుకోండి',
   'pay.panel.share.title': '{name} వాటా',
+  'pay.panel.partPaid': '{share}లో {paid} ఇప్పటికే చెల్లించారు — ఇది మిగతాది',
   'pay.panel.paid.title': 'లెక్క సమానంగా ఉంది',
   'pay.panel.paid.body': 'మీ వాటాను {name} చెల్లించినట్టు గుర్తించారు.',
   'pay.panel.reveal.cta': 'ఏమైనా చెల్లింపు వివరాలు చూపించు',

@@ -40,6 +40,8 @@ export interface ShareLine {
   items: ShareItemLine[]
   /** Bills only: their part of tax and charges (+) or discounts (−) — `share` minus their items. */
   extras: Minor
+  /** Still owing: what they've paid of it so far (`Expense.partPaid`), else 0. */
+  paidSoFar: Minor
 }
 
 /** Everyone in the split, payer first, with what they owe and where it stands. */
@@ -59,7 +61,8 @@ export function shareLines(e: Expense, opts: { settledInGroup?: boolean } = {}):
               : 'owes'
     const lines = items?.get(friendId) ?? []
     const itemsTotal = lines.reduce((sum, line) => sum + line.amount, 0)
-    return { friendId, share, state, items: lines, extras: items ? share - itemsTotal : 0 }
+    const paidSoFar = state === 'owes' ? Math.min(e.partPaid?.[friendId] ?? 0, share) : 0
+    return { friendId, share, state, items: lines, extras: items ? share - itemsTotal : 0, paidSoFar }
   })
 }
 

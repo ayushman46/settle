@@ -4,7 +4,7 @@
  * (whospaid/match.ts): a payment it is sure of is ticked at once, with Undo; one that may be
  * someone's waits for a tap ("Payments to check"); one that fits nobody is let go.
  */
-import { expensesStore, friendsStore } from '../../data'
+import { expensesStore, friendsStore, groupsStore } from '../../data'
 import { autoSettleStore, payerAliasesStore, type AlertCredit } from '../../data/stores'
 import type { Minor } from '../../domain/types'
 import { matchPayments, type Credit, type MatchOption } from '../whospaid/match'
@@ -67,7 +67,7 @@ export function settleAlerts(alerts: readonly RawAlert[], now: number = Date.now
     return { ticked: [], applied: null, waiting: pending.length }
   }
 
-  const result = matchPayments(fresh.map(toCredit), openDues(expensesStore.get()), payersFor(friendsStore.get(), payerAliasesStore.get()), knownReferences())
+  const result = matchPayments(fresh.map(toCredit), openDues(expensesStore.get(), groupsStore.get()), payersFor(friendsStore.get(), payerAliasesStore.get()), knownReferences())
   const byId = new Map(fresh.map((c) => [c.id, c]))
   const chosen: Array<{ credit: Credit; option: MatchOption }> = []
   const waiting: AlertCredit[] = []

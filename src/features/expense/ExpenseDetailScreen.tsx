@@ -272,7 +272,7 @@ function ExpenseDetail({ expense, onDeleting }: ExpenseDetailProps) {
           open={nudge.open}
           onClose={() => setNudge({ ...nudge, open: false })}
           friend={friendsById[nudge.friendId] ?? null}
-          amount={expense.shares[nudge.friendId] ?? 0}
+          amount={Math.max(0, (expense.shares[nudge.friendId] ?? 0) - (expense.partPaid?.[nudge.friendId] ?? 0))}
           currency={expense.currency}
           title={expense.title}
           link={link}

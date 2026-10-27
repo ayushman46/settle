@@ -117,9 +117,10 @@ describe('Who’s paid? — payments Auto-settle wasn’t sure of', () => {
     autoSettleStore.set({ pending: [{ id: 'p1', amount: 40_000, date: '2026-10-28', at: AT, name: 'Asha Iyer', vpa: null, utr: null }], recent: [] })
     const { user } = renderAt('/app/whos-paid?from=alerts', <WhosPaidScreen />)
     const check = await screen.findByRole('region', { name: 'Check these (1)' })
-    await user.click(within(check).getByRole('radio', { name: 'Asha · Goa dinner — part of ₹420; marks it paid' }))
+    await user.click(within(check).getByRole('radio', { name: 'Asha · Goa dinner — part of ₹420; the rest stays owed' }))
     await user.click(screen.getByRole('button', { name: 'Mark 1 as paid' }))
-    expect(paid(asha)).toBe(true)
+    // ₹400 of ₹420 paid; ₹20 still owed.
+    expect(expensesStore.get().find((e) => e.id === dinner)?.partPaid).toEqual({ [asha]: 40_000 })
     expect(autoSettleStore.get().pending).toEqual([])
   })
 

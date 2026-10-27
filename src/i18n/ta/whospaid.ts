@@ -55,7 +55,7 @@ export const whospaid: Messages = {
   'whospaid.which': '{amount} யார் அனுப்பினார்?',
   'whospaid.option.one': '{name} · {title}',
   'whospaid.option.several': '{name} · ஒரே நேரத்தில் {count} பிரிப்புகள்',
-  'whospaid.option.part': '{name} · {title} — {due}-இன் ஒரு பகுதி; முழுமையாகச் செலுத்தியதாகக் குறிக்கும்',
+  'whospaid.option.part': '{name} · {title} — {due}-இன் ஒரு பகுதி; மீதி நிலுவையில் இருக்கும்',
   'whospaid.option.over': '{name} · {title} — {due}-ஐ விட அதிகம்',
   'whospaid.option.none': 'பிரிப்புக்கானது அல்ல',
   'whospaid.learn': '“{printed}”-ஐ {name} என நினைவில் வைக்கும்',

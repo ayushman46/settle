@@ -55,7 +55,7 @@ export const whospaid: Messages = {
   'whospaid.which': '{amount} कोणी पाठवले?',
   'whospaid.option.one': '{name} · {title}',
   'whospaid.option.several': '{name} · एकदम {count} वाटण्या',
-  'whospaid.option.part': '{name} · {title} — {due} चा भाग; पूर्ण पैसे दिले म्हणून मार्क करेल',
+  'whospaid.option.part': '{name} · {title} — {due} चा भाग; उरलेले बाकी राहील',
   'whospaid.option.over': '{name} · {title} — {due} पेक्षा जास्त',
   'whospaid.option.none': 'वाटणीचे नाही',
   'whospaid.learn': '“{printed}” ला {name} म्हणून लक्षात ठेवेल',

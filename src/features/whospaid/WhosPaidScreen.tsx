@@ -2,7 +2,7 @@ import { useEffect, useId, useMemo, useRef, useState, type ChangeEvent, type Rea
 import { Check, ChevronDown, ClipboardPaste, FileSpreadsheet, Images, ShieldCheck, Sparkles } from 'lucide-react'
 import { goBack, navigate, useSearchParams } from '../../app/router'
 import { ActionBar, Banner, Button, Card, Chip, EmptyState, Money, PageTitle, Screen, Skeleton, SuccessCheck, TopBar, useToast } from '../../components'
-import { setPaidBack, useExpenses, useFriends, useFriendsById, useStore } from '../../data'
+import { useExpenses, useFriends, useFriendsById, useGroups, useStore } from '../../data'
 import { payerAliasesStore } from '../../data/stores'
 import { today } from '../../engine/dates'
 import { useT, type MessageKey } from '../../i18n'
@@ -16,7 +16,7 @@ import { dropPending, pendingCredits } from '../autosettle/autoSettle'
 import { shortDate } from '../recurring/recurringLabels'
 import { matchPayments, type Credit, type MatchOption, type Proposal, type Reason } from './match'
 import { creditsFromSms } from './sms'
-import { applyMatches, knownReferences, MAX_SCREENSHOTS, mergeScreenshots, openDues, payersFor, readHistoryScreenshot, undoMatches, type Applied } from './sources'
+import { applyMatches, knownReferences, MAX_SCREENSHOTS, mergeScreenshots, openDues, payersFor, readHistoryScreenshot, settleDue, undoMatches, type Applied } from './sources'
 import { parseDelimited, parseHtmlTable, readStatement } from './statement'
 import { readXlsx } from './xlsx'
 import styles from './WhosPaid.module.css'
@@ -67,7 +67,8 @@ export function WhosPaidScreen() {
   const friends = useFriends()
   const friendsById = useFriendsById()
   const aliases = useStore(payerAliasesStore, (all) => all)
-  const dues = useMemo(() => openDues(expenses), [expenses])
+  const groups = useGroups()
+  const dues = useMemo(() => openDues(expenses, groups), [expenses, groups])
   const params = useSearchParams()
   const shareId = params.get('k')
   // The payments Auto-settle wasn't sure of (from "Payments to check").
@@ -209,12 +210,11 @@ export function WhosPaidScreen() {
                     size="sm"
                     variant="tonal"
                     onClick={() => {
-                      const theirs = dues.filter((d) => d.friendId === friendId)
-                      for (const due of theirs) setPaidBack(due.expenseId, due.friendId, true)
+                      const undos = dues.filter((d) => d.friendId === friendId).map((due) => settleDue(due, today(), 'cash'))
                       haptic('success')
                       toast(t('whospaid.cash.toast', { name: nameOf(friendId) }), {
                         tone: 'success',
-                        action: { label: t('whospaid.undo'), onAction: () => theirs.forEach((due) => setPaidBack(due.expenseId, due.friendId, false)) },
+                        action: { label: t('whospaid.undo'), onAction: () => [...undos].reverse().forEach((undo) => undo()) },
                       })
                     }}
                   >

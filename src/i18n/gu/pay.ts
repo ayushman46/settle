@@ -23,6 +23,7 @@ export const pay = {
 
   'pay.panel.notYou.cta': '{name} નથી? તમારું નામ પસંદ કરો',
   'pay.panel.share.title': '{name} નો હિસ્સો',
+  'pay.panel.partPaid': '{share}માંથી {paid} પહેલેથી આપ્યા — આ બાકીનું છે',
   'pay.panel.paid.title': 'તમે બરાબર છો',
   'pay.panel.paid.body': '{name} એ તમારો હિસ્સો ચૂકવાયેલો તરીકે નોંધ્યો છે.',
   'pay.panel.reveal.cta': 'તોપણ ચુકવણીની વિગતો બતાવો',

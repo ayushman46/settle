@@ -90,6 +90,7 @@ export const kit = {
   'kit.shares.status.paid': '{name} அவர்களுக்குத் திருப்பிச் செலுத்தியது',
   'kit.shares.status.youOwe': 'நீங்கள் {name} அவர்களுக்குத் தர வேண்டும்',
   'kit.shares.status.owes': '{name} தர வேண்டும்',
+  'kit.shares.status.part': '{paid} செலுத்தினார் · {left} மீதம்',
   'kit.shares.status.zero': 'செலுத்த எதுவுமில்லை',
   'kit.shares.status.group': '{group} இல் தீர்க்கப்படும்',
   'kit.shares.status.groupUnnamed': 'குழுவில் தீர்க்கப்படும்',

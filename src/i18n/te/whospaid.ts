@@ -55,7 +55,7 @@ export const whospaid: Messages = {
   'whospaid.which': '{amount} ఎవరు పంపారు?',
   'whospaid.option.one': '{name} · {title}',
   'whospaid.option.several': '{name} · ఒకేసారి {count} పంపకాలు',
-  'whospaid.option.part': '{name} · {title} — {due}లో భాగం; పూర్తిగా చెల్లించినట్టు మార్క్ చేస్తుంది',
+  'whospaid.option.part': '{name} · {title} — {due}లో భాగం; మిగతాది బాకీగా ఉంటుంది',
   'whospaid.option.over': '{name} · {title} — {due} కంటే ఎక్కువ',
   'whospaid.option.none': 'పంపకానికి కాదు',
   'whospaid.learn': '“{printed}”ని {name}గా గుర్తుంచుకుంటుంది',

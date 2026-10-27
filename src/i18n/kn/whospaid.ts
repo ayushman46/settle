@@ -55,7 +55,7 @@ export const whospaid: Messages = {
   'whospaid.which': '{amount} ಯಾರು ಕಳುಹಿಸಿದರು?',
   'whospaid.option.one': '{name} · {title}',
   'whospaid.option.several': '{name} · ಒಮ್ಮೆಗೇ {count} ಹಂಚಿಕೆಗಳು',
-  'whospaid.option.part': '{name} · {title} — {due}ರ ಭಾಗ; ಪೂರ್ತಿ ಪಾವತಿಸಿದೆ ಎಂದು ಗುರುತಿಸುತ್ತದೆ',
+  'whospaid.option.part': '{name} · {title} — {due}ರ ಭಾಗ; ಉಳಿದದ್ದು ಬಾಕಿ ಇರುತ್ತದೆ',
   'whospaid.option.over': '{name} · {title} — {due}ಕ್ಕಿಂತ ಹೆಚ್ಚು',
   'whospaid.option.none': 'ಹಂಚಿಕೆಗಾಗಿ ಅಲ್ಲ',
   'whospaid.learn': '“{printed}” ಅನ್ನು {name} ಎಂದು ನೆನಪಿಟ್ಟುಕೊಳ್ಳುತ್ತದೆ',

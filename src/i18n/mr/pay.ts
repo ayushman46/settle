@@ -28,6 +28,7 @@ export const pay = {
   // One person's share.
   'pay.panel.notYou.cta': '{name} नाही? तुमचे नाव निवडा',
   'pay.panel.share.title': '{name} यांचा हिस्सा',
+  'pay.panel.partPaid': '{share} पैकी {paid} आधीच दिले — हे उरलेले',
   'pay.panel.paid.title': 'तुमचा हिशोब मिटला आहे',
   'pay.panel.paid.body': '{name} यांनी तुमचा हिस्सा दिला म्हणून चिन्हांकित केले आहे.',
   'pay.panel.reveal.cta': 'तरीही पेमेंट तपशील दाखवा',

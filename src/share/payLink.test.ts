@@ -542,11 +542,24 @@ describe('personal links', () => {
 describe('reading a payload', () => {
   it('lists debtors without the payee', () => {
     expect(payLinkDebtors(payload())).toEqual([
-      { index: 1, name: 'Riya', amount: 69_150, paid: true },
-      { index: 2, name: 'Sam', amount: 69_150, paid: false },
-      { index: 3, name: 'Neha Sharma', amount: 69_150, paid: false },
+      { index: 1, name: 'Riya', amount: 69_150, share: 69_150, paidSoFar: 0, paid: true },
+      { index: 2, name: 'Sam', amount: 69_150, share: 69_150, paidSoFar: 0, paid: false },
+      { index: 3, name: 'Neha Sharma', amount: 69_150, share: 69_150, paidSoFar: 0, paid: false },
     ])
     expect(payLinkDebtors(payload({ pi: undefined }))).toHaveLength(4)
+  })
+
+  it('someone who paid part of their share pays the rest (and the link says what was paid)', async () => {
+    const base = payload()
+    const part = { ...base, p: base.p.map((person, i) => (i === 2 ? { ...person, pp: 20_000 } : person)) }
+    const sam = payLinkDebtors(part).find((d) => d.name === 'Sam')
+    expect(sam).toMatchObject({ amount: 49_150, share: 69_150, paidSoFar: 20_000, paid: false })
+    expect(payLinkProgress(part)).toMatchObject({ collected: 69_150 + 20_000, outstanding: 49_150 + 69_150 })
+    expect(payLinkUpiRequest(part, 2)?.amount).toBe(49_150)
+    // Nonsense part payments are dropped: none on someone paid, none of the whole share or more.
+    const odd = { ...base, p: base.p.map((person, i) => (i === 1 ? { ...person, pp: 100 } : i === 2 ? { ...person, pp: 69_150 } : person)) }
+    expect((await decodePayLink(await encodePayLink(odd, ORIGIN)))?.p.map((person) => person.pp)).toEqual([undefined, undefined, undefined, undefined])
+    expect((await decodePayLink(await encodePayLink(part, ORIGIN)))?.p[2]?.pp).toBe(20_000)
   })
 
   it('totals what is collected and outstanding, skipping people who owe nothing', () => {

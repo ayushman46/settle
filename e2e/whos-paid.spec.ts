@@ -69,7 +69,7 @@ test.describe("who's paid?", () => {
     const ticked = page.getByRole('region', { name: 'Ticked for you (1)' })
     await expect(ticked.getByRole('checkbox', { name: 'Riya Sharma · Goa dinner' })).toBeChecked()
     const which = page.getByRole('radiogroup', { name: 'Who paid ₹400?' })
-    await which.getByRole('radio', { name: 'Asha · Goa dinner — part of ₹420; marks it paid' }).click()
+    await which.getByRole('radio', { name: 'Asha · Goa dinner — part of ₹420; the rest stays owed' }).click()
     await expect(page.getByRole('button', { name: 'Not matched (1)', expanded: false })).toBeVisible()
     await expect(page.getByText('1 payment you made is left out.')).toBeVisible()
     await expectAccessible(page)
@@ -82,17 +82,20 @@ test.describe("who's paid?", () => {
 
     await page.getByRole('button', { name: 'Mark 2 as paid' }).click()
     await expect(page.getByRole('heading', { level: 1, name: '2 payments ticked off' })).toBeVisible()
-    await expect(page.getByText('1 person still owes you')).toBeVisible()
+    // Sam's ₹420, and the ₹20 Asha still owes (she paid ₹400).
+    await expect(page.getByText('2 people still owe you')).toBeVisible()
     await expectAccessible(page)
 
-    await page.getByRole('button', { name: 'Paid in cash' }).click()
+    await page.getByRole('listitem').filter({ hasText: 'Sam' }).getByRole('button', { name: 'Paid in cash' }).click()
     await expect(page.getByText('Sam marked paid in cash')).toBeVisible()
-    await expect(page.getByText('1 person still owes you')).toHaveCount(0)
+    await expect(page.getByText('1 person still owes you')).toBeVisible()
 
-    // Everyone has paid: the dinner says so.
+    // The dinner says where everyone stands: Asha paid ₹400 of her ₹420 and owes the rest.
     await page.goto('/app/expense/goa-dinner')
     await expect(page.getByRole('heading', { level: 1, name: 'Goa dinner' })).toBeVisible()
-    await expect(page.getByRole('button', { name: /^Who’s paid. Tick off who paid/ })).toHaveCount(0)
+    await expect(page.getByText('₹400 paid · ₹20 left')).toBeVisible()
+    await expect(page.getByText('₹1,240 collected')).toBeVisible()
+    await expect(page.getByText('You’re owed ₹20')).toBeVisible()
   })
 
   test('history screenshots: read by the AI, the overlap counted once', async ({ page, api }) => {

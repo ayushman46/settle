@@ -72,6 +72,9 @@ export function PayPanel({ payload, person, onChangePerson, headingRef }: PayPan
         </h2>
         <Money value={person.amount} currency={payload.c} size="xl" trimZeros className={styles.amount} />
         {words && <p className={styles.words}>{words}</p>}
+        {person.paidSoFar > 0 && !person.paid && (
+          <p className={styles.words}>{t('pay.panel.partPaid', { paid: formatMoney(person.paidSoFar, payload.c, { trimZeros: true }), share: formatMoney(person.amount + person.paidSoFar, payload.c, { trimZeros: true }) })}</p>
+        )}
       </div>
 
       {person.paid && !reveal && (

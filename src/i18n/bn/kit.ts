@@ -96,6 +96,7 @@ export const kit = {
   'kit.shares.status.paid': '{name}-কে ফেরত দিয়েছেন',
   'kit.shares.status.youOwe': 'আপনি {name}-কে দেবেন',
   'kit.shares.status.owes': '{name}-এর দেনা',
+  'kit.shares.status.part': '{paid} দিয়েছেন · {left} বাকি',
   'kit.shares.status.zero': 'দেওয়ার কিছু নেই',
   'kit.shares.status.group': '{group}-এ মিটবে',
   'kit.shares.status.groupUnnamed': 'গ্রুপে মিটবে',

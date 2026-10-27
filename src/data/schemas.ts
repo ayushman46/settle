@@ -506,10 +506,26 @@ const expenseShape = z.object({
   groupId: z.catch(z.nullable(id), null),
   bill: z.catch(z.nullable(billShape), null),
   paidBack: z.catch(z.record(z.string(), z.number()), {}),
+  partPaid: z.optional(z.unknown()),
   recurringId: z.catch(z.nullable(id), null),
   source: z.catch(z.enum(EXPENSE_SOURCES as readonly ExpenseSource[]), 'manual'),
   fx: z.optional(z.unknown()),
 })
+
+/**
+ * Part payments that still make sense: someone (not the payer) who paid 1 … share − 1. Kept after
+ * they're ticked off too, so un-ticking (Undo) leaves them owing the rest, not their whole share.
+ */
+export function cleanPartPaid(raw: unknown, e: Pick<Expense, 'payerId' | 'shares'>): Record<string, number> | null {
+  if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) return null
+  const out: Record<string, number> = {}
+  for (const [friendId, value] of Object.entries(raw)) {
+    const share = e.shares[friendId] ?? 0
+    if (friendId === e.payerId) continue
+    if (typeof value === 'number' && Number.isInteger(value) && value > 0 && value < share) out[friendId] = value
+  }
+  return Object.keys(out).length > 0 ? out : null
+}
 
 export const expenseSchema: ZodType<Expense> = repaired(expenseShape, (e) => {
   if (!isValidTotal(e.total)) return null
@@ -558,6 +574,8 @@ export const expenseSchema: ZodType<Expense> = repaired(expenseShape, (e) => {
   }
   // Stored only when set, so plain expenses (and everything saved before trip currency) keep their shape.
   if (fx) out.fx = fx
+  const partPaid = cleanPartPaid(e.partPaid, out)
+  if (partPaid) out.partPaid = partPaid
   return out
 })
 

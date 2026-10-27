@@ -44,11 +44,14 @@ export interface Credit {
   sure: boolean
 }
 
-/** One thing someone owes the collector: their share of one split. */
+/** One thing someone owes the collector: what's left of their share of a split, or what they owe in a group. */
 export interface Due {
-  /** `${expenseId}:${friendId}`. */
+  /** `${expenseId}:${friendId}`, or `group:${groupId}:${friendId}`. */
   id: string
+  /** The split ('' for a group). */
   expenseId: string
+  /** The group whose balances it is (settled by recording a payment there), or null for a split. */
+  groupId: string | null
   friendId: string
   /** Paise. */
   amount: Minor

@@ -96,6 +96,7 @@ export const kit = {
   'kit.shares.status.paid': 'Paid {name} back',
   'kit.shares.status.youOwe': 'You owe {name}',
   'kit.shares.status.owes': 'Owes {name}',
+  'kit.shares.status.part': '{paid} paid · {left} left',
   'kit.shares.status.zero': 'Nothing to pay',
   'kit.shares.status.group': 'Settles in {group}',
   'kit.shares.status.groupUnnamed': 'Settles in the group',

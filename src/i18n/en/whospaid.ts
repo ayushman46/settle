@@ -56,7 +56,7 @@ export const whospaid = {
   'whospaid.which': 'Who paid {amount}?',
   'whospaid.option.one': '{name} · {title}',
   'whospaid.option.several': '{name} · {count} splits at once',
-  'whospaid.option.part': '{name} · {title} — part of {due}; marks it paid',
+  'whospaid.option.part': '{name} · {title} — part of {due}; the rest stays owed',
   'whospaid.option.over': '{name} · {title} — more than {due}',
   'whospaid.option.none': 'Not for a split',
   'whospaid.learn': 'remembers “{printed}” as {name}',

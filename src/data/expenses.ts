@@ -1,5 +1,5 @@
 /** Saving, editing and ticking off expenses. Shares always come from the engine, never from the UI. */
-import type { Expense, SplitMode } from '../domain/types'
+import type { Expense, Minor, SplitMode } from '../domain/types'
 import { categoryFromText, isCategoryId } from '../engine/categories'
 import { isIsoDate, today } from '../engine/dates'
 import { convertMinor } from '../engine/fx'
@@ -11,6 +11,7 @@ import {
   cleanCurrency,
   cleanFx,
   cleanMultiline,
+  cleanPartPaid,
   isOneToOne,
   cleanText,
   EXPENSE_SOURCES,
@@ -118,6 +119,21 @@ function carriedPaidBack(existing: Expense, next: Pick<Expense, 'payerId' | 'sha
   return cleanPaidBack(out, next)
 }
 
+/**
+ * Part payments carried over an edit: kept while they're still less than the (new) share; someone
+ * who has now paid it all is ticked off as paid back instead.
+ */
+function carriedPartPaid(existing: Expense, next: Pick<Expense, 'payerId' | 'shares'>, paidBack: Record<string, number>, now: number): Record<string, number> | null {
+  const out: Record<string, number> = {}
+  for (const [id, paid] of Object.entries(existing.partPaid ?? {})) {
+    const share = next.shares[id] ?? 0
+    if (id === next.payerId || !(share > 0)) continue
+    if (paid >= share) paidBack[id] ??= now
+    else out[id] = paid
+  }
+  return cleanPartPaid(out, next)
+}
+
 /** The first problem `saveExpense` would throw for, or null when the draft can be saved. */
 export function expenseDraftIssue(draft: ExpenseDraft): ExpenseErrorCode | null {
   try {
@@ -141,17 +157,18 @@ export function saveExpense(draft: ExpenseDraft): Expense {
   const now = Date.now()
   const list = expensesStore.get()
   const existing = draft.id ? list.find((e) => e.id === draft.id) : undefined
+  const paidBack = draft.paidBack ? cleanPaidBack(draft.paidBack, expense) : existing ? carriedPaidBack(existing, expense) : {}
+  const partPaid = draft.partPaid ? cleanPartPaid(draft.partPaid, expense) : existing && !draft.paidBack ? carriedPartPaid(existing, expense, paidBack, now) : null
   const saved: Expense = {
     id: existing?.id ?? draft.id ?? newId(),
     createdAt: existing?.createdAt ?? now,
     updatedAt: now,
     ...expense,
-    paidBack: draft.paidBack
-      ? cleanPaidBack(draft.paidBack, expense)
-      : existing
-        ? carriedPaidBack(existing, expense)
-        : {},
+    paidBack,
   }
+  delete saved.partPaid
+  // Stored only when someone has paid part (see `Expense.partPaid`).
+  if (partPaid) saved.partPaid = partPaid
   expensesStore.set(existing ? list.map((e) => (e.id === saved.id ? saved : e)) : [saved, ...list])
   touchFriends([saved.payerId, ...saved.participants.map((p) => p.friendId)], now)
   if (saved.groupId) touchGroup(saved.groupId, now)
@@ -198,6 +215,29 @@ export function setPaidBack(expenseId: string, friendId: string, paid: boolean):
   if (paid) paidBack[friendId] = Date.now()
   else delete paidBack[friendId]
   return replaceExpense({ ...e, paidBack, updatedAt: Date.now() })
+}
+
+/**
+ * Records a payment toward someone's share ("₹200 of ₹420"). Paying the rest (or more) ticks them
+ * off as paid back. Returns the expense, whether they've now paid it all, and an undo that puts the
+ * expense back as it was. Nothing changes for the payer, someone with no share, or someone ticked off.
+ */
+export function recordPartPayment(expenseId: string, friendId: string, amount: Minor): { expense: Expense; complete: boolean; undo: () => void } {
+  const before = requireExpense(expenseId)
+  const share = before.shares[friendId] ?? 0
+  if (friendId === before.payerId || !(share > 0) || before.paidBack[friendId] !== undefined || !(amount > 0)) {
+    return { expense: before, complete: before.paidBack[friendId] !== undefined, undo: () => undefined }
+  }
+  const now = Date.now()
+  const paid = (before.partPaid?.[friendId] ?? 0) + amount
+  const partPaid: Record<string, number> = { ...before.partPaid }
+  delete partPaid[friendId]
+  const complete = paid >= share
+  if (!complete) partPaid[friendId] = paid
+  const next: Expense = { ...before, paidBack: complete ? { ...before.paidBack, [friendId]: now } : before.paidBack, updatedAt: now }
+  delete next.partPaid
+  if (Object.keys(partPaid).length > 0) next.partPaid = partPaid
+  return { expense: replaceExpense(next), complete, undo: () => void replaceExpense(before) }
 }
 
 /** Ticks everyone who owes something on an expense as paid back (or clears every tick). */

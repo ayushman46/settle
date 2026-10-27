@@ -62,6 +62,7 @@ export {
   deleteExpense,
   duplicateExpenseDraft,
   expenseDraftIssue,
+  recordPartPayment,
   restoreExpense,
   saveExpense,
   setAllPaidBack,
