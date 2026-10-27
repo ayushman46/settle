@@ -10,6 +10,7 @@ import { currencySymbol } from '../../lib/money'
 import { MAX_NAME_LENGTH, nameKey, normalizeName } from '../../lib/people'
 import { isPhoneUpiId, isValidUpiId, normalizeUpiId } from '../../lib/upi'
 import { CurrencySheet } from '../bill/CurrencySheet'
+import { RestoreBackup } from './RestoreBackup'
 import styles from './OnboardingScreen.module.css'
 
 export interface AboutYou {
@@ -168,6 +169,7 @@ export function AboutYouStep({ onBack, onDone, onSkip }: AboutYouStepProps) {
         <ShieldCheck aria-hidden="true" className={styles.privacyIcon} />
         <span>{t('onboarding.about.privacy', { brand: BRAND.name })}</span>
       </p>
+      <RestoreBackup />
       <CurrencySheet
         open={picking}
         currency={currency}

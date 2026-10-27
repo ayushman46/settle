@@ -34,4 +34,6 @@ export const onboarding = {
   'onboarding.about.currency.sheet.title': 'તમારી કરન્સી',
   'onboarding.about.currency.sheet.body': 'નવી સ્પ્લિટ આ કરન્સીમાં શરૂ થશે. કોઈ પણ સ્પ્લિટ માટે બીજી પસંદ કરી શકો છો.',
   'onboarding.about.privacy': 'સાઇન-અપ નહીં, જાહેરાત નહીં. તમે ઉમેરેલું બધું આ ફોન પર જ રહે છે — {brand} પાસે કોઈ ડેટાબેઝ નથી.',
+  'onboarding.restore.cta': 'ફોન બદલો છો? બૅકઅપ પાછો લાવો',
+  'onboarding.restore.done': 'ફરી સ્વાગત છે — બધું અહીં છે',
 } as const satisfies Messages

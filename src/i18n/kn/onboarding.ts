@@ -34,4 +34,6 @@ export const onboarding = {
   'onboarding.about.currency.sheet.title': 'ನಿಮ್ಮ ಕರೆನ್ಸಿ',
   'onboarding.about.currency.sheet.body': 'ಹೊಸ ಸ್ಪ್ಲಿಟ್‌ಗಳು ಈ ಕರೆನ್ಸಿಯಲ್ಲಿ ಶುರುವಾಗುತ್ತವೆ. ಪ್ರತಿ ಸ್ಪ್ಲಿಟ್‌ಗೂ ಬೇರೆ ಆಯ್ಕೆ ಮಾಡಬಹುದು.',
   'onboarding.about.privacy': 'ಸೈನ್-ಅಪ್ ಇಲ್ಲ, ಜಾಹೀರಾತು ಇಲ್ಲ. ನೀವು ಸೇರಿಸುವ ಎಲ್ಲವೂ ಈ ಫೋನ್‌ನಲ್ಲೇ ಇರುತ್ತದೆ — {brand} ಬಳಿ ಯಾವ ಡೇಟಾಬೇಸೂ ಇಲ್ಲ.',
+  'onboarding.restore.cta': 'ಫೋನ್ ಬದಲಿಸುತ್ತಿದ್ದೀರಾ? ಬ್ಯಾಕಪ್ ಮರುಸ್ಥಾಪಿಸಿ',
+  'onboarding.restore.done': 'ಮರಳಿ ಸ್ವಾಗತ — ಎಲ್ಲವೂ ಇಲ್ಲಿದೆ',
 } as const satisfies Messages

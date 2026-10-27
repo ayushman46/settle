@@ -41,4 +41,6 @@ export const onboarding = {
   'onboarding.about.currency.sheet.title': 'तुमचे चलन',
   'onboarding.about.currency.sheet.body': 'नवीन वाटण्या या चलनात सुरू होतील. कोणत्याही वाटणीसाठी दुसरे चलन निवडू शकता.',
   'onboarding.about.privacy': 'साइन-अप नाही, जाहिराती नाहीत. तुम्ही जोडलेले सर्व काही या फोनवरच राहते — {brand}ला कोणताही डेटाबेस नाही.',
+  'onboarding.restore.cta': 'फोन बदलत आहात? बॅकअप परत आणा',
+  'onboarding.restore.done': 'पुन्हा स्वागत — सगळं इथे आहे',
 } as const satisfies Messages

@@ -34,4 +34,6 @@ export const onboarding = {
   'onboarding.about.currency.sheet.title': 'आपकी करेंसी',
   'onboarding.about.currency.sheet.body': 'नए स्प्लिट इसी करेंसी में शुरू होंगे। किसी भी स्प्लिट के लिए दूसरी चुन सकते हैं।',
   'onboarding.about.privacy': 'न साइन-अप, न विज्ञापन। आपका सारा डेटा इसी फ़ोन पर रहता है — {brand} का कोई डेटाबेस नहीं है।',
+  'onboarding.restore.cta': 'फ़ोन बदल रहे हैं? बैकअप वापस लाएँ',
+  'onboarding.restore.done': 'फिर से स्वागत है — सब कुछ यहाँ है',
 } as const satisfies Messages

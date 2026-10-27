@@ -41,4 +41,6 @@ export const onboarding = {
   'onboarding.about.currency.sheet.title': 'Your currency',
   'onboarding.about.currency.sheet.body': 'New splits start in this currency. You can pick another for any split.',
   'onboarding.about.privacy': 'No sign-up, no ads. Everything you add stays on this phone — {brand} has no database.',
+  'onboarding.restore.cta': 'Moving phones? Restore a backup',
+  'onboarding.restore.done': 'Welcome back — everything’s here',
 } as const satisfies Messages

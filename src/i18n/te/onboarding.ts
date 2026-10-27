@@ -39,4 +39,6 @@ export const onboarding = {
   'onboarding.about.currency.sheet.title': 'మీ కరెన్సీ',
   'onboarding.about.currency.sheet.body': 'కొత్త స్ప్లిట్‌లు ఈ కరెన్సీలో మొదలవుతాయి. ఏ స్ప్లిట్‌కైనా వేరేది ఎంచుకోవచ్చు.',
   'onboarding.about.privacy': 'సైన్-అప్ లేదు, ప్రకటనలు లేవు. మీరు జోడించేవన్నీ ఈ ఫోన్‌లోనే ఉంటాయి — {brand} కు డేటాబేస్ లేదు.',
+  'onboarding.restore.cta': 'ఫోన్ మారుస్తున్నారా? బ్యాకప్ తిరిగి తెచ్చుకోండి',
+  'onboarding.restore.done': 'మళ్లీ స్వాగతం — అంతా ఇక్కడే ఉంది',
 } as const satisfies Messages
