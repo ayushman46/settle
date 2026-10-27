@@ -1,0 +1,85 @@
+/* Auto-settle: the offer, the "it's on" line and the sheet that says what it reads. */
+
+.offer {
+  display: grid;
+  gap: var(--s-3);
+  background: var(--accent-soft);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 55%, transparent);
+}
+
+.head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-3);
+}
+
+.on {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--s-3);
+}
+
+.icon {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: var(--s-10);
+  height: var(--s-10);
+  border-radius: var(--r-pill);
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.icon > svg {
+  width: var(--s-5);
+  height: var(--s-5);
+}
+
+.text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.title {
+  font: var(--text-label);
+  font-weight: 650;
+  color: var(--ink);
+}
+
+.body {
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
+.points {
+  display: grid;
+  gap: var(--s-3);
+  margin: 0 0 var(--s-4);
+  padding: 0;
+  list-style: none;
+}
+
+.points > li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: var(--s-3);
+  font: var(--text-body);
+  color: var(--ink);
+}
+
+.points svg {
+  width: var(--s-5);
+  height: var(--s-5);
+  margin-top: 2px;
+  color: var(--ink-2);
+}
+
+.actions {
+  display: grid;
+  gap: var(--s-2);
+  width: 100%;
+}

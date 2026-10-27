@@ -42,6 +42,7 @@ import { install } from './install'
 import { bijli } from './bijli'
 import { whospaid } from './whospaid'
 import { collect } from './collect'
+import { autosettle } from './autosettle'
 
 export const BN: Messages = {
   ...common,
@@ -80,6 +81,7 @@ export const BN: Messages = {
   ...bijli,
   ...whospaid,
   ...collect,
+  ...autosettle,
 }
 
 export default BN

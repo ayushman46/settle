@@ -1,0 +1,26 @@
+import type { Messages } from '../types'
+
+export const autosettle: Messages = {
+  'autosettle.ticked.one': '{name} {amount} அனுப்பினார் · {title} — டிக் ஆனது',
+  'autosettle.ticked.many': '{count, plural, one {# பேர்} other {# பேர்}} பணத்தைத் திருப்பினர் — டிக் ஆனது',
+  'autosettle.pending': '{count, plural, one {சரிபார்க்க # பணம்} other {சரிபார்க்க # பணங்கள்}}',
+  'autosettle.on.title': 'ஆட்டோ-செட்டில் இயக்கத்தில் உள்ளது',
+  'autosettle.on.text': 'Google Pay, PhonePe, Paytm அல்லது BHIM பணம் வந்ததாகச் சொன்னால், அனுப்பியவர் டிக் ஆகிறார்.',
+  'autosettle.manage': 'மாற்று',
+  'autosettle.offer.title': 'தானாக டிக் செய்யுங்கள்',
+  'autosettle.offer.text': 'உங்கள் UPI ஆப் பணம் வந்ததாகச் சொன்னதும், Settle அனுப்பியவரை டிக் செய்கிறது — ஸ்கிரீன்ஷாட் இல்லை, குறிக்க வேண்டியதில்லை.',
+  'autosettle.offer.cta': 'ஆட்டோ-செட்டிலை இயக்கு',
+  'autosettle.error': 'Android அமைப்புகளைத் திறக்க முடியவில்லை. மீண்டும் முயலுங்கள்.',
+  'autosettle.sheet.title': 'ஆட்டோ-செட்டில்',
+  'autosettle.sheet.description': 'உங்களுக்கு வரும் பணத்தை Settle கவனித்து, அனுப்பியவரை டிக் செய்கிறது.',
+  'autosettle.sheet.reads': 'Google Pay, PhonePe, Paytm, BHIM, Amazon Pay, MobiKwik, CRED பணம் வரும்போது காட்டும் அறிவிப்புகளை மட்டுமே இது படிக்கிறது.',
+  'autosettle.sheet.does': 'உறுதியான பணம் அந்த நபரை டிக் செய்கிறது, செயல்தவிர்க்கும் வசதியுடன். உறுதியில்லாதது நீங்கள் சரிபார்க்கக் காத்திருக்கிறது.',
+  'autosettle.sheet.private': 'அனைத்தும் இந்த போனிலேயே இருக்கும். எதுவும் பதிவேற்றப்படாது; மற்ற அறிவிப்புகள் புறக்கணிக்கப்படும், வைக்கப்படாது.',
+  'autosettle.sheet.stop': 'Settle-க்கு அறிவிப்பு அணுகலை அனுமதிக்க Android கேட்கும். அங்கே எப்போது வேண்டுமானாலும் நிறுத்தலாம்.',
+  'autosettle.sheet.sms.label': 'வங்கி SMS-ம்',
+  'autosettle.sheet.sms.description': 'பல வங்கிகள் SMS மூலம் மட்டுமே தெரிவிக்கின்றன. பணம் வரவு வைக்கப்பட்டதாகச் சொல்லும் செய்திகள் மட்டுமே படிக்கப்படும்.',
+  'autosettle.sheet.allow': 'Android அமைப்புகளில் அனுமதி',
+  'autosettle.sheet.later': 'இப்போது வேண்டாம்',
+  'autosettle.sheet.done': 'முடிந்தது',
+  'autosettle.sheet.off': 'Android அமைப்புகளில் நிறுத்து',
+}

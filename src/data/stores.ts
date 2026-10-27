@@ -31,6 +31,8 @@ export const STORAGE_KEYS = {
   payerAliases: 'settle.v5.payer-aliases',
   /** Reminders you've sent, for "To collect" (src/features/collect). */
   reminders: 'settle.v5.reminders',
+  /** Auto-settle on Android: payments waiting for a tap, and the ones just ticked off (src/features/autosettle). */
+  autoSettle: 'settle.v5.auto-settle',
 } as const
 
 /** Accepts a bare, un-enveloped value (e.g. hand-edited storage) when the schema can read it. */
@@ -166,6 +168,51 @@ export const remindersStore = createStore<Reminder[]>({
   initial: () => [],
   version: STORAGE_VERSION,
   migrate: bare(remindersSchema),
+})
+
+/** A payment a UPI app or bank alert said arrived, as Auto-settle keeps it. */
+export interface AlertCredit {
+  id: string
+  /** Paise. */
+  amount: number
+  /** YYYY-MM-DD. */
+  date: string
+  /** When the alert came (epoch ms). */
+  at: number
+  name: string | null
+  vpa: string | null
+  utr: string | null
+}
+
+export interface AutoSettleState {
+  /** Payments that may be someone's, waiting for a tap. */
+  pending: AlertCredit[]
+  /** Payments already ticked off, so the same payment's second alert (the bank's SMS) isn't counted again. */
+  recent: AlertCredit[]
+}
+
+const alertCreditSchema = z.object({
+  id: z.string().check(z.minLength(1)),
+  amount: z.int().check(z.positive()),
+  date: z.string(),
+  at: z.number(),
+  name: z.nullable(z.string()),
+  vpa: z.nullable(z.string()),
+  utr: z.nullable(z.string()),
+})
+
+export const autoSettleSchema = z.object({
+  pending: z.catch(z.array(alertCreditSchema), []),
+  recent: z.catch(z.array(alertCreditSchema), []),
+})
+
+/** Auto-settle's working state. Kept on this phone; not in backups (it's only days old at most). */
+export const autoSettleStore = createStore<AutoSettleState>({
+  key: STORAGE_KEYS.autoSettle,
+  schema: autoSettleSchema,
+  initial: () => ({ pending: [], recent: [] }),
+  version: STORAGE_VERSION,
+  migrate: bare(autoSettleSchema),
 })
 
 /** The payment references already marked from screenshots. Kept on this phone; backed up with the rest. */

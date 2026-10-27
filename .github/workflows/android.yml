@@ -1,0 +1,55 @@
+# The Android app (android/): Settle in a Capacitor shell that loads the live site, plus
+# Auto-settle's payment-alerts listener. Every push that touches it builds a debug APK, kept as a
+# download on the run for 30 days (install it on a phone to try Auto-settle). Play Store builds
+# need a release key and are made by hand.
+name: Android
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - android/**
+      - capacitor.config.json
+      - native/**
+      - package-lock.json
+      - .github/workflows/android.yml
+  workflow_dispatch:
+
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  apk:
+    name: Debug APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: gradle
+      - uses: android-actions/setup-android@v3
+      - name: Copy the shell page, config and plugins into the Android project
+        run: npx cap sync android
+      - name: Build the debug APK
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon --stacktrace
+      - uses: actions/upload-artifact@v7
+        with:
+          name: settle-android-debug
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 30
+          if-no-files-found: error

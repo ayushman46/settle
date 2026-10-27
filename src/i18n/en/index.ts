@@ -39,6 +39,7 @@ import { rent } from './rent'
 import { bijli } from './bijli'
 import { whospaid } from './whospaid'
 import { collect } from './collect'
+import { autosettle } from './autosettle'
 
 export const EN = {
   ...common,
@@ -78,6 +79,7 @@ export const EN = {
   ...bijli,
   ...whospaid,
   ...collect,
+  ...autosettle,
 } as const
 
 /** Every message key the app may ask for. */

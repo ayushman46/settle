@@ -1,0 +1,26 @@
+import type { Messages } from '../types'
+
+export const autosettle: Messages = {
+  'autosettle.ticked.one': '{name}એ {amount} મોકલ્યા · {title} — ટિક થયું',
+  'autosettle.ticked.many': '{count, plural, one {# વ્યક્તિએ} other {# લોકોએ}} પૈસા પાછા આપ્યા — ટિક થયા',
+  'autosettle.pending': '{count, plural, one {# પેમેન્ટ તપાસવાનું છે} other {# પેમેન્ટ તપાસવાના છે}}',
+  'autosettle.on.title': 'ઑટો-સેટલ ચાલુ છે',
+  'autosettle.on.text': 'Google Pay, PhonePe, Paytm કે BHIM પૈસા આવ્યાનું કહે ત્યારે મોકલનાર ટિક થઈ જાય છે.',
+  'autosettle.manage': 'બદલો',
+  'autosettle.offer.title': 'આપમેળે ટિક કરો',
+  'autosettle.offer.text': 'તમારી UPI એપ પૈસા આવ્યાનું કહે ત્યારે Settle મોકલનારને ટિક કરે છે — ન સ્ક્રીનશૉટ, ન માર્ક કરવું.',
+  'autosettle.offer.cta': 'ઑટો-સેટલ ચાલુ કરો',
+  'autosettle.error': 'Androidની સેટિંગ ખૂલી નહીં. ફરી પ્રયત્ન કરો.',
+  'autosettle.sheet.title': 'ઑટો-સેટલ',
+  'autosettle.sheet.description': 'Settle તમને મળતા પેમેન્ટ જુએ છે અને મોકલનારને ટિક કરે છે.',
+  'autosettle.sheet.reads': 'તે ફક્ત Google Pay, PhonePe, Paytm, BHIM, Amazon Pay, MobiKwik અને CRED પૈસા આવે ત્યારે બતાવે તે અલર્ટ વાંચે છે.',
+  'autosettle.sheet.does': 'જે પેમેન્ટની ખાતરી હોય તે વ્યક્તિ ટિક થાય છે, પાછું લેવાના વિકલ્પ સાથે. જેની ખાતરી ન હોય તે તમે તપાસો ત્યાં સુધી રાહ જુએ છે.',
+  'autosettle.sheet.private': 'બધું આ જ ફોન પર રહે છે. કંઈ અપલોડ થતું નથી, અને બીજી દરેક નોટિફિકેશન અવગણાય છે, રાખવામાં આવતી નથી.',
+  'autosettle.sheet.stop': 'Android તમારી પાસે Settle માટે નોટિફિકેશન ઍક્સેસની પરવાનગી માગશે. ત્યાં ગમે ત્યારે બંધ કરી શકો.',
+  'autosettle.sheet.sms.label': 'બૅન્ક SMS પણ',
+  'autosettle.sheet.sms.description': 'ઘણી બૅન્ક ફક્ત SMSથી જણાવે છે. ફક્ત પૈસા જમા થયાનું કહેતા મેસેજ જ વંચાય છે.',
+  'autosettle.sheet.allow': 'Android સેટિંગમાં પરવાનગી આપો',
+  'autosettle.sheet.later': 'અત્યારે નહીં',
+  'autosettle.sheet.done': 'થઈ ગયું',
+  'autosettle.sheet.off': 'Android સેટિંગમાં બંધ કરો',
+}

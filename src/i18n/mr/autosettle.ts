@@ -1,0 +1,26 @@
+import type { Messages } from '../types'
+
+export const autosettle: Messages = {
+  'autosettle.ticked.one': '{name} यांनी {amount} पाठवले · {title} — टिक झाले',
+  'autosettle.ticked.many': '{count, plural, one {# व्यक्तीने} other {# लोकांनी}} पैसे परत केले — टिक झाले',
+  'autosettle.pending': '{count, plural, one {# पेमेंट तपासायचे आहे} other {# पेमेंट तपासायचे आहेत}}',
+  'autosettle.on.title': 'ऑटो-सेटल चालू आहे',
+  'autosettle.on.text': 'Google Pay, PhonePe, Paytm किंवा BHIM पैसे आल्याचे सांगते तेव्हा पाठवणारे टिक होतात.',
+  'autosettle.manage': 'बदला',
+  'autosettle.offer.title': 'लोकांना आपोआप टिक करा',
+  'autosettle.offer.text': 'तुमचे UPI ॲप पैसे आल्याचे सांगते तेव्हा Settle पाठवणाऱ्याला टिक करते — स्क्रीनशॉट नाही, मार्क करणे नाही.',
+  'autosettle.offer.cta': 'ऑटो-सेटल चालू करा',
+  'autosettle.error': 'Android ची सेटिंग उघडली नाही. पुन्हा प्रयत्न करा.',
+  'autosettle.sheet.title': 'ऑटो-सेटल',
+  'autosettle.sheet.description': 'Settle तुम्हाला आलेले पेमेंट पाहते आणि पाठवणाऱ्याला टिक करते.',
+  'autosettle.sheet.reads': 'ते फक्त Google Pay, PhonePe, Paytm, BHIM, Amazon Pay, MobiKwik आणि CRED पैसे आल्यावर दाखवतात ते अलर्ट वाचते.',
+  'autosettle.sheet.does': 'ज्या पेमेंटची खात्री असते ती व्यक्ती टिक होते, मागे घेण्याच्या पर्यायासह. ज्याची खात्री नसते ते तुम्ही तपासेपर्यंत थांबते.',
+  'autosettle.sheet.private': 'सगळे याच फोनवर राहते. काहीही अपलोड होत नाही, आणि इतर प्रत्येक नोटिफिकेशन दुर्लक्षित होते, ठेवले जात नाही.',
+  'autosettle.sheet.stop': 'Android तुम्हाला Settle साठी नोटिफिकेशन ॲक्सेसची परवानगी विचारेल. ती तिथे कधीही बंद करता येते.',
+  'autosettle.sheet.sms.label': 'बँक SMS सुद्धा',
+  'autosettle.sheet.sms.description': 'अनेक बँका फक्त SMS ने कळवतात. फक्त पैसे जमा झाल्याचे सांगणारे मेसेज वाचले जातात.',
+  'autosettle.sheet.allow': 'Android सेटिंगमध्ये परवानगी द्या',
+  'autosettle.sheet.later': 'आत्ता नाही',
+  'autosettle.sheet.done': 'झाले',
+  'autosettle.sheet.off': 'Android सेटिंगमध्ये बंद करा',
+}

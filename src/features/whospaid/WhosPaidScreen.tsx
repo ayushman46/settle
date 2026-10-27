@@ -11,6 +11,8 @@ import { haptic } from '../../lib/haptics'
 import { prepareImage } from '../../lib/image'
 import { formatMoney } from '../../lib/money'
 import { readSharedPayload } from '../../lib/sharedPayload'
+import { AutoSettleCard } from '../autosettle/AutoSettleCard'
+import { dropPending, pendingCredits } from '../autosettle/autoSettle'
 import { shortDate } from '../recurring/recurringLabels'
 import { matchPayments, type Credit, type MatchOption, type Proposal, type Reason } from './match'
 import { creditsFromSms } from './sms'
@@ -66,7 +68,10 @@ export function WhosPaidScreen() {
   const friendsById = useFriendsById()
   const aliases = useStore(payerAliasesStore, (all) => all)
   const dues = useMemo(() => openDues(expenses), [expenses])
-  const shareId = useSearchParams().get('k')
+  const params = useSearchParams()
+  const shareId = params.get('k')
+  // The payments Auto-settle wasn't sure of (from "Payments to check").
+  const fromAlerts = params.get('from') === 'alerts'
   const [step, setStep] = useState<Step>(() => (shareId ? { kind: 'reading', done: 0, total: 1 } : { kind: 'pick', problem: null }))
   const [picked, setPicked] = useState<Record<string, string | null>>({})
   const [smsOpen, setSmsOpen] = useState(false)
@@ -155,6 +160,16 @@ export function WhosPaidScreen() {
       alive = false
     }
   }, [shareId])
+
+  const latestReview = useRef(review)
+  useEffect(() => {
+    latestReview.current = review
+  })
+  useEffect(() => {
+    if (!fromAlerts) return
+    const waiting = pendingCredits()
+    if (waiting.length > 0) latestReview.current(waiting, 0, true, 'alert')
+  }, [fromAlerts])
 
   const readSms = () => {
     const { credits } = creditsFromSms(smsText, today())
@@ -252,6 +267,10 @@ export function WhosPaidScreen() {
     const received = step.proposals.length
     const confirm = () => {
       const applied: Applied = applyMatches(chosen)
+      // Looked at, whatever was decided: they stop waiting.
+      if (step.source === 'alert') dropPending(step.proposals.map((p) => p.credit.id))
+      // None of them was for a split: they're let go, and that's all.
+      if (chosen.length === 0) return goBack('/app')
       haptic('success')
       toast(t('whospaid.marked.toast', { count: applied.dues.length }), {
         tone: 'success',
@@ -274,8 +293,8 @@ export function WhosPaidScreen() {
         header={<TopBar onBack={() => setStep({ kind: 'pick', problem: null })} />}
         footer={
           <ActionBar>
-            <Button block disabled={chosen.length === 0} onClick={confirm}>
-              {t('whospaid.confirm', { count: chosen.length })}
+            <Button block disabled={chosen.length === 0 && step.source !== 'alert'} onClick={confirm}>
+              {chosen.length === 0 && step.source === 'alert' ? t('common.action.done') : t('whospaid.confirm', { count: chosen.length })}
             </Button>
           </ActionBar>
         }
@@ -316,6 +335,7 @@ export function WhosPaidScreen() {
   return (
     <Screen header={<TopBar onBack={() => goBack('/app')} />} contentClassName={styles.content}>
       <PageTitle title={t('whospaid.title')} subtitle={t('whospaid.subtitle', { count: owing, amount: money(owedTotal) })} />
+      <AutoSettleCard />
       {step.problem && (
         <Banner tone="warning" title={t('whospaid.problem.title')}>
           {t(step.problem)}

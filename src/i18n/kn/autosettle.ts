@@ -1,0 +1,26 @@
+import type { Messages } from '../types'
+
+export const autosettle: Messages = {
+  'autosettle.ticked.one': '{name} {amount} ಕಳುಹಿಸಿದರು · {title} — ಟಿಕ್ ಆಯಿತು',
+  'autosettle.ticked.many': '{count, plural, one {# ಜನರು} other {# ಜನರು}} ಹಣ ಹಿಂತಿರುಗಿಸಿದರು — ಟಿಕ್ ಆಯಿತು',
+  'autosettle.pending': '{count, plural, one {ಪರಿಶೀಲಿಸಲು # ಪಾವತಿ} other {ಪರಿಶೀಲಿಸಲು # ಪಾವತಿಗಳು}}',
+  'autosettle.on.title': 'ಆಟೋ-ಸೆಟಲ್ ಆನ್ ಆಗಿದೆ',
+  'autosettle.on.text': 'Google Pay, PhonePe, Paytm ಅಥವಾ BHIM ಹಣ ಬಂತು ಎಂದಾಗ, ಕಳುಹಿಸಿದವರು ಟಿಕ್ ಆಗುತ್ತಾರೆ.',
+  'autosettle.manage': 'ಬದಲಿಸಿ',
+  'autosettle.offer.title': 'ತಾನಾಗಿ ಟಿಕ್ ಮಾಡಿ',
+  'autosettle.offer.text': 'ನಿಮ್ಮ UPI ಆ್ಯಪ್ ಹಣ ಬಂತು ಎಂದಾಗ Settle ಕಳುಹಿಸಿದವರನ್ನು ಟಿಕ್ ಮಾಡುತ್ತದೆ — ಸ್ಕ್ರೀನ್‌ಶಾಟ್ ಇಲ್ಲ, ಗುರುತಿಸುವುದಿಲ್ಲ.',
+  'autosettle.offer.cta': 'ಆಟೋ-ಸೆಟಲ್ ಆನ್ ಮಾಡಿ',
+  'autosettle.error': 'Android ಸೆಟ್ಟಿಂಗ್ ತೆರೆಯಲಾಗಲಿಲ್ಲ. ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.',
+  'autosettle.sheet.title': 'ಆಟೋ-ಸೆಟಲ್',
+  'autosettle.sheet.description': 'ನಿಮಗೆ ಬರುವ ಪಾವತಿಗಳನ್ನು Settle ಗಮನಿಸಿ, ಕಳುಹಿಸಿದವರನ್ನು ಟಿಕ್ ಮಾಡುತ್ತದೆ.',
+  'autosettle.sheet.reads': 'Google Pay, PhonePe, Paytm, BHIM, Amazon Pay, MobiKwik ಮತ್ತು CRED ಹಣ ಬಂದಾಗ ತೋರಿಸುವ ಅಲರ್ಟ್‌ಗಳನ್ನು ಮಾತ್ರ ಇದು ಓದುತ್ತದೆ.',
+  'autosettle.sheet.does': 'ಖಚಿತವಾದ ಪಾವತಿ ಆ ವ್ಯಕ್ತಿಯನ್ನು ಟಿಕ್ ಮಾಡುತ್ತದೆ, ರದ್ದುಮಾಡುವ ಆಯ್ಕೆಯೊಂದಿಗೆ. ಖಚಿತವಲ್ಲದ್ದು ನೀವು ಪರಿಶೀಲಿಸುವವರೆಗೆ ಕಾಯುತ್ತದೆ.',
+  'autosettle.sheet.private': 'ಎಲ್ಲವೂ ಈ ಫೋನ್‌ನಲ್ಲೇ ಇರುತ್ತದೆ. ಏನೂ ಅಪ್‌ಲೋಡ್ ಆಗುವುದಿಲ್ಲ; ಉಳಿದ ಎಲ್ಲ ನೋಟಿಫಿಕೇಶನ್‌ಗಳನ್ನು ಕಡೆಗಣಿಸಲಾಗುತ್ತದೆ, ಇಟ್ಟುಕೊಳ್ಳುವುದಿಲ್ಲ.',
+  'autosettle.sheet.stop': 'Settle ಗೆ ನೋಟಿಫಿಕೇಶನ್ ಪ್ರವೇಶ ಅನುಮತಿಯನ್ನು Android ಕೇಳುತ್ತದೆ. ಅಲ್ಲಿ ಯಾವಾಗ ಬೇಕಾದರೂ ನಿಲ್ಲಿಸಬಹುದು.',
+  'autosettle.sheet.sms.label': 'ಬ್ಯಾಂಕ್ SMS ಕೂಡ',
+  'autosettle.sheet.sms.description': 'ಅನೇಕ ಬ್ಯಾಂಕುಗಳು SMS ಮೂಲಕ ಮಾತ್ರ ತಿಳಿಸುತ್ತವೆ. ಹಣ ಜಮೆಯಾಗಿದೆ ಎನ್ನುವ ಸಂದೇಶಗಳನ್ನು ಮಾತ್ರ ಓದಲಾಗುತ್ತದೆ.',
+  'autosettle.sheet.allow': 'Android ಸೆಟ್ಟಿಂಗ್‌ನಲ್ಲಿ ಅನುಮತಿಸಿ',
+  'autosettle.sheet.later': 'ಈಗ ಬೇಡ',
+  'autosettle.sheet.done': 'ಆಯಿತು',
+  'autosettle.sheet.off': 'Android ಸೆಟ್ಟಿಂಗ್‌ನಲ್ಲಿ ನಿಲ್ಲಿಸಿ',
+}

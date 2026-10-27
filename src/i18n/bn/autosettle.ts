@@ -1,0 +1,26 @@
+import type { Messages } from '../types'
+
+export const autosettle: Messages = {
+  'autosettle.ticked.one': '{name} {amount} পাঠিয়েছেন · {title} — টিক হয়ে গেছে',
+  'autosettle.ticked.many': '{count, plural, one {#জন} other {#জন}} টাকা ফেরত দিয়েছেন — টিক হয়ে গেছে',
+  'autosettle.pending': '{count, plural, one {#টা পেমেন্ট দেখার আছে} other {#টা পেমেন্ট দেখার আছে}}',
+  'autosettle.on.title': 'অটো-সেটল চালু আছে',
+  'autosettle.on.text': 'Google Pay, PhonePe, Paytm বা BHIM টাকা আসার কথা জানালে, যিনি দিয়েছেন তিনি টিক হয়ে যান।',
+  'autosettle.manage': 'বদলান',
+  'autosettle.offer.title': 'নিজে থেকে টিক করুন',
+  'autosettle.offer.text': 'আপনার UPI অ্যাপ টাকা আসার কথা জানালে Settle যিনি দিয়েছেন তাঁকে টিক করে দেয় — স্ক্রিনশট বা চিহ্নিত করার দরকার নেই।',
+  'autosettle.offer.cta': 'অটো-সেটল চালু করুন',
+  'autosettle.error': 'Android-এর সেটিং খোলা গেল না। আবার চেষ্টা করুন।',
+  'autosettle.sheet.title': 'অটো-সেটল',
+  'autosettle.sheet.description': 'Settle আপনার কাছে আসা পেমেন্ট লক্ষ করে আর যিনি দিয়েছেন তাঁকে টিক করে।',
+  'autosettle.sheet.reads': 'এটা শুধু সেই অ্যালার্টগুলো পড়ে যা Google Pay, PhonePe, Paytm, BHIM, Amazon Pay, MobiKwik আর CRED টাকা এলে দেখায়।',
+  'autosettle.sheet.does': 'যে পেমেন্টে নিশ্চিত, সেই মানুষটি টিক হয়ে যান, ফিরিয়ে নেওয়ার উপায় সহ। যেটায় নিশ্চিত নয়, সেটা আপনার দেখার জন্য অপেক্ষা করে।',
+  'autosettle.sheet.private': 'সবকিছু এই ফোনেই থাকে। কিছু আপলোড হয় না, আর অন্য সব নোটিফিকেশন উপেক্ষা করা হয়, রাখা হয় না।',
+  'autosettle.sheet.stop': 'Android আপনার কাছে Settle-এর জন্য নোটিফিকেশন অ্যাক্সেসের অনুমতি চাইবে। ওখানে যেকোনো সময় বন্ধ করতে পারবেন।',
+  'autosettle.sheet.sms.label': 'ব্যাংকের SMS-ও',
+  'autosettle.sheet.sms.description': 'অনেক ব্যাংক শুধু SMS-এ জানায়। শুধু টাকা জমা হওয়ার মেসেজই পড়া হয়।',
+  'autosettle.sheet.allow': 'Android সেটিংয়ে অনুমতি দিন',
+  'autosettle.sheet.later': 'এখন নয়',
+  'autosettle.sheet.done': 'হয়ে গেছে',
+  'autosettle.sheet.off': 'Android সেটিংয়ে বন্ধ করুন',
+}

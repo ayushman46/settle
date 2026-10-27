@@ -1,0 +1,8 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Settle</string>
+    <string name="title_activity_main">Settle</string>
+    <string name="package_name">in.settleupi.app</string>
+    <string name="custom_url_scheme">in.settleupi.app</string>
+    <string name="payment_alerts_label">Settle: tick off who paid you</string>
+</resources>

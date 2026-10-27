@@ -21,7 +21,7 @@ export const MATCHED_SCORE = 90
 export const CHECK_SCORE = 60
 const MARGIN = 30
 
-export type CreditSource = 'screenshot' | 'statement' | 'sms'
+export type CreditSource = 'screenshot' | 'statement' | 'sms' | 'alert'
 
 /** One payment received, from any source. */
 export interface Credit {

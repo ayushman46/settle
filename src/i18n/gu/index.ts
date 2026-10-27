@@ -39,6 +39,7 @@ import { install } from './install'
 import { bijli } from './bijli'
 import { whospaid } from './whospaid'
 import { collect } from './collect'
+import { autosettle } from './autosettle'
 
 export const GU: Messages = {
   ...common,
@@ -77,6 +78,7 @@ export const GU: Messages = {
   ...bijli,
   ...whospaid,
   ...collect,
+  ...autosettle,
 }
 
 export default GU

@@ -1,4 +1,4 @@
-import { Component, Suspense, useEffect, useLayoutEffect, useState, type ReactNode } from 'react'
+import { Component, lazy, Suspense, useEffect, useLayoutEffect, useState, type ReactNode } from 'react'
 import { CircleUserRound, House, ReceiptText, RefreshCw, RotateCcw, UsersRound, WifiOff } from 'lucide-react'
 import { AppFrame, Banner, Button, EmptyState, ScreenTransition, Skeleton, TabBar, type NavDirection, type TabBarItem } from '../components'
 import { migrateLegacy, profileStore, useStorageWritable, useStore } from '../data'
@@ -6,6 +6,7 @@ import { BRAND, type Profile } from '../domain/types'
 import { hasMessage, t, useLang, type MessageKey } from '../i18n'
 import { onboardingDestination, welcomePath } from '../features/onboarding/destination'
 import { usePaywall } from '../features/pro/paywall'
+import { inAndroidApp } from '../lib/nativeApp'
 import { prefetchHealth } from '../state/health'
 import { isChunkLoadError, retryFailedScreens } from './lazyScreen'
 import { HOME_PATH, matchAppRoute, PaywallHost, preloadCoreScreens, WELCOME_PATTERN, type TabKey } from './routes'
@@ -72,6 +73,25 @@ function whenIdle(task: () => void): () => void {
 }
 
 /**
+ * The code and styles this page loaded before the service worker took over, fetched once more
+ * through it so they're kept for offline (the browser's HTTP cache answers, so it costs nothing).
+ * Re-importing a module that already ran never asks the network again, so without this a screen
+ * opened on the first visit (the split screen, say) would be missing offline.
+ */
+function keepLoadedAssets(): void {
+  try {
+    const paths = new Set<string>()
+    for (const entry of performance.getEntriesByType('resource')) {
+      const url = new URL(entry.name, window.location.href)
+      if (url.origin === window.location.origin && url.pathname.startsWith('/assets/')) paths.add(url.pathname)
+    }
+    for (const path of paths) void fetch(path, { cache: 'force-cache' }).catch(() => undefined)
+  } catch {
+    // No resource timing: the screens are kept as they're next loaded.
+  }
+}
+
+/**
  * `whenIdle`, but on a first visit only once the service worker controls the page. Screens fetched before
  * that never reach the offline cache, so an offline first trip to a preloaded screen would fail.
  */
@@ -81,6 +101,7 @@ function whenControlled(task: () => void): () => void {
   let cancelIdle: () => void = () => {}
   const onControl = (): void => {
     sw.removeEventListener('controllerchange', onControl)
+    keepLoadedAssets()
     cancelIdle = whenIdle(task)
   }
   sw.addEventListener('controllerchange', onControl)
@@ -175,7 +196,21 @@ export function AppShell({ preloadScreens = import.meta.env.PROD }: AppShellProp
       <StorageNotice />
       {content}
       <PaywallMount />
+      {onboarded && <AutoSettleMount />}
     </AppFrame>
+  )
+}
+
+/** Auto-settle's watcher: the Android app only, so the website never loads it. */
+const AutoSettleWatcher = lazy(() => import('../features/autosettle/AutoSettleWatcher').then((m) => ({ default: m.AutoSettleWatcher })))
+
+function AutoSettleMount() {
+  const [android] = useState(inAndroidApp)
+  if (!android) return null
+  return (
+    <Suspense fallback={null}>
+      <AutoSettleWatcher />
+    </Suspense>
   )
 }
 

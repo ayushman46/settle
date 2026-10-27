@@ -43,6 +43,7 @@ import { rent } from './rent'
 import { bijli } from './bijli'
 import { whospaid } from './whospaid'
 import { collect } from './collect'
+import { autosettle } from './autosettle'
 
 export const HI: Messages = {
   ...common,
@@ -82,6 +83,7 @@ export const HI: Messages = {
   ...bijli,
   ...whospaid,
   ...collect,
+  ...autosettle,
 }
 
 export default HI

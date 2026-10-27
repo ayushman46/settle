@@ -1,0 +1,26 @@
+import type { Messages } from '../types'
+
+export const autosettle: Messages = {
+  'autosettle.ticked.one': '{name} ने {amount} भेजे · {title} — टिक हो गया',
+  'autosettle.ticked.many': '{count, plural, one {# व्यक्ति ने} other {# लोगों ने}} पैसे लौटाए — टिक हो गए',
+  'autosettle.pending': '{count, plural, one {# पेमेंट देखना है} other {# पेमेंट देखने हैं}}',
+  'autosettle.on.title': 'ऑटो-सेटल चालू है',
+  'autosettle.on.text': 'जब Google Pay, PhonePe, Paytm या BHIM बताए कि पैसे आए, भेजने वाला टिक हो जाता है।',
+  'autosettle.manage': 'बदलें',
+  'autosettle.offer.title': 'लोगों को अपने-आप टिक करें',
+  'autosettle.offer.text': 'जब आपका UPI ऐप बताए कि पैसे आए, Settle भेजने वाले को टिक कर देता है — न स्क्रीनशॉट, न मार्क करना।',
+  'autosettle.offer.cta': 'ऑटो-सेटल चालू करें',
+  'autosettle.error': 'Android की सेटिंग नहीं खुली। फिर कोशिश करें।',
+  'autosettle.sheet.title': 'ऑटो-सेटल',
+  'autosettle.sheet.description': 'Settle आपको मिले पेमेंट देखता है और भेजने वाले को टिक करता है।',
+  'autosettle.sheet.reads': 'यह सिर्फ़ वे अलर्ट पढ़ता है जो Google Pay, PhonePe, Paytm, BHIM, Amazon Pay, MobiKwik और CRED पैसे आने पर दिखाते हैं।',
+  'autosettle.sheet.does': 'जिस पेमेंट पर पक्का भरोसा हो, वह व्यक्ति टिक हो जाता है, वापस लेने के विकल्प के साथ। जिस पर भरोसा न हो, वह आपके देखने के लिए रुकता है।',
+  'autosettle.sheet.private': 'सब इसी फ़ोन पर रहता है। कुछ अपलोड नहीं होता, और बाकी हर नोटिफ़िकेशन अनदेखा होता है, कभी रखा नहीं जाता।',
+  'autosettle.sheet.stop': 'Android आपसे Settle के लिए नोटिफ़िकेशन ऐक्सेस की अनुमति माँगेगा। आप इसे वहीं कभी भी बंद कर सकते हैं।',
+  'autosettle.sheet.sms.label': 'बैंक SMS भी',
+  'autosettle.sheet.sms.description': 'कई बैंक सिर्फ़ SMS से बताते हैं। सिर्फ़ वे मैसेज पढ़े जाते हैं जिनमें पैसे जमा होने की बात हो।',
+  'autosettle.sheet.allow': 'Android सेटिंग में अनुमति दें',
+  'autosettle.sheet.later': 'अभी नहीं',
+  'autosettle.sheet.done': 'हो गया',
+  'autosettle.sheet.off': 'Android सेटिंग में बंद करें',
+}

@@ -42,6 +42,7 @@ import { install } from './install'
 import { bijli } from './bijli'
 import { whospaid } from './whospaid'
 import { collect } from './collect'
+import { autosettle } from './autosettle'
 
 export const TA: Messages = {
   ...common,
@@ -80,6 +81,7 @@ export const TA: Messages = {
   ...bijli,
   ...whospaid,
   ...collect,
+  ...autosettle,
 }
 
 export default TA

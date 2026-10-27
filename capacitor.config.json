@@ -1,0 +1,14 @@
+{
+  "appId": "in.settleupi.app",
+  "appName": "Settle",
+  "webDir": "native/www",
+  "server": {
+    "url": "https://settleupi.vercel.app/app",
+    "errorPath": "offline.html",
+    "androidScheme": "https"
+  },
+  "android": {
+    "appendUserAgent": "SettleAndroid/1",
+    "backgroundColor": "#141413"
+  }
+}

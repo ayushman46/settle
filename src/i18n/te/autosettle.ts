@@ -1,0 +1,26 @@
+import type { Messages } from '../types'
+
+export const autosettle: Messages = {
+  'autosettle.ticked.one': '{name} {amount} పంపారు · {title} — టిక్ అయింది',
+  'autosettle.ticked.many': '{count, plural, one {# మంది} other {# మంది}} డబ్బు తిరిగిచ్చారు — టిక్ అయ్యారు',
+  'autosettle.pending': '{count, plural, one {చూడాల్సిన # చెల్లింపు} other {చూడాల్సిన # చెల్లింపులు}}',
+  'autosettle.on.title': 'ఆటో-సెటిల్ ఆన్‌లో ఉంది',
+  'autosettle.on.text': 'Google Pay, PhonePe, Paytm లేదా BHIM డబ్బు వచ్చిందని చెప్పినప్పుడు, పంపినవారు టిక్ అవుతారు.',
+  'autosettle.manage': 'మార్చండి',
+  'autosettle.offer.title': 'ఆటోమేటిక్‌గా టిక్ చేయండి',
+  'autosettle.offer.text': 'మీ UPI యాప్ డబ్బు వచ్చిందని చెప్పగానే Settle పంపినవారిని టిక్ చేస్తుంది — స్క్రీన్‌షాట్‌లు లేవు, మార్క్ చేయడం లేదు.',
+  'autosettle.offer.cta': 'ఆటో-సెటిల్ ఆన్ చేయండి',
+  'autosettle.error': 'Android సెట్టింగ్‌లు తెరవలేకపోయాం. మళ్లీ ప్రయత్నించండి.',
+  'autosettle.sheet.title': 'ఆటో-సెటిల్',
+  'autosettle.sheet.description': 'మీకు వచ్చే చెల్లింపులను Settle గమనించి, పంపినవారిని టిక్ చేస్తుంది.',
+  'autosettle.sheet.reads': 'Google Pay, PhonePe, Paytm, BHIM, Amazon Pay, MobiKwik, CRED డబ్బు వచ్చినప్పుడు చూపే అలర్ట్‌లను మాత్రమే ఇది చదువుతుంది.',
+  'autosettle.sheet.does': 'ఖచ్చితమైన చెల్లింపు ఆ వ్యక్తిని టిక్ చేస్తుంది, రద్దు చేసే వీలుతో. ఖచ్చితం కానిది మీరు చూసే వరకు ఆగుతుంది.',
+  'autosettle.sheet.private': 'అంతా ఈ ఫోన్‌లోనే ఉంటుంది. ఏదీ అప్‌లోడ్ కాదు; మిగతా ప్రతి నోటిఫికేషన్ పట్టించుకోబడదు, ఉంచబడదు.',
+  'autosettle.sheet.stop': 'Settle కోసం నోటిఫికేషన్ యాక్సెస్ అనుమతి Android అడుగుతుంది. అక్కడ ఎప్పుడైనా ఆపవచ్చు.',
+  'autosettle.sheet.sms.label': 'బ్యాంక్ SMS కూడా',
+  'autosettle.sheet.sms.description': 'చాలా బ్యాంకులు SMS ద్వారా మాత్రమే చెబుతాయి. డబ్బు జమ అయిందని చెప్పే మెసేజ్‌లు మాత్రమే చదువుతుంది.',
+  'autosettle.sheet.allow': 'Android సెట్టింగ్‌లలో అనుమతించండి',
+  'autosettle.sheet.later': 'ఇప్పుడు కాదు',
+  'autosettle.sheet.done': 'పూర్తయింది',
+  'autosettle.sheet.off': 'Android సెట్టింగ్‌లలో ఆపండి',
+}

@@ -20,6 +20,7 @@ const KEYS = {
   proofRefs: 'settle-proof-refs',
   payerAliases: 'settle.v5.payer-aliases',
   reminders: 'settle.v5.reminders',
+  autoSettle: 'settle.v5.auto-settle',
 } as const satisfies typeof STORAGE_KEYS
 const STORAGE_VERSION = 1 satisfies typeof STORE_VERSION
 
