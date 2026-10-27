@@ -8,17 +8,19 @@ export interface ChoiceChipsProps<T extends string> {
   value: T
   options: ReadonlyArray<{ value: T; label: string }>
   onChange: (value: T) => void
+  /** Keep the question for assistive tech only (a heading above already asks it). */
+  hideLabel?: boolean
 }
 
 /**
  * One choice from a few, as chips that wrap onto the next line (a segmented bar breaks words
  * mid-way once there are four options on a 320 px phone). A radio group to assistive tech.
  */
-export function ChoiceChips<T extends string>({ label, value, options, onChange }: ChoiceChipsProps<T>) {
+export function ChoiceChips<T extends string>({ label, value, options, onChange, hideLabel = false }: ChoiceChipsProps<T>) {
   const id = useId()
   return (
     <div className={styles.section}>
-      <span id={id} className={styles.lead}>
+      <span id={id} className={hideLabel ? 'visually-hidden' : styles.lead}>
         {label}
       </span>
       <div role="radiogroup" aria-labelledby={id} className={styles.chips}>

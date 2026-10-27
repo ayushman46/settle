@@ -36,6 +36,7 @@ import { activity } from './activity'
 import { proof } from './proof'
 import { shagun } from './shagun'
 import { install } from './install'
+import { bijli } from './bijli'
 
 export const KN: Messages = {
   ...common,
@@ -71,6 +72,7 @@ export const KN: Messages = {
   ...proof,
   ...shagun,
   ...install,
+  ...bijli,
 }
 
 export default KN

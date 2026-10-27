@@ -36,6 +36,7 @@ import { proof } from './proof'
 import { shagun } from './shagun'
 import { install } from './install'
 import { rent } from './rent'
+import { bijli } from './bijli'
 
 export const EN = {
   ...common,
@@ -72,6 +73,7 @@ export const EN = {
   ...shagun,
   ...install,
   ...rent,
+  ...bijli,
 } as const
 
 /** Every message key the app may ask for. */

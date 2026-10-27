@@ -1,7 +1,8 @@
-import { Building2, CircleCheck } from 'lucide-react'
+import { Building2, CircleCheck, Zap } from 'lucide-react'
 import { navigate } from '../../app/router'
 import { BottomSheet, QuickAction, QuickActionGrid } from '../../components'
 import { useT } from '../../i18n'
+import { BIJLI_PATH } from '../bijli/paths'
 import { PROOF_ENABLED, PROOF_PATH } from '../proof/enabled'
 import { RENT_ENABLED, RENT_PATH } from '../rent/enabled'
 import { templateActionDefs } from './quickActions'
@@ -44,6 +45,16 @@ export function MoreActionsSheet({ open, onClose }: MoreActionsSheetProps) {
             }}
           />
         )}
+        <QuickAction
+          key="bijli"
+          icon={<Zap />}
+          label={t('bijli.more.title')}
+          tone="utilities"
+          onClick={() => {
+            onClose()
+            navigate(BIJLI_PATH)
+          }}
+        />
         {templateActionDefs().map(({ id, label, icon: Icon, tone, run }) => (
           <QuickAction
             key={id}

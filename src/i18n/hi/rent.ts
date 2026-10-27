@@ -80,6 +80,9 @@ export const rent = {
   'rent.detail.people.title': 'फ़्लैटमेट',
   'rent.detail.receipts.title': 'HRA किराया रसीद',
   'rent.detail.receipts.text': 'हर फ़्लैटमेट को अपने हिस्से की रसीदें मिलती हैं — मकान-मालिक के साइन के लिए और आपकी कंपनी के लिए तैयार।',
+  'rent.detail.bijli.title': 'बिजली का बिल',
+  'rent.detail.bijli.text': 'सही से बाँटें: स्लैब, सब्सिडी और AC की रातें, बाहर रहे दिन गिनकर।',
+  'rent.detail.bijli.cta': 'बिजली का बिल बाँटें',
   'rent.detail.receipts.cta': 'किराया रसीद पाएँ',
 
   'rent.receipts.title': 'किराया रसीद',

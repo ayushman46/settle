@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { ChevronLeft, ChevronRight, Pencil, ReceiptIndianRupee, Share2, Wallet } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Pencil, ReceiptIndianRupee, Share2, Wallet, Zap } from 'lucide-react'
 import { goBack, navigate, Redirect, useRoute } from '../../app/router'
 import { Banner, Button, Card, IconButton, List, ListRow, Money, PageTitle, Screen, TopBar, useToast } from '../../components'
 import { useFriendsById, useProfile } from '../../data'
@@ -11,6 +11,7 @@ import { UpiPaySheet } from '../../kit/index-b'
 import { haptic } from '../../lib/haptics'
 import { formatMoney } from '../../lib/money'
 import { shareResult } from '../../lib/share'
+import { bijliForRent } from '../bijli/paths'
 import { RENT_ENABLED, RENT_PATH, rentEditPath, rentReceiptsPath } from './enabled'
 import { monthName, nextMonth, shortMonthName } from './hra'
 import { rentPayLink } from './rentLink'
@@ -158,6 +159,16 @@ function Detail({ rent }: { rent: Rent }) {
           <p className={styles.lead}>{t('rent.detail.receipts.text')}</p>
           <Button variant="tonal" iconStart={<ReceiptIndianRupee />} onClick={() => navigate(rentReceiptsPath(rent.id))}>
             {t('rent.detail.receipts.cta')}
+          </Button>
+        </div>
+      </Card>
+
+      <Card>
+        <div className={styles.section}>
+          <h2 className={styles.sectionTitle}>{t('rent.detail.bijli.title')}</h2>
+          <p className={styles.lead}>{t('rent.detail.bijli.text')}</p>
+          <Button variant="tonal" iconStart={<Zap />} onClick={() => navigate(bijliForRent(rent.id))}>
+            {t('rent.detail.bijli.cta')}
           </Button>
         </div>
       </Card>

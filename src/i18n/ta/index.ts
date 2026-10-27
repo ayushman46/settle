@@ -39,6 +39,7 @@ import { activity } from './activity'
 import { proof } from './proof'
 import { shagun } from './shagun'
 import { install } from './install'
+import { bijli } from './bijli'
 
 export const TA: Messages = {
   ...common,
@@ -74,6 +75,7 @@ export const TA: Messages = {
   ...proof,
   ...shagun,
   ...install,
+  ...bijli,
 }
 
 export default TA

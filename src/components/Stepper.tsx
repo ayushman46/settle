@@ -26,6 +26,8 @@ export interface StepperProps {
 }
 
 function lowerFirst(text: string): string {
+  // Acronyms stay as they are: "Increase AC nights", not "aC nights".
+  if (/^\p{Lu}{2}/u.test(text)) return text
   return text.charAt(0).toLocaleLowerCase() + text.slice(1)
 }
 

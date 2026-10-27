@@ -1,0 +1,234 @@
+/* Fair bijli: the bill, who lives here, how to split, and the fair split. */
+
+.content {
+  display: grid;
+  gap: var(--s-5);
+  padding-bottom: var(--s-6);
+}
+
+.section {
+  display: grid;
+  gap: var(--s-3);
+}
+
+.sectionTitle {
+  font: var(--text-section);
+  color: var(--ink);
+}
+
+.lead {
+  font: var(--text-body);
+  color: var(--ink-2);
+}
+
+.fields {
+  display: grid;
+  gap: var(--s-4);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+}
+
+/* The electricity company, opening its picker. */
+.company {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  width: 100%;
+  min-height: 64px;
+  padding: var(--s-3) var(--s-4);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+  color: var(--ink);
+  text-align: start;
+}
+
+.companyIcon {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: var(--s-10);
+  height: var(--s-10);
+  border-radius: var(--r-pill);
+  background: var(--warning-soft);
+  color: var(--warning-ink);
+}
+
+.companyIcon > svg {
+  width: var(--s-5);
+  height: var(--s-5);
+}
+
+.companyText {
+  display: grid;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.companyLabel {
+  font: var(--text-micro);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+
+.companyName {
+  font: var(--text-label);
+  font-weight: 650;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.companyCity {
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
+.chevron {
+  flex: none;
+  width: var(--s-5);
+  height: var(--s-5);
+  color: var(--ink-3);
+}
+
+.companies {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.companyOption {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  width: 100%;
+  min-height: 56px;
+  padding: var(--s-2) 0;
+  border-bottom: 1px solid var(--line);
+  color: var(--ink);
+  text-align: start;
+}
+
+.check {
+  flex: none;
+  width: var(--s-5);
+  height: var(--s-5);
+  color: var(--positive);
+}
+
+/* One flatmate: days home, AC nights or their room meter. */
+.person {
+  display: grid;
+  gap: var(--s-3);
+  padding: var(--s-4);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+}
+
+.personHead {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+}
+
+.personName {
+  font: var(--text-label);
+  font-weight: 650;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+/* The fair split. */
+.results {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.result {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: start;
+  gap: var(--s-3);
+  padding: var(--s-3) var(--s-4);
+  border-bottom: 1px solid var(--line);
+}
+
+.resultText {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.resultName {
+  font: var(--text-label);
+  font-weight: 650;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.resultParts {
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
+.less,
+.more,
+.same {
+  font: var(--text-caption);
+  font-weight: 600;
+}
+
+.less {
+  color: var(--positive);
+}
+
+.more {
+  color: var(--warning-ink);
+}
+
+.same {
+  color: var(--ink-2);
+}
+
+.matched {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  padding: var(--s-3) var(--s-4);
+  font: var(--text-caption);
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.matched > svg {
+  flex: none;
+  width: var(--s-4);
+  height: var(--s-4);
+  color: var(--positive);
+}
+
+.notes {
+  display: grid;
+  gap: var(--s-2);
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
+.notes:empty {
+  display: none;
+}
+
+.fine {
+  font: var(--text-micro);
+  color: var(--ink-2);
+}

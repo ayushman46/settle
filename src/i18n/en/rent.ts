@@ -84,6 +84,9 @@ export const rent = {
   'rent.detail.people.title': 'Flatmates',
   'rent.detail.receipts.title': 'HRA rent receipts',
   'rent.detail.receipts.text': 'Each flatmate gets receipts for their own share, ready for the landlord to sign and your employer to accept.',
+  'rent.detail.bijli.title': 'The electricity bill',
+  'rent.detail.bijli.text': 'Split it fairly: slabs, subsidies and AC nights, with days away counted.',
+  'rent.detail.bijli.cta': 'Split the electricity bill',
   'rent.detail.receipts.cta': 'Get rent receipts',
 
   // Receipts (`/app/rent/:id/receipts`).
