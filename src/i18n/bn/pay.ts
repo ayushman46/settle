@@ -54,6 +54,16 @@ export const pay = {
   // The message itself ({title} is what the bill was for).
   'pay.tell.message': 'নমস্কার {name}! {title}-এর জন্য এইমাত্র {amount} পাঠিয়েছি ✓',
   'pay.tell.message.noName': 'নমস্কার! {title}-এর জন্য এইমাত্র {amount} পাঠিয়েছি ✓',
+  'pay.tell.message.cash': 'নমস্কার {name}! {title}-এর জন্য {amount} নগদে দিয়েছি ✓',
+  'pay.tell.message.cash.noName': 'নমস্কার! {title}-এর জন্য {amount} নগদে দিয়েছি ✓',
+  'pay.tell.message.ref': 'UPI রেফ: {ref}',
+  'pay.tell.message.link': 'আমাকে পেমেন্ট করা হিসেবে চিহ্নিত করতে ট্যাপ করুন 👇',
+  'pay.tell.how.upi': 'UPI-তে',
+  'pay.tell.how.cash': 'নগদে',
+  'pay.tell.utr.label': 'UPI রেফারেন্স (ঐচ্ছিক)',
+  'pay.tell.utr.hint': '12 অঙ্ক, আপনার UPI অ্যাপের পেমেন্টের বিবরণে',
+  'pay.tell.utr.error': 'UPI রেফারেন্সে 12টা অঙ্ক থাকে।',
+  'pay.tell.opened.status': 'WhatsApp খুলেছে — {name}-কে পাঠিয়ে দিন।',
 
   // A link that can't be shown.
   'pay.problem.invalid.title': 'এই পে লিংকটি কাজ করছে না',

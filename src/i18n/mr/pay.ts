@@ -54,6 +54,16 @@ export const pay = {
   // The message itself ({title} is what the bill was for).
   'pay.tell.message': 'नमस्कार {name}! {title} साठी आत्ताच {amount} दिले ✓',
   'pay.tell.message.noName': 'नमस्कार! {title} साठी आत्ताच {amount} दिले ✓',
+  'pay.tell.message.cash': 'नमस्कार {name}! {title} साठी {amount} रोख दिले ✓',
+  'pay.tell.message.cash.noName': 'नमस्कार! {title} साठी {amount} रोख दिले ✓',
+  'pay.tell.message.ref': 'UPI रेफ: {ref}',
+  'pay.tell.message.link': 'मला पैसे दिलेले म्हणून मार्क करण्यासाठी टॅप करा 👇',
+  'pay.tell.how.upi': 'UPI ने',
+  'pay.tell.how.cash': 'रोख',
+  'pay.tell.utr.label': 'UPI रेफरन्स (ऐच्छिक)',
+  'pay.tell.utr.hint': '12 अंक, तुमच्या UPI ॲपमधील पेमेंटच्या तपशिलात',
+  'pay.tell.utr.error': 'UPI रेफरन्समध्ये 12 अंक असतात.',
+  'pay.tell.opened.status': 'WhatsApp उघडले — {name} यांना पाठवा.',
 
   // A link that can't be shown.
   'pay.problem.invalid.title': 'ही पे लिंक चालत नाही',

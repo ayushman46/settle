@@ -50,6 +50,16 @@ export const pay = {
   // The message itself ({title} is what the bill was for).
   'pay.tell.message': 'హాయ్ {name}! {title} కు {amount} ఇప్పుడే చెల్లించాను ✓',
   'pay.tell.message.noName': 'హాయ్! {title} కు {amount} ఇప్పుడే చెల్లించాను ✓',
+  'pay.tell.message.cash': 'నమస్తే {name}! {title} కోసం {amount} నగదుగా ఇచ్చాను ✓',
+  'pay.tell.message.cash.noName': 'నమస్తే! {title} కోసం {amount} నగదుగా ఇచ్చాను ✓',
+  'pay.tell.message.ref': 'UPI రెఫ్: {ref}',
+  'pay.tell.message.link': 'నన్ను చెల్లించినట్టు మార్క్ చేయడానికి నొక్కండి 👇',
+  'pay.tell.how.upi': 'UPIతో',
+  'pay.tell.how.cash': 'నగదుగా',
+  'pay.tell.utr.label': 'UPI రెఫరెన్స్ (ఐచ్ఛికం)',
+  'pay.tell.utr.hint': '12 అంకెలు, మీ UPI యాప్‌లోని చెల్లింపు వివరాల్లో',
+  'pay.tell.utr.error': 'UPI రెఫరెన్స్‌లో 12 అంకెలు ఉంటాయి.',
+  'pay.tell.opened.status': 'WhatsApp తెరుచుకుంది — {name}కి పంపండి.',
   // A link that can't be shown.
   'pay.problem.invalid.title': 'ఈ పే లింక్ పనిచేయడం లేదు',
   'pay.problem.invalid.body': 'కాపీ చేసేటప్పుడు అది మధ్యలో కట్ అయి ఉండవచ్చు. పంపినవారిని మళ్ళీ షేర్ చేయమని అడగండి.',
