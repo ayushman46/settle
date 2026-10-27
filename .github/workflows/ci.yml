@@ -76,9 +76,14 @@ jobs:
         run: cat server.log || true
 
   e2e:
-    name: E2E · Edge · phones (360/390, light/dark)
+    # The whole suite (360 journeys on four phones) is too long for one runner: four in parallel.
+    name: E2E · Edge · phones (360/390, light/dark) · ${{ matrix.shard }}/4
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -90,13 +95,13 @@ jobs:
         run: |
           if command -v microsoft-edge-stable > /dev/null; then microsoft-edge-stable --version
           else npx playwright install --with-deps msedge; fi
-      - name: Smoke journeys on the production build
-        run: npx playwright test
+      - name: Journeys on the production build
+        run: npx playwright test --shard=${{ matrix.shard }}/4
       - name: Playwright report
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v7
         with:
-          name: playwright-report
+          name: playwright-report-${{ matrix.shard }}
           path: |
             playwright-report/
             test-results/
