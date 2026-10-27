@@ -198,7 +198,10 @@ function GroupDetail({ group, onLeaving }: { group: Group; onLeaving: (group: Gr
         {tab === 'totals' && <TotalsTab group={group} />}
       </div>
 
-      {!group.archived && <Fab extended icon={<Plus strokeWidth={2.5} />} label={t('groups.detail.add.cta')} onClick={addExpense} />}
+      {/* With no expenses yet, the list's own "Add the first expense" is the way in (the two would overlap). */}
+      {!group.archived && !(tab === 'expenses' && expenses.length === 0 && group.settlements.length === 0) && (
+        <Fab extended icon={<Plus strokeWidth={2.5} />} label={t('groups.detail.add.cta')} onClick={addExpense} />
+      )}
 
       <MenuSheet
         group={group}

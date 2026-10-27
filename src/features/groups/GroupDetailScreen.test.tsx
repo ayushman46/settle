@@ -291,11 +291,13 @@ describe('GroupDetailScreen — options', () => {
     await user.click(within(await screen.findByRole('dialog', { name: 'Group options' })).getByRole('button', { name: /^Archive/ }))
     expect(group()?.archived).toBe(true)
     expect(await screen.findByText('It’s tucked away from your groups list. Everything is still here.')).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Add expense' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /^Add (expense|the first expense)$/ })).not.toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Unarchive' }))
     expect(group()?.archived).toBe(false)
-    expect(await screen.findByRole('button', { name: 'Add expense' })).toBeInTheDocument()
+    // Nothing in it yet: the list's own button (the floating one waits for the first expense).
+    expect(await screen.findByRole('button', { name: 'Add the first expense' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Add expense' })).not.toBeInTheDocument()
   })
 
   it('deletes the group with its expenses, with an undo', async () => {

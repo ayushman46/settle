@@ -54,8 +54,8 @@ test.describe('trip currency', () => {
     await expect(create.getByRole('button', { name: 'Spending in: Thai baht · THB. Change' })).toBeVisible()
     await create.getByRole('button', { name: 'Create group' }).click()
 
-    // Add expense: already in baht.
-    await page.getByRole('button', { name: 'Add expense' }).click()
+    // The first expense: already in baht.
+    await page.getByRole('button', { name: 'Add the first expense' }).click()
     await expect(page.getByRole('button', { name: 'Currency: THB. Change' })).toBeVisible()
     await page.getByLabel('Amount', { exact: true }).fill('1250')
     const panel = page.getByRole('group', { name: 'Conversion' })

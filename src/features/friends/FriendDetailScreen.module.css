@@ -284,7 +284,8 @@
   flex: none;
 }
 
-@media (max-width: 359px) {
+/* "Split with {name}" and "Lend / borrow" don't fit side by side on a phone: one above the other. */
+@media (max-width: 479px) {
   .footerRow {
     flex-direction: column;
   }
