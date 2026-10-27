@@ -490,6 +490,25 @@ describe('service worker — things shared into Settle (spec 02 §5)', () => {
     expect(await first?.text()).toBe('jpeg-bytes')
   })
 
+  it('opens “Who’s paid?” for a bank statement, by its name or its type', async () => {
+    const sw = boot()
+    const csv = await file('Date,Narration', 'Acct_Statement.csv', 'text/csv')
+    const xlsx = await file('PK', 'statement', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    const xls = await file('<table>', 'OpTransactionHistory.XLS', '')
+    for (const shared of [csv, xlsx, xls]) {
+      const response = await share(sw, shareForm({}, [shared]))
+      const to = new URL(response?.headers.get('location') ?? ORIGIN)
+      expect(to.pathname).toBe('/app/whos-paid')
+      expect(to.searchParams.get('k')).toMatch(/^[A-Za-z0-9_-]{12}$/)
+    }
+    // Mail apps add the subject when sharing an attachment: still the statement.
+    const fromMail = await share(sw, shareForm({ title: 'Your HDFC Bank statement' }, [csv]))
+    expect(new URL(fromMail?.headers.get('location') ?? ORIGIN).pathname).toBe('/app/whos-paid')
+    // A statement with a photo is not just a statement.
+    const mixed = await share(sw, shareForm({}, [csv, await file('jpeg', 'bill.jpg', 'image/jpeg')]))
+    expect(new URL(mixed?.headers.get('location') ?? ORIGIN).pathname).toBe('/app/share')
+  })
+
   it('cuts very long text and skips files that are too big', async () => {
     const sw = boot()
     const huge = await file(new Uint8Array(15 * 1024 * 1024 + 1), 'huge.png', 'image/png')

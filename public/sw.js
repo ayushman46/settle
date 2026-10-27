@@ -11,7 +11,8 @@
  * - /api/*: never touched — AI, billing and health checks always go to the server.
  * - POST /share-target (Android's share sheet, see the manifest's share_target): the shared text
  *   and files are kept in the `settle-share` cache for an hour and the app opens /app/share?k=<id>
- *   to read them (src/lib/sharedPayload.ts).
+ *   to read them (src/lib/sharedPayload.ts) — or /app/proof for a lone screenshot, and
+ *   /app/whos-paid for a bank statement (CSV or Excel).
  *
  * It fails open: Cache Storage can be broken or full (damaged profiles, quota, some private
  * modes), so every cache step is best effort, cache writes never hold up a response, and if
@@ -31,6 +32,14 @@ const MAX_SHARED_TEXT = 64 * 1024
 const MAX_SHARED_FILES = 4
 const MAX_SHARED_FILE_BYTES = 15 * 1024 * 1024
 const MAX_SHARED_TOTAL_BYTES = 30 * 1024 * 1024
+/** A bank statement (CSV or Excel), by its name or type: shared in, it opens "Who's paid?". */
+const STATEMENT_FILE = /[.](csv|tsv|xls|xlsx)$/i
+const STATEMENT_TYPES = new Set([
+  'text/csv',
+  'text/tab-separated-values',
+  'application/vnd.ms-excel',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+])
 /** A share nobody picked up is dropped after an hour. */
 const SHARE_TTL_MS = 60 * 60 * 1000
 /** Caches this worker manages (older ones, including BillSplit's, are dropped on activate). */
@@ -229,6 +238,7 @@ async function receiveShare(request) {
     let total = 0
     let count = 0
     let images = 0
+    let statements = 0
     for (const file of form.getAll('media')) {
       if (count >= MAX_SHARED_FILES || typeof file === 'string') continue
       if (file.size > MAX_SHARED_FILE_BYTES || total + file.size > MAX_SHARED_TOTAL_BYTES) continue
@@ -236,13 +246,16 @@ async function receiveShare(request) {
       const headers = { 'Content-Type': file.type || 'application/octet-stream', 'X-File-Name': encodeURIComponent(file.name || 'shared'), 'X-Stored-At': String(now) }
       await cache.put(`${SHARE_PATH}/${id}/file-${count}`, new Response(file, { headers }))
       if (String(file.type).startsWith('image/')) images++
+      else if (STATEMENT_FILE.test(file.name || '') || STATEMENT_TYPES.has(String(file.type).toLowerCase())) statements++
       count++
     }
     const meta = { title: clip(form.get('title')), text: clip(form.get('text')), url: clip(form.get('url')), files: count }
     await cache.put(`${SHARE_PATH}/${id}/meta`, new Response(JSON.stringify(meta), { headers: { 'Content-Type': 'application/json', 'X-Stored-At': String(now) } }))
-    // A screenshot on its own is a payment to check (Paid? Drop the screenshot); anything else is the paste-and-split screen.
+    // A screenshot on its own is a payment to check (Paid? Drop the screenshot); a statement opens "Who's paid?"; anything else is the paste-and-split screen.
     const onlyScreenshots = images > 0 && images === count && !meta.title && !meta.text && !meta.url
-    const opens = onlyScreenshots ? `/app/proof?k=${id}` : `/app/share?k=${id}`
+    // A bank statement is the money you received: tick off who paid ("Who's paid?").
+    const statement = statements > 0 && statements === count
+    const opens = statement ? `/app/whos-paid?k=${id}` : onlyScreenshots ? `/app/proof?k=${id}` : `/app/share?k=${id}`
     return Response.redirect(new URL(opens, self.location.origin).href, 303)
   } catch {
     return Response.redirect(missed, 303)

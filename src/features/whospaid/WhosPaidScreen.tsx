@@ -1,6 +1,6 @@
-import { useId, useMemo, useRef, useState, type ChangeEvent, type ReactNode } from 'react'
+import { useEffect, useId, useMemo, useRef, useState, type ChangeEvent, type ReactNode } from 'react'
 import { Check, ChevronDown, ClipboardPaste, FileSpreadsheet, Images, ShieldCheck, Sparkles } from 'lucide-react'
-import { goBack, navigate } from '../../app/router'
+import { goBack, navigate, useSearchParams } from '../../app/router'
 import { ActionBar, Banner, Button, Card, Chip, EmptyState, Money, PageTitle, Screen, Skeleton, SuccessCheck, TopBar, useToast } from '../../components'
 import { setPaidBack, useExpenses, useFriends, useFriendsById, useStore } from '../../data'
 import { payerAliasesStore } from '../../data/stores'
@@ -10,6 +10,7 @@ import { FriendAvatar, friendLabel } from '../../kit/index-a'
 import { haptic } from '../../lib/haptics'
 import { prepareImage } from '../../lib/image'
 import { formatMoney } from '../../lib/money'
+import { readSharedPayload } from '../../lib/sharedPayload'
 import { shortDate } from '../recurring/recurringLabels'
 import { matchPayments, type Credit, type MatchOption, type Proposal, type Reason } from './match'
 import { creditsFromSms } from './sms'
@@ -65,7 +66,8 @@ export function WhosPaidScreen() {
   const friendsById = useFriendsById()
   const aliases = useStore(payerAliasesStore, (all) => all)
   const dues = useMemo(() => openDues(expenses), [expenses])
-  const [step, setStep] = useState<Step>({ kind: 'pick', problem: null })
+  const shareId = useSearchParams().get('k')
+  const [step, setStep] = useState<Step>(() => (shareId ? { kind: 'reading', done: 0, total: 1 } : { kind: 'pick', problem: null }))
   const [picked, setPicked] = useState<Record<string, string | null>>({})
   const [smsOpen, setSmsOpen] = useState(false)
   const [smsText, setSmsText] = useState('')
@@ -120,7 +122,10 @@ export function WhosPaidScreen() {
   const readFile = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     event.target.value = ''
-    if (!file) return
+    if (file) await readStatementFile(file)
+  }
+
+  const readStatementFile = async (file: File) => {
     setStep({ kind: 'reading', done: 0, total: 1 })
     const rows = await rowsOf(file).catch(() => null)
     const read = rows ? readStatement(rows) : null
@@ -130,6 +135,26 @@ export function WhosPaidScreen() {
     }
     review(read.credits, read.debits, read.trusted, 'statement')
   }
+
+  // Opened from a statement shared into Settle (the service worker keeps it under ?k=<id>).
+  const latestRead = useRef(readStatementFile)
+  useEffect(() => {
+    latestRead.current = readStatementFile
+  })
+  useEffect(() => {
+    if (!shareId) return
+    let alive = true
+    void (async () => {
+      const payload = await readSharedPayload(shareId)
+      if (!alive) return
+      const file = payload?.files[0]
+      if (file) void latestRead.current(file)
+      else setStep({ kind: 'pick', problem: 'whospaid.problem.fileType' })
+    })()
+    return () => {
+      alive = false
+    }
+  }, [shareId])
 
   const readSms = () => {
     const { credits } = creditsFromSms(smsText, today())

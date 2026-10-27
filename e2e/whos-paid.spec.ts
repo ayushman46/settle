@@ -110,6 +110,26 @@ test.describe("who's paid?", () => {
     await expect(page.getByRole('heading', { level: 1, name: '1 payment ticked off' })).toBeVisible()
   })
 
+  test('a statement shared from the bank’s app opens on its payments (production service worker)', async ({ page }) => {
+    test.skip(!!process.env.E2E_BASE_URL || process.env.E2E_TARGET === 'dev', 'needs the production build and its service worker')
+    await openWhosPaid(page)
+    await page.evaluate(async () => {
+      await navigator.serviceWorker.ready
+    })
+    await page.reload()
+    await expect.poll(() => page.evaluate(() => navigator.serviceWorker.controller !== null)).toBe(true)
+    const to = await page.evaluate(async (csv) => {
+      const body = new FormData()
+      body.append('title', 'Your account statement')
+      body.append('media', new File([csv], 'Acct_Statement_XX1234.csv', { type: 'text/csv' }))
+      const response = await fetch('/share-target', { method: 'POST', body })
+      return new URL(response.url).pathname + new URL(response.url).search
+    }, STATEMENT)
+    expect(to).toMatch(/^[/]app[/]whos-paid[?]k=[A-Za-z0-9_-]{12}$/)
+    await page.goto(to)
+    await expect(page.getByRole('heading', { level: 1, name: '3 payments to you' })).toBeVisible()
+  })
+
   test('reached from Home’s More sheet and from an expense people still owe on', async ({ page }) => {
     await seed(page, {
       friends: [friend('riya', 'Riya Sharma'), friend('sam', 'Sam'), friend('asha', 'Asha')],

@@ -6,6 +6,7 @@ import { draft, everyone } from '../../data/testKit'
 import { ME_ID } from '../../domain/types'
 import type * as ImageModule from '../../lib/image'
 import { prepareImage, type PreparedImage } from '../../lib/image'
+import { readSharedPayload } from '../../lib/sharedPayload'
 import { json, renderAt, resetProScreens, route } from '../pro/testing'
 import { proofLedgerStore } from '../proof/proofLedger'
 import { WhosPaidScreen } from './WhosPaidScreen'
@@ -14,6 +15,8 @@ vi.mock('../../lib/image', async (importOriginal) => {
   const actual: typeof ImageModule = await importOriginal()
   return { ...actual, prepareImage: vi.fn() }
 })
+
+vi.mock('../../lib/sharedPayload', () => ({ readSharedPayload: vi.fn() }))
 
 vi.setConfig({ testTimeout: 30_000 })
 
@@ -223,6 +226,20 @@ describe('WhosPaidScreen', () => {
     renderAt('/app/whos-paid', <WhosPaidScreen />)
     fireEvent.change(screen.getByLabelText('Choose screenshots', { selector: 'input' }), { target: { files: [new File(['a'], 'a.png', { type: 'image/png' })] } })
     expect(await screen.findByText(/doesn’t look like a list of payments/)).toBeInTheDocument()
+  })
+
+  it('a statement shared in from the bank’s app is read straight away', async () => {
+    vi.mocked(readSharedPayload).mockResolvedValue({ title: '', text: '', url: '', files: [statementFile()] })
+    renderAt('/app/whos-paid?k=abcdefghijkl', <WhosPaidScreen />)
+    expect(screen.getByText('Reading…')).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { level: 1, name: '3 payments to you' })).toBeInTheDocument()
+    expect(vi.mocked(readSharedPayload)).toHaveBeenCalledWith('abcdefghijkl')
+  })
+
+  it('a share that’s gone says so, on the choices', async () => {
+    vi.mocked(readSharedPayload).mockResolvedValue(null)
+    renderAt('/app/whos-paid?k=abcdefghijkl', <WhosPaidScreen />)
+    expect(await screen.findByText('Couldn’t open that file. Save it as CSV or Excel (.xlsx) and try again.')).toBeInTheDocument()
   })
 
   it('nobody owes you: says so', () => {

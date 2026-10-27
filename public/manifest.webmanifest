@@ -39,7 +39,7 @@
       "title": "title",
       "text": "text",
       "url": "url",
-      "files": [{ "name": "media", "accept": ["image/jpeg", "image/png", "image/webp", "image/heic", "image/*", "text/plain", ".txt"] }]
+      "files": [{ "name": "media", "accept": ["image/jpeg", "image/png", "image/webp", "image/heic", "image/*", "text/plain", ".txt", "text/csv", ".csv", "application/vnd.ms-excel", ".xls", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", ".xlsx"] }]
     }
   }
 }
