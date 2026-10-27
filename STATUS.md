@@ -1,6 +1,6 @@
 # Settle — what works and what doesn't
 
-Live: **https://settleupi.vercel.app** · last checked 25 Oct 2026, 12:40 IST.
+Live: **https://settleupi.vercel.app** · last checked 25 Oct 2026, 12:40 IST (the 28 Oct work is in the repository and awaiting deploy).
 
 Legend: ✅ works on the live site · ⚠️ works with a limit · ❌ not working yet
 
@@ -50,8 +50,9 @@ Legend: ✅ works on the live site · ⚠️ works with a limit · ❌ not worki
 | Using one account on two phones | ⚠️ by design | No accounts and no database: data stays on the phone. Move it with a backup file. |
 | Automatic deploys | ⚠️ | Deploys run from the command line (`npx vercel deploy --prod`); GitHub isn't connected to Vercel for deploy-on-push yet. |
 
-## Tests (24 Oct 2026, after the night-2 changes)
+## Tests (28 Oct 2026)
 
-- Unit and component tests: **4,790 passed**, 0 failed (`npm run check`: typecheck and lint clean).
-- End-to-end against the live site (this morning): smoke and foundations journeys, **13 passed** on 360 px and 390 px phones. The full 164-journey production run was last done on 23 Oct; the night-2 scenario matrix (offline, slow 3G, 320 px, Hindi, 1,500 expenses) was written but not run in full before the wrap-up.
+- Unit and component tests: **5,081 passed**, 0 failed; typecheck and lint clean. (On a busy machine a few slow screen tests can hit the 5-second limit; they pass when run again.)
+- End-to-end on the production build, Microsoft Edge as 360 px and 390 px phones in light and dark (364 journeys): every journey for the new work passes — Auto-settle, "Who's paid?" (statement, screenshots, a statement shared in through the service worker), "To collect", part payments, pay links, offline straight after the first visit (red since v5, now fixed), sharing a bill photo in. The 1,500-expense scroll test needs a quiet machine (60 s alone, against a 90 s budget). CI runs the whole suite in four parallel shards.
+- The Android app compiles in CI (Actions → Android, debug APK).
 

@@ -10,7 +10,7 @@ The bill-splitting app built for India: friends pay their exact share by UPI —
 
 [![Live](https://img.shields.io/badge/live-settleupi.vercel.app-D8F57C?style=flat-square&labelColor=141413)](https://settleupi.vercel.app)
 [![Languages](https://img.shields.io/badge/languages-8%20Indian-D8F57C?style=flat-square&labelColor=141413)](#built-for-india)
-[![Tests](https://img.shields.io/badge/tests-4%2C800%2B%20passing-D8F57C?style=flat-square&labelColor=141413)](STATUS.md)
+[![Tests](https://img.shields.io/badge/tests-5%2C000%2B%20passing-D8F57C?style=flat-square&labelColor=141413)](STATUS.md)
 [![License](https://img.shields.io/badge/license-proprietary-D8F57C?style=flat-square&labelColor=141413)](LICENSE)
 
 **[Open the app](https://settleupi.vercel.app)** · **[Watch the film](docs/media/settle-promo.mp4)** · [What works and what doesn't](STATUS.md) · [Deploy your own](DEPLOY.md)
