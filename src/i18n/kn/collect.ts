@@ -25,4 +25,6 @@ export const collect: Messages = {
   'collect.paid.aria': '{name} ಪಾವತಿಸಿದರು',
   'collect.paid.toast': '{name} ಪಾವತಿಸಿದ್ದಾರೆ ಎಂದು ಗುರುತಿಸಲಾಗಿದೆ',
   'collect.home.cta': 'ಹಣ ವಾಪಸ್ ಪಡೆಯಿರಿ',
+  'collect.line': '{count, plural, one {# ಜನರಿಂದ} other {# ಜನರಿಂದ}} {amount}',
+  'collect.line.none': 'ಈಗ ಯಾರೂ ನಿಮಗೆ ಬಾಕಿ ಇಲ್ಲ',
 }

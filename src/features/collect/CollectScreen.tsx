@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { BellRing, Check, HandCoins, ListChecks } from 'lucide-react'
+import { BellRing, Check, HandCoins } from 'lucide-react'
 import { goBack, navigate } from '../../app/router'
 import { Banner, Button, Card, EmptyState, Money, PageTitle, Screen, TopBar, useToast } from '../../components'
 import { useExpenses, useFriends, useGroups, useProfile, useStore } from '../../data'
@@ -14,7 +14,7 @@ import { formatMoney } from '../../lib/money'
 import { settleWithFriend } from '../friends/friendBalance'
 import { friendPath } from '../groups/paths'
 import { AutoSettleCard } from '../autosettle/AutoSettleCard'
-import { WHOS_PAID_PATH } from '../whospaid/paths'
+import { WhosPaidLink } from '../whospaid/WhosPaidLink'
 import { toCollect, type CollectRow } from './toCollect'
 import styles from './Collect.module.css'
 
@@ -71,9 +71,7 @@ export function CollectScreen() {
           ))}
         </ul>
       </Card>
-      <Button variant="ghost" block iconStart={<ListChecks />} onClick={() => navigate(WHOS_PAID_PATH)}>
-        {t('whospaid.expense.cta')}
-      </Button>
+      <WhosPaidLink />
       {remind && (
         <NudgeSheet
           key={`${remind.row.friend.id}:${remind.opened}`}

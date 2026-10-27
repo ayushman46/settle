@@ -26,4 +26,6 @@ export const collect = {
   'collect.paid.aria': '{name} paid you',
   'collect.paid.toast': '{name} marked paid',
   'collect.home.cta': 'Get paid back',
+  'collect.line': '{amount} from {count, plural, one {# person} other {# people}}',
+  'collect.line.none': 'Nobody owes you right now',
 } as const satisfies Messages

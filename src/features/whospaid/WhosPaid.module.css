@@ -272,3 +272,21 @@
   color: var(--ink);
   overflow-wrap: anywhere;
 }
+
+/* ---------- The link row (To collect, an expense) ---------- */
+
+.linkIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--s-10);
+  height: var(--s-10);
+  border-radius: var(--r-pill);
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+}
+
+.linkIcon > svg {
+  width: var(--s-5);
+  height: var(--s-5);
+}

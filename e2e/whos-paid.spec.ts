@@ -92,7 +92,7 @@ test.describe("who's paid?", () => {
     // Everyone has paid: the dinner says so.
     await page.goto('/app/expense/goa-dinner')
     await expect(page.getByRole('heading', { level: 1, name: 'Goa dinner' })).toBeVisible()
-    await expect(page.getByRole('button', { name: 'Who’s paid? Check your UPI app or bank statement' })).toHaveCount(0)
+    await expect(page.getByRole('button', { name: /^Who’s paid. Tick off who paid/ })).toHaveCount(0)
   })
 
   test('history screenshots: read by the AI, the overlap counted once', async ({ page, api }) => {
@@ -141,7 +141,7 @@ test.describe("who's paid?", () => {
     await expect(page).toHaveURL(/\/app\/whos-paid$/)
 
     await page.goto('/app/expense/goa-dinner')
-    await page.getByRole('button', { name: 'Who’s paid? Check your UPI app or bank statement' }).click()
+    await page.getByRole('button', { name: /^Who’s paid. Tick off who paid/ }).click()
     await expect(page).toHaveURL(/\/app\/whos-paid$/)
     await expect(page.getByRole('heading', { level: 1, name: 'Who’s paid?' })).toBeVisible()
   })

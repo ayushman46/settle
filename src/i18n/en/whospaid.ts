@@ -72,4 +72,5 @@ export const whospaid = {
   'whospaid.reason.part': 'Part payment',
   'whospaid.reason.over': 'Paid more',
   'whospaid.expense.cta': 'Who’s paid? Check your UPI app or bank statement',
+  'whospaid.link.text': 'Tick off who paid, from your UPI app, bank statement or SMS',
 } as const satisfies Messages

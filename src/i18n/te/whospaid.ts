@@ -71,4 +71,5 @@ export const whospaid: Messages = {
   'whospaid.reason.part': 'పాక్షిక చెల్లింపు',
   'whospaid.reason.over': 'ఎక్కువ పంపారు',
   'whospaid.expense.cta': 'ఎవరు పంపారు? మీ UPI యాప్ లేదా బ్యాంక్ స్టేట్‌మెంట్ చూడండి',
+  'whospaid.link.text': 'UPI యాప్, బ్యాంక్ స్టేట్‌మెంట్ లేదా SMS నుంచి చెల్లించినవారిని టిక్ చేయండి',
 }

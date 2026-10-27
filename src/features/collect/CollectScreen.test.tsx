@@ -87,7 +87,7 @@ describe('CollectScreen', () => {
 
   it('links to Who’s paid? and to each person', async () => {
     const { user } = renderAt('/app/collect', <CollectScreen />)
-    await user.click(screen.getByRole('button', { name: 'Who’s paid? Check your UPI app or bank statement' }))
+    await user.click(screen.getByRole('button', { name: /^Who’s paid. Tick off who paid/ }))
     expect(currentUrl()).toBe('/app/whos-paid')
   })
 

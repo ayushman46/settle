@@ -25,7 +25,8 @@ permissions:
 jobs:
   apk:
     name: Debug APK
-    runs-on: ubuntu-latest
+    # 24.04 comes with the Android SDK (ubuntu-latest is moving to 26).
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v7
@@ -39,7 +40,8 @@ jobs:
           distribution: temurin
           java-version: "21"
           cache: gradle
-      - uses: android-actions/setup-android@v3
+      - name: Android SDK
+        run: echo "sdk.dir=$ANDROID_HOME" > android/local.properties && ls "$ANDROID_HOME/platforms"
       - name: Copy the shell page, config and plugins into the Android project
         run: npx cap sync android
       - name: Build the debug APK

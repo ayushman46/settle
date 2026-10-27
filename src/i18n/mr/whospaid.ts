@@ -71,4 +71,5 @@ export const whospaid: Messages = {
   'whospaid.reason.part': 'अंशतः पैसे',
   'whospaid.reason.over': 'जास्त पाठवले',
   'whospaid.expense.cta': 'कोणी पाठवले? तुमचे UPI ॲप किंवा बँक स्टेटमेंट तपासा',
+  'whospaid.link.text': 'UPI ॲप, बँक स्टेटमेंट किंवा SMS वरून पैसे दिलेल्यांना टिक करा',
 }

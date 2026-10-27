@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { CheckCheck, EllipsisVertical, ListChecks, Pencil, QrCode, Share2, UsersRound } from 'lucide-react'
+import { CheckCheck, EllipsisVertical, Pencil, QrCode, Share2, UsersRound } from 'lucide-react'
 import { goBack, navigate, useRoute } from '../../app/router'
 import { ActionBar, Button, Card, IconButton, PageTitle, Screen, SectionHeader, TopBar, useToast } from '../../components'
 import {
@@ -22,7 +22,7 @@ import { formatMoney } from '../../lib/money'
 import { firstName } from '../../share/text'
 import { openBill } from '../bill/launch'
 import { openPaywall } from '../pro/paywall'
-import { WHOS_PAID_PATH } from '../whospaid/paths'
+import { WhosPaidLink } from '../whospaid/WhosPaidLink'
 import { BillBreakdown } from './BillBreakdown'
 import { ExpenseActionsSheet } from './ExpenseActionsSheet'
 import { ExpenseHero } from './ExpenseHero'
@@ -241,9 +241,7 @@ function ExpenseDetail({ expense, onDeleting }: ExpenseDetailProps) {
           />
         </Card>
         {canMarkAll && expense.currency === 'INR' && (
-          <Button variant="ghost" block iconStart={<ListChecks />} onClick={() => navigate(WHOS_PAID_PATH)}>
-            {t('whospaid.expense.cta')}
-          </Button>
+          <WhosPaidLink />
         )}
       </section>
 

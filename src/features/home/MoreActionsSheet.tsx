@@ -1,8 +1,9 @@
-import { Building2, CircleCheck, ListChecks, Zap } from 'lucide-react'
+import { BadgeIndianRupee, Building2, CircleCheck, ListChecks, Zap } from 'lucide-react'
 import { navigate } from '../../app/router'
 import { BottomSheet, QuickAction, QuickActionGrid } from '../../components'
 import { useT } from '../../i18n'
 import { BIJLI_PATH } from '../bijli/paths'
+import { COLLECT_PATH } from '../collect/paths'
 import { PROOF_ENABLED, PROOF_PATH } from '../proof/enabled'
 import { RENT_ENABLED, RENT_PATH } from '../rent/enabled'
 import { WHOS_PAID_PATH } from '../whospaid/paths'
@@ -22,6 +23,16 @@ export function MoreActionsSheet({ open, onClose }: MoreActionsSheetProps) {
   return (
     <BottomSheet open={open} onClose={onClose} title={t('home.more.title')} description={t('home.more.subtitle')}>
       <QuickActionGrid label={t('home.more.title')}>
+        <QuickAction
+          key="collect"
+          icon={<BadgeIndianRupee />}
+          label={t('collect.title')}
+          tone="accent"
+          onClick={() => {
+            onClose()
+            navigate(COLLECT_PATH)
+          }}
+        />
         <QuickAction
           key="whospaid"
           icon={<ListChecks />}

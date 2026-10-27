@@ -1,13 +1,14 @@
 import { useState } from 'react'
-import { Building2, ChartPie, CircleCheck, ClipboardPaste, Coins, FileText, HandCoins, KeyRound, Languages, Repeat, ShieldCheck, Users } from 'lucide-react'
+import { BadgeIndianRupee, Building2, ChartPie, CircleCheck, ClipboardPaste, Coins, FileText, HandCoins, KeyRound, Languages, Repeat, ShieldCheck, Users } from 'lucide-react'
 import { navigate } from '../../app/router'
 import { Badge, Card, List, ListRow, Screen, SuccessBurst, Switch, useToast } from '../../components'
-import { updateProfile, useDueRecurring, useFriends, usePools, useProfile, useRecurring } from '../../data'
+import { updateProfile, useDueRecurring, useFriends, usePools, useProfile, useRecurring, useSummary } from '../../data'
 import { BRAND, type License } from '../../domain/types'
 import { currencyName } from '../../lib/currencies'
-import { currencySymbol } from '../../lib/money'
+import { currencySymbol, formatMoney } from '../../lib/money'
 import { languageInfo, useLang, useT } from '../../i18n'
 import { useHasFeature } from '../../pro'
+import { COLLECT_PATH } from '../collect/paths'
 import { PastePaidReplySheet } from '../expense/PastePaidReplySheet'
 import { POOLS_ENABLED } from '../pools/enabled'
 import { InstallRow } from '../install'
@@ -64,6 +65,8 @@ export function YouScreen() {
 
 function Shortcuts() {
   const friends = useFriends()
+  const summary = useSummary()
+  const owing = Object.values(summary.byFriend).filter((amount) => amount > 0).length
   const recurring = useRecurring()
   const due = useDueRecurring()
   const recurringOn = useHasFeature('recurring')
@@ -110,6 +113,17 @@ function Shortcuts() {
           chevron
         />
         {POOLS_ENABLED && <CollectionsRow />}
+        <ListRow
+          leading={
+            <SettingIcon>
+              <BadgeIndianRupee />
+            </SettingIcon>
+          }
+          title={t('collect.title')}
+          subtitle={owing > 0 ? t('collect.line', { amount: formatMoney(summary.owedToMe, summary.currency, { trimZeros: true }), count: owing }) : t('collect.line.none')}
+          onClick={() => navigate(COLLECT_PATH)}
+          chevron
+        />
         {PROOF_ENABLED && (
           <ListRow
             leading={
