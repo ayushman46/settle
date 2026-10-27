@@ -374,3 +374,45 @@ export interface ProofResponse {
   /** Model that read the screenshot (for logs and the report). */
   model: string
 }
+
+/* ------------------------------------------------------------------ "Who's paid?": payment history */
+
+/** The one error `POST /api/history` adds: the screenshot isn't a list of payments (422). */
+export const NOT_A_HISTORY_CODE = 'not_a_history'
+
+/** Request body for `POST /api/history`: a screenshot of a UPI app's history (same image rules as a bill). */
+export interface HistoryRequest {
+  image: string
+  /** The collector's date, YYYY-MM-DD, to resolve "Today", "Yesterday" and dates without a year. */
+  today: string
+}
+
+/** What on the row said the money came in. A colour alone (`green_only`) is never enough to tick. */
+export const HISTORY_CUES = ['received_word', 'credited_word', 'plus_sign', 'cr_marker', 'deposit_column', 'green_only'] as const
+export type HistoryCue = (typeof HISTORY_CUES)[number]
+
+/** One payment received, as a history screenshot shows it. Money in MAJOR units. */
+export interface HistoryRow {
+  /** The payer exactly as printed. */
+  name: string | null
+  /** Their UPI ID or masked number as printed ("******4821@ybl"). */
+  handle: string | null
+  amount: number | null
+  /** YYYY-MM-DD. */
+  date: string | null
+  status: PaymentStatus
+  cue: HistoryCue
+  /** A 12-digit reference, only when printed on the row. */
+  utr: string | null
+  /** The row is partly outside the screenshot. */
+  cutOff: boolean
+}
+
+/** Successful response of `POST /api/history`: only money received; outgoing rows are counted, never read out. */
+export interface HistoryResponse {
+  app: PaymentApp
+  rows: HistoryRow[]
+  /** Rows of money sent (not listed). */
+  skippedOutgoing: number
+  model: string
+}

@@ -167,6 +167,11 @@ const BijliScreen = lazyScreen(
   () => import('../features/bijli/BijliScreen'),
   (m) => m.BijliScreen,
 )
+const WhosPaidScreen = lazyScreen(
+  'WhosPaidScreen',
+  () => import('../features/whospaid/WhosPaidScreen'),
+  (m) => m.WhosPaidScreen,
+)
 const RentDetailScreen = lazyScreen(
   'RentDetailScreen',
   () => import('../features/rent/RentDetailScreen'),
@@ -272,6 +277,7 @@ export const APP_ROUTES: readonly AppRoute[] = [
   { pattern: '/app/rent/:id/edit', screen: RentEditorScreen, title: 'Edit rent', tab: null },
   { pattern: '/app/rent/:id/receipts', screen: RentReceiptsScreen, title: 'Rent receipts', tab: null },
   { pattern: '/app/bijli', screen: BijliScreen, title: 'Electricity', tab: null },
+  { pattern: '/app/whos-paid', screen: WhosPaidScreen, title: 'Who’s paid?', tab: null },
 ]
 
 /** The app route for `path`, or null for an unknown `/app/*` path. */

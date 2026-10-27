@@ -41,6 +41,7 @@ import { shagun } from './shagun'
 import { install } from './install'
 import { rent } from './rent'
 import { bijli } from './bijli'
+import { whospaid } from './whospaid'
 
 export const HI: Messages = {
   ...common,
@@ -78,6 +79,7 @@ export const HI: Messages = {
   ...install,
   ...rent,
   ...bijli,
+  ...whospaid,
 }
 
 export default HI

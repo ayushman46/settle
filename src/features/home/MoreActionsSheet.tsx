@@ -1,10 +1,11 @@
-import { Building2, CircleCheck, Zap } from 'lucide-react'
+import { Building2, CircleCheck, ListChecks, Zap } from 'lucide-react'
 import { navigate } from '../../app/router'
 import { BottomSheet, QuickAction, QuickActionGrid } from '../../components'
 import { useT } from '../../i18n'
 import { BIJLI_PATH } from '../bijli/paths'
 import { PROOF_ENABLED, PROOF_PATH } from '../proof/enabled'
 import { RENT_ENABLED, RENT_PATH } from '../rent/enabled'
+import { WHOS_PAID_PATH } from '../whospaid/paths'
 import { templateActionDefs } from './quickActions'
 
 export interface MoreActionsSheetProps {
@@ -21,6 +22,16 @@ export function MoreActionsSheet({ open, onClose }: MoreActionsSheetProps) {
   return (
     <BottomSheet open={open} onClose={onClose} title={t('home.more.title')} description={t('home.more.subtitle')}>
       <QuickActionGrid label={t('home.more.title')}>
+        <QuickAction
+          key="whospaid"
+          icon={<ListChecks />}
+          label={t('whospaid.more.title')}
+          tone="accent"
+          onClick={() => {
+            onClose()
+            navigate(WHOS_PAID_PATH)
+          }}
+        />
         {PROOF_ENABLED && (
           <QuickAction
             key="proof"

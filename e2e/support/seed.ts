@@ -18,6 +18,7 @@ const KEYS = {
   claims: 'settle.v4.claims',
   pools: 'settle.v4.pools',
   proofRefs: 'settle-proof-refs',
+  payerAliases: 'settle.v5.payer-aliases',
 } as const satisfies typeof STORAGE_KEYS
 const STORAGE_VERSION = 1 satisfies typeof STORE_VERSION
 

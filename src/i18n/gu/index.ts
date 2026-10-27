@@ -37,6 +37,7 @@ import { proof } from './proof'
 import { shagun } from './shagun'
 import { install } from './install'
 import { bijli } from './bijli'
+import { whospaid } from './whospaid'
 
 export const GU: Messages = {
   ...common,
@@ -73,6 +74,7 @@ export const GU: Messages = {
   ...shagun,
   ...install,
   ...bijli,
+  ...whospaid,
 }
 
 export default GU

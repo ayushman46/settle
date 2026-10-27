@@ -17,7 +17,9 @@ import {
   type ApiErrorCode,
   type DescribeResponse,
   NOT_A_PAYMENT_CODE,
+  NOT_A_HISTORY_CODE,
   type HealthResponse,
+  type HistoryResponse,
   type ProofResponse,
   type ScanResponse,
 } from '../shared/api'
@@ -29,6 +31,7 @@ import { ERROR_MESSAGES, ERROR_STATUS, fail, NOT_JSON, ownPageOnly, readJson, ty
 import { inspectImage } from './image'
 import { MAX_TOKEN_LENGTH, verifyLicense } from './license'
 import { extractBill, UpstreamError } from './nvidia'
+import { isHistoryReply, NOT_A_HISTORY_MESSAGE, readHistory } from './history'
 import { isProofReply, NOT_A_PAYMENT_MESSAGE, readProof } from './proof'
 import { isAcceptableReply, isUsable, normalize, parseExtraction } from './parse'
 import { createRatesSource, ratesCacheControl } from './rates'
@@ -70,6 +73,16 @@ export const PROOF_MESSAGES: Messages = {
   unreadable: "We couldn't read that screenshot. Try the full success screen, in good light.",
 }
 
+/** Wording for `/api/history` ("Who's paid?"): when screenshots can't be read, a statement or SMS still can. */
+export const HISTORY_MESSAGES: Messages = {
+  bad_request: 'Something went wrong sending the screenshot. Please try again.',
+  not_configured: "Reading screenshots isn't available right now — your bank statement or SMS work on this phone.",
+  upstream_auth: "Reading screenshots isn't working right now — your bank statement or SMS work on this phone.",
+  rate_limited: 'Too many screenshots right now. Try again in a few minutes — or use your bank statement.',
+  timeout: 'Reading the screenshot took too long. Try again, or use your bank statement.',
+  unreadable: "We couldn't read that screenshot. Try your UPI app's history, filtered to money received.",
+}
+
 /** A sentence, a few names and a date: anything bigger isn't from our client. */
 const MAX_DESCRIBE_BODY_BYTES = 16 * 1024
 
@@ -88,7 +101,7 @@ const RATES_LIMITED = 'Too many rate lookups — try again in a minute, or enter
 
 interface Route {
   /** Log prefix. */
-  tag: '[scan]' | '[describe]' | '[proof]'
+  tag: '[scan]' | '[describe]' | '[proof]' | '[history]'
   messages: Messages
   busy: string
 }
@@ -96,6 +109,9 @@ interface Route {
 const SCAN: Route = { tag: '[scan]', messages: {}, busy: UPSTREAM_BUSY }
 const DESCRIBE: Route = { tag: '[describe]', messages: DESCRIBE_MESSAGES, busy: UPSTREAM_BUSY_DESCRIBE }
 const PROOF: Route = { tag: '[proof]', messages: PROOF_MESSAGES, busy: PROOFS_BUSY }
+const HISTORY: Route = { tag: '[history]', messages: HISTORY_MESSAGES, busy: PROOFS_BUSY }
+
+const HistoryRequestSchema = z.object({ image: z.string().min(1), today: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional() })
 
 /** `fail` with the route's own wording for `code`, when it has one. */
 function failOn(c: Context, route: Route, code: ApiErrorCode, status?: ContentfulStatusCode) {
@@ -309,6 +325,51 @@ export function createApp(config: ServerConfig, options: AppOptions = {}): Hono 
       } catch (error) {
         if (!(error instanceof UpstreamError)) throw error
         return upstreamFailure(c, error, PROOF)
+      }
+    },
+  )
+
+  /* ---------------------------------------------------------------- POST /api/history */
+
+  app.post(
+    '/api/history',
+    guard,
+    aiAllowance(HISTORY),
+    inFlight(PROOFS_BUSY),
+    bodyLimit({ maxSize: API_LIMITS.maxBodyBytes, onError: (c) => fail(c, 'image_too_large') }),
+    async (c) => {
+      const json = await readJson(c)
+      const request = json === NOT_JSON ? null : HistoryRequestSchema.safeParse(json)
+      if (!request?.success) return fail(c, 'bad_request')
+
+      const photo = inspectImage(request.data.image)
+      if (!photo.ok) return fail(c, photo.code)
+      if (config.apiKey === null) return failOn(c, HISTORY, 'not_configured')
+
+      // The client's own day (India runs ahead of UTC): never more than a day off the server's.
+      const serverToday = utcToday(now())
+      const asked = request.data.today
+      const today = asked && Math.abs(Date.parse(asked) - Date.parse(serverToday)) <= 86_400_000 ? asked : serverToday
+      const started = now()
+      try {
+        const { outcome, model } = await readHistory(config, photo.dataUrl, today, {
+          signal: c.req.raw.signal,
+          accept: isHistoryReply,
+          onAttemptFailed: (error) => log.warn(`[history] attempt failed: ${describeUpstream(error, redact)}`),
+        })
+        keyRejectedAt = null
+        const elapsed = now() - started
+        if (outcome.kind === 'not_a_history') {
+          log.info(`[history] not a history · ${model} · ${elapsed} ms`)
+          return c.json({ error: { code: NOT_A_HISTORY_CODE, message: NOT_A_HISTORY_MESSAGE } }, 422)
+        }
+        // Names, amounts and references are never logged: only how many rows there were.
+        log.info(`[history] ok · ${model} · ${outcome.rows.length} received · ${outcome.skippedOutgoing} sent · ${elapsed} ms`)
+        const body: HistoryResponse = { app: outcome.app, rows: outcome.rows, skippedOutgoing: outcome.skippedOutgoing, model }
+        return c.json(body)
+      } catch (error) {
+        if (!(error instanceof UpstreamError)) throw error
+        return upstreamFailure(c, error, HISTORY)
       }
     },
   )

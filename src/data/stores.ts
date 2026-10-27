@@ -27,6 +27,8 @@ export const STORAGE_KEYS = {
   pools: 'settle.v4.pools',
   /** Payment references marked paid from UPI screenshots (src/features/proof). Keeps the name it was written under. */
   proofRefs: 'settle-proof-refs',
+  /** Bank names confirmed as your people in "Who's paid?" (src/features/whospaid). */
+  payerAliases: 'settle.v5.payer-aliases',
 } as const
 
 /** Accepts a bare, un-enveloped value (e.g. hand-edited storage) when the schema can read it. */
@@ -111,6 +113,31 @@ export const proofRefsSchema = z.array(
     at: z.number(),
   }),
 )
+
+/** A bank name confirmed as one of your people ("KARAN MALHOTRA" pays for Bunty), for "Who's paid?". */
+export interface PayerAlias {
+  /** The printed name's words, lower case ("karan malhotra"). */
+  name: string
+  friendId: string
+  at: number
+}
+
+export const payerAliasesSchema = z.array(
+  z.object({
+    name: z.string().check(z.minLength(1), z.maxLength(120)),
+    friendId: z.string().check(z.minLength(1)),
+    at: z.number(),
+  }),
+)
+
+/** Bank names you've confirmed as people. Kept on this phone; backed up with the rest. */
+export const payerAliasesStore = createStore<PayerAlias[]>({
+  key: STORAGE_KEYS.payerAliases,
+  schema: payerAliasesSchema,
+  initial: () => [],
+  version: STORAGE_VERSION,
+  migrate: bare(payerAliasesSchema),
+})
 
 /** The payment references already marked from screenshots. Kept on this phone; backed up with the rest. */
 export const proofRefsStore = createStore<ProofRef[]>({

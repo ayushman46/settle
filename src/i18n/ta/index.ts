@@ -40,6 +40,7 @@ import { proof } from './proof'
 import { shagun } from './shagun'
 import { install } from './install'
 import { bijli } from './bijli'
+import { whospaid } from './whospaid'
 
 export const TA: Messages = {
   ...common,
@@ -76,6 +77,7 @@ export const TA: Messages = {
   ...shagun,
   ...install,
   ...bijli,
+  ...whospaid,
 }
 
 export default TA

@@ -40,6 +40,7 @@ import { proof } from './proof'
 import { shagun } from './shagun'
 import { install } from './install'
 import { bijli } from './bijli'
+import { whospaid } from './whospaid'
 
 export const TE: Messages = {
   ...common,
@@ -76,6 +77,7 @@ export const TE: Messages = {
   ...shagun,
   ...install,
   ...bijli,
+  ...whospaid,
 }
 
 export default TE

@@ -37,6 +37,7 @@ import { proof } from './proof'
 import { shagun } from './shagun'
 import { install } from './install'
 import { bijli } from './bijli'
+import { whospaid } from './whospaid'
 
 export const KN: Messages = {
   ...common,
@@ -73,6 +74,7 @@ export const KN: Messages = {
   ...shagun,
   ...install,
   ...bijli,
+  ...whospaid,
 }
 
 export default KN

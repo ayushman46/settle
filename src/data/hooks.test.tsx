@@ -162,7 +162,9 @@ describe('group & recurring hooks', () => {
     saveRecurring({ ...base, title: 'Late', dayOfMonth: 20, active: true })
     saveRecurring({ ...base, title: 'Paused', dayOfMonth: 1, active: false })
     saveRecurring({ ...base, title: 'Early', dayOfMonth: 2, active: true })
-    const { result } = renderHook(() => ({ all: useRecurring(), due: useDueRecurring(addDays(today(), 400)) }))
+    // The 25th of a month a year on: both the 2nd and the 20th are past (whatever day the test runs).
+    const later = `${addDays(today(), 400).slice(0, 8)}25`
+    const { result } = renderHook(() => ({ all: useRecurring(), due: useDueRecurring(later) }))
     expect(result.current.all.map((r) => r.title)).toEqual(['Early', 'Late', 'Paused'])
     expect(result.current.due.map((d) => d.template.title)).toEqual(['Early', 'Late'])
   })

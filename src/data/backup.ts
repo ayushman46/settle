@@ -27,10 +27,13 @@ import {
   groupsStore,
   poolsStore,
   profileStore,
+  payerAliasesSchema,
+  payerAliasesStore,
   proofRefsSchema,
   proofRefsStore,
   recurringStore,
   STORAGE_KEYS,
+  type PayerAlias,
   type ProofRef,
 } from './stores'
 import { LEGACY_KEYS } from './legacy'
@@ -53,6 +56,8 @@ export interface BackupFile {
   claims: ClaimRound[]
   /** UPI references marked paid from screenshots (the duplicate guard). Absent in older files. */
   proofRefs: ProofRef[]
+  /** Bank names confirmed as people in "Who's paid?". Absent in older files. */
+  payerAliases: PayerAlias[]
 }
 
 const backupSchema = z.object({
@@ -68,6 +73,7 @@ const backupSchema = z.object({
   pools: z.catch(poolsSchema, []),
   claims: z.catch(claimRoundsSchema, []),
   proofRefs: z.catch(proofRefsSchema, []),
+  payerAliases: z.catch(z.optional(payerAliasesSchema), []),
 })
 
 export function exportBackup(): BackupFile {
@@ -83,6 +89,7 @@ export function exportBackup(): BackupFile {
     pools: poolsStore.get(),
     claims: claimsStore.get(),
     proofRefs: proofRefsStore.get(),
+    payerAliases: payerAliasesStore.get(),
   }
 }
 
@@ -111,6 +118,7 @@ export function parseBackup(json: unknown): BackupFile | null {
     pools: data.pools,
     claims: data.claims,
     proofRefs: data.proofRefs,
+    payerAliases: data.payerAliases ?? [],
   }
 }
 
@@ -227,6 +235,7 @@ export function importBackup(file: BackupFile, mode: 'merge' | 'replace'): { add
     poolsStore.set([...file.pools])
     claimsStore.set([...file.claims])
     proofRefsStore.set([...file.proofRefs])
+    payerAliasesStore.set([...file.payerAliases])
     clearSplitPrefill()
     flushAllStores()
     const added =
@@ -324,6 +333,13 @@ export function importBackup(file: BackupFile, mode: 'merge' | 'replace'): { add
   const knownRefs = new Set(proofRefsStore.get().map((r) => r.utr))
   proofRefsStore.set([...proofRefsStore.get(), ...file.proofRefs.filter((r) => !knownRefs.has(r.utr))])
 
+  // Bank names confirmed as people: kept from both phones (people matched as above).
+  const knownNames = new Set(payerAliasesStore.get().map((a) => a.name))
+  payerAliasesStore.set([
+    ...payerAliasesStore.get(),
+    ...file.payerAliases.filter((a) => !knownNames.has(a.name)).map((a) => ({ ...a, friendId: idMap.get(a.friendId) ?? a.friendId })),
+  ])
+
   flushAllStores()
   return {
     added: added + expenses.added + groups.added + recurring.added + pools.added + claims.added,
@@ -346,7 +362,7 @@ export function clearAllData(): void {
       // Blocked storage — the in-memory reset below still applies.
     }
   }
-  for (const store of [profileStore, friendsStore, expensesStore, groupsStore, recurringStore, poolsStore, claimsStore, proofRefsStore])
+  for (const store of [profileStore, friendsStore, expensesStore, groupsStore, recurringStore, poolsStore, claimsStore, proofRefsStore, payerAliasesStore])
     store.reload()
   clearSplitPrefill()
 }

@@ -1,0 +1,274 @@
+/* "Who's paid?": the sources, reading, the review and what's left. */
+
+.content {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  gap: var(--s-4);
+  padding-bottom: var(--s-6);
+}
+
+/* ---------- Sources ---------- */
+
+.source {
+  display: grid;
+  gap: var(--s-3);
+}
+
+.sourceHead {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-3);
+}
+
+.sourceIcon {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: var(--s-10);
+  height: var(--s-10);
+  border-radius: var(--r-pill);
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+}
+
+.sourceIcon > svg {
+  width: var(--s-5);
+  height: var(--s-5);
+}
+
+.sourceText {
+  display: grid;
+  gap: var(--s-1);
+  min-width: 0;
+}
+
+.sourceTitle {
+  font: var(--text-label);
+  font-weight: 650;
+  color: var(--ink);
+}
+
+.sourceBody {
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
+.badgeAi,
+.badgePhone {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+  font: var(--text-micro);
+  font-weight: 600;
+}
+
+.badgeAi > svg,
+.badgePhone > svg {
+  width: 14px;
+  height: 14px;
+}
+
+.badgeAi {
+  color: var(--ink-2);
+}
+
+.badgePhone {
+  color: var(--positive);
+}
+
+.paste {
+  display: grid;
+  gap: var(--s-2);
+}
+
+.pasteLabel {
+  font: var(--text-label);
+  color: var(--ink);
+}
+
+.area {
+  width: 100%;
+  min-height: 120px;
+  padding: var(--s-3);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  color: var(--ink);
+  font: var(--text-body);
+  resize: vertical;
+}
+
+.reading {
+  font: var(--text-body);
+  color: var(--ink-2);
+}
+
+.skeletons {
+  display: grid;
+  gap: var(--s-3);
+}
+
+/* ---------- Review ---------- */
+
+.section {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--s-2);
+}
+
+.sectionTitle {
+  font: var(--text-section);
+  color: var(--ink);
+}
+
+.sectionHint {
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
+.sectionToggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2);
+  width: 100%;
+  min-height: 44px;
+  color: var(--ink);
+  text-align: start;
+}
+
+.chevron,
+.chevronOpen {
+  flex: none;
+  width: var(--s-5);
+  height: var(--s-5);
+  color: var(--ink-2);
+  transition: transform var(--dur-3) var(--ease-spring);
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+}
+
+.list {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--s-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--s-2);
+  padding: var(--s-3) var(--s-4);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+}
+
+.rowHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--s-3);
+}
+
+.rowText {
+  display: grid;
+  min-width: 0;
+}
+
+.printed {
+  font: var(--text-label);
+  font-weight: 650;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.meta {
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
+.tick {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-height: 44px;
+  font: var(--text-body);
+  color: var(--ink);
+}
+
+.tick > input {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  accent-color: var(--accent);
+}
+
+.choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+/* A choice names a person and a split, so it wraps rather than being cut short. */
+.choices > .choice {
+  height: auto;
+  min-height: calc(var(--s-8) + var(--s-1));
+  padding-block: var(--s-2);
+  border-radius: var(--r-md);
+  white-space: normal;
+  text-align: start;
+}
+
+.reasons {
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
+.fine {
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
+/* ---------- Done ---------- */
+
+.done {
+  display: grid;
+  justify-items: center;
+  gap: var(--s-3);
+  padding-top: var(--s-6);
+  text-align: center;
+}
+
+.doneTitle {
+  font: var(--text-title);
+  color: var(--ink);
+}
+
+.leftTitle {
+  padding: var(--s-4) var(--s-4) var(--s-2);
+  font: var(--text-label);
+  font-weight: 650;
+  color: var(--ink);
+}
+
+.leftRow {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-2) var(--s-4) var(--s-3);
+}
+
+.leftName {
+  font: var(--text-body);
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
