@@ -1,4 +1,5 @@
 /** Getting a file (the share card) out of the app: the native share sheet on phones, a download elsewhere. */
+import { shareFileInApp } from '../lib/nativeApp'
 
 export type ShareFileOutcome = 'shared' | 'downloaded' | 'cancelled' | 'failed'
 
@@ -109,6 +110,9 @@ export async function shareFile(
   opts: ShareFileOptions = {},
 ): Promise<ShareFileOutcome> {
   const name = safeFilename(filename, blob.type)
+  // The Android app: its own share sheet (a WebView can't share files or download a blob).
+  const inApp = await shareFileInApp(blob, name, { ...(text ? { text } : {}), ...(opts.title ? { title: opts.title } : {}) })
+  if (inApp !== null) return inApp ? 'shared' : 'failed'
   const prefer = opts.prefer ?? 'auto'
   const wantsShare = prefer === 'share' || (prefer === 'auto' && isTouchFirst())
   const file = wantsShare ? toFile(blob, name) : null

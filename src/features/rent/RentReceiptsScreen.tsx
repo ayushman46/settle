@@ -7,6 +7,7 @@ import { ME_ID } from '../../domain/types'
 import { today } from '../../engine/dates'
 import { useT, type MessageKey } from '../../i18n'
 import { formatMoney } from '../../lib/money'
+import { printPage } from '../../lib/nativeApp'
 import { ChoiceChips } from './ChoiceChips'
 import { RENT_ENABLED, RENT_PATH, rentEditPath, rentPath } from './enabled'
 import { buildReceipts, financialYearOf, isMonth, monthsBetween, needsLandlordPan, RENT_PAYMENT_MODES, type RentPaymentMode } from './hra'
@@ -145,7 +146,7 @@ function Receipts({ rent }: { rent: Rent }) {
         </div>
       </Card>
 
-      <Button block iconStart={<Printer />} disabled={receipts.length === 0} onClick={() => window.print()}>
+      <Button block iconStart={<Printer />} disabled={receipts.length === 0} onClick={() => printPage(rent.name)}>
         {t('rent.receipts.print')}
       </Button>
 

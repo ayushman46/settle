@@ -51,3 +51,37 @@ export function listenToPlugin(plugin: string, event: string, onEvent: (data: un
     void handle.remove().catch(() => undefined)
   }
 }
+
+/** The Android app's file plugin (android/…/SettleFilesPlugin.java). */
+const FILES = 'SettleFiles'
+
+/** Base64 of a blob, in slices (a long argument list would overflow the stack). */
+async function base64Of(blob: Blob): Promise<string> {
+  const bytes = new Uint8Array(await blob.arrayBuffer())
+  let binary = ''
+  for (let i = 0; i < bytes.length; i += 0x8000) binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000))
+  return btoa(binary)
+}
+
+/**
+ * In the Android app, a file goes out through Android's share sheet (save to Files or Drive, or
+ * send): a WebView can neither share files nor download a blob. Null when this isn't the app.
+ */
+export async function shareFileInApp(blob: Blob, name: string, extras: { text?: string; title?: string } = {}): Promise<boolean | null> {
+  if (!hasPlugin(FILES)) return null
+  try {
+    await callPlugin(FILES, 'share', { data: await base64Of(blob), name, mime: blob.type || 'application/octet-stream', ...extras })
+    return true
+  } catch {
+    return false
+  }
+}
+
+/** Prints the page: Android's print service in the app (a WebView ignores window.print), else the browser's. */
+export function printPage(title?: string): void {
+  if (hasPlugin(FILES)) {
+    void callPlugin(FILES, 'print', title ? { title } : {}).catch(() => undefined)
+    return
+  }
+  window.print()
+}
