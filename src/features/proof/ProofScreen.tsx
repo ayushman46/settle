@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { goBack, useSearchParams } from '../../app/router'
+import { goBack, navigate, useSearchParams } from '../../app/router'
 import { Button, PageTitle, Screen, TopBar, useToast } from '../../components'
 import { expensesStore, groupsStore } from '../../data/stores'
 import { useExpenses, useFriends, useGroups, useProfile } from '../../data'
@@ -9,6 +9,8 @@ import { useT, type MessageKey } from '../../i18n'
 import { prepareImage, ImageError, isImageFile, type PreparedImage } from '../../lib/image'
 import { formatMoney } from '../../lib/money'
 import { readSharedPayload } from '../../lib/sharedPayload'
+import { setSharedPhoto } from '../../state/sharedPhoto'
+import { openBill } from '../bill/launch'
 import { CURRENCY, owedList } from './owed'
 import { forgetReference, proofLedgerStore, rememberReference } from './proofLedger'
 import { matchProof, AMOUNT_TOLERANCE, type Owed, type ProofVerdict } from './proofMatch'
@@ -54,6 +56,8 @@ export function ProofScreen() {
   const [shared, setShared] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const controller = useRef<AbortController | null>(null)
+  /** The photo another app shared in, if that's what is being read. */
+  const sharedFile = useRef<File | null>(null)
   const owed: Owed[] = useMemo(() => owedList(friends, expenses, groups), [friends, expenses, groups])
 
   useEffect(() => () => controller.current?.abort(), [])
@@ -78,6 +82,13 @@ export function ProofScreen() {
         if (next.signal.aborted) return
         if (!result.ok) {
           if (result.code === 'aborted') return
+          // A photo shared into Settle that isn't a payment is most likely a bill: scan it.
+          if (result.code === 'not_a_payment' && sharedFile.current === file) {
+            setSharedPhoto(file)
+            navigate('/app', { replace: true })
+            openBill({ kind: 'photo' })
+            return
+          }
           return setPhase({ kind: 'error', code: result.code })
         }
         const verdict = matchProof(result.proof, { owed, me: { name: profile.name, upiId: profile.upiId }, ledger: proofLedgerStore.get() })
@@ -104,6 +115,7 @@ export function ProofScreen() {
       const image = payload?.files.find((file) => file.type.startsWith('image/'))
       if (!image) return setPhase({ kind: 'error', code: 'unsupported_image' })
       setShared(true)
+      sharedFile.current = image
       void latestRead.current(image)
     })()
     return () => {

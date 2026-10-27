@@ -81,7 +81,7 @@ for (const width of [320, 360]) {
 
       await grid.getByRole('button', { name: 'More' }).click()
       const sheet = page.getByRole('dialog', { name: 'More ways to split' })
-      for (const label of ['Rent', 'Trip', 'Subscription', 'Utilities', 'Cab']) await expect(sheet.getByRole('button', { name: label })).toBeVisible()
+      for (const label of ['Rent', 'Trip', 'Subscription', 'Utilities', 'Cab']) await expect(sheet.getByRole('button', { name: label, exact: true })).toBeVisible()
       await sheet.getByRole('button', { name: 'Cab' }).click()
       await expect(page).toHaveURL(/\/app\/split\/new\?category=transport$/)
     })

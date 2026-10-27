@@ -154,7 +154,9 @@ test.describe('shared from another app (production service worker)', () => {
     return page.evaluate(async ({ text, image }) => {
       const body = new FormData()
       if (text) body.append('text', text)
-      if (image) body.append('media', new File([new Uint8Array([0xff, 0xd8, 0xff, 0xd9])], 'bill.jpg', { type: 'image/jpeg' }))
+      // A real (1×1) PNG, so the phone can read it.
+      const png = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='
+      if (image) body.append('media', new File([Uint8Array.from(atob(png), (c) => c.charCodeAt(0))], 'bill.png', { type: 'image/png' }))
       const response = await fetch('/share-target', { method: 'POST', body })
       return new URL(response.url).pathname + new URL(response.url).search
     }, form)
@@ -169,9 +171,12 @@ test.describe('shared from another app (production service worker)', () => {
     await expect(page.getByText('Show the message')).toBeVisible()
   })
 
-  test('a shared photo lands in the bill scan', async ({ page }) => {
+  test('a shared photo is checked as a payment first; a bill photo goes on to the bill scan', async ({ page, api }) => {
     await seed(page)
+    // The AI says it isn't a payment screenshot: it's a bill.
+    api.proof = { status: 422, body: { error: { code: 'not_a_payment', message: 'Not a payment' } } as never }
     const to = await share(page, { image: true })
+    expect(to).toMatch(/^\/app\/proof\?k=[\w-]{12}$/)
     await page.goto(to)
     await expect(page).toHaveURL(/\/app\/bill/)
   })

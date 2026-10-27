@@ -6,6 +6,7 @@
 import { fireEvent, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { profileStore, updateProfile } from '../data'
+import type { LanguageCode } from '../domain/types'
 import { OnboardingScreen } from '../features/onboarding/OnboardingScreen'
 import { PrivacyPage } from '../features/legal/PrivacyPage'
 import { chooseAppLanguage } from '../features/you/appLanguage'
@@ -76,7 +77,8 @@ describe('language resolution and picker persistence', () => {
   })
 
   it('a language without a catalog is not switched to, and nothing is saved', async () => {
-    expect(await chooseAppLanguage('gu')).toBe('failed')
+    // All eight app languages have catalogs now; a code with none stands in for a chunk that won't load.
+    expect(await chooseAppLanguage('fr' as LanguageCode)).toBe('failed')
     expect(profileStore.get().language).toBeNull()
   })
 })
