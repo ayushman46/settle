@@ -1,4 +1,4 @@
-import { useEffect, useId, useMemo, useState, type Ref } from 'react'
+import { useEffect, useId, useMemo, useRef, useState, type Ref, type RefObject } from 'react'
 import { ArrowRight, ChevronLeft, MessageCircle, Send } from 'lucide-react'
 import {
   Avatar,
@@ -48,6 +48,7 @@ export function PayPanel({ payload, person, onChangePerson, headingRef }: PayPan
   // The amount in English words reads as noise in any other language (i18n-plan §7).
   const words = lang === 'en' ? amountInWords(person.amount, payload.c) : null
   const showPayment = !person.paid || reveal
+  const tellRef = useRef<HTMLParagraphElement>(null)
 
   return (
     <section className={styles.panel} aria-labelledby={headingId}>
@@ -88,7 +89,18 @@ export function PayPanel({ payload, person, onChangePerson, headingRef }: PayPan
         </div>
       )}
 
-      {showPayment && option.kind === 'upi' && <UpiPay payload={payload} request={option.request} />}
+      {showPayment && option.kind === 'upi' && (
+        <UpiPay
+          payload={payload}
+          request={option.request}
+          onPaid={() => {
+            // "Yes, I paid": on to telling them.
+            const title = tellRef.current
+            if (title && typeof title.scrollIntoView === 'function') title.scrollIntoView({ block: 'center' })
+            title?.focus({ preventScroll: true })
+          }}
+        />
+      )}
       {showPayment && option.kind === 'nothing' && (
         <Banner tone="success" title={t('pay.panel.nothing.title')}>
           {t('pay.panel.nothing.body', { amount: formatMoney(0, payload.c, { trimZeros: true }) })}
@@ -105,7 +117,7 @@ export function PayPanel({ payload, person, onChangePerson, headingRef }: PayPan
         </Banner>
       )}
 
-      {!person.paid && option.kind !== 'nothing' && <TellThem payload={payload} person={person} />}
+      {!person.paid && option.kind !== 'nothing' && <TellThem payload={payload} person={person} titleRef={tellRef} />}
 
       {breakdown && (
         <section className={styles.breakdown} aria-labelledby={`${headingId}-items`}>
@@ -146,8 +158,18 @@ export function PayPanel({ payload, person, onChangePerson, headingRef }: PayPan
 }
 
 /** The ways to pay this request by UPI (see `UpiPayBlock`). */
-function UpiPay({ payload, request }: { payload: PayLinkPayload; request: PayLinkUpiRequest }) {
-  return <UpiPayBlock payeeName={payload.to.n} vpa={request.vpa} amount={request.amount} note={payload.t} currency={payload.c} color={payeeColor(payload)} />
+function UpiPay({ payload, request, onPaid }: { payload: PayLinkPayload; request: PayLinkUpiRequest; onPaid: () => void }) {
+  return (
+    <UpiPayBlock
+      payeeName={payload.to.n}
+      vpa={request.vpa}
+      amount={request.amount}
+      note={payload.t}
+      currency={payload.c}
+      color={payeeColor(payload)}
+      onPaid={onPaid}
+    />
+  )
 }
 
 /** The "I've paid" reply link for these answers, packed ahead of the tap (a share sheet needs a fresh tap). */
@@ -174,7 +196,7 @@ function useReplyLink(payload: PayLinkPayload, index: number, how: PaidHow, utr:
  * ready message with a link that ticks them off in the payee's Settle: straight to the payee's
  * WhatsApp when the link carries their number, else the share sheet (clipboard on computers).
  */
-function TellThem({ payload, person }: { payload: PayLinkPayload; person: PayPerson }) {
+function TellThem({ payload, person, titleRef }: { payload: PayLinkPayload; person: PayPerson; titleRef: RefObject<HTMLParagraphElement | null> }) {
   const t = useT()
   const groupId = useId()
   const [how, setHow] = useState<PaidHow>('upi')
@@ -207,7 +229,7 @@ function TellThem({ payload, person }: { payload: PayLinkPayload; person: PayPer
 
   return (
     <div className={styles.tell}>
-      <p className={styles.tellTitle} id={groupId}>
+      <p className={styles.tellTitle} id={groupId} ref={titleRef} tabIndex={-1}>
         {t('pay.tell.title')}
       </p>
       <div role="radiogroup" aria-labelledby={groupId} className={styles.tellHow}>

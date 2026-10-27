@@ -30,7 +30,7 @@ export const onboarding = {
   'onboarding.about.name.error': 'உங்கள் பெயரைச் சேருங்கள் — நீங்கள் அனுப்பும் கோரிக்கைகளில் நண்பர்கள் அதைப் பார்ப்பார்கள்.',
   'onboarding.about.upi.label': 'உங்கள் UPI ID (விருப்பமானது)',
   'onboarding.about.upi.placeholder': 'name@bank',
-  'onboarding.about.upi.hint': 'நண்பர்கள் ஒரே தட்டில் உங்களுக்குத் திருப்பிச் செலுத்த. பின்னர் சேர்க்கலாம்.',
+  'onboarding.about.upi.hint': 'நண்பர்கள் UPI-ல் உங்களுக்குத் திருப்பிச் செலுத்த. பின்னர் சேர்க்கலாம்.',
   // The UPI field was prefilled from an older split on this phone.
   'onboarding.about.upi.hint.remembered': 'இந்த ஃபோனில் நீங்கள் செய்த ஒரு பிரிப்பிலிருந்து. உங்களுடையது இல்லையென்றால் மாற்றுங்கள்.',
   'onboarding.about.upi.error': 'இது UPI ID போலத் தெரியவில்லை. name@bank போன்று இருக்க வேண்டும்.',

@@ -302,10 +302,7 @@ function Collection({ payload }: { payload: PoolLinkPayload }) {
 
       {showPay && amount !== null && amount > 0 && (
         <section className={styles.section} aria-label={t('pools.page.tell', { name: organiser })}>
-          <div onClickCapture={(event) => {
-            const target = event.target as HTMLElement | null
-            if (target?.closest('a[href^="upi:"]')) setPaying(true)
-          }}>
+          <div>
             {!inr ? (
               <div className={styles.usual}>
                 <p className={styles.usualTitle}>{t('pools.page.payUsual')}</p>
@@ -324,6 +321,7 @@ function Collection({ payload }: { payload: PoolLinkPayload }) {
                 note={t('pools.page.upiNote', { title: payload.t })}
                 currency={payload.c}
                 color={avatarColorIndex(hashString(organiser))}
+                onStarted={() => setPaying(true)}
               />
             )}
           </div>

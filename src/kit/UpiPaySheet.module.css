@@ -127,9 +127,3 @@
     animation: none;
   }
 }
-
-/* The UPI apps to pay with, above the QR on phones. */
-.apps {
-  display: grid;
-  width: 100%;
-}

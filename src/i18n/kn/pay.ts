@@ -20,21 +20,6 @@ export const pay = {
   'pay.who.hint': 'ನಿಮ್ಮ ಪಾಲು ನೋಡಲು ಮತ್ತು ಪಾವತಿಸಲು ನಿಮ್ಮ ಹೆಸರನ್ನು ಟ್ಯಾಪ್ ಮಾಡಿ.',
   'pay.who.paid': 'ಪಾವತಿಯಾಗಿದೆ',
 
-  'pay.upi.cta': 'ಯಾವುದೇ UPI ಆ್ಯಪ್‌ನಿಂದ {amount} ಪಾವತಿಸಿ',
-  'pay.upi.cta.caption': 'GPay, PhonePe, Paytm ಅಥವಾ BHIM ಅನ್ನು ಎಲ್ಲ ವಿವರಗಳೊಂದಿಗೆ ತೆರೆಯುತ್ತದೆ.',
-  'pay.upi.qr.show.cta': 'ಬೇರೆ ಫೋನ್‌ನಿಂದ ಪಾವತಿಸಿ',
-  'pay.upi.qr.hide.cta': 'QR ಕೋಡ್ ಮರೆಮಾಡಿ',
-  'pay.upi.qr.aria': '{name} ಅವರಿಗೆ {amount} ಪಾವತಿಸಲು UPI QR ಕೋಡ್',
-  'pay.upi.qr.caption.touch': 'ಇನ್ನೊಂದು ಫೋನ್‌ನಲ್ಲಿರುವ UPI ಆ್ಯಪ್‌ನಿಂದ ಅದನ್ನು ಸ್ಕ್ಯಾನ್ ಮಾಡಿ.',
-  'pay.upi.qr.caption.desktop': 'ನಿಮ್ಮ ಫೋನ್‌ನ ಯಾವುದೇ UPI ಆ್ಯಪ್‌ನಿಂದ ಸ್ಕ್ಯಾನ್ ಮಾಡಿ — GPay, PhonePe, Paytm, BHIM.',
-  'pay.upi.payee.label': 'ಪಾವತಿಸುತ್ತಿರುವುದು',
-  'pay.upi.copy.cta': 'ಕಾಪಿ ಮಾಡಿ',
-  'pay.upi.copied.cta': 'ಕಾಪಿ ಆಯಿತು',
-  'pay.upi.copy.aria': 'UPI ID ಕಾಪಿ ಮಾಡಿ',
-  'pay.upi.copied.aria': 'UPI ID ಕಾಪಿ ಆಯಿತು',
-  'pay.upi.copy.error': 'ಕಾಪಿ ಮಾಡಲಾಗಲಿಲ್ಲ — ID ಕಾಪಿ ಮಾಡಲು ಒತ್ತಿ ಹಿಡಿಯಿರಿ.',
-  'pay.upi.copied.status': 'UPI ID ಕಾಪಿ ಆಗಿದೆ',
-  'pay.upi.safety': 'ಪಾವತಿಸುವ ಮೊದಲು ನಿಮ್ಮ UPI ಆ್ಯಪ್ <b>{name}</b> ತೋರಿಸುತ್ತಿದೆಯೇ ಪರಿಶೀಲಿಸಿ. {brand} ನಿಮ್ಮ ಹಣವನ್ನು ಎಂದಿಗೂ ಮುಟ್ಟುವುದಿಲ್ಲ.',
 
   'pay.panel.notYou.cta': '{name} ಅಲ್ಲವೇ? ನಿಮ್ಮ ಹೆಸರನ್ನು ಆರಿಸಿ',
   'pay.panel.share.title': '{name} ಅವರ ಪಾಲು',
@@ -70,5 +55,5 @@ export const pay = {
 
   'pay.meta.title': '{name} ಅವರಿಗೆ ಪಾವತಿಸಿ · {title} · {brand}',
   'pay.meta.title.empty': 'ಪೇ ಲಿಂಕ್ · {brand}',
-  'pay.meta.description': 'ಯಾವುದೇ UPI ಆ್ಯಪ್‌ನಿಂದ ಒಂದೇ ಟ್ಯಾಪ್‌ನಲ್ಲಿ ನಿಮ್ಮ ಪಾಲು ಪಾವತಿಸಿ. {brand} ಮೂಲಕ ಕಳುಹಿಸಲಾಗಿದೆ.',
+  'pay.meta.description': 'ನಿಮ್ಮ ಸರಿಯಾದ ಪಾಲು ನೋಡಿ, ಯಾವುದೇ UPI ಆ್ಯಪ್‌ನಿಂದ ಪಾವತಿಸಿ. {brand} ಮೂಲಕ ಕಳುಹಿಸಲಾಗಿದೆ.',
 } as const satisfies Messages

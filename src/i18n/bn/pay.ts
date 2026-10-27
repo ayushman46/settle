@@ -25,24 +25,6 @@ export const pay = {
   // Badge next to someone the payee has marked as paid.
   'pay.who.paid': 'দেওয়া হয়েছে',
 
-  // Paying by UPI (also used on the claim and pool pages).
-  'pay.upi.cta': 'যেকোনো UPI অ্যাপে {amount} পে করুন',
-  'pay.upi.cta.caption': 'GPay, PhonePe, Paytm বা BHIM সব ভরা অবস্থায় খুলবে।',
-  'pay.upi.qr.show.cta': 'অন্য ফোন থেকে পে করুন',
-  'pay.upi.qr.hide.cta': 'QR কোড লুকান',
-  'pay.upi.qr.aria': '{name}-কে {amount} পে করতে UPI QR কোড',
-  'pay.upi.qr.caption.touch': 'অন্য ফোনের UPI অ্যাপ দিয়ে এটি স্ক্যান করুন।',
-  'pay.upi.qr.caption.desktop': 'আপনার ফোনের যেকোনো UPI অ্যাপ দিয়ে স্ক্যান করুন — GPay, PhonePe, Paytm, BHIM।',
-  // Label above the payee's name and UPI ID.
-  'pay.upi.payee.label': 'পে করা হচ্ছে',
-  'pay.upi.copy.cta': 'কপি করুন',
-  'pay.upi.copied.cta': 'কপি হয়েছে',
-  'pay.upi.copy.aria': 'UPI ID কপি করুন',
-  'pay.upi.copied.aria': 'UPI ID কপি হয়েছে',
-  'pay.upi.copy.error': 'কপি করা যায়নি — ID-টি কপি করতে চেপে ধরে রাখুন।',
-  'pay.upi.copied.status': 'UPI ID কপি হয়েছে',
-  'pay.upi.safety': 'পে করার আগে আপনার UPI অ্যাপে <b>{name}</b> দেখাচ্ছে কি না মিলিয়ে নিন। {brand} কখনও আপনার টাকায় হাত দেয় না।',
-
   // One person's share.
   'pay.panel.notYou.cta': '{name} নন? আপনার নাম বেছে নিন',
   'pay.panel.share.title': '{name}-এর ভাগ',
@@ -83,5 +65,5 @@ export const pay = {
   // The browser tab title and the link preview.
   'pay.meta.title': '{name}-কে পে করুন · {title} · {brand}',
   'pay.meta.title.empty': 'পে লিংক · {brand}',
-  'pay.meta.description': 'যেকোনো UPI অ্যাপ দিয়ে এক ট্যাপে আপনার ভাগ পে করুন। {brand} দিয়ে পাঠানো।',
+  'pay.meta.description': 'আপনার সঠিক ভাগ দেখুন আর যেকোনো UPI অ্যাপ দিয়ে পে করুন। {brand} দিয়ে পাঠানো।',
 } as const satisfies Messages

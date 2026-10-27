@@ -33,7 +33,7 @@ export function QrCode({ value, label, size = 232, ecc = 'M', className }: QrCod
   }, [value, ecc])
 
   return (
-    <div className={cx(styles.qr, className)} style={{ width: size }}>
+    <div className={cx(styles.qr, className)} style={{ width: size }} data-qr-value={value}>
       {code ? (
         <svg
           key={value}

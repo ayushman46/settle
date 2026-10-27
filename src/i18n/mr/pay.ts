@@ -25,24 +25,6 @@ export const pay = {
   // Badge next to someone the payee has marked as paid.
   'pay.who.paid': 'दिले',
 
-  // Paying by UPI (also used on the claim and pool pages).
-  'pay.upi.cta': 'कोणत्याही UPI ॲपने {amount} द्या',
-  'pay.upi.cta.caption': 'GPay, PhonePe, Paytm किंवा BHIM सगळे भरलेले उघडेल.',
-  'pay.upi.qr.show.cta': 'दुसऱ्या फोनवरून द्या',
-  'pay.upi.qr.hide.cta': 'QR कोड लपवा',
-  'pay.upi.qr.aria': '{name} यांना {amount} देण्यासाठी UPI QR कोड',
-  'pay.upi.qr.caption.touch': 'दुसऱ्या फोनमधील UPI ॲपने स्कॅन करा.',
-  'pay.upi.qr.caption.desktop': 'तुमच्या फोनमधील कोणत्याही UPI ॲपने स्कॅन करा — GPay, PhonePe, Paytm, BHIM.',
-  // Label above the payee's name and UPI ID.
-  'pay.upi.payee.label': 'यांना पैसे दिले जात आहेत',
-  'pay.upi.copy.cta': 'कॉपी करा',
-  'pay.upi.copied.cta': 'कॉपी झाले',
-  'pay.upi.copy.aria': 'UPI ID कॉपी करा',
-  'pay.upi.copied.aria': 'UPI ID कॉपी झाला',
-  'pay.upi.copy.error': 'कॉपी करता आले नाही — ID कॉपी करण्यासाठी दाबून धरा.',
-  'pay.upi.copied.status': 'UPI ID कॉपी झाला',
-  'pay.upi.safety': 'पैसे देण्यापूर्वी तुमच्या UPI ॲपमध्ये <b>{name}</b> दिसत आहे का ते तपासा. {brand} तुमच्या पैशांना कधीही हात लावत नाही.',
-
   // One person's share.
   'pay.panel.notYou.cta': '{name} नाही? तुमचे नाव निवडा',
   'pay.panel.share.title': '{name} यांचा हिस्सा',
@@ -83,5 +65,5 @@ export const pay = {
   // The browser tab title and the link preview.
   'pay.meta.title': '{name} यांना पैसे द्या · {title} · {brand}',
   'pay.meta.title.empty': 'पे लिंक · {brand}',
-  'pay.meta.description': 'कोणत्याही UPI ॲपने एका टॅपमध्ये तुमचा हिस्सा द्या. {brand} द्वारे पाठवले.',
+  'pay.meta.description': 'तुमचा नेमका हिस्सा पाहा आणि कोणत्याही UPI ॲपने द्या. {brand} द्वारे पाठवले.',
 } as const satisfies Messages

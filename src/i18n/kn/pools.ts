@@ -156,7 +156,7 @@ export const pools = {
   'pools.detail.closedBanner': 'ಈ ವಸೂಲಿ ಮುಚ್ಚಲಾಗಿದೆ. ಇನ್ನಷ್ಟು ಪಾವತಿಗಳನ್ನು ಸ್ವೀಕರಿಸಲು ಮತ್ತೆ ತೆರೆಯಿರಿ.',
   'pools.detail.deleted': '{title} ಅಳಿಸಲಾಗಿದೆ',
   'pools.detail.noUpi': 'ನಿಮ್ಮ UPI ID ಸೇರಿಸಿ',
-  'pools.detail.noUpi.text': 'ಲಿಂಕ್‌ನಿಂದ ಸ್ನೇಹಿತರು ಒಂದೇ ಟ್ಯಾಪ್‌ನಲ್ಲಿ ನಿಮಗೆ ಪಾವತಿಸಲು.',
+  'pools.detail.noUpi.text': 'ಲಿಂಕ್‌ನಿಂದ ಸ್ನೇಹಿತರು UPI ಮೂಲಕ ನಿಮಗೆ ಪಾವತಿಸಲು.',
   'pools.detail.gone': 'ಈ ವಸೂಲಿ ಇನ್ನಿಲ್ಲ',
   'pools.detail.gone.text': 'ಇದನ್ನು ಅಳಿಸಿರಬಹುದು — ಈ ಫೋನ್‌ನಲ್ಲಿ ಅಥವಾ ಬೇರೆ ಟ್ಯಾಬ್‌ನಲ್ಲಿ.',
   'pools.detail.gone.action': 'ವಸೂಲಿಗಳನ್ನು ನೋಡಿ',

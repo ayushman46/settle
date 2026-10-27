@@ -328,14 +328,17 @@ function ClaimRequest({ payload }: { payload: ClaimLinkPayload }) {
                   {t('claim.page.noUpiText', { amount })}
                 </Banner>
               ) : (
-                <div
-                  onClickCapture={(event) => {
-                    const target = event.target as HTMLElement
-                    if (target.closest('a[href^="upi:"]')) tappedUpi.current = true
+                <UpiPayBlock
+                  payeeName={organiser}
+                  vpa={upi}
+                  amount={share}
+                  note={payload.t}
+                  currency={payload.c}
+                  color={0}
+                  onStarted={() => {
+                    tappedUpi.current = true
                   }}
-                >
-                  <UpiPayBlock payeeName={organiser} vpa={upi} amount={share} note={payload.t} currency={payload.c} color={0} />
-                </div>
+                />
               )}
               {askPaid && !state.paid && (
                 <Banner

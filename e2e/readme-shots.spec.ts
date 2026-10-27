@@ -84,7 +84,7 @@ test('home in Hindi', async ({ page }) => {
   await shot(page, 'home-hindi')
 })
 
-test('a friend pays with their own UPI app', async ({ page, shared, openPhone }) => {
+test('a friend pays with any UPI app', async ({ page, shared, openPhone }) => {
   await seed(page, { profile: { upiId: 'ayush@okicici' }, friends: PEOPLE, expenses: [DINNER] })
   await page.goto('/app/expense/dinner')
   const link = await copyPayLink(page, async () => (await shared()).clipboard)
@@ -93,12 +93,11 @@ test('a friend pays with their own UPI app', async ({ page, shared, openPhone })
   await p.setViewportSize({ width: 390, height: 844 })
   await p.goto(link)
   await p.getByRole('button', { name: /Riya/ }).click()
-  await p.getByRole('button', { name: 'Pay ₹800', exact: true }).click()
-  const apps = p.getByRole('list', { name: 'Payment apps' })
-  await expect(apps).toBeVisible()
-  await apps.scrollIntoViewIfNeeded()
-  await p.evaluate(() => window.scrollBy(0, -120))
-  await shot(p, 'pay-apps')
+  const save = p.getByRole('button', { name: 'Save QR to gallery' })
+  await expect(save).toBeVisible()
+  await save.scrollIntoViewIfNeeded()
+  await p.evaluate(() => window.scrollBy(0, -160))
+  await shot(p, 'pay')
 })
 
 test('rent receipts for HRA', async ({ page }) => {

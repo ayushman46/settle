@@ -8,6 +8,7 @@ import type { Page } from '@playwright/test'
 import { expectAccessible } from './support/a11y'
 import { expect, test } from './support/fixtures'
 import { mockRates } from './support/mocks'
+import { readUpiLink, upiQrLink } from './support/app'
 import { friend, seed } from './support/seed'
 import type { Group } from '../src/domain/types'
 
@@ -82,7 +83,7 @@ test.describe('trip currency', () => {
     const pay = page.getByRole('button', { name: 'Pay Riya ₹1,004.48 via UPI' })
     await expect(pay).toBeVisible()
     await pay.click()
-    await expect(page.locator('a[href^="upi://pay"]').first()).toHaveAttribute('href', /am=1004\.48/)
+    expect(readUpiLink(await upiQrLink(page)).params.am).toBe('1004.48')
   })
 
   test('what the bank charged is taken exactly: ₹3,104.20', async ({ page }) => {

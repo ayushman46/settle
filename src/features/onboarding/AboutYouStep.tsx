@@ -8,7 +8,7 @@ import { currencyName } from '../../lib/currencies'
 import { haptic } from '../../lib/haptics'
 import { currencySymbol } from '../../lib/money'
 import { MAX_NAME_LENGTH, nameKey, normalizeName } from '../../lib/people'
-import { isValidUpiId, normalizeUpiId } from '../../lib/upi'
+import { isPhoneUpiId, isValidUpiId, normalizeUpiId } from '../../lib/upi'
 import { CurrencySheet } from '../bill/CurrencySheet'
 import styles from './OnboardingScreen.module.css'
 
@@ -127,9 +127,11 @@ export function AboutYouStep({ onBack, onDone, onSkip }: AboutYouStepProps) {
           className={styles.mono}
           value={upi}
           hint={
-            remembered !== null
-              ? t('onboarding.about.upi.hint.remembered')
-              : t('onboarding.about.upi.hint')
+            isPhoneUpiId(upi)
+              ? t('kit.upiForm.hint.phone')
+              : remembered !== null
+                ? t('onboarding.about.upi.hint.remembered')
+                : t('onboarding.about.upi.hint')
           }
           error={showUpiError ? t('onboarding.about.upi.error') : undefined}
           onChange={(event) => {

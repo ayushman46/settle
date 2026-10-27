@@ -3,6 +3,7 @@ import {
   buildUpiLink,
   buildUpiRequestText,
   getSavedUpiId,
+  isPhoneUpiId,
   isValidUpiId,
   LEGACY_UPI_ID_KEY,
   MAX_SAVED_UPI_IDS,
@@ -69,31 +70,23 @@ describe('buildUpiLink', () => {
 })
 
 describe('buildUpiRequestText', () => {
-  it('writes a friendly request with a copyable UPI ID and the link last', () => {
-    const link = buildUpiLink({ vpa: 'ben@okaxis', payeeName: 'Ben', amountMinor: 53010, note: 'Saffron Table' })
+  it('writes a friendly request with a copyable UPI ID — and no upi:// link, which UPI apps refuse for a person', () => {
     const text = buildUpiRequestText({
       debtorName: 'Aisha',
       payerName: 'Ben',
       vpa: 'ben@okaxis',
       amountMinor: 53010,
       merchant: ' Saffron Table ',
-      link,
     })
-    expect(text.split('\n')).toEqual([
-      'Hi Aisha, your share for Saffron Table is ₹530.10.',
-      'Pay Ben on UPI: ben@okaxis',
-      `Or tap to pay: ${link}`,
-    ])
-    // The plain ID sits on a line of its own (chat apps don't linkify upi://), and the link ends the message.
-    expect(text).toMatch(/^Pay Ben on UPI: ben@okaxis$/m)
-    expect(text.endsWith(link)).toBe(true)
+    expect(text.split('\n')).toEqual(['Hi Aisha, your share for Saffron Table is ₹530.10.', 'Pay Ben on UPI: ben@okaxis'])
+    expect(text).not.toContain('upi://')
   })
 
   it('normalises the UPI ID and words a bill without a merchant', () => {
-    const text = buildUpiRequestText({ debtorName: 'Ben', payerName: 'A', vpa: ' Ben@OkAxis ', amountMinor: 100, merchant: null, link: 'l' })
+    const text = buildUpiRequestText({ debtorName: 'Ben', payerName: 'A', vpa: ' Ben@OkAxis ', amountMinor: 100, merchant: null })
     expect(text).toContain('your share of the bill is ₹1.00.')
-    expect(text).toContain('Pay A on UPI: ben@okaxis\n')
-    expect(buildUpiRequestText({ debtorName: 'Ben', payerName: 'A', vpa: 'a@ybl', amountMinor: 100, merchant: '  ', link: 'l' })).toContain(
+    expect(text).toContain('Pay A on UPI: ben@okaxis')
+    expect(buildUpiRequestText({ debtorName: 'Ben', payerName: 'A', vpa: 'a@ybl', amountMinor: 100, merchant: '  ' })).toContain(
       'your share of the bill is',
     )
   })
@@ -167,5 +160,16 @@ describe('saved UPI ids (one per payee)', () => {
     })
     expect(getSavedUpiId('Aisha')).toBeNull()
     expect(() => saveUpiId('Aisha', 'a@ybl')).not.toThrow()
+  })
+})
+
+describe('isPhoneUpiId', () => {
+  it('spots a UPI ID made of a mobile number', () => {
+    expect(isPhoneUpiId('9876543210@ybl')).toBe(true)
+    expect(isPhoneUpiId(' 919876543210@paytm ')).toBe(true)
+    expect(isPhoneUpiId('ayush@okaxis')).toBe(false)
+    expect(isPhoneUpiId('ayush9876543210@okaxis')).toBe(false)
+    expect(isPhoneUpiId('1234567890@ybl')).toBe(false)
+    expect(isPhoneUpiId('9876543210')).toBe(false)
   })
 })

@@ -67,7 +67,7 @@ export const you = {
   'you.profile.upi': 'UPI ID',
   'you.profile.upi.edit': 'UPI ID {id}. Edit',
   'you.profile.copy': 'Copy UPI ID',
-  'you.profile.add.body': 'Add your UPI ID so friends can pay you back in one tap.',
+  'you.profile.add.body': 'Add your UPI ID so friends can pay you back by UPI.',
   'you.profile.add': 'Add UPI ID',
   'you.edit.title': 'Your profile',
   'you.edit.body': 'Friends see your name on pay links. Your UPI ID is where they pay you.',

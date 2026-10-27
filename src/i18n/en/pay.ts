@@ -25,24 +25,6 @@ export const pay = {
   // Badge next to someone the payee has marked as paid.
   'pay.who.paid': 'Paid',
 
-  // Paying by UPI (also used on the claim and pool pages).
-  'pay.upi.cta': 'Pay {amount} with any UPI app',
-  'pay.upi.cta.caption': 'Opens GPay, PhonePe, Paytm or BHIM with everything filled in.',
-  'pay.upi.qr.show.cta': 'Pay from another phone',
-  'pay.upi.qr.hide.cta': 'Hide the QR code',
-  'pay.upi.qr.aria': 'UPI QR code to pay {amount} to {name}',
-  'pay.upi.qr.caption.touch': 'Scan it with the UPI app on the other phone.',
-  'pay.upi.qr.caption.desktop': 'Scan with any UPI app on your phone — GPay, PhonePe, Paytm, BHIM.',
-  // Label above the payee's name and UPI ID.
-  'pay.upi.payee.label': 'Paying to',
-  'pay.upi.copy.cta': 'Copy',
-  'pay.upi.copied.cta': 'Copied',
-  'pay.upi.copy.aria': 'Copy UPI ID',
-  'pay.upi.copied.aria': 'Copied UPI ID',
-  'pay.upi.copy.error': 'Couldn’t copy — press and hold the ID to copy it.',
-  'pay.upi.copied.status': 'UPI ID copied',
-  'pay.upi.safety': 'Check that your UPI app shows <b>{name}</b> before you pay. {brand} never touches your money.',
-
   // One person's share.
   'pay.panel.notYou.cta': 'Not {name}? Pick your name',
   'pay.panel.share.title': '{name}’s share',
@@ -93,7 +75,5 @@ export const pay = {
   // The browser tab title and the link preview.
   'pay.meta.title': 'Pay {name} · {title} · {brand}',
   'pay.meta.title.empty': 'Pay link · {brand}',
-  'pay.meta.description': 'Pay your share in a tap with any UPI app. Sent with {brand}.',
-  'pay.upi.choose.cta': 'Pay {amount}',
-  'pay.upi.choose.caption': 'Pick your app. It opens with the amount and name already filled in.',
+  'pay.meta.description': 'See your exact share and pay it with any UPI app. Sent with {brand}.',
 } as const satisfies Messages

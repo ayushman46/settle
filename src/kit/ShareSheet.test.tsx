@@ -106,7 +106,7 @@ describe('ShareSheet', () => {
   it('asks each person who still owes on their own, with a link that opens on their share', async () => {
     render(<Harness />)
     const each = await screen.findByRole('region', { name: 'Or ask each person' })
-    expect(within(each).getByText('Their own link opens straight on their share — one tap to pay.')).toBeInTheDocument()
+    expect(within(each).getByText('Their own link opens straight on their share — no hunting for their name.')).toBeInTheDocument()
     expect(within(each).getAllByRole('listitem').map((row) => row.textContent)).toEqual([
       expect.stringContaining('Sam'),
       expect.stringContaining('Neha Sharma'),
@@ -116,7 +116,7 @@ describe('ShareSheet', () => {
     expect(url.origin + url.pathname).toBe('https://wa.me/')
     const [hi, tap, link] = (url.searchParams.get('text') ?? '').split('\n')
     expect(hi).toBe('Hi Sam! Your share of Dinner at Toit is ₹691.50 🧾')
-    expect(tap).toBe('Pay me in one tap — any UPI app, amount already filled in 👇')
+    expect(tap).toBe('Pay me with any UPI app — your exact share is on the page 👇')
     expect((await decodePayLink(link ?? ''))?.f).toBe(2)
     expect(within(each).getByRole('link', { name: 'Ask Neha Sharma on WhatsApp' })).toHaveAttribute('target', '_blank')
   })

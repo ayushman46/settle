@@ -87,12 +87,12 @@ describe('summaryText', () => {
 })
 
 describe('personalPayMessage', () => {
-  it('greets the person with their own share and a one-tap link', () => {
+  it('greets the person with their own share and their own link', () => {
     const share = money(payload().p[2]?.a ?? 0)
     expect(personalPayMessage(payload(), 2, LINK, { fromPayee: true })).toBe(
-      [`Hi Sam! Your share of Dinner at Toit is ${share} 🧾`, 'Pay me in one tap — any UPI app, amount already filled in 👇', LINK].join('\n'),
+      [`Hi Sam! Your share of Dinner at Toit is ${share} 🧾`, 'Pay me with any UPI app — your exact share is on the page 👇', LINK].join('\n'),
     )
-    expect(personalPayMessage(payload(), 2, LINK, { fromPayee: false }).split('\n')[1]).toBe('Pay Ayush in one tap — any UPI app, amount already filled in 👇')
+    expect(personalPayMessage(payload(), 2, LINK, { fromPayee: false }).split('\n')[1]).toBe('Pay Ayush with any UPI app — your exact share is on the page 👇')
   })
 
   it('says "see your share" without a UPI ID, gives the UPI ID without a link, and falls back for a stranger', () => {

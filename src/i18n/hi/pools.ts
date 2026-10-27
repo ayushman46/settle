@@ -163,7 +163,7 @@ export const pools = {
   'pools.detail.closedBanner': 'ये कलेक्शन बंद है। और पेमेंट लेने के लिए इसे फिर खोलें।',
   'pools.detail.deleted': '{title} हटा दिया',
   'pools.detail.noUpi': 'अपनी UPI ID जोड़ें',
-  'pools.detail.noUpi.text': 'ताकि दोस्त लिंक से एक टैप में आपको पे कर सकें।',
+  'pools.detail.noUpi.text': 'ताकि दोस्त लिंक से आपको UPI से पे कर सकें।',
   'pools.detail.gone': 'ये कलेक्शन अब नहीं है',
   'pools.detail.gone.text': 'शायद हटा दिया गया — इस फ़ोन पर या किसी दूसरे टैब में।',
   'pools.detail.gone.action': 'कलेक्शन देखें',

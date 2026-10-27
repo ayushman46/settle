@@ -69,13 +69,15 @@ describe.each(NAMESPACES)('the %s namespace', (name, en, hi) => {
   it('has no empty or untranslated-looking Hindi messages', () => {
     const empty = Object.entries(hi).filter(([, message]) => message.trim() === '').map(([key]) => key)
     expect(empty).toEqual([])
-    // Mostly Latin text where English isn't (allowed: brand, UPI, QR, app names, placeholders).
+    // Mostly Latin text where English isn't (allowed: brand, UPI, QR, app names, placeholders, and
+    // “quoted” labels and messages as the UPI apps show them, in English).
     const latinOnly = Object.entries(hi)
       .filter(([key, message]) => {
         // ICU keywords (plural categories, select) are code, not copy.
         const words = message
           .replace(/\b(?:plural|select|zero|one|two|few|many|other)\b/g, '')
-          .replace(/\{[^}]*\}|<\/?\w+>|name@bank|Settle|Made with|UPI|ID|QR|Pro|GPay|PhonePe|Paytm|BHIM|WhatsApp|SMS|AI|JPG|PNG|MB/g, '')
+          .replace(/“[^”]*”/g, '')
+          .replace(/\{[^}]*\}|<\/?\w+>|name@bank|Settle|Made with|UPI|ID|QR|PIN|Pro|GPay|PhonePe|Paytm|BHIM|WhatsApp|SMS|AI|JPG|PNG|MB/g, '')
         return /[A-Za-z]{3,}/.test(words) && en[key] !== message
       })
       .map(([key]) => key)

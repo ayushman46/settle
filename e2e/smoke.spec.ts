@@ -3,7 +3,7 @@
  * is saved and shows up everywhere, and a friend opening the pay link sees exactly their share
  * with a UPI link that pays the right person the right amount.
  */
-import { copyPayLink, onboard, OWNER, readUpiLink, splitEqually, upiAppLink } from './support/app'
+import { copyPayLink, onboard, OWNER, readUpiLink, splitEqually, UPI_PAYMENT_LINKS, upiQrLink } from './support/app'
 import { expect, test } from './support/fixtures'
 
 test.describe('smoke', () => {
@@ -78,7 +78,7 @@ test.describe('smoke', () => {
     await expect(page.getByText('Dinner at Toit').first()).toBeVisible()
   })
 
-  test('a pay link opened as a friend shows their share and a correct upi:// link', async ({ page, shared, openPhone }) => {
+  test('a pay link opened as a friend shows their share, the ways UPI allows, and a QR for exactly that', async ({ page, shared, openPhone }) => {
     await onboard(page)
     // ₹1,000 three ways doesn't divide evenly: friends pay ₹333.33, the payer absorbs the paisa.
     await splitEqually(page, { amount: '1000', title: 'Goa cab', people: ['Riya', 'Sam'] })
@@ -98,10 +98,15 @@ test.describe('smoke', () => {
 
     await friend.page.getByRole('button', { name: /Riya/ }).click()
     await expect(friend.page.getByRole('heading', { name: 'Riya’s share' })).toBeVisible()
-    const pay = await upiAppLink(friend.page, 'Pay ₹333.33')
-    await expect(pay).toBeVisible()
+    // Up to ₹2,000: save the QR and upload it in the UPI app — never a payment link (UPI apps refuse those).
+    await expect(friend.page.getByRole('radio', { name: 'QR from photos' })).toHaveAttribute('aria-checked', 'true')
+    await expect(friend.page.locator(UPI_PAYMENT_LINKS)).toHaveCount(0)
+    const download = friend.page.waitForEvent('download')
+    await friend.page.getByRole('button', { name: 'Save QR to gallery' }).click()
+    expect((await download).suggestedFilename()).toMatch(/^Settle QR Ayush 333\.33\.png$/)
+    await expect(friend.page.getByRole('button', { name: 'QR saved' })).toBeVisible()
 
-    const upi = readUpiLink((await pay.getAttribute('href')) ?? '')
+    const upi = readUpiLink(await upiQrLink(friend.page))
     expect(upi.scheme).toBe('upi:')
     expect(upi.target).toBe('pay')
     expect(upi.params).toEqual({ pa: OWNER.upiId, pn: OWNER.name, am: '333.33', cu: 'INR', tn: 'Goa cab' })
@@ -118,7 +123,7 @@ test.describe('on an iPhone', () => {
     userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1',
   })
 
-  test('a friend’s Pay lists the UPI apps, each opened by its own scheme with the amount filled in', async ({ page, shared, openPhone }) => {
+  test('a friend saves the QR to Photos, and can open their UPI app — never with a payment in the link', async ({ page, shared, openPhone }) => {
     await onboard(page)
     await splitEqually(page, { amount: '1000', title: 'Goa cab', people: ['Riya', 'Sam'] })
     const link = await copyPayLink(page, async () => (await shared()).clipboard)
@@ -126,16 +131,12 @@ test.describe('on an iPhone', () => {
     const friend = await openPhone()
     await friend.page.goto(link)
     await friend.page.getByRole('button', { name: /Riya/ }).click()
-    await friend.page.getByRole('button', { name: 'Pay ₹333.33', exact: true }).click()
-
-    const apps = friend.page.getByRole('list', { name: 'Payment apps' })
-    await expect(apps.getByRole('link')).toHaveCount(5)
+    await expect(friend.page.getByRole('button', { name: 'Save QR to Photos' })).toBeVisible()
+    // The app's home screen only: the bare scheme, no payee or amount.
     for (const [name, scheme] of [['Google Pay', 'gpay'], ['PhonePe', 'phonepe'], ['Paytm', 'paytmmp'], ['BHIM', 'bhim']] as const) {
-      const href = (await apps.getByRole('link', { name: new RegExp(name) }).getAttribute('href')) ?? ''
-      expect(href.startsWith(`${scheme}://upi/pay?`), `${name}: ${href}`).toBe(true)
-      const upi = readUpiLink(href.replace(`${scheme}://upi/pay?`, 'upi://pay?'))
-      expect(upi.params).toMatchObject({ pa: OWNER.upiId, am: '333.33', cu: 'INR' })
+      await expect(friend.page.getByRole('link', { name: `Open ${name}` })).toHaveAttribute('href', `${scheme}://`)
     }
-    await expect(apps.getByRole('link', { name: /Any UPI app/ })).toHaveAttribute('href', /^upi:\/\/pay\?/)
+    await expect(friend.page.locator(UPI_PAYMENT_LINKS)).toHaveCount(0)
+    expect(readUpiLink(await upiQrLink(friend.page)).params).toMatchObject({ pa: OWNER.upiId, am: '333.33', cu: 'INR' })
   })
 })

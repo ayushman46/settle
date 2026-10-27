@@ -22,23 +22,6 @@ export const pay = {
   'pay.who.hint': 'உங்கள் பங்கைப் பார்க்கவும் செலுத்தவும் உங்கள் பெயரைத் தட்டுங்கள்.',
   // Badge next to someone the payee has marked as paid.
   'pay.who.paid': 'செலுத்தியது',
-  // Paying by UPI (also used on the claim and pool pages).
-  'pay.upi.cta': 'எந்த UPI ஆப்பிலும் {amount} செலுத்து',
-  'pay.upi.cta.caption': 'எல்லாம் நிரப்பப்பட்டு GPay, PhonePe, Paytm அல்லது BHIM திறக்கும்.',
-  'pay.upi.qr.show.cta': 'வேறொரு ஃபோனிலிருந்து செலுத்து',
-  'pay.upi.qr.hide.cta': 'QR குறியீட்டை மறை',
-  'pay.upi.qr.aria': '{name} அவர்களுக்கு {amount} செலுத்த UPI QR குறியீடு',
-  'pay.upi.qr.caption.touch': 'மற்ற ஃபோனில் உள்ள UPI ஆப்பால் ஸ்கேன் செய்யுங்கள்.',
-  'pay.upi.qr.caption.desktop': 'உங்கள் ஃபோனில் எந்த UPI ஆப்பிலும் ஸ்கேன் செய்யுங்கள் — GPay, PhonePe, Paytm, BHIM.',
-  // Label above the payee's name and UPI ID.
-  'pay.upi.payee.label': 'செலுத்தும் பெறுநர்',
-  'pay.upi.copy.cta': 'நகலெடு',
-  'pay.upi.copied.cta': 'நகலெடுக்கப்பட்டது',
-  'pay.upi.copy.aria': 'UPI ID ஐ நகலெடு',
-  'pay.upi.copied.aria': 'UPI ID நகலெடுக்கப்பட்டது',
-  'pay.upi.copy.error': 'நகலெடுக்க முடியவில்லை — ID-ஐ நீண்ட நேரம் அழுத்தி நகலெடுங்கள்.',
-  'pay.upi.copied.status': 'UPI ID நகலெடுக்கப்பட்டது',
-  'pay.upi.safety': 'செலுத்துவதற்கு முன் உங்கள் UPI ஆப்பில் <b>{name}</b> தெரிகிறதா என்று பாருங்கள். {brand} ஒருபோதும் உங்கள் பணத்தைத் தொடுவதில்லை.',
   // One person's share.
   'pay.panel.notYou.cta': '{name} இல்லையா? பெயர் தேர்',
   'pay.panel.share.title': '{name} இன் பங்கு',
@@ -76,5 +59,5 @@ export const pay = {
   // The browser tab title and the link preview.
   'pay.meta.title': '{name} அவர்களுக்குச் செலுத்து · {title} · {brand}',
   'pay.meta.title.empty': 'பணம் செலுத்தும் இணைப்பு · {brand}',
-  'pay.meta.description': 'எந்த UPI ஆப்பிலும் ஒரே தட்டில் உங்கள் பங்கைச் செலுத்துங்கள். {brand} மூலம் அனுப்பப்பட்டது.',
+  'pay.meta.description': 'உங்கள் சரியான பங்கைப் பார்த்து, எந்த UPI ஆப்பிலும் செலுத்துங்கள். {brand} மூலம் அனுப்பப்பட்டது.',
 } as const satisfies Messages

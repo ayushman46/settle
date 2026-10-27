@@ -47,7 +47,6 @@ export const share = {
   // A UPI payment request sent from the pay sheet (then "Pay Riya on UPI: …" and the link).
   'share.upiRequest.for': 'Hi {name}, your share for {merchant} is {amount}.',
   'share.upiRequest.bill': 'Hi {name}, your share of the bill is {amount}.',
-  'share.upiRequest.tap': 'Or tap to pay: {link}',
 
   // The full text summary of a split ("Copy text").
   'share.summary.total': 'Total {amount}',
@@ -67,8 +66,8 @@ export const share = {
   'share.message.pay': 'Tap your name to pay {name} with any UPI app 👇',
   'share.message.seeShare': 'Tap your name to see your share 👇',
   'share.message.yourShare': 'Hi {name}! Your share of {title} is {amount} 🧾',
-  'share.message.oneTapMe': 'Pay me in one tap — any UPI app, amount already filled in 👇',
-  'share.message.oneTap': 'Pay {name} in one tap — any UPI app, amount already filled in 👇',
+  'share.message.oneTapMe': 'Pay me with any UPI app — your exact share is on the page 👇',
+  'share.message.oneTap': 'Pay {name} with any UPI app — your exact share is on the page 👇',
   'share.message.seeYours': 'See your share 👇',
 
   // The share card image of a split (drawn in the sender's language).

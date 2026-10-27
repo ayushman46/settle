@@ -156,7 +156,7 @@ export const pools = {
   'pools.detail.closedBanner': 'આ ફાળો બંધ છે. વધુ ચુકવણી લેવા ફરી ખોલો.',
   'pools.detail.deleted': '{title} કાઢી નાખ્યું',
   'pools.detail.noUpi': 'તમારું UPI ID ઉમેરો',
-  'pools.detail.noUpi.text': 'લિંક પરથી મિત્રો એક ટૅપમાં તમને ચૂકવી શકે એ માટે.',
+  'pools.detail.noUpi.text': 'લિંક પરથી મિત્રો UPIથી તમને ચૂકવી શકે એ માટે.',
   'pools.detail.gone': 'આ ફાળો હવે નથી',
   'pools.detail.gone.text': 'એ કાઢી નખાયો હશે — આ ફોન પર કે બીજા ટૅબમાં.',
   'pools.detail.gone.action': 'ફાળા જુઓ',

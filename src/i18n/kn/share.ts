@@ -39,7 +39,6 @@ export const share = {
 
   'share.upiRequest.for': 'ನಮಸ್ಕಾರ {name}, {merchant} ಗಾಗಿ ನಿಮ್ಮ ಪಾಲು {amount}.',
   'share.upiRequest.bill': 'ನಮಸ್ಕಾರ {name}, ಬಿಲ್‌ನಲ್ಲಿ ನಿಮ್ಮ ಪಾಲು {amount}.',
-  'share.upiRequest.tap': 'ಅಥವಾ ಪಾವತಿಸಲು ಟ್ಯಾಪ್ ಮಾಡಿ: {link}',
 
   'share.summary.total': 'ಒಟ್ಟು {amount}',
   'share.summary.totalSplit': 'ಒಟ್ಟು {amount} · {count, plural, one {# ರೀತಿಯಲ್ಲಿ} other {# ರೀತಿಗಳಲ್ಲಿ}} ಹಂಚಲಾಗಿದೆ',
@@ -56,8 +55,8 @@ export const share = {
   'share.message.pay': 'ಯಾವುದೇ UPI ಆ್ಯಪ್‌ನಿಂದ {name} ಅವರಿಗೆ ಪಾವತಿಸಲು ನಿಮ್ಮ ಹೆಸರನ್ನು ಟ್ಯಾಪ್ ಮಾಡಿ 👇',
   'share.message.seeShare': 'ನಿಮ್ಮ ಪಾಲು ನೋಡಲು ನಿಮ್ಮ ಹೆಸರನ್ನು ಟ್ಯಾಪ್ ಮಾಡಿ 👇',
   'share.message.yourShare': 'ಹಾಯ್ {name}! {title} ನಲ್ಲಿ ನಿಮ್ಮ ಪಾಲು {amount} 🧾',
-  'share.message.oneTapMe': 'ಒಂದೇ ಟ್ಯಾಪ್‌ನಲ್ಲಿ ನನಗೆ ಕಳುಹಿಸಿ — ಯಾವುದೇ UPI ಆ್ಯಪ್, ಮೊತ್ತ ಮೊದಲೇ ತುಂಬಿದೆ 👇',
-  'share.message.oneTap': 'ಒಂದೇ ಟ್ಯಾಪ್‌ನಲ್ಲಿ {name} ಅವರಿಗೆ ಕಳುಹಿಸಿ — ಯಾವುದೇ UPI ಆ್ಯಪ್, ಮೊತ್ತ ಮೊದಲೇ ತುಂಬಿದೆ 👇',
+  'share.message.oneTapMe': 'ಯಾವುದೇ UPI ಆ್ಯಪ್‌ನಿಂದ ನನಗೆ ಕಳುಹಿಸಿ — ನಿಮ್ಮ ಪಾಲು ಪುಟದಲ್ಲಿ ಸಿದ್ಧವಿದೆ 👇',
+  'share.message.oneTap': 'ಯಾವುದೇ UPI ಆ್ಯಪ್‌ನಿಂದ {name} ಅವರಿಗೆ ಕಳುಹಿಸಿ — ನಿಮ್ಮ ಪಾಲು ಪುಟದಲ್ಲಿ ಸಿದ್ಧವಿದೆ 👇',
   'share.message.seeYours': 'ನಿಮ್ಮ ಪಾಲು ನೋಡಿ 👇',
 
   'share.card.morePeople': '{count, plural, one {# ಇನ್ನೊಬ್ಬರು} other {# ಇನ್ನಷ್ಟು ಜನರು}}',

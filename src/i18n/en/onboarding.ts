@@ -32,7 +32,7 @@ export const onboarding = {
   'onboarding.about.name.error': 'Add your name — friends see it on the requests you send.',
   'onboarding.about.upi.label': 'Your UPI ID (optional)',
   'onboarding.about.upi.placeholder': 'name@bank',
-  'onboarding.about.upi.hint': 'So friends can pay you back in one tap. You can add it later.',
+  'onboarding.about.upi.hint': 'So friends can pay you back by UPI. You can add it later.',
   // The UPI field was prefilled from an older split on this phone.
   'onboarding.about.upi.hint.remembered': 'From a split you made on this phone. Change it if it isn’t yours.',
   'onboarding.about.upi.error': 'That doesn’t look like a UPI ID. It looks like name@bank.',

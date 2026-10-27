@@ -126,12 +126,15 @@ describe('RentDetailScreen', () => {
     expect(screen.getByText('Rent for October 2026')).toBeInTheDocument()
   })
 
-  it('pays your own share to the landlord with the amount filled in', async () => {
+  it('pays your own share to the landlord by UPI ID (rent is over ₹2,000)', async () => {
     const rent = saveRent(flat())
     const { user } = renderAt(`/app/rent/${rent.id}`, <RentDetailScreen />)
     await user.click(screen.getByRole('button', { name: 'Pay my share · ₹16,000' }))
     const sheet = await screen.findByRole('dialog', { name: 'Pay Ramesh Kumar' })
-    expect(within(sheet).getByRole('link', { name: /Any UPI app/ }).getAttribute('href')).toMatch(/^upi:\/\/pay\?pa=ramesh\.kumar%40okhdfcbank&pn=Ramesh%20Kumar&am=16000\.00&cu=INR/)
+    expect(within(sheet).getByText('ramesh.kumar@okhdfcbank')).toBeInTheDocument()
+    expect(within(sheet).getByText('Enter ₹16,000')).toBeInTheDocument()
+    expect(within(sheet).getByText(/For more than ₹2,000 to a person/)).toBeInTheDocument()
+    expect(sheet.querySelector('a[href^="upi:"], a[href^="intent:"]')).toBeNull()
     // Close it as a person would, so its history entry is settled before the next test.
     await user.keyboard('{Escape}')
     await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Pay Ramesh Kumar' })).not.toBeInTheDocument())

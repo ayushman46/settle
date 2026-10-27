@@ -10,8 +10,8 @@ import { copyText, shareResult } from '../lib/share'
 import { buildUpiLink, buildUpiRequestText, isValidUpiId, normalizeUpiId } from '../lib/upi'
 import { outsideName } from '../share/names'
 import { FINE_POINTER, useMediaQuery } from './media'
-import { PayAppChooser } from './PayAppChooser'
 import { UpiIdForm } from './UpiIdForm'
+import { UpiRoutes } from './UpiRoutes'
 import styles from './UpiPaySheet.module.css'
 
 export interface UpiPayee {
@@ -134,7 +134,6 @@ export function UpiPaySheet({ open, onClose, payee, payer, amount, currency, not
         vpa,
         amountMinor: amount,
         merchant: note,
-        link,
       })
       const outcome = await shareResult(text, { title: t('kit.upi.share.title', { name: payeeOutside }) })
       if (outcome === 'shared' || outcome === 'copied') haptic('success')
@@ -166,8 +165,6 @@ export function UpiPaySheet({ open, onClose, payee, payer, amount, currency, not
   }
 
   const ready = vpa !== null && rupees
-  // Computers can't open UPI apps: there, the QR is the way (scan it with your phone).
-  const openApp = ready && perspective === 'paying' && !computer
   const sendRequest = ready && perspective !== 'paying'
   let footer: ReactNode = null
   if (sendRequest || onMarkPaid) {
@@ -179,7 +176,7 @@ export function UpiPaySheet({ open, onClose, payee, payer, amount, currency, not
           </Button>
         )}
         {onMarkPaid && (
-          <Button block variant={openApp || sendRequest ? 'secondary' : 'primary'} iconStart={<Check />} onClick={markPaid}>
+          <Button block variant={sendRequest || (ready && perspective === 'paying') ? 'secondary' : 'primary'} iconStart={<Check />} onClick={markPaid}>
             {perspective === 'paying' ? t('kit.upi.paid.cta') : t('kit.upi.markPaid.cta')}
           </Button>
         )}
@@ -223,24 +220,26 @@ export function UpiPaySheet({ open, onClose, payee, payer, amount, currency, not
               }
             />
           </div>
+        ) : perspective === 'paying' ? (
+          // You paying: the ways UPI allows (QR, a saved QR up to ₹2,000, or the UPI ID).
+          <UpiRoutes
+            payeeName={payeeOutside}
+            vpa={vpa}
+            amount={amount}
+            note={note}
+            color={payee.color ?? stored?.color ?? 0}
+            phone={!computer}
+            onPaid={onMarkPaid ? markPaid : undefined}
+          />
         ) : (
           <>
-            {openApp && (
-              <div className={styles.apps}>
-                <PayAppChooser input={{ vpa, payeeName: payeeOutside, amountMinor: amount, note }} />
-              </div>
-            )}
             <QrCode
               value={link}
               size={216}
               label={amount > 0 ? t('kit.upi.qr.aria', { amount: amountText, name: payeeOutside }) : t('kit.upi.qr.aria.noAmount', { name: payeeOutside })}
               className={styles.qr}
             />
-            <p className={styles.caption}>
-              {perspective === 'paying' && computer
-                ? t('kit.upi.qr.computer')
-                : t('kit.upi.qr.apps')}
-            </p>
+            <p className={styles.caption}>{t('kit.upi.qr.apps')}</p>
             <div className={styles.vpa}>
               <span className={styles.vpaLabel}>{t('kit.upi.to')}</span>
               <span className={styles.vpaId}>{vpa}</span>

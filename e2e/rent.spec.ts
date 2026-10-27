@@ -5,7 +5,7 @@
  * for the financial year — accessible, and fitting a 320 px phone.
  */
 import { expectAccessible } from './support/a11y'
-import { onboard, readUpiLink, upiAppLink } from './support/app'
+import { onboard, readUpiLink, UPI_PAYMENT_LINKS, upiQrLink } from './support/app'
 import { expectNoSideScroll } from './support/claims'
 import { expect, test } from './support/fixtures'
 
@@ -56,10 +56,12 @@ test('rent: set up, send the link, a flatmate pays the landlord directly, receip
   await friend.page.goto(link)
   await expect(friend.page.getByRole('heading', { level: 1, name: /^Ramesh Kumar requested money for Rent · / })).toBeVisible()
   await friend.page.getByRole('button', { name: /Riya/ }).click()
-  const upi = readUpiLink((await (await upiAppLink(friend.page, 'Pay ₹13,000')).getAttribute('href')) ?? '')
+  // Over ₹2,000 to a person: pay by UPI ID (or scan the QR from another phone) — never a payment link.
+  await expect(friend.page.getByText('Enter ₹13,000')).toBeVisible()
+  await expect(friend.page.getByText(/For more than ₹2,000 to a person/)).toBeVisible()
+  await expect(friend.page.locator(UPI_PAYMENT_LINKS)).toHaveCount(0)
+  const upi = readUpiLink(await upiQrLink(friend.page))
   expect(upi.params).toMatchObject({ pa: 'ramesh.kumar@okhdfcbank', pn: 'Ramesh Kumar', am: '13000.00', cu: 'INR' })
-  const gpay = (await friend.page.getByRole('link', { name: /Google Pay/ }).getAttribute('href')) ?? ''
-  expect(gpay).toMatch(/^intent:\/\/pay\?pa=ramesh\.kumar%40okhdfcbank&.*am=13000\.00.*package=com\.google\.android\.apps\.nbu\.paisa\.user/)
 
   // Receipts for HRA: one a month for the financial year, for your own share.
   await page.getByRole('button', { name: 'Get rent receipts' }).click()

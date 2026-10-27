@@ -163,7 +163,7 @@ export const pools = {
   'pools.detail.closedBanner': 'এই চাঁদা বন্ধ। আরও পেমেন্ট নিতে আবার চালু করুন।',
   'pools.detail.deleted': '{title} মুছে ফেলা হয়েছে',
   'pools.detail.noUpi': 'আপনার UPI ID যোগ করুন',
-  'pools.detail.noUpi.text': 'যাতে বন্ধুরা লিংক থেকে এক ট্যাপে আপনাকে দিতে পারেন।',
+  'pools.detail.noUpi.text': 'যাতে বন্ধুরা লিংক থেকে UPI-তে আপনাকে দিতে পারেন।',
   'pools.detail.gone': 'এই চাঁদা আর নেই',
   'pools.detail.gone.text': 'হয়তো মুছে ফেলা হয়েছে — এই ফোনে বা অন্য ট্যাবে।',
   'pools.detail.gone.action': 'চাঁদা দেখুন',

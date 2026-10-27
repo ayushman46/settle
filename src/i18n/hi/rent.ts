@@ -67,7 +67,7 @@ export const rent = {
   'rent.detail.month.label': '{month} का किराया',
   'rent.detail.month.prev': 'पिछला महीना',
   'rent.detail.month.next': 'अगला महीना',
-  'rent.detail.send.text': 'फ़्लैट ग्रुप में एक लिंक भेजें। हर फ़्लैटमेट अपना नाम टैप करके अपना हिस्सा सीधे {landlord} को देगा, रकम पहले से भरी होगी।',
+  'rent.detail.send.text': 'फ़्लैट ग्रुप में एक लिंक भेजें। हर फ़्लैटमेट अपना नाम टैप करे और अपना हिस्सा सीधे {landlord} को UPI से भेजे।',
   'rent.detail.send.cta': 'किराया लिंक भेजें',
   'rent.detail.payMine.cta': 'मेरा हिस्सा पे करें · {amount}',
   'rent.detail.noUpi.title': '{landlord} का UPI ID जोड़ें',

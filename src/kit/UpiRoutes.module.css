@@ -1,0 +1,290 @@
+/* Paying one person by UPI, the allowed ways: QR, a saved QR, or the UPI ID. */
+
+.routes {
+  display: grid;
+  justify-items: center;
+  gap: var(--s-3);
+  width: 100%;
+}
+
+.switch {
+  width: 100%;
+}
+
+.card {
+  display: grid;
+  justify-items: center;
+  gap: var(--s-3);
+  width: 100%;
+  padding: var(--s-4);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+  animation: enter var(--dur-3) var(--ease-out) both;
+}
+
+.qr {
+  justify-self: center;
+}
+
+.caption {
+  max-width: 34ch;
+  font: var(--text-caption);
+  color: var(--ink-2);
+  text-align: center;
+}
+
+.lead {
+  justify-self: stretch;
+  font: var(--text-label);
+  font-weight: 600;
+  color: var(--ink);
+}
+
+/* Numbered steps, read top to bottom in the UPI app. */
+.steps {
+  display: grid;
+  gap: var(--s-2);
+  justify-self: stretch;
+  margin: 0;
+  padding: 0 0 0 var(--s-5);
+  font: var(--text-body);
+  color: var(--ink);
+}
+
+.steps > li {
+  padding-left: var(--s-1);
+}
+
+.steps > li::marker {
+  font-weight: 700;
+  color: var(--ink-2);
+}
+
+.steps > li:has(button) {
+  display: list-item;
+}
+
+.steps > li > button {
+  margin-top: var(--s-1);
+  margin-left: var(--s-2);
+  vertical-align: middle;
+}
+
+.fine {
+  justify-self: stretch;
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
+.problem {
+  justify-self: stretch;
+  font: var(--text-caption);
+  color: var(--negative);
+}
+
+/* iPhone: open an app's home screen (no payment in the link). */
+.open {
+  display: grid;
+  gap: var(--s-2);
+  width: 100%;
+}
+
+.openLabel {
+  font: var(--text-micro);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+
+.openApps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.openApp {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 var(--s-4);
+  border-radius: var(--r-pill);
+  background: var(--surface-2);
+  font: var(--text-label);
+  font-weight: 600;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+/* ---------- The payee ---------- */
+
+.payee {
+  display: grid;
+  gap: var(--s-3);
+  width: 100%;
+  margin-top: var(--s-2);
+  padding: var(--s-4);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+}
+
+.payeeLabel {
+  font: var(--text-micro);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+
+.payeeRow {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+}
+
+.payeeText {
+  display: grid;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.payeeName {
+  font: var(--text-body);
+  font-weight: 650;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+/* The UPI ID is read character by character: mono, never truncated. */
+.vpa {
+  font: var(--text-label);
+  font-family: var(--font-mono);
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.amountRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2);
+  font: var(--text-body);
+  color: var(--ink);
+}
+
+.safety {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-2);
+  padding-top: var(--s-3);
+  border-top: 1px solid var(--line);
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
+.safety > svg {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin-top: 1px;
+  color: var(--positive);
+}
+
+.safety strong {
+  font-weight: 650;
+  color: var(--ink);
+}
+
+/* ---------- "Did you pay?" ---------- */
+
+.ask {
+  display: grid;
+  gap: var(--s-3);
+  width: 100%;
+  padding: var(--s-4);
+  border-radius: var(--radius-card);
+  background: var(--accent-soft);
+  animation: enter var(--dur-3) var(--ease-out) both;
+}
+
+.askTitle {
+  font: var(--text-label);
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.askActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+/* ---------- When it doesn't go through ---------- */
+
+.help {
+  width: 100%;
+}
+
+.helpToggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  width: 100%;
+  min-height: 44px;
+  font: var(--text-caption);
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.chevron,
+.chevronOpen {
+  width: var(--s-4);
+  height: var(--s-4);
+  transition: transform var(--dur-3) var(--ease-spring);
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+}
+
+.helpBody {
+  display: grid;
+  gap: var(--s-3);
+  margin: 0;
+  padding: var(--s-2) var(--s-1) 0;
+}
+
+.helpBody[hidden] {
+  display: none;
+}
+
+.helpItem dt {
+  font: var(--text-label);
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.helpItem dd {
+  margin: var(--s-1) 0 0;
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
+@keyframes enter {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card,
+  .ask {
+    animation: none;
+  }
+}

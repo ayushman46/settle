@@ -75,7 +75,7 @@ export function summaryText(payload: PayLinkPayload, link?: string | null): stri
  *
  * ```
  * Hi Riya! Your share of Dinner at Toit is ₹460 🧾
- * Pay me in one tap — any UPI app, amount already filled in 👇
+ * Pay me with any UPI app — your exact share is on the page 👇
  * https://…/pay#…
  * ```
  */

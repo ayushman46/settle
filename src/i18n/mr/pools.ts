@@ -163,7 +163,7 @@ export const pools = {
   'pools.detail.closedBanner': 'ही वर्गणी बंद आहे. आणखी पेमेंट घेण्यासाठी पुन्हा उघडा.',
   'pools.detail.deleted': '{title} हटवले',
   'pools.detail.noUpi': 'तुमचा UPI ID जोडा',
-  'pools.detail.noUpi.text': 'जेणेकरून मित्र लिंकवरून एका टॅपमध्ये तुम्हाला पैसे देऊ शकतील.',
+  'pools.detail.noUpi.text': 'जेणेकरून मित्र लिंकवरून UPI ने तुम्हाला पैसे देऊ शकतील.',
   'pools.detail.gone': 'ही वर्गणी आता नाही',
   'pools.detail.gone.text': 'कदाचित हटवली गेली असेल — या फोनवर किंवा दुसऱ्या टॅबमध्ये.',
   'pools.detail.gone.action': 'वर्गणी पहा',

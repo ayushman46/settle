@@ -26,7 +26,7 @@ export const onboarding = {
   'onboarding.about.name.error': 'अपना नाम डालें — आपके भेजे रिक्वेस्ट पर दोस्तों को यही दिखेगा।',
   'onboarding.about.upi.label': 'आपकी UPI ID (ज़रूरी नहीं)',
   'onboarding.about.upi.placeholder': 'name@bank',
-  'onboarding.about.upi.hint': 'ताकि दोस्त एक टैप में पैसे लौटा सकें। चाहें तो बाद में जोड़ें।',
+  'onboarding.about.upi.hint': 'ताकि दोस्त UPI से पैसे लौटा सकें। चाहें तो बाद में जोड़ें।',
   'onboarding.about.upi.hint.remembered': 'इस फ़ोन पर आपके एक पुराने स्प्लिट से ली गई है। आपकी नहीं है तो बदल दें।',
   'onboarding.about.upi.error': 'यह UPI ID जैसी नहीं लगती। UPI ID ऐसी दिखती है: name@bank',
   'onboarding.about.currency.label': 'करेंसी',

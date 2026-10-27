@@ -3,7 +3,7 @@ import { BottomSheet, Button, TextField, useToast } from '../../components'
 import { updateProfile, useProfile } from '../../data'
 import { useT } from '../../i18n'
 import { MAX_NAME_LENGTH, normalizeName } from '../../lib/people'
-import { isValidUpiId, normalizeUpiId } from '../../lib/upi'
+import { isPhoneUpiId, isValidUpiId, normalizeUpiId } from '../../lib/upi'
 import styles from './EditProfileSheet.module.css'
 
 export type ProfileField = 'name' | 'upi'
@@ -105,7 +105,7 @@ export function EditProfileSheet({ open, onClose, focus }: EditProfileSheetProps
           spellCheck={false}
           enterKeyHint="done"
           className={styles.upi}
-          hint={t('you.edit.upi.hint')}
+          hint={isPhoneUpiId(upi) ? t('kit.upiForm.hint.phone') : t('you.edit.upi.hint')}
           error={errors.upi}
           onChange={(event) => {
             setUpi(event.target.value.replace(/\s+/g, ''))

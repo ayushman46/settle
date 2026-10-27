@@ -7,7 +7,7 @@
  */
 import type { Page } from '@playwright/test'
 import { expectAccessible } from './support/a11y'
-import { readUpiLink, upiAppLink } from './support/app'
+import { readUpiLink, UPI_PAYMENT_LINKS, upiQrLink } from './support/app'
 import { expect, test } from './support/fixtures'
 import { friend, seed } from './support/seed'
 import type { Contribution, Pool } from '../src/domain/types'
@@ -66,18 +66,14 @@ test.describe('collections', () => {
     await other.getByRole('button', { name: 'Sam' }).click()
     await expect(other.getByText('Your part')).toBeVisible()
 
-    const pay = await upiAppLink(other, 'Pay ₹500')
-    const upi = readUpiLink((await pay.getAttribute('href')) ?? '')
+    const upi = readUpiLink(await upiQrLink(other))
     expect(upi.scheme).toBe('upi:')
     expect(upi.params).toMatchObject({ pa: UPI, am: '500.00', tn: "Chanda Riya's farewell", cu: 'INR' })
+    await expect(other.locator(UPI_PAYMENT_LINKS)).toHaveCount(0)
 
-    // Paying opens the UPI app; coming back asks whether it went through.
-    await other.evaluate(() => {
-      window.addEventListener('click', (event) => {
-        if ((event.target as HTMLElement).closest('a[href^="upi:"]')) event.preventDefault()
-      }, true)
-    })
-    await pay.click()
+    // Paying by UPI ID: copy it, off to the UPI app, and back — it asks whether it went through.
+    await other.getByRole('radio', { name: 'UPI ID' }).click()
+    await other.getByRole('button', { name: 'Copy UPI ID' }).first().click()
     await other.evaluate(() => document.dispatchEvent(new Event('visibilitychange')))
     await other.getByRole('button', { name: 'Yes, I have' }).click()
     await expect(other.getByRole('checkbox', { name: 'I’ve paid ₹500' })).toBeChecked()
@@ -157,10 +153,10 @@ test.describe('collections', () => {
     await other.getByRole('button', { name: 'I’m not on the list' }).click()
     await other.getByRole('textbox', { name: 'Your name' }).fill('Priya')
     await expect(other.getByRole('radio', { name: '₹1,300 (suggested)' })).toHaveAttribute('aria-checked', 'true')
-    const upi = readUpiLink((await (await upiAppLink(other, 'Pay ₹1,300')).getAttribute('href')) ?? '')
+    const upi = readUpiLink(await upiQrLink(other))
     expect(upi.params).toMatchObject({ am: '1300.00', tn: 'Chanda Ganpati puja chanda' })
     await other.getByRole('radio', { name: '₹251' }).click()
-    await expect(await upiAppLink(other, 'Pay ₹251')).toBeVisible()
+    expect(readUpiLink(await upiQrLink(other)).params.am).toBe('251.00')
   })
 
   test.describe('at 320 px', () => {

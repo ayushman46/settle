@@ -22,23 +22,6 @@ export const pay = {
   'pay.who.hint': 'మీ వాటా చూడటానికి, చెల్లించడానికి మీ పేరు ట్యాప్ చేయండి.',
   // Badge next to someone the payee has marked as paid.
   'pay.who.paid': 'చెల్లించారు',
-  // Paying by UPI (also used on the claim and pool pages).
-  'pay.upi.cta': 'ఏ UPI యాప్‌తోనైనా {amount} చెల్లించండి',
-  'pay.upi.cta.caption': 'అన్నీ నింపి GPay, PhonePe, Paytm లేదా BHIM తెరుచుకుంటుంది.',
-  'pay.upi.qr.show.cta': 'మరో ఫోన్ నుంచి చెల్లించండి',
-  'pay.upi.qr.hide.cta': 'QR కోడ్ దాచండి',
-  'pay.upi.qr.aria': '{name} కు {amount} చెల్లించడానికి UPI QR కోడ్',
-  'pay.upi.qr.caption.touch': 'ఇతర ఫోన్‌లోని UPI యాప్‌తో స్కాన్ చేయండి.',
-  'pay.upi.qr.caption.desktop': 'మీ ఫోన్‌లో ఏ UPI యాప్‌తోనైనా స్కాన్ చేయండి — GPay, PhonePe, Paytm, BHIM.',
-  // Label above the payee's name and UPI ID.
-  'pay.upi.payee.label': 'చెల్లించే వారు',
-  'pay.upi.copy.cta': 'కాపీ చేయండి',
-  'pay.upi.copied.cta': 'కాపీ అయింది',
-  'pay.upi.copy.aria': 'UPI ID కాపీ చేయండి',
-  'pay.upi.copied.aria': 'UPI ID కాపీ అయింది',
-  'pay.upi.copy.error': 'కాపీ చేయలేకపోయాం — ID ను ఎక్కువసేపు నొక్కి కాపీ చేయండి.',
-  'pay.upi.copied.status': 'UPI ID కాపీ అయింది',
-  'pay.upi.safety': 'చెల్లించే ముందు మీ UPI యాప్‌లో <b>{name}</b> కనిపిస్తున్నదో చూడండి. {brand} మీ డబ్బును ఎప్పుడూ తాకదు.',
   // One person's share.
   'pay.panel.notYou.cta': '{name} కాదా? మీ పేరు ఎంచుకోండి',
   'pay.panel.share.title': '{name} వాటా',
@@ -76,5 +59,5 @@ export const pay = {
   // The browser tab title and the link preview.
   'pay.meta.title': '{name} కు చెల్లించండి · {title} · {brand}',
   'pay.meta.title.empty': 'పే లింక్ · {brand}',
-  'pay.meta.description': 'ఏ UPI యాప్‌తోనైనా ఒక్క ట్యాప్‌లో మీ వాటా చెల్లించండి. {brand} తో పంపబడింది.',
+  'pay.meta.description': 'మీ సరైన వాటా చూసి, ఏ UPI యాప్‌తోనైనా చెల్లించండి. {brand} తో పంపబడింది.',
 } as const satisfies Messages

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { render, screen, within } from '@testing-library/react'
+import { act, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ToastProvider } from '../components'
@@ -66,7 +66,8 @@ describe('UpiPaySheet', () => {
     const text = await navigator.clipboard.readText()
     expect(text).toContain('Hi Sam, your share for Dinner at Toit is ₹691.50.')
     expect(text).toContain('Pay Ayush on UPI: ayush@okaxis')
-    expect(text).toContain('upi://pay?pa=ayush%40okaxis&pn=Ayush&am=691.50&cu=INR&tn=Dinner%20at%20Toit')
+    // No upi:// link: UPI apps refuse a payment to a person that starts from one.
+    expect(text).not.toContain('upi://')
   })
 
   it('copies the UPI ID', async () => {
@@ -77,13 +78,15 @@ describe('UpiPaySheet', () => {
     expect(await navigator.clipboard.readText()).toBe('ayush@okaxis')
   })
 
-  it('hands over to your UPI app when you are the one paying', () => {
+  it('when you are the one paying: the ways UPI allows, and never a payment link', () => {
     render(<Harness {...DINNER} payee={{ id: 'riya', name: 'Riya', upiId: null }} payer={{ id: ME_ID, name: 'You', color: 2 }} />)
     const sheet = screen.getByRole('dialog', { name: 'Pay Riya' })
     // What it's for leads, as on a payments app's pay screen.
     expect(within(sheet).getByText('Dinner at Toit')).toBeInTheDocument()
-    const app = within(sheet).getByRole('link', { name: /Any UPI app/ })
-    expect(app).toHaveAttribute('href', 'upi://pay?pa=riya%40okicici&pn=Riya&am=691.50&cu=INR&tn=Dinner%20at%20Toit')
+    expect(within(sheet).getByRole('button', { name: 'Save QR to gallery' })).toBeInTheDocument()
+    expect(within(sheet).getByRole('radio', { name: 'UPI ID' })).toBeInTheDocument()
+    expect(within(sheet).getByText('riya@okicici')).toBeInTheDocument()
+    expect(sheet.querySelector('a[href^="upi:"], a[href^="intent:"]')).toBeNull()
     expect(within(sheet).queryByRole('button', { name: 'Send request' })).not.toBeInTheDocument()
   })
 
@@ -92,7 +95,7 @@ describe('UpiPaySheet', () => {
     render(<Harness {...DINNER} payee={{ id: 'riya', name: 'Riya', upiId: null }} payer={{ id: ME_ID, name: 'You', color: 2 }} />)
     const sheet = screen.getByRole('dialog', { name: 'Pay Riya' })
     expect(within(sheet).queryByRole('link')).not.toBeInTheDocument()
-    expect(within(sheet).getByText('Scan this with the UPI app on your phone.')).toBeInTheDocument()
+    expect(within(sheet).getByText('Scan with any UPI app on your phone — ₹691.50 and the note fill in by themselves.')).toBeInTheDocument()
     expect(within(sheet).getByRole('img', { name: 'UPI QR code to pay ₹691.50 to Riya' })).toBeInTheDocument()
   })
 
@@ -122,11 +125,8 @@ describe('UpiPaySheet', () => {
     await user.click(save)
     expect(friendsStore.get().find((f) => f.id === 'sam')?.upiId).toBe('sam@ybl')
     expect(await screen.findByText('UPI ID saved')).toBeInTheDocument()
-    expect(within(sheet).getByRole('img', { name: 'UPI QR code to pay ₹691.50 to Sam' })).toBeInTheDocument()
-    expect(within(sheet).getByRole('link', { name: /Any UPI app/ })).toHaveAttribute(
-      'href',
-      expect.stringContaining('pa=sam%40ybl'),
-    )
+    expect(within(sheet).getByText('sam@ybl')).toBeInTheDocument()
+    expect(within(sheet).getByRole('button', { name: 'Save QR to gallery' })).toBeInTheDocument()
   })
 
   it('adds your own UPI ID to your profile when you have none', async () => {
@@ -147,7 +147,7 @@ describe('UpiPaySheet', () => {
     render(<Harness {...DINNER} payee={{ name: 'Kabir', upiId: null }} payer={{ id: ME_ID, name: 'You', color: 2 }} />)
     await user.type(screen.getByRole('textbox', { name: 'UPI ID for Kabir' }), 'kabir@okhdfc')
     await user.click(screen.getByRole('button', { name: 'Use this UPI ID' }))
-    expect(screen.getByRole('img', { name: 'UPI QR code to pay ₹691.50 to Kabir' })).toBeInTheDocument()
+    expect(screen.getByText('kabir@okhdfc')).toBeInTheDocument()
     expect(friendsStore.get().some((f) => f.upiId === 'kabir@okhdfc')).toBe(false)
   })
 
@@ -200,7 +200,7 @@ describe('UpiPaySheet', () => {
     render(<Harness {...DINNER} payee={{ name: 'Kabir', upiId: 'not an id' }} payer={{ id: ME_ID, name: 'You', color: 2 }} />)
     await user.type(screen.getByRole('textbox', { name: 'UPI ID for Kabir' }), 'kabir@okhdfc')
     await user.click(screen.getByRole('button', { name: 'Use this UPI ID' }))
-    expect(screen.getByRole('img', { name: 'UPI QR code to pay ₹691.50 to Kabir' })).toBeInTheDocument()
+    expect(screen.getByText('kabir@okhdfc')).toBeInTheDocument()
   })
 
   it('uses, without saving, an ID for someone who was removed', async () => {
@@ -219,11 +219,29 @@ describe('UpiPaySheet', () => {
     render(
       <Harness {...DINNER} payee={{ id: 'riya', name: 'Riya', upiId: null }} payer={{ id: ME_ID, name: 'You', color: 2 }} onMarkPaid={onMarkPaid} />,
     )
-    // The UPI app comes first; "I've paid" is the quieter follow-up.
-    const app = screen.getByRole('link', { name: /Any UPI app/ })
+    // Paying comes first; "I've paid" is the quieter follow-up.
+    const app = screen.getByRole('button', { name: 'Save QR to gallery' })
     const paid = screen.getByRole('button', { name: 'I’ve paid' })
     expect(app.compareDocumentPosition(paid) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     await user.click(paid)
+    expect(onMarkPaid).toHaveBeenCalledOnce()
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
+  it('asks "Did you pay?" when you come back from your UPI app, and a yes marks it paid', async () => {
+    const user = userEvent.setup()
+    const onMarkPaid = vi.fn()
+    render(
+      <Harness {...DINNER} payee={{ id: 'riya', name: 'Riya', upiId: null }} payer={{ id: ME_ID, name: 'You', color: 2 }} onMarkPaid={onMarkPaid} />,
+    )
+    await user.click(screen.getByRole('radio', { name: 'UPI ID' }))
+    await user.click(screen.getAllByRole('button', { name: 'Copy UPI ID' })[0] as HTMLElement)
+    const visibility = vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('hidden')
+    act(() => {
+      document.dispatchEvent(new Event('visibilitychange'))
+    })
+    visibility.mockRestore()
+    await user.click(within(screen.getByRole('group', { name: 'Did you pay Riya ₹691.50?' })).getByRole('button', { name: 'Yes, I paid' }))
     expect(onMarkPaid).toHaveBeenCalledOnce()
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })

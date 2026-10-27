@@ -41,7 +41,7 @@ describe('YouScreen — profile', () => {
 
   it('asks for a UPI ID, checks it, and saves it', async () => {
     const { user } = renderYou()
-    expect(screen.getByText('Add your UPI ID so friends can pay you back in one tap.')).toBeInTheDocument()
+    expect(screen.getByText('Add your UPI ID so friends can pay you back by UPI.')).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Add UPI ID' }))
     const sheet = await screen.findByRole('dialog', { name: 'Your profile' })
     const field = within(sheet).getByLabelText('Your UPI ID')
@@ -285,5 +285,15 @@ describe('YouScreen — about', () => {
     const footer = screen.getByRole('contentinfo')
     expect(footer).toHaveTextContent('Split anything. Settle in a tap.')
     expect(footer).toHaveTextContent('Made with care · no ads · no tracking')
+  })
+})
+
+describe('YouScreen — a UPI ID made of a phone number', () => {
+  it('says friends would see the number, and that the UPI app can give one without it', async () => {
+    const { user } = renderYou()
+    await user.click(screen.getByRole('button', { name: 'Add UPI ID' }))
+    const sheet = await screen.findByRole('dialog', { name: 'Your profile' })
+    await user.type(within(sheet).getByLabelText('Your UPI ID'), '9876543210@ybl')
+    expect(within(sheet).getByText(/This ID shows your phone number to everyone you send a link to/)).toBeInTheDocument()
   })
 })

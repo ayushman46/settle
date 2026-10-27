@@ -20,21 +20,6 @@ export const pay = {
   'pay.who.hint': 'अपना हिस्सा देखने और पे करने के लिए अपने नाम पर टैप करें।',
   'pay.who.paid': 'चुका दिया',
 
-  'pay.upi.cta': 'किसी भी UPI ऐप से {amount} पे करें',
-  'pay.upi.cta.caption': 'GPay, PhonePe, Paytm या BHIM खुलेगा, सारी डिटेल पहले से भरी होगी।',
-  'pay.upi.qr.show.cta': 'दूसरे फ़ोन से पे करें',
-  'pay.upi.qr.hide.cta': 'QR कोड छिपाएँ',
-  'pay.upi.qr.aria': '{name} को {amount} पे करने का UPI QR कोड',
-  'pay.upi.qr.caption.touch': 'दूसरे फ़ोन के UPI ऐप से इसे स्कैन करें।',
-  'pay.upi.qr.caption.desktop': 'अपने फ़ोन के किसी भी UPI ऐप से स्कैन करें — GPay, PhonePe, Paytm, BHIM।',
-  'pay.upi.payee.label': 'पैसे इन्हें जाएँगे',
-  'pay.upi.copy.cta': 'कॉपी करें',
-  'pay.upi.copied.cta': 'कॉपी हो गया',
-  'pay.upi.copy.aria': 'UPI ID कॉपी करें',
-  'pay.upi.copied.aria': 'UPI ID कॉपी हो गई',
-  'pay.upi.copy.error': 'कॉपी नहीं हो पाया — ID को दबाकर रखें और कॉपी करें।',
-  'pay.upi.copied.status': 'UPI ID कॉपी हो गई',
-  'pay.upi.safety': 'पे करने से पहले देख लें कि आपके UPI ऐप में <b>{name}</b> दिख रहा है। {brand} आपके पैसों को कभी नहीं छूता।',
 
   'pay.panel.notYou.cta': '{name} नहीं हैं? अपना नाम चुनें',
   'pay.panel.share.title': '{name} का हिस्सा',
@@ -80,7 +65,5 @@ export const pay = {
 
   'pay.meta.title': '{name} को पे करें · {title} · {brand}',
   'pay.meta.title.empty': 'पे लिंक · {brand}',
-  'pay.meta.description': 'किसी भी UPI ऐप से एक टैप में अपना हिस्सा पे करें। {brand} से भेजा गया।',
-  'pay.upi.choose.cta': '{amount} पे करें',
-  'pay.upi.choose.caption': 'ऐप चुनें। वह रकम और नाम पहले से भरकर खुलेगा।',
+  'pay.meta.description': 'अपना सही हिस्सा देखें और किसी भी UPI ऐप से पे करें। {brand} से भेजा गया।',
 } as const satisfies Messages

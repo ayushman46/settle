@@ -163,7 +163,7 @@ export const pools = {
   'pools.detail.closedBanner': 'This collection is closed. Reopen it to take more payments.',
   'pools.detail.deleted': '{title} deleted',
   'pools.detail.noUpi': 'Add your UPI ID',
-  'pools.detail.noUpi.text': 'So friends can pay you in one tap from the link.',
+  'pools.detail.noUpi.text': 'So friends can pay you by UPI from the link.',
   'pools.detail.gone': 'This collection is gone',
   'pools.detail.gone.text': 'It may have been deleted — on this phone or in another tab.',
   'pools.detail.gone.action': 'See collections',

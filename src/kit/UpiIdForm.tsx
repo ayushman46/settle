@@ -3,7 +3,7 @@ import { Button, TextField } from '../components'
 import { ME_ID } from '../domain/types'
 import { useT } from '../i18n'
 import { cx } from '../lib/cx'
-import { isValidUpiId, normalizeUpiId } from '../lib/upi'
+import { isPhoneUpiId, isValidUpiId, normalizeUpiId } from '../lib/upi'
 import styles from './UpiIdForm.module.css'
 
 export interface UpiIdFormProps {
@@ -63,7 +63,15 @@ export function UpiIdForm({
           if (text !== '') setTried(true)
         }}
         error={error}
-        hint={mine ? t('kit.upiForm.hint.mine') : ownerId ? t('kit.upiForm.hint.saved', { name: ownerName }) : undefined}
+        hint={
+          mine && isPhoneUpiId(text)
+            ? t('kit.upiForm.hint.phone')
+            : mine
+              ? t('kit.upiForm.hint.mine')
+              : ownerId
+                ? t('kit.upiForm.hint.saved', { name: ownerName })
+                : undefined
+        }
         inputMode="email"
         autoComplete="off"
         autoCapitalize="none"

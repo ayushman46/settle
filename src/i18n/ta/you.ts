@@ -68,7 +68,7 @@ export const you = {
   'you.profile.upi': 'UPI ID',
   'you.profile.upi.edit': 'UPI ID {id}. திருத்து',
   'you.profile.copy': 'UPI ID ஐ நகலெடு',
-  'you.profile.add.body': 'நண்பர்கள் ஒரே தட்டில் உங்களுக்குத் திருப்பிச் செலுத்த உங்கள் UPI ID ஐச் சேருங்கள்.',
+  'you.profile.add.body': 'நண்பர்கள் UPI-ல் உங்களுக்குத் திருப்பிச் செலுத்த உங்கள் UPI ID ஐச் சேருங்கள்.',
   'you.profile.add': 'UPI ID சேர்',
   'you.edit.title': 'உங்கள் சுயவிவரம்',
   'you.edit.body': 'பணம் செலுத்தும் இணைப்புகளில் நண்பர்கள் உங்கள் பெயரைப் பார்ப்பார்கள். உங்கள் UPI ID-தான் அவர்கள் உங்களுக்குச் செலுத்தும் இடம்.',

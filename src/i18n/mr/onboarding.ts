@@ -32,7 +32,7 @@ export const onboarding = {
   'onboarding.about.name.error': 'तुमचे नाव लिहा — तुम्ही पाठवलेल्या विनंत्यांवर मित्रांना ते दिसेल.',
   'onboarding.about.upi.label': 'तुमचा UPI ID (ऐच्छिक)',
   'onboarding.about.upi.placeholder': 'name@bank',
-  'onboarding.about.upi.hint': 'मित्रांना एका टॅपमध्ये पैसे परत करता यावेत म्हणून. नंतरही जोडू शकता.',
+  'onboarding.about.upi.hint': 'मित्रांना UPI ने पैसे परत करता यावेत म्हणून. नंतरही जोडू शकता.',
   // The UPI field was prefilled from an older split on this phone.
   'onboarding.about.upi.hint.remembered': 'या फोनवर तुम्ही केलेल्या आधीच्या वाटणीतून. तुमचा नसेल तर बदला.',
   'onboarding.about.upi.error': 'हा UPI ID वाटत नाही. तो name@bank सारखा असायला हवा.',

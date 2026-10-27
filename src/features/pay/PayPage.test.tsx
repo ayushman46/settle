@@ -5,7 +5,7 @@ import { historyDriver } from '../../app/nav/historyDriver'
 import { navigate, resetNavForTests, useLocation } from '../../app/router'
 import { BRAND } from '../../domain/types'
 import { decodePaidReply } from '../../share/paidReply'
-import { encodePayLink, payLinkUpiRequest, type PayLinkPayload } from '../../share/payLink'
+import { encodePayLink, type PayLinkPayload } from '../../share/payLink'
 import { PayPage } from './PayPage'
 
 const ORIGIN = 'https://settle.example'
@@ -131,35 +131,102 @@ describe('PayPage — the request', () => {
 })
 
 describe('PayPage — paying', () => {
-  it('on a computer: shows the share, a QR code and the payee’s UPI ID', async () => {
+  it('on a computer: shows the share, a QR code to scan with a phone, and the payee’s UPI ID', async () => {
     const { user } = await openLink(dinner())
     await user.click(await screen.findByRole('button', { name: /^S?Sam/ }))
     const share = screen.getByRole('heading', { level: 2, name: 'Sam’s share' })
     expect(share).toHaveFocus()
     expect(screen.getByText('Six hundred ninety-one rupees and fifty paise')).toBeInTheDocument()
     expect(screen.getByRole('img', { name: 'UPI QR code to pay ₹691.50 to Ayush' })).toBeInTheDocument()
+    expect(screen.getByText('Scan with any UPI app on your phone — ₹691.50 and the note fill in by themselves.')).toBeInTheDocument()
     expect(screen.getByText('ayush@okaxis')).toBeInTheDocument()
-    expect(screen.queryByRole('link', { name: /with any UPI app/ })).not.toBeInTheDocument()
-    expect(screen.getByText(/Check that your UPI app shows/)).toHaveTextContent('Ayush')
+    expect(screen.getByText(/Your UPI app shows the name on/)).toHaveTextContent('Ayush’s bank account')
+    // No payment link to a person's UPI ID: UPI apps refuse them (NPCI OC 76C).
+    expect(document.querySelector('a[href^="upi:"], a[href^="intent:"]')).toBeNull()
+    expect(screen.queryByRole('button', { name: /Save QR/ })).not.toBeInTheDocument()
   })
 
-  it('on a phone: leads with a one-tap UPI payment, QR on request', async () => {
+  it('on a phone, up to ₹2,000: save the QR and upload it in the UPI app — or pay by UPI ID', async () => {
     asPhone()
-    const payload = dinner()
-    const { user } = await openLink(payload)
+    const { user } = await openLink(dinner())
     await user.click(await screen.findByRole('button', { name: /^S?Sam/ }))
-    const pay = screen.getByRole('button', { name: 'Pay ₹691.50' })
-    expect(pay).toHaveAttribute('aria-expanded', 'false')
-    await user.click(pay)
-    expect(pay).toHaveAttribute('aria-expanded', 'true')
-    expect(screen.getByRole('link', { name: /Any UPI app/ })).toHaveAttribute('href', payLinkUpiRequest(payload, 2)?.uri)
+    expect(screen.getByRole('radio', { name: 'QR from photos' })).toHaveAttribute('aria-checked', 'true')
+    expect(screen.getByRole('button', { name: 'Save QR to gallery' })).toBeInTheDocument()
+    expect(screen.getByText('Tap “Scan”, then the photo or “Upload” icon')).toBeInTheDocument()
+    expect(screen.getByText('Pick the QR you saved — ₹691.50 fills in by itself')).toBeInTheDocument()
+    expect(screen.getByText('A QR from your photos pays a person up to ₹2,000.')).toBeInTheDocument()
     expect(screen.queryByRole('img', { name: /UPI QR code/ })).not.toBeInTheDocument()
-    const another = screen.getByRole('button', { name: 'Pay from another phone' })
+    expect(document.querySelector('a[href^="upi:"], a[href^="intent:"]')).toBeNull()
+
+    await user.click(screen.getByRole('radio', { name: 'UPI ID' }))
+    expect(screen.getByText('Tap “Pay UPI ID” (or search) and paste')).toBeInTheDocument()
+    await user.click(screen.getAllByRole('button', { name: 'Copy UPI ID' })[0] as HTMLElement)
+    expect(await navigator.clipboard.readText()).toBe('ayush@okaxis')
+    await user.click(screen.getByRole('button', { name: 'Copy the amount, ₹691.50' }))
+    expect(await navigator.clipboard.readText()).toBe('691.50')
+
+    const another = screen.getByRole('button', { name: 'Show QR for another phone' })
     expect(another).toHaveAttribute('aria-expanded', 'false')
     await user.click(another)
     expect(screen.getByRole('img', { name: 'UPI QR code to pay ₹691.50 to Ayush' })).toBeInTheDocument()
-    await user.click(screen.getByRole('button', { name: 'Hide the QR code' }))
+    expect(screen.getByText('Scan it with the UPI app on the other phone. Works for any amount.')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Hide the QR' }))
     expect(screen.queryByRole('img', { name: /UPI QR code/ })).not.toBeInTheDocument()
+  })
+
+  it('on a phone, over ₹2,000: pay by UPI ID, and why', async () => {
+    asPhone()
+    const big = dinner({ p: [{ n: 'Ayush', a: 50_000 }, { n: 'Sam', a: 450_000 }] })
+    await openLink(big)
+    // Only Sam owes: the link opens straight on his share.
+    await screen.findByRole('heading', { level: 2, name: 'Sam’s share' })
+    expect(screen.queryByRole('radio', { name: 'QR from photos' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Save QR/ })).not.toBeInTheDocument()
+    expect(screen.getAllByRole('button', { name: 'Copy UPI ID' })).toHaveLength(2)
+    expect(screen.getByText('Enter ₹4,500')).toBeInTheDocument()
+    expect(screen.getByText(/For more than ₹2,000 to a person, UPI apps don’t take a QR from your photos or a payment link/)).toBeInTheDocument()
+  })
+
+  it('asks "Did you pay?" when they come back from their UPI app, and takes a yes to "Paid? Tell them"', async () => {
+    asPhone()
+    const { user } = await openLink(dinner())
+    await user.click(await screen.findByRole('button', { name: /^S?Sam/ }))
+    await user.click(screen.getByRole('radio', { name: 'UPI ID' }))
+    await user.click(screen.getAllByRole('button', { name: 'Copy UPI ID' })[0] as HTMLElement)
+    expect(screen.queryByRole('group', { name: /Did you pay/ })).not.toBeInTheDocument()
+
+    // Off to the UPI app, and back.
+    const visibility = vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('hidden')
+    act(() => {
+      document.dispatchEvent(new Event('visibilitychange'))
+    })
+    visibility.mockReturnValue('visible')
+    act(() => {
+      document.dispatchEvent(new Event('visibilitychange'))
+    })
+    visibility.mockRestore()
+    const ask = screen.getByRole('group', { name: 'Did you pay Ayush ₹691.50?' })
+    await user.click(within(ask).getByRole('button', { name: 'Yes, I paid' }))
+    expect(screen.queryByRole('group', { name: /Did you pay/ })).not.toBeInTheDocument()
+    expect(screen.getByText('Paid?')).toHaveFocus()
+  })
+
+  it('a "not yet" opens the help for payments that don’t go through', async () => {
+    asPhone()
+    const { user } = await openLink(dinner())
+    await user.click(await screen.findByRole('button', { name: /^S?Sam/ }))
+    const help = screen.getByRole('button', { name: 'Payment didn’t go through?' })
+    expect(help).toHaveAttribute('aria-expanded', 'false')
+    await user.click(screen.getByRole('radio', { name: 'UPI ID' }))
+    await user.click(screen.getAllByRole('button', { name: 'Copy UPI ID' })[0] as HTMLElement)
+    const visibility = vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('hidden')
+    act(() => {
+      document.dispatchEvent(new Event('visibilitychange'))
+    })
+    visibility.mockRestore()
+    await user.click(screen.getByRole('button', { name: 'Not yet' }))
+    expect(help).toHaveAttribute('aria-expanded', 'true')
+    expect(screen.getByText('It says “may be risky” or “declined for security reasons”')).toBeVisible()
   })
 
   it('copies the UPI ID and says so', async () => {
@@ -167,7 +234,7 @@ describe('PayPage — paying', () => {
     await user.click(await screen.findByRole('button', { name: /^S?Sam/ }))
     await user.click(screen.getByRole('button', { name: 'Copy UPI ID' }))
     expect(await navigator.clipboard.readText()).toBe('ayush@okaxis')
-    expect(screen.getByRole('button', { name: 'Copied UPI ID' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'UPI ID copied' })).toBeInTheDocument()
     expect(screen.getByText('UPI ID copied')).toBeInTheDocument()
   })
 

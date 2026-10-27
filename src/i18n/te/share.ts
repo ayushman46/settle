@@ -45,7 +45,6 @@ export const share = {
   // A UPI payment request sent from the pay sheet (then "Pay Riya on UPI: …" and the link).
   'share.upiRequest.for': 'హాయ్ {name}, {merchant} కు మీ వాటా {amount}.',
   'share.upiRequest.bill': 'హాయ్ {name}, బిల్లులో మీ వాటా {amount}.',
-  'share.upiRequest.tap': 'లేదా చెల్లించడానికి ట్యాప్ చేయండి: {link}',
   // The full text summary of a split ("Copy text").
   'share.summary.total': 'మొత్తం {amount}',
   'share.summary.totalSplit': 'మొత్తం {amount} · {count, plural, one {# పద్ధతిలో} other {# పద్ధతుల్లో}} పంచబడింది',
@@ -63,8 +62,8 @@ export const share = {
   'share.message.pay': 'ఏ UPI యాప్‌తోనైనా {name} గారికి చెల్లించడానికి మీ పేరు ట్యాప్ చేయండి 👇',
   'share.message.seeShare': 'మీ వాటా చూడడానికి మీ పేరు ట్యాప్ చేయండి 👇',
   'share.message.yourShare': 'హాయ్ {name}! {title}లో మీ వాటా {amount} 🧾',
-  'share.message.oneTapMe': 'ఒక్క ట్యాప్‌లో నాకు పంపండి — ఏ UPI యాప్ అయినా, మొత్తం ముందే నింపబడింది 👇',
-  'share.message.oneTap': 'ఒక్క ట్యాప్‌లో {name}కి పంపండి — ఏ UPI యాప్ అయినా, మొత్తం ముందే నింపబడింది 👇',
+  'share.message.oneTapMe': 'ఏ UPI యాప్‌తోనైనా నాకు పంపండి — మీ వాటా పేజీలో సిద్ధంగా ఉంది 👇',
+  'share.message.oneTap': 'ఏ UPI యాప్‌తోనైనా {name}కి పంపండి — మీ వాటా పేజీలో సిద్ధంగా ఉంది 👇',
   'share.message.seeYours': 'మీ వాటా చూడండి 👇',
   // The share card image of a split (drawn in the sender's language).
   'share.card.morePeople': '{count, plural, one {ఇంకా # వ్యక్తి} other {ఇంకా # మంది}}',

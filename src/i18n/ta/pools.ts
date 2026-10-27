@@ -158,7 +158,7 @@ export const pools = {
   'pools.detail.closedBanner': 'இந்த வசூல் மூடப்பட்டுள்ளது. மேலும் பணம் பெற மீண்டும் திறக்கவும்.',
   'pools.detail.deleted': '{title} நீக்கப்பட்டது',
   'pools.detail.noUpi': 'உங்கள் UPI ID-ஐச் சேருங்கள்',
-  'pools.detail.noUpi.text': 'நண்பர்கள் இணைப்பிலிருந்தே ஒரே தட்டில் உங்களுக்குச் செலுத்த.',
+  'pools.detail.noUpi.text': 'நண்பர்கள் இணைப்பிலிருந்தே UPI-ல் உங்களுக்குச் செலுத்த.',
   'pools.detail.gone': 'இந்த வசூல் இல்லை',
   'pools.detail.gone.text': 'இது நீக்கப்பட்டிருக்கலாம் — இந்த ஃபோனில் அல்லது வேறொரு டேபில்.',
   'pools.detail.gone.action': 'வசூல்களைப் பார்',

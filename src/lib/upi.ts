@@ -40,6 +40,16 @@ export function isValidUpiId(value: string): boolean {
 }
 
 /**
+ * True for a UPI ID made of an Indian mobile number ("9876543210@ybl"). Everyone a pay link goes
+ * to sees it; UPI apps themselves now mask these to the last 4 digits (NPCI OC 234), and every app
+ * can give you an ID without the number.
+ */
+export function isPhoneUpiId(value: string): boolean {
+  const local = normalizeUpiId(value).split('@')[0] ?? ''
+  return isValidUpiId(value) && /^(\+?91)?[6-9]\d{9}$/.test(local)
+}
+
+/**
  * Keeps names and notes to characters every UPI app accepts: letters, digits, spaces and simple
  * punctuation (no emoji or symbols, which some apps reject), collapsed and length-capped.
  */
@@ -85,8 +95,6 @@ export interface UpiRequestTextInput {
   vpa: string
   amountMinor: Minor
   merchant: string | null
-  /** From `buildUpiLink`. */
-  link: string
 }
 
 /**
@@ -94,26 +102,18 @@ export interface UpiRequestTextInput {
  *
  *     Hi Ben, your share for Saffron Table is ₹530.10.
  *     Pay Aisha on UPI: aisha@okaxis
- *     Or tap to pay: upi://pay?…
  *
- * The UPI ID is spelled out because chat apps (WhatsApp, SMS) don't make `upi://` links tappable;
- * the link comes last so it still works where they do.
+ * The UPI ID is spelled out so it can be copied from any chat app and pasted into "Pay UPI ID".
+ * No `upi://` link: chat apps don't make it tappable, and UPI apps refuse a payment to a person
+ * that starts from one (NPCI OC 76C; Consolidated Circular 7.9).
  */
-export function buildUpiRequestText({
-  debtorName,
-  payerName,
-  vpa,
-  amountMinor,
-  merchant,
-  link,
-}: UpiRequestTextInput): string {
+export function buildUpiRequestText({ debtorName, payerName, vpa, amountMinor, merchant }: UpiRequestTextInput): string {
   const amount = formatMoney(amountMinor, 'INR')
   return [
     merchant?.trim()
       ? t('share.upiRequest.for', { name: debtorName, merchant: merchant.trim(), amount })
       : t('share.upiRequest.bill', { name: debtorName, amount }),
     t('share.nudge.upi', { name: payerName, upi: normalizeUpiId(vpa) }),
-    t('share.upiRequest.tap', { link }),
   ].join('\n')
 }
 

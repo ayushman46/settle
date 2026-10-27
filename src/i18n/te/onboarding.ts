@@ -30,7 +30,7 @@ export const onboarding = {
   'onboarding.about.name.error': 'మీ పేరు జోడించండి — మీరు పంపే అభ్యర్థనలపై స్నేహితులు దాన్ని చూస్తారు.',
   'onboarding.about.upi.label': 'మీ UPI ID (ఐచ్ఛికం)',
   'onboarding.about.upi.placeholder': 'name@bank',
-  'onboarding.about.upi.hint': 'స్నేహితులు ఒకే ట్యాప్‌తో మీకు తిరిగి చెల్లించేందుకు. తర్వాత కూడా జోడించవచ్చు.',
+  'onboarding.about.upi.hint': 'స్నేహితులు UPIతో మీకు తిరిగి చెల్లించేందుకు. తర్వాత కూడా జోడించవచ్చు.',
   // The UPI field was prefilled from an older split on this phone.
   'onboarding.about.upi.hint.remembered': 'ఈ ఫోన్‌లో మీరు చేసిన ఒక స్ప్లిట్ నుంచి. అది మీది కాకపోతే మార్చండి.',
   'onboarding.about.upi.error': 'అది UPI ID లా కనిపించడం లేదు. name@bank లా ఉండాలి.',

@@ -67,12 +67,11 @@ function asPhone() {
   )
 }
 
-/** Opens "Pay ₹…" (once: it's a toggle) and reads the generic UPI link from the app list. */
-async function upiParams(user: ReturnType<typeof userEvent.setup>, amount: string): Promise<Record<string, string>> {
-  const cta = screen.getByRole('button', { name: amount })
-  if (cta.getAttribute('aria-expanded') !== 'true') await user.click(cta)
-  const href = screen.getByRole('link', { name: /Any UPI app/ }).getAttribute('href') ?? ''
-  return Object.fromEntries(new URL(href).searchParams)
+/** Shows the QR (once: it's a toggle) and checks it pays `amount` to Ayush. */
+async function expectQrFor(user: ReturnType<typeof userEvent.setup>, amount: string): Promise<void> {
+  const toggle = screen.getByRole('button', { name: /^(Show QR for another phone|Hide the QR)$/ })
+  if (toggle.getAttribute('aria-expanded') !== 'true') await user.click(toggle)
+  expect(screen.getByRole('img', { name: `UPI QR code to pay ${amount} to Ayush` })).toBeInTheDocument()
 }
 
 beforeEach(() => {
@@ -105,12 +104,14 @@ describe('PoolPage', { timeout: 30_000 }, () => {
     const { user } = await open(pool())
     await user.click(await screen.findByRole('button', { name: 'Sam' }))
     expect(screen.getByText('Your part')).toBeInTheDocument()
-    expect(await upiParams(user, 'Pay ₹500')).toMatchObject({ pa: 'ayush@okicici', am: '500.00', cu: 'INR', tn: "Chanda Riya's farewell" })
+    await expectQrFor(user, '₹500')
+    expect(screen.getByText('ayush@okicici')).toBeInTheDocument()
+    expect(screen.getByText('Pick the QR you saved — ₹500 fills in by itself')).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Give a different amount' }))
     const field = screen.getByRole('textbox', { name: 'Amount' })
     await user.clear(field)
     await user.type(field, '300')
-    expect(await upiParams(user, 'Pay ₹300')).toMatchObject({ am: '300.00' })
+    await expectQrFor(user, '₹300')
   })
 
   it('tell builds a signed reply link for the organiser', async () => {
@@ -138,19 +139,19 @@ describe('PoolPage', { timeout: 30_000 }, () => {
     const suggested = screen.getByRole('radio', { name: '₹1,300 (suggested)' })
     expect(suggested).toHaveAttribute('aria-checked', 'true')
     expect(screen.getByRole('radiogroup', { name: 'How much?' })).toHaveTextContent('₹1,300 (suggested)₹101₹251₹501Other')
-    expect(await upiParams(user, 'Pay ₹1,300')).toMatchObject({ am: '1300.00' })
+    await expectQrFor(user, '₹1,300')
     await user.click(screen.getByRole('radio', { name: 'Other' }))
     await user.type(screen.getByRole('textbox', { name: 'Amount' }), '1001')
-    expect(await upiParams(user, 'Pay ₹1,001')).toMatchObject({ am: '1001.00' })
+    await expectQrFor(user, '₹1,001')
   })
 
   it('someone already ticked sees it, with Pay again', async () => {
     const { user } = await open(pool())
     await user.click(await screen.findByRole('button', { name: /Kabir/ }))
     expect(screen.getByText('You’ve chipped in ✓')).toBeInTheDocument()
-    expect(screen.queryByRole('link', { name: /Pay ₹500/ })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Save QR to gallery' })).toBeNull()
     await user.click(screen.getByRole('button', { name: 'Pay again' }))
-    expect(screen.getByRole('button', { name: 'Pay ₹500' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Save QR to gallery' })).toBeInTheDocument()
   })
 
   it('no UPI ID or not rupees: pay the usual way; past the deadline still accepts', async () => {

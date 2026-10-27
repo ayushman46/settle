@@ -71,7 +71,7 @@ export const rent = {
   'rent.detail.month.label': 'Rent for {month}',
   'rent.detail.month.prev': 'Previous month',
   'rent.detail.month.next': 'Next month',
-  'rent.detail.send.text': 'Send one link to the flat group. Each flatmate taps their name and pays {landlord} their share directly, with the amount already filled in.',
+  'rent.detail.send.text': 'Send one link to the flat group. Each flatmate taps their name and pays {landlord} their share directly by UPI.',
   'rent.detail.send.cta': 'Send rent link',
   'rent.detail.payMine.cta': 'Pay my share · {amount}',
   'rent.detail.noUpi.title': 'Add {landlord}’s UPI ID',

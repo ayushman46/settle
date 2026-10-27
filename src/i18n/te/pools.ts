@@ -158,7 +158,7 @@ export const pools = {
   'pools.detail.closedBanner': 'ఈ వసూలు మూసివేయబడింది. మరిన్ని చెల్లింపులు తీసుకోవడానికి మళ్ళీ తెరవండి.',
   'pools.detail.deleted': '{title} తొలగించబడింది',
   'pools.detail.noUpi': 'మీ UPI ID జోడించండి',
-  'pools.detail.noUpi.text': 'స్నేహితులు లింక్ నుంచే ఒక్క ట్యాప్‌లో మీకు చెల్లించేందుకు.',
+  'pools.detail.noUpi.text': 'స్నేహితులు లింక్ నుంచే UPIతో మీకు చెల్లించేందుకు.',
   'pools.detail.gone': 'ఈ వసూలు లేదు',
   'pools.detail.gone.text': 'ఇది తొలగించబడి ఉండవచ్చు — ఈ ఫోన్‌లో లేదా మరో ట్యాబ్‌లో.',
   'pools.detail.gone.action': 'వసూళ్లు చూడండి',

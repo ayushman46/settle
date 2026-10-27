@@ -26,7 +26,7 @@ export const onboarding = {
   'onboarding.about.name.error': 'ನಿಮ್ಮ ಹೆಸರು ಸೇರಿಸಿ — ನೀವು ಕಳುಹಿಸುವ ವಿನಂತಿಗಳಲ್ಲಿ ಸ್ನೇಹಿತರು ಅದನ್ನು ನೋಡುತ್ತಾರೆ.',
   'onboarding.about.upi.label': 'ನಿಮ್ಮ UPI ID (ಐಚ್ಛಿಕ)',
   'onboarding.about.upi.placeholder': 'name@bank',
-  'onboarding.about.upi.hint': 'ಸ್ನೇಹಿತರು ಒಂದೇ ಟ್ಯಾಪ್‌ನಲ್ಲಿ ನಿಮಗೆ ಹಣ ಹಿಂತಿರುಗಿಸಲು. ನಂತರವೂ ಸೇರಿಸಬಹುದು.',
+  'onboarding.about.upi.hint': 'ಸ್ನೇಹಿತರು UPI ಮೂಲಕ ನಿಮಗೆ ಹಣ ಹಿಂತಿರುಗಿಸಲು. ನಂತರವೂ ಸೇರಿಸಬಹುದು.',
   'onboarding.about.upi.hint.remembered': 'ಈ ಫೋನ್‌ನಲ್ಲಿ ನೀವು ಮಾಡಿದ ಹಿಂದಿನ ಸ್ಪ್ಲಿಟ್‌ನಿಂದ. ಅದು ನಿಮ್ಮದಲ್ಲದಿದ್ದರೆ ಬದಲಿಸಿ.',
   'onboarding.about.upi.error': 'ಅದು UPI ID ಯಂತೆ ಕಾಣುತ್ತಿಲ್ಲ. name@bank ರೀತಿಯಲ್ಲಿ ಇರಬೇಕು.',
   'onboarding.about.currency.label': 'ಕರೆನ್ಸಿ',

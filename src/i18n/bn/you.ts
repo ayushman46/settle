@@ -67,7 +67,7 @@ export const you = {
   'you.profile.upi': 'UPI ID',
   'you.profile.upi.edit': 'UPI ID {id}। বদলান',
   'you.profile.copy': 'UPI ID কপি করুন',
-  'you.profile.add.body': 'বন্ধুরা যাতে এক ট্যাপে আপনাকে টাকা দিতে পারে, তাই আপনার UPI ID যোগ করুন।',
+  'you.profile.add.body': 'বন্ধুরা যাতে UPI-তে আপনাকে টাকা দিতে পারে, তাই আপনার UPI ID যোগ করুন।',
   'you.profile.add': 'UPI ID যোগ করুন',
   'you.edit.title': 'আপনার প্রোফাইল',
   'you.edit.body': 'পে লিংকে বন্ধুরা আপনার নাম দেখবে। আপনার UPI ID-তেই তাঁরা আপনাকে পে করবেন।',
