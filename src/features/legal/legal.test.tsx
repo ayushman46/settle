@@ -72,7 +72,7 @@ describe('PrivacyPage', () => {
     const device = screen.getByRole('region', { name: 'What stays on your device' })
     expect(device).toHaveTextContent('stuck payments')
     expect(device).toHaveTextContent('goes into your backup file')
-    expect(device).toHaveTextContent('when a payment fails or is pending, and when money is reversed or refunded')
+    expect(device).toHaveTextContent('when a payment fails or is pending, when a payment goes through (only to clear a pending one it was tracking), and when money is reversed or refunded')
     expect(device).toHaveTextContent('A debit is used only to check that a payment that failed really took your money')
     const leaves = screen.getByRole('region', { name: 'What leaves your device, and why' })
     expect(leaves).toHaveTextContent('never contacts your bank, a business or anyone else for you')

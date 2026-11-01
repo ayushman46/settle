@@ -69,7 +69,7 @@ describe('AutoSettleCard', () => {
     expect(await screen.findByRole('heading', { name: 'Tick people off automatically' })).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Turn on Auto-settle' }))
     const sheet = await screen.findByRole('dialog', { name: 'Auto-settle' })
-    expect(within(sheet).getByText(/reads only the alerts Google Pay, PhonePe, Paytm, BHIM/)).toBeInTheDocument()
+    expect(within(sheet).getByText(/reads only payment alerts: from Google Pay, PhonePe, Paytm, BHIM/)).toBeInTheDocument()
     expect(within(sheet).getByText(/Nothing is uploaded/)).toBeInTheDocument()
     const sms = within(sheet).getByRole('switch', { name: 'Bank SMS too' })
     expect(sms).toHaveAttribute('aria-checked', 'false')
