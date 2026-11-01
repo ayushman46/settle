@@ -1,4 +1,4 @@
-import { BadgeIndianRupee, Building2, CircleCheck, ListChecks, Zap } from 'lucide-react'
+import { BadgeIndianRupee, Building2, CircleCheck, Landmark, ListChecks, Zap } from 'lucide-react'
 import { navigate } from '../../app/router'
 import { BottomSheet, QuickAction, QuickActionGrid } from '../../components'
 import { useT } from '../../i18n'
@@ -6,6 +6,7 @@ import { BIJLI_PATH } from '../bijli/paths'
 import { COLLECT_PATH } from '../collect/paths'
 import { PROOF_ENABLED, PROOF_PATH } from '../proof/enabled'
 import { RENT_ENABLED, RENT_PATH } from '../rent/enabled'
+import { STUCK_PATH } from '../stuck/paths'
 import { WHOS_PAID_PATH } from '../whospaid/paths'
 import { templateActionDefs } from './quickActions'
 
@@ -16,7 +17,7 @@ export interface MoreActionsSheetProps {
 
 /**
  * Behind Home's More tile: one-tap starts for everyday splits (Rent, Trip, Subscription, Utilities, Cab),
- * and the switched-on features that didn't fit the grid (paid? drop the screenshot).
+ * and the switched-on features that didn't fit the grid (to collect, stuck money, who's paid, paid? drop the screenshot).
  */
 export function MoreActionsSheet({ open, onClose }: MoreActionsSheetProps) {
   const t = useT()
@@ -31,6 +32,16 @@ export function MoreActionsSheet({ open, onClose }: MoreActionsSheetProps) {
           onClick={() => {
             onClose()
             navigate(COLLECT_PATH)
+          }}
+        />
+        <QuickAction
+          key="stuck"
+          icon={<Landmark />}
+          label={t('stuck.title')}
+          tone="accent"
+          onClick={() => {
+            onClose()
+            navigate(STUCK_PATH)
           }}
         />
         <QuickAction

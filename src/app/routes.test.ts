@@ -33,6 +33,10 @@ describe('the app route table', () => {
       ['/app/pools/in', '/app/pools/in'],
       ['/app/pools/p1', '/app/pools/:id'],
       ['/app/pools/p1/edit', '/app/pools/:id/edit'],
+      ['/app/stuck', '/app/stuck'],
+      ['/app/stuck/new', '/app/stuck/new'],
+      ['/app/stuck/s1', '/app/stuck/:id'],
+      ['/app/stuck/s1/edit', '/app/stuck/:id/edit'],
     ]
     for (const [path, pattern] of cases) expect(matchAppRoute(path)?.pattern, path).toBe(pattern)
   })
@@ -43,6 +47,7 @@ describe('the app route table', () => {
     expect(matchAppRoute('/app/split')).toBeNull()
     expect(matchAppRoute('/app/claims')).toBeNull()
     expect(matchAppRoute('/app/lend/e1')).toBeNull()
+    expect(matchAppRoute('/app/stuck/s1/raise')).toBeNull()
   })
 
   it('marks exactly the four tab roots', () => {

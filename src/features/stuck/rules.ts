@@ -7,7 +7,8 @@
  * DPSS.CO.PD No.629/02.01.014/2019-20, 20 September 2019): each kind of payment has a deadline
  * counted from T, the calendar day of the transaction, and beyond it the bank owes ₹100 for each
  * day of delay — paid on its own, without being asked. Unpaid, it's a complaint to the bank, then
- * after 30 days without a fix to the RBI Ombudsman (Integrated Ombudsman Scheme, 2021).
+ * after 30 days without a fix to the RBI Ombudsman (Reserve Bank – Integrated Ombudsman Scheme,
+ * 2026, in force from 1 July 2026: file within 90 days of those 30 days or of the bank's last reply).
  *
  * Refunds follow the business's own promise (or its usual timeline, src/features/stuck/merchants.ts);
  * overdue, it's the business's support, then the National Consumer Helpline, then a consumer
@@ -54,8 +55,8 @@ export const OMBUDSMAN_WAIT_DAYS = 30
 export const MERCHANT_WAIT_DAYS = 7
 /** The National Consumer Helpline gets a month before a consumer commission. */
 export const NCH_WAIT_DAYS = 30
-/** The Ombudsman can't take a complaint more than a year after the bank's reply (or a year and 30 days after a complaint it never answered). */
-export const OMBUDSMAN_WINDOW_DAYS = 365
+/** The Ombudsman takes a complaint within 90 days of the bank's 30 days running out (or of its last reply), by the 2026 scheme. */
+export const OMBUDSMAN_WINDOW_DAYS = 90
 
 /** The day the money should be back by. */
 export function dueBy(s: Pick<StuckPayment, 'kind' | 'rail' | 'date' | 'promisedBy' | 'merchant'>): string {
@@ -219,7 +220,7 @@ export function sortStuck(list: readonly StuckPayment[], today: string): StuckPa
   return [...list].sort((a, b) => stageRank(nextStep(a, today).stage) - stageRank(nextStep(b, today).stage) || b.date.localeCompare(a.date) || b.createdAt - a.createdAt)
 }
 
-/** The Ombudsman's window has closed (a year after the bank's complaint, plus its 30 days). */
+/** The Ombudsman's window has closed: 90 days after the bank's 30 days ran out (a later reply from the bank reopens it). */
 export function ombudsmanTooLate(s: StuckPayment, today: string): boolean {
   const bank = stepOn(s, 'bank')
   return bank !== null && daysBetween(bank.date, today) > OMBUDSMAN_WINDOW_DAYS + OMBUDSMAN_WAIT_DAYS

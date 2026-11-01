@@ -13,6 +13,9 @@ import { formatMoney } from '../../lib/money'
 import { readSharedPayload, type SharedPayload } from '../../lib/sharedPayload'
 import { setSharedPhoto } from '../../state/sharedPhoto'
 import { openBill } from '../bill/launch'
+import { readStuckMessage } from '../stuck/detect'
+import { trackFailedMessage } from '../stuck/prefill'
+import { StuckOffer } from '../stuck/StuckOffer'
 import { SMS_ENABLED } from './enabled'
 import { IgnoredNotice, UnknownNotice } from './IgnoredNotice'
 import type { SmsTxn } from './sms/parseSms'
@@ -148,6 +151,8 @@ function ShareIn() {
   }
 
   const current: ReadMessage | null = view ? (view.txns.length > 1 ? (view.txns[picked] ?? view.txns[0] ?? null) : view.primary) : null
+  // The same message, read for money that's stuck or coming back (Stuck money).
+  const stuckSignal = current ? readStuckMessage(current.text, { today }) : null
   const skipped = view ? skippedLine(view.skipped) : null
   const field = (
     <div className={styles.field}>
@@ -243,10 +248,18 @@ function ShareIn() {
               onDone={() => goBack('/app')}
             />
           ) : current.parse.kind === 'ignored' ? (
-            <IgnoredNotice ref={firstAction} reason={current.parse.reason} ai={ai} text={current.text} onByHand={byHand} />
+            <IgnoredNotice
+              ref={firstAction}
+              reason={current.parse.reason}
+              ai={ai}
+              text={current.text}
+              onByHand={byHand}
+              onTrackStuck={current.parse.reason === 'failed' ? () => trackFailedMessage(current.text, today, 'sms') : undefined}
+            />
           ) : (
             <UnknownNotice ref={firstAction} ai={ai} text={current.text} onByHand={byHand} />
           )}
+          {stuckSignal && !(current.parse.kind === 'ignored' && current.parse.reason === 'failed') && <StuckOffer signal={stuckSignal} />}
           {skipped && (
             <p className={styles.skipped} role="status">
               {skipped}

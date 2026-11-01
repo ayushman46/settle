@@ -1,0 +1,162 @@
+/** Auto-settle's watcher also feeds Stuck money: failed payments noticed, money back ticked, each with Undo. */
+import { screen } from '@testing-library/react'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { stuckStore } from '../../data/stores'
+import { addStuck } from '../../data/stuck'
+import { renderAt, resetProScreens } from '../pro/testing'
+import { AutoSettleWatcher } from './AutoSettleWatcher'
+import { alertToCredit } from './alerts'
+import { stuckToastMessage } from './useAutoSettle'
+import { t } from '../../i18n/runtime'
+import type { StuckPayment } from '../../data/stores'
+
+vi.setConfig({ testTimeout: 30_000 })
+
+/** The Android app's bridge with the PaymentAlerts plugin, draining `queue`. */
+function fakeAndroid(queue: unknown[]) {
+  let drained = 0
+  vi.stubGlobal('Capacitor', {
+    isNativePlatform: () => true,
+    getPlatform: () => 'android',
+    PluginHeaders: [{ name: 'PaymentAlerts' }],
+    nativePromise: async (plugin: string, method: string) => {
+      if (plugin !== 'PaymentAlerts') throw new Error(plugin)
+      if (method !== 'drain') return {}
+      drained += 1
+      return { alerts: queue.splice(0) }
+    },
+    addListener: () => ({ remove: async () => undefined }),
+  })
+  return { drained: () => drained }
+}
+
+const GPAY = 'com.google.android.apps.nbu.paisa.user'
+const MESSAGES = 'com.google.android.apps.messaging'
+/** Monday 2 Nov 2026, 10 am. */
+const AT = new Date(2026, 10, 2, 10, 0).getTime()
+
+beforeEach(() => {
+  vi.useFakeTimers({ toFake: ['Date'] })
+  vi.setSystemTime(AT + 5 * 60_000)
+  resetProScreens()
+})
+
+afterEach(() => {
+  vi.unstubAllGlobals()
+  vi.useRealTimers()
+})
+
+describe('AutoSettleWatcher — Stuck money', () => {
+  it('a failed payment the phone saw becomes Stuck money, with Undo', async () => {
+    fakeAndroid([{ id: 'g1', app: GPAY, title: 'Payment failed', text: '₹500 to Riya Sharma', postedAt: AT }])
+    const { user } = renderAt('/app', <AutoSettleWatcher />)
+    expect(await screen.findByText('₹500 to Riya Sharma may be stuck — did it leave your account?')).toBeInTheDocument()
+    expect(stuckStore.get()).toEqual([expect.objectContaining({ amount: 50_000, party: 'Riya Sharma', source: 'alert', confirmed: false })])
+    await user.click(screen.getByRole('button', { name: /^Undo/ }))
+    expect(stuckStore.get()).toEqual([])
+  })
+
+  it('money back closes it, and says what the bank owes for the wait', async () => {
+    const s = addStuck({
+      kind: 'failed',
+      rail: 'upi_person',
+      party: 'Riya Sharma',
+      merchant: null,
+      amount: 50_000,
+      date: '2026-10-28',
+      promisedBy: null,
+      ref: '630611112222',
+      orderId: null,
+      bank: 'icici',
+      account: 'XX902',
+      app: 'gpay',
+      source: 'manual',
+      confirmed: true,
+    })
+    fakeAndroid([{ id: 's1', app: MESSAGES, title: 'ICICIB', text: 'Rs 500.00 reversed to ICICI Bank Acct XX902 on 02-Nov-26 for failed UPI txn 630611112222.', postedAt: AT }])
+    const { user } = renderAt('/app', <AutoSettleWatcher />)
+    // Due back by 29 Oct (T+1), back on 2 Nov: 4 days late, ₹100 a day.
+    expect(await screen.findByText('₹500 from the failed Riya Sharma payment is back — 4 days late: your bank owes you ₹400 for the wait')).toBeInTheDocument()
+    expect(stuckStore.get()[0]?.back).toEqual({ date: '2026-11-02', amount: 50_000, compensation: 0 })
+    await user.click(screen.getByRole('button', { name: /^Undo/ }))
+    expect(stuckStore.get()).toEqual([s])
+  })
+
+  it('a pending payment that went through before Settle looked is never shown', async () => {
+    const android = fakeAndroid([
+      { id: 'p1', app: 'com.phonepe.app', title: 'Payment pending', text: '₹500 to Riya Sharma. Your bank is taking longer than usual.', postedAt: AT },
+      { id: 'p2', app: 'com.phonepe.app', title: 'Payment successful', text: '₹500 paid to Riya Sharma', postedAt: AT + 40_000 },
+    ])
+    renderAt('/app', <AutoSettleWatcher />)
+    await vi.waitFor(() => expect(android.drained()).toBe(1))
+    await Promise.resolve()
+    expect(screen.queryByText(/stuck|Stuck money/)).toBeNull()
+    expect(stuckStore.get()).toEqual([])
+  })
+
+  it('says nothing when nothing was stuck', async () => {
+    const android = fakeAndroid([{ id: 'g2', app: GPAY, title: 'Riya Sharma paid you ₹420', text: '', postedAt: AT }])
+    renderAt('/app', <AutoSettleWatcher />)
+    await vi.waitFor(() => expect(android.drained()).toBe(1))
+    await Promise.resolve()
+    expect(screen.queryByText(/stuck|Stuck money|is back/)).toBeNull()
+    expect(stuckStore.get()).toEqual([])
+  })
+})
+
+describe('stuckToastMessage', () => {
+  const stuck = (over: Partial<StuckPayment>): StuckPayment => ({
+    id: 's',
+    kind: 'failed',
+    rail: null,
+    party: null,
+    merchant: null,
+    amount: 50_000,
+    date: '2026-11-02',
+    promisedBy: null,
+    ref: null,
+    orderId: null,
+    bank: null,
+    account: null,
+    app: null,
+    source: 'alert',
+    confirmed: true,
+    steps: [],
+    back: null,
+    dismissedAt: null,
+    note: null,
+    createdAt: 1,
+    updatedAt: 1,
+    ...over,
+  })
+  const say = (added: StuckPayment[], back: StuckPayment[] = []) => stuckToastMessage({ added, back }, t, '2026-11-02')
+
+  it.each([
+    [[stuck({ party: 'Swiggy' })], '₹500 to Swiggy failed but took your money — tracking it in Stuck money'],
+    [[stuck({})], 'A ₹500 payment failed but took your money — tracking it in Stuck money'],
+    [[stuck({ confirmed: false })], 'A ₹500 payment may be stuck — did it leave your account?'],
+    [[stuck({ kind: 'refund', merchant: 'flipkart', amount: 129_900 })], 'Tracking Flipkart’s refund of ₹1,299 till it lands'],
+    [[stuck({ kind: 'refund' })], 'Tracking a refund of ₹500 till it lands'],
+    [[stuck({}), stuck({ id: 't' })], '2 payments added to Stuck money'],
+  ])('added: %#', (added, message) => {
+    expect(say(added)).toBe(message)
+  })
+
+  it('money back comes first', () => {
+    const back = { date: '2026-11-02', amount: 50_000, compensation: 0 }
+    expect(say([stuck({})], [stuck({ party: 'Swiggy', back })])).toBe('₹500 from the failed Swiggy payment is back')
+    expect(say([], [stuck({ kind: 'refund', merchant: 'zomato', back })])).toBe('Zomato’s refund of ₹500 is in')
+    expect(say([], [stuck({ back }), stuck({ id: 't', back })])).toBe('2 stuck payments are back')
+    expect(say([], [])).toBeNull()
+  })
+})
+
+describe('Auto-settle leaves stuck money alone', () => {
+  it.each([
+    ['a shop’s refund', { app: 'in.swiggy.android', title: 'Refund credited', text: '₹249 has been credited to your account' }],
+    ['a refund still to come, by SMS', { app: MESSAGES, title: 'HDFCBK', text: 'Refund of Rs.249 from SWIGGY will be credited to your A/c XX4821 in 5-7 days' }],
+    ['a failed payment', { app: GPAY, title: 'Payment failed', text: '₹500 to Riya Sharma. Money will be credited back to your account' }],
+  ])('%s is nobody paying you', (_, alert) => {
+    expect(alertToCredit({ id: 'x', postedAt: AT, ...alert })).toBeNull()
+  })
+})

@@ -1,0 +1,350 @@
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-5);
+  padding-top: var(--s-1);
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  min-width: 0;
+}
+
+.heading {
+  margin: 0;
+  font: var(--text-micro);
+  color: var(--ink-2);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.hint {
+  margin: 0;
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
+/* ---------- Where and how ---------- */
+
+.steps {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: step;
+}
+
+.step {
+  position: relative;
+  min-height: var(--s-6);
+  padding-inline-start: calc(var(--s-6) + var(--s-3));
+  font: var(--text-body);
+  color: var(--ink);
+  overflow-wrap: anywhere;
+  counter-increment: step;
+}
+
+.step::before {
+  content: counter(step);
+  position: absolute;
+  inset-inline-start: 0;
+  top: 0;
+  display: grid;
+  place-items: center;
+  width: var(--s-6);
+  height: var(--s-6);
+  border-radius: var(--r-pill);
+  background: var(--surface-2);
+  color: var(--ink);
+  font: var(--text-label);
+  font-weight: 600;
+}
+
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  margin: var(--s-1) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ready {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  margin: 0;
+  padding-inline-start: var(--s-5);
+  font: var(--text-body);
+  color: var(--ink);
+}
+
+/* ---------- The RBI form's values ---------- */
+
+.fields {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  border-radius: var(--radius-card);
+  background: var(--surface-2);
+}
+
+/* Label over value, with the copy button to the side of both (so a short row stays one line high). */
+.field {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--s-3) calc(var(--tap) + var(--s-2)) var(--s-3) var(--s-4);
+}
+
+.field + .field {
+  border-top: 1px solid var(--line);
+}
+
+.fieldLabel {
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
+.fieldValue {
+  margin: 0;
+}
+
+/* Centred by its fixed height (not a transform, which the button's own press squeeze uses). */
+.fieldValue > button {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-end: var(--s-1);
+  margin-block: auto;
+}
+
+.value {
+  min-width: 0;
+  font: var(--text-body);
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.unknown {
+  color: var(--ink-2);
+  font-style: italic;
+}
+
+/* ---------- The letter ---------- */
+
+.paper {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  padding: var(--s-4);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  box-shadow: var(--shadow-xs);
+}
+
+.subject {
+  margin: 0;
+  padding-bottom: var(--s-3);
+  border-bottom: 1px solid var(--line);
+  font: var(--text-label);
+  font-weight: 600;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.subjectLabel {
+  color: var(--ink-2);
+  font-weight: 500;
+}
+
+.letter {
+  margin: 0;
+  font: var(--text-caption);
+  line-height: 1.55;
+  color: var(--ink);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+/* What's left to fill in: "[your mobile number]". */
+.blank {
+  padding: 0 2px;
+  border-radius: 4px;
+  background: var(--warning-soft);
+  color: var(--warning-ink);
+}
+
+.actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--s-2);
+}
+
+.actions > * {
+  width: 100%;
+}
+
+/* Email opens the mail app from a real link, styled as the small secondary buttons beside it. */
+.mail {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  min-width: 0;
+  min-height: calc(var(--s-8) + var(--s-1));
+  padding: var(--s-1) var(--s-4);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-pill);
+  background: var(--surface);
+  color: var(--ink);
+  font: var(--text-label);
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+/* Keeps the touch target at 44px while the pill stays compact. */
+.mail::after {
+  content: '';
+  position: absolute;
+  inset: calc((var(--s-8) + var(--s-1) - var(--tap)) / 2) 0;
+}
+
+.mail > svg {
+  flex: none;
+  width: var(--s-4);
+  height: var(--s-4);
+}
+
+/* ---------- Links out (WhatsApp, the RBI's portal, a number to call) ---------- */
+
+.channel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  min-width: 0;
+  border-radius: var(--r-pill);
+  text-align: center;
+  text-decoration: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  overflow-wrap: anywhere;
+  transition:
+    transform var(--dur-2) var(--ease-spring),
+    background-color var(--dur-2) var(--ease-out);
+}
+
+.channel > svg {
+  flex: none;
+}
+
+.channel:focus-visible,
+.mail:focus-visible {
+  outline-offset: 3px;
+}
+
+.channel:active,
+.mail:active {
+  transform: scale(0.97);
+  transition-duration: var(--dur-1);
+}
+
+.channelPrimary {
+  width: 100%;
+  min-height: var(--btn-h);
+  padding: var(--s-2) var(--s-6);
+  background: var(--primary);
+  color: var(--on-primary);
+  font: var(--text-body);
+  font-weight: 600;
+  letter-spacing: -0.011em;
+}
+
+.channelPrimary > svg {
+  width: var(--s-5);
+  height: var(--s-5);
+}
+
+.channelSmall {
+  position: relative;
+  min-height: calc(var(--s-8) + var(--s-1));
+  padding: var(--s-1) var(--s-4);
+  border: 1px solid var(--line-strong);
+  color: var(--ink);
+  font: var(--text-label);
+  font-weight: 600;
+}
+
+.channelSmall::after {
+  content: '';
+  position: absolute;
+  inset: calc((var(--s-8) + var(--s-1) - var(--tap)) / 2) 0;
+}
+
+.channelSmall > svg {
+  width: var(--s-4);
+  height: var(--s-4);
+}
+
+@media (hover: hover) {
+  .channelPrimary:hover {
+    background: var(--primary-hover);
+  }
+
+  .channelSmall:hover,
+  .mail:hover {
+    background: var(--surface-2);
+  }
+}
+
+/* ---------- "I've raised it" ---------- */
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+  padding-top: var(--s-1);
+}
+
+.dateRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2) var(--s-3);
+}
+
+.dateLabel {
+  font: var(--text-label);
+  font-weight: 600;
+  color: var(--ink);
+}
+
+/* Three buttons in a row need ~330px; narrower, Email takes its own row. */
+@media (max-width: 359px) {
+  .actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .mail {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .channel,
+  .mail {
+    transition: none;
+  }
+}

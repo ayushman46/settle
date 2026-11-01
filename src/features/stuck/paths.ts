@@ -6,3 +6,8 @@ export const STUCK_NEW_PATH = '/app/stuck/new'
 export function stuckPath(id: string): string {
   return `${STUCK_PATH}/${encodeURIComponent(id)}`
 }
+
+/** Changing what's known about one. */
+export function stuckEditPath(id: string): string {
+  return `${stuckPath(id)}/edit`
+}

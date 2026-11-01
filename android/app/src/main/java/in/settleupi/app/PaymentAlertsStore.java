@@ -7,16 +7,18 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 /**
- * "Money received" alerts waiting for Settle to read them (it reads them, and empties this, each
- * time it opens). Kept in the app's private storage, never anywhere else: at most 100, none older
- * than 30 days, and the same alert re-posted by its app is kept once.
+ * Payment alerts waiting for Settle to read them (it reads them, and empties this, each time it
+ * opens): money received, for Auto-settle; and payments that failed, are pending, went through or
+ * came back, debits and businesses' refunds, for Stuck money (see PaymentAlertsListener). One queue
+ * for both. Kept in the app's private storage, never anywhere else: at most 200, none older than
+ * 30 days, and the same alert re-posted by its app is kept once.
  */
 final class PaymentAlertsStore {
 
     private static final String PREFS = "settle_payment_alerts";
     private static final String QUEUE = "queue";
     private static final String SMS = "sms";
-    private static final int MAX_ALERTS = 100;
+    private static final int MAX_ALERTS = 200;
     private static final long MAX_AGE_MS = 30L * 24 * 60 * 60 * 1000;
     /** An app re-posting the same alert within this window is one alert. */
     private static final long REPOST_MS = 10L * 60 * 1000;

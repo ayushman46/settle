@@ -42,6 +42,7 @@ import { collect } from './collect'
 import { autosettle } from './autosettle'
 import { stuck } from './stuck'
 import { stuckhelp } from './stuckhelp'
+import { stuckalerts } from './stuckalerts'
 
 export const EN = {
   ...common,
@@ -84,6 +85,7 @@ export const EN = {
   ...autosettle,
   ...stuck,
   ...stuckhelp,
+  ...stuckalerts,
 } as const
 
 /** Every message key the app may ask for. */

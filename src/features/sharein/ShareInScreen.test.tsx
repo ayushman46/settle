@@ -14,7 +14,21 @@ vi.mock('../../lib/sharedPayload', () => ({
   readSharedPayload: vi.fn(async () => shared.payload),
 }))
 
+// Stuck money reads the same message; a test can say what it found (otherwise the real reader runs).
+const stuckSignal = vi.hoisted(() => ({ value: undefined as unknown }))
+vi.mock('../stuck/detect', async (importOriginal) => {
+  const actual = await importOriginal<typeof StuckDetect>()
+  return {
+    ...actual,
+    readStuckMessage: (...args: Parameters<typeof actual.readStuckMessage>) => (stuckSignal.value !== undefined ? stuckSignal.value : actual.readStuckMessage(...args)),
+  }
+})
+
 import { addFriend, expensesStore, groupsStore, peekSplitPrefill, saveExpense, updateProfile } from '../../data'
+import { stuckStore } from '../../data/stores'
+import type { StuckSignal } from '../stuck/detect'
+import { clearStuckPrefill, peekStuckPrefill } from '../stuck/prefill'
+import { stuckPayment } from '../stuck/testKit'
 import { draft, everyone } from '../../data/testKit'
 import { ME_ID } from '../../domain/types'
 import { consumeAiQuota } from '../../pro/quota'
@@ -26,6 +40,7 @@ import { paywallState } from '../pro/paywall'
 import { currentUrl, json, renderAt, resetProScreens, route } from '../pro/testing'
 import { ShareInScreen } from './ShareInScreen'
 import { CORPUS_TODAY, SMS_CORPUS } from './sms/corpus'
+import type * as StuckDetect from '../stuck/detect'
 
 const sms = (id: string): string => SMS_CORPUS.find(([cid]) => cid === id)?.[1] ?? ''
 const SLOW = { timeout: 20_000 }
@@ -50,6 +65,8 @@ let onLine: { mockRestore: () => void } | null = null
 beforeEach(() => {
   flags.sms = true
   shared.payload = null
+  stuckSignal.value = undefined
+  clearStuckPrefill()
   resetProScreens()
   resetHealthForTests()
   resetBillLaunchForTests()
@@ -152,6 +169,17 @@ describe('paste mode', () => {
     else expect(screen.queryByRole('button', { name: /^Split it/ })).toBeNull()
   })
 
+  it('a failed payment: Track it in Stuck money opens Add, filled in from the message', SLOW, async () => {
+    const { user } = open()
+    await pasteAndRead(user, sms('sbi-09'))
+    const track = screen.getByRole('button', { name: 'Track it in Stuck money' })
+    expect(track).toHaveFocus()
+    expect(screen.getByText(/If it took your money, Settle can track it till it’s back\./)).toBeInTheDocument()
+    await user.click(track)
+    expect(currentUrl()).toBe('/app/stuck/new')
+    expect(peekStuckPrefill()).toMatchObject({ kind: 'failed', source: 'sms' })
+  })
+
   it('several messages: which one, and what was skipped', SLOW, async () => {
     const { user } = open()
     await pasteAndRead(user, [sms('hdfc-01'), sms('hdfc-09'), sms('icici-01'), sms('hdfc-10')].join('\n\n'))
@@ -166,6 +194,45 @@ describe('paste mode', () => {
     expect(screen.getByRole('region', { name: 'Blinkit' })).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Split it' }))
     expect(peekSplitPrefill()).toMatchObject({ title: 'Blinkit', total: 34900 })
+  })
+})
+
+describe('Stuck money', () => {
+  const refundStarted: StuckSignal = {
+    type: 'refund_initiated',
+    amount: 129_900,
+    date: '2026-10-21',
+    at: 0,
+    ref: null,
+    party: 'Flipkart',
+    merchant: 'flipkart',
+    bank: null,
+    account: null,
+    app: null,
+    orderId: 'OD4412',
+    promisedBy: '2026-10-28',
+  }
+
+  it('a refund a business has started: Track it in Stuck money', SLOW, async () => {
+    stuckSignal.value = refundStarted
+    const { user } = open()
+    await pasteAndRead(user, 'Your refund of Rs.1,299 for order OD4412 has been initiated. It will reflect in 5-7 business days. - Flipkart')
+    const offer = screen.getByRole('region', { name: 'Waiting for this refund?' })
+    await user.click(within(offer).getByRole('button', { name: 'Track it in Stuck money' }))
+    expect(currentUrl()).toBe('/app/stuck/new')
+    expect(peekStuckPrefill()).toMatchObject({ kind: 'refund', amount: 129_900, merchant: 'flipkart', orderId: 'OD4412', promisedBy: '2026-10-28', source: 'sms' })
+  })
+
+  it('money back: offers to tick it off only while something is stuck', SLOW, async () => {
+    stuckSignal.value = { ...refundStarted, type: 'refund_credited' }
+    const first = open()
+    await pasteAndRead(first.user, sms('hdfc-08'))
+    expect(screen.queryByRole('button', { name: 'Tick it off in Stuck money' })).toBeNull()
+    first.unmount()
+    stuckStore.set([stuckPayment()])
+    const { user } = open()
+    await pasteAndRead(user, sms('hdfc-08'))
+    expect(screen.getByRole('button', { name: 'Tick it off in Stuck money' })).toBeInTheDocument()
   })
 })
 

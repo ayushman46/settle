@@ -113,10 +113,10 @@ describe('what to do next', () => {
     expect(nextStep(flight, '2026-11-20').step).toBe('airsewa')
   })
 
-  it('the Ombudsman window closes a year and 30 days after the bank complaint', () => {
+  it('the Ombudsman window closes 90 days after the bank’s 30 days (the 2026 scheme)', () => {
     const raised = stuck({ steps: [{ kind: 'bank', date: '2026-10-30', ref: null }] })
-    expect(ombudsmanTooLate(raised, '2027-11-29')).toBe(false)
-    expect(ombudsmanTooLate(raised, '2027-12-01')).toBe(true)
+    expect(ombudsmanTooLate(raised, '2027-02-27')).toBe(false)
+    expect(ombudsmanTooLate(raised, '2027-02-28')).toBe(true)
   })
 })
 

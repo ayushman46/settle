@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Landmark } from 'lucide-react'
 import { goBack, navigate, useSearchParams } from '../../app/router'
 import { Button, PageTitle, Screen, TopBar, useToast } from '../../components'
 import { expensesStore, groupsStore } from '../../data/stores'
@@ -11,6 +12,7 @@ import { formatMoney } from '../../lib/money'
 import { readSharedPayload } from '../../lib/sharedPayload'
 import { setSharedPhoto } from '../../state/sharedPhoto'
 import { openBill } from '../bill/launch'
+import { openStuckAdd, prefillFromProof } from '../stuck/prefill'
 import { CURRENCY, owedList } from './owed'
 import { forgetReference, proofLedgerStore, rememberReference } from './proofLedger'
 import { matchProof, AMOUNT_TOLERANCE, type Owed, type ProofVerdict } from './proofMatch'
@@ -283,9 +285,9 @@ function Verdict({
         />
       )
     case 'pending':
-      return <Refusal title={t('proof.verdict.pending.title')} body={t('proof.verdict.pending.body')} onAgain={onAgain} t={t} />
+      return <Refusal title={t('proof.verdict.pending.title')} body={t('proof.verdict.pending.body')} onAgain={onAgain} onTrack={() => openStuckAdd(prefillFromProof(proof))} t={t} />
     case 'failed':
-      return <Refusal title={t('proof.verdict.failed.title')} body={t('proof.verdict.failed.body')} onAgain={onAgain} t={t} />
+      return <Refusal title={t('proof.verdict.failed.title')} body={t('proof.verdict.failed.body')} onAgain={onAgain} onTrack={() => openStuckAdd(prefillFromProof(proof))} t={t} />
     case 'payee_unknown':
       return <Refusal title={t('proof.verdict.payeeUnknown.title')} body={t('proof.verdict.payeeUnknown.body')} onAgain={onAgain} t={t} />
     case 'unreadable':
@@ -298,14 +300,23 @@ function Verdict({
   }
 }
 
-function Refusal({ title, body, onAgain, t }: { title: string; body: string; onAgain: () => void; t: (key: MessageKey) => string }) {
+/** Why it isn't marked; a failed or pending payment can be tracked in Stuck money (`onTrack`), in case it took the money. */
+function Refusal({ title, body, onAgain, onTrack, t }: { title: string; body: string; onAgain: () => void; onTrack?: () => void; t: (key: MessageKey) => string }) {
   return (
     <section className={styles.card} aria-live="polite">
       <p className={styles.cardTitle}>{title}</p>
       <p className={styles.cardText}>{body}</p>
-      <Button variant="secondary" block onClick={onAgain}>
-        {t('proof.again')}
-      </Button>
+      {onTrack && <p className={styles.cardText}>{t('stuck.proof.text')}</p>}
+      <div className={styles.actions}>
+        {onTrack && (
+          <Button block iconStart={<Landmark />} onClick={onTrack}>
+            {t('stuck.track.cta')}
+          </Button>
+        )}
+        <Button variant={onTrack ? 'ghost' : 'secondary'} block onClick={onAgain}>
+          {t('proof.again')}
+        </Button>
+      </div>
     </section>
   )
 }

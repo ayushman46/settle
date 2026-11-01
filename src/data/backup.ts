@@ -33,6 +33,7 @@ import {
   remindersSchema,
   remindersStore,
   stuckSchema,
+  stuckSeenStore,
   stuckStore,
   proofRefsSchema,
   proofRefsStore,
@@ -393,7 +394,7 @@ export function clearAllData(): void {
       // Blocked storage — the in-memory reset below still applies.
     }
   }
-  for (const store of [profileStore, friendsStore, expensesStore, groupsStore, recurringStore, poolsStore, claimsStore, proofRefsStore, payerAliasesStore, remindersStore, autoSettleStore, stuckStore])
+  for (const store of [profileStore, friendsStore, expensesStore, groupsStore, recurringStore, poolsStore, claimsStore, proofRefsStore, payerAliasesStore, remindersStore, autoSettleStore, stuckStore, stuckSeenStore])
     store.reload()
   clearSplitPrefill()
 }

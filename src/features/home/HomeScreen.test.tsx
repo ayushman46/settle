@@ -1,12 +1,14 @@
 import { screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { addFriend, createGroup, saveRecurring, setPaidBack, updateProfile } from '../../data'
+import { stuckStore } from '../../data/stores'
 import { ME_ID } from '../../domain/types'
 import { loadSession, saveSession } from '../../state/persist'
 import { reducer } from '../../state/reducer'
 import { newBillAction } from '../bill/boot'
 import { takeBillStart } from '../bill/launch'
 import { paywallState } from '../pro/paywall'
+import { stuckPayment } from '../stuck/testKit'
 import { currentHour, greetingName, helloLine, timeOfDayGreeting } from './greeting'
 import { draftLine } from './homeLinks'
 import { homeGridActions } from './quickActions'
@@ -144,6 +146,28 @@ describe('HomeScreen — quick actions', SLOW, () => {
     )
     await user.click(within(sheet).getByRole('button', { name: 'Cab' }))
     expect(currentUrl()).toBe('/app/split/new?category=transport')
+  })
+
+  it('More opens Stuck money', async () => {
+    const { user } = renderHome()
+    await user.click(within(screen.getByRole('list', { name: 'Quick actions' })).getByRole('button', { name: 'More' }))
+    const sheet = await screen.findByRole('dialog', { name: 'More ways to split' })
+    await user.click(within(sheet).getByRole('button', { name: 'Stuck money' }))
+    expect(currentUrl()).toBe('/app/stuck')
+  })
+})
+
+describe('HomeScreen — stuck money', SLOW, () => {
+  it('shows what banks and shops owe you only while something is', async () => {
+    const { unmount } = renderHome()
+    expect(screen.queryByRole('region', { name: 'Stuck money' })).not.toBeInTheDocument()
+    unmount()
+    // A ₹500 UPI payment to a person on 20 Oct: due back the next day, so two days late by the 22nd.
+    stuckStore.set([stuckPayment({ date: '2026-10-20' })])
+    const { user } = renderHome()
+    const card = screen.getByRole('region', { name: 'Stuck money' })
+    await user.click(within(card).getByRole('button', { name: /^₹500 stuck with banks and shops 1 needs you/ }))
+    expect(currentUrl()).toBe('/app/stuck')
   })
 })
 

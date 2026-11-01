@@ -148,7 +148,8 @@ function addDays(day: string, n: number): string {
   return d.toISOString().slice(0, 10)
 }
 
-function findDate(text: string, today: string): string | null {
+/** The first date printed (day first), never later than tomorrow; null when none is. Also read by Stuck money (src/features/stuck/detect.ts). */
+export function findDate(text: string, today: string): string | null {
   const found: Array<[number, string | null]> = []
   for (const m of text.matchAll(/\b(20\d{2})[-:/](\d{2})[-:/](\d{2})\b/g)) {
     found.push([m.index, iso(Number(m[1]), Number(m[2]), Number(m[3]))])
@@ -179,7 +180,8 @@ const REF12 =
 const NEFT_REF = /\bneft[-/]([a-z0-9]{12,22})\b/i
 const TXN_ID = /\btxn\s*id[:\s]*([a-z0-9]{8,30})\b/i
 
-function findRef(text: string): string | null {
+/** The 12-digit UPI/IMPS reference, NEFT reference or txn id, or null. */
+export function findRef(text: string): string | null {
   return REF12.exec(text)?.[1] ?? NEFT_REF.exec(text)?.[1]?.toUpperCase() ?? TXN_ID.exec(text)?.[1] ?? null
 }
 
@@ -189,7 +191,8 @@ const ACCOUNT_PATTERNS: readonly RegExp[] = [
   /\bbank\s*[-–]\s*(\d{3,4})\b/i,
 ]
 
-function findAccount(text: string): string | null {
+/** "XX4821": the account's or card's last digits as printed, or null. */
+export function findAccount(text: string): string | null {
   for (const pattern of ACCOUNT_PATTERNS) {
     const m = pattern.exec(text)
     if (m?.[1]) return `XX${m[1]}`
@@ -197,7 +200,8 @@ function findAccount(text: string): string | null {
   return null
 }
 
-function findVia(text: string): PayVia | null {
+/** How the money moved (UPI, card, ATM…), when the message says. */
+export function findVia(text: string): PayVia | null {
   if (/\bauto\s?pay\b|\bupi mandate\b|\bmandate\//i.test(text)) return 'autopay'
   if (/\batm\b|\bwithdrawn\b/i.test(text)) return 'atm'
   if (/(?:\b|bob)card\b|\bpos\b/i.test(text)) return 'card'
@@ -281,8 +285,14 @@ const CREDIT_PATTERNS: readonly RegExp[] = [
   /\bfrom\s+([A-Z][A-Z .]+?)(?=\.\s|\.$|\n|\s+UPI|\s+has|$)/, // "from KABIR MEHTA. UPI Ref", "from ANANYA RAO."
 ]
 
+/** A printed name as people know it ("BUNDL TECHNOLOGIES PVT LTD" → "Swiggy", "RIYA SHARMA" → "Riya Sharma"), or null when it isn't a name. */
+export function partyName(raw: string): string | null {
+  const cleaned = cleanName(raw)
+  return cleaned === null ? null : (brandOfName(cleaned) ?? titleCase(cleaned))
+}
+
 /** Who the money went to (debit) or came from (credit): a display name and/or a VPA. */
-function findParty(text: string, dir: SmsTxn['dir'], via: PayVia | null): { name: string | null; vpa: string | null } {
+export function findParty(text: string, dir: SmsTxn['dir'], via: PayVia | null): { name: string | null; vpa: string | null } {
   const vpas = [...text.matchAll(VPA)].map((m) => (m[2] ?? '').toLowerCase())
   let vpa: string | null = vpas[0] ?? null
   let name: string | null = null
@@ -312,11 +322,16 @@ function findParty(text: string, dir: SmsTxn['dir'], via: PayVia | null): { name
 
 const ignored = (reason: IgnoreReason): SmsIgnored => ({ kind: 'ignored', reason })
 
+/** The text with UPI IDs and links taken out, so "hdfcbank" in an ID or "offers" in a link never count as words. */
+export function scrubSms(text: string): string {
+  return text.replace(VPA, '$1 ').replace(URL_PATTERN, ' ')
+}
+
 /** Reads one message. `today` (YYYY-MM-DD, the phone's date) keeps future-looking dates out. Never throws. */
 export function parseSms(raw: string, opts: { today: string }): SmsParse {
   const text = cleanSms(typeof raw === 'string' ? raw : '')
   if (text === '') return ignored('not_txn')
-  const scrubbed = text.replace(VPA, '$1 ').replace(URL_PATTERN, ' ')
+  const scrubbed = scrubSms(text)
   const amount = findAmount(text)
 
   if (OTP.test(scrubbed)) return ignored('otp')

@@ -43,6 +43,9 @@ import { bijli } from './bijli'
 import { whospaid } from './whospaid'
 import { collect } from './collect'
 import { autosettle } from './autosettle'
+import { stuck } from './stuck'
+import { stuckhelp } from './stuckhelp'
+import { stuckalerts } from './stuckalerts'
 
 export const TE: Messages = {
   ...common,
@@ -82,6 +85,9 @@ export const TE: Messages = {
   ...whospaid,
   ...collect,
   ...autosettle,
+  ...stuck,
+  ...stuckhelp,
+  ...stuckalerts,
 }
 
 export default TE

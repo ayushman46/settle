@@ -5,6 +5,8 @@ import { ME_ID } from '../../domain/types'
 import { paywallState } from '../pro/paywall'
 import { currentUrl, DAY_SECONDS, installPro, renderAt, resetProScreens, serveBilling, testSigner } from '../pro/testing'
 import { UPI_ID_ERROR } from '../../kit/index-b'
+import { stuckStore } from '../../data/stores'
+import { stuckPayment } from '../stuck/testKit'
 import { resetLastBackupForTests } from './backupFiles'
 import { YouScreen } from './YouScreen'
 
@@ -168,6 +170,18 @@ describe('YouScreen — shortcuts', () => {
     expect(screen.getByRole('button', { name: /^Insights/ })).toHaveTextContent('Pro')
     await user.click(screen.getByRole('button', { name: /^Insights/ }))
     await waitFor(() => expect(currentUrl()).toBe('/app/insights'))
+  })
+
+  it('opens Stuck money, saying what banks and shops owe you', async () => {
+    const first = renderYou()
+    expect(screen.getByRole('button', { name: /^Stuck money/ })).toHaveTextContent('Failed payments and refunds')
+    first.unmount()
+    stuckStore.set([stuckPayment({ date: '2026-10-21' })])
+    const { user } = renderYou()
+    const row = screen.getByRole('button', { name: /^Stuck money/ })
+    expect(row).toHaveTextContent('₹500 with banks and shops')
+    await user.click(row)
+    await waitFor(() => expect(currentUrl()).toBe('/app/stuck'))
   })
 
   it('counts recurring splits for Pro users', async () => {

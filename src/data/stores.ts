@@ -36,6 +36,8 @@ export const STORAGE_KEYS = {
   autoSettle: 'settle.v5.auto-settle',
   /** Money stuck with a bank or a business — failed payments and refunds still to come (src/features/stuck). */
   stuck: 'settle.v6.stuck',
+  /** Stuck money's short memory of the phone's recent alerts: debits, failures, money back (src/features/stuck/track.ts). */
+  stuckSeen: 'settle.v6.stuck-seen',
 } as const
 
 /** Accepts a bare, un-enveloped value (e.g. hand-edited storage) when the schema can read it. */
@@ -332,4 +334,49 @@ export const stuckStore = createStore<StuckPayment[]>({
   initial: () => [],
   version: STORAGE_VERSION,
   migrate: bare(stuckSchema),
+})
+
+/** What an alert told Stuck money: money left ('debit'), a payment failed or is pending, money came back, a refund was started. */
+export const STUCK_SEEN_KINDS = ['debit', 'failed', 'pending', 'back', 'refund'] as const
+export type StuckSeenKind = (typeof STUCK_SEEN_KINDS)[number]
+
+/**
+ * One alert Stuck money saw lately: enough to pair a failure with the debit that shows it took the
+ * money, and to know the same payment told twice (the UPI app and the bank's SMS) as one.
+ */
+export interface StuckSeen {
+  kind: StuckSeenKind
+  /** Paise. */
+  amount: number
+  /** When the alert came (epoch ms). */
+  at: number
+  /** UPI reference, or the order number of a refund. */
+  ref: string | null
+  vpa: string | null
+  party: string | null
+  account: string | null
+  /** The stuck payment it made, joined or closed, or null. */
+  stuckId: string | null
+}
+
+export const stuckSeenSchema = z.array(
+  z.object({
+    kind: z.enum(STUCK_SEEN_KINDS),
+    amount: z.int().check(z.positive()),
+    at: z.number(),
+    ref: z.catch(z.nullable(z.string().check(z.maxLength(60))), null),
+    vpa: z.catch(z.nullable(z.string().check(z.maxLength(100))), null),
+    party: z.catch(z.nullable(z.string().check(z.maxLength(120))), null),
+    account: z.catch(z.nullable(z.string().check(z.maxLength(20))), null),
+    stuckId: z.catch(z.nullable(z.string()), null),
+  }),
+)
+
+/** Stuck money's short memory (48 hours at most). Kept on this phone; not in backups. */
+export const stuckSeenStore = createStore<StuckSeen[]>({
+  key: STORAGE_KEYS.stuckSeen,
+  schema: stuckSeenSchema,
+  initial: () => [],
+  version: STORAGE_VERSION,
+  migrate: bare(stuckSeenSchema),
 })

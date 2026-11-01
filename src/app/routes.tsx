@@ -217,6 +217,21 @@ const PaidReplyScreen = lazyScreen(
   () => import('../features/expense/PaidReplyScreen'),
   (m) => m.PaidReplyScreen,
 )
+const StuckScreen = lazyScreen(
+  'StuckScreen',
+  () => import('../features/stuck/StuckScreen'),
+  (m) => m.StuckScreen,
+)
+const StuckAddScreen = lazyScreen(
+  'StuckAddScreen',
+  () => import('../features/stuck/StuckAddScreen'),
+  (m) => m.StuckAddScreen,
+)
+const StuckDetailScreen = lazyScreen(
+  'StuckDetailScreen',
+  () => import('../features/stuck/StuckDetailScreen'),
+  (m) => m.StuckDetailScreen,
+)
 const UpgradeScreen = lazyScreen(
   'UpgradeScreen',
   () => import('../features/pro/UpgradeScreen'),
@@ -284,6 +299,10 @@ export const APP_ROUTES: readonly AppRoute[] = [
   { pattern: '/app/bijli', screen: BijliScreen, title: 'Electricity', tab: null },
   { pattern: '/app/whos-paid', screen: WhosPaidScreen, title: 'Who’s paid?', tab: null },
   { pattern: '/app/collect', screen: CollectScreen, title: 'To collect', tab: null },
+  { pattern: '/app/stuck', screen: StuckScreen, title: 'Stuck money', tab: null },
+  { pattern: '/app/stuck/new', screen: StuckAddScreen, title: 'Add stuck money', tab: null },
+  { pattern: '/app/stuck/:id', screen: StuckDetailScreen, title: 'Stuck money', tab: null },
+  { pattern: '/app/stuck/:id/edit', screen: StuckAddScreen, title: 'Edit stuck money', tab: null },
 ]
 
 /** The app route for `path`, or null for an unknown `/app/*` path. */

@@ -7,6 +7,7 @@
  */
 import type { AlertCredit } from '../../data/stores'
 import { parseSms } from '../sharein/sms/parseSms'
+import { MERCHANT_APPS } from '../stuck/detect'
 import { nameKey } from '../whospaid/match'
 
 /** One alert as the phone kept it. */
@@ -33,8 +34,11 @@ export const UPI_APPS: Readonly<Record<string, string>> = {
 
 const AMOUNT = /(?:₹|\brs\.?|\binr)\s?([\d,]+(?:\.\d{1,2})?)/i
 const MONEY_IN = /\b(?:received|credited|deposited|paid you|sent you|added to)\b/i
-/** Not a person paying you back, whatever else it says. */
-const NOT_PAYBACK = /\b(?:you paid|you sent|you have paid|paid to|sent to|debited|spent|payment to|cashback|cash back|reward|rewards|refund|refunded|reversal|reversed|request|requested|requesting|requests|recharge|scratch card|offer|won|coins|points|otp)\b/i
+/** Not a person paying you back, whatever else it says (failures and refunds are Stuck money's, src/features/stuck). */
+const NOT_PAYBACK =
+  /\b(?:you paid|you sent|you have paid|paid to|sent to|debited|spent|payment to|cashback|cash back|reward|rewards|refund|refunded|reversal|reversed|credited back|failed|failure|declined|unsuccessful|request|requested|requesting|requests|recharge|scratch card|offer|won|coins|points|otp)\b/i
+/** Money back from a bank or a business, in an SMS: not someone paying you. */
+const MONEY_BACK = /\b(?:refunds?|refunded|reversal|reversed|credited back)\b/i
 /** "Riya Sharma paid you ₹420", "RIYA SHARMA has sent you Rs.420". */
 const PAID_YOU = /^\s*(.+?)\s+(?:has\s+)?(?:paid|sent)\s+you\b/im
 /** "… from Riya Sharma on Google Pay", "… from riya@okaxis." */
@@ -84,6 +88,8 @@ function fromUpiApp(alert: RawAlert): AlertCredit | null {
 
 /** A bank SMS shown by the messages app: the existing SMS reader, money in from a person only. */
 function fromBankSms(alert: RawAlert): AlertCredit | null {
+  // "Refund of ₹500 will be credited…" reads as money in; it's a refund still to come.
+  if (MONEY_BACK.test(alert.text)) return null
   const parsed = parseSms(alert.text, { today: dayOf(alert.postedAt) })
   if (parsed.kind !== 'txn' || parsed.dir !== 'credit' || parsed.refund) return null
   return {
@@ -97,9 +103,10 @@ function fromBankSms(alert: RawAlert): AlertCredit | null {
   }
 }
 
-/** The payment an alert reports, or null when it isn't someone paying you. */
+/** The payment an alert reports, or null when it isn't someone paying you (a shop's refund alert never is). */
 export function alertToCredit(alert: RawAlert): AlertCredit | null {
   try {
+    if (alert.app in MERCHANT_APPS) return null
     return alert.app in UPI_APPS ? fromUpiApp(alert) : fromBankSms(alert)
   } catch {
     return null

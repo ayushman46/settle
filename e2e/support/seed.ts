@@ -5,7 +5,7 @@
  * reloads and later navigations keep whatever the app changed since.
  */
 import type { Page } from '@playwright/test'
-import type { STORAGE_KEYS, STORAGE_VERSION as STORE_VERSION } from '../../src/data/stores'
+import type { STORAGE_KEYS, STORAGE_VERSION as STORE_VERSION, StuckPayment } from '../../src/data/stores'
 import type { ClaimRound, Expense, Friend, Group, Pool, Profile, RecurringTemplate } from '../../src/domain/types'
 
 /** Must match src/data/stores.ts (checked by the compiler). */
@@ -21,6 +21,8 @@ const KEYS = {
   payerAliases: 'settle.v5.payer-aliases',
   reminders: 'settle.v5.reminders',
   autoSettle: 'settle.v5.auto-settle',
+  stuck: 'settle.v6.stuck',
+  stuckSeen: 'settle.v6.stuck-seen',
 } as const satisfies typeof STORAGE_KEYS
 const STORAGE_VERSION = 1 satisfies typeof STORE_VERSION
 
@@ -34,6 +36,8 @@ export interface SeedData {
   recurring?: RecurringTemplate[]
   pools?: Pool[]
   claims?: ClaimRound[]
+  /** Money stuck with banks and businesses. */
+  stuck?: StuckPayment[]
 }
 
 /** A friend record with sensible defaults. */
@@ -67,6 +71,7 @@ export function seedEntries(data: SeedData, now = Date.now()): Record<string, st
   if (data.recurring) entries[KEYS.recurring] = envelope(data.recurring)
   if (data.pools) entries[KEYS.pools] = envelope(data.pools)
   if (data.claims) entries[KEYS.claims] = envelope(data.claims)
+  if (data.stuck) entries[KEYS.stuck] = envelope(data.stuck)
   return entries
 }
 

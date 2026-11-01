@@ -8,6 +8,7 @@
 import { mkdirSync } from 'node:fs'
 import { join } from 'node:path'
 import type { Page } from '@playwright/test'
+import type { StuckPayment } from '../src/data/stores'
 import type { Expense } from '../src/domain/types'
 import { settleAnimations } from './support/a11y'
 import { copyPayLink } from './support/app'
@@ -163,6 +164,64 @@ test('payments tick themselves off (Auto-settle)', async ({ page }) => {
   await expect(page.getByText('Riya paid ₹800 · Friday dinner — ticked off')).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Auto-settle is on' })).toBeVisible()
   await shot(page, 'auto-settle')
+})
+
+/** `n` days before today (negative: after), as YYYY-MM-DD. */
+function daysAgo(n: number): string {
+  return new Date(Date.parse(`${DAY}T12:00:00Z`) - n * 86_400_000).toISOString().slice(0, 10)
+}
+
+/** A stuck payment with the defaults filled in (the money left the account, nothing raised). */
+function stuckMoney(id: string, fields: Partial<StuckPayment> & Pick<StuckPayment, 'kind' | 'amount' | 'date'>): StuckPayment {
+  return {
+    id,
+    rail: null,
+    party: null,
+    merchant: null,
+    promisedBy: null,
+    ref: null,
+    orderId: null,
+    bank: null,
+    account: null,
+    app: null,
+    source: 'manual',
+    confirmed: true,
+    steps: [],
+    back: null,
+    dismissedAt: null,
+    note: null,
+    createdAt: 1_792_000_000_000,
+    updatedAt: 1_792_000_000_000,
+    ...fields,
+  }
+}
+
+/** A ₹649 Swiggy failure 3 days late, an IndiGo refund on its way, an ATM case raised with the bank, a Flipkart refund back. */
+const STUCK: StuckPayment[] = [
+  stuckMoney('swiggy', { kind: 'failed', rail: 'upi_merchant', party: 'Swiggy', merchant: 'swiggy', amount: 649_00, date: daysAgo(8), ref: '630412345678', bank: 'hdfc', account: 'XX4821', app: 'gpay' }),
+  stuckMoney('indigo', { kind: 'refund', party: 'IndiGo', merchant: 'indigo', amount: 4_500_00, date: daysAgo(2), promisedBy: daysAgo(-5), orderId: 'K7XQ2M' }),
+  stuckMoney('atm', { kind: 'failed', rail: 'atm', amount: 2_000_00, date: daysAgo(12), bank: 'sbi', account: 'XX3367', steps: [{ kind: 'bank', date: daysAgo(5), ref: 'SBI-88412' }] }),
+  stuckMoney('flipkart', {
+    kind: 'refund',
+    party: 'Flipkart',
+    merchant: 'flipkart',
+    amount: 1_299_00,
+    date: daysAgo(14),
+    promisedBy: daysAgo(7),
+    orderId: 'OD432198765432100',
+    back: { date: daysAgo(4), amount: 1_299_00, compensation: 0 },
+  }),
+]
+
+test('stuck money: what banks and shops owe you back', async ({ page }) => {
+  await page.clock.setFixedTime(new Date(`${DAY}T11:00:00+05:30`))
+  // The still picture: amounts at their final values, nothing mid-glide.
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await seed(page, { profile: { upiId: 'ayush@okicici' }, friends: PEOPLE, stuck: STUCK })
+  await page.goto('/app/stuck')
+  await expect(page.getByRole('heading', { level: 1, name: 'Stuck money' })).toBeVisible()
+  await expect(page.getByRole('region', { name: 'Got back 1' })).toBeVisible()
+  await shot(page, 'stuck')
 })
 
 test('the electricity bill, split fairly', async ({ page }) => {

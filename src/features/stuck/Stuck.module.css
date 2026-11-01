@@ -1,0 +1,1017 @@
+/* Stuck money: the list and its hero, a payment's page and its clock, Add, the sheets and Home's line. */
+
+.content {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  gap: var(--s-5);
+  padding-bottom: var(--s-8);
+}
+
+/* ---------- Who owes it (a bank or a shop), tinted by where it stands ---------- */
+
+.kindIcon {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: var(--s-10);
+  height: var(--s-10);
+  border-radius: var(--radius-tile);
+  background: var(--surface-3);
+  color: var(--ink-2);
+}
+
+.kindIcon > svg {
+  width: var(--s-5);
+  height: var(--s-5);
+}
+
+.kindIconLg {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--r-lg);
+}
+
+.kindIconLg > svg {
+  width: 26px;
+  height: 26px;
+}
+
+.kind-needs {
+  background: var(--warning-soft);
+  color: var(--warning-ink);
+}
+
+.kind-onway {
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+}
+
+.kind-back {
+  background: var(--positive-soft);
+  color: var(--positive);
+}
+
+.kind-aside {
+  background: var(--surface-3);
+  color: var(--ink-3);
+}
+
+/* ---------- The hero: the premium dark card, like Home's balance ---------- */
+
+.hero {
+  --ink: var(--balance-card-ink);
+  --ink-2: var(--balance-card-ink-2);
+  --line: var(--balance-card-line);
+  --focus-ring: var(--balance-card-ink);
+
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+  min-width: 0;
+  padding: var(--s-5);
+  overflow: clip;
+  border-radius: var(--radius-card);
+  background: var(--balance-card-gradient);
+  color: var(--balance-card-ink);
+  box-shadow: var(--shadow-md);
+  animation: hero-in var(--dur-4) var(--ease-out) backwards;
+}
+
+/* The same quiet rings as the balance card, off the top corner. */
+.hero::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  top: -96px;
+  right: -72px;
+  width: 200px;
+  aspect-ratio: 1;
+  border: 1px solid var(--balance-card-line);
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 28px rgb(255 255 255 / 0.018),
+    0 0 0 29px var(--balance-card-line),
+    0 0 0 60px rgb(255 255 255 / 0.012);
+  pointer-events: none;
+}
+
+.heroTop {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  min-width: 0;
+}
+
+.heroLabel {
+  font: var(--text-label);
+  color: var(--balance-card-ink-2);
+}
+
+/* What's owed to you is the signature accent (AA on the dark card in every accent). */
+.heroAmount {
+  color: var(--accent);
+}
+
+.heroCalm {
+  font: var(--text-section);
+  color: var(--balance-card-ink);
+}
+
+.heroTotals {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
+  gap: var(--s-2);
+  margin: 0;
+}
+
+.heroTotal {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding: var(--s-3);
+  border-radius: var(--r-md);
+  background: rgb(255 255 255 / 0.06);
+  box-shadow: inset 0 0 0 1px var(--balance-card-line);
+}
+
+.heroTotalLabel {
+  font: var(--text-caption);
+  color: var(--balance-card-ink-2);
+}
+
+.heroTotalValue {
+  margin: 0;
+  overflow-wrap: anywhere;
+  font: var(--text-headline);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+.heroAccent {
+  color: var(--accent);
+}
+
+.heroFoot {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  padding-top: var(--s-3);
+  border-top: 1px solid var(--balance-card-line);
+  font: var(--text-label);
+  color: var(--balance-card-ink);
+}
+
+.heroDot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--warning);
+  box-shadow: 0 0 0 4px rgb(251 191 36 / 0.18);
+}
+
+@keyframes hero-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--s-2)) scale(0.985);
+  }
+}
+
+/* ---------- The list ---------- */
+
+/* "Add" keeps to its label; "Paste a message" takes the rest, on one line even at 320 px. */
+.listActions {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--s-2);
+}
+
+.listActions > button {
+  padding-inline: var(--s-4);
+  white-space: nowrap;
+}
+
+.emptyActions {
+  display: grid;
+  gap: var(--s-2);
+  width: min(100%, 20rem);
+}
+
+.rule {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-2);
+  padding: var(--s-3) var(--s-4);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
+.ruleIcon {
+  flex: none;
+  width: var(--s-4);
+  height: var(--s-4);
+  margin-top: 1px;
+  color: var(--ink-2);
+}
+
+.section {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--s-3);
+  min-width: 0;
+}
+
+.sectionTitle {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  font: var(--text-section);
+  color: var(--ink);
+}
+
+.sectionCount {
+  display: inline-grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  padding-inline: 6px;
+  border-radius: var(--r-pill);
+  background: var(--surface-3);
+  font: var(--text-micro);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-2);
+}
+
+.sectionToggle {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2);
+  min-height: var(--tap);
+  color: inherit;
+  font: inherit;
+  text-align: start;
+}
+
+.sectionToggle > span {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.sectionToggle:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+  border-radius: var(--r-sm);
+}
+
+.chevron,
+.chevronOpen {
+  flex: none;
+  width: var(--s-5);
+  height: var(--s-5);
+  color: var(--ink-2);
+  transition: transform var(--dur-3) var(--ease-spring);
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+}
+
+.list {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.row {
+  position: relative;
+  display: grid;
+  gap: var(--s-2);
+  padding-bottom: var(--s-1);
+}
+
+.row + .row::before {
+  content: '';
+  position: absolute;
+  inset: 0 var(--s-4) auto calc(var(--s-4) + var(--s-10) + var(--s-3));
+  height: 1px;
+  background: var(--line);
+}
+
+.rowMain {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--s-3);
+  width: 100%;
+  min-height: 64px;
+  padding: var(--s-3) var(--s-4) var(--s-2);
+  color: var(--ink);
+  text-align: start;
+  cursor: pointer;
+}
+
+.rowMain:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: -2px;
+  border-radius: var(--r-md);
+}
+
+@media (hover: hover) {
+  .rowMain:hover {
+    background: var(--surface-2);
+  }
+}
+
+.rowText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.rowTitle {
+  overflow: hidden;
+  font: var(--text-label);
+  font-weight: 650;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rowStatus {
+  font: var(--text-caption);
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.rowUrgent {
+  color: var(--warning-ink);
+  font-weight: 600;
+}
+
+.rowBack {
+  color: var(--positive);
+}
+
+.rowAmount {
+  align-self: start;
+  padding-top: 2px;
+}
+
+.rowActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  padding: 0 var(--s-4) var(--s-3) calc(var(--s-4) + var(--s-10) + var(--s-3));
+}
+
+/* ---------- Paste a message ---------- */
+
+.paste {
+  display: grid;
+  gap: var(--s-3);
+}
+
+.pasteLabel {
+  font: var(--text-label);
+  color: var(--ink);
+}
+
+.area {
+  width: 100%;
+  min-height: 132px;
+  padding: var(--s-3);
+  border: 1px solid var(--field-border);
+  border-radius: var(--radius-field);
+  background: var(--field-bg);
+  color: var(--ink);
+  font: var(--text-body);
+  resize: vertical;
+}
+
+.area:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 1px;
+}
+
+.area::placeholder {
+  color: var(--ink-placeholder);
+}
+
+.pasteButton {
+  justify-self: start;
+}
+
+.fine {
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
+/* ---------- Add ---------- */
+
+.tiles {
+  display: grid;
+  gap: var(--s-2);
+}
+
+.option {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--s-3);
+  width: 100%;
+  min-height: 72px;
+  padding: var(--s-3) var(--s-4) var(--s-3) var(--s-3);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  box-shadow:
+    inset 0 0 0 1px var(--line),
+    var(--shadow-xs);
+  color: var(--ink);
+  text-align: start;
+  transition:
+    transform var(--dur-2) var(--ease-spring),
+    box-shadow var(--dur-2) var(--ease-out),
+    background-color var(--dur-2) var(--ease-out);
+}
+
+.option:active {
+  transform: scale(0.985);
+  transition-duration: var(--dur-1);
+}
+
+.option:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.optionOn {
+  background: color-mix(in srgb, var(--accent-soft) 55%, var(--surface));
+  box-shadow:
+    inset 0 0 0 2px var(--accent-edge),
+    var(--shadow-xs);
+}
+
+.optionIcon {
+  display: inline-grid;
+  place-items: center;
+  width: var(--s-10);
+  height: var(--s-10);
+  border-radius: var(--radius-tile);
+  background: var(--surface-3);
+  color: var(--ink);
+}
+
+.optionOn .optionIcon {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.optionIcon > svg {
+  width: var(--s-5);
+  height: var(--s-5);
+}
+
+.optionText {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.optionTitle {
+  font: var(--text-label);
+  font-weight: 650;
+}
+
+.optionCaption {
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
+.optionCheck {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 2px var(--line-strong);
+}
+
+.optionOn .optionCheck {
+  background: var(--accent);
+  box-shadow: none;
+  color: var(--on-accent);
+}
+
+.optionCheck > svg {
+  width: 14px;
+  height: 14px;
+}
+
+.formSection {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--s-3);
+  min-width: 0;
+}
+
+.railGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s-2);
+}
+
+.rail {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  min-width: 0;
+  min-height: 60px;
+  padding: var(--s-2) var(--s-3);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+  color: var(--ink);
+  text-align: start;
+  transition:
+    transform var(--dur-2) var(--ease-spring),
+    background-color var(--dur-2) var(--ease-out),
+    box-shadow var(--dur-2) var(--ease-out);
+}
+
+.rail:active {
+  transform: scale(0.97);
+  transition-duration: var(--dur-1);
+}
+
+.rail:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.railOn {
+  background: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
+  color: var(--on-accent);
+}
+
+.railName {
+  font: var(--text-label);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.railDays {
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
+.railOn .railDays {
+  color: inherit;
+  opacity: 0.8;
+}
+
+.moreRails {
+  justify-self: start;
+}
+
+.ruleLine {
+  padding: var(--s-3);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.dateRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2) var(--s-3);
+}
+
+.dateLabel {
+  font: var(--text-label);
+  color: var(--ink);
+}
+
+.switchCard {
+  overflow: clip;
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+}
+
+/* ---------- It's back ---------- */
+
+.backForm {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--s-4);
+}
+
+/* ---------- A payment's page ---------- */
+
+.detailHero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-2);
+  padding-top: var(--s-2);
+  text-align: center;
+}
+
+.detailEyebrow {
+  margin-top: var(--s-1);
+  font: var(--text-micro);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+
+.detailTitle {
+  max-width: 100%;
+  color: var(--ink);
+  font: var(--text-headline);
+  letter-spacing: var(--tracking-tight);
+  overflow-wrap: anywhere;
+}
+
+.detailTitle:focus {
+  outline: none;
+}
+
+.detailAmount {
+  width: min(100%, 18rem);
+}
+
+.detailMeta {
+  max-width: 36ch;
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
+/* What to do now: the one card that asks something of you. */
+.now {
+  display: grid;
+  gap: var(--s-2);
+  padding: var(--s-5);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+}
+
+.nowUrgent {
+  background: color-mix(in srgb, var(--warning-soft) 70%, var(--surface));
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--warning) 45%, transparent),
+    var(--shadow-card);
+}
+
+.nowDone {
+  background: color-mix(in srgb, var(--positive-soft) 70%, var(--surface));
+}
+
+.nowHeading {
+  font: var(--text-micro);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+
+.nowTitle {
+  font: var(--text-section);
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.nowText {
+  font: var(--text-body);
+  color: var(--ink-2);
+}
+
+.nowActions {
+  display: grid;
+  gap: var(--s-2);
+  margin-top: var(--s-2);
+}
+
+.clockCard,
+.details {
+  display: grid;
+  gap: var(--s-3);
+  padding: var(--s-5);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+}
+
+.cardHeading {
+  font: var(--text-section);
+  color: var(--ink);
+}
+
+/* The clock: a quiet vertical timeline, the step that's live ringed in the accent. */
+.clock {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.event {
+  position: relative;
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  gap: var(--s-3);
+  padding-bottom: var(--s-4);
+}
+
+.event:last-child {
+  padding-bottom: 0;
+}
+
+/* The line joining one step to the next. */
+.event:not(:last-child)::before {
+  content: '';
+  position: absolute;
+  top: 18px;
+  bottom: 2px;
+  left: 9px;
+  width: 2px;
+  border-radius: 1px;
+  background: var(--line-strong);
+}
+
+.eventDot {
+  position: relative;
+  width: 12px;
+  height: 12px;
+  margin: 4px 0 0 4px;
+  border-radius: 50%;
+  background: var(--ink-3);
+}
+
+.event-done .eventDot {
+  background: var(--ink);
+}
+
+.event-late .eventDot {
+  background: var(--warning);
+  box-shadow: 0 0 0 4px var(--warning-soft);
+}
+
+.event-now .eventDot {
+  background: var(--accent);
+  box-shadow: 0 0 0 4px var(--accent-soft);
+  animation: live 2.4s var(--ease-in-out) infinite;
+}
+
+.event-next .eventDot {
+  background: var(--surface);
+  box-shadow: inset 0 0 0 2px var(--ink-3);
+}
+
+.eventBody {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.eventHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0 var(--s-2);
+}
+
+.eventTitle {
+  font: var(--text-label);
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.event-late .eventTitle {
+  color: var(--warning-ink);
+  font-weight: 650;
+}
+
+.event-next .eventTitle {
+  color: var(--ink-2);
+}
+
+.eventDate {
+  font: var(--text-caption);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+
+.eventDetail {
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
+@keyframes live {
+  50% {
+    box-shadow: 0 0 0 7px var(--accent-soft);
+  }
+}
+
+.detailsHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2);
+  margin-block: calc(var(--s-2) * -1);
+}
+
+.facts {
+  display: grid;
+  margin: 0;
+}
+
+.fact {
+  display: grid;
+  grid-template-columns: minmax(6.5rem, 0.8fr) minmax(0, 1.2fr);
+  align-items: center;
+  gap: var(--s-3);
+  min-height: var(--tap);
+  border-top: 1px solid var(--line);
+}
+
+.fact:first-child {
+  border-top: 0;
+}
+
+.factLabel {
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
+.factValue {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--s-1);
+  min-width: 0;
+  margin: 0;
+  font: var(--text-label);
+  color: var(--ink);
+  text-align: end;
+}
+
+.factText {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Home's line ---------- */
+
+.homeSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+
+.homeRow {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  width: 100%;
+  min-height: 64px;
+  padding: var(--s-3) var(--s-4);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+  color: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+@media (hover: hover) {
+  .homeRow:hover {
+    background: var(--surface-2);
+  }
+}
+
+.homeRow:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.homeText {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.homeTitle {
+  color: var(--ink);
+  font: var(--text-label);
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.homeLine {
+  color: var(--ink-2);
+  font: var(--text-caption);
+  font-variant-numeric: tabular-nums;
+}
+
+.homeLineAct {
+  color: var(--warning-ink);
+  font-weight: 600;
+}
+
+.homeChevron {
+  flex: none;
+  width: var(--s-5);
+  height: var(--s-5);
+  color: var(--ink-3);
+}
+
+/* ---------- The offer under a shared SMS ---------- */
+
+.offer {
+  display: grid;
+  gap: var(--s-3);
+}
+
+.offerHead {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-3);
+}
+
+.offerIcon {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: var(--s-10);
+  height: var(--s-10);
+  border-radius: var(--radius-tile);
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+}
+
+.offerIcon > svg {
+  width: var(--s-5);
+  height: var(--s-5);
+}
+
+.offerText {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.offerTitle {
+  font: var(--text-label);
+  font-weight: 650;
+  color: var(--ink);
+}
+
+.offerBody {
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero,
+  .event-now .eventDot {
+    animation: none;
+  }
+
+  .option,
+  .rail,
+  .chevron,
+  .chevronOpen {
+    transition: none;
+  }
+}

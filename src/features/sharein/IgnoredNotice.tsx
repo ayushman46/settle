@@ -1,5 +1,5 @@
 import { useId, type ReactNode, type Ref } from 'react'
-import { PenLine, Sparkles, WifiOff } from 'lucide-react'
+import { Landmark, PenLine, Sparkles, WifiOff } from 'lucide-react'
 import { DESCRIBE_ERROR_MESSAGES } from '../../ai'
 import { Banner, Button, type BannerTone } from '../../components'
 import { useT, type MessageKey } from '../../i18n'
@@ -36,21 +36,33 @@ export interface IgnoredNoticeProps {
   ai: SmsAi
   /** What the AI reads when asked to split it anyway. */
   text: string
+  /** A failed payment: track it in Stuck money (it may have taken the money). */
+  onTrackStuck?: () => void
 }
 
-/** Why a message isn't split — and, for offers, requests, bills and the unreadable, a way to split it anyway. */
-export function IgnoredNotice({ reason, ai, text, onByHand, ref }: IgnoredNoticeProps) {
+/**
+ * Why a message isn't split — and, for offers, requests, bills and the unreadable, a way to split it
+ * anyway; for a failed payment, a way to track it in Stuck money.
+ */
+export function IgnoredNotice({ reason, ai, text, onByHand, onTrackStuck, ref }: IgnoredNoticeProps) {
   const t = useT()
   const copy = NOTICES[reason]
   const action = copy.action
+  const track =
+    reason === 'failed' && onTrackStuck ? (
+      <Button ref={ref} size="sm" variant="secondary" iconStart={<Landmark />} onClick={onTrackStuck}>
+        {t('stuck.track.cta')}
+      </Button>
+    ) : null
   return (
     <div className={styles.result}>
       <Banner
         tone={copy.tone}
         title={t(copy.title)}
-        actions={action ? <AiButton ref={ref} ai={ai} text={text} label={t(action)} variant="secondary" /> : undefined}
+        actions={action ? <AiButton ref={ref} ai={ai} text={text} label={t(action)} variant="secondary" /> : (track ?? undefined)}
       >
         {t(copy.body)}
+        {track && ` ${t('stuck.track.sms')}`}
       </Banner>
       {action && <AiStatus ai={ai} onByHand={onByHand} />}
     </div>

@@ -1,8 +1,10 @@
-import { useState } from 'react'
-import { BadgeIndianRupee, Building2, ChartPie, CircleCheck, ClipboardPaste, Coins, FileText, HandCoins, KeyRound, Languages, Repeat, ShieldCheck, Users } from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { BadgeIndianRupee, Building2, ChartPie, CircleCheck, ClipboardPaste, Coins, FileText, HandCoins, KeyRound, Landmark, Languages, Repeat, ShieldCheck, Users } from 'lucide-react'
 import { navigate } from '../../app/router'
 import { Badge, Card, List, ListRow, Screen, SuccessBurst, Switch, useToast } from '../../components'
-import { updateProfile, useDueRecurring, useFriends, usePools, useProfile, useRecurring, useSummary } from '../../data'
+import { updateProfile, useDueRecurring, useFriends, usePools, useProfile, useRecurring, useStore, useSummary } from '../../data'
+import { stuckStore } from '../../data/stores'
+import { today } from '../../engine/dates'
 import { BRAND, type License } from '../../domain/types'
 import { currencyName } from '../../lib/currencies'
 import { currencySymbol, formatMoney } from '../../lib/money'
@@ -14,6 +16,8 @@ import { POOLS_ENABLED } from '../pools/enabled'
 import { InstallRow } from '../install'
 import { PROOF_ENABLED, PROOF_PATH } from '../proof/enabled'
 import { RENT_ENABLED, RENT_PATH } from '../rent/enabled'
+import { STUCK_PATH } from '../stuck/paths'
+import { summarize } from '../stuck/rules'
 import { CurrencySheet } from '../bill/CurrencySheet'
 import { BrandMark } from '../landing/BrandMark'
 import { PaywallHost } from '../pro/PaywallSheet'
@@ -124,6 +128,7 @@ function Shortcuts() {
           onClick={() => navigate(COLLECT_PATH)}
           chevron
         />
+        <StuckRow />
         {PROOF_ENABLED && (
           <ListRow
             leading={
@@ -165,6 +170,27 @@ function Shortcuts() {
       <InstallRow />
       <PastePaidReplySheet open={pasting} onClose={() => setPasting(false)} />
     </Card>
+  )
+}
+
+/** "Stuck money · ₹4,700 with banks and shops" (or what it's for, while nothing is stuck). */
+function StuckRow() {
+  const t = useT()
+  const list = useStore(stuckStore, (all) => all)
+  const day = today()
+  const summary = useMemo(() => summarize(list, day), [list, day])
+  return (
+    <ListRow
+      leading={
+        <SettingIcon>
+          <Landmark />
+        </SettingIcon>
+      }
+      title={t('stuck.title')}
+      subtitle={summary.stuck > 0 ? t('stuck.you.line', { amount: formatMoney(summary.stuck, 'INR', { trimZeros: true }) }) : t('stuck.you.none')}
+      onClick={() => navigate(STUCK_PATH)}
+      chevron
+    />
   )
 }
 
