@@ -32,6 +32,8 @@ import {
   payerAliasesStore,
   remindersSchema,
   remindersStore,
+  stuckSchema,
+  stuckStore,
   proofRefsSchema,
   proofRefsStore,
   recurringStore,
@@ -39,6 +41,7 @@ import {
   type PayerAlias,
   type Reminder,
   type ProofRef,
+  type StuckPayment,
 } from './stores'
 import { LEGACY_KEYS } from './legacy'
 
@@ -64,6 +67,8 @@ export interface BackupFile {
   payerAliases: PayerAlias[]
   /** Reminders sent to people who owe you. Absent in older files. */
   reminders: Reminder[]
+  /** Money stuck with banks and businesses. Absent in older files. */
+  stuck: StuckPayment[]
 }
 
 const backupSchema = z.object({
@@ -81,6 +86,7 @@ const backupSchema = z.object({
   proofRefs: z.catch(proofRefsSchema, []),
   payerAliases: z.catch(z.optional(payerAliasesSchema), []),
   reminders: z.catch(z.optional(remindersSchema), []),
+  stuck: z.catch(z.optional(stuckSchema), []),
 })
 
 export function exportBackup(): BackupFile {
@@ -98,6 +104,7 @@ export function exportBackup(): BackupFile {
     proofRefs: proofRefsStore.get(),
     payerAliases: payerAliasesStore.get(),
     reminders: remindersStore.get(),
+    stuck: stuckStore.get(),
   }
 }
 
@@ -128,6 +135,7 @@ export function parseBackup(json: unknown): BackupFile | null {
     proofRefs: data.proofRefs,
     payerAliases: data.payerAliases ?? [],
     reminders: data.reminders ?? [],
+    stuck: data.stuck ?? [],
   }
 }
 
@@ -246,6 +254,7 @@ export function importBackup(file: BackupFile, mode: 'merge' | 'replace'): { add
     proofRefsStore.set([...file.proofRefs])
     payerAliasesStore.set([...file.payerAliases])
     remindersStore.set([...file.reminders])
+    stuckStore.set([...file.stuck])
     clearSplitPrefill()
     flushAllStores()
     const added =
@@ -254,7 +263,8 @@ export function importBackup(file: BackupFile, mode: 'merge' | 'replace'): { add
       file.groups.length +
       file.recurring.length +
       file.pools.length +
-      file.claims.length
+      file.claims.length +
+      file.stuck.length
     return { added, updated: 0 }
   }
 
@@ -357,10 +367,14 @@ export function importBackup(file: BackupFile, mode: 'merge' | 'replace'): { add
     ...file.reminders.map((r) => ({ ...r, friendId: idMap.get(r.friendId) ?? r.friendId })).filter((r) => !sent.has(`${r.friendId}|${r.at}`)),
   ])
 
+  // Stuck payments: by id, the newer edit wins.
+  const stuck = mergeById(stuckStore.get(), file.stuck, (inc, loc) => (inc.updatedAt > loc.updatedAt ? inc : null))
+  stuckStore.set(stuck.list)
+
   flushAllStores()
   return {
-    added: added + expenses.added + groups.added + recurring.added + pools.added + claims.added,
-    updated: updated + expenses.updated + groups.updated + recurring.updated + pools.updated + claims.updated,
+    added: added + expenses.added + groups.added + recurring.added + pools.added + claims.added + stuck.added,
+    updated: updated + expenses.updated + groups.updated + recurring.updated + pools.updated + claims.updated + stuck.updated,
   }
 }
 
@@ -379,7 +393,7 @@ export function clearAllData(): void {
       // Blocked storage — the in-memory reset below still applies.
     }
   }
-  for (const store of [profileStore, friendsStore, expensesStore, groupsStore, recurringStore, poolsStore, claimsStore, proofRefsStore, payerAliasesStore, remindersStore, autoSettleStore])
+  for (const store of [profileStore, friendsStore, expensesStore, groupsStore, recurringStore, poolsStore, claimsStore, proofRefsStore, payerAliasesStore, remindersStore, autoSettleStore, stuckStore])
     store.reload()
   clearSplitPrefill()
 }

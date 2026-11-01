@@ -40,6 +40,8 @@ import { bijli } from './bijli'
 import { whospaid } from './whospaid'
 import { collect } from './collect'
 import { autosettle } from './autosettle'
+import { stuck } from './stuck'
+import { stuckhelp } from './stuckhelp'
 
 export const EN = {
   ...common,
@@ -80,6 +82,8 @@ export const EN = {
   ...whospaid,
   ...collect,
   ...autosettle,
+  ...stuck,
+  ...stuckhelp,
 } as const
 
 /** Every message key the app may ask for. */

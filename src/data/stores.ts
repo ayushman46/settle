@@ -13,6 +13,7 @@ import {
   recurringListSchema,
   withMe,
 } from './schemas'
+import { isIsoDate } from '../engine/dates'
 import { createStore, type ZodType } from './store'
 
 export const STORAGE_VERSION = 1
@@ -33,6 +34,8 @@ export const STORAGE_KEYS = {
   reminders: 'settle.v5.reminders',
   /** Auto-settle on Android: payments waiting for a tap, and the ones just ticked off (src/features/autosettle). */
   autoSettle: 'settle.v5.auto-settle',
+  /** Money stuck with a bank or a business — failed payments and refunds still to come (src/features/stuck). */
+  stuck: 'settle.v6.stuck',
 } as const
 
 /** Accepts a bare, un-enveloped value (e.g. hand-edited storage) when the schema can read it. */
@@ -222,4 +225,111 @@ export const proofRefsStore = createStore<ProofRef[]>({
   initial: () => [],
   version: STORAGE_VERSION,
   migrate: bare(proofRefsSchema),
+})
+
+/**
+ * How the money left, for a payment that failed: it decides the RBI's deadline for putting it back
+ * (src/features/stuck/rules.ts). UPI to a person and to a shop differ (T+1 against T+5).
+ */
+export const STUCK_RAILS = ['upi_person', 'upi_merchant', 'imps', 'card_online', 'card_pos', 'card_transfer', 'atm', 'wallet', 'nach', 'aeps'] as const
+export type StuckRail = (typeof STUCK_RAILS)[number]
+
+/** A payment that failed but took the money, or a refund a business owes you. */
+export const STUCK_KINDS = ['failed', 'refund'] as const
+export type StuckKind = (typeof STUCK_KINDS)[number]
+
+/** Where you've taken it: your bank or UPI app, the RBI Ombudsman, the business, the National Consumer Helpline, a consumer commission, AirSewa. */
+export const STUCK_STEP_KINDS = ['bank', 'ombudsman', 'merchant', 'nch', 'commission', 'airsewa'] as const
+export type StuckStepKind = (typeof STUCK_STEP_KINDS)[number]
+
+/** Where a stuck payment was found. */
+export const STUCK_SOURCES = ['alert', 'sms', 'screenshot', 'manual'] as const
+export type StuckSource = (typeof STUCK_SOURCES)[number]
+
+/** A complaint you raised: where, on what day, and its number if you were given one. */
+export interface StuckStep {
+  kind: StuckStepKind
+  /** YYYY-MM-DD. */
+  date: string
+  ref: string | null
+}
+
+/** The money came back: on what day, how much, and any compensation paid on top. */
+export interface StuckBack {
+  date: string
+  amount: number
+  compensation: number
+}
+
+/** Money a bank or a business owes you back. Kept on this phone; backed up with the rest. */
+export interface StuckPayment {
+  id: string
+  kind: StuckKind
+  /** How the money left (failed payments; null for refunds and when not known). */
+  rail: StuckRail | null
+  /** Who it was paid to, or who owes the refund: "Swiggy", "Riya Sharma", "IndiGo". */
+  party: string | null
+  /** A business Settle knows (its refund timeline and where to complain), or null. */
+  merchant: string | null
+  /** Paise. */
+  amount: number
+  /** The day the money left (T) — for a refund, the day it was promised. YYYY-MM-DD. */
+  date: string
+  /** The day the business said the refund would arrive by, when it said one. */
+  promisedBy: string | null
+  /** UPI reference (RRN/UTR), card ARN or transaction id. */
+  ref: string | null
+  /** The order or booking number (refunds). */
+  orderId: string | null
+  bank: string | null
+  /** The account's last digits as printed ("XX4821"). */
+  account: string | null
+  app: string | null
+  source: StuckSource
+  /** Known to have left the account. An app saying a payment failed doesn't always mean it took the money: until then it waits for a tap. */
+  confirmed: boolean
+  steps: StuckStep[]
+  back: StuckBack | null
+  /** Not stuck after all (never left the account), or set aside: epoch ms. */
+  dismissedAt: number | null
+  note: string | null
+  createdAt: number
+  updatedAt: number
+}
+
+const isoDay = z.string().check(z.refine(isIsoDate))
+
+export const stuckSchema = z.array(
+  z.object({
+    id: z.string().check(z.minLength(1)),
+    kind: z.enum(STUCK_KINDS),
+    rail: z.catch(z.nullable(z.enum(STUCK_RAILS)), null),
+    party: z.catch(z.nullable(z.string().check(z.maxLength(120))), null),
+    merchant: z.catch(z.nullable(z.string().check(z.maxLength(40))), null),
+    amount: z.int().check(z.positive()),
+    date: isoDay,
+    promisedBy: z.catch(z.nullable(isoDay), null),
+    ref: z.catch(z.nullable(z.string().check(z.maxLength(40))), null),
+    orderId: z.catch(z.nullable(z.string().check(z.maxLength(60))), null),
+    bank: z.catch(z.nullable(z.string().check(z.maxLength(40))), null),
+    account: z.catch(z.nullable(z.string().check(z.maxLength(20))), null),
+    app: z.catch(z.nullable(z.string().check(z.maxLength(40))), null),
+    source: z.catch(z.enum(STUCK_SOURCES), 'manual'),
+    confirmed: z.catch(z.boolean(), true),
+    steps: z.catch(z.array(z.object({ kind: z.enum(STUCK_STEP_KINDS), date: isoDay, ref: z.catch(z.nullable(z.string().check(z.maxLength(60))), null) })), []),
+    back: z.catch(z.nullable(z.object({ date: isoDay, amount: z.int().check(z.nonnegative()), compensation: z.int().check(z.nonnegative()) })), null),
+    dismissedAt: z.catch(z.nullable(z.number()), null),
+    note: z.catch(z.nullable(z.string().check(z.maxLength(500))), null),
+    createdAt: z.number(),
+    updatedAt: z.number(),
+  }),
+)
+
+/** Money stuck with banks and businesses. */
+export const stuckStore = createStore<StuckPayment[]>({
+  key: STORAGE_KEYS.stuck,
+  schema: stuckSchema,
+  initial: () => [],
+  version: STORAGE_VERSION,
+  migrate: bare(stuckSchema),
 })
