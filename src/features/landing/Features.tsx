@@ -6,7 +6,7 @@ import { FEATURES } from './featureList'
 import styles from './Features.module.css'
 import page from './LandingPage.module.css'
 
-/** "Everything a split needs": the ten signature features as a bento grid of mini mockups. */
+/** "Everything a split needs": the signature features as a bento grid of mini mockups, the newest first. */
 export function Features() {
   return (
     <section id="features" className={page.section} aria-labelledby="features-title">
@@ -16,7 +16,8 @@ export function Features() {
           One app for every split
         </h2>
         <p className={page.lede}>
-          From a ₹90 chai run to a month’s rent — and the part everyone dreads: actually getting paid back.
+          From a ₹90 chai run to a month’s rent — and the part everyone dreads: actually getting paid back, by friends,
+          banks and shops.
         </p>
       </div>
       <ul className={styles.grid} role="list">
@@ -26,6 +27,7 @@ export function Features() {
             <div className={styles.text}>
               <p className={styles.eyebrow}>
                 {feature.eyebrow}
+                {feature.isNew && <Badge tone="accent">New</Badge>}
                 {feature.pro && <Badge tone="pro">Pro</Badge>}
               </p>
               <h3 className={styles.title}>{feature.title}</h3>

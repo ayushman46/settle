@@ -1,5 +1,5 @@
 import type { JSX } from 'react'
-import { ArrowRight, Check, CircleCheck, Link2, Lock, Repeat, ShieldCheck, Smartphone, Sparkles, WifiOff } from 'lucide-react'
+import { ArrowRight, Check, CircleCheck, FileText, Landmark, Link2, Lock, Repeat, ShieldCheck, Smartphone, Sparkles, WifiOff } from 'lucide-react'
 import {
   Avatar,
   AvatarStack,
@@ -29,12 +29,57 @@ import {
   GROUP_DEMO,
   INSIGHTS_DEMO,
   RECURRING_DEMO,
+  stuckDemo,
 } from './demo'
 import type { FeatureId } from './featureList'
 import styles from './FeatureVisuals.module.css'
 
 const money = (minor: number) => formatMoney(minor, DEMO_CURRENCY, { trimZeros: true })
 const noop = () => {}
+
+function StuckVisual() {
+  const { rows, summary, ladder, ladderFor } = stuckDemo()
+  return (
+    <div className={styles.stuck}>
+      <div className={styles.stuckCard}>
+        <div className={styles.stuckHead}>
+          <span className={styles.muted}>Banks and shops owe you</span>
+          <Money value={summary.stuck} currency={DEMO_CURRENCY} size="lg" trimZeros strong />
+          <span className={styles.owed}>
+            <Landmark strokeWidth={2.25} />+{money(summary.compensation)} for the wait
+          </span>
+        </div>
+        {rows.map((row) => (
+          <div key={row.id} className={styles.stuckRow}>
+            <CategoryIcon category={row.category} size="sm" />
+            <span className={styles.billText}>
+              <span className={styles.stuckTitle}>{row.title}</span>
+              <span className={styles.late}>{row.status}</span>
+            </span>
+            <Money value={row.amount} currency={DEMO_CURRENCY} size="sm" trimZeros strong />
+          </div>
+        ))}
+      </div>
+      <div className={styles.ladder}>
+        <p className={styles.ladderHead}>Next for the {ladderFor}</p>
+        <ol className={styles.rungs}>
+          {ladder.map((rung) => (
+            <li key={rung.kind} className={cx(styles.rung, styles[`rung-${rung.state}`])}>
+              <span className={styles.rungDot}>
+                {rung.state === 'done' && <Check strokeWidth={3} />}
+                {rung.state === 'now' && <FileText strokeWidth={2.5} />}
+              </span>
+              <span className={styles.rungText}>
+                <span className={styles.rungLabel}>{rung.label}</span>
+                {rung.note && <span className={styles.rungNote}>{rung.note}</span>}
+              </span>
+            </li>
+          ))}
+        </ol>
+      </div>
+    </div>
+  )
+}
 
 function ScanVisual() {
   const bill = billDemo()
@@ -331,6 +376,7 @@ function InsightsVisual() {
 }
 
 const VISUALS: Readonly<Record<FeatureId, () => JSX.Element>> = {
+  stuck: StuckVisual,
   scan: ScanVisual,
   describe: DescribeVisual,
   paylink: PayLinkVisual,

@@ -20,20 +20,32 @@ export function PrivacyPage() {
       <LegalSection title={t('legal.privacy.section.device')}>
         <p>
           Everything you put into {NAME} — your name and UPI ID, the people you split with (their names, UPI IDs and
-          phone numbers), expenses, groups, recurring splits, settings and your Pro pass — is saved in your
-          browser’s storage on this device. It is not sent to us, and we can’t see it.
+          phone numbers), expenses, groups, recurring splits, stuck payments, settings and your Pro pass — is saved
+          in your browser’s storage on this device. It is not sent to us, and we can’t see it.
         </p>
         <p>
           Clearing this site’s data in your browser, or removing the app, deletes it. Keep a backup file (under
           You → Backup) if you’d like to move to a new phone or be safe.
         </p>
         <p>
-          <strong>Auto-settle (the Android app).</strong> If you turn it on, the app reads the alerts Google Pay,
-          PhonePe, Paytm, BHIM, Amazon Pay, MobiKwik and CRED show when money arrives — and, only if you allow it,
-          bank SMS that say money was credited — to tick off whoever paid you. Those alerts are kept on your phone
-          until {NAME} reads them, then deleted; every other notification is ignored, never stored and never sent.
-          Turn it off any time in Android’s notification access settings. Bank statements and SMS you add to “Who’s
-          paid?” are read on your phone too.
+          <strong>Stuck money.</strong> For each failed payment or refund you track, {NAME} keeps the amount, the
+          dates, who it was paid to or who owes the refund, the reference or order number, your bank or UPI app and
+          the account’s last digits as the message printed them, the complaints you’ve raised (the date and any
+          complaint number) and any note you add. It stays on this phone and goes into your backup file with
+          everything else. A bank SMS you paste or share is read on your phone; only what it says about the payment
+          is kept.
+        </p>
+        <p>
+          <strong>Auto-settle and Stuck money (the Android app).</strong> If you turn on notification access, the app
+          reads the alerts Google Pay, PhonePe, Paytm, BHIM, Amazon Pay, MobiKwik and CRED show when money arrives,
+          when a payment fails or is pending, when a payment goes through (only to clear a pending one it was
+          tracking), and when money is reversed or refunded; refund alerts from a short list
+          of shopping, food and travel apps (such as Flipkart, Swiggy, Zomato, IRCTC and airlines); and — only if you
+          allow it — bank SMS that say money was credited, reversed or refunded, or that money was debited. A debit
+          is used only to check that a payment that failed really took your money, and isn’t kept for anything else.
+          These alerts are kept on your phone until {NAME} reads them, then deleted; every other notification is
+          ignored, never stored and never sent. Turn it off any time in Android’s notification access settings. Bank
+          statements and SMS you add to “Who’s paid?” are read on your phone too.
         </p>
       </LegalSection>
 
@@ -68,6 +80,12 @@ export function PrivacyPage() {
           <li>
             <strong>Nudges and sharing.</strong> Sending a reminder or sharing a split opens WhatsApp, your messages
             app or your phone’s share sheet with the text ready. What you send from there is between you and that app.
+          </li>
+          <li>
+            <strong>Complaint letters (Stuck money).</strong> {NAME} drafts them on your phone and never sends them
+            itself, and never contacts your bank, a business or anyone else for you. A letter leaves your phone only
+            when you copy, share or email it, or open the RBI’s complaint site, the National Consumer Helpline or
+            AirSewa from it — what you send there is between you and them.
           </li>
         </ul>
       </LegalSection>

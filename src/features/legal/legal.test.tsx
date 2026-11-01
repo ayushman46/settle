@@ -67,6 +67,17 @@ describe('PrivacyPage', () => {
     expect(screen.getByRole('region', { name: 'Cookies and tracking' })).toHaveTextContent('no cookies, no analytics')
   })
 
+  it('says what Stuck money keeps and what the Android app reads for it, and that letters leave only when you send them', () => {
+    open('/privacy')
+    const device = screen.getByRole('region', { name: 'What stays on your device' })
+    expect(device).toHaveTextContent('stuck payments')
+    expect(device).toHaveTextContent('goes into your backup file')
+    expect(device).toHaveTextContent('when a payment fails or is pending, and when money is reversed or refunded')
+    expect(device).toHaveTextContent('A debit is used only to check that a payment that failed really took your money')
+    const leaves = screen.getByRole('region', { name: 'What leaves your device, and why' })
+    expect(leaves).toHaveTextContent('never contacts your bank, a business or anyone else for you')
+  })
+
   it('dates the policy and gives a way to get in touch', () => {
     open('/privacy')
     const time = screen.getByText((_, el) => el?.tagName === 'TIME')

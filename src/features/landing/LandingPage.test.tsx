@@ -125,15 +125,52 @@ describe('LandingPage', () => {
     expect(screen.getByRole('heading', { level: 1 })).toHaveFocus()
   })
 
-  it('shows all ten signature features, Pro ones marked', () => {
+  it('announces Stuck money above the tagline and opens it in the app, in place', async () => {
+    const { user } = renderLanding()
+    const link = screen.getByRole('link', { name: 'New: Stuck money — get back what banks and shops owe you' })
+    expect(link).toHaveAttribute('href', '/app/stuck')
+    expect(link.compareDocumentPosition(screen.getByRole('heading', { level: 1 })) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    await user.click(link)
+    expect(path()).toBe('/app/stuck')
+  })
+
+  it('shows every signature feature, Stuck money first; new and Pro ones marked', () => {
     renderLanding()
     const section = screen.getByRole('region', { name: 'One app for every split' })
     const titles = within(section).getAllByRole('heading', { level: 3 })
     expect(titles.map((t) => t.textContent)).toEqual(FEATURES.map((f) => f.title))
+    expect(FEATURES[0]).toMatchObject({ id: 'stuck', isNew: true, size: 'full' })
     for (const feature of FEATURES) {
       const tile = screen.getByRole('heading', { name: feature.title }).closest('li') as HTMLElement
       expect(within(tile).queryByText('Pro') !== null).toBe(feature.pro === true)
+      expect(within(tile).queryByText('New') !== null).toBe(feature.isNew === true)
     }
+  })
+
+  it('fills the bento grid’s rows exactly, so no tile leaves a hole', () => {
+    // Wide screens: six columns (full 6, wide 3, regular 2). Tablets: two columns (full 2, the rest 1).
+    const six = { full: 6, wide: 3, regular: 2 } as const
+    let used = 0
+    for (const feature of FEATURES) {
+      const span = six[feature.size]
+      expect(6 - (used % 6), `${feature.id} doesn't fit its row`).toBeGreaterThanOrEqual(span)
+      used += span
+    }
+    expect(used % 6).toBe(0)
+    const two = FEATURES.reduce((sum, f) => sum + (f.size === 'full' ? 2 : 1), 0)
+    expect(two % 2).toBe(0)
+  })
+
+  it('tells the Stuck money story in its tile: the RBI’s deadline, ₹100 a day, the ladder', () => {
+    renderLanding()
+    const stuck = FEATURES[0] as (typeof FEATURES)[number]
+    const tile = screen.getByRole('heading', { name: stuck.title }).closest('li') as HTMLElement
+    expect(tile).toHaveTextContent('RBI’s deadline')
+    expect(tile).toHaveTextContent('₹100 a day')
+    expect(tile).toHaveTextContent('RBI Ombudsman')
+    // The mockup's numbers come from the real rules (see demo.test.ts).
+    expect(tile).toHaveTextContent('3 days late · your bank owes you ₹300')
+    expect(tile).toHaveTextContent('Letter ready')
   })
 
   it('keeps the mini mockups out of the accessibility tree and the tab order', () => {

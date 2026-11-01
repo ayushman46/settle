@@ -19,8 +19,33 @@ export const FAQ: readonly FaqEntry[] = [
     id: 'free',
     question: `Is ${NAME} really free?`,
     answer: [
-      `Yes. Splitting, groups, pay links, UPI QR codes, the collect tracker, nudges and backups are free for good, with no ads. You also get ${FREE_AI_PER_DAY} AI bill reads or “Just say it” splits a day.`,
+      `Yes. Splitting, groups, pay links, UPI QR codes, the collect tracker, nudges, Stuck money and backups are free for good, with no ads. You also get ${FREE_AI_PER_DAY} AI bill reads or “Just say it” splits a day.`,
       `${NAME} Pro adds unlimited AI and a few extras for people who split a lot.`,
+    ],
+  },
+  {
+    id: 'stuck',
+    question: 'A payment failed but the money left my account. What does Stuck money do?',
+    answer: [
+      `It keeps track until the money is back. Paste or share the bank SMS, or add it in three taps — the ${NAME} Android app spots failed payments and refunds in your UPI app’s and (if you allow it) your bank’s alerts by itself, and ticks them off when the money comes back.`,
+      'It knows the RBI’s deadline for each kind of payment: a failed UPI payment to a person must be back by the next day; one to a shop (by UPI or card), or an ATM that didn’t give cash, within five days. When it’s late, Stuck money counts what the bank owes you for the wait and has the complaint ready — to your bank or UPI app, then after 30 days to the RBI Ombudsman.',
+      'Refunds a business promised — Amazon, Flipkart, Swiggy, Zomato, IRCTC, airlines — go the same way: the business first, then the National Consumer Helpline (1915), then a consumer commission, or AirSewa for a flight.',
+    ],
+  },
+  {
+    id: 'stuck-compensation',
+    question: 'Is the ₹100 a day real?',
+    answer: [
+      'Yes. The RBI’s circular on failed transactions (RBI/2019-20/67, 20 September 2019) gives each kind of payment a deadline, counted in calendar days from the day you paid, and says that past it the bank pays you ₹100 for every day of delay — on its own, without waiting for you to complain. Most banks don’t, so Stuck money works out the amount and puts it in your letter.',
+      `It covers payments that failed but took your money — UPI, cards, ATMs, IMPS and the like — not a shop’s refund. ${NAME} states the published rules and where to complain; it isn’t legal advice, and it can’t make a bank pay.`,
+    ],
+  },
+  {
+    id: 'stuck-complaints',
+    question: `Does ${NAME} file complaints for me?`,
+    answer: [
+      `No — ${NAME} drafts, you send. Each letter has your name, the dates and the amount — and for a failed payment, the RBI rule and the compensation so far — ready to copy, share or email to your bank, the business, the RBI Ombudsman (cms.rbi.org.in), the National Consumer Helpline (1915 or WhatsApp), AirSewa or a consumer commission (e-Jagriti).`,
+      `${NAME} never contacts a bank, a business or anyone else for you. Your stuck payments stay on your phone; nothing leaves it unless you send it yourself.`,
     ],
   },
   {

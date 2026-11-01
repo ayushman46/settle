@@ -1,6 +1,8 @@
-import { ArrowRight, BadgeCheck, Ban, Smartphone, Sparkles, UserRoundCheck } from 'lucide-react'
+import { ArrowRight, BadgeCheck, Ban, Smartphone, UserRoundCheck } from 'lucide-react'
+import { Link } from '../../app/router'
 import { QrCode } from '../../components'
 import { BRAND } from '../../domain/types'
+import { STUCK_PATH } from '../stuck/paths'
 import { ctaClassName } from './cta'
 import { CtaLink, SectionLink } from './CtaLink'
 import { HeroDemo } from './HeroDemo'
@@ -20,7 +22,7 @@ const TRUST = [
   { icon: BadgeCheck, text: 'Works with any UPI app' },
 ] as const
 
-/** The first screen: the promise, the two ways in, and the live phone. */
+/** The first screen: what's new, the promise, the two ways in, and the live phone. */
 export function Hero() {
   const [lead, rest] = taglineParts(BRAND.tagline)
   const appUrl = `${siteOrigin()}/app`
@@ -28,10 +30,12 @@ export function Hero() {
     <section className={styles.hero} aria-labelledby="hero-title">
       <div className={styles.heroInner}>
         <div className={styles.heroCopy}>
-          <p className={styles.kicker}>
-            <Sparkles aria-hidden="true" strokeWidth={2.25} />
-            AI bill splitting, made for UPI
-          </p>
+          <Link to={STUCK_PATH} className={styles.announce}>
+            <span className={styles.announceTag}>New</span>
+            <span className="visually-hidden">:</span>{' '}
+            <span>Stuck money — get back what banks and shops owe you</span>
+            <ArrowRight aria-hidden="true" strokeWidth={2.25} />
+          </Link>
           <h1 id="hero-title" className={styles.h1}>
             {lead}
             {rest && (

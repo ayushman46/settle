@@ -2,11 +2,14 @@
  * The sample splits the landing page shows off. Every number is worked out by the real engine
  * and share kit at render time — the page demonstrates the product, it doesn't fake it.
  */
+import type { StuckPayment, StuckStepKind } from '../../data/stores'
 import { ME_ID, type CategoryId, type Minor } from '../../domain/types'
 import { simplifyDebts, type Transfer } from '../../engine/balances'
+import { addDays, daysBetween } from '../../engine/dates'
 import { splitAmount, type AmountSplitMode } from '../../engine/split'
 import { formatPercent } from '../../lib/format'
 import { formatMoney } from '../../lib/money'
+import { compensationDue, daysLate, nextStep, summarize, type StuckStage, type StuckSummary } from '../stuck/rules'
 
 export interface DemoPerson {
   id: string
@@ -190,6 +193,126 @@ export function billDemo(): { items: typeof BILL_DEMO.items; subtotal: Minor; ta
   const subtotal = BILL_DEMO.items.reduce((sum, item) => sum + item.amount, 0)
   const tax = Math.round(subtotal * 0.05)
   return { items: BILL_DEMO.items, subtotal, tax, total: subtotal + tax }
+}
+
+/* ------------------------------------------------------------------ stuck money */
+
+/** The day the stuck-money cases are laid out around (only "days late" is shown, so they never look old). */
+const STUCK_TODAY = '2026-11-02'
+
+function stuckCase(
+  fields: Pick<StuckPayment, 'id' | 'kind' | 'rail' | 'party' | 'merchant' | 'amount' | 'date' | 'promisedBy' | 'steps'>,
+): StuckPayment {
+  return {
+    ref: null,
+    orderId: null,
+    bank: null,
+    account: null,
+    app: null,
+    source: 'alert',
+    confirmed: true,
+    back: null,
+    dismissedAt: null,
+    note: null,
+    createdAt: 0,
+    updatedAt: 0,
+    ...fields,
+  }
+}
+
+/** A UPI payment to Swiggy that failed but took ₹649, eight days ago — UPI to a shop is due back in five. */
+const STUCK_SWIGGY = stuckCase({
+  id: 'swiggy',
+  kind: 'failed',
+  rail: 'upi_merchant',
+  party: 'Swiggy',
+  merchant: 'swiggy',
+  amount: 64_900,
+  date: addDays(STUCK_TODAY, -8),
+  promisedBy: null,
+  steps: [],
+})
+
+/** An IndiGo refund promised within the DGCA's 7 days, three weeks ago; IndiGo was asked nine days ago and hasn't paid. */
+const STUCK_INDIGO = stuckCase({
+  id: 'indigo',
+  kind: 'refund',
+  rail: null,
+  party: 'IndiGo',
+  merchant: 'indigo',
+  amount: 845_000,
+  date: addDays(STUCK_TODAY, -20),
+  promisedBy: addDays(STUCK_TODAY, -13),
+  steps: [{ kind: 'merchant', date: addDays(STUCK_TODAY, -9), ref: null }],
+})
+
+/** Where a complaint goes, as the ladder names it. */
+const PLACES: Readonly<Record<StuckStepKind, string>> = {
+  bank: 'Your bank or UPI app',
+  ombudsman: 'RBI Ombudsman',
+  merchant: 'IndiGo',
+  airsewa: 'AirSewa',
+  nch: 'Consumer helpline 1915',
+  commission: 'Consumer commission',
+}
+
+/** An airline refund's ladder, as rules.ts climbs it: the airline, AirSewa, the helpline, a commission. */
+const AIRLINE_LADDER: readonly StuckStepKind[] = ['merchant', 'airsewa', 'nch', 'commission']
+
+export interface StuckDemoRow {
+  id: string
+  /** "Failed UPI to Swiggy". */
+  title: string
+  category: CategoryId
+  amount: Minor
+  /** One line, as the list says it: "3 days late · your bank owes you ₹300". */
+  status: string
+  stage: StuckStage
+}
+
+export interface StuckDemoRung {
+  kind: StuckStepKind
+  label: string
+  state: 'done' | 'now' | 'next'
+  /** "Asked 9 days ago", "Letter ready". */
+  note: string | null
+}
+
+const inr = (minor: Minor) => formatMoney(minor, DEMO_CURRENCY, { trimZeros: true })
+
+/** Two stuck payments, where they stand today and the IndiGo refund's ladder — every number from the real rules. */
+export function stuckDemo(): { rows: StuckDemoRow[]; summary: StuckSummary; ladder: StuckDemoRung[]; ladderFor: string } {
+  const today = STUCK_TODAY
+  const swiggyNext = nextStep(STUCK_SWIGGY, today)
+  const swiggyLate = daysLate(STUCK_SWIGGY, today)
+  const indigoNext = nextStep(STUCK_INDIGO, today)
+  const indigoLate = daysLate(STUCK_INDIGO, today)
+  const late = (days: number) => `${days} ${days === 1 ? 'day' : 'days'} late`
+  const rows: StuckDemoRow[] = [
+    {
+      id: STUCK_SWIGGY.id,
+      title: `Failed UPI to ${STUCK_SWIGGY.party ?? ''}`,
+      category: 'food',
+      amount: STUCK_SWIGGY.amount,
+      status: `${late(swiggyLate)} · your bank owes you ${inr(compensationDue(STUCK_SWIGGY, today))}`,
+      stage: swiggyNext.stage,
+    },
+    {
+      id: STUCK_INDIGO.id,
+      title: `${STUCK_INDIGO.party ?? ''} refund`,
+      category: 'travel',
+      amount: STUCK_INDIGO.amount,
+      status: `${late(indigoLate)} · next: ${indigoNext.step ? PLACES[indigoNext.step] : 'wait'}`,
+      stage: indigoNext.stage,
+    },
+  ]
+  const ladder = AIRLINE_LADDER.map((kind): StuckDemoRung => {
+    const taken = STUCK_INDIGO.steps.find((s) => s.kind === kind)
+    if (taken) return { kind, label: PLACES[kind], state: 'done', note: `Asked ${daysBetween(taken.date, today)} days ago` }
+    if (kind === indigoNext.step) return { kind, label: PLACES[kind], state: 'now', note: 'Letter ready' }
+    return { kind, label: PLACES[kind], state: 'next', note: null }
+  })
+  return { rows, summary: summarize([STUCK_SWIGGY, STUCK_INDIGO], today), ladder, ladderFor: `${STUCK_INDIGO.party ?? ''} refund` }
 }
 
 /* ------------------------------------------------------------------ insights & recurring */

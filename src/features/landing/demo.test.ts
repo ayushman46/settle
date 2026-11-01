@@ -11,6 +11,7 @@ import {
   heroSummary,
   HERO_BILL,
   INSIGHTS_DEMO,
+  stuckDemo,
 } from './demo'
 
 const sum = (values: number[]) => values.reduce((a, b) => a + b, 0)
@@ -91,5 +92,29 @@ describe('the other mockups', () => {
 
   it('keeps insight amounts positive', () => {
     for (const d of INSIGHTS_DEMO) expect(d.amount).toBeGreaterThan(0)
+  })
+})
+
+describe('stuck money', () => {
+  it('counts the failed Swiggy payment by the RBI’s rule: UPI to a shop is due in 5 days, ₹100 a day after', () => {
+    const [swiggy] = stuckDemo().rows
+    expect(swiggy).toMatchObject({ title: 'Failed UPI to Swiggy', amount: 64_900, stage: 'overdue' })
+    expect(swiggy?.status).toBe('3 days late · your bank owes you ₹300')
+  })
+
+  it('sends the late IndiGo refund up the airline ladder: IndiGo was asked, AirSewa is next', () => {
+    const { rows, ladder, ladderFor } = stuckDemo()
+    expect(rows[1]).toMatchObject({ title: 'IndiGo refund', amount: 845_000, stage: 'escalate', status: '13 days late · next: AirSewa' })
+    expect(ladderFor).toBe('IndiGo refund')
+    expect(ladder.map((r) => [r.label, r.state, r.note])).toEqual([
+      ['IndiGo', 'done', 'Asked 9 days ago'],
+      ['AirSewa', 'now', 'Letter ready'],
+      ['Consumer helpline 1915', 'next', null],
+      ['Consumer commission', 'next', null],
+    ])
+  })
+
+  it('sums what banks and shops owe: ₹9,099 stuck, ₹300 for the wait, both need you', () => {
+    expect(stuckDemo().summary).toEqual({ open: 2, stuck: 909_900, compensation: 30_000, act: 2, recovered: 0, recoveredCount: 0 })
   })
 })

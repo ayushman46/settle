@@ -1,5 +1,24 @@
 # Changelog
 
+## v7 — 2 Nov 2026
+
+From "friends who owe you" to "banks and businesses who owe you": money stuck in a failed payment or a refund that never came, tracked to the day and claimed the way the RBI says.
+
+### New
+- **Stuck money.** A UPI, card, ATM or IMPS payment that failed but took your money, or a refund a business promised (Amazon, Flipkart, Swiggy, Zomato, IRCTC, airlines…), tracked until it's back. For a failed payment Settle uses the RBI's deadline for that kind of payment (RBI/2019-20/67, 20 Sep 2019): T+1 for UPI to a person, IMPS, card-to-card, NACH and on-us wallets; T+5 for UPI to a shop, cards online or at a shop, ATM cash not dispensed and AePS — calendar days from the payment, as the circular counts them; the longer one when the way you paid isn't known. A refund goes by the date the business gave, or its published timeline (DGCA's 7 days for an airline's card refund). Past the deadline it counts the ₹100 a day the circular says the bank pays on its own, without being asked.
+- **The complaint ladder, with the letter ready.** Each stuck payment says what to do today: a failed payment goes to your bank or UPI app, then — after 30 days without a fix — to the RBI Ombudsman (cms.rbi.org.in, Reserve Bank – Integrated Ombudsman Scheme, 2026); a refund goes to the business, then the National Consumer Helpline (1915 or WhatsApp), then a consumer commission (e-Jagriti); an airline's refund can go to AirSewa. The letters carry the dates, the amount, the circular's row, the compensation so far and your name and UPI ID — copy, share or email them. "I've raised it" keeps the date and complaint number; "It's back" records the money and any compensation paid, and a delayed reversal without compensation turns into a claim for it. Settle drafts, you send: it never contacts anyone for you.
+- **Found by itself on Android.** With notification access on, the Settle Android app also reads failed, pending and refund alerts from the UPI apps (and from your bank's SMS, if you allowed it), and refund alerts from a short list of shopping, food and travel apps. A failure becomes a stuck payment — confirmed when the bank's debit for the same amount arrives, or with one tap ("Did ₹500 leave your account?") — and an open one is ticked off when the reversal or refund lands, with a toast and Undo. Read on the phone, never uploaded. On iPhone and the web: paste or share the bank SMS, or add one in three taps.
+- Home shows what banks and shops owe you when something is open; Stuck money is also under Home → More and You → Shortcuts. Stuck payments are in backups.
+
+### Changed
+- **The landing page and README lead with Stuck money**: a "New" link above the tagline, the first feature tile (with its numbers from the real rules), and three new questions in the FAQ — how it works, whether the ₹100 a day is real, and whether Settle files complaints (it doesn't). Auto-settle's tile says it now catches failed payments and refunds too.
+- **Privacy policy**: what Stuck money keeps on the phone and in backups, and what the Android app now reads — failed-payment, pending and refund alerts from UPI apps and a few shopping, food and travel apps, and a bank's debit SMS only to check that a failed payment took the money — and that complaint letters leave the phone only when you send them.
+
+### Known limits
+- The wording of failed-payment, reversal and refund alerts comes from published samples and test texts, not yet from notifications collected on real phones; the shopping and travel apps' package names are as Google Play lists them and haven't been tried on a device.
+- Deadlines are counted in calendar days, as the circular does; NPCI's own FAQ speaks of working days for UPI reversals, so a bank may answer by that. Refund timelines in working days skip weekends but not bank holidays.
+- Settle states the published rules and where to complain. It isn't legal advice, it can't make a bank or a business pay, and it can't see compensation paid to you unless you record it.
+
 ## v6 — 27 Oct 2026
 
 Getting paid back, start to finish — and the things nobody checks: the bill, the electricity, who has actually paid.

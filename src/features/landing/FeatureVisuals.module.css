@@ -34,6 +34,18 @@
   position: relative;
 }
 
+.v-stuck {
+  --glow: color-mix(in srgb, var(--warning) 40%, transparent);
+
+  padding: var(--s-3);
+}
+
+@media (min-width: 680px) {
+  .v-stuck {
+    padding: var(--s-4);
+  }
+}
+
 .v-scan {
   --glow: color-mix(in srgb, var(--cat-food-ink) 30%, transparent);
 }
@@ -89,6 +101,205 @@
 .cardTitle {
   flex: 1 1 auto;
   min-width: 0;
+  font-weight: 650;
+}
+
+/* ---------- Stuck money ---------- */
+
+/* The list card and the complaint ladder: stacked on a phone, side by side from 680px. */
+.stuck {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-3);
+  width: 100%;
+  min-width: 0;
+}
+
+@media (min-width: 680px) {
+  .stuck {
+    flex-wrap: nowrap;
+  }
+}
+
+.stuckCard,
+.ladder {
+  width: min(100%, 300px);
+  min-width: 0;
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-md);
+}
+
+@media (min-width: 680px) {
+  .stuckCard {
+    flex: 0 1 300px;
+  }
+
+  .ladder {
+    flex: 0 1 210px;
+  }
+}
+
+.stuckCard {
+  padding: var(--s-3) var(--s-3) var(--s-1) var(--s-4);
+}
+
+.stuckHead {
+  display: grid;
+  justify-items: start;
+  gap: 2px;
+  padding-bottom: var(--s-3);
+  border-bottom: 1px solid var(--line);
+}
+
+/* "+₹300 for the wait": the compensation, on lime like money coming to you. */
+.owed {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+  margin-top: var(--s-1);
+  padding: 2px var(--s-2);
+  border-radius: var(--r-pill);
+  background: var(--accent);
+  color: var(--on-accent);
+  font: var(--text-micro);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.owed > svg {
+  flex: none;
+  width: 12px;
+  height: 12px;
+}
+
+.stuckRow {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  min-height: 54px;
+  padding-block: var(--s-2);
+}
+
+.stuckRow + .stuckRow {
+  border-top: 1px solid var(--line);
+}
+
+.stuckTitle {
+  display: block;
+  overflow: hidden;
+  font: var(--text-caption);
+  font-weight: 650;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.late {
+  display: block;
+  font: var(--text-caption);
+  font-weight: 550;
+  color: var(--warning-ink);
+}
+
+.ladder {
+  padding: var(--s-3) var(--s-4);
+}
+
+.ladderHead {
+  margin-bottom: var(--s-3);
+  font: var(--text-micro);
+  color: var(--ink-2);
+}
+
+.rungs {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rung {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-2);
+  padding-bottom: var(--s-3);
+}
+
+.rung:last-child {
+  padding-bottom: 0;
+}
+
+/* The ladder's rail, from one rung's dot down to the next. */
+.rung:not(:last-child)::before {
+  content: '';
+  position: absolute;
+  top: 22px;
+  bottom: 2px;
+  left: 9px;
+  width: 2px;
+  border-radius: 1px;
+  background: var(--line-strong);
+}
+
+.rung-done:not(:last-child)::before {
+  background: var(--positive);
+}
+
+.rungDot {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--line-strong);
+  border-radius: 50%;
+  background: var(--surface);
+}
+
+.rungDot > svg {
+  width: 11px;
+  height: 11px;
+}
+
+.rung-done .rungDot {
+  border-color: var(--positive);
+  background: var(--positive-soft);
+  color: var(--positive);
+}
+
+.rung-now .rungDot {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--on-accent);
+  box-shadow: 0 0 0 4px var(--accent-soft);
+}
+
+.rungText {
+  min-width: 0;
+}
+
+.rungLabel {
+  display: block;
+  font: var(--text-caption);
+  font-weight: 600;
+}
+
+.rung-next .rungLabel {
+  color: var(--ink-2);
+  font-weight: 500;
+}
+
+.rungNote {
+  display: block;
+  font: var(--text-micro);
+  color: var(--ink-2);
+}
+
+.rung-now .rungNote {
+  color: var(--accent-ink);
   font-weight: 650;
 }
 

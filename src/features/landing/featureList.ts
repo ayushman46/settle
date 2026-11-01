@@ -1,7 +1,8 @@
-/** The ten reasons people pick Settle (spec §1), in the order the landing page's bento grid lays them out. */
+/** The reasons people pick Settle (spec §1), in the order the landing page's bento grid lays them out. */
 import { BRAND } from '../../domain/types'
 
 export type FeatureId =
+  | 'stuck'
   | 'scan'
   | 'describe'
   | 'paylink'
@@ -21,11 +22,21 @@ export interface Feature {
   text: string
   /** Part of Settle Pro. */
   pro?: boolean
-  /** Bento size on wide screens: `wide` takes half a row, `regular` a third. */
-  size: 'wide' | 'regular'
+  /** Just arrived: marked "New". */
+  isNew?: boolean
+  /** Bento size: `full` takes a whole row (text beside the mockup on wide screens), `wide` half a row, `regular` a third. */
+  size: 'full' | 'wide' | 'regular'
 }
 
 export const FEATURES: readonly Feature[] = [
+  {
+    id: 'stuck',
+    eyebrow: 'Stuck money',
+    title: 'Payment failed, money gone? Get it back.',
+    text: `A UPI, card or ATM payment that failed but took your money, or a refund that never came. ${BRAND.name} knows the RBI’s deadline for every kind of payment, counts the ₹100 a day the bank owes you after it, and has the next complaint ready — your bank, the RBI Ombudsman, the consumer helpline. The Android app spots them by itself.`,
+    isNew: true,
+    size: 'full',
+  },
   {
     id: 'scan',
     eyebrow: 'AI bill reading',
@@ -51,7 +62,7 @@ export const FEATURES: readonly Feature[] = [
     id: 'collect',
     eyebrow: 'Auto-settle',
     title: 'Payments tick themselves off.',
-    text: 'In the Android app, when GPay, PhonePe, Paytm or BHIM says money arrived, whoever paid is ticked off — read on your phone, nothing uploaded. Whoever’s left gets a reminder, friendly first.',
+    text: 'In the Android app, when GPay, PhonePe, Paytm or BHIM says money arrived, whoever paid is ticked off — and now it catches failed payments and refunds for Stuck money too. Read on your phone, nothing uploaded. Whoever’s left gets a reminder, friendly first.',
     size: 'regular',
   },
   {

@@ -8,6 +8,8 @@
 
 The bill-splitting app built for India: friends pay their exact share by UPI — in their own app, in their own language — without installing anything.
 
+**New — Stuck money:** payments that failed but took your money, and refunds that haven't come — tracked to the day, and claimed the way the RBI says.
+
 [![Live](https://img.shields.io/badge/live-settleupi.vercel.app-D8F57C?style=flat-square&labelColor=141413)](https://settleupi.vercel.app)
 [![Languages](https://img.shields.io/badge/languages-8%20Indian-D8F57C?style=flat-square&labelColor=141413)](#built-for-india)
 [![Tests](https://img.shields.io/badge/tests-5%2C000%2B%20passing-D8F57C?style=flat-square&labelColor=141413)](STATUS.md)
@@ -27,7 +29,7 @@ The bill-splitting app built for India: friends pay their exact share by UPI —
 
 <table>
   <tr>
-    <td align="center" width="25%"><img src="docs/media/screens/home.png" alt="Home: you're owed ₹1,600, quick actions, people" width="100%"><br><sub><b>Home</b><br>What you're owed, one tap to get it back</sub></td>
+    <td align="center" width="25%"><img src="docs/media/screens/stuck.png" alt="Stuck money: a failed UPI payment and a late refund, each with its deadline, the compensation owed so far and the next step" width="100%"><br><sub><b>Stuck money</b><br>Failed payments and refunds, claimed back</sub></td>
     <td align="center" width="25%"><img src="docs/media/screens/pay.png" alt="A friend's pay page: their ₹800 share, a QR to save to the gallery, and the UPI ID to copy" width="100%"><br><sub><b>Pay, the ways UPI allows</b><br>QR, saved QR or UPI ID — no app to install</sub></td>
     <td align="center" width="25%"><img src="docs/media/screens/whos-paid.png" alt="Who's paid: three payments from a bank statement, Riya ticked, Asha's part payment picked, a stranger set aside" width="100%"><br><sub><b>Who's paid?</b><br>Your statement ticks everyone off</sub></td>
     <td align="center" width="25%"><img src="docs/media/screens/collect.png" alt="To collect: everyone who owes you, how long it's been and when you last reminded them" width="100%"><br><sub><b>To collect</b><br>A reminder each, in the right tone</sub></td>
@@ -42,7 +44,9 @@ The bill-splitting app built for India: friends pay their exact share by UPI —
 
 ## Why Settle
 
-Most split apps stop at *who owes whom* and leave the paying — and the chasing — to you. Settle is built around actually getting paid back, the way India pays.
+Most split apps stop at *who owes whom* and leave the paying — and the chasing — to you. Settle is built around actually getting paid back, the way India pays — by friends, and now by banks and shops too.
+
+- **Money stuck with a bank or a shop? Get it back.** *New — Stuck money.* A UPI payment fails but the money leaves your account, or a refund is "initiated" and never lands — and chasing it is on you. By the RBI's rules (RBI/2019-20/67), a failed UPI payment to a person must be back by the next day, and one to a shop or an ATM within five days — after that, **the bank owes you ₹100 a day**, without being asked. Most never pay it. Settle counts the days and the money and hands you the complaint for each step: your bank, then after 30 days the RBI Ombudsman; for a refund, the business, the National Consumer Helpline, then a consumer commission (or AirSewa for a flight). The Android app spots failed payments and refunds in your alerts and ticks them off when the money's back; anywhere else, paste the bank SMS or add one in three taps. Settle drafts, you send — it never contacts anyone for you, and it isn't legal advice.
 
 - **Payments tick themselves off.** *New — Auto-settle, Android.* No split app knows when you've been paid: since UPI collect requests ended (Oct 2025), friends pay from whatever UPI app they like, and GPay, PhonePe and Paytm splits only see payments made inside their own app. In the Settle Android app, when Google Pay, PhonePe, Paytm, BHIM (or, if you allow it, your bank's SMS) tells you money arrived, Settle matches it to whoever owed you that amount and ticks them off — with Undo. A payment it isn't sure of waits for one tap. Nothing is uploaded: the alerts are read on your phone and every other notification is ignored. Friends still install nothing.
 
@@ -58,6 +62,13 @@ Most split apps stop at *who owes whom* and leave the paying — and the chasing
 
 ## Features
 
+**Get your money back from banks and shops**
+- **Stuck money** — a UPI, card, ATM or IMPS payment that failed but took your money, or a refund a business promised (Amazon, Flipkart, Swiggy, Zomato, IRCTC, airlines…), tracked from the day it left until it's back.
+- **The RBI's deadlines, to the day** — T+1 for UPI to a person, IMPS and card-to-card transfers; T+5 for UPI to a shop, card payments online or at a shop, and ATM cash not dispensed — calendar days from the payment, as the circular (RBI/2019-20/67) counts them. A refund goes by the business's own promise or its published timeline.
+- **₹100 a day for the wait** — past the deadline the bank owes you ₹100 for each day of delay, on its own. Settle counts it, and if the money comes back without it, has the claim ready.
+- **The complaint ladder, letters ready** — your bank or UPI app → after 30 days, the RBI Ombudsman (cms.rbi.org.in, under the Integrated Ombudsman Scheme 2026); for refunds, the business → the National Consumer Helpline (1915 or WhatsApp) → a consumer commission (e-Jagriti); airlines → AirSewa. Each letter carries the dates, the amount, the rule, the compensation so far and your details — copy, share or email it. Settle drafts, you send.
+- **Finds them by itself** (Android app) — failed, pending and refund alerts from UPI apps (and your bank's SMS, if you allow it) become stuck payments, ticked off when the money comes back. Read on the phone, never uploaded. Anywhere else: paste or share the bank SMS, or add one in three taps.
+
 **Split anything**
 - **Six ways to split** — equally, exact amounts, percentages, shares ("pays double"), item by item, or **what each had** for a meal with no bill (tax and tip shared in proportion), with optional rounding to whole rupees.
 - **Bill check** — a default service charge, GST on it, old taxes and totals that don't add up, found before you split; one tap to split without them.
@@ -69,7 +80,7 @@ Most split apps stop at *who owes whom* and leave the paying — and the chasing
 
 **Get paid back**
 - **One pay link per split**, or a personal link for each friend, with their exact share. On a computer they scan your QR (amount filled in); on a phone they save the QR to the gallery and upload it in their UPI app (up to ₹2,000, as UPI allows) or copy your UPI ID. They reply **"I've paid"** with the UPI reference, and you tick them off in one tap.
-- **Auto-settle** (Android app) — UPI app and bank alerts that say money arrived tick off whoever paid, as it happens; unsure ones wait for a tap. Read on the phone, never uploaded.
+- **Auto-settle** (Android app) — UPI app and bank alerts that say money arrived tick off whoever paid, as it happens; unsure ones wait for a tap. It also catches failed payments and refunds for Stuck money. Read on the phone, never uploaded.
 - **Who's paid?** — UPI history screenshots (read by AI, not kept), a bank statement (CSV or Excel) or bank SMS (read on the phone) tick off everyone who paid you back at once, with Undo. Share a statement from your bank's app straight to Settle.
 - **To collect** — everyone who owes you, the longest wait first, when you last reminded them, and the next reminder in the right tone; late at night it says the reminder can wait.
 - **Paid? Drop the screenshot** — a GPay, PhonePe, Paytm or BHIM screenshot is read, matched to who owes you and marked paid after you confirm; pending, failed, mis-addressed and duplicate payments are refused.
@@ -111,7 +122,7 @@ Everything except AI works without a key: split amounts by hand, type a bill in,
 
 | | Free | Pro |
 | --- | --- | --- |
-| Manual splits, groups, people, pay links, UPI QR, nudges, backup | Unlimited | Unlimited |
+| Manual splits, groups, people, pay links, UPI QR, nudges, Stuck money, backup | Unlimited | Unlimited |
 | AI bill scans and "Just say it" | 3 a day | Unlimited (fair use) |
 | Recurring splits, insights, CSV export, accent colours | — | ✓ |
 | Share cards without the "Made with Settle" line | — | ✓ |
@@ -169,7 +180,7 @@ Set these in `.env` (for `npm run dev` and `npm start`) or in your host's enviro
 src/
   features/   screens: home, onboarding, split, expense, bill, groups, friends, activity, you,
               pro, insights, recurring, landing, legal, pay, claim, pools, lend, trip, proof, rent,
-              bijli, whospaid, collect…
+              bijli, whospaid, collect, stuck…
   kit/        feature components (people picker, split editor, share & UPI sheets…)
   components/ design system (buttons, sheets, charts, tab bar…)
   data/       on-device stores, actions and hooks (localStorage, no database)
@@ -207,7 +218,9 @@ Serve it over **HTTPS**: browsers only enable offline mode, the native share she
 - **No database and no accounts.** Nothing about you or your splits is stored on the server.
 - **Photos and "Just say it" text go to NVIDIA only to be read**, and the server keeps nothing.
 - **Pay links carry the split in the link itself** (after the `#`), which browsers never send to the server.
-- **Everything else stays in your browser** — people, expenses, groups and settings — with a backup file you can export and restore.
+- **Everything else stays in your browser** — people, expenses, groups, stuck payments and settings — with a backup file you can export and restore.
+- **The Android app reads payment alerts on the phone** — money in (Auto-settle), failed, pending and refunded payments (Stuck money) — and never uploads them; every other notification is ignored.
+- **Settle never sends a complaint or contacts anyone for you.** Its letters leave your phone only when you send them.
 
 ## License
 

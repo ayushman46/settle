@@ -196,26 +196,52 @@
   animation: enter var(--dur-4) var(--ease-out) both;
 }
 
-.kicker {
+/* "New — Stuck money": what's new, as a link into it. Rounded rather than a pill so it can wrap on a phone. */
+.announce {
   display: inline-flex;
   align-items: center;
   gap: var(--s-2);
-  padding: var(--s-1) var(--s-3) var(--s-1) var(--s-2);
-  border-radius: var(--r-pill);
+  max-width: 100%;
+  min-height: 40px;
+  padding: var(--s-1) var(--s-3) var(--s-1) var(--s-1);
+  border-radius: var(--r-lg);
   background: var(--surface);
   box-shadow: var(--shadow-sm);
   font: var(--text-caption);
   font-weight: 600;
   color: var(--ink);
+  text-decoration: none;
+  transition:
+    box-shadow var(--dur-2) var(--ease-out),
+    background-color var(--dur-2) var(--ease-out);
 }
 
-.kicker > svg {
-  width: 22px;
-  height: 22px;
-  padding: 4px;
-  border-radius: 50%;
-  background: var(--pro-gradient);
-  color: var(--on-pro);
+.announceTag {
+  flex: none;
+  padding: 3px var(--s-2);
+  border-radius: var(--r-pill);
+  background: var(--accent);
+  color: var(--on-accent);
+  font: var(--text-micro);
+  font-weight: 700;
+}
+
+.announce > svg {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  color: var(--ink-2);
+  transition: transform var(--dur-2) var(--ease-out);
+}
+
+@media (hover: hover) {
+  .announce:hover {
+    box-shadow: var(--shadow-md);
+  }
+
+  .announce:hover > svg {
+    transform: translateX(2px);
+  }
 }
 
 .h1 {

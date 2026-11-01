@@ -7,7 +7,7 @@ import { fromMinor } from '../../lib/money'
 import { FALLBACK_BILLING_CONFIG, type BillingConfig } from '../../pro/config'
 import { FAQ } from './faqData'
 
-export const LANDING_DESCRIPTION = `${BRAND.name} splits any expense — restaurant bills (AI reads the photo), rent, trips, flatmates and subscriptions — and gets you paid back by UPI with one link. Free, no sign-up, private by default.`
+export const LANDING_DESCRIPTION = `${BRAND.name} splits any bill — restaurants (AI reads the photo), rent, trips, flatmates — and gets you paid back by UPI. New: get back failed payments and late refunds from banks and shops. Free, no sign-up, private by default.`
 
 /** The JSON-LD for the landing page, safe to put inside a `<script>` element. */
 export function landingStructuredData(origin: string, config: BillingConfig | null): string {
