@@ -144,7 +144,7 @@ test.describe("who's paid?", () => {
     await expect(page).toHaveURL(/\/app\/whos-paid$/)
 
     await page.goto('/app/expense/goa-dinner')
-    await page.getByRole('button', { name: /^Who’s paid. Tick off who paid/ }).click()
+    await page.getByRole('button', { name: 'Who’s paid? Check your UPI app or bank statement' }).click()
     await expect(page).toHaveURL(/\/app\/whos-paid$/)
     await expect(page.getByRole('heading', { level: 1, name: 'Who’s paid?' })).toBeVisible()
   })

@@ -52,7 +52,7 @@ export function listenToPlugin(plugin: string, event: string, onEvent: (data: un
   }
 }
 
-/** The Android app's file plugin (android/…/SettleFilesPlugin.java). */
+/** A native file plugin, when the app has one (the current Android app doesn't: these fall back to the browser's). */
 const FILES = 'SettleFiles'
 
 /** Base64 of a blob, in slices (a long argument list would overflow the stack). */
