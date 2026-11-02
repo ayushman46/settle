@@ -218,9 +218,64 @@ describe('did the money leave? — the debit decides', () => {
     expect(trackStuckSignals([DEBIT(T - MIN, '630699990000'), pending], 'alert', T + PENDING_WAIT_MS).added[0]?.confirmed).toBe(false)
   })
 
+  it('a debit with its reference confirms one saved by hand or pasted, with no alert to pair it with', () => {
+    const own = addStuck(manual({ rail: 'imps', party: 'Sri Sai Mobile Spares', merchant: null, amount: 1_200_000, ref: '630312345678', confirmed: false, source: 'sms' }), T)
+    const debit = readStuckMessage('ICICI Bank Acct XX4821 debited for Rs 12000.00 on 30-Oct-26; IMPS:630312345678 credited to SRI SAI MOBILE SPARES.', { today: TODAY }) as StuckSignal
+    trackStuckSignals([debit], 'sms', T + MIN)
+    expect(stuckStore.get()).toEqual([expect.objectContaining({ id: own.id, confirmed: true, bank: 'icici', account: 'XX4821' })])
+    // Another reference or amount never does.
+    resetDataForTests()
+    addStuck(manual({ amount: 1_200_000, ref: '630312345679', confirmed: false }), T)
+    trackStuckSignals([debit], 'sms', T + MIN)
+    expect(stuckStore.get()[0]?.confirmed).toBe(false)
+  })
+
   it('a failure that says the money was taken needs no debit', () => {
     const taken = heard('Payment Failed\nMoney Deducted / Transaction Not Completed. ₹349 to Blinkit will be refunded in 3-5 days.', PHONEPE)
     expect(trackStuckSignals([taken], 'alert', T + MIN).added[0]?.confirmed).toBe(true)
+  })
+})
+
+describe('the bank’s SMS fills in what the app’s alert didn’t say', () => {
+  const CANARA_DEBIT = (at: number) => heard('INR 2,450.00 has been DEBITED from your account XX7731 on 28-10-26 UPI/P2P/630112349876/RAMESH KUMAR - Canara Bank', MESSAGES, at)
+  const PHONEPE_FAILED = (at: number) => heard('Payment Failed\n₹2,450 to Ramesh Kumar failed. Money will be refunded if debited.', PHONEPE, at)
+  const CANARA_BACK = (at: number) =>
+    heard('INR 2,450.00 has been CREDITED to your account XX7731 on 02-11-26 towards reversal of failed UPI txn 630112349876 - Canara Bank', MESSAGES, at)
+  const FILLED = { bank: 'canara', account: 'XX7731', ref: '630112349876', confirmed: true, app: 'phonepe', party: 'Ramesh Kumar' }
+
+  it('the debit and the failure in one go', () => {
+    trackStuckSignals([CANARA_DEBIT(T - MIN), PHONEPE_FAILED(T)], 'alert', T + MIN)
+    expect(stuckStore.get()).toEqual([expect.objectContaining(FILLED)])
+  })
+
+  it('the failure first, its debit in a later go', () => {
+    trackStuckSignals([PHONEPE_FAILED(T)], 'alert', T + 30 * 1000)
+    expect(stuckStore.get()[0]).toMatchObject({ bank: null, confirmed: false })
+    trackStuckSignals([CANARA_DEBIT(T + MIN)], 'alert', T + 2 * MIN)
+    expect(stuckStore.get()).toEqual([expect.objectContaining(FILLED)])
+  })
+
+  it('the debit in an earlier go: what was remembered (the reference and the account)', () => {
+    trackStuckSignals([CANARA_DEBIT(T - MIN)], 'alert', T - 30 * 1000)
+    trackStuckSignals([PHONEPE_FAILED(T)], 'alert', T + MIN)
+    expect(stuckStore.get()).toEqual([expect.objectContaining({ account: 'XX7731', ref: '630112349876', confirmed: true })])
+  })
+
+  it('the reversal fills in what’s still missing when it closes one', () => {
+    const own = addStuck(manual({ party: 'Ramesh Kumar', merchant: null, rail: 'upi_person', amount: 245_000, date: '2026-10-28', source: 'alert', app: 'phonepe' }), T)
+    trackStuckSignals([CANARA_BACK(T)], 'alert', T + MIN)
+    expect(stuckStore.get()).toEqual([expect.objectContaining({ id: own.id, bank: 'canara', account: 'XX7731', ref: '630112349876', back: expect.objectContaining({ amount: 245_000 }) })])
+  })
+
+  it('never over what the person typed, and never from a debit with another reference', () => {
+    addStuck(manual({ party: 'Ramesh Kumar', merchant: null, rail: 'upi_person', amount: 245_000, date: '2026-10-28', bank: 'sbi', account: 'XX1111', ref: null }), T)
+    trackStuckSignals([CANARA_BACK(T)], 'alert', T + MIN)
+    expect(stuckStore.get()[0]).toMatchObject({ bank: 'sbi', account: 'XX1111' })
+
+    resetDataForTests()
+    const bank = heard('Your UPI payment of Rs.2,450.00 to RAMESH KUMAR failed. Any amount debited will be reversed. UPI Ref 630112349999 -HDFC Bank', MESSAGES, T)
+    trackStuckSignals([CANARA_DEBIT(T - MIN), bank], 'alert', T + MIN)
+    expect(stuckStore.get()).toEqual([expect.objectContaining({ bank: 'hdfc', ref: '630112349999', account: null, confirmed: false })])
   })
 })
 
@@ -231,7 +286,7 @@ describe('money back', () => {
     const reversal = heard('Rs 500.00 reversed to ICICI Bank Acct XX902 on 02-Nov-26 for failed UPI txn 630611112222.', MESSAGES)
     const result = trackStuckSignals([reversal], 'alert', T + MIN)
     expect(result.back.map((s) => s.id)).toEqual([a.id])
-    expect(result.back[0]?.back).toEqual({ date: TODAY, amount: 50_000, compensation: 0 })
+    expect(result.back[0]?.back).toMatchObject({ date: TODAY, amount: 50_000, compensation: 0, parts: [{ date: TODAY, amount: 50_000, compensation: 0 }] })
     expect(stuckStore.get().find((s) => s.id === b.id)?.back).toBeNull()
   })
 
@@ -239,7 +294,7 @@ describe('money back', () => {
     const s = addStuck(manual({ confirmed: false }), T)
     const reversal = heard('Your A/c XX4821 is credited with INR 500.00 on 01-11-26. Info: UPI-REV-630512340987. -HDFC Bank', MESSAGES)
     const result = trackStuckSignals([reversal], 'alert', T + MIN)
-    expect(result.back).toEqual([expect.objectContaining({ id: s.id, confirmed: true, back: { date: '2026-11-01', amount: 50_000, compensation: 0 } })])
+    expect(result.back).toEqual([expect.objectContaining({ id: s.id, confirmed: true, back: expect.objectContaining({ date: '2026-11-01', amount: 50_000, compensation: 0 }) })])
   })
 
   it('when two could be it, closes neither', () => {
@@ -276,6 +331,71 @@ describe('money back', () => {
     expect(stuckStore.get().find((s) => s.id === riya.id)?.back).toBeNull()
   })
 
+  it('a reversal with no reference, for less than is out, is part of the one open failure on that account', () => {
+    const iob = heard('Your UPI payment of Rs.5,000.00 to landlord.sharma@okaxis failed. Rs.5,000.00 debited from A/c XX2201 will be reversed. -Indian Overseas Bank', MESSAGES, T - 60 * MIN)
+    trackStuckSignals([iob], 'alert', T - 59 * MIN)
+    const part = heard('Rs.2,000.00 credited to A/c XX2201 on 02-11-26 towards reversal of failed UPI txn. -Indian Overseas Bank', MESSAGES, T)
+    const first = trackStuckSignals([part], 'alert', T + MIN)
+    expect(first.back).toEqual([expect.objectContaining({ amount: 500_000, back: expect.objectContaining({ amount: 200_000 }), dismissedAt: null })])
+    // The rest, later: all of it back, each part on its own day.
+    const rest = heard('Rs.3,000.00 credited to A/c XX2201 on 03-11-26 towards reversal of failed UPI txn. -Indian Overseas Bank', MESSAGES, T + 86_400_000)
+    const second = trackStuckSignals([rest], 'alert', T + 86_400_000 + MIN)
+    expect(stuckStore.get()[0]?.back).toMatchObject({ amount: 500_000, parts: [{ amount: 200_000, date: TODAY }, { amount: 300_000, date: '2026-11-03' }] })
+    // What it was before, for a toast to say what just came.
+    const id = second.back[0]?.id ?? ''
+    expect(second.was(id)?.back).toMatchObject({ amount: 200_000 })
+    expect(second.was('nothing')).toBeNull()
+  })
+
+  it('…not to one on another account, nor when two could be it', () => {
+    addStuck(manual({ amount: 500_000, account: 'XX9999', bank: 'iob' }), T)
+    const part = heard('Rs.2,000.00 credited to A/c XX2201 on 02-11-26 towards reversal of failed UPI txn. -Indian Overseas Bank', MESSAGES, T)
+    expect(trackStuckSignals([part], 'alert', T + MIN)).toMatchObject({ back: [], unmatched: [expect.objectContaining({ amount: 200_000 })] })
+    addStuck(manual({ amount: 600_000, account: 'XX2201' }), T)
+    addStuck(manual({ amount: 700_000, account: 'XX2201' }), T)
+    const again = heard('Rs.2,000.00 credited to A/c XX2201 on 02-11-26 towards reversal of failed UPI txn. -Indian Overseas Bank', MESSAGES, T + 60 * MIN)
+    expect(trackStuckSignals([again], 'alert', T + 61 * MIN).back).toEqual([])
+  })
+
+  it('the bank’s compensation for the wait is noted on the payment it names — not taken as money back', () => {
+    const imps = addStuck(
+      manual({ rail: 'imps', party: 'Sri Sai Mobile Spares', merchant: null, amount: 1_200_000, date: '2026-10-28', ref: '630312345678', account: 'XX4821', back: { date: TODAY, amount: 1_200_000, compensation: 0 } }),
+      T,
+    )
+    const other = addStuck(manual({ amount: 20_000, date: '2026-10-30' }), T)
+    const comp = heard('Dear Customer, Rs.200.00 has been credited to your ICICI Bank A/c XX4821 on 02-Nov-26 as compensation for delayed reversal of IMPS Ref 630312345678. -ICICI Bank', MESSAGES)
+    const result = trackStuckSignals([comp], 'alert', T + MIN)
+    expect(result).toMatchObject({ back: [], paid: [expect.objectContaining({ id: imps.id, back: expect.objectContaining({ amount: 1_200_000, compensation: 20_000 }) })] })
+    expect(stuckStore.get().find((s) => s.id === other.id)?.back).toBeNull()
+    result.undo()
+    expect(stuckStore.get().find((s) => s.id === imps.id)?.back).toMatchObject({ compensation: 0 })
+  })
+
+  it('…or, with no reference, on the one it’s exactly what’s owed on', () => {
+    // Due back by 29 Oct (T+1), back 2 Nov: 4 days late, ₹400.
+    const late = addStuck(manual({ rail: 'upi_person', party: 'Riya Sharma', merchant: null, date: '2026-10-28', account: 'XX4821', back: { date: TODAY, amount: 50_000, compensation: 0 } }), T)
+    const comp = heard('Rs.400.00 credited to your A/c XX4821 on 02-11-26 as TAT compensation for failed UPI txn. -Axis Bank', MESSAGES)
+    expect(trackStuckSignals([comp], 'alert', T + MIN).paid.map((s) => s.id)).toEqual([late.id])
+    const wrong = heard('Rs.150.00 credited to your A/c XX4821 on 02-11-26 as TAT compensation for failed UPI txn. -Axis Bank', MESSAGES, T + 60 * MIN)
+    expect(trackStuckSignals([wrong], 'alert', T + 61 * MIN)).toMatchObject({ paid: [], unmatched: [expect.objectContaining({ amount: 15_000 })] })
+  })
+
+  it('money already marked back, told again, says so; money that’s none of these says so too', () => {
+    const swiggy = addStuck(manual({ amount: 64_900, ref: '630612345670', back: { date: TODAY, amount: 64_900, compensation: 0 } }), T)
+    const again = readStuckMessage('Your a/c no. XXXXXXXX1234 is credited by Rs.649.00 on 02-11-2026 by reversal of UPI txn Ref no 630612345670 (SWIGGY). -SBI', { today: TODAY }) as StuckSignal
+    expect(trackStuckSignals([again], 'sms', T + MIN)).toMatchObject({ back: [], already: [expect.objectContaining({ id: swiggy.id })], unmatched: [] })
+    // Pasted again within the hour: the same.
+    expect(trackStuckSignals([again], 'sms', T + 2 * MIN)).toMatchObject({ back: [], already: [expect.objectContaining({ id: swiggy.id })] })
+    const amazon = readStuckMessage('Dear Cardmember, a refund of INR 1,299.00 from AMAZON has been credited to your HDFC Bank Credit Card ending 4821 on 01-11-2026.', { today: TODAY }) as StuckSignal
+    expect(trackStuckSignals([amazon], 'sms', T + 3 * MIN)).toMatchObject({ back: [], already: [], unmatched: [expect.objectContaining({ amount: 129_900 })] })
+  })
+
+  it('a reversal under another UPI reference never closes one by its amount', () => {
+    addStuck(manual({ ref: '630611112222' }), T)
+    const reversal = heard('Rs 500.00 reversed to ICICI Bank Acct XX902 on 02-Nov-26 for failed UPI txn 630699990000.', MESSAGES)
+    expect(trackStuckSignals([reversal], 'alert', T + MIN).back).toEqual([])
+  })
+
   it('a failure and its money back in one go: saved, then closed', () => {
     const reversal = heard('Rs 500.00 reversed to HDFC Bank A/c XX4821 on 02-11-26 for failed UPI txn 630611112222.', MESSAGES, T + 60 * MIN)
     const result = trackStuckSignals([reversal, FAILED_BANK()], 'alert', T + 61 * MIN)
@@ -303,16 +423,26 @@ describe('a payment that went through after all', () => {
     expect(stuckStore.get()).toEqual([])
   })
 
-  it('told after it was saved, it sets the waiting one aside — and Undo brings it back', () => {
+  it('told after it was saved, the waiting one goes (nothing’s stuck) — and Undo brings it back', () => {
     trackStuckSignals([PENDING()], 'alert', T + 30 * 1000)
     trackStuckSignals([], 'alert', T + PENDING_WAIT_MS)
     const waiting = stuckStore.get()
     expect(waiting).toHaveLength(1)
     const result = trackStuckSignals([WENT_THROUGH(T + PENDING_WAIT_MS + 5 * MIN)], 'alert', T + PENDING_WAIT_MS + 6 * MIN)
     expect(result.added).toEqual([])
-    expect(result.cleared).toEqual([expect.objectContaining({ id: waiting[0]?.id, dismissedAt: T + PENDING_WAIT_MS + 6 * MIN, back: null })])
+    expect(result.cleared).toEqual([expect.objectContaining({ id: waiting[0]?.id, amount: 50_000, back: null })])
+    expect(stuckStore.get()).toEqual([])
     result.undo()
     expect(stuckStore.get()).toEqual(waiting)
+  })
+
+  it('…but one the person added a complaint or a note to is set aside, where it can still be seen', () => {
+    trackStuckSignals([PENDING()], 'alert', T + 30 * 1000)
+    trackStuckSignals([], 'alert', T + PENDING_WAIT_MS)
+    stuckStore.set(stuckStore.get().map((s) => ({ ...s, note: 'Called the bank' })))
+    const result = trackStuckSignals([WENT_THROUGH(T + PENDING_WAIT_MS + 5 * MIN)], 'alert', T + PENDING_WAIT_MS + 6 * MIN)
+    expect(result.cleared).toEqual([expect.objectContaining({ note: 'Called the bank', dismissedAt: T + PENDING_WAIT_MS + 6 * MIN })])
+    expect(stuckStore.get()).toHaveLength(1)
   })
 
   it('the same reference clears it, whoever it names', () => {

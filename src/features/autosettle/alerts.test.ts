@@ -51,6 +51,10 @@ describe('alertToCredit — bank SMS', () => {
     expect(credit).toMatchObject({ amount: 42_000, vpa: 'riya.s@okhdfcbank', utr: '629618427311', date: '2026-10-28' })
   })
 
+  it('ignores the bank’s compensation for a failed payment’s wait: no one paying you', () => {
+    expect(alertToCredit(alert(MESSAGES, 'AX-AXISBK', 'Rs.200.00 credited to your A/c XX4821 on 02-11-26 as compensation. -Axis Bank'))).toBeNull()
+  })
+
   it('ignores debits and OTPs', () => {
     expect(alertToCredit(alert(MESSAGES, 'VM-HDFCBK', 'Your a/c XX4821 is debited with Rs 450.00 on 28-10-26 towards UPI/SWIGGY.'))).toBeNull()
     expect(alertToCredit(alert(MESSAGES, 'AD-ICICIB', '123456 is your OTP for a payment of Rs 420. Do not share it.'))).toBeNull()

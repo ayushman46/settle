@@ -1,4 +1,4 @@
-import { fireEvent, screen } from '@testing-library/react'
+import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { stuckStore } from '../../data/stores'
 import { currentUrl, renderAt, resetProScreens } from '../pro/testing'
@@ -84,7 +84,36 @@ describe('StuckAddScreen — a failed payment', SLOW, () => {
     await user.click(screen.getByRole('button', { name: /^Undo/ }))
     expect(stuckStore.get()).toEqual([])
     expect(currentUrl()).toBe('/app/stuck/new')
-    expect(peekStuckPrefill()).toMatchObject({ kind: 'failed', amount: 64_900, party: 'Riya Sharma', ref: '430112345678', date: '2026-11-01' })
+    expect(peekStuckPrefill()).toMatchObject({ kind: 'failed', amount: 64_900, party: 'Riya Sharma', ref: '430112345678', date: '2026-11-01', undone: true })
+  })
+
+  it('back after Undo, the form says it isn’t saved', () => {
+    setStuckPrefill({ kind: 'failed', amount: 64_900, rail: 'upi_person', date: '2026-11-01', source: 'manual', confirmed: true, undone: true })
+    renderAt('/app/stuck/new', <StuckAddScreen />)
+    expect(screen.getByText('Not saved. Change anything you need, then tap Start tracking again.')).toBeInTheDocument()
+    expect(save()).toBeEnabled()
+  })
+
+  it('offers 4 and 5 days ago, says the day picked in words, and gives an old day its year', async () => {
+    const { user } = renderAt('/app/stuck/new?kind=failed', <StuckAddScreen />)
+    await user.type(amount(), '1200')
+    await user.click(screen.getByRole('button', { name: '5 days ago' }))
+    expect(screen.getByText('Picked: 27 Oct')).toBeInTheDocument()
+    fireEvent.change(screen.getByLabelText(/^Another day/), { target: { value: '2024-11-03' } })
+    expect(screen.getByText('Picked: 3 Nov 2024')).toBeInTheDocument()
+    await user.click(screen.getByRole('radio', { name: 'UPI to a shop Due within 5 days' }))
+    expect(screen.getByText(/^It was due back by 8 Nov 2024, so your bank already owes you/)).toBeInTheDocument()
+  })
+
+  it('“Not sure”, a few days on: a payment to a person may be late already', async () => {
+    const { user } = renderAt('/app/stuck/new?kind=failed', <StuckAddScreen />)
+    await user.type(amount(), '2000')
+    await user.click(screen.getByRole('button', { name: '3 days ago' }))
+    await user.click(screen.getByRole('radio', { name: /^Not sure/ }))
+    // Paid 29 Oct: to a person, due 30 Oct (2 days late on 1 Nov); at the latest, 3 Nov.
+    expect(
+      screen.getByText('Due back by 3 Nov at the latest. But if you paid a person, it was due by 30 Oct — your bank may already owe you ₹200. Pick how you paid for the exact deadline.'),
+    ).toBeInTheDocument()
   })
 
   it('reads commas typed in the amount as Indian grouping', async () => {
@@ -172,6 +201,46 @@ describe('StuckAddScreen — a failed payment', SLOW, () => {
   })
 })
 
+describe('StuckAddScreen — from a message', SLOW, () => {
+  it('a message that doesn’t say the day: asks it, nothing picked', () => {
+    setStuckPrefill({ kind: 'failed', amount: 200_000, rail: 'upi_person', party: 'RAMESH KUMAR', ref: '430212345678', source: 'sms', confirmed: true })
+    renderAt('/app/stuck/new', <StuckAddScreen />)
+    expect(screen.getByText('Filled in from the message. It doesn’t say the day — when did the money leave?')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Today' })).toHaveAttribute('aria-pressed', 'false')
+    expect(screen.getByText('Say when the money left')).toBeInTheDocument()
+    expect(save()).toBeDisabled()
+  })
+
+  it('a refund’s “in 7 working days” lights its chip and counts from the day said, as it’s corrected', async () => {
+    setStuckPrefill({ kind: 'refund', amount: 109_900, party: 'Myntra', merchant: 'myntra', orderId: '1209384756-5521', promisedDays: 7, promisedWorking: true, source: 'sms', confirmed: true })
+    const { user } = renderAt('/app/stuck/new', <StuckAddScreen />)
+    expect(screen.getByText('Filled in from the message. It doesn’t say the day — when did the message come?')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '7 working days' })).toHaveAttribute('aria-pressed', 'true')
+    await user.click(screen.getByRole('button', { name: 'Today' }))
+    // Sun 1 Nov + 7 working days = Tue 10 Nov.
+    expect(screen.getByText('Due back by 10 Nov, as they said.')).toBeInTheDocument()
+    fireEvent.change(screen.getByLabelText(/^Another day/), { target: { value: '2026-10-21' } })
+    // Wed 21 Oct + 7 working days = Fri 30 Oct: late.
+    expect(screen.getByText('It was due back by 30 Oct, as they said — it’s late.')).toBeInTheDocument()
+    await user.click(save())
+    expect(stuckStore.get()[0]).toMatchObject({ kind: 'refund', merchant: 'myntra', date: '2026-10-21', promisedBy: '2026-10-30' })
+  })
+
+  it('a message’s own “within 3 days” is a chip of its own', () => {
+    setStuckPrefill({ kind: 'refund', amount: 50_000, merchant: 'swiggy', party: 'Swiggy', date: '2026-10-30', promisedDays: 3, promisedWorking: false, source: 'sms' })
+    renderAt('/app/stuck/new', <StuckAddScreen />)
+    expect(screen.getByRole('button', { name: '3 days' })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByText('Due back by 2 Nov, as they said.')).toBeInTheDocument()
+  })
+
+  it('an airline’s refund to a card opens with “paid by card” on, under the DGCA’s 7 days', () => {
+    setStuckPrefill({ kind: 'refund', amount: 845_000, party: 'IndiGo', merchant: 'indigo', orderId: 'X7KQ2M', rail: 'card_online', date: '2026-10-21', promisedDays: 7, source: 'sms', confirmed: true })
+    renderAt('/app/stuck/new', <StuckAddScreen />)
+    expect(screen.getByRole('switch', { name: /^Paid for the ticket by card/ })).toHaveAttribute('aria-checked', 'true')
+    expect(screen.getByText('It was due back by 28 Oct — the DGCA gives airlines 7 days to refund a ticket paid by card.')).toBeInTheDocument()
+  })
+})
+
 describe('StuckAddScreen — already tracked', SLOW, () => {
   it('the same reference opens the one already tracked instead of adding it twice', async () => {
     seedStuck(stuckPayment({ ref: '630314567890', amount: 1_200_000, date: '2026-10-30' }))
@@ -179,6 +248,8 @@ describe('StuckAddScreen — already tracked', SLOW, () => {
     const { user } = renderAt('/app/stuck/new', <StuckAddScreen />)
     expect(screen.getByText('You’re already tracking this')).toBeInTheDocument()
     expect(screen.getByText('Same reference number — it’s the same money.')).toBeInTheDocument()
+    // Why the button changed, right above it.
+    expect(screen.getByText('You’re already tracking this — the same reference number')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Start tracking' })).not.toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Open it' }))
     expect(currentUrl()).toBe('/app/stuck/s1')
@@ -259,15 +330,40 @@ describe('StuckAddScreen — a refund', SLOW, () => {
     expect(stuckStore.get()[0]).toMatchObject({ merchant: 'indigo', orderId: 'X7K2LQ' })
   })
 
-  it('a promised day before the start moves up with it', async () => {
+  it('a promised day the person picked stays theirs: before the start, it’s shown as wrong, not moved', async () => {
     const { user } = renderAt('/app/stuck/new?kind=refund', <StuckAddScreen />)
     await user.type(amount(), '450')
     await user.click(screen.getByRole('button', { name: '3 days ago' }))
     await user.click(screen.getByRole('radio', { name: 'Swiggy' }))
     fireEvent.change(screen.getByLabelText(/^They said by/), { target: { value: '2026-10-30' } })
     await user.click(screen.getByRole('button', { name: 'Yesterday' }))
+    expect(screen.getByText('Their date can’t be before it was cancelled')).toBeInTheDocument()
+    // No deadline that contradicts it.
+    expect(screen.queryByText(/as they said/)).not.toBeInTheDocument()
+    expect(screen.getByLabelText(/^They said by/)).toHaveValue('2026-10-30')
+    expect(save()).toBeDisabled()
+    await user.click(screen.getByRole('button', { name: '3 days ago' }))
     await user.click(save())
-    expect(stuckStore.get()[0]).toMatchObject({ date: '2026-10-31', promisedBy: '2026-10-31' })
+    expect(stuckStore.get()[0]).toMatchObject({ date: '2026-10-29', promisedBy: '2026-10-30' })
+  })
+
+  it('a flight or train with no PNR yet: one tap makes it a failed payment', async () => {
+    const { user } = renderAt('/app/stuck/new?kind=refund', <StuckAddScreen />)
+    await user.type(amount(), '1845')
+    await user.click(screen.getByRole('radio', { name: 'IRCTC' }))
+    await user.click(screen.getByRole('button', { name: 'It’s a failed payment' }))
+    expect(screen.getByRole('radio', { name: /^A payment failed/ })).toHaveAttribute('aria-checked', 'true')
+    expect(screen.getByRole('combobox', { name: 'Paid to (optional)' })).toHaveValue('IRCTC')
+  })
+
+  it('a refund’s ARN or UTR is kept', async () => {
+    const { user } = renderAt('/app/stuck/new?kind=refund', <StuckAddScreen />)
+    await user.type(amount(), '1299')
+    await user.click(screen.getByRole('button', { name: 'Today' }))
+    await user.click(screen.getByRole('radio', { name: 'Amazon' }))
+    await user.type(screen.getByRole('textbox', { name: 'Refund reference — ARN or UTR (optional)' }), '74332746300123456789012')
+    await user.click(save())
+    expect(stuckStore.get()[0]).toMatchObject({ kind: 'refund', ref: '74332746300123456789012' })
   })
 })
 
@@ -306,12 +402,50 @@ describe('StuckAddScreen — edit', SLOW, () => {
     await user.click(screen.getByRole('radio', { name: /^A refund hasn’t come/ }))
     expect(screen.getByRole('radio', { name: 'IRCTC' })).toHaveAttribute('aria-checked', 'true')
     expect(screen.getByRole('button', { name: 'Save' })).toBeEnabled()
+    await user.click(screen.getByRole('button', { name: 'Back' }))
+    await user.click(within(await screen.findByRole('dialog', { name: 'Discard your changes?' })).getByRole('button', { name: 'Discard changes' }))
+    await waitFor(() => expect(currentUrl()).toBe('/app/stuck/s1'))
     unmount()
 
     const second = renderAt('/app/stuck/s2/edit', <StuckAddScreen />)
     await second.user.click(screen.getByRole('radio', { name: /^A refund hasn’t come/ }))
     expect(screen.getByRole('radio', { name: 'Someone else' })).toHaveAttribute('aria-checked', 'true')
     expect(screen.getByRole('textbox', { name: 'Business name' })).toHaveValue('Croma Store')
+  })
+
+  it('Back with changes asks first: keep editing, or discard them', async () => {
+    seedStuck(stuckPayment())
+    const { user } = renderAt('/app/stuck/s1/edit', <StuckAddScreen />)
+    await user.clear(amount())
+    await user.type(amount(), '520')
+    await user.click(screen.getByRole('button', { name: 'Back' }))
+    const ask = await screen.findByRole('dialog', { name: 'Discard your changes?' })
+    await user.click(within(ask).getByRole('button', { name: 'Keep editing' }))
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Discard your changes?' })).not.toBeInTheDocument())
+    expect(amount()).toHaveValue('520')
+    await user.click(screen.getByRole('button', { name: 'Back' }))
+    await user.click(within(await screen.findByRole('dialog', { name: 'Discard your changes?' })).getByRole('button', { name: 'Discard changes' }))
+    await waitFor(() => expect(currentUrl()).toBe('/app/stuck/s1'))
+    expect(storedStuck('s1')?.amount).toBe(50_000)
+  })
+
+  it('money already back: the amount stays the full one, never less than what came back', async () => {
+    seedStuck(stuckPayment({ amount: 129_900, back: { date: '2026-10-31', amount: 100_000, compensation: 0 } }))
+    const { user } = renderAt('/app/stuck/s1/edit', <StuckAddScreen />)
+    expect(screen.getByText('The full amount, not what’s left: ₹1,000 is back, ₹299 still to come')).toBeInTheDocument()
+    await user.clear(amount())
+    await user.type(amount(), '300')
+    expect(amount()).toHaveAttribute('aria-invalid', 'true')
+    expect(screen.getAllByText('₹1,000 already came back — the amount can’t be less').length).toBeGreaterThan(0)
+    expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled()
+  })
+
+  it('all back: the deadline line says how it ended, not what’s owed from today', () => {
+    // Paid 28 Oct to a person: due 29 Oct; back 31 Oct, 2 days late.
+    seedStuck(stuckPayment({ back: { date: '2026-10-31', amount: 50_000, compensation: 0 } }))
+    renderAt('/app/stuck/s1/edit', <StuckAddScreen />)
+    expect(screen.getByText('It came back on 31 Oct, 2 days late — so your bank owes you ₹200 for the wait.')).toBeInTheDocument()
+    expect(screen.getByText('The full amount, not what’s left: all of it is back')).toBeInTheDocument()
   })
 
   it('a payment that’s gone says so', () => {

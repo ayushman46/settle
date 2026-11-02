@@ -37,6 +37,9 @@ export const app = {
   'app.title.collection': 'வசூல்',
   'app.title.editCollection': 'வசூலைத் திருத்து',
   'app.title.pro': 'Pro',
+  'app.title.stuck': 'சிக்கிய பணம்',
+  'app.title.stuckNew': 'சிக்கிய பணத்தைச் சேர்',
+  'app.title.stuckEdit': 'சிக்கிய பணத்தை மாற்று',
   // When the phone won't save (storage full or blocked).
   'app.storage.title': 'இந்த ஃபோன் உங்கள் மாற்றங்களைச் சேமிக்கவில்லை',
   'app.storage.body': 'சேமிப்பு நிரம்பியிருக்கலாம் அல்லது தடுக்கப்பட்டிருக்கலாம். சிறிது இடத்தை விடுவியுங்கள் — {brand} திறந்திருக்கும் வரை எல்லாம் இங்கேயே இருக்கும்.',

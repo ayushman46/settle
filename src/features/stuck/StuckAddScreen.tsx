@@ -1,26 +1,26 @@
 import { useId, useState, type ReactNode } from 'react'
-import { Check, ChevronDown, Landmark, ScanText, Store } from 'lucide-react'
+import { Check, ChevronDown, Landmark, ScanText, Store, Undo2 } from 'lucide-react'
+import { useBackClose } from '../../app/nav/useBackClose'
 import { goBack, navigate, useRoute, useSearchParams } from '../../app/router'
-import { ActionBar, Banner, Button, Chip, PageTitle, Screen, SectionHeader, Switch, TextField, TopBar, useToast } from '../../components'
+import { ActionBar, Banner, BottomSheet, Button, Chip, PageTitle, Screen, SectionHeader, Switch, TextField, TopBar, useToast } from '../../components'
 import { useStore } from '../../data'
-import { stuckStore, type StuckKind, type StuckPayment, type StuckRail, type StuckStepKind } from '../../data/stores'
-import { addStuck, deleteStuck, isStuckOpen, updateStuck, type StuckDraft } from '../../data/stuck'
+import { stuckStore, type StuckBack, type StuckKind, type StuckPayment, type StuckRail, type StuckStepKind } from '../../data/stores'
+import { addStuck, deleteStuck, updateStuck, type StuckDraft } from '../../data/stuck'
 import type { Minor } from '../../domain/types'
 import { daysBetween, isIsoDate, today as todayIso } from '../../engine/dates'
 import { useT, type MessageKey } from '../../i18n'
 import { AmountHero, DateField } from '../../kit/index-a'
 import { cx } from '../../lib/cx'
 import { haptic } from '../../lib/haptics'
-import { shortDate } from '../recurring/recurringLabels'
 import { AddDate } from './AddDate'
 import { AddPaidWith, isKnownBank, OTHER_BANK, walletOf, type PaidWith } from './AddPaidWith'
 import { findStuckTwin, type StuckCandidate, type StuckTwin } from './duplicates'
 import { upiAppOf } from './help'
-import { addWorkingDays, findMerchant, MERCHANTS, merchantById } from './merchants'
+import { findMerchant, MERCHANTS, merchantById } from './merchants'
 import { STUCK_NEW_PATH, STUCK_PATH, stuckPath } from './paths'
-import { setStuckPrefill, takeStuckPrefill, type StuckPrefill } from './prefill'
+import { promiseEnds, setStuckPrefill, takeStuckPrefill, type StuckPrefill } from './prefill'
 import { COMPENSATION_PER_DAY, dueBy, RAIL_RULES, refundDueBasis } from './rules'
-import { COMMON_RAILS, inr, partyName, POPULAR_MERCHANTS, RAIL_ORDER, railDays, railLabel, stepPlace } from './view'
+import { COMMON_RAILS, inr, partyName, POPULAR_MERCHANTS, RAIL_ORDER, railDays, railLabel, stepPlace, stuckDate } from './view'
 import styles from './Stuck.module.css'
 
 const ROUTES = ['/app/stuck/new', '/app/stuck/:id/edit'] as const
@@ -70,8 +70,10 @@ interface Form extends PaidWith {
   ref: string
   orderId: string
   promisedBy: string | null
-  /** "They said 7 working days", counted from the date. */
+  /** "They said 7 working days", counted from the date (so it moves with it). */
   promisedDays: number | null
+  /** …working days; false for a message's "within 7 days" or "48 hours". */
+  promisedWorking: boolean
   confirmed: boolean
 }
 
@@ -94,6 +96,8 @@ function initialForm(existing: StuckPayment | null, prefill: StuckPrefill | null
   const merchant = merchantById(from.merchant)?.id ?? (resolvedKind === 'refund' ? (findMerchant(party)?.id ?? null) : null)
   const bank = from.bank ?? ''
   const app = from.app ?? ''
+  // A message's "in 7 working days": a count from the day, not a day of its own.
+  const promisedDays = prefill?.promisedDays ?? null
   return {
     kind: resolvedKind,
     amount: from.amount ?? null,
@@ -105,8 +109,9 @@ function initialForm(existing: StuckPayment | null, prefill: StuckPrefill | null
     other: resolvedKind === 'refund' && merchant === null && party.trim() !== '',
     ref: from.ref ?? '',
     orderId: from.orderId ?? '',
-    promisedBy: from.promisedBy ?? null,
-    promisedDays: null,
+    promisedBy: promisedDays !== null ? null : (from.promisedBy ?? null),
+    promisedDays,
+    promisedWorking: prefill?.promisedWorking ?? true,
     confirmed: from.confirmed ?? true,
     bank: bank === '' || isKnownBank(bank) ? bank : OTHER_BANK,
     bankName: bank !== '' && !isKnownBank(bank) ? bank : '',
@@ -116,16 +121,17 @@ function initialForm(existing: StuckPayment | null, prefill: StuckPrefill | null
   }
 }
 
-/** The day they said it would be back by: the date given, or so many working days from the start. */
+/** The day they said it would be back by: the date given, or so many (working) days from the start. */
 function promisedOf(form: Form): string | null {
-  if (form.promisedDays !== null && form.date !== null) return addWorkingDays(form.date, form.promisedDays)
+  if (form.promisedDays !== null && form.date !== null) return promiseEnds(form.date, form.promisedDays, form.promisedWorking)
   return form.promisedBy
 }
 
-/** Why it can't be saved yet, or null. */
-function formIssue(form: Form, day: string): MessageKey | null {
+/** Why it can't be saved yet, or null. An edit can't take the amount below what already came back. */
+function formIssue(form: Form, day: string, back: StuckBack | null): MessageKey | null {
   if (form.kind === null) return 'stuck.add.issue.kind'
   if (form.amount === null || form.amount <= 0) return 'stuck.add.issue.amount'
+  if (back !== null && form.amount < back.amount) return 'stuck.edit.issue.belowBack'
   if (form.date === null) return form.kind === 'refund' ? 'stuck.add.issue.dateRefund' : 'stuck.add.issue.date'
   // The picker stops at today, but a typed date doesn't.
   if (!isIsoDate(form.date) || form.date > day) return 'stuck.add.issue.future'
@@ -176,7 +182,7 @@ function fitsKind(step: StuckStepKind, kind: StuckKind, merchant: string | null)
   return step === 'merchant' || step === 'nch' || step === 'commission'
 }
 
-/** Undo of "Start tracking": it's gone, and from its page (or its edit) the form comes back as it was — never "This one's gone". */
+/** Undo of "Start tracking": it's gone, and from its page (or its edit) the form comes back as it was (saying it isn't saved) — never "This one's gone". */
 function undoAdd(id: string, refill: StuckPrefill): void {
   deleteStuck(id)
   const page = stuckPath(id)
@@ -196,6 +202,11 @@ function Editor({ existing }: { existing: StuckPayment | null }) {
   const [prefill] = useState(() => (existing ? null : takeStuckPrefill()))
   const queryKind = query.get('kind')
   const [form, setForm] = useState<Form>(() => initialForm(existing, prefill, queryKind === 'failed' || queryKind === 'refund' ? queryKind : null))
+  // An edit with changes asks before Back throws them away; Back again keeps editing.
+  const [dirty, setDirty] = useState(false)
+  const [discarding, setDiscarding] = useState(false)
+  useBackClose(existing !== null && dirty, () => setDiscarding(true))
+  useBackClose(discarding, () => setDiscarding(false))
   // A message that didn't say the money left: ask, instead of assuming.
   const [askConfirmed] = useState(() => prefill?.confirmed === false)
   const [moreRails, setMoreRails] = useState(() => form.rail !== null && !COMMON_RAILS.includes(form.rail))
@@ -203,20 +214,25 @@ function Editor({ existing }: { existing: StuckPayment | null }) {
   // The one this form just saved isn't a twin of itself (the screen can linger as it leaves).
   const [savedId, setSavedId] = useState<string | null>(null)
   const isNew = existing === null
-  const issue = formIssue(form, day)
+  const back = existing?.back ?? null
+  const issue = formIssue(form, day, back)
+  const issueText = (key: MessageKey): string => t(key, { back: back ? inr(back.amount) : '' })
   const twin = isNew && form.kind !== null ? findStuckTwin(savedId ? all.filter((s) => s.id !== savedId) : all, candidateOf(form)) : null
   const refundMerchant = form.other ? null : form.merchant
   // Complaints noted for the other kind of stuck money (changed in this edit) don't fit any more.
   const dropped = existing && form.kind !== null ? existing.steps.filter((step) => !fitsKind(step.kind, form.kind ?? existing.kind, refundMerchant)) : []
-  const change = (patch: Partial<Form>): void => setForm((current) => ({ ...current, ...patch }))
+  const update = (next: (current: Form) => Form): void => {
+    setForm(next)
+    setDirty(true)
+  }
+  const change = (patch: Partial<Form>): void => update((current) => ({ ...current, ...patch }))
 
-  // A "they said by" day before the new start can't stand: it moves up with it.
-  const setDate = (date: string): void =>
-    setForm((current) => ({ ...current, date, promisedBy: current.promisedBy !== null && current.promisedBy < date ? date : current.promisedBy }))
+  // A "they said by" day the person picked stays theirs: one before the new start shows as wrong, it isn't moved.
+  const setDate = (date: string): void => change({ date })
 
   // Switching kind keeps who it was: a failed IRCTC payment becomes a refund owed by IRCTC.
   const pickKind = (kind: StuckKind): void =>
-    setForm((current) => {
+    update((current) => {
       if (current.kind === kind) return current
       if (kind === 'refund' && current.merchant === null && !current.other) {
         const known = findMerchant(current.party)
@@ -229,7 +245,8 @@ function Editor({ existing }: { existing: StuckPayment | null }) {
     })
 
   const leave = (): void => {
-    if (existing) goBack(stuckPath(existing.id))
+    if (existing && dirty) setDiscarding(true)
+    else if (existing) goBack(stuckPath(existing.id))
     else goBack(STUCK_PATH)
   }
 
@@ -264,6 +281,7 @@ function Editor({ existing }: { existing: StuckPayment | null }) {
       // The bank's reply goes with the complaint to the bank, when that's taken off.
       const replied = steps.length < existing.steps.length && !steps.some((step) => step.kind === 'bank') ? { repliedAt: null } : {}
       const undo = updateStuck(existing.id, { ...fields, steps, ...replied })
+      setDirty(false)
       toast(t('stuck.edit.saved'), { tone: 'success', action: undo ? { label: t('common.action.undo'), onAction: undo } : undefined })
       goBack(stuckPath(existing.id))
       return
@@ -272,11 +290,26 @@ function Editor({ existing }: { existing: StuckPayment | null }) {
     const saved = addStuck(draft)
     setSavedId(saved.id)
     navigate(stuckPath(saved.id), { replace: true })
-    toast(t('stuck.add.saved'), { tone: 'success', action: { label: t('common.action.undo'), onAction: () => undoAdd(saved.id, draft) } })
+    // Undone, the form comes back as it was: a promise in days still counts from the day.
+    const refill: StuckPrefill = {
+      ...draft,
+      ...(form.promisedDays !== null ? { promisedBy: null, promisedDays: form.promisedDays, promisedWorking: form.promisedWorking } : {}),
+      undone: true,
+    }
+    toast(t('stuck.add.saved'), { tone: 'success', action: { label: t('common.action.undo'), onAction: () => undoAdd(saved.id, refill) } })
   }
 
   const title = isNew ? t('stuck.add.title') : t('stuck.edit.title')
-  const rule = ruleLine(form, day, t)
+  // While their date is before the start, a deadline would contradict the error: none is shown.
+  const rule = issue === 'stuck.add.issue.promised' ? null : ruleLine(form, day, t, back)
+  // Why the button changed to "Open it" (or "Track it anyway"), right above it — else what's missing.
+  const twinHint = twin ? t(twin.by === 'ref' ? 'stuck.dupe.hint.ref' : twin.by === 'order' ? 'stuck.dupe.hint.order' : 'stuck.dupe.hint.maybe') : undefined
+  const hint = twin?.sure || !issue ? twinHint : form.kind !== null ? issueText(issue) : undefined
+  const fromMessage = prefill?.source !== undefined && prefill.source !== 'manual'
+  // The message's own "in N days", offered as a chip when it isn't one of the usual 5, 7 or 10 working days.
+  const saidDays = prefill?.promisedDays ?? null
+  const saidWorking = prefill?.promisedWorking ?? true
+  const said = saidDays !== null && !(saidWorking && PROMISED_DAYS.some((count) => count === saidDays)) ? { days: saidDays, working: saidWorking } : null
   const named = form.kind === 'failed' && form.rail !== 'atm' ? findMerchant(form.party) : null
   const toCopy = partyCopy(form.rail)
   const [refKey, refHint] = refCopy(form.rail, form.app)
@@ -286,7 +319,7 @@ function Editor({ existing }: { existing: StuckPayment | null }) {
     <Screen
       header={<TopBar onBack={leave} title={title} />}
       footer={
-        <ActionBar hint={!twin?.sure && issue && form.kind !== null ? t(issue) : undefined}>
+        <ActionBar hint={hint}>
           {twin?.sure ? (
             <Button block onClick={() => openTwin(twin)}>
               {t('stuck.dupe.open')}
@@ -298,14 +331,24 @@ function Editor({ existing }: { existing: StuckPayment | null }) {
           )}
         </ActionBar>
       }
-      contentClassName={styles.content}
+      contentClassName={cx(styles.content, styles.addContent)}
     >
       <PageTitle title={t('stuck.add.heading')} id={ids.kind} />
 
-      {prefill && prefill.source !== undefined && prefill.source !== 'manual' && (
-        <Banner tone="info" icon={<ScanText />}>
-          {prefill.source === 'screenshot' ? t('stuck.add.fromShot') : t('stuck.add.fromMessage')}
+      {prefill?.undone ? (
+        <Banner tone="warning" icon={<Undo2 />}>
+          {t('stuck.add.undone')}
         </Banner>
+      ) : (
+        fromMessage && (
+          <Banner tone="info" icon={<ScanText />}>
+            {prefill.source === 'screenshot'
+              ? t('stuck.add.fromShot')
+              : prefill.date === undefined && prefill.kind !== undefined
+                ? t(prefill.kind === 'refund' ? 'stuck.add.fromMessageNoDateRefund' : 'stuck.add.fromMessageNoDate')
+                : t('stuck.add.fromMessage')}
+          </Banner>
+        )
       )}
 
       <div role="radiogroup" aria-labelledby={ids.kind} className={styles.tiles}>
@@ -328,7 +371,21 @@ function Editor({ existing }: { existing: StuckPayment | null }) {
 
       {form.kind !== null && (
         <>
-          <AmountHero value={form.amount} currency="INR" onChange={(amount) => change({ amount })} label={t('stuck.add.amount')} showLabel />
+          <AmountHero
+            value={form.amount}
+            currency="INR"
+            onChange={(amount) => change({ amount })}
+            label={t('stuck.add.amount')}
+            showLabel
+            error={issue === 'stuck.edit.issue.belowBack' ? issueText(issue) : undefined}
+          />
+          {back !== null && back.amount > 0 && form.amount !== null && form.amount >= back.amount && (
+            <p className={styles.backLine}>
+              {back.amount >= form.amount
+                ? t('stuck.edit.amount.allBack', { back: inr(back.amount) })
+                : t('stuck.edit.amount.partBack', { back: inr(back.amount), rest: inr(form.amount - back.amount) })}
+            </p>
+          )}
 
           <AddDate label={form.kind === 'refund' ? t('stuck.add.date.refund') : t('stuck.add.date.failed')} value={form.date} today={day} onChange={setDate} />
 
@@ -447,10 +504,23 @@ function Editor({ existing }: { existing: StuckPayment | null }) {
                     {t('stuck.add.promised.none')}
                   </Chip>
                   {PROMISED_DAYS.map((count) => (
-                    <Chip key={count} selected={form.promisedDays === count} onClick={() => change({ promisedDays: count, promisedBy: null })}>
+                    <Chip
+                      key={count}
+                      selected={form.promisedDays === count && form.promisedWorking}
+                      onClick={() => change({ promisedDays: count, promisedWorking: true, promisedBy: null })}
+                    >
                       {t('stuck.add.promised.days', { count })}
                     </Chip>
                   ))}
+                  {/* What the message said, when it isn't one of the usual: "within 3 days", "10-14 working days". */}
+                  {said && (
+                    <Chip
+                      selected={form.promisedDays === said.days && form.promisedWorking === said.working}
+                      onClick={() => change({ promisedDays: said.days, promisedWorking: said.working, promisedBy: null })}
+                    >
+                      {said.working ? t('stuck.add.promised.days', { count: said.days }) : t('stuck.add.promised.calendarDays', { count: said.days })}
+                    </Chip>
+                  )}
                   <DateField
                     label={t('stuck.add.promised.label')}
                     value={form.promisedBy ?? ''}
@@ -473,6 +543,23 @@ function Editor({ existing }: { existing: StuckPayment | null }) {
                 spellCheck={false}
                 onChange={(event) => change({ orderId: event.target.value })}
               />
+              {/* A booking that failed while paying never gets a PNR: that's a failed payment, with the RBI's shorter deadline. */}
+              {pnr && form.orderId.trim() === '' && (
+                <Banner tone="info" action={{ label: t('stuck.add.order.noPnr.cta'), onAction: () => pickKind('failed') }}>
+                  {t('stuck.add.order.noPnr')}
+                </Banner>
+              )}
+
+              <TextField
+                label={t('stuck.add.ref.refund')}
+                hint={t('stuck.add.ref.refund.hint')}
+                value={form.ref}
+                maxLength={40}
+                autoCapitalize="characters"
+                autoCorrect="off"
+                spellCheck={false}
+                onChange={(event) => change({ ref: event.target.value })}
+              />
             </>
           )}
 
@@ -480,22 +567,48 @@ function Editor({ existing }: { existing: StuckPayment | null }) {
             <Banner tone="warning">{t('stuck.edit.dropsSteps', { places: dropped.map((step) => stepPlace(step.kind, existing)).join(', ') })}</Banner>
           )}
 
-          {twin && <TwinBanner twin={twin} onOpen={twin.sure ? undefined : () => openTwin(twin)} />}
+          {twin && <TwinBanner twin={twin} today={day} onOpen={twin.sure ? undefined : () => openTwin(twin)} />}
         </>
       )}
+
+      <BottomSheet
+        open={discarding}
+        onClose={() => setDiscarding(false)}
+        title={t('stuck.edit.discard.title')}
+        description={t('stuck.edit.discard.text')}
+        footer={
+          <ActionBar>
+            <Button
+              variant="danger"
+              block
+              onClick={() => {
+                setDiscarding(false)
+                setDirty(false)
+                if (existing) goBack(stuckPath(existing.id))
+              }}
+            >
+              {t('stuck.edit.discard.cta')}
+            </Button>
+            <Button variant="secondary" block onClick={() => setDiscarding(false)}>
+              {t('stuck.edit.discard.keep')}
+            </Button>
+          </ActionBar>
+        }
+      />
     </Screen>
   )
 }
 
 /** "You're already tracking this": the one on the phone, what matched, and (when it may be another payment) Open it. */
-function TwinBanner({ twin, onOpen }: { twin: StuckTwin; onOpen?: () => void }) {
+function TwinBanner({ twin, today, onOpen }: { twin: StuckTwin; today: string; onOpen?: () => void }) {
   const t = useT()
   const s = twin.payment
-  const title = !twin.sure ? t('stuck.dupe.titleMaybe') : isStuckOpen(s) ? t('stuck.dupe.title') : t('stuck.dupe.titleClosed')
+  // Back with compensation still owed is still tracked: only one set aside is "before".
+  const title = !twin.sure ? t('stuck.dupe.titleMaybe') : s.dismissedAt === null ? t('stuck.dupe.title') : t('stuck.dupe.titleClosed')
   const why = twin.by === 'ref' ? t('stuck.dupe.sure') : twin.by === 'order' ? t('stuck.dupe.sureOrder') : t('stuck.dupe.maybe')
   return (
     <Banner tone="warning" title={title} action={onOpen ? { label: t('stuck.dupe.open'), onAction: onOpen } : undefined}>
-      <p>{t('stuck.dupe.text', { name: partyName(s), amount: inr(s.amount), date: shortDate(s.date) })}</p>
+      <p>{t('stuck.dupe.text', { name: partyName(s), amount: inr(s.amount), date: stuckDate(s.date, today) })}</p>
       <p>{why}</p>
     </Banner>
   )
@@ -551,15 +664,25 @@ function refCopy(rail: StuckRail | null, app: string): [MessageKey, MessageKey] 
 
 /**
  * The deadline as you fill it in — "The RBI says it's due back by 3 Nov", or, already past it, "It
- * was due back by 1 Nov, so your bank already owes you ₹100" — or null until the day is said.
+ * was due back by 1 Nov, so your bank already owes you ₹100" — or null until the day is said. An
+ * edit of one that's all back says how it ended: in time, or so many days late (and what that's worth).
  */
-function ruleLine(form: Form, day: string, t: ReturnType<typeof useT>): string | null {
+function ruleLine(form: Form, day: string, t: ReturnType<typeof useT>, back: StuckBack | null): string | null {
   if (form.kind === null || form.date === null) return null
   if (form.kind === 'failed' && !form.railPicked) return t('stuck.add.rule.pick')
   const merchant = form.other ? null : form.merchant
   const due = dueBy({ kind: form.kind, rail: form.rail, date: form.date, promisedBy: promisedOf(form), merchant })
+  if (back !== null && form.amount !== null && back.amount >= form.amount) {
+    const after = Math.max(0, daysBetween(due, back.date))
+    const on = stuckDate(back.date, day)
+    if (after === 0) return t('stuck.edit.rule.back', { date: on })
+    if (form.kind === 'failed' && form.confirmed) {
+      return t(form.rail === 'wallet' ? 'stuck.edit.rule.backOwed.wallet' : 'stuck.edit.rule.backOwed', { date: on, count: after, amount: inr(after * COMPENSATION_PER_DAY) })
+    }
+    return t('stuck.edit.rule.backLate', { date: on, count: after })
+  }
   const late = Math.max(0, daysBetween(due, day))
-  const date = shortDate(due)
+  const date = stuckDate(due, day)
   if (form.kind === 'refund') {
     const basis = refundDueBasis({ kind: form.kind, rail: form.rail, date: form.date, promisedBy: promisedOf(form), merchant })
     if (basis.kind === 'dgca') return t(late > 0 ? 'stuck.add.rule.dgcaLate' : 'stuck.add.rule.dgca', { date, count: basis.days })
@@ -568,7 +691,16 @@ function ruleLine(form: Form, day: string, t: ReturnType<typeof useT>): string |
     if (known) return t(late > 0 ? 'stuck.add.rule.merchantLate' : 'stuck.add.rule.merchant', { date, name: known.name, count: known.workingDays })
     return t(late > 0 ? 'stuck.add.rule.refundLate' : 'stuck.add.rule.refund', { date })
   }
-  if (late === 0) return t(form.rail === null ? 'stuck.add.rule.unknown' : form.rail === 'wallet' ? 'stuck.add.rule.wallet' : 'stuck.add.rule.failed', { date })
+  if (late === 0 && form.rail === null) {
+    // "Not sure", but paid to a person (due the next day), it may be late already.
+    const person = dueBy({ kind: 'failed', rail: 'upi_person', date: form.date, promisedBy: null, merchant: null })
+    const personLate = Math.max(0, daysBetween(person, day))
+    if (personLate > 0 && form.confirmed) {
+      return t('stuck.add.rule.unknownMaybeLate', { date, personDate: stuckDate(person, day), amount: inr(personLate * COMPENSATION_PER_DAY) })
+    }
+    return t('stuck.add.rule.unknown', { date })
+  }
+  if (late === 0) return t(form.rail === 'wallet' ? 'stuck.add.rule.wallet' : 'stuck.add.rule.failed', { date })
   const amount = inr(late * COMPENSATION_PER_DAY)
   if (!form.confirmed) return t('stuck.add.rule.failedLateUnsure', { date, amount })
   return t(form.rail === null ? 'stuck.add.rule.unknownLate' : form.rail === 'wallet' ? 'stuck.add.rule.walletLate' : 'stuck.add.rule.failedLate', { date, amount })

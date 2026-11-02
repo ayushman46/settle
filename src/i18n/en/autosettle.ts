@@ -7,6 +7,7 @@ export const autosettle = {
   'autosettle.pending': '{count, plural, one {# payment to check} other {# payments to check}}',
   'autosettle.on.title': 'Auto-settle is on',
   'autosettle.on.text': 'When Google Pay, PhonePe, Paytm or BHIM says money arrived, whoever paid is ticked off. Failed payments and refunds go to Stuck money.',
+  'autosettle.on.text.noSms': 'When Google Pay, PhonePe, Paytm or BHIM says money arrived, whoever paid is ticked off. Turn on Bank SMS in Manage to catch most failed payments and money coming back too.',
   'autosettle.manage': 'Manage',
   'autosettle.offer.title': 'Tick people off automatically',
   'autosettle.offer.text': 'When your UPI app says money arrived, Settle ticks off whoever paid. A payment that failed but took your money, or a refund on its way, goes to Stuck money by itself.',

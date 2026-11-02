@@ -6,7 +6,7 @@
  */
 import { daysBetween, today as todayIso } from '../../engine/dates'
 import type { BadgeTone } from '../../components'
-import type { StuckBack, StuckPayment, StuckRail, StuckSource, StuckStepKind } from '../../data/stores'
+import type { StuckPayment, StuckRail, StuckSource, StuckStepKind } from '../../data/stores'
 import { t, type MessageKey } from '../../i18n'
 import { formatBillDate } from '../../lib/format'
 import { formatMoney } from '../../lib/money'
@@ -17,6 +17,7 @@ import { merchantById } from './merchants'
 import {
   backInFull,
   backInPart,
+  backParts,
   bankReplied,
   COMPENSATION_PER_DAY,
   compensationDue,
@@ -116,13 +117,22 @@ export function partyName(s: Pick<StuckPayment, 'party' | 'merchant' | 'kind' | 
 }
 
 /**
- * Its name in the list and on Home, saying what it is — "Failed payment to Neha", "Amazon refund" —
- * so a payee's name never reads like a friend who owes you. Without a name, as partyName().
+ * Its name, saying what it is — "Failed payment to Neha", "Amazon refund" — so a payee's name never
+ * reads like a friend who owes you. Without a name, as partyName().
  */
 export function stuckTitle(s: Pick<StuckPayment, 'party' | 'merchant' | 'kind' | 'rail'>): string {
   const name = knownParty(s)
   if (!name) return partyName(s)
   return s.kind === 'failed' ? t('stuck.title.failed', { name }) : t('stuck.title.refund', { name })
+}
+
+/**
+ * Its name in the list and on Home: stuckTitle(), and for a failed payment with no name, the account
+ * it left too ("ATM, no cash came out · KVB ••4410"), so two aren't alike.
+ */
+export function listTitle(s: Pick<StuckPayment, 'party' | 'merchant' | 'kind' | 'rail' | 'bank' | 'account'>): string {
+  const account = s.kind === 'failed' && knownParty(s) === null ? accountLine(s) : null
+  return account ? t('stuck.title.account', { name: partyName(s), account }) : stuckTitle(s)
 }
 
 /**
@@ -281,12 +291,15 @@ export function rowAmount(s: StuckPayment, next: StuckNext, today: string): numb
   return owedForWait(next.stage) ? owed.compensation : owed.money
 }
 
-/** "Order …5566778": tells two refunds from the same business apart. Null without an order number. */
+/**
+ * "Order …5566778": tells two refunds from the same business apart. Null without an order number.
+ * On a line of its own in the list, so it's never cut again: a long one by its end, one of 10
+ * characters or fewer (a PNR, "BLK-88213") whole.
+ */
 export function orderTail(s: Pick<StuckPayment, 'orderId' | 'merchant'>): string | null {
   const id = s.orderId?.trim()
   if (!id) return null
-  // The end of a long one ("…5432100"); a short one (a PNR) whole.
-  const ref = id.length > 8 ? `…${id.slice(-7)}` : id
+  const ref = id.length > 10 ? `…${id.slice(-7)}` : id
   const category = merchantById(s.merchant)?.category
   return t(category === 'airline' || category === 'rail' ? 'stuck.list.pnr' : 'stuck.list.order', { ref })
 }
@@ -344,10 +357,12 @@ function stageLine(s: StuckPayment, next: StuckNext, today: string): string {
       if (late > 0) return t('stuck.status.escalatedLate', { place, count: late })
       return t('stuck.status.escalated', { place })
     }
-    case 'compensation':
+    case 'compensation': {
+      const wallet = s.rail === 'wallet'
       return (s.back?.compensation ?? 0) > 0
-        ? t('stuck.status.compensationRest', { count: late, amount: inr(owed) })
-        : t('stuck.status.compensation', { count: late, amount: inr(owed) })
+        ? t(wallet ? 'stuck.status.compensationRest.wallet' : 'stuck.status.compensationRest', { count: late, amount: inr(owed) })
+        : t(wallet ? 'stuck.status.compensation.wallet' : 'stuck.status.compensation', { count: late, amount: inr(owed) })
+    }
     case 'compensationRaised':
       return t('stuck.status.owedRaised', { back: inr(s.amount), amount: inr(owed), date: stuckDate(next.until ?? today, today) })
     case 'compensationEscalate':
@@ -391,6 +406,8 @@ export interface ClockEvent {
 export function dueReason(s: StuckPayment): string {
   if (s.kind === 'failed') {
     if (!s.rail) return t('stuck.clock.due.unknownRail', { count: UNKNOWN_RAIL_DAYS })
+    // The next day is for a payment within the same wallet only: say so, and what to pick when it wasn't.
+    if (s.rail === 'wallet') return t('stuck.clock.due.wallet')
     return t('stuck.clock.due.rail', { rail: railLabel(s.rail), count: RAIL_RULES[s.rail].days })
   }
   const basis = refundDueBasis(s)
@@ -442,7 +459,8 @@ export function refundDueText(s: StuckPayment, today: string): string {
 
 /**
  * The payment's story, in date order: the money left (or the refund started), how long it's been,
- * when it's due back and why, each complaint raised and the bank's reply, the money back — then,
+ * when it's due back and why, each complaint raised and the bank's reply, each time money came back
+ * and compensation paid later, each on its own day (same day: in the order it happens) — then,
  * while it's open, how late it is today and what that's worth, what's waited on, and the last day
  * for the RBI Ombudsman.
  */
@@ -451,15 +469,15 @@ export function clockOf(s: StuckPayment, today: string): ClockEvent[] {
   const due = dueBy(s)
   const late = daysLate(s, today)
   const open = !backInFull(s) && s.dismissedAt === null
-  // Events on a day, sorted by it below (on the same day, in the order they're added).
-  const dated: Array<{ at: string; event: ClockEvent }> = []
-  const add = (at: string, event: ClockEvent): void => {
-    dated.push({ at, event })
+  // Events on a day, sorted by it below — on the same day by what happens first (DAY_ORDER), then in the order they're added.
+  const dated: Array<{ at: string; order: number; event: ClockEvent }> = []
+  const add = (at: string, event: ClockEvent, order: number = DAY_ORDER.start): void => {
+    dated.push({ at, order, event })
   }
 
   add(s.date, {
     key: 'start',
-    title: s.kind === 'refund' ? t('stuck.clock.promised') : s.confirmed ? t('stuck.clock.left') : t('stuck.clock.failed'),
+    title: s.kind === 'refund' ? t('stuck.clock.promised') : !s.confirmed ? t('stuck.clock.failed') : s.rail === 'wallet' ? t('stuck.clock.left.wallet') : t('stuck.clock.left'),
     detail: null,
     date: s.date,
     state: 'done',
@@ -468,30 +486,41 @@ export function clockOf(s: StuckPayment, today: string): ClockEvent[] {
   // In time: how long it's been so far is today's marker, and the due day comes after it.
   const waiting = open && today <= due
   const since = waiting && s.confirmed && today < due ? daysBetween(s.date, today) : 0
-  if (since > 0) add(today, { key: 'since', title: t('stuck.clock.since', { count: since }), detail: null, date: today, state: 'now' })
-  add(due, {
-    key: 'due',
-    title: t('stuck.clock.due', { date: stuckDate(due, today) }),
-    detail: dueReason(s),
-    date: null,
-    state: !waiting ? 'done' : since > 0 ? 'next' : 'now',
-  })
+  if (since > 0) add(today, { key: 'since', title: t('stuck.clock.since', { count: since }), detail: null, date: today, state: 'now' }, DAY_ORDER.since)
+  add(
+    due,
+    {
+      key: 'due',
+      title: t('stuck.clock.due', { date: stuckDate(due, today) }),
+      detail: dueReason(s),
+      date: null,
+      state: !waiting ? 'done' : since > 0 ? 'next' : 'now',
+    },
+    DAY_ORDER.due,
+  )
 
   for (const step of s.steps) {
-    add(step.date, {
-      key: `step-${step.kind}`,
-      title: t('stuck.clock.raised', { place: stepPlace(step.kind, s) }),
-      detail: step.ref ? t('stuck.clock.raisedRef', { ref: step.ref }) : null,
-      date: step.date,
-      state: 'done',
-    })
+    add(
+      step.date,
+      {
+        key: `step-${step.kind}`,
+        title: t('stuck.clock.raised', { place: stepPlace(step.kind, s) }),
+        detail: step.ref ? t('stuck.clock.raisedRef', { ref: step.ref }) : null,
+        date: step.date,
+        state: 'done',
+      },
+      DAY_ORDER.step,
+    )
   }
-  if (s.repliedAt !== null && bankReplied(s)) add(s.repliedAt, { key: 'replied', title: t('stuck.clock.replied'), detail: null, date: s.repliedAt, state: 'done' })
+  const wallet = s.rail === 'wallet'
+  if (s.repliedAt !== null && bankReplied(s)) {
+    add(s.repliedAt, { key: 'replied', title: t(wallet ? 'stuck.clock.replied.wallet' : 'stuck.clock.replied'), detail: null, date: s.repliedAt, state: 'done' }, DAY_ORDER.step)
+  }
   // Taken higher because the bank had its 30 days and didn't fix it: the day they ran out.
   const bank = s.steps.find((x) => x.kind === 'bank')
   if (bank && (next.stage === 'escalate' || next.stage === 'compensationEscalate') && next.step === 'ombudsman' && !bankReplied(s)) {
     const ended = rungEnds('bank', bank.date)
-    add(ended, { key: 'bank-time-up', title: t('stuck.clock.bankTimeUp', { count: OMBUDSMAN_WAIT_DAYS }), detail: null, date: ended, state: 'done' })
+    add(ended, { key: 'bank-time-up', title: t(wallet ? 'stuck.clock.bankTimeUp.wallet' : 'stuck.clock.bankTimeUp', { count: OMBUDSMAN_WAIT_DAYS }), detail: null, date: ended, state: 'done' }, DAY_ORDER.step)
   }
 
   // How late, and what that's worth: today's marker while it's open, a fact once it's all back (not shown once set aside).
@@ -513,20 +542,23 @@ export function clockOf(s: StuckPayment, today: string): ClockEvent[] {
           state: open ? 'late' : 'done',
         }
       : null
-  if (open) {
-    if (s.back) add(s.back.date, backEvent(s, s.back))
-    if (lateEvent) add(today, lateEvent)
-  } else if (s.back) {
-    if (lateEvent) add(s.back.date, lateEvent)
-    add(s.back.date, backEvent(s, s.back))
+  // Each time money came in, on its own day: once it's all back, the lateness is a fact told just before the last of it.
+  let lateTold = false
+  for (const back of backEvents(s)) {
+    if (!open && lateEvent && !lateTold && back.event.state === 'back') {
+      add(back.at, lateEvent, back.order)
+      lateTold = true
+    }
+    add(back.at, back.event, back.order)
   }
+  if (lateEvent && !lateTold) add(open ? today : (s.back?.date ?? today), lateEvent, open ? DAY_ORDER.today : DAY_ORDER.back)
 
   // The last day for the RBI Ombudsman: still to come, or (in its place among the rest) gone.
   const lastDay = closed(next.stage) ? null : ombudsmanLastDay(s)
   const lastDayGone = lastDay !== null && today > lastDay
-  if (lastDay && lastDayGone) add(lastDay, { key: 'ombudsman-by', title: t('stuck.clock.ombudsmanClosed'), detail: null, date: lastDay, state: 'done' })
+  if (lastDay && lastDayGone) add(lastDay, { key: 'ombudsman-by', title: t('stuck.clock.ombudsmanClosed'), detail: null, date: lastDay, state: 'done' }, DAY_ORDER.after)
 
-  dated.sort((a, b) => a.at.localeCompare(b.at))
+  dated.sort((a, b) => a.at.localeCompare(b.at) || a.order - b.order)
   const events = dated.map((d) => d.event)
 
   if (s.dismissedAt !== null) {
@@ -546,7 +578,7 @@ export function clockOf(s: StuckPayment, today: string): ClockEvent[] {
   } else if (next.stage === 'compensationRaised' && next.until) {
     events.push({
       key: 'wait',
-      title: t('stuck.clock.waitOwed', { amount: inr(stillOwed(s, today).compensation), date: stuckDate(next.until, today) }),
+      title: t(s.rail === 'wallet' ? 'stuck.clock.waitOwed.wallet' : 'stuck.clock.waitOwed', { amount: inr(stillOwed(s, today).compensation), date: stuckDate(next.until, today) }),
       detail: null,
       date: null,
       state: 'next',
@@ -565,15 +597,68 @@ function rungAfter(s: StuckPayment): StuckStepKind | null {
   return ladder[reached + 1] ?? null
 }
 
-/** The money back: in full, the good last step; in part, how much of it. */
-function backEvent(s: StuckPayment, back: StuckBack): ClockEvent {
-  return {
-    key: 'back',
-    title: backInPart(s) ? t('stuck.clock.backPart', { amount: inr(back.amount), total: inr(s.amount) }) : t('stuck.clock.back', { amount: inr(back.amount) }),
-    detail: back.compensation > 0 ? t('stuck.clock.backPaid', { amount: inr(back.compensation) }) : null,
-    date: back.date,
-    state: backInFull(s) ? 'back' : 'done',
+/**
+ * What happens first on a day, for the clock: the money left, the days so far, the due day, money
+ * coming back (the clock's good news, told before a complaint raised the same day — that's for the
+ * rest, or for the wait), complaints and replies, compensation paid (after the complaint that asked
+ * for it), today's lateness, and the Ombudsman's last day gone.
+ */
+const DAY_ORDER = { start: 0, since: 1, due: 2, back: 3, step: 4, paid: 5, today: 6, after: 7 } as const
+
+/**
+ * Each time money came in, as the clock tells it: the money with its own day ("Part back · ₹2,000
+ * of ₹5,000" on 30 Oct, "Back · the last ₹3,000 of ₹5,000" on 1 Nov — the last of it the good last
+ * step), compensation paid with it as its detail, and compensation paid later on a day of its own.
+ * Saved before each part was kept, compensation on top of money that came back before a later
+ * complaint was paid after it, on a day nobody noted: it's told after that complaint, undated.
+ */
+function backEvents(s: StuckPayment): Array<{ at: string; order: number; event: ClockEvent }> {
+  const parts = backParts(s)
+  const kept = (s.back?.parts?.length ?? 0) > 0
+  const out: Array<{ at: string; order: number; event: ClockEvent }> = []
+  let sum = 0
+  let money = 0
+  let paid = 0
+  for (const part of parts) {
+    // A part saved before the parts were kept, with a complaint after it: its compensation came later.
+    const laterSteps = kept ? [] : [...s.steps.map((x) => x.date), ...(s.repliedAt !== null && bankReplied(s) ? [s.repliedAt] : [])].filter((d) => d >= part.date)
+    const paidWith = part.compensation > 0 && part.amount > 0 && laterSteps.length === 0
+    if (part.amount > 0) {
+      const before = sum
+      sum = Math.min(s.amount, sum + part.amount)
+      const all = sum >= s.amount
+      const amount = inr(part.amount)
+      const total = inr(s.amount)
+      money += 1
+      out.push({
+        at: part.date,
+        order: DAY_ORDER.back,
+        event: {
+          key: money === 1 ? 'back' : `back-${money}`,
+          title: all
+            ? before === 0
+              ? t('stuck.clock.back', { amount })
+              : t('stuck.clock.backLast', { amount, total })
+            : before === 0
+              ? t('stuck.clock.backPart', { amount, total })
+              : t('stuck.clock.backMore', { amount, sum: inr(sum), total }),
+          detail: paidWith ? t('stuck.clock.backPaid', { amount: inr(part.compensation) }) : null,
+          date: part.date,
+          state: all && backInFull(s) ? 'back' : 'done',
+        },
+      })
+    }
+    if (part.compensation > 0 && !paidWith) {
+      paid += 1
+      const afterStep = laterSteps.reduce((last, d) => (d > last ? d : last), '')
+      out.push({
+        at: afterStep || part.date,
+        order: DAY_ORDER.paid,
+        event: { key: paid === 1 ? 'paid' : `paid-${paid}`, title: t('stuck.clock.backPaid', { amount: inr(part.compensation) }), detail: null, date: afterStep ? null : part.date, state: 'done' },
+      })
+    }
   }
+  return out
 }
 
 /* ------------------------------------------------------------------ Home and You */
@@ -588,8 +673,20 @@ export function homeLines(summary: StuckSummary, list: readonly StuckPayment[] =
   const only = owing.length === 1 ? owing[0] : undefined
   if (only) {
     const { payment: s, next } = only
-    if (owedForWait(next.stage)) return { title: t('stuck.home.titleCompensation', { amount: inr(rowAmount(s, next, today)) }), line: stuckTitle(s), id: s.id }
-    return { title: t('stuck.home.one', { name: stuckTitle(s), amount: inr(rowAmount(s, next, today)) }), line: statusLine(s, next, today), id: s.id }
+    if (owedForWait(next.stage)) {
+      const title = t(s.rail === 'wallet' ? 'stuck.home.titleCompensation.wallet' : 'stuck.home.titleCompensation', { amount: inr(rowAmount(s, next, today)) })
+      return { title, line: listTitle(s), id: s.id }
+    }
+    return { title: t('stuck.home.one', { name: listTitle(s), amount: inr(rowAmount(s, next, today)) }), line: statusLine(s, next, today), id: s.id }
+  }
+  // Several: the most urgent by name, and how many more (the card opens the list).
+  const first = sortStuck(owing.map((e) => e.payment), today)[0]
+  if (first && summary.act > 0) {
+    const next = nextStep(first, today)
+    return {
+      title: t('stuck.home.one', { name: listTitle(first), amount: inr(rowAmount(first, next, today)) }),
+      line: `${statusLine(first, next, today)} · ${t('stuck.home.more', { count: owing.length - 1 })}`,
+    }
   }
   const title =
     summary.stuck > 0

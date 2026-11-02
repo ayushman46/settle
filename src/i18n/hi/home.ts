@@ -7,7 +7,8 @@ export const home = {
   'home.quick.scan': 'बिल स्कैन',
   'home.quick.split': 'रकम बाँटें',
   'home.quick.lend': 'उधार दें / लें',
-  'home.quick.collect': 'पैसे इकट्ठा करें',
+  // Collections (pools): chipping in together for a gift, a party or a trip.
+  'home.quick.collect': 'ग्रुप कलेक्शन',
   'home.quick.sms': 'SMS से',
   'home.quick.food': 'फ़ूड ऑर्डर',
   'home.quick.group': 'नया ग्रुप',
@@ -20,10 +21,11 @@ export const home = {
   'home.template.subscription': 'सब्सक्रिप्शन',
   'home.template.utilities': 'बिजली-पानी',
   'home.template.transport': 'कैब',
-  // The sheet behind the More tile: getting money back, then ways to start a split.
+  // The sheet behind the More tile: money back from friends, then from banks and shops, then ways to start a split.
   'home.more.title': 'और भी',
   'home.more.subtitle': 'अपने पैसे वापस पाएँ, या कोई बँटवारा शुरू करें।',
-  'home.more.back': 'अपने पैसे वापस पाएँ',
+  'home.more.back': 'दोस्तों से',
+  'home.more.banks': 'बैंकों और दुकानों से',
   'home.more.split': 'बँटवारा शुरू करें',
   // Short tile name for "Paid? Drop the screenshot".
   'home.more.proof': 'पेमेंट स्क्रीनशॉट',
@@ -92,7 +94,7 @@ export const home = {
   'home.describe.quota.used': 'आज के {limit} मुफ़्त AI बँटवारे खत्म हो गए हैं',
   'home.describe.quota.left': 'आज {limit} में से {count} मुफ़्त AI बँटवारे बाकी हैं',
   'home.greet.morning': 'सुप्रभात',
-  'home.greet.afternoon': 'नमस्ते',
+  'home.greet.afternoon': 'शुभ दोपहर',
   'home.greet.evening': 'शुभ संध्या',
   'home.greet.hiName': 'नमस्ते, {name}',
   'home.greet.hi': 'नमस्ते',

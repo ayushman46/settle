@@ -7,7 +7,8 @@ export const home = {
   'home.quick.scan': 'बिल स्कॅन करा',
   'home.quick.split': 'रक्कम वाटा',
   'home.quick.lend': 'उधार द्या / घ्या',
-  'home.quick.collect': 'पैसे गोळा करा',
+  // Collections (pools): chipping in together for a gift, a party or a trip.
+  'home.quick.collect': 'वर्गणी',
   'home.quick.sms': 'SMS वरून',
   'home.quick.food': 'फूड ऑर्डर',
   'home.quick.group': 'नवीन ग्रुप',
@@ -20,10 +21,11 @@ export const home = {
   'home.template.subscription': 'सबस्क्रिप्शन',
   'home.template.utilities': 'वीज-पाणी',
   'home.template.transport': 'कॅब',
-  // The sheet behind the More tile: getting money back, then ways to start a split.
+  // The sheet behind the More tile: money back from friends, then from banks and shops, then ways to start a split.
   'home.more.title': 'आणखी',
   'home.more.subtitle': 'तुमचे पैसे परत मिळवा, किंवा वाटणी सुरू करा.',
-  'home.more.back': 'तुमचे पैसे परत मिळवा',
+  'home.more.back': 'मित्रांकडून',
+  'home.more.banks': 'बँका आणि दुकानांकडून',
   'home.more.split': 'वाटणी सुरू करा',
   // Short tile name for "Paid? Drop the screenshot".
   'home.more.proof': 'पेमेंट स्क्रीनशॉट',

@@ -1254,3 +1254,110 @@
   font: var(--text-caption);
   color: var(--ink-2);
 }
+
+/* ---------- Paste: rows read in full, Add's fields clear of the sticky bars ---------- */
+
+/* The name gets the whole row (a long name, or Telugu and Tamil words, never break mid-word); Check first / Open it sits under it. */
+.foundRow {
+  grid-template-columns: minmax(0, 1fr);
+  padding: var(--s-2) var(--s-3);
+}
+
+.foundTitle {
+  overflow-wrap: break-word;
+}
+
+/* Its text under the name's: past the 20px tick and the gap, less the button's own padding. */
+.foundAction {
+  justify-self: start;
+  margin-inline-start: 20px;
+}
+
+/* A field scrolled to (by focus or a tap) stops clear of the sticky header and of the bar with Start tracking. */
+.addContent :is(button, input, select, textarea) {
+  scroll-margin-top: calc(var(--safe-top) + 72px);
+  scroll-margin-bottom: 140px;
+}
+
+/* "Picked: 29 Oct" under the day's question — the chip itself can sit on a row the bar covers. */
+.datePickedLine {
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
+.backLine {
+  margin-top: calc(var(--s-3) * -1);
+  font: var(--text-caption);
+  color: var(--ink-2);
+  text-align: center;
+}
+
+/* The list: a long name wraps to a second line before it's cut, so the payee is the part that shows. */
+.rowTitle {
+  display: -webkit-box;
+  overflow: hidden;
+  white-space: normal;
+  overflow-wrap: break-word;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+/* The order or PNR, whole on a line of its own (never cut a second time). */
+.rowRef {
+  font: var(--text-caption);
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+/* The amount still owed to you, and "for the wait" under it when that's what it is. */
+.rowAmount {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.rowAmountNote {
+  font: var(--text-caption);
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+
+/* ---------- A payment's sheets: a day outside its range, the extra under compensation; the win's total ---------- */
+
+/* A day picker with its "why" under it (the empty line takes no room). */
+.dateField {
+  display: grid;
+  min-width: 0;
+}
+
+/* Why a value can't be saved: a day before the payment or after today, a note at its limit. */
+.fieldIssue {
+  font: var(--text-caption);
+  font-weight: 550;
+  color: var(--negative);
+}
+
+.fieldIssue:not(:empty) {
+  margin-top: var(--s-1);
+}
+
+/* "Put the extra ₹700 under compensation", under an amount that's more than was owed. */
+.backExtra {
+  justify-self: start;
+}
+
+/* All back with compensation: the two together, as the celebration said it. */
+.winTotal {
+  font: var(--text-label);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+
+/* "All back!": its words sit over the rings, not under them. */
+.burst > :last-child {
+  position: relative;
+  z-index: 1;
+}

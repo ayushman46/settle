@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ToastProvider } from '../../components'
 import { updateProfile } from '../../data'
-import { stuckStore, type StuckPayment, type StuckStepKind } from '../../data/stores'
+import { profileStore, stuckStore, type StuckPayment, type StuckStepKind } from '../../data/stores'
 import { formatMoney } from '../../lib/money'
 import { letterMeStore } from './letterMe'
 import { letterFor, ombudsmanFields, withSubject } from './letters'
@@ -63,7 +63,13 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
-function Harness({ payment, step, compensationOnly, onClose }: { payment: StuckPayment; step: StuckStepKind; compensationOnly?: boolean; onClose?: () => void }) {
+interface Extra {
+  compensationOnly?: boolean
+  onClose?: () => void
+  onNext?: () => void
+}
+
+function Harness({ payment, step, compensationOnly, onClose, onNext }: Extra & { payment: StuckPayment; step: StuckStepKind }) {
   const [open, setOpen] = useState(true)
   return (
     <ToastProvider>
@@ -76,17 +82,25 @@ function Harness({ payment, step, compensationOnly, onClose }: { payment: StuckP
         payment={payment}
         step={step}
         compensationOnly={compensationOnly}
+        onNext={onNext}
       />
     </ToastProvider>
   )
 }
 
-function show(payment: StuckPayment, step: StuckStepKind, extra: { compensationOnly?: boolean; onClose?: () => void } = {}) {
+function show(payment: StuckPayment, step: StuckStepKind, extra: Extra = {}) {
   stuckStore.set([payment])
   const user = userEvent.setup()
   render(<Harness payment={payment} step={step} {...extra} />)
   return { user, sheet: screen.getByRole('dialog') }
 }
+
+/** Your mobile number already given: the letters have nothing left to fill in. */
+function knownMobile() {
+  letterMeStore.set({ mobile: '98200 12345', place: 'Pune, Maharashtra', address: '', emails: {}, revoked: {} })
+}
+
+const FULL = { ...ME, mobile: '98200 12345', place: 'Pune, Maharashtra', address: '' }
 
 const letterBox = () => screen.getByTestId('stuck-letter')
 
@@ -142,23 +156,26 @@ describe('RaiseSheet — the bank', () => {
     letterMeStore.set({ mobile: '98200 12345', place: '', address: '', emails: {}, revoked: {} })
     const { user } = show(failed(), 'bank')
     expect(screen.queryByRole('textbox', { name: 'Mobile number' })).not.toBeInTheDocument()
-    expect(screen.getByText('98200 12345')).toBeInTheDocument()
+    expect(screen.getByText('98200 12345 · ayush@okaxis')).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Change your details' }))
     expect(screen.getByRole('textbox', { name: 'Mobile number' })).toHaveValue('98200 12345')
+    expect(screen.getByRole('textbox', { name: 'Your UPI ID (optional)' })).toHaveValue('ayush@okaxis')
   })
 
   it('copies the letter from the main button, and says so', async () => {
+    knownMobile()
     const { user } = show(failed(), 'bank')
     await user.click(screen.getByRole('button', { name: 'Copy the letter' }))
-    expect(await navigator.clipboard.readText()).toBe(letterFor('bank', failed(), ME, TODAY).body)
+    expect(await navigator.clipboard.readText()).toBe(letterFor('bank', failed(), FULL, TODAY).body)
     expect(screen.getByRole('button', { name: 'Copied' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'I’ve raised it' })).toBeInTheDocument()
   })
 
   it('copies a business message with its subject first', async () => {
+    knownMobile()
     const { user } = show(refund(), 'merchant')
     await user.click(screen.getByRole('button', { name: 'Copy the message' }))
-    const message = letterFor('merchant', refund(), ME, TODAY)
+    const message = letterFor('merchant', refund(), FULL, TODAY)
     expect(await navigator.clipboard.readText()).toBe(withSubject(message))
     expect((await navigator.clipboard.readText()).startsWith(`Subject: ${message.subject}\n\n`)).toBe(true)
   })
@@ -167,8 +184,9 @@ describe('RaiseSheet — the bank', () => {
     const share = vi.fn().mockResolvedValue(undefined)
     Object.defineProperty(navigator, 'share', { value: share, configurable: true, writable: true })
     try {
+      knownMobile()
       const { user } = show(failed(), 'bank')
-      const letter = letterFor('bank', failed(), ME, TODAY)
+      const letter = letterFor('bank', failed(), FULL, TODAY)
       await user.click(screen.getByRole('button', { name: 'Share' }))
       expect(share).toHaveBeenCalledWith({ title: letter.subject, text: letter.body })
     } finally {
@@ -177,9 +195,10 @@ describe('RaiseSheet — the bank', () => {
   })
 
   it('falls back to copying when it cannot share', async () => {
+    knownMobile()
     const { user } = show(failed(), 'bank')
     await user.click(screen.getByRole('button', { name: 'Share' }))
-    expect(await navigator.clipboard.readText()).toBe(letterFor('bank', failed(), ME, TODAY).body)
+    expect(await navigator.clipboard.readText()).toBe(letterFor('bank', failed(), FULL, TODAY).body)
     expect(await screen.findByText('Copied. Paste it where you’re sending it.')).toBeInTheDocument()
   })
 
@@ -198,6 +217,7 @@ describe('RaiseSheet — the bank', () => {
 
   it('prints the letter, with a line to sign and a copy for the branch to stamp', async () => {
     const print = vi.spyOn(window, 'print').mockImplementation(() => undefined)
+    knownMobile()
     const { user } = show(failed(), 'bank')
     await user.click(screen.getByRole('button', { name: 'Print or save as PDF' }))
     expect(print).toHaveBeenCalledTimes(1)
@@ -257,7 +277,7 @@ describe('RaiseSheet — "I’ve raised it"', () => {
     const { user } = show(refund(), 'merchant')
     await user.click(screen.getByRole('button', { name: 'I’ve raised it' }))
     expect(screen.getByRole('textbox', { name: 'Ticket number' })).toHaveValue('')
-    await user.click(screen.getByRole('button', { name: 'Back' }))
+    await user.click(screen.getByRole('button', { name: 'Back to the message' }))
     expect(screen.getByRole('dialog')).toHaveAccessibleName('Raise it with Amazon')
     await user.click(screen.getByRole('button', { name: 'I’ve raised it' }))
     await user.click(screen.getByRole('button', { name: 'Save' }))
@@ -351,5 +371,163 @@ describe('RaiseSheet — further up', () => {
     expect(letterBox()).toHaveTextContent('Order / booking number: 404-1234567-7654321')
     // The main button copies the message; the help page is one of the links.
     expect(within(sheet).getByRole('button', { name: 'Copy the message' })).toBeInTheDocument()
+  })
+})
+
+describe('RaiseSheet — nothing goes out with a blank unsaid', () => {
+  it('says what is still empty before copying, then fills it in or copies it anyway', async () => {
+    const { user } = show(failed(), 'bank')
+    await user.click(screen.getByRole('button', { name: 'Copy the letter' }))
+    expect(screen.getByRole('dialog')).toHaveAccessibleName('1 part is still empty')
+    expect(within(screen.getByRole('list', { name: 'Still empty' })).getByText('[your mobile number]')).toBeInTheDocument()
+    expect(await navigator.clipboard.readText()).not.toContain('Yours faithfully')
+
+    // Fill it in: back on the letter, in the field it needs.
+    await user.click(screen.getByRole('button', { name: 'Fill it in' }))
+    expect(screen.getByRole('dialog')).toHaveAccessibleName('Raise it with your bank')
+    expect(screen.getByRole('textbox', { name: 'Mobile number' })).toHaveFocus()
+
+    // Or copy it as it is.
+    await user.click(screen.getByRole('button', { name: 'Copy the letter' }))
+    await user.click(screen.getByRole('button', { name: 'Copy it anyway' }))
+    expect(await navigator.clipboard.readText()).toBe(letterFor('bank', failed(), ME, TODAY).body)
+    expect(screen.getByRole('dialog')).toHaveAccessibleName('Raise it with your bank')
+    // Asked once: the next copy goes straight through.
+    await user.click(screen.getByRole('button', { name: 'Copied' }))
+    expect(screen.getByRole('dialog')).toHaveAccessibleName('Raise it with your bank')
+  })
+
+  it('asks before printing or emailing too, and sends it from there', async () => {
+    const print = vi.spyOn(window, 'print').mockImplementation(() => undefined)
+    const { user } = show(failed(), 'bank')
+    await user.click(screen.getByRole('button', { name: 'Print or save as PDF' }))
+    expect(print).not.toHaveBeenCalled()
+    await user.click(screen.getByRole('button', { name: 'Print it anyway' }))
+    expect(print).toHaveBeenCalledTimes(1)
+    print.mockRestore()
+  })
+
+  it('keeps the email link until you say to send it anyway', async () => {
+    const { user } = show(failed(), 'bank')
+    const letter = letterFor('bank', failed(), ME, TODAY)
+    await user.click(screen.getByRole('link', { name: 'Email' }))
+    expect(screen.getByRole('dialog')).toHaveAccessibleName('1 part is still empty')
+    expect(screen.getByRole('link', { name: 'Email it anyway' })).toHaveAttribute('href', `mailto:?subject=${encodeURIComponent(letter.subject)}&body=${encodeURIComponent(letter.body)}`)
+  })
+
+  it('puts the helpline’s one detail first, and asks before WhatsApp while it is empty', async () => {
+    const { user, sheet } = show(refund({ steps: [{ kind: 'merchant', date: '2026-10-28', ref: 'TKT-55021' }] }), 'nch')
+    const headings = within(sheet)
+      .getAllByRole('heading', { level: 3 })
+      .map((h) => h.textContent)
+    expect(headings.slice(0, 2)).toEqual(['Your details', 'Where and how'])
+    const city = screen.getByRole('textbox', { name: 'City and state' })
+    expect(city).not.toHaveAttribute('placeholder')
+    expect(city).toHaveAccessibleDescription('For example: Pune, Maharashtra')
+    await user.click(screen.getByRole('link', { name: 'Send on WhatsApp (opens in a new tab)' }))
+    expect(screen.getByRole('dialog')).toHaveAccessibleName('1 part is still empty')
+    expect(screen.getByText('[your city and state]')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Send it anyway (opens in a new tab)' }).getAttribute('href')).toMatch(/^https:\/\/wa\.me\/918800001915\?text=/)
+    await user.click(screen.getByRole('button', { name: 'Fill it in' }))
+    expect(screen.getByRole('textbox', { name: 'City and state' })).toHaveFocus()
+  })
+})
+
+describe('RaiseSheet — your name and UPI ID', () => {
+  it('asks for your name when the profile has none, and signs with it', async () => {
+    updateProfile({ name: 'You' })
+    knownMobile()
+    const { user } = show(failed({ rail: 'imps', app: null }), 'bank')
+    expect(letterBox()).toHaveTextContent('Yours faithfully, [your name] Mobile', { normalizeWhitespace: true })
+    await user.type(screen.getByRole('textbox', { name: 'Your name' }), 'Ishaan Verma')
+    expect(letterBox()).toHaveTextContent('Yours faithfully, Ishaan Verma Mobile: 98200 12345', { normalizeWhitespace: true })
+    expect(screen.queryByText(/still to fill in/)).not.toBeInTheDocument()
+    expect(profileStore.get().name).toBe('Ishaan Verma')
+  })
+
+  it('does not ask for a name it already has', () => {
+    show(failed(), 'bank')
+    expect(screen.queryByRole('textbox', { name: 'Your name' })).not.toBeInTheDocument()
+  })
+
+  it('leaves the UPI ID out until you give one, then signs with it and saves it to your profile', async () => {
+    updateProfile({ upiId: null })
+    knownMobile()
+    const { user } = show(failed(), 'bank')
+    expect(letterBox()).not.toHaveTextContent('UPI ID')
+    expect(screen.queryByText(/still to fill in/)).not.toBeInTheDocument()
+    // The letter is complete without it: one tap away, under Change.
+    await user.click(screen.getByRole('button', { name: 'Change your details' }))
+    const field = screen.getByRole('textbox', { name: 'Your UPI ID (optional)' })
+    await user.type(field, 'priya.k@okhdfcbank')
+    expect(letterBox()).toHaveTextContent('UPI ID: priya.k@okhdfcbank')
+    expect(profileStore.get().upiId).toBe('priya.k@okhdfcbank')
+    await user.clear(field)
+    await user.type(field, 'not a upi')
+    await user.tab()
+    expect(field).toHaveAccessibleDescription(/doesn’t look like a UPI ID/)
+  })
+
+  it('does not ask for a UPI ID a card payment’s letter never uses', () => {
+    knownMobile()
+    show(failed({ rail: 'card_online', app: null }), 'bank')
+    expect(screen.queryByRole('textbox', { name: /UPI ID/ })).not.toBeInTheDocument()
+  })
+})
+
+describe('RaiseSheet — a reference that was not saved', () => {
+  it('asks for it in the sheet and saves it with the payment', async () => {
+    knownMobile()
+    const { user } = show(failed({ ref: null }), 'bank')
+    expect(within(letterBox()).getByText('[transaction reference]')).toBeInTheDocument()
+    await user.type(screen.getByRole('textbox', { name: 'UPI reference (12 digits)' }), '629420113457')
+    expect(letterBox()).toHaveTextContent('UPI reference (RRN/UTR): 629420113457')
+    expect(stuckStore.get()[0]?.ref).toBe('629420113457')
+  })
+
+  it('does not ask when it is there already', () => {
+    show(failed(), 'bank')
+    expect(screen.queryByRole('textbox', { name: 'UPI reference (12 digits)' })).not.toBeInTheDocument()
+  })
+})
+
+describe('RaiseSheet — what is still owed, above the title', () => {
+  it('shows the rest after a part came back', () => {
+    show(failed({ back: { date: '2026-10-30', amount: 30_000, compensation: 0 } }), 'bank')
+    expect(screen.getByText(`${inr(20_000)} of ${inr(50_000)} · Swiggy`)).toBeInTheDocument()
+  })
+
+  it('shows the compensation alone once the money is back', () => {
+    show(failed({ back: { date: '2026-10-30', amount: 50_000, compensation: 0 } }), 'bank', { compensationOnly: true })
+    expect(screen.getByText(`${inr(50_000)} for the wait · Swiggy`)).toBeInTheDocument()
+  })
+})
+
+describe('RaiseSheet — focus and the way on', () => {
+  it('moves off the button that changed: "I’ve raised it" never leaves focus on a Back that undoes it', async () => {
+    const { user } = show(failed(), 'bank')
+    await user.click(screen.getByRole('button', { name: 'I’ve raised it' }))
+    expect(document.activeElement).not.toHaveAccessibleName('Back to the letter')
+    expect(document.activeElement?.tagName).not.toBe('BODY')
+    expect(screen.getByRole('button', { name: 'Back to the letter' })).toBeInTheDocument()
+  })
+
+  it('gives the RBI Ombudsman’s last day for this case, and the way to post it', () => {
+    const raised = failed({ steps: [{ kind: 'bank', date: '2026-10-01', ref: null }] })
+    const { sheet } = show(raised, 'ombudsman')
+    expect(within(sheet).getByText(/^File by 29 Jan 2027 at the latest/)).toBeInTheDocument()
+    expect(within(sheet).getByText(/Central Vista, Chandigarh 160017/)).toBeInTheDocument()
+  })
+
+  it('offers the helpline from the business’s steps when the detail screen says it’s time', async () => {
+    const onNext = vi.fn()
+    const { user } = show(refund(), 'merchant', { onNext })
+    await user.click(screen.getByRole('button', { name: 'Take it to the National Consumer Helpline' }))
+    expect(onNext).toHaveBeenCalledTimes(1)
+  })
+
+  it('leaves it out otherwise', () => {
+    show(refund(), 'merchant')
+    expect(screen.queryByRole('button', { name: 'Take it to the National Consumer Helpline' })).not.toBeInTheDocument()
   })
 })

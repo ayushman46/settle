@@ -12,13 +12,19 @@ export interface ToastAction {
 export interface ToastOptions {
   /** Adds a small status glyph. Default `neutral` (text only). */
   tone?: ToastTone
-  /** One inline action (e.g. Undo). */
+  /** One inline action (e.g. Undo), beside the close button every toast has. */
   action?: ToastAction
   /**
    * Milliseconds before it hides. Default 2200, or 8000 when there is an action (which Ctrl/Cmd+Z
    * also runs while it shows). Paused while hovered, touched or focused.
    */
   duration?: number
+  /**
+   * Stays when a sheet opens over it. By default a sheet opening puts the toast away (it would sit
+   * over the sheet's fields and buttons); an Undo that must survive editing something else first
+   * (the bill review's "Removed Dal Makhani") opts out.
+   */
+  keepOverSheets?: boolean
 }
 
 /** Shows a toast (replacing any current one). Returns a function that dismisses it early. */

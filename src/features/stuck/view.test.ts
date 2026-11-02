@@ -12,6 +12,7 @@ import {
   groupStuck,
   homeLines,
   knownParty,
+  listTitle,
   orderTail,
   partyName,
   railLabel,
@@ -70,8 +71,18 @@ describe('names and labels', () => {
   it('titles it by what it is, so a payee never reads as a friend who owes you', () => {
     expect(stuckTitle(stuck({ party: 'Neha' }))).toBe('Failed payment to Neha')
     expect(stuckTitle(stuck({ kind: 'refund', rail: null, party: null, merchant: 'amazon' }))).toBe('Amazon refund')
+    // No name: how it was paid, with the account it left when that's known, so two aren't alike.
     expect(stuckTitle(stuck({ party: null, rail: 'atm' }))).toBe('ATM, no cash came out')
+    expect(listTitle(stuck({ party: null, rail: 'atm', bank: 'kvb', account: 'XX4410' }))).toBe('ATM, no cash came out · KVB ••4410')
+    expect(listTitle(stuck({ party: null, rail: null, bank: null, account: 'XX4410' }))).toBe('A failed payment · ••4410')
+    expect(listTitle(stuck({ party: null, rail: 'atm', bank: null, account: null }))).toBe('ATM, no cash came out')
+    expect(listTitle(stuck({ party: 'Neha' }))).toBe('Failed payment to Neha')
+    expect(stuckTitle(stuck({ kind: 'refund', rail: null, party: null }))).toBe('A refund')
     expect(orderTail(stuck({ orderId: '403-1122334-5566778' }))).toBe('Order …5566778')
+    expect(orderTail(stuck({ orderId: 'OD432178651234567100' }))).toBe('Order …4567100')
+    // Ten characters or fewer: whole, never cut from the front.
+    expect(orderTail(stuck({ orderId: 'BLK-88213' }))).toBe('Order BLK-88213')
+    expect(orderTail(stuck({ orderId: '4512345678' }))).toBe('Order 4512345678')
     expect(orderTail(stuck({ orderId: 'A12' }))).toBe('Order A12')
     expect(orderTail(stuck({ kind: 'refund', merchant: 'indigo', orderId: 'K7XQ2M' }))).toBe('PNR K7XQ2M')
     expect(orderTail(stuck())).toBeNull()
@@ -166,7 +177,7 @@ describe('one line per payment', () => {
 
   it('back in full with the compensation raised: the line is about the compensation', () => {
     const owed = stuck({ amount: 450_000, steps: [{ kind: 'bank', date: '2026-10-31', ref: null }], back: { date: '2026-11-01', amount: 450_000, compensation: 0 } })
-    expect(line(owed)).toBe('₹4,500 back · raised for the ₹300 · they have till 30 Nov')
+    expect(line(owed)).toBe('₹4,500 back · ₹300 for the wait still owed · they have till 30 Nov')
     expect(line(owed, '2026-12-01')).toBe('₹4,500 back · take the ₹300 to the RBI Ombudsman')
     expect(line({ ...owed, steps: [...owed.steps, { kind: 'ombudsman', date: '2026-12-01', ref: null }] }, '2026-12-05')).toBe('₹4,500 back · ₹300 with the RBI Ombudsman')
     expect(amountOf(owed)).toBe(30_000)
@@ -287,6 +298,75 @@ describe('the clock', () => {
     ])
   })
 
+  it('each part back on its own day — none overwritten — and the lateness told before the last of it', () => {
+    // ₹5,000 by UPI to a person on 25 Oct, due 26 Oct: ₹2,000 back on 30 Oct, the other ₹3,000 on 1 Nov (6 days late).
+    const parts = [
+      { date: '2026-10-30', amount: 200_000, compensation: 0 },
+      { date: '2026-11-01', amount: 300_000, compensation: 0 },
+    ]
+    const vikram = stuck({ amount: 500_000, date: '2026-10-25', back: { date: '2026-11-01', amount: 500_000, compensation: 0, parts } })
+    expect(clockOf(vikram, '2026-11-02').map((e) => [e.key, e.title, e.date, e.state])).toEqual([
+      ['start', 'The money left your account', '2026-10-25', 'done'],
+      ['due', 'Due back by 26 Oct', null, 'done'],
+      ['back', 'Part back · ₹2,000 of ₹5,000', '2026-10-30', 'done'],
+      ['late', '6 days late', null, 'done'],
+      ['back-2', 'Back · the last ₹3,000 of ₹5,000', '2026-11-01', 'back'],
+    ])
+    // Still open: each part, then today's lateness.
+    const open = stuck({ amount: 500_000, date: '2026-10-25', back: { date: '2026-11-01', amount: 300_000, compensation: 0, parts: [parts[0]!, { date: '2026-11-01', amount: 100_000, compensation: 0 }] } })
+    expect(clockOf(open, '2026-11-02').map((e) => [e.title, e.date])).toEqual([
+      ['The money left your account', '2026-10-25'],
+      ['Due back by 26 Oct', null],
+      ['Part back · ₹2,000 of ₹5,000', '2026-10-30'],
+      ['₹1,000 more back · ₹3,000 of ₹5,000', '2026-11-01'],
+      ['7 days late', '2026-11-02'],
+    ])
+  })
+
+  it('compensation paid after the complaint gets its own day, after it', () => {
+    // ₹4,500 on 1 Oct, due 2 Oct, back 6 Oct (4 days late, ₹400); raised with the bank 20 Oct; the ₹400 paid 28 Oct.
+    const parts = [
+      { date: '2026-10-06', amount: 450_000, compensation: 0 },
+      { date: '2026-10-28', amount: 0, compensation: 40_000 },
+    ]
+    const rohit = stuck({ amount: 450_000, date: '2026-10-01', steps: [{ kind: 'bank', date: '2026-10-20', ref: null }], back: { date: '2026-10-06', amount: 450_000, compensation: 40_000, parts } })
+    expect(clockOf(rohit, TODAY).map((e) => [e.key, e.title, e.date])).toEqual([
+      ['start', 'The money left your account', '2026-10-01'],
+      ['due', 'Due back by 2 Oct', null],
+      ['late', '4 days late', null],
+      ['back', 'Back · ₹4,500', '2026-10-06'],
+      ['step-bank', 'Raised with your bank', '2026-10-20'],
+      ['paid', '+₹400 for the wait, paid', '2026-10-28'],
+    ])
+    // Saved before the parts were kept: the day it was paid wasn't noted, so it's told after the complaint, with no day.
+    const old = { ...rohit, back: { date: '2026-10-06', amount: 450_000, compensation: 40_000 } }
+    const events = clockOf(old, TODAY)
+    expect(events.map((e) => [e.key, e.date])).toEqual([
+      ['start', '2026-10-01'],
+      ['due', null],
+      ['late', null],
+      ['back', '2026-10-06'],
+      ['step-bank', '2026-10-20'],
+      ['paid', null],
+    ])
+    expect(events.find((e) => e.key === 'back')?.detail).toBeNull()
+  })
+
+  it('on the same day, the money back comes before the complaint raised for the wait', () => {
+    // ₹14,000 to Neha on 20 Oct, due 21 Oct: back 2 Nov, and the ₹1,200 for the wait raised with the bank the same day.
+    const neha = stuck({ party: 'Neha', amount: 1_400_000, date: '2026-10-20', steps: [{ kind: 'bank', date: '2026-11-02', ref: null }], back: { date: '2026-11-02', amount: 1_400_000, compensation: 0 } })
+    expect(clockOf(neha, '2026-11-02').map((e) => e.key)).toEqual(['start', 'due', 'late', 'back', 'step-bank', 'wait', 'ombudsman-by'])
+  })
+
+  it('a wallet payment says it left the wallet, and that the next day is for one within the same wallet', () => {
+    const paytm = stuck({ rail: 'wallet', app: 'paytm', party: 'Zomato', back: { date: '2026-10-31', amount: 50_000, compensation: 0 } })
+    const events = clockOf(paytm, TODAY)
+    expect(events[0]?.title).toBe('The money left your wallet')
+    expect(events[1]?.detail).toBe('Paid within the same wallet: the RBI’s rule says back the next day. If the wallet app paid over UPI or a card, that one’s deadline counts instead — change how you paid.')
+    expect(line(paytm)).toBe('Back 2 days late · the wallet company owes you ₹200')
+    expect(homeLines(summarize([paytm], TODAY), [paytm], TODAY)?.title).toBe('The wallet company owes you ₹200 for the wait')
+  })
+
   it('set aside: no lateness, and the bank’s reply shows when it came', () => {
     expect(clockOf(stuck({ dismissedAt: 5 }), TODAY).map((e) => e.key)).toEqual(['start', 'due', 'aside'])
     const replied = clockOf(stuck({ steps: [{ kind: 'bank', date: '2026-10-29', ref: null }], repliedAt: '2026-10-30' }), TODAY)
@@ -296,7 +376,7 @@ describe('the clock', () => {
       ['step-bank', '2026-10-29'],
       ['replied', '2026-10-30'],
       ['late', TODAY],
-      ['ombudsman-by', '2027-01-28'],
+      ['ombudsman-by', '2027-02-26'],
     ])
   })
 
@@ -341,7 +421,8 @@ describe('Home’s line', () => {
     expect(homeLines(summarize([], TODAY))).toBeNull()
     expect(homeLines(summarize([stuck({ back: { date: '2026-10-29', amount: 50_000, compensation: 0 } })], TODAY))).toBeNull()
     const two = [stuck(), stuck({ id: 's2', amount: 420_000, date: '2026-10-31' })]
-    expect(homeLines(summarize(two, TODAY), two, TODAY)).toEqual({ title: '₹4,700 stuck with banks and shops', line: '1 to act on · ₹300 owed for the wait' })
+    // Several, one needing you: that one by name, and how many more.
+    expect(homeLines(summarize(two, TODAY), two, TODAY)).toEqual({ title: 'Failed payment to Riya Sharma · ₹500', line: '3 days late · your bank owes you ₹300 · + 1 more' })
     const calm = [stuck({ date: '2026-11-01' }), stuck({ id: 's2', date: '2026-11-01' })]
     expect(homeLines(summarize(calm, TODAY), calm, TODAY)).toEqual({ title: '₹1,000 stuck with banks and shops', line: 'Nothing to do today' })
   })

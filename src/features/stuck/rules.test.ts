@@ -1,7 +1,22 @@
 import { describe, expect, it } from 'vitest'
 import type { StuckPayment } from '../../data/stores'
 import { addWorkingDays, findMerchant } from './merchants'
-import { compensationDue, daysLate, dueBy, needsAction, nextStep, ombudsmanLastDay, ombudsmanTooLate, refundDueBasis, sortStuck, stillOwed, summarize } from './rules'
+import {
+  backParts,
+  compensationDue,
+  daysLate,
+  dueBy,
+  NACH_REVOKED_RULE,
+  needsAction,
+  nextStep,
+  ombudsmanLastDay,
+  ombudsmanTooLate,
+  RAIL_RULES,
+  refundDueBasis,
+  sortStuck,
+  stillOwed,
+  summarize,
+} from './rules'
 
 function stuck(over: Partial<StuckPayment> = {}): StuckPayment {
   return {
@@ -41,6 +56,12 @@ describe('the RBI deadlines', () => {
 
   it('an unknown way of paying gets the longer deadline, so a claim is never early', () => {
     expect(dueBy(stuck({ rail: null }))).toBe('2026-11-02')
+  })
+
+  it('a payment within the same wallet (on-us) is due the next day; a NACH debit after a revoked mandate cites its own row, 7(b)', () => {
+    expect(dueBy(stuck({ rail: 'wallet' }))).toBe('2026-10-29')
+    expect(RAIL_RULES.wallet.row).toMatch(/on-us.*\(I\.8\.b\)$/)
+    expect(NACH_REVOKED_RULE).toEqual({ days: 1, row: 'NACH — account debited despite revocation of the debit mandate with the bank by the customer (I.7.b)' })
   })
 
   it('a refund is due when the business promised, or after its usual working days', () => {
@@ -149,9 +170,11 @@ describe('what to do next', () => {
     expect(ombudsmanTooLate(raised, '2027-02-28')).toBe(true)
   })
 
-  it('counts the Ombudsman’s 90 days from the bank’s reply, and has no last day before a complaint or once it’s filed', () => {
+  it('counts the Ombudsman’s 90 days from the later of the bank’s 30 days and its reply, and has no last day before a complaint or once it’s filed', () => {
     const raised = stuck({ steps: [{ kind: 'bank', date: '2026-10-30', ref: null }], repliedAt: '2026-11-04' })
-    expect(ombudsmanLastDay(raised)).toBe('2027-02-02')
+    // An early reply never shortens it: still 90 days from the end of the bank's 30 days.
+    expect(ombudsmanLastDay(raised)).toBe('2027-02-27')
+    expect(ombudsmanLastDay({ ...raised, repliedAt: '2026-10-30' })).toBe('2027-02-27')
     // A late reply reopens it.
     expect(ombudsmanLastDay({ ...raised, repliedAt: '2027-03-01' })).toBe('2027-05-30')
     expect(ombudsmanLastDay(stuck())).toBeNull()
@@ -188,6 +211,18 @@ describe('part of it back', () => {
     expect(stillOwed(part, '2026-11-02')).toEqual({ money: 100_000, compensation: 30_000 })
   })
 
+  it('reads each time money came in, in date order — the totals as one part when saved before the parts were kept', () => {
+    expect(backParts(stuck())).toEqual([])
+    expect(backParts(stuck({ back: { date: '2026-10-30', amount: 40_000, compensation: 0 } }))).toEqual([{ date: '2026-10-30', amount: 40_000, compensation: 0 }])
+    expect(backParts(stuck({ back: { date: '2026-10-30', amount: 40_000, compensation: 0, parts: [] } }))).toEqual([{ date: '2026-10-30', amount: 40_000, compensation: 0 }])
+    const parts = [
+      { date: '2026-11-01', amount: 10_000, compensation: 0 },
+      { date: '2026-10-30', amount: 40_000, compensation: 0 },
+      { date: '2026-11-05', amount: 0, compensation: 40_000 },
+    ]
+    expect(backParts(stuck({ back: { date: '2026-11-01', amount: 50_000, compensation: 40_000, parts } })).map((p) => p.date)).toEqual(['2026-10-30', '2026-11-01', '2026-11-05'])
+  })
+
   it('compensation paid never closes a case short of its money', () => {
     const generous = stuck({ amount: 245_000, back: { date: '2026-11-01', amount: 200_000, compensation: 500_000 } })
     expect(nextStep(generous, '2026-11-02').stage).toBe('overdue')
@@ -205,12 +240,36 @@ describe('the list', () => {
       stuck({ id: 'd', confirmed: false, amount: 99_900 }),
       stuck({ id: 'e', dismissedAt: 9 }),
     ]
-    expect(summarize(list, '2026-11-01')).toEqual({ open: 3, stuck: 170_000, compensation: 50_000, act: 3, recovered: 30_000, recoveredCount: 1 })
+    expect(summarize(list, '2026-11-01')).toEqual({ open: 3, stuck: 170_000, compensation: 50_000, act: 3, recovered: 30_000, recoveredCompensation: 0, recoveredCount: 1 })
+  })
+
+  it('counts the money that came back apart from the compensation, so it’s never more than was stuck', () => {
+    // ₹2,450 by UPI to a person on 8 Oct, due 9 Oct: all back on 21 Oct (12 days late), and the ₹1,200 for the wait paid.
+    const pooja = stuck({ amount: 245_000, date: '2026-10-08', back: { date: '2026-10-21', amount: 245_000, compensation: 120_000 } })
+    expect(summarize([pooja], '2026-11-01')).toMatchObject({ recovered: 245_000, recoveredCompensation: 120_000, recoveredCount: 1, compensation: 0 })
   })
 
   it('puts what needs you first', () => {
     const list = [stuck({ id: 'waiting', date: '2026-11-01' }), stuck({ id: 'late' }), stuck({ id: 'gone', dismissedAt: 1 })]
     expect(sortStuck(list, '2026-11-01').map((s) => s.id)).toEqual(['late', 'waiting', 'gone'])
+  })
+
+  it('at each stage, the most urgent first: the most days late, the soonest last day — not the newest', () => {
+    const today = '2026-11-02'
+    // Late, nothing raised: 3 days late (Zomato) before 2 (Swiggy), though Swiggy is newer.
+    const zomato = stuck({ id: 'zomato', date: '2026-10-29', createdAt: 1 })
+    const swiggy = stuck({ id: 'swiggy', date: '2026-10-30', createdAt: 2 })
+    // 18 days late before 7.
+    const ola = stuck({ id: 'ola', date: '2026-10-14' })
+    expect(sortStuck([swiggy, zomato, ola], today).map((s) => s.id)).toEqual(['ola', 'zomato', 'swiggy'])
+    // Not due yet: due 4 Nov before due 6 Nov, though paid earlier.
+    const croma = stuck({ id: 'croma', kind: 'refund', rail: null, date: '2026-10-25', promisedBy: '2026-11-04' })
+    const amazon = stuck({ id: 'amazon', kind: 'refund', rail: null, date: '2026-10-31', promisedBy: '2026-11-06' })
+    expect(sortStuck([amazon, croma], today).map((s) => s.id)).toEqual(['croma', 'amazon'])
+    // Raised: whoever's time runs out first.
+    const early = stuck({ id: 'early', steps: [{ kind: 'bank', date: '2026-10-29', ref: null }] })
+    const later = stuck({ id: 'later', date: '2026-10-20', steps: [{ kind: 'bank', date: '2026-10-31', ref: null }] })
+    expect(sortStuck([later, early], today).map((s) => s.id)).toEqual(['early', 'later'])
   })
 })
 
@@ -243,11 +302,11 @@ describe('an airline refund paid by card', () => {
     expect(refundDueBasis(indigo({ promisedBy: '2026-11-05' }))).toEqual({ kind: 'dgca', days: 7 })
   })
 
-  it('keeps the airline’s word when it gave an earlier date, or its own timeline ends the same day', () => {
+  it('keeps the airline’s word when it gave an earlier date, and cites the DGCA when its own timeline ends the same day', () => {
     expect(dueBy(indigo({ promisedBy: '2026-10-24' }))).toBe('2026-10-24')
     expect(refundDueBasis(indigo({ promisedBy: '2026-10-24' }))).toEqual({ kind: 'promised' })
     expect(dueBy(indigo())).toBe('2026-10-27')
-    expect(refundDueBasis(indigo()).kind).toBe('merchant')
+    expect(refundDueBasis(indigo()).kind).toBe('dgca')
   })
 
   it('follows the airline’s word when it wasn’t paid by card, and the rule is for airlines only', () => {

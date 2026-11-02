@@ -18,18 +18,27 @@ import styles from './Stuck.module.css'
  * your bank owes you ₹200"), opening it; several as a total ("₹4,700 stuck with banks and shops · 1
  * to act on"), opening the list. Only while something is still owed (the money, or compensation for the wait).
  */
-export function StuckCard() {
+export function StuckCard({ compact = false }: { compact?: boolean }) {
   const t = useT()
   const list = useStore(stuckStore, (all) => all)
   const day = todayIso()
   const summary = useMemo(() => summarize(list, day), [list, day])
   const lines = useMemo(() => homeLines(summary, list, day), [summary, list, day])
   if (!lines) return null
+  // One payment named: its own icon (a shop for a refund); several: the feature's.
+  const kind = lines.id ? (list.find((s) => s.id === lines.id)?.kind ?? null) : null
   return (
+    // At the top of Home (something needs you): one compact row, its heading only for screen readers.
     <section className={styles.homeSection} aria-labelledby="home-stuck">
-      <SectionHeader id="home-stuck" title={t('stuck.title')} />
+      {compact ? (
+        <h2 id="home-stuck" className="visually-hidden">
+          {t('stuck.title')}
+        </h2>
+      ) : (
+        <SectionHeader id="home-stuck" title={t('stuck.title')} />
+      )}
       <button type="button" className={styles.homeRow} onClick={() => navigate(lines.id ? stuckPath(lines.id) : STUCK_PATH)}>
-        <KindIcon kind="failed" section={summary.act > 0 ? 'needs' : 'onway'} />
+        <KindIcon kind={kind} section={summary.act > 0 ? 'needs' : 'onway'} />
         <span className={styles.homeText}>
           <span className={styles.homeTitle}>{lines.title}</span>{' '}
           <span className={cx(styles.homeLine, summary.act > 0 && styles.homeLineAct)}>{lines.line}</span>

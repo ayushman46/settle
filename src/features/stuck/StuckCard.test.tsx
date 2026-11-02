@@ -26,11 +26,11 @@ describe('StuckCard (Home)', { timeout: 30_000 }, () => {
     expect(container).toBeEmptyDOMElement()
   })
 
-  it('says what’s stuck and what needs you, and opens the list', async () => {
+  it('names the most urgent of several, says how many more, and opens the list', async () => {
     seedStuck(stuckPayment(), stuckPayment({ id: 's2', kind: 'refund', rail: null, party: 'Amazon', merchant: 'amazon', amount: 420_000, date: '2026-10-31' }))
     const { user } = renderAt('/app', <StuckCard />)
     expect(screen.getByRole('region', { name: 'Stuck money' })).toBeInTheDocument()
-    const row = screen.getByRole('button', { name: '₹4,700 stuck with banks and shops 1 to act on · ₹300 owed for the wait' })
+    const row = screen.getByRole('button', { name: 'Failed payment to Riya Sharma · ₹500 3 days late · your bank owes you ₹300 · + 1 more' })
     await user.click(row)
     expect(currentUrl()).toBe('/app/stuck')
   })
@@ -46,6 +46,17 @@ describe('StuckCard (Home)', { timeout: 30_000 }, () => {
     seedStuck(stuckPayment({ back: { date: '2026-10-31', amount: 50_000, compensation: 0 } }))
     renderAt('/app', <StuckCard />)
     expect(screen.getByRole('button', { name: 'Your bank owes you ₹200 for the wait Failed payment to Riya Sharma' })).toBeInTheDocument()
+  })
+
+  it('shows a refund’s own icon (a shop, not a bank), and the feature’s for several', () => {
+    seedStuck(stuckPayment({ kind: 'refund', rail: null, party: 'Flipkart', merchant: 'flipkart', date: '2026-10-20' }))
+    const { container, unmount } = renderAt('/app', <StuckCard />)
+    expect(container.querySelector('.lucide-store')).not.toBeNull()
+    expect(container.querySelector('.lucide-landmark')).toBeNull()
+    unmount()
+    seedStuck(stuckPayment(), stuckPayment({ id: 's2', kind: 'refund', rail: null, party: 'Amazon', merchant: 'amazon', amount: 420_000, date: '2026-10-31' }))
+    const several = renderAt('/app', <StuckCard />)
+    expect(several.container.querySelector('.lucide-banknote-arrow-down')).not.toBeNull()
   })
 
   it('stays while part of it is still to come', () => {

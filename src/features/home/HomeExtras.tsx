@@ -3,7 +3,7 @@ import { POOLS_ENABLED } from '../pools/enabled'
 import { StuckCard } from '../stuck/StuckCard'
 
 export interface HomeExtrasProps {
-  /** Leave Stuck money out: Home already shows it higher up (see `useStuckFirst`). */
+  /** Leave Stuck money out: Home already shows it higher up (see `useStuckPlace`). */
   withoutStuck?: boolean
 }
 

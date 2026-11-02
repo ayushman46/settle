@@ -26,6 +26,11 @@ export const stuckalerts: Messages = {
   'stuckalerts.back.refund.anon': '{amount} ರಿಫಂಡ್ ಬಂತು',
   'stuckalerts.back.part': 'ನಿಮ್ಮ {amount} ರಲ್ಲಿ {back} ವಾಪಸ್ ಬಂತು — ಇನ್ನೂ {rest} ಬರಬೇಕು, Settle ಅದನ್ನು ಟ್ರ್ಯಾಕ್ ಮಾಡುತ್ತಲೇ ಇರುತ್ತದೆ',
   'stuckalerts.back.many': '{count, plural, one {# ಸಿಲುಕಿದ ಪಾವತಿ ವಾಪಸ್ ಬಂತು} other {# ಸಿಲುಕಿದ ಪಾವತಿಗಳು ವಾಪಸ್ ಬಂದವು}}',
+  'stuckalerts.paid': '{name} ಗೆ ಮಾಡಿದ ಪಾವತಿಯಲ್ಲಿ ಕಾಯಿಸಿದ್ದಕ್ಕೆ {amount} ಬಂತು — ಸಿಲುಕಿದ ಹಣ ವಿಭಾಗದಲ್ಲಿ ಬರೆದಿಟ್ಟಿದ್ದೇವೆ',
+  'stuckalerts.paid.anon': 'ವಿಫಲ ಪಾವತಿಯೊಂದರಲ್ಲಿ ಕಾಯಿಸಿದ್ದಕ್ಕೆ {amount} ಬಂತು — ಸಿಲುಕಿದ ಹಣ ವಿಭಾಗದಲ್ಲಿ ಬರೆದಿಟ್ಟಿದ್ದೇವೆ',
+  'stuckalerts.paid.part': '{name} ಗೆ ಮಾಡಿದ ಪಾವತಿಯಲ್ಲಿ ಕಾಯಿಸಿದ್ದಕ್ಕೆ {amount} ಬಂತು — ಇನ್ನೂ {owed} ಬರಬೇಕು',
+  'stuckalerts.paid.part.anon': 'ವಿಫಲ ಪಾವತಿಯೊಂದರಲ್ಲಿ ಕಾಯಿಸಿದ್ದಕ್ಕೆ {amount} ಬಂತು — ಇನ್ನೂ {owed} ಬರಬೇಕು',
+  'stuckalerts.on.noSms': 'ನಿಮ್ಮ UPI ಆ್ಯಪ್‌ಗಳನ್ನು ಮಾತ್ರ ಗಮನಿಸಲಾಗುತ್ತಿದೆ. ಹೆಚ್ಚಿನ ವಿಫಲ ಪಾವತಿಗಳು ಮತ್ತು ವಾಪಸ್ ಬರುವ ಹಣವನ್ನು ಗುರುತಿಸಲು ಬ್ಯಾಂಕ್ SMS ಆನ್ ಮಾಡಿ.',
   'stuckalerts.cleared': '{name} ಗೆ {amount} ಪಾವತಿ ಕೊನೆಗೂ ಯಶಸ್ವಿಯಾಯಿತು — ಏನೂ ಸಿಲುಕಿಲ್ಲ',
   'stuckalerts.cleared.anon': '{amount} ಪಾವತಿ ಕೊನೆಗೂ ಯಶಸ್ವಿಯಾಯಿತು — ಏನೂ ಸಿಲುಕಿಲ್ಲ',
   'stuckalerts.cleared.many':

@@ -7,23 +7,26 @@ export const home = {
   'home.quick.scan': 'Scan bill',
   'home.quick.split': 'Split amount',
   'home.quick.lend': 'Lend / borrow',
-  'home.quick.collect': 'Collect money',
+  // Collections (pools): chipping in together for a gift, a party or a trip.
+  'home.quick.collect': 'Group collection',
   'home.quick.sms': 'From SMS',
   'home.quick.food': 'Food order',
   'home.quick.group': 'New group',
-  // Failed payments and refunds that haven't come back (Stuck money), there even before the first one.
+  // Failed payments and refunds that haven't come back (Stuck money): a tile until Home has its card.
   'home.quick.stuck': 'Stuck money',
   'home.quick.more': 'More',
   // One-tap starts for everyday splits (a tile each, or in the More sheet).
   'home.template.rent': 'Rent',
   'home.template.travel': 'Trip',
   'home.template.subscription': 'Subscription',
+  // It sits beside Electricity (bijli.more.title) in More, so it starts with a different word.
   'home.template.utilities': 'Utilities',
   'home.template.transport': 'Cab',
-  // The sheet behind the More tile: getting money back, then ways to start a split.
+  // The sheet behind the More tile: money back from friends, then from banks and shops, then ways to start a split.
   'home.more.title': 'More',
   'home.more.subtitle': 'Get your money back, or start a split.',
-  'home.more.back': 'Get your money back',
+  'home.more.back': 'From friends',
+  'home.more.banks': 'From banks and shops',
   'home.more.split': 'Start a split',
   // Short tile name for "Paid? Drop the screenshot".
   'home.more.proof': 'Paid screenshot',
@@ -91,6 +94,7 @@ export const home = {
   'home.describe.note.nothingSaved': 'Nothing is saved until you tap Save.',
   'home.describe.quota.used': 'You’ve used today’s {limit} free AI splits',
   'home.describe.quota.left': '{count} of {limit} free AI splits left today',
+  // The small line above "Hi, {name}": a greeting for the time of day, never the same word as the heading's.
   'home.greet.morning': 'Good morning',
   'home.greet.afternoon': 'Good afternoon',
   'home.greet.evening': 'Good evening',

@@ -39,6 +39,9 @@ export const app = {
   'app.title.collection': 'চাঁদা',
   'app.title.editCollection': 'চাঁদা বদলান',
   'app.title.pro': 'Pro',
+  'app.title.stuck': 'আটকে থাকা টাকা',
+  'app.title.stuckNew': 'আটকে থাকা টাকা যোগ করুন',
+  'app.title.stuckEdit': 'আটকে থাকা টাকা বদলান',
 
   // When the phone won't save (storage full or blocked).
   'app.storage.title': 'এই ফোন আপনার বদল সেভ করছে না',

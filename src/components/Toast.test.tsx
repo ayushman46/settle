@@ -234,6 +234,77 @@ describe('Toast', () => {
     expect(liveRegion()).not.toHaveTextContent('Removed Ben')
   })
 
+  it('gives every toast a close button, with or without an action', async () => {
+    const user = userEvent.setup()
+    renderToasts()
+    act(() => {
+      show('Backup saved to your downloads', { tone: 'success' })
+    })
+    expect(screen.queryByRole('button', { name: /^Undo/ })).not.toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Hide message' }))
+    expect(liveRegion()).not.toHaveTextContent('Backup saved')
+  })
+
+  describe('hands focus back when it closes from its own buttons', () => {
+    function renderPage() {
+      return render(
+        <ToastProvider>
+          <Capture />
+          <main>
+            <h1 tabIndex={-1}>Stuck money</h1>
+            <button type="button">It’s back</button>
+          </main>
+        </ToastProvider>,
+      )
+    }
+
+    it('to what was used last on the page, after “Hide message”', async () => {
+      const user = userEvent.setup()
+      renderPage()
+      const back = screen.getByRole('button', { name: 'It’s back' })
+      await user.click(back)
+      act(() => {
+        show('Tracking it', { action: { label: 'Undo', onAction: () => {} } })
+      })
+      await user.tab()
+      expect(screen.getByRole('button', { name: /^Undo/ })).toHaveFocus()
+      await user.keyboard('{Tab}{Enter}')
+      expect(liveRegion()).not.toHaveTextContent('Tracking it')
+      expect(back).toHaveFocus()
+    })
+
+    it('to the screen’s heading after Undo when what was used is gone', async () => {
+      const user = userEvent.setup()
+      const { rerender } = renderPage()
+      act(() => {
+        show('Your ₹649 is back', { action: { label: 'Undo', onAction: () => {} } })
+      })
+      // The button that showed it is gone (the screen changed underneath).
+      rerender(
+        <ToastProvider>
+          <Capture />
+          <main>
+            <h1 tabIndex={-1}>Stuck money</h1>
+          </main>
+        </ToastProvider>,
+      )
+      await user.click(screen.getByRole('button', { name: /^Undo/ }))
+      expect(document.activeElement).not.toBe(document.body)
+      expect(screen.getByRole('heading', { name: 'Stuck money' })).toHaveFocus()
+    })
+
+    it('leaves focus alone when the Undo put it somewhere itself', async () => {
+      const user = userEvent.setup()
+      renderPage()
+      const back = screen.getByRole('button', { name: 'It’s back' })
+      act(() => {
+        show('Removed Ben', { action: { label: 'Undo', onAction: () => back.focus() } })
+      })
+      await user.click(screen.getByRole('button', { name: /^Undo/ }))
+      expect(back).toHaveFocus()
+    })
+  })
+
   it('stays longer when there is more to read', () => {
     vi.useFakeTimers()
     renderToasts()
@@ -307,7 +378,7 @@ describe('Toast', () => {
       expect(liveRegion()).not.toHaveTextContent('Tracking it')
     })
 
-    it('goes away when a sheet opens over it, unless it has an Undo, and stays when shown in one', async () => {
+    it('goes away when a sheet opens over it, Undo or not, and stays when shown in one', async () => {
       vi.useFakeTimers()
       renderToasts()
       act(() => {
@@ -317,9 +388,17 @@ describe('Toast', () => {
       expect(liveRegion()).not.toHaveTextContent('Saved')
       await closeSheet()
 
-      // An Undo stays above the sheet: opening something else first mustn't lose the way back.
+      // An Undo goes too: it would sit over the sheet's fields, and undo from behind it.
       act(() => {
-        show('Removed', { action: { label: 'Undo', onAction: () => {} } })
+        show('Tracking it', { action: { label: 'Undo', onAction: () => {} } })
+      })
+      await openSheet()
+      expect(liveRegion()).not.toHaveTextContent('Tracking it')
+      await closeSheet()
+
+      // Unless it asks to stay: editing something else first mustn't lose the way back.
+      act(() => {
+        show('Removed', { keepOverSheets: true, action: { label: 'Undo', onAction: () => {} } })
       })
       await openSheet()
       expect(liveRegion()).toHaveTextContent('Removed')

@@ -23,6 +23,7 @@ export const stuckhelp = {
   'stuckhelp.lead.ombudsman': 'The RBI’s complaint service, for when your bank hasn’t fixed it.',
   'stuckhelp.lead.ombudsmanWallet': 'The RBI’s complaint service, for when the wallet company hasn’t fixed it.',
   'stuckhelp.lead.merchant': 'Start with the business itself, in writing, with the order number.',
+  'stuckhelp.lead.airline': 'Start with the airline itself, in writing, with your PNR.',
   'stuckhelp.lead.nch': 'The government’s helpline takes your complaint to the business for you.',
   'stuckhelp.lead.airsewa': 'The Ministry of Civil Aviation’s portal for complaints about airlines.',
   'stuckhelp.lead.commission': 'A consumer commission (the consumer court) decides the case. You file it online.',
@@ -58,11 +59,15 @@ export const stuckhelp = {
   'stuckhelp.compensation.sendWallet': 'Send the letter below to the wallet company’s grievance officer: by email, or from the help section of its app.',
   'stuckhelp.compensation.why': 'The RBI’s rules say this should be paid without being asked. The letter asks in writing, with the days counted.',
 
-  // The RBI Ombudsman ({phone}: 14448; {issuer}: "Paytm Payments Bank Ltd").
+  // The RBI Ombudsman ({phone}: 14448; {issuer}: "Paytm Payments Bank Ltd"; {email}: crpc@rbi.org.in; {address}: the RBI's postal address, in English).
   'stuckhelp.ombudsman.when':
-    'You can file once 30 days have passed since your complaint to the bank (sooner if it replied and you’re not satisfied), and within 90 days after that.',
+    'You can file once 30 days have passed since your complaint to the bank (sooner if it replied and you’re not satisfied). You then have 90 days from the later of the end of those 30 days and the bank’s last reply.',
   'stuckhelp.ombudsman.whenWallet':
-    'You can file once 30 days have passed since your complaint to the wallet company (sooner if it replied and you’re not satisfied), and within 90 days after that.',
+    'You can file once 30 days have passed since your complaint to the wallet company (sooner if it replied and you’re not satisfied). You then have 90 days from the later of the end of those 30 days and its last reply.',
+  // This case's last day ({date}: "2 Mar 2027"; {kind}: bank or wallet).
+  'stuckhelp.ombudsman.lastDay':
+    '{kind, select, wallet {File by {date} at the latest: 90 days from the later of the end of the wallet company’s 30 days and its last reply (RBI Integrated Ombudsman Scheme, 2026).} other {File by {date} at the latest: 90 days from the later of the end of your bank’s 30 days and its last reply (RBI Integrated Ombudsman Scheme, 2026).}}',
+  'stuckhelp.ombudsman.post': 'Can’t use the website? Email the complaint to {email}, or post it, signed, with copies of your papers to: {address}.',
   'stuckhelp.ombudsman.file': 'On cms.rbi.org.in, file a complaint against your bank. The details for the form are below.',
   'stuckhelp.ombudsman.fileWallet': 'On cms.rbi.org.in, file a complaint against {issuer}, the company behind the wallet. The details for the form are below.',
   'stuckhelp.ombudsman.fileWalletAny': 'On cms.rbi.org.in, file a complaint against the company behind the wallet. The details for the form are below.',
@@ -85,6 +90,11 @@ export const stuckhelp = {
   'stuckhelp.merchant.page': 'Open {name}’s help, find this order and contact support from it.',
   'stuckhelp.merchant.app': 'In the {name} app or website, open this order and contact support from it.',
   'stuckhelp.merchant.unknown': 'Contact the business’s support, from the order if you can.',
+  // An airline: a booking, not an order.
+  'stuckhelp.merchant.pageBooking': 'Open {name}’s help, find this booking and contact support from it.',
+  'stuckhelp.merchant.appBooking': 'In the {name} app or website, open this booking and contact support from it.',
+  'stuckhelp.merchant.nodal': 'No reply in a few days? Write to {name}’s Nodal Officer for complaints (the contact is on its website), with your PNR and ticket number.',
+  'stuckhelp.merchant.nodalAny': 'No reply in a few days? Write to the airline’s Nodal Officer for complaints (the contact is on its website), with your PNR and ticket number.',
   'stuckhelp.merchant.paste': 'Paste the message below and ask for a ticket number.',
   // Settle's own advice (a week), not the law's month.
   'stuckhelp.merchant.nextNch': 'Give them a week. Still not sorted? You can go to the National Consumer Helpline; you don’t have to wait the full month.',
@@ -124,8 +134,10 @@ export const stuckhelp = {
   'stuckhelp.links.aria': 'Other ways to reach them',
   'stuckhelp.newTab': '{label} (opens in a new tab)',
 
-  // The sheet.
+  // The sheet. Above the title, what's still owed ({amount}, {rest}, {owed}: "₹49"; {name}: who it was paid to, or the business).
   'stuckhelp.eyebrow': '{amount} · {name}',
+  'stuckhelp.eyebrow.part': '{rest} of {amount} · {name}',
+  'stuckhelp.eyebrow.owed': '{owed} for the wait · {name}',
   'stuckhelp.party.failed': 'Failed payment',
   'stuckhelp.party.refund': 'Refund',
   'stuckhelp.how.heading': 'Where and how',
@@ -145,12 +157,16 @@ export const stuckhelp = {
   'stuckhelp.field.copy': 'Copy {field}',
   'stuckhelp.field.copied': '{field} copied',
 
-  // Your details for letters: asked once, kept on this phone.
+  // Your details for letters: asked once, kept on this phone. The name and UPI ID go to your profile.
   'stuckhelp.me.heading': 'Your details',
   'stuckhelp.me.hint': 'Settle puts these in the letter. They stay on this phone and aren’t sent anywhere.',
+  'stuckhelp.me.name': 'Your name',
   'stuckhelp.me.mobile': 'Mobile number',
+  'stuckhelp.me.upi': 'Your UPI ID (optional)',
+  'stuckhelp.me.upiHint': 'It helps the bank find a UPI payment. Settle saves it to your profile.',
   'stuckhelp.me.place': 'City and state',
-  'stuckhelp.me.placeExample': 'Pune, Maharashtra',
+  // Under the empty field, so it never looks filled in.
+  'stuckhelp.me.placeExample': 'For example: Pune, Maharashtra',
   'stuckhelp.me.address': 'Address (optional)',
   'stuckhelp.me.change': 'Change',
   'stuckhelp.me.changeLabel': 'Change your details',
@@ -169,17 +185,31 @@ export const stuckhelp = {
     '{kind, select, wallet {The wallet company’s grievance email, from its app’s help.} business {The business’s support email, if it has one.} other {Your bank’s grievance email, from its website or app.}} Settle remembers it on this phone.',
   'stuckhelp.email.crpc': 'Email goes to the RBI’s complaint centre, {email}.',
 
+  // The payment's reference, when it wasn't saved ({kind}: upi, imps, wallet, nach or other).
+  'stuckhelp.ref.label':
+    '{kind, select, upi {UPI reference (12 digits)} imps {IMPS reference (12 digits)} wallet {Wallet transaction ID} nach {Mandate (UMRN) or debit reference} other {Transaction reference}}',
+  'stuckhelp.ref.hint': 'From the bank’s SMS, or the payment in your app. Settle saves it with this payment.',
+
   // The letter's box: {kind} is letter, message or summary.
   'stuckhelp.letter.heading': '{kind, select, message {The message} summary {The summary} other {The letter}}',
   'stuckhelp.letter.blanks':
     '{count, plural, one {# part in [brackets] is still to fill in. Fill it in before you send it.} other {# parts in [brackets] are still to fill in. Fill them in before you send it.}}',
   'stuckhelp.letter.actions': 'Send the letter',
+  // Sending while a [bracket] is still empty: said first ({count}: how many; {action}: copy, share, print, email or send).
+  'stuckhelp.blanks.title': '{count, plural, one {# part is still empty} other {# parts are still empty}}',
+  'stuckhelp.blanks.description':
+    '{count, plural, one {It’s marked in [brackets]. Fill it in first, or send it as it is and fill it in where you paste it.} other {They’re marked in [brackets]. Fill them in first, or send it as it is and fill them in where you paste it.}}',
+  'stuckhelp.blanks.list': 'Still empty',
+  'stuckhelp.blanks.fill': '{count, plural, one {Fill it in} other {Fill them in}}',
+  'stuckhelp.blanks.anyway': '{action, select, copy {Copy it anyway} share {Share it anyway} print {Print it anyway} email {Email it anyway} other {Send it anyway}}',
   // Above the letter, in the app's language: what it asks for ({amount}, {compensation}, {total}: "₹500").
   'stuckhelp.summary.reverse': 'It asks for {amount} back, and ₹100 for each day it’s late.',
   'stuckhelp.summary.reverseOwed': 'It asks for {amount} back, and the {compensation} owed so far for the delay (₹100 a day).',
   'stuckhelp.summary.compensation': 'It asks for the {compensation} owed for the days the money was late (₹100 a day).',
   'stuckhelp.summary.compensationAny': 'It asks for the compensation owed for the days the money was late (₹100 a day).',
   'stuckhelp.summary.ombudsman': 'It tells the RBI Ombudsman what happened and how your complaint went, and asks for the {total} you’re owed so far.',
+  'stuckhelp.summary.ombudsmanBoth':
+    'It tells the RBI Ombudsman what happened and how your complaint went, and asks for your {amount} back and the {compensation} owed so far for the delay (₹100 a day).',
   'stuckhelp.summary.ombudsmanAny': 'It tells the RBI Ombudsman what happened and how your complaint went, and asks for what you’re owed.',
   'stuckhelp.summary.refund': 'It asks for your {amount} refund, or its reference number if it was already sent, so you can trace it.',
   'stuckhelp.summary.confirm': 'It asks them to confirm in writing whether your {amount} reached them, so you can show your bank.',
@@ -203,6 +233,8 @@ export const stuckhelp = {
   'stuckhelp.raised.ref': '{kind, select, merchant {Ticket number} nch {Docket number} airsewa {Reference number} commission {Case number} other {Complaint number}}',
   'stuckhelp.raised.refHint': 'Optional, if you were given one',
   'stuckhelp.raised.save': 'Save',
+  // Not "Back": in a money app that reads as money returned ({kind}: letter, message or summary).
+  'stuckhelp.raised.back': '{kind, select, message {Back to the message} summary {Back to the summary} other {Back to the letter}}',
   // {date}: "2 Nov"; {name}: the business.
   'stuckhelp.raised.toast':
     '{kind, select, bank {Noted: raised with your bank on {date}} ombudsman {Noted: taken to the RBI Ombudsman on {date}} merchant {Noted: raised with {name} on {date}} nch {Noted: raised with the National Consumer Helpline on {date}} airsewa {Noted: raised on AirSewa on {date}} other {Noted: filed with the consumer commission on {date}}}',

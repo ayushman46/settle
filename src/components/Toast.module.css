@@ -23,6 +23,10 @@
   max-width: calc(var(--app-max) - 2 * var(--gutter));
 }
 
+/*
+ * A raised card with a hairline edge, not an ink pill: it often sits just above the screen's
+ * black primary button and mustn't read as part of it (or as another one).
+ */
 .toast {
   display: flex;
   align-items: center;
@@ -30,19 +34,15 @@
   max-width: 100%;
   min-height: var(--s-12);
   padding: var(--s-2) var(--s-2) var(--s-2) var(--s-5);
+  border: 1px solid var(--line-strong);
   border-radius: var(--r-xl);
-  background: var(--primary);
-  color: var(--on-primary);
+  background: var(--surface);
+  color: var(--ink);
   box-shadow: var(--shadow-lg);
   font: var(--text-label);
   font-weight: 550;
   pointer-events: auto;
   animation: toast-in var(--dur-3) var(--ease-spring) backwards;
-}
-
-/* Without an action the pill is balanced on both sides. */
-.toast:not(:has(.action)) {
-  padding-inline-end: var(--s-5);
 }
 
 .leaving {
@@ -86,7 +86,7 @@
 }
 
 .info {
-  color: var(--on-primary);
+  color: var(--ink);
 }
 
 .info > svg {
@@ -94,33 +94,25 @@
   height: var(--s-5);
 }
 
+/* Two lines at most: a long message (or a long translation) mustn't cover the screen. */
 .message {
+  display: -webkit-box;
   flex: 1 1 auto;
   min-width: 0;
-  padding-block: var(--s-1);
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  margin-block: var(--s-1);
   overflow-wrap: break-word;
 }
 
-/* Undo and close, side by side. */
+/* Undo (when there is one) and close, side by side. */
 .actions {
   display: flex;
   flex: none;
   align-items: center;
   gap: var(--s-1);
-}
-
-/* A long message: the whole width for the words, the buttons underneath at the end. */
-.stacked {
-  flex-wrap: wrap;
-  row-gap: var(--s-1);
-}
-
-.stacked .message {
-  flex-basis: calc(100% - var(--s-8));
-}
-
-.stacked .actions {
-  margin-inline-start: auto;
 }
 
 .action {
@@ -130,6 +122,7 @@
   padding-inline: var(--s-4);
   border-radius: var(--r-pill);
   background: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent-edge);
   color: var(--on-accent);
   font: var(--text-label);
   font-weight: 650;
@@ -149,11 +142,6 @@
   transition-duration: var(--dur-1);
 }
 
-.action:focus-visible,
-.close:focus-visible {
-  outline-color: var(--on-primary);
-}
-
 .close {
   position: relative;
   display: grid;
@@ -162,8 +150,7 @@
   width: calc(var(--s-8) + var(--s-1));
   height: calc(var(--s-8) + var(--s-1));
   border-radius: 50%;
-  color: var(--on-primary);
-  opacity: 0.8;
+  color: var(--ink-2);
 }
 
 .close > svg {
@@ -171,6 +158,7 @@
   height: var(--s-4);
 }
 
+/* A full-size target, the button itself staying small. */
 .close::after {
   content: '';
   position: absolute;
@@ -179,7 +167,8 @@
 
 @media (hover: hover) {
   .close:hover {
-    opacity: 1;
+    background: var(--surface-2);
+    color: var(--ink);
   }
 }
 

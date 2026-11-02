@@ -1,6 +1,8 @@
+import { ArrowRight } from 'lucide-react'
 import { Badge } from '../../components'
 import { BRAND } from '../../domain/types'
 import { cx } from '../../lib/cx'
+import { CtaLink } from './CtaLink'
 import { FeatureVisual } from './FeatureVisuals'
 import { FEATURES } from './featureList'
 import styles from './Features.module.css'
@@ -32,6 +34,11 @@ export function Features() {
               </p>
               <h3 className={styles.title}>{feature.title}</h3>
               <p className={styles.body}>{feature.text}</p>
+              {feature.cta && (
+                <CtaLink to={feature.cta.to} variant="accent" size="md" iconEnd={<ArrowRight strokeWidth={2.5} />} className={styles.cta}>
+                  {feature.cta.label}
+                </CtaLink>
+              )}
             </div>
           </li>
         ))}

@@ -16,7 +16,7 @@
  * commission — or AirSewa for an airline.
  */
 import { addDays, daysBetween } from '../../engine/dates'
-import type { StuckPayment, StuckRail, StuckStepKind } from '../../data/stores'
+import type { StuckBackPart, StuckPayment, StuckRail, StuckStepKind } from '../../data/stores'
 import { addWorkingDays, DEFAULT_REFUND_WORKING_DAYS, merchantById, refundWorkingDays } from './merchants'
 
 /** One row of the RBI's TAT table: the deadline (days after T) and the row it comes from. */
@@ -27,7 +27,12 @@ export interface RailRule {
   row: string
 }
 
-/** The RBI's deadline for each way a payment can fail (Annex to RBI/2019-20/67). */
+/**
+ * The RBI's deadline for each way a payment can fail (Annex to RBI/2019-20/67). 'wallet' is a
+ * payment from the wallet's balance within the same wallet (on-us): T + 1. A wallet app that paid
+ * over UPI or a card (off-us) follows that rail's row instead — so that's the way to pick, and when
+ * it isn't known, "Not sure" counts the longest deadline, so a claim is never early.
+ */
 export const RAIL_RULES: Readonly<Record<StuckRail, RailRule>> = {
   upi_person: { days: 1, row: 'UPI — account debited but the beneficiary account not credited (I.4.a)' },
   upi_merchant: { days: 5, row: 'UPI — account debited but transaction confirmation not received at merchant location (I.4.b)' },
@@ -40,6 +45,13 @@ export const RAIL_RULES: Readonly<Record<StuckRail, RailRule>> = {
   nach: { days: 1, row: 'NACH — delay in crediting the beneficiary or account debited despite a revoked mandate (I.7)' },
   aeps: { days: 5, row: 'AePS — account debited but transaction confirmation not received at merchant location (I.5.a)' },
 }
+
+/**
+ * A NACH debit after you revoked the mandate with your bank: its own row of the annex, 7(b) — your
+ * bank is responsible for that debit, and reverses it by T + 1. (7(a), a delay in crediting the
+ * beneficiary, is the other side's.) For a letter about a revoked mandate.
+ */
+export const NACH_REVOKED_RULE: RailRule = { days: 1, row: 'NACH — account debited despite revocation of the debit mandate with the bank by the customer (I.7.b)' }
 
 /** How a failed payment is treated when how it was paid isn't known: the longer deadline, so a claim is never early. */
 export const UNKNOWN_RAIL_DAYS = 5
@@ -56,7 +68,7 @@ export const OMBUDSMAN_WAIT_DAYS = 30
 export const MERCHANT_WAIT_DAYS = 7
 /** The National Consumer Helpline gets a month before a consumer commission. */
 export const NCH_WAIT_DAYS = 30
-/** The Ombudsman takes a complaint within 90 days of the bank's 30 days running out (or of its reply), by the 2026 scheme. */
+/** The Ombudsman takes a complaint within 90 days of the bank's 30 days running out or of its last reply, whichever is later (the 2026 scheme). */
 export const OMBUDSMAN_WINDOW_DAYS = 90
 
 /**
@@ -101,7 +113,8 @@ export type RefundDueBasis =
 /** Why a refund is due when it is, in dueBy()'s order — so nothing claims a promise the business never made. */
 export function refundDueBasis(s: DueFields): RefundDueBasis {
   const dgca = dgcaDue(s)
-  if (dgca !== null && dgca < ownRefundDue(s)) return { kind: 'dgca', days: DGCA_CARD_REFUND_DAYS }
+  // On the same day, the DGCA's rule is the one to cite: it binds the airline, its own timeline doesn't.
+  if (dgca !== null && dgca <= ownRefundDue(s)) return { kind: 'dgca', days: DGCA_CARD_REFUND_DAYS }
   if (s.promisedBy) return { kind: 'promised' }
   const merchant = merchantById(s.merchant)
   if (merchant) return { kind: 'merchant', name: merchant.name, workingDays: merchant.workingDays }
@@ -123,6 +136,19 @@ export function backInFull(s: Pick<StuckPayment, 'amount' | 'back'>): boolean {
 /** Some of it came back, not all. */
 export function backInPart(s: Pick<StuckPayment, 'amount' | 'back'>): boolean {
   return s.back !== null && s.back.amount > 0 && s.back.amount < s.amount
+}
+
+/**
+ * Each time money came in for it, in date order (on the same day, in the order it came): part of
+ * the payment and/or compensation, each with its own day. Saved before the parts were kept (or set
+ * as totals), the totals are the one part. None while nothing is back.
+ */
+export function backParts(s: Pick<StuckPayment, 'back'>): StuckBackPart[] {
+  const back = s.back
+  if (!back) return []
+  if (back.parts && back.parts.length > 0) return [...back.parts].sort((a, b) => a.date.localeCompare(b.date))
+  if (back.amount <= 0 && back.compensation <= 0) return []
+  return [{ date: back.date, amount: back.amount, compensation: back.compensation }]
 }
 
 /** Compensation the RBI says the bank owes for the wait (failed payments the money really left on). */
@@ -244,7 +270,7 @@ export function nextStep(s: StuckPayment, today: string): StuckNext {
   return done ? { stage: 'escalate', step: ladder[reached + 1] as StuckStepKind, until: null } : { stage: 'raised', step: null, until }
 }
 
-/** Open ones first by urgency, then the newest. */
+/** Open ones first by urgency (within a stage, sortStuck() puts the most urgent first). */
 const STAGE_ORDER: Readonly<Record<StuckStage, number>> = {
   escalate: 0,
   compensationEscalate: 0,
@@ -283,14 +309,16 @@ export interface StuckSummary {
   compensation: number
   /** How many need you to act today. */
   act: number
-  /** Got back so far (money and compensation), in paise. */
+  /** Their money got back so far (all of it, or part), in paise — never the compensation, so it's never more than was stuck. */
   recovered: number
+  /** Compensation for the wait paid so far, in paise (on its own: it isn't their money coming back). */
+  recoveredCompensation: number
   /** How many came back. */
   recoveredCount: number
 }
 
 export function summarize(list: readonly StuckPayment[], today: string): StuckSummary {
-  const out: StuckSummary = { open: 0, stuck: 0, compensation: 0, act: 0, recovered: 0, recoveredCount: 0 }
+  const out: StuckSummary = { open: 0, stuck: 0, compensation: 0, act: 0, recovered: 0, recoveredCompensation: 0, recoveredCount: 0 }
   for (const s of list) {
     if (s.dismissedAt !== null) continue
     const owed = stillOwed(s, today)
@@ -301,27 +329,42 @@ export function summarize(list: readonly StuckPayment[], today: string): StuckSu
     } else {
       out.recoveredCount += 1
     }
-    if (s.back !== null) out.recovered += s.back.amount + s.back.compensation
+    if (s.back !== null) {
+      out.recovered += Math.min(s.amount, s.back.amount)
+      out.recoveredCompensation += s.back.compensation
+    }
     out.compensation += owed.compensation
     if (needsAction(stage)) out.act += 1
   }
   return out
 }
 
-/** Sorted for the list: what needs you first, then the rest, newest first. */
+/**
+ * Sorted for the list: what needs you first, then the rest — and at each stage the most urgent
+ * first: the soonest last day (due back, or their time to answer), else the latest (the most days
+ * late, then the most owed), else the oldest.
+ */
 export function sortStuck(list: readonly StuckPayment[], today: string): StuckPayment[] {
-  return [...list].sort((a, b) => stageRank(nextStep(a, today).stage) - stageRank(nextStep(b, today).stage) || b.date.localeCompare(a.date) || b.createdAt - a.createdAt)
+  const keyed = list.map((s) => {
+    const next = nextStep(s, today)
+    const owed = stillOwed(s, today)
+    return { s, rank: stageRank(next.stage), until: next.until ?? '9999-12-31', late: daysLate(s, today), owed: owed.money + owed.compensation }
+  })
+  keyed.sort((a, b) => a.rank - b.rank || a.until.localeCompare(b.until) || b.late - a.late || b.owed - a.owed || a.s.date.localeCompare(b.s.date) || a.s.createdAt - b.s.createdAt)
+  return keyed.map((k) => k.s)
 }
 
 /**
- * The last day to take it to the RBI Ombudsman: 90 days after the bank's reply, or after its 30 days
- * ran out when it didn't reply. Null when there's no complaint to the bank yet, or it's already with
- * the Ombudsman.
+ * The last day to take it to the RBI Ombudsman: 90 days from the end of the bank's 30 days or from
+ * its last reply, whichever is later (RB-IOS 2026; RBI's FAQ on the scheme, Q17) — so noting an
+ * early reply never shortens it. Null when there's no complaint to the bank yet, or it's already
+ * with the Ombudsman.
  */
 export function ombudsmanLastDay(s: StuckPayment): string | null {
   const bank = stepOn(s, 'bank')
   if (!bank || stepOn(s, 'ombudsman')) return null
-  const from = bankReplied(s) && s.repliedAt !== null ? s.repliedAt : rungEnds('bank', bank.date)
+  const timeUp = rungEnds('bank', bank.date)
+  const from = bankReplied(s) && s.repliedAt !== null && s.repliedAt > timeUp ? s.repliedAt : timeUp
   return addDays(from, OMBUDSMAN_WINDOW_DAYS)
 }
 

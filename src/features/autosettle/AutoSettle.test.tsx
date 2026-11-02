@@ -71,12 +71,31 @@ describe('AutoSettleCard', () => {
     const sheet = await screen.findByRole('dialog', { name: 'Auto-settle' })
     expect(within(sheet).getByText(/reads only payment alerts: from Google Pay, PhonePe, Paytm, BHIM/)).toBeInTheDocument()
     expect(within(sheet).getByText(/Nothing is uploaded/)).toBeInTheDocument()
-    const sms = within(sheet).getByRole('switch', { name: 'Bank SMS too' })
-    expect(sms).toHaveAttribute('aria-checked', 'false')
-    await user.click(sms)
+    // On to start: most failed payments and money coming back are only told by SMS.
+    expect(within(sheet).getByRole('switch', { name: 'Bank SMS too' })).toHaveAttribute('aria-checked', 'true')
     await user.click(within(sheet).getByRole('button', { name: 'Allow in Android settings' }))
     await waitFor(() => expect(android.calls.map(([m]) => m)).toEqual(['status', 'setOptions', 'openSettings']))
     expect(android.calls[1]).toEqual(['setOptions', { sms: true }])
+  })
+
+  it('bank SMS can be left out before allowing', async () => {
+    const android = fakeAndroid({ status: () => ({ granted: false, sms: false }) })
+    const { user } = renderAt('/app/collect', <AutoSettleCard />)
+    await user.click(await screen.findByRole('button', { name: 'Turn on Auto-settle' }))
+    const sheet = await screen.findByRole('dialog', { name: 'Auto-settle' })
+    await user.click(within(sheet).getByRole('switch', { name: 'Bank SMS too' }))
+    await user.click(within(sheet).getByRole('button', { name: 'Allow in Android settings' }))
+    await waitFor(() => expect(android.calls.map(([m]) => m)).toContain('openSettings'))
+    expect(android.calls.find(([m]) => m === 'setOptions')).toEqual(['setOptions', { sms: false }])
+  })
+
+  it('on without bank SMS: says what that misses, and Manage shows it off', async () => {
+    fakeAndroid({ status: () => ({ granted: true, sms: false }) })
+    const { user } = renderAt('/app/collect', <AutoSettleCard />)
+    expect(await screen.findByText(/Turn on Bank SMS in Manage to catch most failed payments/)).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Manage' }))
+    const sheet = await screen.findByRole('dialog', { name: 'Auto-settle' })
+    expect(within(sheet).getByRole('switch', { name: 'Bank SMS too' })).toHaveAttribute('aria-checked', 'false')
   })
 
   it('says it’s on, and lists payments waiting for a tap', async () => {

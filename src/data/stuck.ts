@@ -4,7 +4,7 @@
  * complaint raised along the way. Every change returns its Undo. Kept on this phone and backed up.
  */
 import { newId } from '../lib/ids'
-import { stuckStore, type StuckBack, type StuckPayment, type StuckStep } from './stores'
+import { stuckStore, type StuckBack, type StuckBackPart, type StuckPayment, type StuckStep } from './stores'
 
 /** Enough for anyone; the oldest settled ones fall off first. */
 export const MAX_STUCK = 300
@@ -63,9 +63,67 @@ export function updateStuck(id: string, change: Partial<Omit<StuckPayment, 'id' 
   return done ? () => restoreStuck(done.before) : null
 }
 
-/** The money is back (and any compensation with it). */
+/** Most parts one payment keeps (the store's own limit); past it, a new part joins the last. */
+const MAX_BACK_PARTS = 100
+
+/** The parts noted so far: the list, or — saved before parts were kept, or set as totals — the totals as one. */
+function partsOf(back: StuckBack | null): StuckBackPart[] {
+  if (!back) return []
+  if (back.parts && back.parts.length > 0) return back.parts
+  return back.amount > 0 || back.compensation > 0 ? [{ date: back.date, amount: back.amount, compensation: back.compensation }] : []
+}
+
+/** The totals the parts add up to: the money (never more than was paid), the compensation, and the day the last of the money came. */
+function backFrom(parts: StuckBackPart[], paid: number): StuckBack {
+  const money = parts.filter((p) => p.amount > 0)
+  const date = (money.at(-1) ?? parts.at(-1))?.date ?? ''
+  const amount = Math.min(paid, money.reduce((sum, p) => sum + p.amount, 0))
+  const compensation = parts.reduce((sum, p) => sum + p.compensation, 0)
+  return { date, amount, compensation, parts }
+}
+
+/**
+ * The money is back as these totals (an edit of what came back, or all of it at once; never more
+ * than was paid). When they only add to what was noted — more money on the day of the last part or
+ * later, or compensation — the parts so far stay and the difference is a new part; any other change
+ * starts over from the totals. Given with its parts, the totals are worked out from them.
+ */
 export function markStuckBack(id: string, back: StuckBack): (() => void) | null {
-  const done = patch(id, (s) => ({ ...s, back, confirmed: true, dismissedAt: null }))
+  const done = patch(id, (s) => ({ ...s, back: totalsBack(s.back, back, s.amount), confirmed: true, dismissedAt: null }))
+  return done ? () => restoreStuck(done.before) : null
+}
+
+function totalsBack(before: StuckBack | null, back: StuckBack, paid: number): StuckBack {
+  if (back.parts && back.parts.length > 0) return backFrom(back.parts, paid)
+  const totals = { date: back.date, amount: Math.min(paid, back.amount), compensation: back.compensation }
+  if (!before) return totals
+  const more = { date: back.date, amount: totals.amount - before.amount, compensation: totals.compensation - before.compensation }
+  if (more.amount === 0 && more.compensation === 0 && back.date === before.date) return before
+  // More of the money, on the day of the last part or later; or only compensation, the money's day kept.
+  const adds = more.compensation >= 0 && (more.amount > 0 ? back.date >= before.date : more.amount === 0 && back.date === before.date)
+  return adds ? { ...totals, parts: [...partsOf(before), more] } : totals
+}
+
+/**
+ * Money that came in for it: a part of the payment and/or compensation, on `part.date`. Added to
+ * what came before (each keeps its own day), and the totals follow: the money (never more than was
+ * paid), the compensation, and the day the last of the money came. With Undo.
+ */
+export function addStuckBack(id: string, part: StuckBackPart): (() => void) | null {
+  if (part.amount <= 0 && part.compensation <= 0) return null
+  const add: StuckBackPart = { date: part.date, amount: Math.max(0, part.amount), compensation: Math.max(0, part.compensation) }
+  const done = patch(id, (s) => {
+    const parts = [...partsOf(s.back)]
+    const last = parts.at(-1)
+    if (last && parts.length >= MAX_BACK_PARTS) {
+      parts[parts.length - 1] = { date: last.date > add.date ? last.date : add.date, amount: last.amount + add.amount, compensation: last.compensation + add.compensation }
+    } else {
+      // In date order; on the same day, after what came before it.
+      const at = parts.findIndex((p) => p.date > add.date)
+      parts.splice(at === -1 ? parts.length : at, 0, add)
+    }
+    return { ...s, back: backFrom(parts, s.amount), confirmed: true, dismissedAt: null }
+  })
   return done ? () => restoreStuck(done.before) : null
 }
 

@@ -2,7 +2,8 @@
  * Home's quick actions as a registry, so features add their tile without sharing a file: each
  * entry says when it's on (its feature flag), what it's called and what it does. The grid shows
  * the enabled ones in order, back-fills with everyday templates to seven, and ends with More (the
- * actions and templates that didn't fit) — always two rows of four.
+ * actions and templates that didn't fit) — always two rows of four. When there are more than
+ * seven, the spare ones make room first.
  */
 import { ArrowLeftRight, BanknoteArrowDown, Bike, Droplets, HandCoins, LayoutGrid, MessageSquareText, ScanLine, Split, UsersRound, type LucideIcon } from 'lucide-react'
 import { navigate } from '../../app/router'
@@ -29,6 +30,13 @@ export interface QuickActionDef {
   tone: QuickActionTone
   run: () => void
   enabled: () => boolean
+  /** Makes room first when there are more actions than tiles (it's in More then). */
+  spare?: boolean
+}
+
+export interface GridOptions {
+  /** Home shows Stuck money's card (something's still owed), so its tile isn't needed on the grid. */
+  stuckCard?: boolean
 }
 
 /** Tiles in the grid: seven actions, then More. */
@@ -42,16 +50,19 @@ function openPools(): void {
 }
 
 /** The registry, in grid order (labels read now, in the current language). `more` is added by `homeGridActions`. */
-export function quickActionDefs(): QuickActionDef[] {
+export function quickActionDefs({ stuckCard = false }: GridOptions = {}): QuickActionDef[] {
   return [
     { id: 'scan', label: t('home.quick.scan'), icon: ScanLine, tone: 'ink', run: () => openBill(), enabled: always },
     { id: 'split', label: t('home.quick.split'), icon: Split, tone: 'accent', run: () => navigate(NEW_SPLIT_PATH), enabled: always },
     { id: 'lend', label: t('home.quick.lend'), icon: ArrowLeftRight, tone: 'accent', run: () => navigate('/app/lend'), enabled: () => LEND_ENABLED },
-    { id: 'collect', label: t('home.quick.collect'), icon: HandCoins, tone: 'gift', run: openPools, enabled: () => POOLS_ENABLED },
+    // Group collections (gifts, parties): the first to move to More when the grid is full.
+    { id: 'collect', label: t('home.quick.collect'), icon: HandCoins, tone: 'gift', run: openPools, enabled: () => POOLS_ENABLED, spare: true },
+    // Money a bank or shop owes you: on the grid while nothing's owed, so it's found before it's
+    // needed. While something is, Home's card leads there (and More still has it), and the tile
+    // makes way — for Group collection, back in its place.
+    { id: 'stuck', label: t('home.quick.stuck'), icon: BanknoteArrowDown, tone: 'accent', run: () => navigate(STUCK_PATH), enabled: () => !stuckCard },
     { id: 'sms', label: t('home.quick.sms'), icon: MessageSquareText, tone: 'utilities', run: () => navigate('/app/share'), enabled: () => SMS_ENABLED },
     { id: 'food', label: t('home.quick.food'), icon: Bike, tone: 'food', run: () => openBill({ kind: 'delivery' }), enabled: () => DELIVERY_ENABLED },
-    // Money a bank or shop owes you: on the grid from day one, so it's found before it's needed.
-    { id: 'stuck', label: t('home.quick.stuck'), icon: BanknoteArrowDown, tone: 'transport', run: () => navigate(STUCK_PATH), enabled: always },
     { id: 'group', label: t('home.quick.group'), icon: UsersRound, tone: 'entertainment', run: () => navigate(NEW_GROUP_PATH), enabled: always },
   ]
 }
@@ -83,21 +94,37 @@ export function templateActionDefs(): QuickActionDef[] {
   }))
 }
 
-/** Enabled actions that don't fit the grid (New group, with everything on): the More sheet offers them. */
-export function overflowActions(): QuickActionDef[] {
-  return quickActionDefs()
-    .filter((a) => a.enabled())
-    .slice(GRID_SIZE - 1)
+/**
+ * The enabled actions, split into those on the grid (in order) and those that don't fit: with
+ * more than seven, spare ones step aside first (the last spare first), then the last ones.
+ */
+function placeActions(options: GridOptions): { shown: QuickActionDef[]; rest: QuickActionDef[] } {
+  const actions = quickActionDefs(options).filter((a) => a.enabled())
+  let extra = actions.length - (GRID_SIZE - 1)
+  const aside = new Set<QuickActionDef>()
+  for (let i = actions.length - 1; i >= 0 && extra > 0; i--) {
+    const action = actions[i]
+    if (action?.spare) {
+      aside.add(action)
+      extra -= 1
+    }
+  }
+  const shown = actions.filter((a) => !aside.has(a)).slice(0, GRID_SIZE - 1)
+  return { shown, rest: actions.filter((a) => !shown.includes(a)) }
+}
+
+/** Enabled actions that don't fit the grid (Group collection, with everything on and nothing stuck yet): the More sheet offers them. */
+export function overflowActions(options: GridOptions = {}): QuickActionDef[] {
+  return placeActions(options).rest
 }
 
 /**
  * The grid: enabled actions in order, templates back-filling to seven, then More (which opens
  * the sheet of the rest and all templates).
  */
-export function homeGridActions(openMore: () => void): QuickActionDef[] {
-  const actions = quickActionDefs().filter((a) => a.enabled())
-  const room = Math.max(0, GRID_SIZE - 1 - actions.length)
-  const fill = templateActionDefs().slice(0, room)
+export function homeGridActions(openMore: () => void, options: GridOptions = {}): QuickActionDef[] {
+  const { shown } = placeActions(options)
+  const fill = templateActionDefs().slice(0, Math.max(0, GRID_SIZE - 1 - shown.length))
   const more: QuickActionDef = { id: 'more', label: t('home.quick.more'), icon: LayoutGrid, tone: 'ink', run: openMore, enabled: always }
-  return [...actions.slice(0, GRID_SIZE - 1), ...fill, more]
+  return [...shown, ...fill, more]
 }

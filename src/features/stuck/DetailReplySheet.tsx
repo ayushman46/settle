@@ -5,19 +5,24 @@ import type { StuckPayment } from '../../data/stores'
 import { markBankReplied } from '../../data/stuck'
 import { today as todayIso } from '../../engine/dates'
 import { useT } from '../../i18n'
-import { DateField } from '../../kit/index-a'
 import { haptic } from '../../lib/haptics'
-import styles from './Stuck.module.css'
+import { DetailDate } from './DetailDate'
+import { OMBUDSMAN_WINDOW_DAYS } from './rules'
+import { stuckDate } from './view'
 
 export interface DetailReplySheetProps {
   open: boolean
   onClose: () => void
   payment: StuckPayment
+  /** What the button said ("My bank replied or said no", "Paytm replied again"). */
+  title: string
 }
 
 /**
- * "My bank replied or said no": the day the bank answered the complaint without fixing it. The RBI
- * Ombudsman takes it from then — there's no need to wait out the bank's 30 days (with Undo).
+ * "My bank replied or said no": the day the bank answered the complaint without fixing it — on or
+ * after the day it was raised, and not after today. The RBI Ombudsman takes it from then; there's
+ * no need to wait out the bank's 30 days. A later reply can be noted too: the Ombudsman's 90 days
+ * count from the bank's last reply when that's later than its 30 days (with Undo).
  */
 export function DetailReplySheet(props: DetailReplySheetProps) {
   // A fresh form each time it opens (the sheet keeps its last content while it slides away).
@@ -30,15 +35,20 @@ export function DetailReplySheet(props: DetailReplySheetProps) {
   return <ReplyFrame key={opened} {...props} />
 }
 
-function ReplyFrame({ open, onClose, payment }: DetailReplySheetProps) {
+function ReplyFrame({ open, onClose, payment, title }: DetailReplySheetProps) {
   const t = useT()
   const toast = useToast()
   const day = todayIso()
   // It can't have replied before it was asked.
   const asked = payment.steps.find((x) => x.kind === 'bank')?.date ?? payment.date
-  const [date, setDate] = useState(payment.repliedAt ?? (day < asked ? asked : day))
+  // Kept while the sheet slides away after saving.
+  const [again] = useState(payment.repliedAt !== null)
+  const [heading] = useState(title)
+  const [date, setDate] = useState(day < asked ? asked : day)
+  const ok = date >= asked && date <= day
 
   const save = (): void => {
+    if (!ok) return
     const undo = markBankReplied(payment.id, date)
     haptic('success')
     toast(t('stuck.reply.toast'), { tone: 'success', action: { label: t('common.action.undo'), onAction: undo } })
@@ -49,22 +59,17 @@ function ReplyFrame({ open, onClose, payment }: DetailReplySheetProps) {
     <BottomSheet
       open={open}
       onClose={onClose}
-      title={t('stuck.reply.title')}
-      description={t('stuck.reply.text')}
+      title={heading}
+      description={again ? t('stuck.reply.textAgain', { days: OMBUDSMAN_WINDOW_DAYS }) : t('stuck.reply.text')}
       footer={
         <ActionBar>
-          <Button block iconStart={<Check />} onClick={save}>
+          <Button block iconStart={<Check />} disabled={!ok} onClick={save}>
             {t('stuck.reply.save')}
           </Button>
         </ActionBar>
       }
     >
-      <div className={styles.dateRow}>
-        <span className={styles.dateLabel} aria-hidden="true">
-          {t('stuck.reply.date')}
-        </span>
-        <DateField label={t('stuck.reply.date')} value={date} min={asked} onChange={setDate} />
-      </div>
+      <DetailDate label={t('stuck.reply.date')} value={date} onChange={setDate} min={asked} early={t('stuck.reply.dateEarly', { date: stuckDate(asked, day) })} />
     </BottomSheet>
   )
 }

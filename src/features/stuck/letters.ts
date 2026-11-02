@@ -6,21 +6,25 @@
  * consumer commission.
  *
  * Polite, firm and factual: exact dates ("28 October 2026"), exact amounts, the RBI circular and its
- * row, what is owed so far. They state the published rules and ask for what those rules say — no
- * threats, no legal advice. Your mobile number, city and address come from the details you typed in
- * once (src/features/stuck/letterMe.ts); whatever Settle still doesn't know is left as a
- * "[your mobile number]" placeholder. Pure functions of the stuck payment, the sender and today's date.
+ * row, what is owed so far, each sum that came back with its own date. They state the published
+ * rules and ask for what those rules say — no threats, no legal advice. Your name and UPI ID come
+ * from your profile, your mobile number, city and address from the details you typed in once
+ * (src/features/stuck/letterMe.ts); whatever Settle still doesn't know and the letter needs is left
+ * as a "[your mobile number]" placeholder, and a line it can do without (the UPI ID, the address) is
+ * left out. Pure functions of the stuck payment, the sender and today's date.
  */
 import { addDays, daysBetween } from '../../engine/dates'
 import type { Profile } from '../../domain/types'
 import type { StuckPayment, StuckRail, StuckStep, StuckStepKind } from '../../data/stores'
 import { formatMoney } from '../../lib/money'
+import { nameKey } from '../../lib/people'
 import { BANK_LABELS } from '../sharein/sms/smsView'
 import { UPI_APP_NAMES, upiAppOf, walletName, walletOf, WALLETS } from './help'
 import { merchantById } from './merchants'
 import {
   backInFull,
   backInPart,
+  backParts,
   bankReplied,
   COMPENSATION_PER_DAY,
   compensationDue,
@@ -65,17 +69,17 @@ export type LetterSender = Pick<Profile, 'name' | 'upiId'> & {
 export const PLACEHOLDERS = {
   name: '[your name]',
   mobile: '[your mobile number]',
-  upiId: '[your UPI ID]',
   bank: "[your bank's name]",
   wallet: "[the wallet company's name]",
   account: '[your account or card number]',
+  card: '[last 4 digits of your card]',
   reference: '[transaction reference]',
   order: '[order or booking number]',
   pnr: '[PNR or booking reference]',
-  address: '[your address]',
   place: '[your city and state]',
   complaintDate: '[date of your complaint]',
   complaintNumber: '[complaint number]',
+  contacted: '[date you contacted them]',
   mandateRevoked: '[date you revoked the mandate]',
 } as const
 
@@ -194,6 +198,8 @@ const RAIL_SHORT: Readonly<Record<StuckRail, string>> = {
 }
 
 const UPI: ReadonlySet<StuckRail> = new Set(['upi_person', 'upi_merchant'])
+/** Paid by card (an ATM too): what was saved is the card's last digits, not an account's. */
+const CARD: ReadonlySet<StuckRail> = new Set(['card_online', 'card_pos', 'card_transfer', 'atm'])
 
 function railWords(rail: StuckRail | null): string {
   return rail ? RAIL_WORDS[rail] : 'a payment'
@@ -218,13 +224,40 @@ function refLabel(rail: StuckRail | null): string {
   return 'Transaction reference'
 }
 
-function isUpiPayment(s: LetterPayment): boolean {
+function isUpiPayment(s: Pick<StuckPayment, 'rail' | 'app'>): boolean {
   return s.rail ? UPI.has(s.rail) : upiAppOf(s.app) !== null
 }
 
+function isCard(s: LetterPayment): boolean {
+  return s.rail !== null && CARD.has(s.rail)
+}
+
+/** "7712", from the card's digits as saved ("XX7712"). */
+function cardEnding(account: string): string {
+  return account.replace(/^[^0-9]+/, '') || account
+}
+
+/** The account or card it left from, as a sentence names it ("XX4821", "card ending 7712"), or null. */
+function paidFrom(s: LetterPayment): string | null {
+  if (!s.account) return null
+  return isCard(s) ? `card ending ${cardEnding(s.account)}` : s.account
+}
+
+/** This rung's letter signs with your UPI ID when you have one (the bank finds a UPI payment by it). */
+export function signsWithUpiId(step: StuckStepKind, s: Pick<StuckPayment, 'rail' | 'app'>): boolean {
+  return step !== 'nch' && step !== 'commission' && isUpiPayment(s)
+}
+
+/** Names that don't say who you are: a skipped name is saved as "You", and older ones as "Me". */
+const PLACEHOLDER_NAMES: ReadonlySet<string> = new Set(['', 'you', 'me'])
+
+/** The profile's name is a real one, fit to sign a letter with. */
+export function isRealName(name: string): boolean {
+  return !PLACEHOLDER_NAMES.has(nameKey(name))
+}
+
 function senderName(me: LetterSender): string {
-  const name = me.name.trim()
-  return name && name !== 'Me' ? name : PLACEHOLDERS.name
+  return isRealName(me.name) ? me.name.trim() : PLACEHOLDERS.name
 }
 
 function mobileOf(me: LetterSender): string {
@@ -270,6 +303,44 @@ function complaintLine(step: StuckStep | null, noun = 'complaint number'): strin
   return step.ref ? `${letterDate(step.date)}, ${noun} ${step.ref}` : letterDate(step.date)
 }
 
+/** A complaint to them raised before today: this letter is a follow-up, and says so. */
+function raisedBefore(s: LetterPayment, kind: StuckStepKind, today: string): StuckStep | null {
+  const step = stepOf(s, kind)
+  return step && step.date < today ? step : null
+}
+
+/** "I first raised this with you on 28 October 2026 (complaint number 4471), and it has not been resolved." */
+function followUpLine(step: StuckStep, noun: string): string {
+  return `I first raised this with you on ${letterDate(step.date)}${step.ref ? ` (${noun} ${step.ref})` : ''}, and it has not been resolved.`
+}
+
+/** "A, B and C" (with semicolons between longer items, since amounts carry commas). */
+function listed(items: readonly string[]): string {
+  if (items.length <= 2) return items.join(' and ')
+  return `${items.slice(0, -1).join('; ')}; and ${items.at(-1) ?? ''}`
+}
+
+/** Each time money came back, with its date, when it came in more than one go: " (₹600 on 28 October 2026 and ₹400 on 30 October 2026)". */
+function inParts(s: LetterPayment): string | null {
+  const parts = backParts(s).filter((p) => p.amount > 0)
+  if (parts.length < 2) return null
+  return ` (${listed(parts.map((p) => `${rupees(p.amount)} on ${letterDate(p.date)}`))})`
+}
+
+/**
+ * When the compensation was paid: " (on 5 November 2026)", or each payment with its date — once
+ * it came in its own go (a single total, as older entries keep it, has no day of its own).
+ */
+function compensationWhen(s: LetterPayment): string {
+  const all = backParts(s)
+  if (all.length < 2) return ''
+  const parts = all.filter((p) => p.compensation > 0)
+  const [first] = parts
+  if (!first) return ''
+  if (parts.length === 1) return ` (on ${letterDate(first.date)})`
+  return ` (${listed(parts.map((p) => `${rupees(p.compensation)} on ${letterDate(p.date)}`))})`
+}
+
 /** Lines that are known, as "Label: value" (unknown ones are dropped). */
 function facts(rows: ReadonlyArray<readonly [string, string | null | undefined]>): string {
   return rows
@@ -278,9 +349,13 @@ function facts(rows: ReadonlyArray<readonly [string, string | null | undefined]>
     .join('\n')
 }
 
-/** The sign-off: name, the UPI ID on a UPI payment (so the bank can find it), mobile, and the address when it's known. */
+/**
+ * The sign-off: name, the UPI ID on a UPI payment when it's known (it helps the bank find it; the
+ * account, app and reference already do, so it's never a blank to fill in), mobile, and the address
+ * when it's known.
+ */
 function signOff(me: LetterSender, s: LetterPayment, close: string): string {
-  const upi = isUpiPayment(s) ? me.upiId?.trim() || PLACEHOLDERS.upiId : null
+  const upi = isUpiPayment(s) ? me.upiId?.trim() || null : null
   const address = me.address?.trim() || null
   return [close, senderName(me), upi ? `UPI ID: ${upi}` : null, `Mobile: ${mobileOf(me)}`, address ? `Address: ${address}` : null]
     .filter((x) => x !== null)
@@ -329,12 +404,17 @@ function claimed(s: LetterPayment): LetterPayment {
   return s.confirmed && s.dismissedAt === null ? s : { ...s, confirmed: true, dismissedAt: null }
 }
 
-/** The rule for this payment and its date: the row, T + N, the day it was due back. */
-function ruleParagraph(s: LetterPayment): string {
-  const due = letterDate(dueBy(s))
+/** The circular's own row for a debit after the mandate was revoked: the customer's bank reverses it by T + 1. */
+const REVOKED_ROW = 'NACH — account debited despite revocation of the debit mandate with the bank by the customer (I.7.b)'
+
+/** The rule for this payment and its date: the row, T + N, the day it is (or was) due back. */
+function ruleParagraph(s: LetterPayment, today: string): string {
+  const dueDay = dueBy(s)
+  const due = letterDate(dueDay)
   const days = s.rail ? RAIL_RULES[s.rail].days : UNKNOWN_RAIL_DAYS
-  const where = s.rail
-    ? `Under ${CIRCULAR_NAME}, this is covered by the row "${RAIL_RULES[s.rail].row}". It had to be reversed by T + ${dayWord(days)}, that is by ${due} (T being the date of the transaction, counted in calendar days as the circular does).`
+  const row = revoked(s) ? REVOKED_ROW : s.rail ? RAIL_RULES[s.rail].row : null
+  const where = row
+    ? `Under ${CIRCULAR_NAME}, this is covered by the row "${row}". It ${today <= dueDay ? 'has' : 'had'} to be reversed by T + ${dayWord(days)}, that is by ${due} (T being the date of the transaction, counted in calendar days as the circular does).`
     : `Under ${CIRCULAR_NAME}, a failed transaction like this has to be reversed within T + ${dayWord(days)} at the most, that is by ${due} (T being the date of the transaction, counted in calendar days as the circular does).`
   const payer = isWallet(s) ? 'the wallet issuer' : 'the bank'
   return `${where} Beyond that, ${payer} is to pay compensation of ${rupees(COMPENSATION_PER_DAY)} for each day of delay, on its own, without waiting for a complaint.`
@@ -359,7 +439,10 @@ function failedFacts(s: LetterPayment): string {
 /** What came back of it so far, when some did: "Only ₹300 of it was reversed, on 30 October 2026; ₹200 is still to come." */
 function partBack(s: LetterPayment, today: string): string | null {
   if (!backInPart(s) || s.back === null) return null
-  return `Only ${rupees(s.back.amount)} of it was reversed, on ${letterDate(s.back.date)}; ${rupees(stillOwed(s, today).money)} is still to come.`
+  const rest = rupees(stillOwed(s, today).money)
+  const parts = inParts(s)
+  if (parts) return `Only ${rupees(s.back.amount)} of it was reversed${parts}; ${rest} is still to come.`
+  return `Only ${rupees(s.back.amount)} of it was reversed, on ${letterDate(s.back.date)}; ${rest} is still to come.`
 }
 
 /** " (UPI ref 629420113457)" for a subject line, or nothing. */
@@ -368,15 +451,29 @@ function refSuffix(s: LetterPayment): string {
   return isUpiPayment(s) ? ` (UPI ref ${s.ref})` : ` (ref ${s.ref})`
 }
 
+/** Who or where it was paid, as the details name it: the ATM, a shop's card machine, a mandate's payee. */
+function payeeLabel(s: LetterPayment): string {
+  if (s.rail === 'atm') return 'ATM'
+  if (s.rail === 'card_pos' || s.rail === 'aeps') return 'Paid at'
+  if (s.rail === 'nach') return 'Mandate in favour of'
+  return 'Paid to'
+}
+
+/** The account it left from, or for a card (an ATM too) the card's last digits. */
+function accountRow(s: LetterPayment): readonly [string, string] {
+  if (isCard(s)) return ['Card ending', s.account ? cardEnding(s.account) : PLACEHOLDERS.card]
+  return ['Account', s.account ?? PLACEHOLDERS.account]
+}
+
 /** The details, one per line. */
 function failedDetails(s: LetterPayment, me: LetterSender): string {
   const wallet = isWallet(s)
   return facts([
     ['Amount', rupees(s.amount)],
     ['Date of the transaction', letterDate(s.date)],
-    ['Paid to', payee(s)],
+    [payeeLabel(s), payee(s)],
     [refLabel(s.rail), s.ref ?? PLACEHOLDERS.reference],
-    wallet ? ['Wallet', walletName(s)] : ['Account', s.account ?? PLACEHOLDERS.account],
+    wallet ? ['Wallet', walletName(s)] : accountRow(s),
     wallet ? ['Registered mobile', mobileOf(me)] : ['Paid using', appName(s.app)],
   ])
 }
@@ -401,14 +498,16 @@ export function bankComplaint(payment: LetterPayment, me: LetterSender, today: s
   const subject = `Reversal and compensation: ${railShort(s)} of ${rupees(s.amount)} on ${letterDate(s.date)}${refSuffix(s)}`
 
   const what = part ? `the remaining ${rupees(owed.money)}` : 'the money'
+  // Before the deadline the rule paragraph already says what the delay costs: said once.
   const status =
     late > 0
-      ? `As of ${letterDate(today)}, it is ${dayWord(late)} past that date and ${what} has not been reversed, so the compensation due so far is ${rupees(total)} (${dayWord(late)} × ${rupees(COMPENSATION_PER_DAY)}), and ${rupees(COMPENSATION_PER_DAY)} for each further day until it is reversed.${paid > 0 ? ` I have received ${rupees(paid)} of it so far.` : ''}`
-      : `If it is not reversed by ${letterDate(dueBy(s))}, ${rupees(COMPENSATION_PER_DAY)} is due for each day after that until it is.`
+      ? `As of ${letterDate(today)}, it is ${dayWord(late)} past that date and ${what} has not been reversed, so the compensation due so far is ${rupees(total)} (${dayWord(late)} × ${rupees(COMPENSATION_PER_DAY)}), and ${rupees(COMPENSATION_PER_DAY)} for each further day until it is reversed.${paid > 0 ? ` I have received ${rupees(paid)} of it so far${compensationWhen(s)}.` : ''}`
+      : null
   const ask =
     late > 0
       ? `I request you to:\n1. Reverse ${rupees(owed.money)} to my ${where}; and\n2. Credit the compensation due under the circular: ${rupees(owed.compensation)} as of ${letterDate(today)}, plus ${rupees(COMPENSATION_PER_DAY)} for each further day until the reversal.`
-      : `I request you to reverse ${rupees(owed.money)} to my ${where} by ${letterDate(dueBy(s))}. If it is reversed later, the circular sets compensation for each day of delay.`
+      : `I request you to reverse ${rupees(owed.money)} to my ${where} by ${letterDate(dueBy(s))}.`
+  const prior = raisedBefore(s, 'bank', today)
 
   const body = [
     `To,\nThe Grievance Redressal Officer,\n${entity(s)}`,
@@ -416,13 +515,16 @@ export function bankComplaint(payment: LetterPayment, me: LetterSender, today: s
     `Subject: ${subject}`,
     'Dear Sir/Madam,',
     `${failedFacts(s)} ${part ?? `It has not been returned to my ${where}.`}`,
+    prior ? followUpLine(prior, 'complaint number') : null,
     failedDetails(s, me),
-    ruleParagraph(s),
+    ruleParagraph(s, today),
     status,
     ask,
-    'Please acknowledge this complaint and share its reference number.',
+    prior?.ref ? `Please reply to this under complaint number ${prior.ref}.` : 'Please acknowledge this complaint and share its reference number.',
     signOff(me, s, 'Yours faithfully,'),
-  ].join('\n\n')
+  ]
+    .filter((x) => x !== null)
+    .join('\n\n')
   return { subject, body }
 }
 
@@ -436,7 +538,8 @@ export function compensationClaim(payment: LetterPayment, me: LetterSender, toda
   const owed = stillOwed(s, today)
   const subject = `Compensation for late reversal: ${railShort(s)} of ${rupees(s.amount)} on ${letterDate(s.date)}${refSuffix(s)}`
 
-  const cameBack = partBack(s, today) ?? `It was reversed on ${letterDate(s.back.date)}.`
+  const parts = inParts(s)
+  const cameBack = partBack(s, today) ?? (parts ? `It was reversed in parts${parts}.` : `It was reversed on ${letterDate(s.back.date)}.`)
   const due = letterDate(dueBy(s))
   // Part of it back is still late: the days run until all of it is.
   const lateLine = !backInFull(s)
@@ -447,11 +550,12 @@ export function compensationClaim(payment: LetterPayment, me: LetterSender, toda
       ? `The reversal came ${dayWord(late)} after ${due}, the date the circular required, so the compensation due is ${rupees(total)} (${dayWord(late)} × ${rupees(COMPENSATION_PER_DAY)}).`
       : 'The reversal came within the time the circular sets.'
   const paidLine =
-    paid > 0 ? `I have received ${rupees(paid)} of it so far, so ${rupees(owed.compensation)} is still due.` : 'I have not received this compensation.'
+    paid > 0 ? `I have received ${rupees(paid)} of it so far${compensationWhen(s)}, so ${rupees(owed.compensation)} is still due.` : 'I have not received this compensation.'
   const asks: string[] = []
   if (owed.money > 0) asks.push(`reverse the remaining ${rupees(owed.money)} to my ${home(s)}`)
   if (owed.compensation > 0) asks.push(`credit the compensation of ${rupees(owed.compensation)} due under the circular`)
   const ask = asks.length > 0 ? `I request you to ${asks.join(', and ')}.` : 'Please confirm the compensation paid against this transaction.'
+  const prior = raisedBefore(s, 'bank', today)
 
   const body = [
     `To,\nThe Grievance Redressal Officer,\n${entity(s)}`,
@@ -459,13 +563,16 @@ export function compensationClaim(payment: LetterPayment, me: LetterSender, toda
     `Subject: ${subject}`,
     'Dear Sir/Madam,',
     `${failedFacts(s)} ${cameBack}`,
+    prior ? followUpLine(prior, 'complaint number') : null,
     failedDetails(s, me),
-    ruleParagraph(s),
+    ruleParagraph(s, today),
     `${lateLine} ${late > 0 ? paidLine : ''}`.trim(),
     ask,
-    'Please acknowledge this claim and share its reference number.',
+    prior?.ref ? `Please reply to this under complaint number ${prior.ref}.` : 'Please acknowledge this claim and share its reference number.',
     signOff(me, s, 'Yours faithfully,'),
-  ].join('\n\n')
+  ]
+    .filter((x) => x !== null)
+    .join('\n\n')
   return { subject, body }
 }
 
@@ -516,17 +623,24 @@ export function ombudsmanComplaint(payment: LetterPayment, me: LetterSender, tod
   const back = backInFull(s)
   const what = back ? 'compensation for the late reversal not paid' : 'not reversed, compensation not paid'
   const subject = `Complaint against ${against}: ${railShort(s)} of ${rupees(s.amount)} on ${letterDate(s.date)}, ${what}`
-  const status = s.back ? `The money was reversed only on ${letterDate(s.back.date)}${s.back.amount < s.amount ? `, and only ${rupees(s.back.amount)} of it` : ''}.` : 'The money has not been reversed.'
+  const parts = inParts(s)
+  const status = !s.back
+    ? 'The money has not been reversed.'
+    : (partBack(s, today) ?? (parts ? `The money was reversed only in parts${parts}.` : `The money was reversed only on ${letterDate(s.back.date)}.`))
   const late = daysLate(s, today)
+  // Its reply goes with it when there was one (filed before the 30 days are up, there was); "(if any)" only while Settle doesn't know.
+  const bank = stepOf(s, 'bank')
+  const replied = bank !== null && (bankReplied(s) || daysBetween(bank.date, today) < OMBUDSMAN_WAIT_DAYS)
+  const reply = !bank ? ' and its reply (if any)' : replied ? ' and its reply' : ''
 
   const body = [
     `I am filing this complaint against ${against} under the Reserve Bank - Integrated Ombudsman Scheme, 2026.`,
     `What happened:\n${failedFacts(s)} ${status}`,
     failedDetails(s, me),
-    `The rule:\n${ruleParagraph(s)}${late > 0 ? ` The delay is ${dayWord(late)}${back ? '' : ` as of ${letterDate(today)}`}.` : ''}`,
+    `The rule:\n${ruleParagraph(s, today)}${late > 0 ? ` The delay is ${dayWord(late)}${back ? '' : ` as of ${letterDate(today)}`}.` : ''}`,
     `My complaint to ${entityWord(s)}:\n${bankComplaintStatus(s, today)}`,
     `Relief sought:\n${reliefSought(s, today)}.`,
-    `Attached: my complaint to ${entityWord(s)} and its reply (if any), and the ${isWallet(s) ? 'wallet' : 'account'} statement showing the debit${s.back ? ' and the reversal' : ''}.`,
+    `Attached: my complaint to ${entityWord(s)}${reply}, and the ${isWallet(s) ? 'wallet' : 'account'} statement showing the debit${s.back ? ' and the reversal' : ''}.`,
     signOff(me, s, 'Thank you,'),
   ].join('\n\n')
   return { subject, body }
@@ -566,7 +680,9 @@ export function ombudsmanFields(payment: LetterPayment, me: LetterSender, today:
     { id: 'reference', value: s.ref ?? PLACEHOLDERS.reference, known: s.ref !== null },
     isWallet(s)
       ? { id: 'account', value: mobile ?? PLACEHOLDERS.mobile, known: mobile !== null }
-      : { id: 'account', value: s.account ?? PLACEHOLDERS.account, known: s.account !== null },
+      : isCard(s)
+        ? { id: 'account', value: s.account ? `Card ending ${cardEnding(s.account)}` : PLACEHOLDERS.card, known: s.account !== null }
+        : { id: 'account', value: s.account ?? PLACEHOLDERS.account, known: s.account !== null },
     { id: 'bankComplaint', value: complaintLine(step), known: step !== null && step.ref !== null },
     { id: 'relief', value: reliefSought(s, today), known: true },
   ]
@@ -598,55 +714,104 @@ function forBooking(s: LetterPayment): string {
   return ref ? ` for ${isPnr(s) ? 'PNR' : 'order'} ${ref}` : ''
 }
 
-/** When the refund was due, and why that day: a date they gave, their own timeline, or the usual time (never a promise they didn't make). */
-function refundDue(s: LetterPayment): { date: string; why: string } {
-  const date = letterDate(dueBy(s))
+/** An airline's refund: the booking was cancelled (by you or by it), and the DGCA's rules apply. */
+function isAirline(s: LetterPayment): boolean {
+  return merchantById(s.merchant)?.category === 'airline'
+}
+
+/** Paid by card, as a refund's details say when the DGCA's card rule turns on it. */
+function paidByCard(s: LetterPayment): string | null {
+  return isCard(s) ? 'Card' : null
+}
+
+/** The day the refund's clock starts, as the details name it: a cancelled booking for an airline, else the refund's start. */
+function startLabel(s: LetterPayment): string {
+  return isAirline(s) ? 'Cancelled on' : 'Refund started on'
+}
+
+/**
+ * When the refund is (or was) due, and why that day: a date they gave, their own timeline, or the
+ * usual time (never a promise they didn't make). Before that day it says "is due", after it "was".
+ */
+function refundDue(s: LetterPayment, today: string): { date: string; why: string } {
+  const day = dueBy(s)
+  const date = letterDate(day)
+  const pending = today <= day
   const basis = refundDueBasis(s)
-  if (basis.kind === 'dgca') return { date, why: `I paid by card, and under the DGCA's Civil Aviation Requirement on refunds of airline tickets (Section 3, Series M, Part II) a card payment must be refunded within ${basis.days} days, so it was due by ${date}.` }
+  if (basis.kind === 'dgca')
+    return {
+      date,
+      why: `I paid by card, and under the DGCA's Civil Aviation Requirement on refunds of airline tickets (Section 3, Series M, Part II) a card payment must be refunded within ${basis.days} days, so it ${pending ? 'is' : 'was'} due by ${date}.`,
+    }
   if (basis.kind === 'promised') return { date, why: `You said it would reach me by ${date}.` }
-  if (basis.kind === 'merchant') return { date, why: `Your refund timeline is ${workingDayWord(basis.workingDays)}, so it was due by ${date}.` }
-  return { date, why: `Refunds usually arrive within ${workingDayWord(basis.workingDays)}, so I expected it by ${date}.` }
+  if (basis.kind === 'merchant') return { date, why: `Your refund timeline is ${workingDayWord(basis.workingDays)}, so it ${pending ? 'is' : 'was'} due by ${date}.` }
+  return { date, why: `Refunds usually arrive within ${workingDayWord(basis.workingDays)}, so I ${pending ? 'expect' : 'expected'} it by ${date}.` }
 }
 
 function refundDetails(s: LetterPayment): string {
   return facts([
     [isPnr(s) ? 'PNR / booking reference' : 'Order / booking number', bookingRef(s) ?? (isPnr(s) ? PLACEHOLDERS.pnr : PLACEHOLDERS.order)],
     ['Refund amount', rupees(s.amount)],
-    ['Refund started on', letterDate(s.date)],
+    [startLabel(s), letterDate(s.date)],
     ['Refund reference', s.ref],
   ])
 }
 
 const ECOMMERCE_RULES =
   'As the Consumer Protection (E-Commerce) Rules, 2020 provide, please share a ticket number for this complaint; I look forward to it being resolved within one month.'
+/** The same, once they've given a ticket number. */
+const ECOMMERCE_RULES_AGAIN = 'As the Consumer Protection (E-Commerce) Rules, 2020 provide, I look forward to it being resolved within one month of my complaint.'
 const DGCA_RULES =
   "The DGCA's rules on refunds (CAR Section 3, Series M, Part II) ask airlines to refund within 7 days when a ticket is paid by card, and within 14 working days when it is booked through an agent or portal."
 
-/** The message to the business for a refund that's late. */
+/** The message to the business for a refund: late, or (asked before its day) where it stands. */
 export function merchantMessage(s: LetterPayment, me: LetterSender, today: string): Letter {
   if (s.kind === 'failed') return failedToBusiness(s, me, today)
   const name = business(s)
   const m = merchantById(s.merchant)
   const owed = stillOwed(s, today).money
   // Part of it came: "₹1,000 came on 30 October 2026, and ₹299 is still to come."
-  const part = backInPart(s) && s.back ? `${rupees(s.back.amount)} came on ${letterDate(s.back.date)}, and ${rupees(owed)} is still to come.` : null
+  const parts = inParts(s)
+  const part =
+    backInPart(s) && s.back
+      ? `${rupees(s.back.amount)} came ${parts ? `in parts${parts}` : `on ${letterDate(s.back.date)}`}, and ${rupees(owed)} is still to come.`
+      : null
   const subject = part ? `Refund of ${rupees(s.amount)}${forBooking(s)}: ${rupees(owed)} not received` : `Refund of ${rupees(s.amount)}${forBooking(s)} not received`
-  const due = refundDue(s)
+  const due = refundDue(s, today)
   const late = daysLate(s, today)
-  const rule = m?.category === 'airline' ? DGCA_RULES : m ? ECOMMERCE_RULES : 'Please share a ticket or reference number for this complaint.'
+  const prior = raisedBefore(s, 'merchant', today)
+  // The DGCA's rule once: the due line already gives it when it's the card rule.
+  const rule =
+    m?.category === 'airline'
+      ? refundDueBasis(s).kind === 'dgca'
+        ? null
+        : DGCA_RULES
+      : m
+        ? prior?.ref
+          ? ECOMMERCE_RULES_AGAIN
+          : ECOMMERCE_RULES
+        : prior?.ref
+          ? null
+          : 'Please share a ticket or reference number for this complaint.'
   const still = part ? `the remaining ${rupees(owed)} has` : 'the money has'
+  const again = prior ? ' again' : ''
+  const ask =
+    late > 0
+      ? `Please credit ${part ? `the remaining ${rupees(owed)}` : 'the refund'} to my original payment method, or, if it has already been sent, share its reference number (ARN or UTR) so I can trace it with my bank.`
+      : `Please share where ${part ? `the remaining ${rupees(owed)}` : 'the refund'} stands, or its reference number (ARN or UTR) if it has already been sent.`
 
   const body = [
     `Hello ${payee(s) ? `${name} support` : 'support team'},`,
-    part ? `I'm writing about a refund that has only partly reached me: ${part}` : `I'm writing about a refund that hasn't reached me.`,
+    part ? `I'm writing${again} about a refund that has only partly reached me: ${part}` : `I'm writing${again} about a refund that hasn't reached me.`,
+    prior ? `I raised this with you on ${letterDate(prior.date)}${prior.ref ? ` (ticket ${prior.ref})` : ''}, and it is still not resolved.` : null,
     refundDetails(s),
     `${due.why} ${late > 0 ? `It is now ${dayWord(late)} past that date, and ${still} not reached my account.` : `It has not reached my account yet.`}`,
-    part
-      ? `Please credit the remaining ${rupees(owed)} to my original payment method, or, if it has already been sent, share its reference number (ARN or UTR) so I can trace it with my bank.`
-      : 'Please credit the refund to my original payment method, or, if it has already been sent, share its reference number (ARN or UTR) so I can trace it with my bank.',
+    ask,
     rule,
     signOff(me, s, 'Thank you,'),
-  ].join('\n\n')
+  ]
+    .filter((x) => x !== null)
+    .join('\n\n')
   return { subject, body }
 }
 
@@ -708,7 +873,7 @@ export function nchMessage(s: LetterPayment, me: LetterSender, today: string): L
   const sign = `${senderName(me)}, ${placeOf(me)}`
   if (s.kind === 'failed') {
     const subject = `Failed payment of ${rupees(s.amount)} not returned`
-    const from = [entityName(s), isWallet(s) ? null : s.account].filter((x) => x).join(' ')
+    const from = [entityName(s), isWallet(s) ? null : paidFrom(s)].filter((x) => x).join(' ')
     const body = [
       revoked(s)
         ? `Complaint: my account was debited ${rupees(s.amount)} on ${letterDate(s.date)} under a NACH mandate${paidTo(s)} that I had revoked; it has not come back as of ${letterDate(today)}.`
@@ -736,13 +901,16 @@ export function nchMessage(s: LetterPayment, me: LetterSender, today: string): L
   const earlier = stepsSoFar(s, ['nch', 'commission']).map((x) => `${letterDate(x.date)}: ${x.text}`)
   const ref = bookingRef(s)
   const field = sector(s)
+  const part = backInPart(s) && s.back !== null
+  // What came, each time with its date, then what's still missing.
+  const received = part && s.back ? `${rupees(s.back.amount)} received${inParts(s) ?? ` on ${letterDate(s.back.date)}`}; ${rupees(owed)} still not received` : 'not received'
   const lines = [
-    backInPart(s) && s.back
-      ? `Complaint: refund of ${rupees(s.amount)} from ${name}: only ${rupees(s.back.amount)} received, ${rupees(owed)} still due.`
-      : `Complaint: refund of ${rupees(s.amount)} from ${name} not received.`,
+    part ? `Complaint: refund of ${rupees(s.amount)} from ${name} only partly received.` : `Complaint: refund of ${rupees(s.amount)} from ${name} not received.`,
     isPnr(s) ? `PNR: ${ref ?? PLACEHOLDERS.pnr}.` : `Order: ${ref ?? PLACEHOLDERS.order}.`,
-    `Refund started ${letterDate(s.date)}; ${when}; not received as of ${letterDate(today)}.`,
-    earlier.length > 0 ? `Complained so far: ${earlier.join('; ')}. Not resolved.` : `I asked ${name} for it; not resolved.`,
+    isAirline(s) && isCard(s) ? 'Paid by card.' : null,
+    `${isAirline(s) ? 'Cancelled' : 'Refund started'} ${letterDate(s.date)}; ${when}; ${received} as of ${letterDate(today)}.`,
+    // Never a request nobody recorded: with none noted, the day is left for you to fill in.
+    earlier.length > 0 ? `Complained so far: ${earlier.join('; ')}. Not resolved.` : `I contacted ${name} about it on ${PLACEHOLDERS.contacted}; it has not been resolved.`,
     s.ref ? `Refund reference (ARN/UTR): ${s.ref}.` : null,
     field ? `Sector: ${field}.` : null,
     `Please take this up with ${name}.`,
@@ -761,13 +929,14 @@ export function airsewaMessage(s: LetterPayment, me: LetterSender, today: string
   const owed = stillOwed(s, today).money
   const part = backInPart(s) && s.back !== null
   const body = [
-    `Grievance: a refund from ${name} has not reached me.`,
+    part ? `Grievance: a refund from ${name} has only partly reached me.` : `Grievance: a refund from ${name} has not reached me.`,
     facts([
       ['Airline', payee(s) ?? '[airline]'],
       ['PNR / booking reference', ref ?? PLACEHOLDERS.pnr],
       ['Refund amount', rupees(s.amount)],
-      ['Received so far', part && s.back ? `${rupees(s.back.amount)}, on ${letterDate(s.back.date)}` : null],
-      ['Refund started on', letterDate(s.date)],
+      ['Received so far', part && s.back ? `${rupees(s.back.amount)}${inParts(s) ?? `, on ${letterDate(s.back.date)}`}` : null],
+      [startLabel(s), letterDate(s.date)],
+      ['Paid by', paidByCard(s)],
       ['Due by', letterDate(dueBy(s))],
       ['Complaint to the airline', airline ? complaintLine(airline, 'reference') : `${PLACEHOLDERS.complaintDate}, reference ${PLACEHOLDERS.complaintNumber}`],
     ]),
@@ -801,12 +970,18 @@ export function commissionSummary(payment: LetterPayment, me: LetterSender, toda
   const events: Array<{ date: string; text: string }> = [
     failed
       ? { date: s.date, text: revoked(s) ? `${rupees(s.amount)} debited under a NACH mandate${paidTo(s)} that I had revoked` : `${rupees(s.amount)} debited for ${railWords(s.rail)}${paidTo(s)}; the transaction failed` }
-      : { date: s.date, text: `${against} started a refund of ${rupees(s.amount)}${forBooking(s)}` },
+      : isAirline(s)
+        ? { date: s.date, text: `the booking${forBooking(s)} was cancelled; ${against} owed a refund of ${rupees(s.amount)}${isCard(s) ? ', paid by card' : ''}` }
+        : { date: s.date, text: `${against} started a refund of ${rupees(s.amount)}${forBooking(s)}` },
     { date: dueBy(s), text: dueText },
     ...stepsSoFar(s),
   ]
   if (revoked(s) && s.mandateRevokedOn) events.push({ date: s.mandateRevokedOn, text: 'I revoked the NACH mandate with the bank' })
-  if (s.back) events.push({ date: s.back.date, text: `${rupees(s.back.amount)} ${failed ? 'reversed' : 'received'}` })
+  // Each time money came back, and each compensation payment, on its own day.
+  for (const part of backParts(s)) {
+    if (part.amount > 0) events.push({ date: part.date, text: `${rupees(part.amount)} ${failed ? 'reversed' : 'received'}` })
+    if (part.compensation > 0) events.push({ date: part.date, text: `${rupees(part.compensation)} compensation received` })
+  }
   const timeline = events
     .map((x, i) => ({ ...x, i }))
     .sort((a, b) => a.date.localeCompare(b.date) || a.i - b.i)
@@ -819,12 +994,17 @@ export function commissionSummary(payment: LetterPayment, me: LetterSender, toda
       ? `${rupees(owed.money)} still not received`
       : 'still not received'
   timeline.push(`${letterDate(today)}: ${now}`)
-  const relief = failed ? reliefSought(s, today) : `Refund of ${rupees(owed.money)}`
+  // What a commission is usually asked for besides the refund itself; it decides what to award.
+  const relief = failed
+    ? reliefSought(s, today)
+    : `Refund of ${rupees(owed.money)}, with interest from ${letterDate(dueBy(s))}; compensation for the deficiency in service; and the costs of this complaint`
   const mobile = me.mobile?.trim() || null
+  // The address when it was given (the filing form asks for it anyway): never a blank here.
+  const address = me.address?.trim() || null
 
   const body = [
     facts([
-      ['Complainant', `${senderName(me)}, ${me.address?.trim() || PLACEHOLDERS.address}`],
+      ['Complainant', address ? `${senderName(me)}, ${address}` : senderName(me)],
       ['Mobile', mobile],
       ['Against', against],
       ['About', failed ? (revoked(s) ? 'a NACH debit made after I had revoked the mandate' : `${railWords(s.rail)} that failed but took the money`) : `a refund${forBooking(s)} that has not been paid`],

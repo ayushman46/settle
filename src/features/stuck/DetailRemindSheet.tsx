@@ -1,10 +1,11 @@
+import { useId } from 'react'
 import { CalendarPlus, ExternalLink } from 'lucide-react'
 import { ActionBar, BottomSheet, Button, useToast } from '../../components'
+import { today as todayIso } from '../../engine/dates'
 import { useT } from '../../i18n'
 import { haptic } from '../../lib/haptics'
 import { shareFile } from '../../share/shareFile'
-import { googleCalendarUrl, icsFor, type StuckReminder } from './reminder'
-import { stuckDate } from './view'
+import { googleCalendarUrl, icsFor, remindLabel, type StuckReminder } from './reminder'
 import styles from './Stuck.module.css'
 
 export interface DetailRemindSheetProps {
@@ -16,12 +17,14 @@ export interface DetailRemindSheetProps {
 }
 
 /**
- * "Remind me on 7 Nov": the next date as a calendar event, made on this phone — an .ics file for
- * whatever calendar the phone has, or Google Calendar's new-event page, filled in.
+ * "Remind me on 7 Nov" (or tomorrow): the next date as a calendar event, made on this phone — an
+ * .ics file for whatever calendar the phone has, or Google Calendar's new-event page, filled in
+ * (which Google then sees, so the sheet says so).
  */
 export function DetailRemindSheet({ open, onClose, id, reminder }: DetailRemindSheetProps) {
   const t = useT()
   const toast = useToast()
+  const noteId = useId()
 
   const addToCalendar = async (): Promise<void> => {
     const file = new Blob([icsFor(reminder, id, new Date())], { type: 'text/calendar' })
@@ -41,7 +44,7 @@ export function DetailRemindSheet({ open, onClose, id, reminder }: DetailRemindS
     <BottomSheet
       open={open}
       onClose={onClose}
-      title={t('stuck.remind.title', { date: stuckDate(reminder.date) })}
+      title={remindLabel(reminder, todayIso())}
       description={t('stuck.remind.text')}
       footer={
         <ActionBar>
@@ -54,6 +57,7 @@ export function DetailRemindSheet({ open, onClose, id, reminder }: DetailRemindS
             target="_blank"
             rel="noopener noreferrer"
             aria-label={t('stuck.remind.newTab')}
+            aria-describedby={noteId}
             onClick={() => {
               haptic('tap')
               onClose()
@@ -66,6 +70,9 @@ export function DetailRemindSheet({ open, onClose, id, reminder }: DetailRemindS
       }
     >
       <p className={styles.remindEvent}>{reminder.title}</p>
+      <p id={noteId} className={styles.fine}>
+        {t('stuck.remind.googleNote')}
+      </p>
     </BottomSheet>
   )
 }

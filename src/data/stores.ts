@@ -258,11 +258,25 @@ export interface StuckStep {
   ref: string | null
 }
 
-/** The money came back: on what day, how much, and any compensation paid on top. */
+/** One time money came back: the day, the part of the payment (paise) and any compensation paid then (paise). */
+export interface StuckBackPart {
+  /** YYYY-MM-DD. */
+  date: string
+  amount: number
+  compensation: number
+}
+
+/**
+ * The money came back: the totals (the day the last of the money came, how much, and the
+ * compensation paid on top) and each part as it came. Read the parts through rules.ts backParts():
+ * saved before parts were kept (or edited as one), `parts` is empty and the totals are the one part.
+ */
 export interface StuckBack {
   date: string
   amount: number
   compensation: number
+  /** In date order (on the same day, in the order they came). Empty or missing when it was saved as totals alone. */
+  parts?: StuckBackPart[]
 }
 
 /** Money a bank or a business owes you back. Kept on this phone; backed up with the rest. */
@@ -305,6 +319,8 @@ export interface StuckPayment {
 
 const isoDay = z.string().check(z.refine(isIsoDate))
 
+const stuckBackPartSchema = z.object({ date: isoDay, amount: z.int().check(z.nonnegative()), compensation: z.int().check(z.nonnegative()) })
+
 export const stuckSchema = z.array(
   z.object({
     id: z.string().check(z.minLength(1)),
@@ -324,7 +340,18 @@ export const stuckSchema = z.array(
     confirmed: z.catch(z.boolean(), true),
     steps: z.catch(z.array(z.object({ kind: z.enum(STUCK_STEP_KINDS), date: isoDay, ref: z.catch(z.nullable(z.string().check(z.maxLength(60))), null) })), []),
     repliedAt: z.catch(z.nullable(isoDay), null),
-    back: z.catch(z.nullable(z.object({ date: isoDay, amount: z.int().check(z.nonnegative()), compensation: z.int().check(z.nonnegative()) })), null),
+    back: z.catch(
+      z.nullable(
+        z.object({
+          date: isoDay,
+          amount: z.int().check(z.nonnegative()),
+          compensation: z.int().check(z.nonnegative()),
+          // Saved before the parts were kept: none, and the totals read as one part.
+          parts: z.catch(z.array(stuckBackPartSchema).check(z.maxLength(100)), []),
+        }),
+      ),
+      null,
+    ),
     dismissedAt: z.catch(z.nullable(z.number()), null),
     note: z.catch(z.nullable(z.string().check(z.maxLength(500))), null),
     createdAt: z.number(),

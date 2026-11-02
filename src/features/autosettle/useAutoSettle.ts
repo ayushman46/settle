@@ -16,7 +16,7 @@ import { haptic } from '../../lib/haptics'
 import { formatMoney } from '../../lib/money'
 import { callPlugin, hasPlugin, listenToPlugin } from '../../lib/nativeApp'
 import { merchantById } from '../stuck/merchants'
-import { backInPart, compensationDue, daysLate } from '../stuck/rules'
+import { backInPart, backParts, compensationDue, daysLate, stillOwed } from '../stuck/rules'
 import { alertSignals, trackStuckSignals, type TrackResult } from '../stuck/track'
 import { undoMatches } from '../whospaid/sources'
 import { readRawAlerts } from './alerts'
@@ -35,13 +35,15 @@ function nameOf(s: StuckPayment): string | null {
 }
 
 /**
- * What the toast says about stuck money just noticed: money back first (the good news), then what
- * was added — already late, it says by how much and what the bank owes so far — then a payment
- * that went through after all. Null when nothing changed.
+ * What the toast says about stuck money just noticed: money back first (the good news), then
+ * compensation paid for the wait, then what was added — already late, it says by how much and what
+ * the bank owes so far — then a payment that went through after all. Null when nothing changed.
  */
-export function stuckToastMessage(result: Pick<TrackResult, 'added' | 'back'> & Partial<Pick<TrackResult, 'cleared'>>, t: Translate, day: string): string | null {
+export function stuckToastMessage(result: Pick<TrackResult, 'added' | 'back'> & Partial<Pick<TrackResult, 'cleared' | 'paid'>>, t: Translate, day: string): string | null {
   const back = result.back[0]
   if (result.back.length > 1) return t('stuckalerts.back.many', { count: result.back.length })
+  const paid = result.paid?.[0]
+  if (!back && paid) return paidMessage(paid, t, day)
   if (back) {
     const name = nameOf(back)
     const amount = inr(back.back?.amount ?? back.amount)
@@ -75,6 +77,16 @@ export function stuckToastMessage(result: Pick<TrackResult, 'added' | 'back'> & 
     return name ? t('stuckalerts.failed', { name, amount }) : t('stuckalerts.failed.anon', { amount })
   }
   return name ? t('stuckalerts.check', { name, amount }) : t('stuckalerts.check.anon', { amount })
+}
+
+/** The bank paid compensation for the wait on `s`: how much just came, and what's still owed. */
+function paidMessage(s: StuckPayment, t: Translate, day: string): string {
+  const name = nameOf(s)
+  // The compensation that just came: the latest part that paid some.
+  const amount = inr(backParts(s).filter((p) => p.compensation > 0).at(-1)?.compensation ?? s.back?.compensation ?? 0)
+  const owed = stillOwed(s, day).compensation
+  if (owed > 0) return name ? t('stuckalerts.paid.part', { amount, name, owed: inr(owed) }) : t('stuckalerts.paid.part.anon', { amount, owed: inr(owed) })
+  return name ? t('stuckalerts.paid', { amount, name }) : t('stuckalerts.paid.anon', { amount })
 }
 
 /** A payment that was waiting for a tap went through after all. */
@@ -112,7 +124,7 @@ export function useAutoSettle(): void {
     const tellStuck = (result: TrackResult): void => {
       const message = stuckToastMessage(result, t, today())
       if (message === null) return
-      const good = result.back.length > 0 || (result.added.length === 0 && result.cleared.length > 0)
+      const good = result.back.length > 0 || result.paid.length > 0 || (result.added.length === 0 && result.cleared.length > 0)
       haptic(good ? 'success' : 'warning')
       toast(message, { tone: good ? 'success' : 'info', action: { label: t('common.action.undo'), onAction: result.undo } })
     }

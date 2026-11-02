@@ -22,8 +22,7 @@ export function HeroDemo() {
   return (
     <figure className={styles.demo} aria-labelledby={captionId}>
       <figcaption id={captionId} className="visually-hidden">
-        Try it: a {total} {HERO_BILL.title.toLowerCase()} split between you, Riya and Sam. Pick a way to split
-        it.
+        Try it: a {total} {HERO_BILL.title} split between you, Riya and Sam. Pick a way to split it.
       </figcaption>
 
       <div className={styles.phone}>

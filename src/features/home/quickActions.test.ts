@@ -29,7 +29,7 @@ import { poolsStore, resetDataForTests } from '../../data'
 import { resetBillLaunchForTests, takeBillStart, takeScanHint } from '../bill/launch'
 import { GRID_SIZE, homeGridActions, overflowActions, quickActionDefs, templateActionDefs } from './quickActions'
 
-const ids = (open = () => {}) => homeGridActions(open).map((a) => a.id)
+const ids = (stuckCard = false) => homeGridActions(() => {}, { stuckCard }).map((a) => a.id)
 
 beforeEach(() => {
   Object.assign(flags, { lend: false, pools: false, sms: false, delivery: false })
@@ -50,31 +50,55 @@ describe('homeGridActions', () => {
     expect(overflowActions()).toEqual([])
   })
 
-  it('with every feature on: seven actions and More, no templates; New group moves to the More sheet', () => {
+  it('with every feature on and nothing stuck: Stuck money in Group collection’s place, which moves to the More sheet', () => {
     Object.assign(flags, { lend: true, pools: true, sms: true, delivery: true })
-    expect(ids()).toEqual(['scan', 'split', 'lend', 'collect', 'sms', 'food', 'stuck', 'more'])
-    expect(overflowActions().map((a) => a.id)).toEqual(['group'])
+    expect(ids()).toEqual(['scan', 'split', 'lend', 'stuck', 'sms', 'food', 'group', 'more'])
+    expect(overflowActions().map((a) => a.id)).toEqual(['collect'])
+  })
+
+  it('with every feature on and Home showing the Stuck card: the grid as before Stuck money, nothing left over', () => {
+    Object.assign(flags, { lend: true, pools: true, sms: true, delivery: true })
+    expect(ids(true)).toEqual(['scan', 'split', 'lend', 'collect', 'sms', 'food', 'group', 'more'])
+    expect(overflowActions({ stuckCard: true })).toEqual([])
+    expect(homeGridActions(() => {}, { stuckCard: true }).map((a) => a.label)).toEqual([
+      'Scan bill',
+      'Split amount',
+      'Lend / borrow',
+      'Group collection',
+      'From SMS',
+      'Food order',
+      'New group',
+      'More',
+    ])
   })
 
   it('back-fills with templates when only some are on', () => {
     Object.assign(flags, { lend: true, pools: true })
     expect(ids()).toEqual(['scan', 'split', 'lend', 'collect', 'stuck', 'group', 'template:rent', 'more'])
     Object.assign(flags, { lend: false, pools: false, delivery: true })
-    expect(ids()).toEqual(['scan', 'split', 'food', 'stuck', 'group', 'template:rent', 'template:travel', 'more'])
+    expect(ids()).toEqual(['scan', 'split', 'stuck', 'food', 'group', 'template:rent', 'template:travel', 'more'])
+    expect(ids(true)).toEqual(['scan', 'split', 'food', 'group', 'template:rent', 'template:travel', 'template:subscription', 'more'])
   })
 
-  it('always offers Stuck money on the grid, even before anything is stuck', () => {
-    for (const mask of [0, 15]) {
+  it('offers Stuck money on the grid until Home has its card, and always keeps New group', () => {
+    for (const mask of [0, 1, 3, 5, 7, 15]) {
       Object.assign(flags, { lend: !!(mask & 1), pools: !!(mask & 2), sms: !!(mask & 4), delivery: !!(mask & 8) })
       expect(ids()).toContain('stuck')
+      expect(ids(true)).not.toContain('stuck')
+      // The card leads there instead (and the More sheet has its own Stuck money tile).
+      expect(overflowActions({ stuckCard: true }).map((a) => a.id)).not.toContain('stuck')
+      expect(ids()).toContain('group')
+      expect(ids(true)).toContain('group')
     }
   })
 
   it('is always two rows of four', () => {
     for (const mask of [0, 1, 3, 5, 7, 15]) {
       Object.assign(flags, { lend: !!(mask & 1), pools: !!(mask & 2), sms: !!(mask & 4), delivery: !!(mask & 8) })
-      expect(ids()).toHaveLength(GRID_SIZE)
-      expect(ids().at(-1)).toBe('more')
+      for (const stuckCard of [false, true]) {
+        expect(ids(stuckCard)).toHaveLength(GRID_SIZE)
+        expect(ids(stuckCard).at(-1)).toBe('more')
+      }
     }
   })
 

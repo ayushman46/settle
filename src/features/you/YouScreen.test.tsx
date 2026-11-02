@@ -184,15 +184,22 @@ describe('YouScreen — shortcuts', () => {
     await waitFor(() => expect(currentUrl()).toBe('/app/stuck'))
   })
 
-  it('keeps the shortcuts under a heading, Stuck money straight after People (above the Pro-only rows)', () => {
+  it('puts money owed to you — by friends, and stuck with banks and shops — under its own heading, before the shortcuts', () => {
     renderYou()
-    const shortcuts = screen.getByRole('region', { name: 'Shortcuts' })
-    const rows = within(shortcuts)
+    const owed = screen.getByRole('region', { name: 'Money owed to you' })
+    const rows = within(within(owed).getByRole('list', { name: 'Money owed to you' }))
       .getAllByRole('button')
       .map((b) => (b.textContent ?? '').trim())
-    expect(rows[0]).toMatch(/^People/)
+    expect(rows).toHaveLength(2)
+    expect(rows[0]).toMatch(/^To collect/)
     expect(rows[1]).toMatch(/^Stuck money/)
-    expect(rows.findIndex((r) => r.startsWith('Stuck money'))).toBeLessThan(rows.findIndex((r) => r.startsWith('Recurring splits')))
+    const shortcuts = screen.getByRole('region', { name: 'Shortcuts' })
+    expect(owed.compareDocumentPosition(shortcuts) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    const others = within(shortcuts)
+      .getAllByRole('button')
+      .map((b) => (b.textContent ?? '').trim())
+    expect(others[0]).toMatch(/^People/)
+    expect(others.some((r) => r.startsWith('Stuck money') || r.startsWith('To collect'))).toBe(false)
   })
 
   it('counts recurring splits for Pro users', async () => {

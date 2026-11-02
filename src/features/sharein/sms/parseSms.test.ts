@@ -17,9 +17,9 @@ const { fileURLToPath } = (await import(/* @vite-ignore */ URL_MODULE)) as NodeU
 const today = CORPUS_TODAY
 
 describe('the corpus', () => {
-  it('has 211 messages with unique ids', () => {
-    expect(SMS_CORPUS).toHaveLength(211)
-    expect(new Set(SMS_CORPUS.map(([id]) => id)).size).toBe(211)
+  it('has 217 messages with unique ids', () => {
+    expect(SMS_CORPUS).toHaveLength(217)
+    expect(new Set(SMS_CORPUS.map(([id]) => id)).size).toBe(217)
   })
 
   it.each(SMS_CORPUS)('%s', (_id, text, expected) => {

@@ -137,6 +137,17 @@ describe('DateField', () => {
     expect(showPicker).toHaveBeenCalledTimes(2)
   })
 
+  it('says the date once: a day near today by name and in full, any other day just in full', () => {
+    const yesterday = addDays(today(), -1)
+    const { unmount } = render(<DateField value={yesterday} onChange={() => {}} label="When did it reply?" />)
+    expect(dateInput()).toHaveAccessibleName(`When did it reply?: Yesterday, ${fullDateLabel(yesterday)}`)
+    unmount()
+    const earlier = addDays(today(), -8)
+    render(<DateField value={earlier} onChange={() => {}} label="Another day" />)
+    expect(screen.getByText(relativeDateLabel(earlier))).toBeInTheDocument()
+    expect(dateInput()).toHaveAccessibleName(`Another day: ${fullDateLabel(earlier)}`)
+  })
+
   it('shows "Pick a date" for an empty value', () => {
     render(<DateField value="" onChange={() => {}} label="When" />)
     expect(screen.getByText('Pick a date')).toBeInTheDocument()

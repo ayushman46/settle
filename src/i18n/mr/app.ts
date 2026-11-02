@@ -39,6 +39,9 @@ export const app = {
   'app.title.collection': 'वर्गणी',
   'app.title.editCollection': 'वर्गणी बदला',
   'app.title.pro': 'Pro',
+  'app.title.stuck': 'अडकलेले पैसे',
+  'app.title.stuckNew': 'अडकलेले पैसे जोडा',
+  'app.title.stuckEdit': 'अडकलेले पैसे बदला',
 
   // When the phone won't save (storage full or blocked).
   'app.storage.title': 'हा फोन तुमचे बदल सेव्ह करत नाहीये',

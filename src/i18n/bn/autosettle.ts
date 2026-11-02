@@ -6,6 +6,7 @@ export const autosettle: Messages = {
   'autosettle.pending': '{count, plural, one {#টা পেমেন্ট দেখার আছে} other {#টা পেমেন্ট দেখার আছে}}',
   'autosettle.on.title': 'অটো-সেটল চালু আছে',
   'autosettle.on.text': 'Google Pay, PhonePe, Paytm বা BHIM টাকা আসার কথা জানালে, যিনি দিয়েছেন তিনি টিক হয়ে যান। ব্যর্থ পেমেন্ট আর রিফান্ড চলে যায় “আটকে থাকা টাকা” অংশে।',
+  'autosettle.on.text.noSms': 'Google Pay, PhonePe, Paytm বা BHIM টাকা আসার কথা জানালে, যিনি দিয়েছেন তিনি টিক হয়ে যান। বেশির ভাগ ব্যর্থ পেমেন্ট আর ফেরত আসা টাকাও ধরতে, “বদলান” ট্যাপ করে ব্যাংকের SMS চালু করুন।',
   'autosettle.manage': 'বদলান',
   'autosettle.offer.title': 'নিজে থেকে টিক করুন',
   'autosettle.offer.text': 'আপনার UPI অ্যাপ টাকা আসার কথা জানালে Settle যিনি দিয়েছেন তাঁকে টিক করে দেয়। যে পেমেন্ট ব্যর্থ হয়েও টাকা কেটে নিয়েছে, বা যে রিফান্ড আসছে, তা নিজে থেকেই “আটকে থাকা টাকা” অংশে চলে যায়।',

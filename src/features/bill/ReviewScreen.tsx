@@ -139,6 +139,8 @@ export function ReviewScreen() {
     dispatch({ type: 'removeItem', itemId: item.id })
     haptic('warning')
     toast(item.name ? t('bill.review.removed.toast', { name: item.name }) : t('bill.review.removedUnnamed.toast'), {
+      // Editing another item first mustn't lose the way back.
+      keepOverSheets: true,
       action: {
         label: t('bill.undo.cta'),
         onAction: () => {
@@ -157,6 +159,7 @@ export function ReviewScreen() {
     const before = latest.current
     dispatch({ type: 'setCurrency', currency: code })
     toast(t('bill.review.currency.toast', { code }), {
+      keepOverSheets: true,
       action: {
         label: t('bill.undo.cta'),
         onAction: () => {
@@ -209,6 +212,7 @@ export function ReviewScreen() {
     dispatch({ type: 'removeFee', feeId: fee.id })
     haptic('warning')
     toast(t('delivery.review.fees.removed.toast', { label: fee.label }), {
+      keepOverSheets: true,
       action: {
         label: t('common.action.undo'),
         onAction: () => {
@@ -237,6 +241,7 @@ export function ReviewScreen() {
     haptic('success')
     toast(t('delivery.review.fees.converted.toast', { label: item.name }), {
       tone: 'success',
+      keepOverSheets: true,
       action: {
         label: t('common.action.undo'),
         onAction: () => {

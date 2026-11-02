@@ -91,12 +91,13 @@ export function IntroSlides({ slides = INTRO_SLIDES, onDone }: IntroSlidesProps)
   return (
     <Screen
       header={
-        <div className={styles.topRow}>
+        // A banner landmark, so the wordmark isn't left outside every landmark.
+        <header className={styles.topRow}>
           <BrandMark size="sm" />
           <Button variant="ghost" size="sm" onClick={onDone}>
             {t('common.action.skip')}
           </Button>
-        </div>
+        </header>
       }
       footer={
         <ActionBar>

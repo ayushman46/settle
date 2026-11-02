@@ -156,14 +156,17 @@ describe('HomeScreen — quick actions', SLOW, () => {
     expect(currentUrl()).toBe('/app/split/new?category=transport')
   })
 
-  it('More puts getting money back first, apart from the ways to split', async () => {
+  it('More puts getting money back first — from friends, then from banks and shops — apart from the ways to split', async () => {
     const { user } = renderHome()
     await user.click(within(screen.getByRole('list', { name: 'Quick actions' })).getByRole('button', { name: 'More' }))
     const sheet = await screen.findByRole('dialog', { name: 'More' })
     expect(sheet).toHaveAccessibleDescription('Get your money back, or start a split.')
-    const back = within(within(sheet).getByRole('region', { name: 'Get your money back' }))
-    expect(back.getAllByRole('button').map((b) => b.textContent)).toEqual(['Stuck money', 'To collect', 'Who’s paid?', 'Paid screenshot'])
-    await user.click(back.getByRole('button', { name: 'Stuck money' }))
+    expect(within(sheet).getAllByRole('heading', { level: 3 }).map((h) => h.textContent)).toEqual(['From friends', 'From banks and shops', 'Start a split'])
+    const friends = within(within(sheet).getByRole('region', { name: 'From friends' }))
+    expect(friends.getAllByRole('button').map((b) => b.textContent)).toEqual(['To collect', 'Who’s paid?', 'Paid screenshot'])
+    const banks = within(within(sheet).getByRole('region', { name: 'From banks and shops' }))
+    expect(banks.getAllByRole('button').map((b) => b.textContent)).toEqual(['Stuck money'])
+    await user.click(banks.getByRole('button', { name: 'Stuck money' }))
     expect(currentUrl()).toBe('/app/stuck')
   })
 
@@ -172,6 +175,28 @@ describe('HomeScreen — quick actions', SLOW, () => {
     expect(screen.queryByRole('region', { name: 'Stuck money' })).not.toBeInTheDocument()
     await user.click(within(screen.getByRole('list', { name: 'Quick actions' })).getByRole('button', { name: 'Stuck money' }))
     expect(currentUrl()).toBe('/app/stuck')
+  })
+
+  it('once something’s stuck, the card leads there instead of a tile, and New group keeps its own', async () => {
+    stuckStore.set([stuckPayment({ date: '2026-10-22' })])
+    const { user } = renderHome()
+    expect(screen.getByRole('region', { name: 'Stuck money' })).toBeInTheDocument()
+    const grid = within(screen.getByRole('list', { name: 'Quick actions' }))
+    expect(grid.queryByRole('button', { name: 'Stuck money' })).not.toBeInTheDocument()
+    expect(grid.getByRole('button', { name: 'New group' })).toBeInTheDocument()
+    expect(grid.getAllByRole('button').map((b) => b.textContent)).toEqual(homeGridActions(() => {}, { stuckCard: true }).map((a) => a.label))
+    // More still has it.
+    await user.click(grid.getByRole('button', { name: 'More' }))
+    const sheet = await screen.findByRole('dialog', { name: 'More' })
+    expect(within(within(sheet).getByRole('region', { name: 'From banks and shops' })).getByRole('button', { name: 'Stuck money' })).toBeInTheDocument()
+  })
+
+  it('brings the tile back once nothing is owed any more', () => {
+    // Set aside: nothing to chase, so no card — the tile is how to find it again.
+    stuckStore.set([stuckPayment({ date: '2026-10-20', dismissedAt: 1 })])
+    renderHome()
+    expect(screen.queryByRole('region', { name: 'Stuck money' })).not.toBeInTheDocument()
+    expect(within(screen.getByRole('list', { name: 'Quick actions' })).getByRole('button', { name: 'Stuck money' })).toBeInTheDocument()
   })
 })
 

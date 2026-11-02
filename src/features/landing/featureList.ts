@@ -1,5 +1,6 @@
 /** The reasons people pick Settle (spec §1), in the order the landing page's bento grid lays them out. */
 import { BRAND } from '../../domain/types'
+import { STUCK_PATH } from '../stuck/paths'
 
 export type FeatureId =
   | 'stuck'
@@ -26,6 +27,8 @@ export interface Feature {
   isNew?: boolean
   /** Bento size: `full` takes a whole row (text beside the mockup on wide screens), `wide` half a row, `regular` a third. */
   size: 'full' | 'wide' | 'regular'
+  /** Somewhere to start, right there in the tile. */
+  cta?: { label: string; to: string }
 }
 
 export const FEATURES: readonly Feature[] = [
@@ -36,6 +39,7 @@ export const FEATURES: readonly Feature[] = [
     text: `A UPI, card or ATM payment that failed but took your money, or a refund that never came. ${BRAND.name} knows the RBI’s deadline for UPI, IMPS, card, ATM, AePS, NACH and wallet failures, counts the ₹100 a day the bank owes you after it, and has the next complaint ready — your bank, the RBI Ombudsman, the consumer helpline. The Android app spots them by itself.`,
     isNew: true,
     size: 'full',
+    cta: { label: 'Check what your bank owes you', to: STUCK_PATH },
   },
   {
     id: 'scan',

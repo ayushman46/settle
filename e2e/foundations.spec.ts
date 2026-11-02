@@ -44,17 +44,22 @@ function expense(extra: Partial<Expense>): Expense {
   }
 }
 
-/** Mirrors src/features/home/quickActions.ts: switched-on actions in order, templates to seven, More. */
-const ACTIONS = [
+/**
+ * Mirrors src/features/home/quickActions.ts with nothing stuck yet (so Stuck money has a tile):
+ * switched-on actions in order — with more than seven, Group collection makes room first —
+ * templates to seven, More.
+ */
+const ENABLED = [
   'Scan bill',
   'Split amount',
   ...(LEND_ENABLED ? ['Lend / borrow'] : []),
-  ...(POOLS_ENABLED ? ['Collect money'] : []),
+  ...(POOLS_ENABLED ? ['Group collection'] : []),
+  'Stuck money',
   ...(SMS_ENABLED ? ['From SMS'] : []),
   ...(DELIVERY_ENABLED ? ['Food order'] : []),
-  'Stuck money',
   'New group',
 ]
+const ACTIONS = ENABLED.length > 7 ? ENABLED.filter((label) => label !== 'Group collection') : ENABLED
 const GRID = [...ACTIONS, ...['Rent', 'Trip', 'Subscription', 'Utilities', 'Cab']].slice(0, 7).concat('More')
 
 for (const width of [320, 360]) {

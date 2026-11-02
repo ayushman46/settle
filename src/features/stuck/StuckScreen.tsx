@@ -1,5 +1,5 @@
 import { useId, useMemo, useState, type ReactNode } from 'react'
-import { ChevronDown, ClipboardPaste, Landmark, Plus, Scale } from 'lucide-react'
+import { BanknoteArrowDown, ChevronDown, ClipboardPaste, Plus, Scale } from 'lucide-react'
 import { goBack, navigate } from '../../app/router'
 import { Button, Card, EmptyState, IconButton, Money, PageTitle, Screen, TopBar, useToast } from '../../components'
 import { useStore } from '../../data'
@@ -11,11 +11,11 @@ import { useCountUp } from '../../kit/motion'
 import { cx } from '../../lib/cx'
 import { haptic } from '../../lib/haptics'
 import { STUCK_NEW_PATH, stuckPath } from './paths'
-import { needsAction, summarize, type StuckSummary } from './rules'
+import { needsAction, owedForWait, summarize, type StuckSummary } from './rules'
 import { StuckAlertsCard } from './StuckAlertsCard'
 import { KindIcon } from './StuckParts'
 import { StuckPasteSheet } from './StuckPasteSheet'
-import { checkLabel, groupStuck, inr, orderTail, rowAmount, statusLine, stuckTitle, type StuckEntry, type StuckSection } from './view'
+import { checkLabel, groupStuck, inr, listTitle, orderTail, rowAmount, statusLine, type StuckEntry, type StuckSection } from './view'
 import styles from './Stuck.module.css'
 
 /**
@@ -50,7 +50,7 @@ export function StuckScreen() {
       <Screen header={header} contentClassName={styles.content}>
         <PageTitle title={t('stuck.title')} />
         <EmptyState
-          icon={<Landmark />}
+          icon={<BanknoteArrowDown />}
           title={t('stuck.empty.title')}
           text={t('stuck.empty.text')}
           action={
@@ -109,13 +109,17 @@ function RuleNote() {
   )
 }
 
-/** The hero: what banks and shops owe you, what the wait has earned, and what came back. */
+/**
+ * The hero: what banks and shops owe you, what the wait has earned, and what came back — your
+ * money and the compensation each said apart, so it never reads as more than was stuck. It opens
+ * on the real figure (no count-up from nothing); a change glides.
+ */
 function SummaryHero({ summary }: { summary: StuckSummary }) {
   const t = useT()
   const headingId = useId()
   const owedOnly = summary.stuck === 0 && summary.compensation > 0
   const headline = owedOnly ? summary.compensation : summary.stuck
-  const shown = useCountUp(headline, { step: 100 })
+  const shown = useCountUp(headline, { step: 100, intro: false })
   const counting = shown !== headline
   const calm = headline === 0
   // Nothing counted yet, but failed payments to check: that's the news, not "nothing stuck".
@@ -138,7 +142,7 @@ function SummaryHero({ summary }: { summary: StuckSummary }) {
           </div>
         </div>
       )}
-      {(extra || summary.recovered > 0) && (
+      {(extra || summary.recovered > 0 || summary.recoveredCompensation > 0) && (
         <dl className={styles.heroTotals}>
           {extra && (
             <div className={styles.heroTotal}>
@@ -146,10 +150,14 @@ function SummaryHero({ summary }: { summary: StuckSummary }) {
               <dd className={cx(styles.heroTotalValue, styles.heroAccent)}>{t('stuck.summary.plus', { amount: inr(summary.compensation) })}</dd>
             </div>
           )}
-          {summary.recovered > 0 && (
+          {(summary.recovered > 0 || summary.recoveredCompensation > 0) && (
             <div className={styles.heroTotal}>
               <dt className={styles.heroTotalLabel}>{t('stuck.summary.recovered')}</dt>
-              <dd className={styles.heroTotalValue}>{inr(summary.recovered)}</dd>
+              <dd className={styles.heroTotalValue}>
+                {summary.recoveredCompensation > 0
+                  ? t('stuck.summary.recoveredWait', { amount: inr(summary.recovered), wait: inr(summary.recoveredCompensation) })
+                  : inr(summary.recovered)}
+              </dd>
             </div>
           )}
         </dl>
@@ -218,7 +226,7 @@ function Row({ entry, section, day }: { entry: StuckEntry; section: StuckSection
   const t = useT()
   const toast = useToast()
   const { payment: s, next } = entry
-  const name = stuckTitle(s)
+  const name = listTitle(s)
   const order = orderTail(s)
   const line = statusLine(s, next, day)
   const urgent = needsAction(next.stage) && next.stage !== 'check'
@@ -240,15 +248,26 @@ function Row({ entry, section, day }: { entry: StuckEntry; section: StuckSection
       <button type="button" className={styles.rowMain} onClick={() => navigate(stuckPath(s.id))}>
         <KindIcon kind={s.kind} section={section} />
         <span className={styles.rowText}>
+          {/* The name wraps to a second line before it's cut; the order or PNR has a line of its own, whole. */}
           <span id={`${id}-name`} className={styles.rowTitle}>
             {name}
-            {order && <span className={styles.rowOrder}> · {order}</span>}
           </span>{' '}
+          {order && (
+            <>
+              <span className={styles.rowRef}>{order}</span>{' '}
+            </>
+          )}
           <span id={`${id}-status`} className={cx(styles.rowStatus, urgent && styles.rowUrgent, section === 'back' && styles.rowBack)}>{line}</span>
         </span>{' '}
-        {/* The question to check already says the amount: it's heard once. */}
+        {/* What's still owed to you, "for the wait" when that's the compensation. The question to check already says the amount: it's heard once. */}
         <span className={styles.rowAmount} aria-hidden={checking || undefined}>
           <Money value={rowAmount(s, next, day)} currency="INR" strong={section !== 'aside'} muted={section === 'aside'} trimZeros />
+          {owedForWait(next.stage) && (
+            <>
+              {' '}
+              <span className={styles.rowAmountNote}>{t('stuck.list.forWait')}</span>
+            </>
+          )}
         </span>
       </button>
       {checking && (

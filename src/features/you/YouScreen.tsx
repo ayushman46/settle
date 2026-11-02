@@ -34,9 +34,10 @@ import settings from './Settings.module.css'
 import styles from './YouScreen.module.css'
 
 /**
- * `/app/you` — you and your settings: profile and UPI ID, Settle Pro, shortcuts (your people,
- * stuck money, what's owed to you, recurring splits and insights), currency and appearance,
- * backups and exports, a Pro code to redeem, the legal pages, and clearing everything off the phone.
+ * `/app/you` — you and your settings: profile and UPI ID, Settle Pro, money owed to you (by
+ * friends, and stuck with banks and shops), shortcuts (your people, recurring splits and
+ * insights), currency and appearance, backups and exports, a Pro code to redeem, the legal pages,
+ * and clearing everything off the phone.
  */
 export function YouScreen() {
   const [redeemOpen, setRedeemOpen] = useState(false)
@@ -67,6 +68,7 @@ export function YouScreen() {
   )
 }
 
+/** Money owed to you (friends', then what banks and shops hold), then the other shortcuts. */
 function Shortcuts() {
   const friends = useFriends()
   const summary = useSummary()
@@ -79,102 +81,113 @@ function Shortcuts() {
   const [pasting, setPasting] = useState(false)
 
   return (
-    <section className={settings.section} aria-labelledby="you-shortcuts">
-      <h2 id="you-shortcuts" className={settings.sectionTitle}>
-        {t('you.shortcuts.label')}
-      </h2>
-      <Card padding="none">
-        <List aria-label={t('you.shortcuts.label')}>
-          <ListRow
-            leading={
-              <SettingIcon>
-                <Users />
-              </SettingIcon>
-            }
-            title={t('you.shortcuts.people.title')}
-            subtitle={peopleLine(friends)}
-            onClick={() => navigate('/app/friends')}
-            chevron
-          />
-          <StuckRow />
-          <ListRow
-            leading={
-              <SettingIcon>
-                <BadgeIndianRupee />
-              </SettingIcon>
-            }
-            title={t('collect.title')}
-            subtitle={owing > 0 ? t('collect.line', { amount: formatMoney(summary.owedToMe, summary.currency, { trimZeros: true }), count: owing }) : t('collect.line.none')}
-            onClick={() => navigate(COLLECT_PATH)}
-            chevron
-          />
-          {POOLS_ENABLED && <CollectionsRow />}
-          <ListRow
-            leading={
-              <SettingIcon>
-                <Repeat />
-              </SettingIcon>
-            }
-            title={t('you.shortcuts.recurring.title')}
-            subtitle={recurringLine(recurring, due.length, recurringOn)}
-            trailing={recurringOn ? undefined : <Badge tone="pro">Pro</Badge>}
-            onClick={() => navigate('/app/recurring')}
-            chevron
-          />
-          <ListRow
-            leading={
-              <SettingIcon>
-                <ChartPie />
-              </SettingIcon>
-            }
-            title={t('you.shortcuts.insights.title')}
-            subtitle={t('you.shortcuts.insights.subtitle')}
-            trailing={insightsOn ? undefined : <Badge tone="pro">Pro</Badge>}
-            onClick={() => navigate('/app/insights')}
-            chevron
-          />
-          {PROOF_ENABLED && (
+    <>
+      <section className={settings.section} aria-labelledby="you-owed">
+        <h2 id="you-owed" className={settings.sectionTitle}>
+          {t('you.owed.label')}
+        </h2>
+        <Card padding="none">
+          <List aria-label={t('you.owed.label')}>
             <ListRow
               leading={
                 <SettingIcon>
-                  <CircleCheck />
+                  <BadgeIndianRupee />
                 </SettingIcon>
               }
-              title={t('proof.more.title')}
-              subtitle={t('proof.more.subtitle')}
-              onClick={() => navigate(PROOF_PATH)}
+              title={t('collect.title')}
+              subtitle={owing > 0 ? t('collect.line', { amount: formatMoney(summary.owedToMe, summary.currency, { trimZeros: true }), count: owing }) : t('collect.line.none')}
+              onClick={() => navigate(COLLECT_PATH)}
               chevron
             />
-          )}
-          {RENT_ENABLED && (
+            <StuckRow />
+          </List>
+        </Card>
+      </section>
+      <section className={settings.section} aria-labelledby="you-shortcuts">
+        <h2 id="you-shortcuts" className={settings.sectionTitle}>
+          {t('you.shortcuts.label')}
+        </h2>
+        <Card padding="none">
+          <List aria-label={t('you.shortcuts.label')}>
             <ListRow
               leading={
                 <SettingIcon>
-                  <Building2 />
+                  <Users />
                 </SettingIcon>
               }
-              title={t('rent.more.title')}
-              subtitle={t('rent.more.subtitle')}
-              onClick={() => navigate(RENT_PATH)}
+              title={t('you.shortcuts.people.title')}
+              subtitle={peopleLine(friends)}
+              onClick={() => navigate('/app/friends')}
               chevron
             />
-          )}
-          <ListRow
-            leading={
-              <SettingIcon>
-                <ClipboardPaste />
-              </SettingIcon>
-            }
-            title={t('expense.paidReply.paste.row')}
-            subtitle={t('expense.paidReply.paste.rowSub')}
-            aria-haspopup="dialog"
-            onClick={() => setPasting(true)}
-          />
-        </List>
-        <InstallRow />
-        <PastePaidReplySheet open={pasting} onClose={() => setPasting(false)} />
-      </Card>
-    </section>
+            {POOLS_ENABLED && <CollectionsRow />}
+            <ListRow
+              leading={
+                <SettingIcon>
+                  <Repeat />
+                </SettingIcon>
+              }
+              title={t('you.shortcuts.recurring.title')}
+              subtitle={recurringLine(recurring, due.length, recurringOn)}
+              trailing={recurringOn ? undefined : <Badge tone="pro">Pro</Badge>}
+              onClick={() => navigate('/app/recurring')}
+              chevron
+            />
+            <ListRow
+              leading={
+                <SettingIcon>
+                  <ChartPie />
+                </SettingIcon>
+              }
+              title={t('you.shortcuts.insights.title')}
+              subtitle={t('you.shortcuts.insights.subtitle')}
+              trailing={insightsOn ? undefined : <Badge tone="pro">Pro</Badge>}
+              onClick={() => navigate('/app/insights')}
+              chevron
+            />
+            {PROOF_ENABLED && (
+              <ListRow
+                leading={
+                  <SettingIcon>
+                    <CircleCheck />
+                  </SettingIcon>
+                }
+                title={t('proof.more.title')}
+                subtitle={t('proof.more.subtitle')}
+                onClick={() => navigate(PROOF_PATH)}
+                chevron
+              />
+            )}
+            {RENT_ENABLED && (
+              <ListRow
+                leading={
+                  <SettingIcon>
+                    <Building2 />
+                  </SettingIcon>
+                }
+                title={t('rent.more.title')}
+                subtitle={t('rent.more.subtitle')}
+                onClick={() => navigate(RENT_PATH)}
+                chevron
+              />
+            )}
+            <ListRow
+              leading={
+                <SettingIcon>
+                  <ClipboardPaste />
+                </SettingIcon>
+              }
+              title={t('expense.paidReply.paste.row')}
+              subtitle={t('expense.paidReply.paste.rowSub')}
+              aria-haspopup="dialog"
+              onClick={() => setPasting(true)}
+            />
+          </List>
+          <InstallRow />
+          <PastePaidReplySheet open={pasting} onClose={() => setPasting(false)} />
+        </Card>
+      </section>
+    </>
   )
 }
 

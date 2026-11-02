@@ -2,10 +2,10 @@ import { Check } from 'lucide-react'
 import { Link } from '../../app/router'
 import { CategoryIcon, Money, Receipt } from '../../components'
 import { ME_ID, type Expense, type Group } from '../../domain/types'
-import { CATEGORY_META } from '../../engine/categories'
 import { useT } from '../../i18n'
 import { FriendAvatar, fullDateLabel, relativeDateLabel } from '../../kit/index-a'
 import { cx } from '../../lib/cx'
+import { categoryLabel } from '../../share/categories'
 import type { StandingPill } from './expenseView'
 import styles from './ExpenseHero.module.css'
 
@@ -24,10 +24,11 @@ export interface ExpenseHeroProps {
  */
 export function ExpenseHero({ expense, payerName, group, standing }: ExpenseHeroProps) {
   const t = useT()
-  const category = CATEGORY_META[expense.category]
+  // In the UI language, on the icon and beside the date alike.
+  const category = categoryLabel(expense.category)
   return (
     <Receipt padding="lg" className={styles.hero} paperClassName={styles.paper}>
-      <CategoryIcon category={expense.category} size="xl" label={category.label} />
+      <CategoryIcon category={expense.category} size="xl" label={category} />
       <h1 className={styles.title} tabIndex={-1}>
         {expense.title}
       </h1>
@@ -36,7 +37,7 @@ export function ExpenseHero({ expense, payerName, group, standing }: ExpenseHero
           {relativeDateLabel(expense.date)}
         </time>
         {/* "Rent · Rent" says nothing twice: the category only shows when the title doesn't say it. */}
-        {category.label.toLocaleLowerCase() !== expense.title.trim().toLocaleLowerCase() && <> · {category.label}</>}
+        {category.toLocaleLowerCase() !== expense.title.trim().toLocaleLowerCase() && <> · {category}</>}
       </p>
       {group && (
         <Link to={`/app/groups/${encodeURIComponent(group.id)}`} className={styles.group} aria-label={t('expense.hero.group.aria', { name: group.name })}>

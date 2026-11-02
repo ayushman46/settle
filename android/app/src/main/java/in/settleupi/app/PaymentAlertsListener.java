@@ -68,14 +68,14 @@ public class PaymentAlertsListener extends NotificationListenerService {
      * src/features/stuck/detect.ts (detect.test.ts reads these patterns).
      */
 
-    /** An amount of money: ₹420, Rs.420, Rs 420.50, INR 420, रु.420, 420 रुपये — in any Indian digits. */
-    private static final Pattern MONEY = Pattern.compile("(?i)(₹|\\brs\\.?|\\binr|रु\\.?|रू\\.?)\\s?\\p{Nd}|\\p{Nd}\\s?(रुपये|रुपए)");
+    /** An amount of money: ₹420, Rs.420, Rs 420.50, INR 420, रु.420, 420 रुपये, IRCTC's "Amt 1845" — in any Indian digits. */
+    private static final Pattern MONEY = Pattern.compile("(?i)(₹|\\brs\\.?|\\binr|रु\\.?|रू\\.?)\\s?\\p{Nd}|\\p{Nd}\\s?(रुपये|रुपए)|\\bamt\\.?:?\\s?\\p{Nd}");
     /** Money coming in. */
     private static final Pattern MONEY_IN = Pattern.compile("(?i)\\b(received|credited|deposited|paid you|sent you|added to)\\b|प्राप्त|जमा");
     /** A payment that failed, waits, or is coming back. */
     private static final Pattern STUCK = Pattern.compile("(?i)\\b(failed|failure|declined|unsuccessful|pending|processing|reversed|reversal|refunds?|refunded|credited back|will be refunded|asafal|vifal|wapas|vapas)\\b|विफल|असफल|अस्वीकृत|लंबित|वापस|रिवर्स|रिफ(\\u093c)?ंड|रि\\u095eंड");
-    /** Money going out of your account (bank SMS): only to pair with a failure. */
-    private static final Pattern MONEY_OUT = Pattern.compile("(?i)\\b(debited|deducted|spent|sent|paid|withdrawn|kaate|kate gaye|kat gaye|debit hu[ae])\\b|डेबिट|कटे|कटी|काटे|कट गए");
+    /** Money going out of your account (bank SMS): only to pair with a failure. Banking Hindi's "नामे" is a debit, "निकासी" a withdrawal. */
+    private static final Pattern MONEY_OUT = Pattern.compile("(?i)\\b(debited|deducted|spent|sent|paid|withdrawn|kaate|kate gaye|kat gaye|debit hu[ae])\\b|डेबिट|कटे|कटी|काटे|कट गए|नामे|निकासी");
     /** A payment that went through (UPI apps): only to clear one that was pending. */
     private static final Pattern WENT_THROUGH = Pattern.compile("(?i)\\b(successful|successfully|paid|sent)\\b");
     /** A business's refund. */

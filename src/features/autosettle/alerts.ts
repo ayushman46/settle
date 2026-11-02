@@ -36,9 +36,9 @@ const AMOUNT = /(?:₹|\brs\.?|\binr)\s?([\d,]+(?:\.\d{1,2})?)/i
 const MONEY_IN = /\b(?:received|credited|deposited|paid you|sent you|added to)\b/i
 /** Not a person paying you back, whatever else it says (failures and refunds are Stuck money's, src/features/stuck). */
 const NOT_PAYBACK =
-  /\b(?:you paid|you sent|you have paid|paid to|sent to|debited|spent|payment to|cashback|cash back|reward|rewards|refund|refunded|reversal|reversed|credited back|failed|failure|declined|unsuccessful|request|requested|requesting|requests|recharge|scratch card|offer|won|coins|points|otp)\b/i
-/** Money back from a bank or a business, in an SMS: not someone paying you. */
-const MONEY_BACK = /\b(?:refunds?|refunded|reversal|reversed|credited back)\b|रिफ\u093c?ंड|रिवर्स|वापस/i
+  /\b(?:you paid|you sent|you have paid|paid to|sent to|debited|spent|payment to|cashback|cash back|reward|rewards|refund|refunded|reversal|reversed|credited back|compensation|failed|failure|declined|unsuccessful|request|requested|requesting|requests|recharge|scratch card|offer|won|coins|points|otp)\b/i
+/** Money back from a bank or a business — or the bank's compensation for a wait — in an SMS: not someone paying you. */
+const MONEY_BACK = /\b(?:refunds?|refunded|reversal|reversed|credited back|compensation)\b|रिफ\u093c?ंड|रिवर्स|वापस/i
 /** "Riya Sharma paid you ₹420", "RIYA SHARMA has sent you Rs.420". */
 const PAID_YOU = /^\s*(.+?)\s+(?:has\s+)?(?:paid|sent)\s+you\b/im
 /** "… from Riya Sharma on Google Pay", "… from riya@okaxis." */

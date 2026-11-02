@@ -23,7 +23,7 @@ import { InstallCard } from '../install'
 import { MicButton } from './MicButton'
 import { PeopleRow } from './PeopleRow'
 import { RecentActivity } from './RecentActivity'
-import { useStuckFirst } from './stuckFirst'
+import { useStuckPlace } from './stuckFirst'
 import { VOICE_ENABLED } from './voice.enabled'
 import styles from './HomeScreen.module.css'
 
@@ -31,11 +31,12 @@ import styles from './HomeScreen.module.css'
  * `/app` — Home, built like a payments app: a greeting, the "Just say it" AI field, quick actions,
  * where you stand (the dark balance card), anything due, your people and the latest activity.
  * Before the first split it's an invitation instead, with the sample bill one tap away. Stuck
- * money that needs the person comes before all of that (and before the invitation).
+ * money that needs the person now comes before the balance (and before the invitation); while
+ * it waits it sits lower down, and with nothing stuck the grid offers its tile instead.
  */
 export function HomeScreen() {
   const hasData = useHasData()
-  const stuckFirst = useStuckFirst(hasData)
+  const stuck = useStuckPlace(hasData)
   const summary = useSummary()
   const onlyOwed = summary.owedToMe > 0 && summary.iOwe === 0
   const quota = useAiQuota()
@@ -73,11 +74,11 @@ export function HomeScreen() {
 
       <BillDraftCard />
 
-      <HomeQuickActions />
+      <HomeQuickActions stuckCard={stuck !== null} />
 
       <InstallCard />
 
-      {stuckFirst && <StuckCard />}
+      {stuck === 'top' && <StuckCard compact />}
 
       {hasData ? (
         // Only owed money: the way forward is getting it back (everyone who owes you, each with a reminder).
@@ -92,7 +93,7 @@ export function HomeScreen() {
 
       <DueSplits />
 
-      <HomeExtras withoutStuck={stuckFirst} />
+      <HomeExtras withoutStuck={stuck === 'top'} />
 
       <PeopleRow />
 

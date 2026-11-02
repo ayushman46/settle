@@ -9,15 +9,19 @@
  *     { type: 'failed' | 'pending', amount, party, vpa, ref, rail, bank, account, app, date, debited, … }
  *   | { type: 'success', amount, party, vpa, ref, date, … }
  *   | { type: 'debit', amount, party, vpa, ref, rail, date, … }
- *   | { type: 'reversal' | 'refund_credited', amount, party, ref, date, … }
- *   | { type: 'refund_initiated', amount, party, merchant, orderId, promisedBy, date, … }
+ *   | { type: 'reversal' | 'refund_credited', amount, party, ref, date, compensation?, … }
+ *   | { type: 'refund_initiated', amount, party, merchant, orderId, promisedBy, promisedDays, toCard, date, … }
  *   | null
  *
  * Built on the SMS reader (src/features/sharein/sms/parseSms.ts): its clean-up, dates, references,
  * accounts, names and brands. A failure says `debited: true` only when the message says the money
- * WAS taken ("Rs.500 debited … txn failed"), never for "any amount debited will be reversed". A
- * failure the message itself says never took the money (insufficient balance, a wrong PIN, a
- * limit, a plain decline) is null: nothing is stuck. No regex lookbehind (Safari < 16.4).
+ * WAS taken ("Rs.500 debited … txn failed", "the debited amount will be reversed"), never for "any
+ * amount debited will be reversed". A failure the message itself says never took the money
+ * (insufficient balance, a wrong PIN, a limit, a plain decline), and a debit the bank returned
+ * unpaid (a bounced NACH or cheque), is null: nothing is stuck. Money "will be credited back"
+ * ("wapas jama hoga", "वापस जमा होगी") is a promise, never money back. `dated` says whether the day
+ * is known (printed, or the day a notification came) or is only today because a pasted message
+ * didn't say. No regex lookbehind (Safari < 16.4).
  */
 import { addDays, toIsoDate } from '../../engine/dates'
 import type { StuckRail } from '../../data/stores'
@@ -44,6 +48,11 @@ interface SignalBase {
   app: string | null
   /** A day the message printed that hasn't come yet (a typo, a wrong clock): `date` is the day it was seen instead, to be checked. */
   dateDoubt?: string
+  /**
+   * The day is known: printed in the message, or the day a notification came. False when a pasted
+   * message didn't say, so `date` is only today — ask when the money left. (Absent: as true.)
+   */
+  dated?: boolean
 }
 
 export type StuckSignal =
@@ -52,9 +61,19 @@ export type StuckSignal =
   | (SignalBase & { type: 'debit'; vpa: string | null; rail: StuckRail | null })
   /** A payment that went through (a UPI app's "paid ₹500 to Riya"): only to clear a pending one that did. */
   | (SignalBase & { type: 'success'; vpa: string | null })
-  | (SignalBase & { type: 'reversal' })
-  | (SignalBase & { type: 'refund_initiated'; orderId: string | null; promisedBy: string | null })
-  | (SignalBase & { type: 'refund_credited' })
+  /** Money back. `compensation`: the bank paying for the wait ("₹200 … as compensation for delayed reversal"), not the money itself. */
+  | (SignalBase & { type: 'reversal'; compensation?: boolean })
+  | (SignalBase & {
+      type: 'refund_initiated'
+      orderId: string | null
+      /** The day promised, as a date (counted from `date` when the message gave days, not a day). */
+      promisedBy: string | null
+      /** "In 7 working days": the promise in working days, to count from the day the person confirms (null when it gave a day, or calendar days). */
+      promisedDays?: number | null
+      /** It's going back to a card ("credit card ending 4821"): for a flight, the DGCA's 7 days apply. */
+      toCard?: boolean
+    })
+  | (SignalBase & { type: 'refund_credited'; compensation?: boolean })
 
 export interface ReadOptions {
   /** YYYY-MM-DD on this phone. */
@@ -120,16 +139,16 @@ const PROMO =
 
 /* ---------------------------------------------------------------- amounts and dates */
 
-/** ₹500, Rs.500, INR 500, रु.500, "debited by 500" — and Hindi's "500 रुपये". */
+/** ₹500, Rs.500, INR 500, रु.500, "debited by 500", IRCTC's "Amt 1845" — and Hindi's "500 रुपये". */
 const MONEY =
-  /(?:₹|\brs\.?|\binr|रु\.?|रू\.?)\s?([0-9][0-9,]*(?:\.[0-9]{1,2})?)|\b(?:debited|credited|reversed|refunded) (?:by|for|with)\s?(?:rs\.?|inr)?\s?([0-9][0-9,]*(?:\.[0-9]{1,2})?)|\b([0-9][0-9,]*(?:\.[0-9]{1,2})?)\s?(?:रुपये|रुपए)/gi
+  /(?:₹|\brs\.?|\binr|रु\.?|रू\.?)\s?([0-9][0-9,]*(?:\.[0-9]{1,2})?)|\b(?:debited|credited|reversed|refunded) (?:by|for|with)\s?(?:rs\.?|inr)?\s?([0-9][0-9,]*(?:\.[0-9]{1,2})?)|\b([0-9][0-9,]*(?:\.[0-9]{1,2})?)\s?(?:रुपये|रुपए)|\bamt\.?:?\s?(?:rs\.?|inr|₹)?\s?([0-9][0-9,]*(?:\.[0-9]{1,2})?)/gi
 /** An amount right after these words (within 14 characters) is a balance or a limit, not the payment. */
 const NOT_THE_AMOUNT = /(?:bal(?:ance)?|avl|avail(?:able)?|limit|lmt|outstanding|o\/s|above|upto|up to|worth|शेष|बैलेंस)\W{0,4}$/i
 
 function findMoney(text: string): number | null {
   for (const m of text.matchAll(MONEY)) {
     if (NOT_THE_AMOUNT.test(text.slice(Math.max(0, m.index - 14), m.index))) continue
-    const value = toPaise(m[1] ?? m[2] ?? m[3] ?? '')
+    const value = toPaise(m[1] ?? m[2] ?? m[3] ?? m[4] ?? '')
     if (value !== null) return value
   }
   return null
@@ -174,21 +193,44 @@ function promisedDate(text: string, base: string): string | null {
 /** "in 5-7 business days", "within 48 hrs", "takes 3 working days": the latest day that promises. */
 const WITHIN =
   /\b(?:in|within|takes?|take up to|up to|upto)\s+(?:the next\s+|another\s+)?(\d{1,2})(?:\s?(?:-|–|to)\s?(\d{1,2}))?\s*(business|working|bank(?:ing)?(?: working)?)?\s*(days?|hours?|hrs?)\b/i
+/** Hindi and Hinglish: "5-7 din mein", "48 ghante mein", "7 कार्य दिवस में", "3 दिन में". */
+const WITHIN_HI =
+  /\b(\d{1,2})(?:\s?(?:-|–|to|se|से)\s?(\d{1,2}))?\s*(working|business|kaam(?:-?kaaj)?(?: ke)?|कार्य|कामकाजी)?\s*(din|dino|dinon|ghante|ghanton|दिन|दिनों|दिवस|दिवसों|घंटे|घंटों)\s*(?:mein|me|main|ke andar|ke bhitar|tak|में|के अंदर|के भीतर|तक)(?![\u0900-\u097Fa-z])/i
 const WORKING_DAYS = /\b(\d{1,2})(?:\s?(?:-|–|to)\s?(\d{1,2}))?\s*(?:business|working|bank(?:ing)?(?: working)?)\s*days?\b/i
 
-function promisedIn(text: string, base: string): string | null {
-  const m = WITHIN.exec(text)
+/** The latest day "in N days" promises, from `base` — and N when they're working days (to count again from another start). */
+function promisedIn(text: string, base: string): { by: string; days: number | null } | null {
+  const m = WITHIN.exec(text) ?? WITHIN_HI.exec(text)
   if (m) {
     const n = Number(m[2] ?? m[1])
-    if (/^h/i.test(m[4] ?? '')) return addDays(base, Math.max(1, Math.ceil(n / 24)))
-    return m[3] ? addWorkingDays(base, n) : addDays(base, n)
+    if (/^(?:h|ghant|घंट)/i.test(m[4] ?? '')) return { by: addDays(base, Math.max(1, Math.ceil(n / 24))), days: null }
+    return m[3] ? { by: addWorkingDays(base, n), days: n } : { by: addDays(base, n), days: null }
   }
   const w = WORKING_DAYS.exec(text)
-  return w ? addWorkingDays(base, Number(w[2] ?? w[1])) : null
+  if (!w) return null
+  const n = Number(w[2] ?? w[1])
+  return { by: addWorkingDays(base, n), days: n }
 }
 
 /** Phrases naming a promised day ("by 12 Nov"), taken out before looking for the day a message is about. */
 const PROMISE_PHRASE = BY_DATE
+
+/** "initiated on 27 Oct" with no year (findDate needs one). */
+const ON_DAY = /\bon\s+(\d{1,2})(?:st|nd|rd|th)?[\s-]+([a-z]{3,9})\b\.?(?![\s,-]*\d)/gi
+
+/** The day "on 27 Oct" means: the latest such day not after today. */
+function onDayOf(text: string, today: string): string | null {
+  const year = Number(today.slice(0, 4))
+  for (const m of text.matchAll(ON_DAY)) {
+    const name = (m[2] ?? '').toLowerCase()
+    const month = MONTHS.indexOf(name.slice(0, 3)) + 1
+    if (month === 0 || !MONTH_NAMES.some((n) => n.startsWith(name))) continue
+    const day = dayOf(year, month, Number(m[1]))
+    if (day === null) continue
+    return day <= today ? day : dayOf(year - 1, month, Number(m[1]))
+  }
+  return null
+}
 
 /* ---------------------------------------------------------------- references and order numbers */
 
@@ -199,6 +241,7 @@ const MORE_REFS: readonly RegExp[] = [
   /\brefund\s*(?:ref(?:erence)?|id)\s*(?:no\.?|number)?\s*[:#.-]?\s*([a-z0-9]{8,30})\b/i,
   /\b(?:transaction|trxn|txn)\s*(?:id|no\.?|number|ref(?:erence)?)\s*[:#.-]?\s*([a-z0-9]{8,30})\b/i,
   /\bp2[amp][-/ ]?(?:txn|transaction)\s*[:#.-]?\s*(\d{12})\b/i, // "UPI-P2A txn 630333344455"
+  /\b(?:txn|trxn|transaction)\s*[:#.-]?\s*(\d{10,22})\b/i, // IRCTC "Txn 100004512345678"
   /(?:संदर्भ|रेफ\u093c?रेंस)(?:\s*(?:सं\.?|संख्या|नं\.?))?\s*[:#.-]?\s*(\d{12})(?!\d)/, // "संदर्भ 429812345678"
 ]
 
@@ -228,7 +271,8 @@ function orderMerchant(orderId: string | null): Merchant | null {
   if (orderId === null) return null
   return merchantById(ORDER_MERCHANTS.find(([pattern]) => pattern.test(orderId))?.[1])
 }
-const ORDER_ID = /\b(?:order|booking)\s*(?:id|no\.?|number|ref(?:erence)?)?\s*[:#.-]?\s*#?\s*([a-z0-9][a-z0-9-]{3,40})\b/gi
+/** "order #1234", "booking ID NF7A…", redBus's "ticket TN8H29XK". */
+const ORDER_ID = /\b(?:order|booking|ticket)\s*(?:id|no\.?|number|ref(?:erence)?)?\s*[:#.-]?\s*#?\s*([a-z0-9][a-z0-9-]{3,40})\b/gi
 
 function orderIdOf(text: string): string | null {
   for (const pattern of ORDER_PATTERNS) {
@@ -249,21 +293,31 @@ function orderIdOf(text: string): string | null {
  * nukta letter (फ़) arrives as the letter and U+093C: written फ\u093c? to take both spellings.
  */
 
-/** "if debited", "any amount debited", "debited, if any": a maybe, not a statement. */
+/** "if debited", "any amount debited", "debited, if any", "any debited amount": a maybe, not a statement. */
 const MAYBE_DEBITED =
-  /\bif\b[^.,;!\n]{0,40}?\b(?:debited|deducted)\b|\b(?:debited|deducted),? if any\b|\bany (?:amount|money|deduction)(?: (?:debited|deducted))?|\bin case\b[^.,;!\n]{0,40}?\b(?:debited|deducted)\b|\bmay (?:have been|be|get) (?:debited|deducted)\b|(?:यदि|अगर)[^।.,;!\n]{0,40}?(?:डेबिट|कट|काट)|\b(?:agar|yadi)\b[^.,;!\n]{0,40}?\b(?:debit|ka+t[aei]?)\b/gi
-/** The message says money WAS taken ("A/c XX7712 debited", "रु.500 डेबिट हुए", "Rs 500 kaate gaye"). */
+  /\bif\b[^.,;!\n]{0,40}?\b(?:debited|deducted)\b|\b(?:debited|deducted)(?: (?:amount|money|sum))?,? if any\b|\bany (?:amount|money|deduction)(?: (?:debited|deducted))?|\bany (?:debited|deducted) (?:amount|money|sum)\b|\bin case\b[^.,;!\n]{0,40}?\b(?:debited|deducted)\b|\bmay (?:have been|be|get) (?:debited|deducted)\b|(?:यदि|अगर)[^।.,;!\n]{0,40}?(?:डेबिट|कट|काट)|\b(?:agar|yadi)\b[^.,;!\n]{0,40}?\b(?:debit|ka+t[aei]?)\b/gi
+/** The message says money WAS taken ("A/c XX7712 debited", "the debited amount", "रु.500 डेबिट हुए", "रु 500 नामे किए गए", "Rs 500 kaate gaye"). */
 const DEBITED =
-  /\b(?:has been|have been|was|were|got|is|been) (?:debited|deducted)\b|\b(?:debited|deducted) (?:from|in|to) (?:your |the )?(?:a\/?c|acct|account|bank|card)|\b(?:amount|money) (?:debited|deducted)\b|(?:₹|\brs\.?|\binr)\s?[\d,]+(?:\.\d+)?\s+(?:has been |was |is )?(?:debited|deducted)\b|\b(?:debited|deducted) (?:by|for|with)\b|\bdr\.? from\b|\b(?:a\/?c|acct|account|card)(?:\s*(?:no\.?\s*)?(?:ending\s+(?:in\s+|with\s+)?)?[x*•\d]{2,})?\s+(?:is\s+|has been\s+|was\s+|got\s+)?(?:debited|deducted)\b|डेबिट (?:हुए|हुआ|हुई|हो गए|हो गये|हो गया|हो गई|हो गयी|किए गए|किये गये|किया गया|की गई|की गयी)|(?:^|[^\u0900-\u097F])(?:कट|कटे|कटी|काट|काटे|काटी|काट लिए|काट लिये) (?:गए|गये|गया|गई|गयी)|(?:(?:₹|रु\.?|रू\.?|\brs\.?|\binr)\s?[\d,]+(?:\.\d+)?|\b[\d,]+(?:\.\d+)?\s?(?:रुपये|रुपए))\s*(?:कटे|कटी|काटे)(?![\u0900-\u097F])|\b(?:debit (?:hue|hua|hui|ho gaye|ho gaya|ho gya|ho gayi|kiye gaye|kiya gaya)|ka+t[aei]? (?:gaye|gaya|gye|gya|gayi|liye|liya))\b/i
-/** "if it fails…", "if cash is not dispensed…": a maybe, not a failure. */
+  /\b(?:has been|have been|was|were|got|is|been) (?:debited|deducted)\b|\b(?:debited|deducted) (?:from|in|to) (?:your |the )?(?:a\/?c|acct|account|bank|card)|\b(?:amount|money) (?:debited|deducted)\b|\b(?:debited|deducted) (?:amount|money|sum)\b|(?:₹|\brs\.?|\binr|\bamt\.?:?)\s?[\d,]+(?:\.\d+)?\s+(?:has been |was |is )?(?:debited|deducted)\b|नामे (?:हुए|हुआ|हुई|हो गए|हो गये|हो गया|हो गई|हो गयी|किए गए|किये गये|किया गया|की गई|की गयी)|\b(?:debited|deducted) (?:by|for|with)\b|\bdr\.? from\b|\b(?:a\/?c|acct|account|card)(?:\s*(?:no\.?\s*)?(?:ending\s+(?:in\s+|with\s+)?)?[x*•\d]{2,})?\s+(?:is\s+|has been\s+|was\s+|got\s+)?(?:debited|deducted)\b|डेबिट (?:हुए|हुआ|हुई|हो गए|हो गये|हो गया|हो गई|हो गयी|किए गए|किये गये|किया गया|की गई|की गयी)|(?:^|[^\u0900-\u097F])(?:कट|कटे|कटी|काट|काटे|काटी|काट लिए|काट लिये) (?:गए|गये|गया|गई|गयी)|(?:(?:₹|रु\.?|रू\.?|\brs\.?|\binr)\s?[\d,]+(?:\.\d+)?|\b[\d,]+(?:\.\d+)?\s?(?:रुपये|रुपए))\s*(?:कटे|कटी|काटे)(?![\u0900-\u097F])|\b(?:debit (?:hue|hua|hui|ho gaye|ho gaya|ho gya|ho gayi|kiye gaye|kiya gaya)|ka+t[aei]? (?:gaye|gaya|gye|gya|gayi|liye|liya))\b/i
+/** "if it fails…", "if cash is not dispensed…", a help line's "Cash not dispensed? Call 1800…": a maybe, not a failure. */
 const MAYBE_FAILED =
-  /\bif\b[^.;!\n]{0,40}?\b(?:fail(?:s|ed)?|not dispensed|unsuccessful|declined|not completed)\b|\bin case of (?:a )?failure\b|(?:यदि|अगर)[^।.;!\n]{0,40}?(?:विफल|असफल)|\b(?:agar|yadi)\b[^.;!\n]{0,40}?\b(?:fail|asafal|vifal)/gi
+  /\bif\b[^.;!\n]{0,40}?\b(?:fail(?:s|ed)?|not dispensed|unsuccessful|declined|not completed)\b|\bin case of (?:a )?failure\b|\bin case\b[^.;!\n]{0,40}?\b(?:fail(?:s|ed)?|not dispensed|unsuccessful|declined)\b|[^.;!?\n]{0,30}\b(?:not dispensed|fail(?:s|ed|ure)?|unsuccessful|declined)\s*\?|(?:यदि|अगर)[^।.;!\n]{0,40}?(?:विफल|असफल)|\b(?:agar|yadi)\b[^.;!\n]{0,40}?\b(?:fail|asafal|vifal)/gi
 const FAILED =
   /\b(?:failed|failure|unsuccessful|not successful|unable to (?:process|complete)|could ?n[o']t be (?:processed|completed)|was not (?:processed|completed)|not completed|(?:has been|was) rejected|timed? ?out|not dispensed|not (?:been )?credited to (?:the )?(?:beneficiary|payee|merchant|receiver))\b|विफल|असफल|नाकाम|\b(?:asafal|vifal|fail (?:ho )?(?:gaya|gayi|gya|hua|hui))\b/i
 const DECLINED = /\bdeclined\b|अस्वीकृत|अस्वीकार/i
 /** The message says the money never left (or never could have). */
 const NEVER_LEFT =
-  /\binsufficient (?:balance|funds?)\b|\b(?:incorrect|wrong|invalid) (?:upi )?m?pin\b|\bpin (?:was |is )?(?:entered )?(?:incorrect(?:ly)?|wrong(?:ly)?)\b|\bpin (?:tries|attempts) (?:exceeded|exhausted)\b|\bexceed(?:s|ed|ing)? (?:the |your )?(?:daily |transaction |per[- ]transaction |upi |withdrawal )?limit\b|\blimit (?:exceeded|reached)\b|\b(?:not|never) (?:been )?(?:debited|deducted)\b|\bno (?:amount|money) (?:has been |was |is )?(?:debited|deducted)\b|\b(?:cancell?ed|declined) by (?:you|user|customer|the customer)\b|\byou (?:have )?(?:cancell?ed|declined)\b|अपर्याप्त (?:शेष|राशि|धनराशि|बैलेंस)|(?:गलत|अमान्य) (?:यूपीआई )?(?:पिन|एमपिन)|(?:डेबिट|कटे|कटी|काटे|काटी) नहीं|नहीं (?:कटे|कटी|काटे|काटी)|\b(?:nahi|nahin|nhi) (?:kate|kata|kati|kaate|kaata|debit)\b|\b(?:kate|kata|kaate|debit) (?:nahi|nahin|nhi)\b/i
+  /\binsufficient (?:balance|funds?)\b|\b(?:incorrect|wrong|invalid) (?:upi )?m?pin\b|\bpin (?:was |is )?(?:entered )?(?:incorrect(?:ly)?|wrong(?:ly)?)\b|\bpin (?:tries|attempts) (?:exceeded|exhausted)\b|\bexceed(?:s|ed|ing)? (?:the |your )?(?:daily |transaction |per[- ]transaction |upi |withdrawal )?limit\b|\blimit (?:exceeded|reached)\b|\b(?:not|never) (?:been )?(?:debited|deducted)\b|\bno (?:amount|money) (?:has been |was |is )?(?:debited|deducted)\b|\b(?:cancell?ed|declined) by (?:you|user|customer|the customer)\b|\byou (?:have )?(?:cancell?ed|declined)\b|अपर्याप्त (?:शेष|राशि|धनराशि|बैलेंस)|(?:गलत|अमान्य) (?:यूपीआई )?(?:पिन|एमपिन)|(?:डेबिट|कटे|कटी|काटे|काटी|नामे) नहीं|नहीं (?:कटे|कटी|काटे|काटी)|\b(?:nahi|nahin|nhi) (?:kate|kata|kati|kaate|kaata|debit)\b|\b(?:kate|kata|kaate|debit) (?:nahi|nahin|nhi)\b/i
+/**
+ * A debit the bank returned unpaid: a NACH or ECS mandate that bounced, a dishonoured cheque. No
+ * money left (only, at most, the bank's charge for it).
+ */
+export const BOUNCED =
+  /\breturned unpaid\b|\bunpaid\b[^.\n]{0,30}\breturned\b|\bbounced\b|\bdishono(?:u)?red\b|\b(?:nach|ecs|e-?mandate|mandate|standing instruction|auto[- ]?debit)\b[^.\n]{0,80}?\b(?:returned|rejected)\b/i
+/** The bank paying for the wait ("₹200 credited as compensation for delayed reversal"), not the money itself. */
+/** Money put into the account (to tell compensation paid from a charge or a penalty taken). */
+const CREDITED = /\b(?:credited|deposited|added to your)\b|जमा/i
+const COMPENSATION = /\bcompensation\b|\btat (?:compensation|penalty)\b|मुआवज(?:\u093c)?ा|क्षतिपूर्ति/i
 /** A payment still waiting on the bank (a status, not "pending dues" or a "processing fee"). */
 const PENDING =
   /\b(?:is|was|remains|still|currently|status:?|payment|transaction|txn|transfer)\s+(?:is\s+)?(?:pending|processing|in process|in progress|under process)\b(?! (?:fees?|charges?))|\b(?:pending|processing)(?:\s*[:!.-]|\s+(?:payment|transaction|txn|transfer|confirmation|status)\b)|\bawaiting (?:confirmation|response|bank|status)\b|\btaking longer than usual\b|\byet to be (?:confirmed|completed)\b|लंबित|प्रक्रियाधीन|प्रक्रिया में|\bpending (?:hai|he)\b/i
@@ -283,30 +337,36 @@ const TO_SOMEONE = /\bto\s+(?:[A-Z][a-z]|[A-Z]{2,}|[Aa]\/[Cc]\b|[a-z0-9._-]+@)/
 /** Money coming back, or promised back. */
 const REFUNDISH =
   /\brefund(?:s|ed)?\b|\breversal\b|\breversed\b|\bcredited back\b|\badded back\b|\bmoney (?:is )?back\b|\bupi[-/ ]?(?:rev|ret)\b|\brev[-/: ]+(?:upi|\d)|रिफ\u093c?ंड|रिवर्स|वापस|\b(?:wapas|vapas|waapas)\b/i
-/** The money is still to come. */
+/** The money is still to come ("will be credited", "जमा कर दी जाएगी", "wapas jama hoga", "वापस जमा होगी"). */
 const FUTURE =
-  /\bwill (?:be )?(?:auto[- ]?)?(?:credited|refunded|reversed|reflect(?:ed)?|reach|added|processed|returned|initiated|sent)\b|\bshould (?:be )?(?:credited|refunded|reflect|reach)\b|\bto be (?:credited|refunded|reversed)\b|\bexpected (?:to|by|in|within)\b|\bmay take\b|\bwould be (?:credited|refunded|reversed)\b|\bis being (?:processed|refunded|credited)\b|\bwill get\b|जाएंगे|जायेंगे|जाएँगे|जाएगा|जायेगा|जाएगी|जायेगी|\b(?:jayega|jayegi|jayenge|jaega|jaegi|jaenge)\b/i
-/** It's in. */
+  /\bwill (?:be )?(?:auto[- ]?)?(?:credited|refunded|reversed|reflect(?:ed)?|reach|added|processed|returned|initiated|sent)\b|\bshould (?:be )?(?:credited|refunded|reflect|reach)\b|\bto be (?:credited|refunded|reversed)\b|\bexpected (?:to|by|in|within)\b|\bmay take\b|\bwould be (?:credited|refunded|reversed)\b|\bis being (?:processed|refunded|credited)\b|\bwill get\b|जाएंगे|जायेंगे|जाएँगे|जाएगा|जायेगा|जाएगी|जायेगी|\b(?:jayega|jayegi|jayenge|jaega|jaegi|jaenge)\b|(?:^|[^\u0900-\u097F])(?:होगा|होगी|होंगे|होंगी|करेंगे|करेगा|करेगी|मिलेगा|मिलेगी|मिलेंगे)(?![\u0900-\u097F])|\b(?:hoga|hogi|honge|karenge|karega|karegi|milega|milegi|milenge)\b/i
+/** It's in. "जमा"/"jama" alone is only "credit": the verb after it says whether it happened ("जमा किए गए") or will ("जमा होगी"). */
 const BACK_NOW =
-  /\b(?:credited|refunded|reversed|added back|returned)\b|\bmoney (?:is )?back\b|वापस (?:जमा|आ गए|आ गये|आ गया|कर दिए|कर दी|कर दिया)|जमा (?:कर दिए गए|किए गए|किये गये|किया गया|की गई|हो गए|हो गया|हो गई)|\b(?:wapas|vapas|waapas) (?:aa gaye|aa gaya|aa gye|aa gya|jama|kar diye|kar diya|mil gaye)\b|\brefund (?:ho gaya|ho gya|mil gaya|kar diya)\b/i
+  /\b(?:credited|refunded|reversed|added back|returned)\b|\bmoney (?:is )?back\b|वापस (?:जमा (?:कर दिए|कर दी|कर दिया|किए|किये|किया|की|हो गए|हो गये|हो गया|हो गई|हो गयी|हुए|हुआ|हुई)|आ गए|आ गये|आ गया|कर दिए|कर दी|कर दिया)|जमा (?:कर दिए गए|किए गए|किये गये|किया गया|की गई|हो गए|हो गया|हो गई)|\b(?:wapas|vapas|waapas) (?:aa gaye|aa gaya|aa gye|aa gya|jama (?:ho gaye|ho gaya|ho gya|ho gayi|ho gyi|kar diye|kar diya|kar di|kiye gaye|kiya gaya|kiye|kiya|hue|hua|hui)|kar diye|kar diya|mil gaye)\b|\brefund (?:ho gaya|ho gya|mil gaya|kar diya)\b/i
 /** Back because a payment failed, not because a business refunded it. */
 const FAILED_BACK =
   /\bfail(?:ed|ure)?\b|\bdeclined\b|\bunsuccessful\b|\breversal\b|\breversed\b|\bcredited back\b|\bupi[-/ ]?(?:rev|ret)\b|\brev[-/: ]+(?:upi|\d)|\bchargeback\b|\bnot dispensed\b|विफल|असफल|रिवर्स|वापस जमा|\b(?:asafal|vifal|(?:wapas|vapas|waapas) jama)\b/i
 const REFUND_WORD = /\brefund(?:s|ed)?\b|रिफ\u093c?ंड/i
 const STARTED =
-  /\b(?:initiated|processed|approved|issued|raised|on (?:its|the) way|being processed|under process|in process|processing|pending)\b|शुरू|प्रारंभ|आरंभ|प्रोसेस|\bprocess (?:ho|kar|kiya)\b/i
+  /\b(?:initiated|processed|approved|issued|raised|on (?:its|the) way|being processed|under process|in process|processing|pending)\b|शुरू|प्रारंभ|आरंभ|प्रोसेस|\b(?:process|initiate) (?:ho|kar|kiya)\b/i
+/** It's going back to a card ("credit card ending 4821", "HDFC Bank Card XX9034"), not a gift card or a "card" of another kind. */
+const TO_CARD = /\b(?:credit|debit)\s+card\b|\bcard\s+(?:ending|no\.?|number)\b|\bcard\s*(?:ending\s*)?(?:in\s*)?[x*•]*\d{4}\b|कार्ड/i
+const GIFT_CARD = /\bgift\s*card\b|\bgift\s*voucher\b/i
 
 /* ---------------------------------------------------------------- who */
 
 const VPA_IN_TEXT = /(?:^|[^\w.@-])([a-z0-9][a-z0-9._-]{1,63}@[a-z][a-z0-9]{1,30})(?![\w@-]|\.[a-z])/i
 /** Where a name ends: a verb, a preposition, punctuation or the end. */
-const STOP = String.raw`(?=\s+(?:has|have|is|was|of|for|failed|could|did|didn|on|from|via|using|through|with|declined|not|ref|upi|txn|dated|at|due|pending|processing|got|and|in|will|would|to|by|towards|as|after)\b|\s*[,!(\n·•|]|\s+[-–—]\s|\.(?:\s|$)|$)`
+const STOP = String.raw`(?=\s+(?:has|have|is|was|of|for|failed|could|did|didn|on|from|via|using|through|with|declined|not|ref|upi|imps|neft|rtgs|txn|dated|at|due|pending|processing|got|and|in|will|would|to|by|towards|as|after)\b|\s*[,!(\n·•|]|\s+[-–—]\s|\.(?:\s|$)|$)`
 const AMOUNT = String.raw`(?:rs\.?|inr|₹)\s?[\d,]+(?:\.\d+)?`
 /** "payment of ₹500 to Swiggy failed", "₹349 to Blinkit could not…", "at AMAZON on your card". */
 const PAID_TO: readonly RegExp[] = [
   new RegExp(String.raw`\b(?:payment|transaction|txn|transfer|request to (?:send|pay)|paying|sending)\s+(?:of\s+)?(?:${AMOUNT}\s+)?(?:from\s+[^\n]{1,40}?\s+)?(?:to|for)\s+(.+?)${STOP}`, 'i'),
   new RegExp(String.raw`${AMOUNT}\s+(?:payment\s+|transfer\s+)?(?:to|for)\s+(.+?)${STOP}`, 'i'),
   new RegExp(String.raw`\bpaid to\s+(.+?)${STOP}`, 'i'),
+  // Canara's "towards UPI to KAVYA S", "paid thru A/C XX4821 … to KAVYA S".
+  new RegExp(String.raw`\btowards\s+(?:upi|imps|neft)\s+(?:txn\s+|payment\s+)?to\s+(.+?)${STOP}`, 'i'),
+  new RegExp(String.raw`\bpaid (?:thru|through)\b[^\n]*?\bto\s+(.+?)${STOP}`, 'i'),
   /\bat\s+([A-Z][^\n]*?)(?=\s+on\b|\s+\d{1,2}[-/]|\s+(?:was|has|is|for|using|with|failed|declined)\b|\s*[,!(\n]|\.(?:\s|$)|$)/,
   /\bon\s+([a-z0-9-]+(?:\.[a-z]{2,3}){1,2})(?=[\s,!]|\.(?:\s|$)|$)/i,
   /\b[Yy]our\s+([A-Z][A-Za-z0-9&'-]+(?:\s+[A-Z][A-Za-z0-9&'-]+){0,2})\s+(?:payment|order)\s+of\b/, // "Your Swiggy payment of ₹649 failed"
@@ -325,6 +385,16 @@ const REFUNDED_BY: readonly RegExp[] = [
 const NOT_A_PARTY =
   /^(?:a\/?c|acct|account|your|the|card|bank|beneficiary|merchant|upi|you|refund|source|original|order|booking|pnr|transaction|txn|payment|ticket|trip|ride|atm)\b/i
 
+/** A big city a card machine prints after the shop's name ("RELIANCE TRENDS MUMBAI"). */
+const CITY_AFTER =
+  /\s+(?:navi mumbai|mumbai|thane|new delhi|delhi|gurgaon|gurugram|noida|bangalore|bengaluru|chennai|hyderabad|secunderabad|kolkata|pune|ahmedabad|jaipur|lucknow|kochi|chandigarh|indore|surat|nagpur)(?:\s+(?:in|ind))?$/i
+
+/** "Reliance Trends Mumbai" → "Reliance Trends": the shop, without the city (a one-word name keeps it). */
+function withoutCity(name: string): string {
+  const shorter = name.replace(CITY_AFTER, '')
+  return shorter.includes(' ') ? shorter : name
+}
+
 /** A name from what a pattern caught: a UPI ID, a person, a business — or nothing usable. */
 function nameFrom(raw: string): { name: string | null; vpa: string | null } {
   const vpa = VPA_IN_TEXT.exec(` ${raw}`)?.[1]?.toLowerCase() ?? null
@@ -333,7 +403,7 @@ function nameFrom(raw: string): { name: string | null; vpa: string | null } {
   if (/^(?:rs\b|inr\b|₹|\d)/i.test(raw)) return { name: null, vpa: null }
   const name = partyName(raw)
   if (name === null || NOT_A_PARTY.test(name) || findNamedBank(name) !== null) return { name: null, vpa: null }
-  return { name, vpa: null }
+  return { name: withoutCity(name), vpa: null }
 }
 
 function partyOf(text: string, patterns: readonly RegExp[], dir: 'debit' | 'credit', via: PayVia | null): { name: string | null; vpa: string | null } {
@@ -344,7 +414,7 @@ function partyOf(text: string, patterns: readonly RegExp[], dir: 'debit' | 'cred
     if (found.name || found.vpa) return { name: found.name, vpa: found.vpa ?? VPA_IN_TEXT.exec(text)?.[1]?.toLowerCase() ?? null }
   }
   const fallback = findParty(text, dir, via)
-  const name = fallback.name && !NOT_A_PARTY.test(fallback.name) && findNamedBank(fallback.name) === null ? fallback.name : null
+  const name = fallback.name && !NOT_A_PARTY.test(fallback.name) && findNamedBank(fallback.name) === null ? withoutCity(fallback.name) : null
   return { name: name ?? (fallback.vpa ? brandOfVpa(fallback.vpa) : null), vpa: fallback.vpa }
 }
 
@@ -403,6 +473,18 @@ function railOf(text: string, via: PayVia | null, name: string | null, vpa: stri
   return null
 }
 
+/** The wallet a wallet payment was made from ("your Paytm Wallet"), kept as its `app`: the wallet company owes it. */
+const WALLETS: ReadonlyArray<readonly [string, RegExp]> = [
+  ['paytm', /\bpaytm\b/i],
+  ['phonepe', /\bphonepe\b/i],
+  ['amazonpay', /\bamazon ?pay\b/i],
+  ['mobikwik', /\bmobikwik\b/i],
+]
+
+function walletIn(text: string): string | null {
+  return WALLETS.find(([, pattern]) => pattern.test(text))?.[0] ?? null
+}
+
 /* ---------------------------------------------------------------- reading */
 
 function clip(value: string | null, max: number): string | null {
@@ -440,11 +522,14 @@ function read(raw: string, opts: ReadOptions): StuckSignal | null {
   const account = findAccount(text)
   if (PROMO.test(scrubbed) && ref === null && account === null && orderId === null) return null
 
-  const at = typeof opts.at === 'number' && Number.isFinite(opts.at) ? opts.at : Date.now()
+  const posted = typeof opts.at === 'number' && Number.isFinite(opts.at)
+  const at = posted ? (opts.at as number) : Date.now()
   // The day it was seen: a notification's own day, else today.
-  const seen = typeof opts.at === 'number' && Number.isFinite(opts.at) ? toIsoDate(new Date(opts.at)) : opts.today
+  const seen = posted ? toIsoDate(new Date(at)) : opts.today
   const undated = text.replace(PROMISE_PHRASE, ' ')
-  const printed = findDate(undated, opts.today)
+  const printed = findDate(undated, opts.today) ?? onDayOf(undated, opts.today)
+  // A pasted message that prints no day: `seen` is only today, not the day the money left.
+  const dated = printed !== null || posted
   // A printed day that hasn't come yet (findDate passes over it) is a typo or a wrong clock: the day it was seen instead, flagged.
   const future = printed === null ? findPrintedDate(undated) : null
   const doubt = future === null ? {} : { dateDoubt: future }
@@ -462,7 +547,9 @@ function read(raw: string, opts: ReadOptions): StuckSignal | null {
   // Told by (or about) a UPI app: a UPI payment, unless it says card or wallet.
   const upiApp = base.app !== null
 
-  const refundish = REFUNDISH.test(scrubbed)
+  // The bank paying for the wait is money back too ("₹200 credited as compensation for the failed txn").
+  const compensation = COMPENSATION.test(scrubbed) && CREDITED.test(scrubbed)
+  const refundish = REFUNDISH.test(scrubbed) || compensation
   const failedText = scrubbed.replace(MAYBE_FAILED, ' ')
   const failed = FAILED.test(failedText)
   const pending = !failed && PENDING.test(failedText)
@@ -476,8 +563,8 @@ function read(raw: string, opts: ReadOptions): StuckSignal | null {
       const { name } = partyOf(text, [...REFUNDED_BY, ...PAID_TO], 'credit', via)
       const merchant = merchantOf(name, null) ?? (name === null ? merchantById(appMerchant) : null)
       const party = name ?? merchant?.name ?? null
-      const common = { ...base, date: printed ?? seen, ...doubt, party, merchant: merchant?.id ?? null }
-      return FAILED_BACK.test(scrubbed) ? { ...common, type: 'reversal' } : { ...common, type: 'refund_credited' }
+      const common = { ...base, date: printed ?? seen, dated, ...doubt, party, merchant: merchant?.id ?? null, ...(compensation ? { compensation } : {}) }
+      return FAILED_BACK.test(scrubbed) || compensation ? { ...common, type: 'reversal' } : { ...common, type: 'refund_credited' }
     }
     if (!failed && REFUND_WORD.test(scrubbed) && (STARTED.test(scrubbed) || FUTURE.test(scrubbed) || promisedIn(text, seen) !== null)) {
       const { name } = partyOf(text, REFUNDED_BY, 'credit', via)
@@ -486,8 +573,21 @@ function read(raw: string, opts: ReadOptions): StuckSignal | null {
       const party = name ?? merchant?.name ?? null
       // A business's own alert is about today; a pasted one may say the day.
       const date = pkg === null ? (printed ?? seen) : seen
-      const promisedBy = promisedDate(text, date) ?? promisedIn(text, date)
-      return { ...base, type: 'refund_initiated', date, party, merchant: merchant?.id ?? null, orderId, promisedBy }
+      const on = promisedDate(text, date)
+      const within = on === null ? promisedIn(text, date) : null
+      return {
+        ...base,
+        type: 'refund_initiated',
+        date,
+        dated: pkg === null ? dated : posted,
+        party,
+        merchant: merchant?.id ?? null,
+        orderId,
+        promisedBy: on ?? within?.by ?? null,
+        // "In 7 working days" counts from the day it started, which the person may correct.
+        promisedDays: within?.days ?? null,
+        toCard: TO_CARD.test(scrubbed) && !GIFT_CARD.test(scrubbed),
+      }
     }
   }
 
@@ -495,12 +595,14 @@ function read(raw: string, opts: ReadOptions): StuckSignal | null {
   if (failed || pending || DECLINED.test(failedText)) {
     if (INCOMING.test(scrubbed) || (FROM_SOMEONE.test(scrubbed) && !TO_SOMEONE.test(scrubbed))) return null
     const sure = scrubbed.replace(MAYBE_DEBITED, ' ')
-    if (NEVER_LEFT.test(sure)) return null
+    // Never left, or the bank returned the debit unpaid ("ECS … bounced. Charges Rs 500 debited" is only the charge).
+    if (NEVER_LEFT.test(sure) || BOUNCED.test(sure)) return null
     const debited = DEBITED.test(sure)
     // A plain decline is the bank saying no before any money moved.
     if (!failed && !pending && !debited) return null
     const found = partyOf(text, PAID_TO, 'debit', via)
-    const merchant = merchantOf(found.name, found.vpa) ?? merchantById(appMerchant)
+    // Paid to no one named: the app that told it, or a business named anywhere (IRCTC's "… -IRCTC").
+    const merchant = merchantOf(found.name, found.vpa) ?? merchantById(appMerchant) ?? (found.name === null && found.vpa === null ? merchantIn(scrubbed) : null)
     const name = found.name ?? merchant?.name ?? null
     const rail = railOf(scrubbed, via, name, found.vpa, merchant, upiApp)
     return {
@@ -509,24 +611,28 @@ function read(raw: string, opts: ReadOptions): StuckSignal | null {
       // A wallet's or a shop's order number ("Order ID 37124598812") when there's no other reference.
       ref: base.ref ?? orderId,
       date: printed ?? seen,
+      dated,
       ...doubt,
       // Cash from an ATM has no one on the other side.
       party: rail === 'atm' ? null : name,
       vpa: found.vpa,
       merchant: rail === 'atm' ? null : (merchant?.id ?? null),
+      // A wallet payment: the wallet it was paid from ("from your Paytm Wallet").
+      app: base.app ?? (rail === 'wallet' ? walletIn(scrubbed) : null),
       rail,
       debited,
     }
   }
 
-  /* Money that left ("Riya paid you ₹420" is money in). */
-  if (INCOMING.test(scrubbed)) return null
+  /* Money that left ("Riya paid you ₹420" is money in; a NACH debit "returned unpaid" never left). */
+  if (INCOMING.test(scrubbed) || BOUNCED.test(scrubbed) || NEVER_LEFT.test(scrubbed)) return null
   const parsed = parseSms(text, { today: opts.today })
   if (parsed.kind !== 'txn' || parsed.dir !== 'debit' || parsed.refund) return null
   const merchant = merchantOf(parsed.name, parsed.vpa)
   const common = {
     amount: parsed.amount,
     date: parsed.date ?? seen,
+    dated: parsed.date !== null || posted,
     ...(parsed.date === null ? doubt : {}),
     at,
     ref: parsed.ref ?? ref,
@@ -576,9 +682,44 @@ export function signalToDraft(signal: StuckSignal, source: StuckDraft['source'])
   }
   if (signal.type === 'refund_initiated') {
     if (signal.party === null && signal.merchant === null && signal.orderId === null) return null
-    return { ...common, kind: 'refund', rail: null, promisedBy: signal.promisedBy, orderId: clip(signal.orderId, 60), confirmed: true }
+    // A refund keeps a rail only for a flight paid by card: the DGCA's 7 days.
+    const rail = signal.toCard === true && merchantById(signal.merchant)?.category === 'airline' ? 'card_online' : null
+    return { ...common, kind: 'refund', rail, promisedBy: signal.promisedBy, orderId: clip(signal.orderId, 60), confirmed: true }
   }
   return null
+}
+
+/**
+ * What a message gave, read even when it isn't one Stuck money understands — the amount, the day
+ * (null when it printed none), the reference, the account, the bank, a business named in it, and
+ * whether it says a payment failed — for a form filled in by hand. Null without an amount.
+ */
+export function readStuckFacts(
+  raw: string,
+  today: string,
+): { amount: number; date: string | null; ref: string | null; orderId: string | null; account: string | null; bank: string | null; merchant: string | null; party: string | null; failed: boolean } | null {
+  try {
+    const text = cleanSms(typeof raw === 'string' ? raw : '')
+    const scrubbed = scrubSms(text)
+    if (text === '' || OTP.test(scrubbed)) return null
+    const amount = findMoney(text)
+    if (amount === null) return null
+    const merchant = merchantIn(scrubbed)
+    const undated = text.replace(PROMISE_PHRASE, ' ')
+    return {
+      amount,
+      date: findDate(undated, today) ?? onDayOf(undated, today),
+      ref: refOf(text),
+      orderId: orderIdOf(text),
+      account: findAccount(text),
+      bank: findBank(scrubbed),
+      merchant: merchant?.id ?? null,
+      party: merchant?.name ?? null,
+      failed: FAILED.test(scrubbed.replace(MAYBE_FAILED, ' ')) && !BOUNCED.test(scrubbed),
+    }
+  } catch {
+    return null
+  }
 }
 
 /**

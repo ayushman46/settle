@@ -50,6 +50,9 @@ const TITLE_KEYS: Readonly<Record<string, MessageKey>> = {
   Collection: 'app.title.collection',
   'Edit collection': 'app.title.editCollection',
   Pro: 'app.title.pro',
+  'Stuck money': 'app.title.stuck',
+  'Add stuck money': 'app.title.stuckNew',
+  'Edit stuck money': 'app.title.stuckEdit',
 }
 
 /** A route's title in the UI language: an English title we know, or a catalog key; anything else as is. */

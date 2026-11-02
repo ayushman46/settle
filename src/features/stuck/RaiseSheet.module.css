@@ -64,6 +64,11 @@
   font-weight: 600;
 }
 
+/* The business's rung: straight on to the helpline (or AirSewa) once it's late. */
+.next {
+  align-self: flex-start;
+}
+
 .links {
   display: flex;
   flex-wrap: wrap;
@@ -241,6 +246,19 @@
   gap: var(--s-2);
 }
 
+/* Still empty, before sending: the brackets, one per line. */
+.blanks {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--s-2);
+  margin: 0;
+  padding: var(--s-1) 0 0;
+  list-style: none;
+  font: var(--text-body);
+  overflow-wrap: anywhere;
+}
+
 /* Side by side while each has ~7rem; narrower, they wrap. Print takes its own row. */
 .actions > * {
   flex: 1 1 7rem;
@@ -335,6 +353,24 @@
   height: var(--s-5);
 }
 
+/* "Email it anyway" / "Send it anyway": a link out, as the footer's secondary button. */
+.channelSecondary {
+  width: 100%;
+  min-height: var(--btn-h);
+  padding: var(--s-2) var(--s-6);
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--ink);
+  font: var(--text-body);
+  font-weight: 600;
+  letter-spacing: -0.011em;
+}
+
+.channelSecondary > svg {
+  width: var(--s-5);
+  height: var(--s-5);
+}
+
 .channelSmall {
   position: relative;
   min-height: calc(var(--s-8) + var(--s-1));
@@ -362,6 +398,7 @@
   }
 
   .channelSmall:hover,
+  .channelSecondary:hover,
   .mail:hover {
     background: var(--surface-2);
   }

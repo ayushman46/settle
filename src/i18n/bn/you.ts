@@ -2,6 +2,8 @@
 import type { Messages } from '../types'
 
 export const you = {
+  // Above the shortcuts: what friends owe you (To collect) and what banks and shops hold (Stuck money).
+  'you.owed.label': 'আপনার পাওনা টাকা',
   'you.shortcuts.label': 'শর্টকাট',
   'you.shortcuts.people.title': 'লোকজন',
   'you.shortcuts.recurring.title': 'নিয়মিত ভাগ',

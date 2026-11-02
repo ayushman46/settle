@@ -115,6 +115,6 @@ describe('stuck money', () => {
   })
 
   it('sums what banks and shops owe: ₹9,099 stuck, ₹300 for the wait, both need you', () => {
-    expect(stuckDemo().summary).toEqual({ open: 2, stuck: 909_900, compensation: 30_000, act: 2, recovered: 0, recoveredCount: 0 })
+    expect(stuckDemo().summary).toEqual({ open: 2, stuck: 909_900, compensation: 30_000, act: 2, recovered: 0, recoveredCompensation: 0, recoveredCount: 0 })
   })
 })

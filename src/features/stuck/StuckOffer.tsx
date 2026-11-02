@@ -17,9 +17,10 @@ import styles from './Stuck.module.css'
  * Under a message read elsewhere in Settle (a bank SMS pasted or shared in): when it's about stuck
  * money — a payment that failed or is pending, a refund a business has started, or money back for
  * something being tracked — the way into Stuck money (or to the one already tracked, when it has
- * the same reference or order number). Nothing for anything else.
+ * the same reference or order number). Nothing for anything else. Given the message's text, Add
+ * gets only the day it prints (and asks when it prints none) and a promise in days as a count.
  */
-export function StuckOffer({ signal }: { signal: StuckSignal }) {
+export function StuckOffer({ signal, text }: { signal: StuckSignal; text?: string }) {
   const t = useT()
   const all = useStore(stuckStore, (list) => list)
   const anyOpen = all.some(isStuckOpen)
@@ -48,7 +49,7 @@ export function StuckOffer({ signal }: { signal: StuckSignal }) {
     )
   }
 
-  const prefill = prefillFromSignal(signal, 'sms')
+  const prefill = prefillFromSignal(signal, 'sms', text)
   if (!prefill) return null
   const twin = findStuckTwin(all, prefill)
   if (twin?.sure && isStuckOpen(twin.payment)) {

@@ -1,6 +1,6 @@
 import type { KeyboardEvent, MouseEvent } from 'react'
 import { CalendarDays, ChevronDown } from 'lucide-react'
-import { isIsoDate, today } from '../engine/dates'
+import { daysBetween, isIsoDate, today } from '../engine/dates'
 import { useT } from '../i18n'
 import { cx } from '../lib/cx'
 import { haptic } from '../lib/haptics'
@@ -44,7 +44,10 @@ export function DateField({ value, onChange, label: labelProp, max, min, disable
   const limit = max === undefined ? now : max
   const text = relativeDateLabel(value, now)
   const full = fullDateLabel(value)
-  const spoken = full && full !== text ? t('kit.date.field.aria.full', { label, text, full }) : t('kit.date.field.aria', { label, text })
+  // The date once: "Another day: Sunday, 25 October 2026" — the chip's "25 Oct" would only repeat
+  // it. "Today", "Yesterday" and "Tomorrow" say something the date doesn't, so they stay.
+  const near = isIsoDate(value) && isIsoDate(now) && Math.abs(daysBetween(now, value)) <= 1
+  const spoken = !full || full === text ? t('kit.date.field.aria', { label, text }) : near ? t('kit.date.field.aria.full', { label, text, full }) : t('kit.date.field.aria', { label, text: full })
 
   return (
     <span className={cx(styles.field, disabled && styles.disabled, className)}>

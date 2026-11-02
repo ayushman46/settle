@@ -29,6 +29,16 @@ Stuck money, after 24 people tried it on phones — in English and all seven Ind
 - **Regional languages.** Hindi and Bengali vowel signs no longer clipped in status pills; words no longer break mid-word; Tamil and Bengali case endings no longer glued on with a hyphen; Undo no longer reads as "take the money back"; "you" no longer flips the meaning of a share line. Rent & HRA is now in all eight languages, and the You tab, backup note, Home's example sentence and screen-reader labels are translated.
 - Privacy policy: letter details stay on the phone and out of backups; a backup file is readable by anyone who has it; what the Google Calendar link sends; the app's check-ins with the server.
 
+### After the re-test
+The same 24 people tried the fixed build: overall 7.0 → 8.0, Stuck money 7.3 → 8.3, would recommend 7.0 → 8.1; of their 72 earlier top asks, 35 were fixed and 37 partly. What they still found:
+- **Money back is a dated history.** Each sum that comes back, and compensation paid later, keeps its own date — in the clock, the win card and every letter ("₹2,000 reversed on 30 October 2026 and the remaining ₹3,000 on 1 November 2026"). "They've paid the ₹300" has its own short sheet; more back than was stuck, or a date before the payment, is caught.
+- **The RBI Ombudsman's 90 days** run from the end of the bank's 30 days or its last reply, whichever is later (RB-IOS 2026, the RBI's FAQ Q17): noting an early reply no longer shortens them. The sheet shows the case's own last day, the scheme, and the postal route (CRPC, Chandigarh); a later reply can be noted at the Ombudsman step too.
+- **Letters are send-ready.** No "[your UPI ID]" (your profile's, or a field to add it); signed with your name, never "You"; a warning before sending with blanks left; card and ATM letters say "Card ending 7712" and "ATM: …"; wording follows where the case stands (before or after the due date, citing the earlier ticket); NACH after a revoked mandate cites row 7(b); airline letters say "Cancelled on" and the DGCA rule once, with a Nodal Officer step.
+- **Paste reads what the message says.** A message's own date is the date (and "in 7 working days" counts from it); no date, and it asks; up to 50 messages, none dropped silently; a Hinglish "credited back" is a promise, not money back; a bank's failure SMS, or a matching debit, confirms the money left; a NACH "returned unpaid" isn't money that left; pending stays pending; compensation credits and part reversals are recognised.
+- **Home**: New group keeps its tile; the Stuck money tile shows only when there's no Stuck card; the card names the most urgent case "+ N more", and sits on top (compact) only when something needs you. More is "From friends" and "From banks and shops"; You groups them as "Money owed to you".
+- **Toasts** go away when a sheet opens, have a close button, stay two lines at most, and no longer look like the main button; focus returns where it was.
+- "Share the win" adds the app's link; the DGCA is credited when its date ties with the airline's; the list sorts by urgency and stops mangling order and PNR numbers; every new string in all eight languages.
+
 ## v7 — 2 Nov 2026
 
 From "friends who owe you" to "banks and businesses who owe you": money stuck in a failed payment or a refund that never came, tracked to the day and claimed the way the RBI says.

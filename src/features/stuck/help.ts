@@ -7,7 +7,9 @@
  * Every number and address here was checked against its own source in November 2026:
  * - RBI Ombudsman: https://cms.rbi.org.in ("Reserve Bank – Integrated Ombudsman Scheme, 2026") and
  *   the RBI's FAQ on the scheme (rbi.org.in, FAQ 153) — 14448, 24x7 IVR, agents Mon–Sat 8 AM–10 PM;
- *   file after 30 days (or a reply you're not happy with), within 90 days after that.
+ *   file after 30 days (or a reply you're not happy with), within 90 days of the later of the end of
+ *   those 30 days and the bank's last reply (FAQ Q16–17); by email to crpc@rbi.org.in, or by post to
+ *   the CRPC in Chandigarh (FAQ Q9).
  * - NPCI's UPI help site (UPI complaints and status): https://www.upihelp.npci.org.in/ — takes a
  *   complaint up to 45 days after the payment. (The old
  *   npci.org.in/what-we-do/upi/dispute-redressal-mechanism page is gone, so it isn't linked.)
@@ -26,7 +28,7 @@ import { daysBetween } from '../../engine/dates'
 import type { MessageKey, Vars } from '../../i18n'
 import { formatMoney } from '../../lib/money'
 import { merchantById } from './merchants'
-import { backInFull, stillOwed } from './rules'
+import { backInFull, bankReplied, ombudsmanLastDay, rungEnds, stillOwed } from './rules'
 import { stuckDate } from './view'
 
 /* ------------------------------------------------------------------ places and numbers */
@@ -37,6 +39,8 @@ export const RBI_CMS_URL = 'https://cms.rbi.org.in'
 export const RBI_HELPLINE = '14448'
 /** The RBI's Centralised Receipt and Processing Centre, which takes Ombudsman complaints by email too. */
 export const RBI_CRPC_EMAIL = 'crpc@rbi.org.in'
+/** …and by post. */
+export const RBI_CRPC_POSTAL = 'CRPC, Reserve Bank of India, 4th Floor, Sector 17, Central Vista, Chandigarh 160017'
 /** NPCI's UPI help site: raise a UPI complaint or check a payment's status. */
 export const MYUPI_URL = 'https://www.upihelp.npci.org.in/'
 /** NPCI's UPI help site takes a complaint up to this many days after the payment. */
@@ -251,7 +255,8 @@ function bankHelp(s: StuckPayment, opts: RaiseHelpOptions): RaiseHelp {
   const links: HelpLink[] = []
   const app = upiAppOf(s.app)
   const myUpi = !back && myUpiOpen(s, opts.today)
-  if (!back && !wallet && app === 'phonepe') links.push({ kind: 'web', href: 'https://grievance.phonepe.com/', label: { key: 'stuckhelp.link.phonepeGrievance' } })
+  // PhonePe's desk answers for its UPI payments, not for a card or IMPS payment the bank owes.
+  if (!back && isUpi(s) && app === 'phonepe') links.push({ kind: 'web', href: 'https://grievance.phonepe.com/', label: { key: 'stuckhelp.link.phonepeGrievance' } })
   if (myUpi) links.push({ kind: 'web', href: MYUPI_URL, label: { key: 'stuckhelp.link.myupi' } })
   if (back) {
     const owed = opts.today ? stillOwed(s, opts.today).compensation : 0
@@ -281,7 +286,17 @@ function bankHelp(s: StuckPayment, opts: RaiseHelpOptions): RaiseHelp {
   return { title: { key: 'stuckhelp.title.bank' }, lead: { key: 'stuckhelp.lead.bank' }, steps, channel: null, links, keepReady: [] }
 }
 
-function ombudsmanHelp(s: StuckPayment): RaiseHelp {
+/** When to file: this case's own last day once it can be filed and while that day is ahead, else the rule in general. */
+function ombudsmanWhen(s: StuckPayment, today?: string): HelpText {
+  const wallet = s.rail === 'wallet'
+  const last = ombudsmanLastDay(s)
+  const bank = s.steps.find((x) => x.kind === 'bank')
+  const open = bank !== undefined && today !== undefined && (bankReplied(s) || today > rungEnds('bank', bank.date))
+  if (last && open && today <= last) return { key: 'stuckhelp.ombudsman.lastDay', vars: { kind: wallet ? 'wallet' : 'bank', date: stuckDate(last, today) } }
+  return { key: wallet ? 'stuckhelp.ombudsman.whenWallet' : 'stuckhelp.ombudsman.when' }
+}
+
+function ombudsmanHelp(s: StuckPayment, opts: RaiseHelpOptions): RaiseHelp {
   const wallet = s.rail === 'wallet'
   const id = walletOf(s)
   const issuer = id ? WALLETS[id].issuer : walletName(s)
@@ -294,9 +309,10 @@ function ombudsmanHelp(s: StuckPayment): RaiseHelp {
     title: { key: 'stuckhelp.title.ombudsman' },
     lead: { key: wallet ? 'stuckhelp.lead.ombudsmanWallet' : 'stuckhelp.lead.ombudsman' },
     steps: [
-      { key: wallet ? 'stuckhelp.ombudsman.whenWallet' : 'stuckhelp.ombudsman.when' },
+      ombudsmanWhen(s, opts.today),
       file,
       { key: wallet ? 'stuckhelp.ombudsman.pasteWallet' : 'stuckhelp.ombudsman.paste' },
+      { key: 'stuckhelp.ombudsman.post', vars: { email: RBI_CRPC_EMAIL, address: RBI_CRPC_POSTAL } },
       { key: 'stuckhelp.ombudsman.call', vars: { phone: RBI_HELPLINE } },
     ],
     channel: { kind: 'web', href: RBI_CMS_URL, label: { key: 'stuckhelp.link.cms' } },
@@ -311,18 +327,22 @@ function merchantHelp(s: StuckPayment): RaiseHelp {
   const name = businessName(s)
   const page = s.merchant ? MERCHANT_HELP[s.merchant] : undefined
   const known = merchantById(s.merchant) !== null
+  const airline = isAirline(s)
+  // An airline's is a booking, found by its PNR; everyone else's an order.
   const steps: HelpText[] = [
-    name ? { key: page ? 'stuckhelp.merchant.page' : 'stuckhelp.merchant.app', vars: { name } } : { key: 'stuckhelp.merchant.unknown' },
+    name
+      ? { key: page ? (airline ? 'stuckhelp.merchant.pageBooking' : 'stuckhelp.merchant.page') : airline ? 'stuckhelp.merchant.appBooking' : 'stuckhelp.merchant.app', vars: { name } }
+      : { key: 'stuckhelp.merchant.unknown' },
     { key: 'stuckhelp.merchant.paste' },
   ]
-  if (isAirline(s)) steps.push({ key: 'stuckhelp.rule.dgca' })
+  if (airline) steps.push({ key: 'stuckhelp.rule.dgca' }, name ? { key: 'stuckhelp.merchant.nodal', vars: { name } } : { key: 'stuckhelp.merchant.nodalAny' })
   else if (known) steps.push({ key: 'stuckhelp.rule.ecommerce' })
-  steps.push({ key: isAirline(s) ? 'stuckhelp.merchant.nextAirsewa' : 'stuckhelp.merchant.nextNch' })
+  steps.push({ key: airline ? 'stuckhelp.merchant.nextAirsewa' : 'stuckhelp.merchant.nextNch' })
   const channel: HelpLink | null =
     page && name ? { kind: 'web', href: page.url, label: { key: page.kind === 'help' ? 'stuckhelp.link.merchantHelp' : 'stuckhelp.link.merchantRefunds', vars: { name } } } : null
   return {
     title: name ? { key: 'stuckhelp.title.merchant', vars: { name } } : { key: 'stuckhelp.title.merchantAny' },
-    lead: { key: 'stuckhelp.lead.merchant' },
+    lead: { key: airline ? 'stuckhelp.lead.airline' : 'stuckhelp.lead.merchant' },
     steps,
     channel,
     links: [],
@@ -384,7 +404,7 @@ export function raiseHelp(step: StuckStepKind, payment: StuckPayment, opts: Rais
     case 'bank':
       return bankHelp(payment, opts)
     case 'ombudsman':
-      return ombudsmanHelp(payment)
+      return ombudsmanHelp(payment, opts)
     case 'merchant':
       return merchantHelp(payment)
     case 'nch':
@@ -414,6 +434,9 @@ export function letterSummary(step: StuckStepKind, s: StuckPayment, opts: { comp
         ? { key: 'stuckhelp.summary.reverseOwed', vars: { amount: inr(owed.money), compensation: inr(owed.compensation) } }
         : { key: 'stuckhelp.summary.reverse', vars: { amount: inr(owed.money) } }
     case 'ombudsman': {
+      // The money and the compensation apart, so neither reads as one big penalty.
+      if (owed.money > 0 && owed.compensation > 0)
+        return { key: 'stuckhelp.summary.ombudsmanBoth', vars: { amount: inr(owed.money), compensation: inr(owed.compensation) } }
       const total = owed.money + owed.compensation
       return total > 0 ? { key: 'stuckhelp.summary.ombudsman', vars: { total: inr(total) } } : { key: 'stuckhelp.summary.ombudsmanAny' }
     }

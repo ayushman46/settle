@@ -1,6 +1,6 @@
 /**
  * SYNTHETIC corpus for the on-device bank/UPI SMS parser (spec 02), copied verbatim from the
- * verified reference corpus (features/02-sms-corpus.mjs, 179 messages), then 32 more: the
+ * verified reference corpus (features/02-sms-corpus.mjs, 179 messages), then 38 more: the
  * public-sector, regional and small-finance banks, layouts the customer panel pasted, and Hindi. Every message is invented
  * (made-up accounts, refs, names, VPAs) but follows the layout of real Indian bank and UPI-app alerts.
  *
@@ -456,6 +456,15 @@ export const SMS_CORPUS: ReadonlyArray<readonly [id: string, text: string, expec
     T('debit', 25000, 'Swiggy', null, '2026-10-21', '629420113457', 'XX4821', 'hdfc', null, null)],
   ['panel-05', 'Rs.1,000.00 debited from A/c XX4821 on 21-10-26 for UPI-P2A txn 629412345629. -HDFC Bank',
     T('debit', 100000, null, null, '2026-10-21', '629412345629', 'XX4821', 'hdfc', null, 'upi')],
+  // The second panel: where the money went, as Canara and Indian Bank print it; rail words never part of a name; a bounced mandate.
+  ['panel-06', 'Rs.500.00 paid thru A/C XX4821 on 22-10-26 16:45:12 to KAVYA S, UPI Ref 430412345678. If not done, SMS BLOCKUPI to 9901771222.-Canara Bank',
+    T('debit', 50000, 'Kavya S', null, '2026-10-22', '430412345678', 'XX4821', 'canara', null, 'upi')],
+  ['panel-07', 'Your a/c no. XXXXXXXX4821 is debited for Rs.1845.00 on 22-10-2026 and credited to a/c IRCTC (UPI Ref no 630012345678). If not you, call 180042500000 - Indian Bank',
+    T('debit', 184500, 'IRCTC', null, '2026-10-22', '630012345678', 'XX4821', 'indianbank', null, 'upi')],
+  ['panel-08', 'INR 2,499.00 debited from A/c ending 3041 on 21-OCT-2026 towards UPI/629420887299/SUCCESS/LAKSHMI KIRANA. Avl Bal INR 7,701.00 - YES BANK',
+    T('debit', 249900, 'Lakshmi Kirana', null, '2026-10-21', '629420887299', 'XX3041', 'yes', null, 'upi')],
+  ['panel-09', 'Your NACH mandate debit of Rs 5,600 towards HDFC LIFE has been returned unpaid due to insufficient funds. Charges Rs 590 applicable.', X('failed')],
+  ['panel-10', 'Your cheque no. 004512 for Rs 15,000 has been dishonoured. Charges Rs 500 debited. -HDFC Bank', X('failed')],
 
   /* ------------------------------------------------------------------ Hindi (names aren't read) */
   ['hi-01', 'प्रिय ग्राहक, आपके खाते XX1234 से 21-10-26 को रु.500 डेबिट हुए। संदर्भ 629412345632 -एसबीआई',
@@ -468,4 +477,7 @@ export const SMS_CORPUS: ReadonlyArray<readonly [id: string, text: string, expec
   ['hi-05', 'रु.4500 के लेनदेन के लिए आपका ओटीपी 123456 है। किसी से साझा न करें। -एसबीआई', X('otp')],
   ['hi-06', 'प्रिय ग्राहक, आपके खाते XX1234 में उपलब्ध शेष रु.12,000 है। -एसबीआई', X('balance')],
   ['hi-07', 'शानदार ऑफर! रु.500 कैशबैक पाएं। अभी खरीदें।', X('promo')],
+  // Banking Hindi's "नामे" is a debit, as "जमा" is a credit.
+  ['hi-08', 'प्रिय ग्राहक, आपके खाते XX7712 से दिनांक 22-10-26 को ATM निकासी हेतु रु 5000.00 नामे किए गए। संदर्भ 429718003456 -SBI',
+    T('debit', 500000, null, null, '2026-10-22', '429718003456', 'XX7712', 'sbi', null, 'atm')],
 ]

@@ -74,7 +74,9 @@ describe('StuckScreen — nothing yet', SLOW, () => {
     const { user } = renderAt('/app/stuck', <StuckScreen />)
     expect(screen.getByRole('heading', { level: 1, name: 'Stuck money' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Money stuck with a bank or a shop?' })).toBeInTheDocument()
-    expect(screen.getByText(/^Failed UPI to a person, IMPS and wallet payments must be back the next day; UPI to a shop, card payments and ATM withdrawals within 5 days/)).toBeInTheDocument()
+    expect(
+      screen.getByText(/^Failed UPI to a person, IMPS and payments within the same wallet must be back the next day; UPI to a shop, card payments and ATM withdrawals within 5 days\. A wallet app that paid over UPI or a card follows those\./),
+    ).toBeInTheDocument()
     expect(screen.getByText('A refund that’s late? Settle counts from the business’s own deadline.')).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Paste a message' }))
     expect(await screen.findByRole('dialog', { name: 'Paste a message' })).toBeInTheDocument()
@@ -135,7 +137,7 @@ describe('StuckScreen — the list', SLOW, () => {
       'Failed payment to Swiggy Raised · 3 days late · ₹300 owed so far ₹649',
     )
     expect(within(screen.getByRole('region', { name: /^Owed for the wait/ })).getByRole('listitem')).toHaveTextContent(
-      'Failed payment to Kabir Mehta ₹4,500 back · raised for the ₹300 · they have till 30 Nov ₹300',
+      'Failed payment to Kabir Mehta ₹4,500 back · ₹300 for the wait still owed · they have till 30 Nov ₹300 for the wait',
     )
     expect(screen.queryByRole('region', { name: /^Not due yet/ })).not.toBeInTheDocument()
   })
@@ -147,8 +149,32 @@ describe('StuckScreen — the list', SLOW, () => {
     renderAt('/app/stuck', <StuckScreen />)
     expect(screen.getByRole('region', { name: 'What you’re owed' })).toHaveTextContent('₹299')
     expect(within(screen.getByRole('region', { name: /^Needs you/ })).getByRole('listitem')).toHaveTextContent(
-      'Flipkart refund · Order …4556677 Part back · ₹299 still to come · 3 days late · raise it with Flipkart ₹299',
+      'Flipkart refund Order …4556677 Part back · ₹299 still to come · 3 days late · raise it with Flipkart ₹299',
     )
+  })
+
+  it('says the money that came back apart from what was paid for the wait', () => {
+    seedStuck(
+      stuckPayment({ id: 'late' }),
+      // ₹2,450 back 12 days late, and the ₹1,200 for the wait paid: never “₹3,650 back” on a ₹2,450 payment.
+      stuckPayment({ id: 'pooja', party: 'Ramesh Kumar', amount: 245_000, date: '2026-10-08', back: { date: '2026-10-21', amount: 245_000, compensation: 120_000 } }),
+    )
+    renderAt('/app/stuck', <StuckScreen />)
+    const hero = screen.getByRole('region', { name: 'What you’re owed' })
+    expect(within(hero).getByText('Got back so far').nextSibling).toHaveTextContent('₹2,450 · +₹1,200 for the wait')
+  })
+
+  it('in each part, the most urgent first: the most days late, the soonest due', () => {
+    seedStuck(
+      stuckPayment({ id: 'swiggy', party: 'Swiggy', date: '2026-10-29', createdAt: 2 }),
+      stuckPayment({ id: 'zomato', party: 'Zomato', date: '2026-10-28', createdAt: 1 }),
+      stuckPayment({ id: 'amazon', kind: 'refund', rail: null, party: 'Amazon', merchant: 'amazon', date: '2026-10-31', promisedBy: '2026-11-07' }),
+      stuckPayment({ id: 'croma', kind: 'refund', rail: null, party: 'Croma', merchant: null, date: '2026-10-27', promisedBy: '2026-11-04' }),
+    )
+    renderAt('/app/stuck', <StuckScreen />)
+    const names = (name: RegExp) => within(screen.getByRole('region', { name })).getAllByRole('listitem').map((li) => li.textContent?.split(' ').slice(0, 4).join(' '))
+    expect(names(/^Needs you/)).toEqual(['Failed payment to Zomato', 'Failed payment to Swiggy'])
+    expect(names(/^Not due yet/)).toEqual(['Croma refund Due back', 'Amazon refund Due back'])
   })
 
   it('with only payments to check, the hero asks about them rather than saying nothing’s stuck', () => {

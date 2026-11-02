@@ -36,6 +36,9 @@ export const app = {
   'app.title.collection': 'चंदा',
   'app.title.editCollection': 'चंदा बदलें',
   'app.title.pro': 'Pro',
+  'app.title.stuck': 'अटके पैसे',
+  'app.title.stuckNew': 'अटके पैसे जोड़ें',
+  'app.title.stuckEdit': 'अटके पैसे बदलें',
 
   'app.storage.title': 'यह फ़ोन आपके बदलाव सेव नहीं कर रहा',
   'app.storage.body': 'शायद स्टोरेज भर गई है या ब्लॉक है। थोड़ी जगह खाली करें — {brand} खुला रहने तक सब यहीं रहेगा।',

@@ -7,7 +7,8 @@ export const home = {
   'home.quick.scan': 'বিল স্ক্যান',
   'home.quick.split': 'টাকা ভাগ করুন',
   'home.quick.lend': 'ধার দিন / নিন',
-  'home.quick.collect': 'টাকা তুলুন',
+  // Collections (pools): chipping in together for a gift, a party or a trip.
+  'home.quick.collect': 'গ্রুপ চাঁদা',
   'home.quick.sms': 'SMS থেকে',
   'home.quick.food': 'ফুড অর্ডার',
   'home.quick.group': 'নতুন গ্রুপ',
@@ -20,10 +21,11 @@ export const home = {
   'home.template.subscription': 'সাবস্ক্রিপশন',
   'home.template.utilities': 'বিদ্যুৎ ও জল',
   'home.template.transport': 'ক্যাব',
-  // The sheet behind the More tile: getting money back, then ways to start a split.
+  // The sheet behind the More tile: money back from friends, then from banks and shops, then ways to start a split.
   'home.more.title': 'আরও',
   'home.more.subtitle': 'আপনার টাকা ফেরত আনুন, বা নতুন ভাগ শুরু করুন।',
-  'home.more.back': 'আপনার টাকা ফেরত আনুন',
+  'home.more.back': 'বন্ধুদের থেকে',
+  'home.more.banks': 'ব্যাংক আর দোকান থেকে',
   'home.more.split': 'ভাগ শুরু করুন',
   // Short tile name for "Paid? Drop the screenshot".
   'home.more.proof': 'পেমেন্টের স্ক্রিনশট',

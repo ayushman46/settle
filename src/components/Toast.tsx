@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom'
 import { Check, CircleAlert, Info, TriangleAlert, X } from 'lucide-react'
 import { useT } from '../i18n'
 import { cx } from '../lib/cx'
-import { OVERLAY_KEEP_ATTR } from './overlayStack'
+import { lastInputModality, OVERLAY_KEEP_ATTR, returnFocusTarget } from './overlayStack'
 import { DismissToastContext, ToastContext, type ShowToast, type ToastAction, type ToastTone } from './toastContext'
 import styles from './Toast.module.css'
 
@@ -27,6 +27,8 @@ interface ToastItem {
   action: ToastAction | undefined
   duration: number
   shownAt: number
+  /** Stays when a sheet opens over it (`keepOverSheets`). */
+  keep: boolean
 }
 
 interface ToastState {
@@ -68,10 +70,12 @@ function openDialogs(): number {
  * Hosts the app's single toast: a pill that floats just above the live bottom controls (the
  * screen's action bar or the open sheet's footer, the tab bar, a FAB — or, over a sheet without
  * a footer, just above the sheet), announced politely, auto-hiding and pausing while touched,
- * hovered or focused. A new toast replaces the current one. It belongs where it was shown:
- * another page puts it away, and so does a sheet opening over a plain message. While one with an action (Undo) is up,
- * Ctrl/Cmd+Z runs it — so keyboard and screen-reader users don't have to reach the pill — and
- * its close button puts it away early.
+ * hovered or focused. Two lines at most (the screen carries the detail), and a close button on
+ * every one. A new toast replaces the current one. It belongs where it was shown: another page
+ * puts it away, and so does a sheet opening over it (unless it was shown with `keepOverSheets`).
+ * While one with an action (Undo) is up, Ctrl/Cmd+Z runs it — so keyboard and screen-reader users
+ * don't have to reach the pill. Closing it from its own buttons hands focus back to where the
+ * person was (or the screen's heading), never to the page body.
  */
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<ToastState>({ current: null, leaving: null })
@@ -79,6 +83,8 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   const seq = useRef(0)
   const leaveTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const viewportRef = useRef<HTMLDivElement>(null)
+  /** The pill's own Undo or close was used: focus goes back to the page once it's gone. */
+  const restoreFocus = useRef(false)
   const { current, leaving } = state
 
   /** Moves the current toast (all of them when `id` is null) to its exit animation. */
@@ -99,7 +105,15 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         options.duration !== undefined && Number.isFinite(options.duration) && options.duration > 0
           ? options.duration
           : durationFor(message, options.action !== undefined)
-      const item: ToastItem = { id, message, tone: options.tone ?? 'neutral', action: options.action, duration, shownAt: Date.now() }
+      const item: ToastItem = {
+        id,
+        message,
+        tone: options.tone ?? 'neutral',
+        action: options.action,
+        duration,
+        shownAt: Date.now(),
+        keep: options.keepOverSheets === true,
+      }
       setState({ current: item, leaving: null })
       return () => dismiss(id)
     },
@@ -115,6 +129,22 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   }, [current, paused, dismiss])
 
   useEffect(() => () => clearTimeout(leaveTimer.current), [])
+
+  // Its Undo or close was used and the pill is gone: focus goes back to what the person used last
+  // on the page, else the screen's heading — not the page body (where a screen reader starts over).
+  // After a tap, never into a text field: that would pop the keyboard up.
+  useLayoutEffect(() => {
+    if (!restoreFocus.current) return
+    restoreFocus.current = false
+    const active = document.activeElement
+    if (active !== null && active !== document.body) return
+    const usable = (el: HTMLElement | null | undefined): el is HTMLElement => el != null && el.isConnected && !el.closest('[inert], [data-closing]')
+    let last = viewportRef.current ? returnFocusTarget(viewportRef.current) : null
+    if (lastInputModality() === 'pointer' && isTextEntry(last)) last = null
+    const heading = document.querySelector<HTMLElement>('main h1')
+    const next = usable(last) ? last : usable(heading) ? heading : null
+    next?.focus({ preventScroll: true })
+  }, [current])
 
   // It stays with the page it was shown on: another page puts it away — so an Undo never follows
   // someone around.
@@ -133,10 +163,11 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         }
         path = window.location.pathname
       }
-      // A sheet opening over a plain message puts it away; one with an Undo stays (it floats above
-      // the sheet's footer), so editing something else first doesn't lose the way back.
+      // A sheet opening over it puts it away, so it never sits over the sheet's fields and buttons
+      // (or offers an Undo from behind it). One shown with `keepOverSheets` stays above the sheet's
+      // footer, so editing something else first doesn't lose the way back.
       const now = openDialogs()
-      if (now > dialogs && !item.action) dismiss(item.id)
+      if (now > dialogs && !item.keep) dismiss(item.id)
       dialogs = now
     }
     const schedule = (): void => {
@@ -225,7 +256,10 @@ export function ToastProvider({ children }: { children: ReactNode }) {
           <ToastPill
             key={current.id}
             item={current}
-            onDismiss={dismiss}
+            onDismiss={(id) => {
+              restoreFocus.current = true
+              dismiss(id)
+            }}
             onPause={() => setPausedId(current.id)}
             onResume={() => setPausedId((id) => (id === current.id ? null : id))}
           />
@@ -260,19 +294,9 @@ interface ToastPillProps {
 function ToastPill({ item, leaving = false, onDismiss, onPause, onResume }: ToastPillProps) {
   const t = useT()
   const glyph = GLYPHS[item.tone]
-  const messageRef = useRef<HTMLSpanElement>(null)
-  // More than two lines beside the buttons (a long message, a long translation): the message
-  // takes the whole width and the buttons go underneath, instead of a word or two per line.
-  const [stacked, setStacked] = useState(false)
-  useLayoutEffect(() => {
-    const message = messageRef.current
-    if (!message || !item.action || stacked) return
-    const line = Number.parseFloat(window.getComputedStyle(message).lineHeight)
-    if (Number.isFinite(line) && line > 0 && message.getBoundingClientRect().height > line * 2.5) setStacked(true)
-  }, [item.action, stacked])
   return (
     <div
-      className={cx(styles.toast, stacked && styles.stacked, leaving && styles.leaving)}
+      className={cx(styles.toast, leaving && styles.leaving)}
       onPointerEnter={onPause}
       onPointerLeave={onResume}
       onFocus={onPause}
@@ -285,11 +309,12 @@ function ToastPill({ item, leaving = false, onDismiss, onPause, onResume }: Toas
           {glyph}
         </span>
       )}
-      <span ref={messageRef} className={styles.message}>
+      {/* Two lines at most on screen; the whole message is still read out. */}
+      <span className={styles.message}>
         {item.message}
       </span>
-      {item.action && (
-        <span className={styles.actions}>
+      <span className={styles.actions}>
+        {item.action && (
           <button
             type="button"
             className={styles.action}
@@ -304,17 +329,17 @@ function ToastPill({ item, leaving = false, onDismiss, onPause, onResume }: Toas
           >
             {item.action.label}
           </button>
-          <button
-            type="button"
-            className={styles.close}
-            tabIndex={leaving ? -1 : undefined}
-            aria-label={t('ui.toast.dismiss.aria')}
-            onClick={() => onDismiss?.(item.id)}
-          >
-            <X strokeWidth={2.5} aria-hidden="true" />
-          </button>
-        </span>
-      )}
+        )}
+        <button
+          type="button"
+          className={styles.close}
+          tabIndex={leaving ? -1 : undefined}
+          aria-label={t('ui.toast.dismiss.aria')}
+          onClick={() => onDismiss?.(item.id)}
+        >
+          <X strokeWidth={2.5} aria-hidden="true" />
+        </button>
+      </span>
     </div>
   )
 }

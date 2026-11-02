@@ -39,6 +39,9 @@ export const app = {
   'app.title.collection': 'వసూలు',
   'app.title.editCollection': 'వసూలు మార్చండి',
   'app.title.pro': 'Pro',
+  'app.title.stuck': 'ఇరుక్కున్న డబ్బు',
+  'app.title.stuckNew': 'ఇరుక్కున్న డబ్బు జోడించండి',
+  'app.title.stuckEdit': 'ఇరుక్కున్న డబ్బు మార్చండి',
   // When the phone won't save (storage full or blocked).
   'app.storage.title': 'ఈ ఫోన్ మీ మార్పులను సేవ్ చేయడం లేదు',
   'app.storage.body': 'స్టోరేజ్ నిండిపోయి ఉండవచ్చు లేదా బ్లాక్ అయి ఉండవచ్చు. కొంత స్థలం ఖాళీ చేయండి — {brand} తెరిచి ఉన్నంతవరకు అన్నీ ఇక్కడే ఉంటాయి.',

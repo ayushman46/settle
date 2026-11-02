@@ -6,6 +6,7 @@ export const autosettle: Messages = {
   'autosettle.pending': '{count, plural, one {# पेमेंट तपासायचे आहे} other {# पेमेंट तपासायचे आहेत}}',
   'autosettle.on.title': 'ऑटो-सेटल चालू आहे',
   'autosettle.on.text': 'Google Pay, PhonePe, Paytm किंवा BHIM पैसे आल्याचे सांगते तेव्हा पाठवणारे टिक होतात. फेल झालेले पेमेंट आणि रिफंड “अडकलेले पैसे” मध्ये जातात.',
+  'autosettle.on.text.noSms': 'Google Pay, PhonePe, Paytm किंवा BHIM पैसे आल्याचे सांगते तेव्हा पाठवणारे टिक होतात. फेल झालेले बहुतेक पेमेंट आणि परत येणारे पैसेही पकडण्यासाठी “बदला” मध्ये बँक SMS चालू करा.',
   'autosettle.manage': 'बदला',
   'autosettle.offer.title': 'लोकांना आपोआप टिक करा',
   'autosettle.offer.text': 'तुमचे UPI ॲप पैसे आल्याचे सांगते तेव्हा Settle पाठवणाऱ्याला टिक करते. पेमेंट फेल झाले पण पैसे कापले गेले, किंवा रिफंड येणार आहे — ते आपोआप “अडकलेले पैसे” मध्ये जाते.',

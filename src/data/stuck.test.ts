@@ -1,8 +1,9 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { exportBackup, importBackup, parseBackup } from './backup'
-import { stuckStore } from './stores'
+import { stuckSchema, stuckStore } from './stores'
 import {
   addStuck,
+  addStuckBack,
   addStuckStep,
   confirmStuck,
   deleteStuck,
@@ -54,6 +55,67 @@ describe('stuck payments', () => {
     expect(isStuckOpen(stuckStore.get()[0]!)).toBe(false)
     undo?.()
     expect(stuckStore.get()[0]?.back).toBeNull()
+  })
+
+  it('keeps each part that comes back on its own day, the totals following, with Undo', () => {
+    // ₹5,000: ₹2,000 back on 30 Oct (noted before the parts were kept), ₹3,000 on 1 Nov, then ₹600 for the wait on 5 Nov.
+    const s = addStuck(draft({ amount: 500_000, back: { date: '2026-10-30', amount: 200_000, compensation: 0 } }))
+    const undo = addStuckBack(s.id, { date: '2026-11-01', amount: 300_000, compensation: 0 })
+    expect(stuckStore.get()[0]?.back).toEqual({
+      date: '2026-11-01',
+      amount: 500_000,
+      compensation: 0,
+      parts: [
+        { date: '2026-10-30', amount: 200_000, compensation: 0 },
+        { date: '2026-11-01', amount: 300_000, compensation: 0 },
+      ],
+    })
+    expect(isStuckOpen(stuckStore.get()[0]!)).toBe(false)
+    // Compensation later: its own day, and the money's day stays the day the last of it came.
+    addStuckBack(s.id, { date: '2026-11-05', amount: 0, compensation: 60_000 })
+    expect(stuckStore.get()[0]?.back).toMatchObject({ date: '2026-11-01', amount: 500_000, compensation: 60_000 })
+    expect(stuckStore.get()[0]?.back?.parts).toHaveLength(3)
+    undo?.()
+    expect(stuckStore.get()[0]?.back).toEqual({ date: '2026-10-30', amount: 200_000, compensation: 0 })
+  })
+
+  it('a part noted late goes in date order; never more than was paid; nothing to add, nothing changes', () => {
+    const s = addStuck(draft({ amount: 64_900 }))
+    dismissStuck(s.id, 5)
+    addStuckBack(s.id, { date: '2026-11-01', amount: 30_000, compensation: 0 })
+    // It came back, so it isn't set aside.
+    expect(stuckStore.get()[0]).toMatchObject({ dismissedAt: null, confirmed: true })
+    addStuckBack(s.id, { date: '2026-10-30', amount: 10_000, compensation: 0 })
+    addStuckBack(s.id, { date: '2026-11-01', amount: 90_000, compensation: 0 })
+    const back = stuckStore.get()[0]?.back
+    expect(back?.parts?.map((p) => [p.date, p.amount])).toEqual([
+      ['2026-10-30', 10_000],
+      ['2026-11-01', 30_000],
+      ['2026-11-01', 90_000],
+    ])
+    expect(back).toMatchObject({ date: '2026-11-01', amount: 64_900 })
+    expect(addStuckBack(s.id, { date: '2026-11-02', amount: 0, compensation: 0 })).toBeNull()
+    expect(addStuckBack('nope', { date: '2026-11-02', amount: 1, compensation: 0 })).toBeNull()
+  })
+
+  it('totals set as an edit keep the parts when they only add to them, and start over when they change them', () => {
+    const s = addStuck(draft({ amount: 500_000 }))
+    addStuckBack(s.id, { date: '2026-10-30', amount: 200_000, compensation: 0 })
+    // "More came back" as totals: the rest on 1 Nov.
+    markStuckBack(s.id, { date: '2026-11-01', amount: 500_000, compensation: 0 })
+    expect(stuckStore.get()[0]?.back?.parts?.map((p) => [p.date, p.amount, p.compensation])).toEqual([
+      ['2026-10-30', 200_000, 0],
+      ['2026-11-01', 300_000, 0],
+    ])
+    // "They've paid it" as totals: the compensation added, the money's day kept.
+    markStuckBack(s.id, { date: '2026-11-01', amount: 500_000, compensation: 60_000 })
+    expect(stuckStore.get()[0]?.back?.parts?.at(-1)).toEqual({ date: '2026-11-01', amount: 0, compensation: 60_000 })
+    // A correction (an earlier day, less money): the totals, as one.
+    markStuckBack(s.id, { date: '2026-10-31', amount: 450_000, compensation: 60_000 })
+    expect(stuckStore.get()[0]?.back).toEqual({ date: '2026-10-31', amount: 450_000, compensation: 60_000 })
+    // Never more than was paid.
+    markStuckBack(s.id, { date: '2026-10-31', amount: 900_000, compensation: 60_000 })
+    expect(stuckStore.get()[0]?.back?.amount).toBe(500_000)
   })
 
   it('notes complaints in date order; a second of the same kind replaces the first', () => {
@@ -153,6 +215,18 @@ describe('stuck payments in backups', () => {
     const file = JSON.parse(JSON.stringify(exportBackup())) as { stuck: Array<Record<string, unknown>> }
     for (const x of file.stuck) delete x.repliedAt
     expect(parseBackup(file)?.stuck).toEqual([s])
+  })
+
+  it('ones saved before each part back was kept read with none — the totals stand for the one part', () => {
+    const s = addStuck(draft({ back: { date: '2026-10-30', amount: 64_900, compensation: 10_000 } }))
+    const file = JSON.parse(JSON.stringify(exportBackup())) as { stuck: Array<{ back: Record<string, unknown> }> }
+    expect(file.stuck[0]?.back).not.toHaveProperty('parts')
+    expect(parseBackup(file)?.stuck[0]?.back).toEqual({ ...s.back, parts: [] })
+    // Parts that don't read are dropped, not the payment.
+    const bad = [{ ...s, back: { ...s.back, parts: [{ date: 'yesterday', amount: -1 }] } }]
+    expect(stuckSchema.parse(bad)[0]?.back).toEqual({ date: '2026-10-30', amount: 64_900, compensation: 10_000, parts: [] })
+    const kept = [{ ...s, back: { date: '2026-10-30', amount: 64_900, compensation: 0, parts: [{ date: '2026-10-30', amount: 64_900, compensation: 0 }] } }]
+    expect(stuckSchema.parse(kept)[0]?.back?.parts).toEqual([{ date: '2026-10-30', amount: 64_900, compensation: 0 }])
   })
 
   it('older backups without them restore as none', () => {

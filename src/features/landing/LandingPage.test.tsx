@@ -134,6 +134,15 @@ describe('LandingPage', () => {
     expect(path()).toBe('/app/stuck')
   })
 
+  it('lets the Stuck money tile itself open Stuck money', async () => {
+    const { user } = renderLanding()
+    const tile = screen.getByRole('heading', { name: 'Payment failed, money gone? Get it back.' }).closest('li') as HTMLElement
+    const link = within(tile).getByRole('link', { name: 'Check what your bank owes you' })
+    expect(link).toHaveAttribute('href', '/app/stuck')
+    await user.click(link)
+    expect(path()).toBe('/app/stuck')
+  })
+
   it('shows every signature feature, Stuck money first; new and Pro ones marked', () => {
     renderLanding()
     const section = screen.getByRole('region', { name: 'One app for every split' })

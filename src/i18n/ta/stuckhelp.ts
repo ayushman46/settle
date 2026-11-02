@@ -23,6 +23,7 @@ export const stuckhelp: Messages = {
   'stuckhelp.lead.ombudsman': 'உங்கள் வங்கி சரிசெய்யாதபோது, RBI-இன் புகார் சேவை.',
   'stuckhelp.lead.ombudsmanWallet': 'வாலெட் நிறுவனம் சரிசெய்யாதபோது, RBI-இன் புகார் சேவை.',
   'stuckhelp.lead.merchant': 'முதலில் அந்த நிறுவனத்திடமே, ஆர்டர் எண்ணுடன், எழுத்துமூலம் கேளுங்கள்.',
+  'stuckhelp.lead.airline': 'முதலில் அந்த விமான நிறுவனத்திடமே, உங்கள் PNR-உடன், எழுத்துமூலம் கேளுங்கள்.',
   'stuckhelp.lead.nch': 'அரசின் இந்த உதவி எண், உங்கள் புகாரை உங்களுக்காக அந்த நிறுவனத்திடம் கொண்டு செல்லும்.',
   'stuckhelp.lead.airsewa': 'விமான நிறுவனங்கள் மீதான புகார்களுக்கு, மத்திய சிவில் விமானப் போக்குவரத்து அமைச்சகத்தின் தளம்.',
   'stuckhelp.lead.commission': 'நுகர்வோர் ஆணையம் (நுகர்வோர் நீதிமன்றம்) வழக்கை முடிவு செய்யும். ஆன்லைனில் தாக்கல் செய்யலாம்.',
@@ -60,11 +61,15 @@ export const stuckhelp: Messages = {
   'stuckhelp.compensation.sendWallet': 'கீழே உள்ள கடிதத்தை வாலெட் நிறுவனத்தின் குறைதீர் அதிகாரிக்கு அனுப்புங்கள்: மின்னஞ்சலில், அல்லது அதன் ஆப்பின் உதவிப் பகுதியிலிருந்து.',
   'stuckhelp.compensation.why': 'RBI விதிகளின்படி, இதைக் கேட்காமலேயே தர வேண்டும். இந்தக் கடிதம் நாட்களைக் கணக்கிட்டு, எழுத்துமூலம் கேட்கிறது.',
 
-  // The RBI Ombudsman ({phone}: 14448; {issuer}: "Paytm Payments Bank Ltd").
+  // The RBI Ombudsman ({phone}: 14448; {issuer}: "Paytm Payments Bank Ltd"; {email}: crpc@rbi.org.in; {address}: the RBI's postal address, in English).
   'stuckhelp.ombudsman.when':
-    'வங்கியிடம் புகார் செய்து 30 நாட்கள் ஆன பின் (வங்கி பதில் சொல்லி, அதில் உங்களுக்குத் திருப்தி இல்லை என்றால் அதற்கு முன்பே) தாக்கல் செய்யலாம்; அதன் பிறகு 90 நாட்களுக்குள் செய்ய வேண்டும்.',
+    'வங்கியிடம் புகார் செய்து 30 நாட்கள் ஆன பின் (வங்கி பதில் சொல்லி, அதில் உங்களுக்குத் திருப்தி இல்லை என்றால் அதற்கு முன்பே) தாக்கல் செய்யலாம். அந்த 30 நாட்கள் முடிந்த நாள், வங்கியின் கடைசிப் பதில் வந்த நாள் — இவற்றில் எது பிந்தையதோ, அதிலிருந்து 90 நாட்கள் உங்களுக்கு உள்ளன.',
   'stuckhelp.ombudsman.whenWallet':
-    'வாலெட் நிறுவனத்திடம் புகார் செய்து 30 நாட்கள் ஆன பின் (அது பதில் சொல்லி, அதில் உங்களுக்குத் திருப்தி இல்லை என்றால் அதற்கு முன்பே) தாக்கல் செய்யலாம்; அதன் பிறகு 90 நாட்களுக்குள் செய்ய வேண்டும்.',
+    'வாலெட் நிறுவனத்திடம் புகார் செய்து 30 நாட்கள் ஆன பின் (அது பதில் சொல்லி, அதில் உங்களுக்குத் திருப்தி இல்லை என்றால் அதற்கு முன்பே) தாக்கல் செய்யலாம். அந்த 30 நாட்கள் முடிந்த நாள், அதன் கடைசிப் பதில் வந்த நாள் — இவற்றில் எது பிந்தையதோ, அதிலிருந்து 90 நாட்கள் உங்களுக்கு உள்ளன.',
+  // This case's last day ({date}: "2 Mar 2027"; {kind}: bank or wallet).
+  'stuckhelp.ombudsman.lastDay':
+    '{kind, select, wallet {அதிகபட்சம் {date} தேதிக்குள் தாக்கல் செய்யுங்கள்: வாலெட் நிறுவனத்தின் 30 நாட்கள் முடிந்த நாள், அதன் கடைசிப் பதில் வந்த நாள் — இவற்றில் எது பிந்தையதோ, அதிலிருந்து 90 நாட்கள் (RBI ஒருங்கிணைந்த Ombudsman திட்டம், 2026).} other {அதிகபட்சம் {date} தேதிக்குள் தாக்கல் செய்யுங்கள்: உங்கள் வங்கியின் 30 நாட்கள் முடிந்த நாள், அதன் கடைசிப் பதில் வந்த நாள் — இவற்றில் எது பிந்தையதோ, அதிலிருந்து 90 நாட்கள் (RBI ஒருங்கிணைந்த Ombudsman திட்டம், 2026).}}',
+  'stuckhelp.ombudsman.post': 'இணையதளத்தைப் பயன்படுத்த முடியவில்லையா? புகாரை {email} முகவரிக்கு மின்னஞ்சல் செய்யுங்கள், அல்லது அதில் கையொப்பமிட்டு, உங்கள் ஆவணங்களின் நகல்களுடன் இந்த முகவரிக்குத் தபாலில் அனுப்புங்கள்: {address}.',
   'stuckhelp.ombudsman.file': 'cms.rbi.org.in-இல் உங்கள் வங்கி மீது புகார் தாக்கல் செய்யுங்கள். படிவத்துக்கான விவரங்கள் கீழே உள்ளன.',
   'stuckhelp.ombudsman.fileWallet': 'cms.rbi.org.in-இல், வாலெட்டை நடத்தும் நிறுவனமான {issuer} மீது புகார் தாக்கல் செய்யுங்கள். படிவத்துக்கான விவரங்கள் கீழே உள்ளன.',
   'stuckhelp.ombudsman.fileWalletAny': 'cms.rbi.org.in-இல், வாலெட்டை நடத்தும் நிறுவனம் மீது புகார் தாக்கல் செய்யுங்கள். படிவத்துக்கான விவரங்கள் கீழே உள்ளன.',
@@ -87,6 +92,11 @@ export const stuckhelp: Messages = {
   'stuckhelp.merchant.page': '{name} நிறுவனத்தின் உதவிப் பக்கத்தைத் திறந்து, இந்த ஆர்டரைக் கண்டுபிடித்து, அதிலிருந்தே வாடிக்கையாளர் சேவையைத் தொடர்புகொள்ளுங்கள்.',
   'stuckhelp.merchant.app': '{name} ஆப் அல்லது இணையதளத்தில், இந்த ஆர்டரைத் திறந்து, அதிலிருந்தே வாடிக்கையாளர் சேவையைத் தொடர்புகொள்ளுங்கள்.',
   'stuckhelp.merchant.unknown': 'முடிந்தால் ஆர்டரிலிருந்தே, அந்த நிறுவனத்தின் வாடிக்கையாளர் சேவையைத் தொடர்புகொள்ளுங்கள்.',
+  // An airline: a booking, not an order.
+  'stuckhelp.merchant.pageBooking': '{name} நிறுவனத்தின் உதவிப் பக்கத்தைத் திறந்து, இந்த புக்கிங்கைக் கண்டுபிடித்து, அதிலிருந்தே வாடிக்கையாளர் சேவையைத் தொடர்புகொள்ளுங்கள்.',
+  'stuckhelp.merchant.appBooking': '{name} ஆப் அல்லது இணையதளத்தில், இந்த புக்கிங்கைத் திறந்து, அதிலிருந்தே வாடிக்கையாளர் சேவையைத் தொடர்புகொள்ளுங்கள்.',
+  'stuckhelp.merchant.nodal': 'சில நாட்களில் பதில் இல்லையா? உங்கள் PNR, டிக்கெட் எண்ணுடன், {name} நிறுவனத்தின் புகார்களுக்கான நோடல் அதிகாரிக்கு எழுதுங்கள் (தொடர்பு விவரம் அதன் இணையதளத்தில் இருக்கும்).',
+  'stuckhelp.merchant.nodalAny': 'சில நாட்களில் பதில் இல்லையா? உங்கள் PNR, டிக்கெட் எண்ணுடன், விமான நிறுவனத்தின் புகார்களுக்கான நோடல் அதிகாரிக்கு எழுதுங்கள் (தொடர்பு விவரம் அதன் இணையதளத்தில் இருக்கும்).',
   'stuckhelp.merchant.paste': 'கீழே உள்ள செய்தியை ஒட்டி, டிக்கெட் எண் கேளுங்கள்.',
   // Settle's own advice (a week), not the law's month.
   'stuckhelp.merchant.nextNch': 'ஒரு வாரம் அவகாசம் கொடுங்கள். இன்னும் சரியாகவில்லையா? தேசிய நுகர்வோர் உதவி எண்ணை அணுகலாம்; முழு மாதம் காத்திருக்க வேண்டியதில்லை.',
@@ -126,8 +136,10 @@ export const stuckhelp: Messages = {
   'stuckhelp.links.aria': 'அவர்களைத் தொடர்புகொள்ள மற்ற வழிகள்',
   'stuckhelp.newTab': '{label} (புதிய டேபில் திறக்கும்)',
 
-  // The sheet.
+  // The sheet. Above the title, what's still owed ({amount}, {rest}, {owed}: "₹49"; {name}: who it was paid to, or the business).
   'stuckhelp.eyebrow': '{amount} · {name}',
+  'stuckhelp.eyebrow.part': '{amount} தொகையில் {rest} · {name}',
+  'stuckhelp.eyebrow.owed': 'காத்திருந்ததற்கு {owed} · {name}',
   'stuckhelp.party.failed': 'தோல்வியடைந்த பணம்',
   'stuckhelp.party.refund': 'ரீஃபண்ட்',
   'stuckhelp.how.heading': 'எங்கே, எப்படி',
@@ -147,13 +159,16 @@ export const stuckhelp: Messages = {
   'stuckhelp.field.copy': 'நகலெடு: {field}',
   'stuckhelp.field.copied': '{field} நகலெடுக்கப்பட்டது',
 
-  // Your details for letters: asked once, kept on this phone.
+  // Your details for letters: asked once, kept on this phone. The name and UPI ID go to your profile.
   'stuckhelp.me.heading': 'உங்கள் விவரங்கள்',
   'stuckhelp.me.hint': 'Settle இவற்றைக் கடிதத்தில் சேர்க்கும். இவை இந்த ஃபோனிலேயே இருக்கும், எங்கும் அனுப்பப்படாது.',
+  'stuckhelp.me.name': 'உங்கள் பெயர்',
   'stuckhelp.me.mobile': 'மொபைல் எண்',
+  'stuckhelp.me.upi': 'உங்கள் UPI ID (விருப்பம்)',
+  'stuckhelp.me.upiHint': 'UPI பணத்தைக் கண்டறிய இது வங்கிக்கு உதவும். Settle இதை உங்கள் சுயவிவரத்தில் சேமிக்கும்.',
   'stuckhelp.me.place': 'நகரம், மாநிலம்',
-  // The letter is in English, so the example stays in English letters.
-  'stuckhelp.me.placeExample': 'Chennai, Tamil Nadu',
+  // Under the empty field, so it never looks filled in.
+  'stuckhelp.me.placeExample': 'எடுத்துக்காட்டு: Chennai, Tamil Nadu',
   'stuckhelp.me.address': 'முகவரி (விருப்பம்)',
   'stuckhelp.me.change': 'மாற்று',
   'stuckhelp.me.changeLabel': 'உங்கள் விவரங்களை மாற்று',
@@ -172,11 +187,23 @@ export const stuckhelp: Messages = {
     '{kind, select, wallet {வாலெட் நிறுவனத்தின் குறைதீர் மின்னஞ்சல் — அதன் ஆப்பின் உதவிப் பகுதியில் இருக்கும்.} business {அந்த நிறுவனத்தின் வாடிக்கையாளர் சேவை மின்னஞ்சல், இருந்தால்.} other {உங்கள் வங்கியின் குறைதீர் மின்னஞ்சல் — அதன் இணையதளத்தில் அல்லது ஆப்பில் இருக்கும்.}} Settle இதை இந்த ஃபோனில் நினைவில் வைத்திருக்கும்.',
   'stuckhelp.email.crpc': 'மின்னஞ்சல் RBI-இன் புகார் மையத்துக்குச் செல்லும்: {email}.',
 
+  // The payment's reference, when it wasn't saved ({kind}: upi, imps, wallet, nach or other).
+  'stuckhelp.ref.label':
+    '{kind, select, upi {UPI குறிப்பு எண் (12 இலக்கங்கள்)} imps {IMPS குறிப்பு எண் (12 இலக்கங்கள்)} wallet {வாலெட் பரிவர்த்தனை ID} nach {மேண்டேட் (UMRN) அல்லது டெபிட் குறிப்பு எண்} other {பரிவர்த்தனைக் குறிப்பு எண்}}',
+  'stuckhelp.ref.hint': 'வங்கியின் SMS-இல், அல்லது உங்கள் ஆப்பில் இந்தப் பணத்தின் விவரத்தில் இருக்கும். Settle இதை இந்தப் பணத்துடன் சேமிக்கும்.',
+
   // The letter's box: {kind} is letter, message or summary.
   'stuckhelp.letter.heading': '{kind, select, message {செய்தி} summary {சுருக்கம்} other {கடிதம்}}',
   'stuckhelp.letter.blanks':
     '{count, plural, one {[ ] அடைப்புக்குறிக்குள் உள்ள # பகுதி இன்னும் நிரப்பப்படவில்லை. அனுப்பும் முன் அதை நிரப்புங்கள்.} other {[ ] அடைப்புக்குறிக்குள் உள்ள # பகுதிகள் இன்னும் நிரப்பப்படவில்லை. அனுப்பும் முன் அவற்றை நிரப்புங்கள்.}}',
   'stuckhelp.letter.actions': 'கடிதத்தை அனுப்பு',
+  // Sending while a [bracket] is still empty: said first ({count}: how many; {action}: copy, share, print, email or send).
+  'stuckhelp.blanks.title': '{count, plural, one {# பகுதி இன்னும் காலியாக உள்ளது} other {# பகுதிகள் இன்னும் காலியாக உள்ளன}}',
+  'stuckhelp.blanks.description':
+    '{count, plural, one {அது [ ] அடைப்புக்குறிக்குள் குறிக்கப்பட்டுள்ளது. முதலில் அதை நிரப்புங்கள், அல்லது இப்படியே அனுப்பிவிட்டு, ஒட்டும் இடத்தில் நிரப்புங்கள்.} other {அவை [ ] அடைப்புக்குறிக்குள் குறிக்கப்பட்டுள்ளன. முதலில் அவற்றை நிரப்புங்கள், அல்லது இப்படியே அனுப்பிவிட்டு, ஒட்டும் இடத்தில் நிரப்புங்கள்.}}',
+  'stuckhelp.blanks.list': 'இன்னும் காலியாக உள்ளவை',
+  'stuckhelp.blanks.fill': '{count, plural, one {அதை நிரப்பு} other {அவற்றை நிரப்பு}}',
+  'stuckhelp.blanks.anyway': '{action, select, copy {எப்படியும் நகலெடு} share {எப்படியும் பகிர்} print {எப்படியும் அச்சிடு} email {எப்படியும் மின்னஞ்சல் செய்} other {எப்படியும் அனுப்பு}}',
   // Above the letter, in the app's language: what it asks for ({amount}, {compensation}, {total}: "₹500").
   'stuckhelp.summary.reverse': '{amount} திரும்பத் தரவும், தாமதமாகும் ஒவ்வொரு நாளுக்கும் ₹100 தரவும் இது கேட்கிறது.',
   'stuckhelp.summary.reverseOwed': '{amount} திரும்பத் தரவும், தாமதத்துக்காக இதுவரை வர வேண்டிய {compensation} தரவும் (நாளுக்கு ₹100) இது கேட்கிறது.',
@@ -184,6 +211,8 @@ export const stuckhelp: Messages = {
   'stuckhelp.summary.compensationAny': 'பணம் தாமதமான நாட்களுக்கு வர வேண்டிய இழப்பீட்டை (நாளுக்கு ₹100) இது கேட்கிறது.',
   'stuckhelp.summary.ombudsman':
     'என்ன நடந்தது, உங்கள் புகார் என்ன ஆனது என்பதை இது RBI Ombudsman-இடம் சொல்கிறது; இதுவரை உங்களுக்கு வர வேண்டிய {total} தொகையையும் கேட்கிறது.',
+  'stuckhelp.summary.ombudsmanBoth':
+    'என்ன நடந்தது, உங்கள் புகார் என்ன ஆனது என்பதை இது RBI Ombudsman-இடம் சொல்கிறது; உங்கள் {amount} தொகையைத் திரும்பத் தரவும், தாமதத்துக்காக இதுவரை வர வேண்டிய {compensation} தரவும் (நாளுக்கு ₹100) கேட்கிறது.',
   'stuckhelp.summary.ombudsmanAny': 'என்ன நடந்தது, உங்கள் புகார் என்ன ஆனது என்பதை இது RBI Ombudsman-இடம் சொல்கிறது; உங்களுக்கு வர வேண்டியதையும் கேட்கிறது.',
   'stuckhelp.summary.refund': 'உங்கள் {amount} ரீஃபண்டை இது கேட்கிறது; ஏற்கனவே அனுப்பியிருந்தால், அதைக் கண்டறிய அதன் குறிப்பு எண்ணைக் கேட்கிறது.',
   'stuckhelp.summary.confirm': 'உங்கள் {amount} அவர்களுக்கு வந்து சேர்ந்ததா என்று எழுத்துமூலம் உறுதிப்படுத்துமாறு இது கேட்கிறது — உங்கள் வங்கியிடம் காட்டுவதற்காக.',
@@ -207,6 +236,8 @@ export const stuckhelp: Messages = {
   'stuckhelp.raised.ref': '{kind, select, merchant {டிக்கெட் எண்} nch {டாக்கெட் எண்} airsewa {குறிப்பு எண்} commission {வழக்கு எண்} other {புகார் எண்}}',
   'stuckhelp.raised.refHint': 'விருப்பம் — கொடுத்திருந்தால்',
   'stuckhelp.raised.save': 'சேமி',
+  // Not "Back": in a money app that reads as money returned ({kind}: letter, message or summary).
+  'stuckhelp.raised.back': '{kind, select, message {செய்திக்குத் திரும்பு} summary {சுருக்கத்துக்குத் திரும்பு} other {கடிதத்துக்குத் திரும்பு}}',
   // {date}: "2 Nov"; {name}: the business.
   'stuckhelp.raised.toast':
     '{kind, select, bank {குறித்துக்கொண்டோம்: {date} அன்று உங்கள் வங்கியிடம் புகார் செய்யப்பட்டது} ombudsman {குறித்துக்கொண்டோம்: {date} அன்று RBI Ombudsman-இடம் கொண்டு செல்லப்பட்டது} merchant {குறித்துக்கொண்டோம்: {date} அன்று {name} நிறுவனத்திடம் புகார் செய்யப்பட்டது} nch {குறித்துக்கொண்டோம்: {date} அன்று தேசிய நுகர்வோர் உதவி எண்ணில் புகார் செய்யப்பட்டது} airsewa {குறித்துக்கொண்டோம்: {date} அன்று AirSewa-வில் புகார் செய்யப்பட்டது} other {குறித்துக்கொண்டோம்: {date} அன்று நுகர்வோர் ஆணையத்தில் தாக்கல் செய்யப்பட்டது}}',

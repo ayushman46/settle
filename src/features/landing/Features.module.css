@@ -105,6 +105,12 @@
   color: var(--ink-2);
 }
 
+/* A tile's own way in (Stuck money's "Check what your bank owes you"). */
+.cta {
+  justify-self: start;
+  margin-block-start: var(--s-2);
+}
+
 /* Tiles rise in as they scroll into view (where the browser can tie animation to scrolling). */
 @supports (animation-timeline: view()) {
   @media (prefers-reduced-motion: no-preference) {

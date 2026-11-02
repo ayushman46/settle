@@ -77,7 +77,7 @@ describe('AutoSettleWatcher — Stuck money', () => {
     const { user } = renderAt('/app', <AutoSettleWatcher />)
     // Due back by 29 Oct (T+1), back on 2 Nov: 4 days late, ₹100 a day.
     expect(await screen.findByText('₹500 from the failed Riya Sharma payment is back — 4 days late: your bank owes you ₹400 for the wait')).toBeInTheDocument()
-    expect(stuckStore.get()[0]?.back).toEqual({ date: '2026-11-02', amount: 50_000, compensation: 0 })
+    expect(stuckStore.get()[0]?.back).toMatchObject({ date: '2026-11-02', amount: 50_000, compensation: 0 })
     await user.click(screen.getByRole('button', { name: /^Undo/ }))
     expect(stuckStore.get()).toEqual([s])
   })
@@ -101,6 +101,59 @@ describe('AutoSettleWatcher — Stuck money', () => {
     await Promise.resolve()
     expect(screen.queryByText(/stuck|Stuck money/)).toBeNull()
     expect(stuckStore.get()).toEqual([])
+  })
+
+  it('a payment waiting for a tap that went through after all is gone — not set aside — with Undo', async () => {
+    const waiting = addStuck(
+      {
+        kind: 'failed',
+        rail: 'upi_merchant',
+        party: 'Sri Krishna Medicals',
+        merchant: null,
+        amount: 310_000,
+        date: '2026-11-02',
+        promisedBy: null,
+        ref: null,
+        orderId: null,
+        bank: null,
+        account: null,
+        app: 'phonepe',
+        source: 'alert',
+        confirmed: false,
+      },
+      AT - 3 * 60 * 60_000,
+    )
+    fakeAndroid([{ id: 'ok1', app: 'com.phonepe.app', title: 'Payment Successful', text: '₹3,100 paid to Sri Krishna Medicals', postedAt: AT }])
+    const { user } = renderAt('/app', <AutoSettleWatcher />)
+    expect(await screen.findByText('₹3,100 to Sri Krishna Medicals went through after all — nothing stuck')).toBeInTheDocument()
+    expect(stuckStore.get()).toEqual([])
+    await user.click(screen.getByRole('button', { name: /^Undo/ }))
+    expect(stuckStore.get()).toEqual([waiting])
+  })
+
+  it('the bank’s compensation for the wait is noted, not taken as money back', async () => {
+    addStuck({
+      kind: 'failed',
+      rail: 'imps',
+      party: 'Sri Sai Mobile Spares',
+      merchant: null,
+      amount: 1_200_000,
+      date: '2026-10-28',
+      promisedBy: null,
+      ref: '630312345678',
+      orderId: null,
+      bank: 'icici',
+      account: 'XX4821',
+      app: null,
+      source: 'sms',
+      confirmed: true,
+      back: { date: '2026-11-02', amount: 1_200_000, compensation: 0 },
+    })
+    const text = 'Dear Customer, Rs.200.00 has been credited to your ICICI Bank A/c XX4821 on 02-Nov-26 as compensation for delayed reversal of IMPS Ref 630312345678. -ICICI Bank'
+    fakeAndroid([{ id: 'c1', app: MESSAGES, title: 'ICICIB', text, postedAt: AT }])
+    renderAt('/app', <AutoSettleWatcher />)
+    expect(await screen.findByText(/^₹200 paid for the wait on the Sri Sai Mobile Spares payment/)).toBeInTheDocument()
+    expect(stuckStore.get()[0]?.back).toMatchObject({ amount: 1_200_000, compensation: 20_000 })
   })
 
   it('says nothing when nothing was stuck', async () => {
@@ -160,6 +213,16 @@ describe('stuckToastMessage', () => {
     const cleared = stuck({ party: 'Murugan Tea Stall', confirmed: false, dismissedAt: 1 })
     expect(stuckToastMessage({ added: [], back: [], cleared: [cleared] }, t, '2026-11-02')).toBe('₹500 to Murugan Tea Stall went through after all — nothing stuck')
     expect(stuckToastMessage({ added: [], back: [], cleared: [cleared, { ...cleared, id: 't' }] }, t, '2026-11-02')).toBe('2 payments went through after all — nothing stuck')
+  })
+
+  it('compensation paid for the wait: how much came, and what’s still owed', () => {
+    // Due back by 29 Oct (T+1), back on 2 Nov: 4 days late, ₹400 owed.
+    const late = { rail: 'upi_person' as const, date: '2026-10-28', party: 'Riya Sharma' }
+    const paidAll = stuck({ ...late, back: { date: '2026-11-02', amount: 50_000, compensation: 40_000, parts: [{ date: '2026-11-02', amount: 50_000, compensation: 0 }, { date: '2026-11-02', amount: 0, compensation: 40_000 }] } })
+    expect(stuckToastMessage({ added: [], back: [], paid: [paidAll] }, t, '2026-11-02')).toBe('₹400 paid for the wait on the Riya Sharma payment — noted in Stuck money')
+    const paidPart = stuck({ ...late, back: { date: '2026-11-02', amount: 50_000, compensation: 20_000, parts: [{ date: '2026-11-02', amount: 50_000, compensation: 0 }, { date: '2026-11-02', amount: 0, compensation: 20_000 }] } })
+    expect(stuckToastMessage({ added: [], back: [], paid: [paidPart] }, t, '2026-11-02')).toBe('₹200 paid for the wait on the Riya Sharma payment — ₹200 still to come')
+    expect(stuckToastMessage({ added: [], back: [], paid: [{ ...paidAll, party: null }] }, t, '2026-11-02')).toBe('₹400 paid for the wait on a failed payment — noted in Stuck money')
   })
 
   it('money back comes first', () => {

@@ -111,6 +111,10 @@ describe('raiseHelp — your bank', () => {
     expect(keys(raiseHelp('bank', failed({ app: 'Paytm' })).steps)[0]).toBe('stuckhelp.bank.app.paytm')
   })
 
+  it('leaves PhonePe’s desk out of an IMPS or card payment, which the bank owes', () => {
+    for (const rail of ['imps', 'card_online', 'atm'] as const) expect(raiseHelp('bank', failed({ rail, app: 'phonepe' })).links, rail).toEqual([])
+  })
+
   it('names the other UPI apps in the general step', () => {
     for (const [app, name] of [
       ['bhim', 'BHIM'],
@@ -237,7 +241,9 @@ describe('letterSummary', () => {
     expect(sum('bank', failed(), { today: '2026-10-22' })).toBe(`It asks for ${inr(50_000)} back, and ₹100 for each day it’s late.`)
     const back = failed({ back: { date: '2026-10-30', amount: 50_000, compensation: 0 } })
     expect(sum('bank', back, { today: TODAY })).toBe(`It asks for the ${inr(50_000)} owed for the days the money was late (₹100 a day).`)
-    expect(sum('ombudsman', failed(), { today: TODAY })).toContain(`asks for the ${inr(1_30_000)} you’re owed so far`)
+    // The money and the compensation apart, so the sum doesn't read as one penalty.
+    expect(sum('ombudsman', failed(), { today: TODAY })).toContain(`asks for your ${inr(50_000)} back and the ${inr(80_000)} owed so far for the delay (₹100 a day)`)
+    expect(sum('ombudsman', back, { today: TODAY })).toContain(`asks for the ${inr(50_000)} you’re owed so far`)
     expect(sum('merchant', refund(), { today: TODAY })).toContain(`your ${inr(1_29_900)} refund`)
     expect(sum('nch', refund(), { today: TODAY })).toContain(inr(1_29_900))
     expect(sum('airsewa', refund({ merchant: 'indigo' }), { today: TODAY })).toContain('AirSewa')
@@ -287,10 +293,35 @@ describe('raiseHelp — the rest of the ladder', () => {
     expect(say(raiseHelp('merchant', refund({ merchant: null })).title)).toBe('Raise it with the business')
   })
 
-  it('points an airline at the DGCA rule and AirSewa next', () => {
+  it('points an airline at the DGCA rule, its Nodal Officer and AirSewa next, for a booking', () => {
     const help = raiseHelp('merchant', refund({ merchant: 'indigo' }))
-    expect(keys(help.steps)).toEqual(['stuckhelp.merchant.page', 'stuckhelp.merchant.paste', 'stuckhelp.rule.dgca', 'stuckhelp.merchant.nextAirsewa'])
+    expect(keys(help.steps)).toEqual(['stuckhelp.merchant.pageBooking', 'stuckhelp.merchant.paste', 'stuckhelp.rule.dgca', 'stuckhelp.merchant.nodal', 'stuckhelp.merchant.nextAirsewa'])
+    expect(say(help.steps[0] as HelpText)).toBe('Open IndiGo’s help, find this booking and contact support from it.')
+    expect(say(help.steps[3] as HelpText)).toContain('IndiGo’s Nodal Officer')
+    expect(say(help.lead)).toBe('Start with the airline itself, in writing, with your PNR.')
+    expect(keys(raiseHelp('merchant', refund({ merchant: 'akasa' })).steps)[0]).toBe('stuckhelp.merchant.pageBooking')
     expect(raiseHelp('airsewa', refund({ merchant: 'indigo' })).channel?.href).toBe(AIRSEWA_URL)
+  })
+
+  it('gives the case’s own last day for the RBI Ombudsman, and the postal route', () => {
+    // Complaint 1 Oct, no reply: the bank's 30 days ended 31 Oct, so the last day is 29 Jan 2027.
+    const raised = failed({ steps: [{ kind: 'bank', date: '2026-10-01', ref: null }] })
+    const help = raiseHelp('ombudsman', raised, { today: TODAY })
+    expect(help.steps[0]).toMatchObject({ key: 'stuckhelp.ombudsman.lastDay' })
+    expect(say(help.steps[0] as HelpText)).toMatch(/^File by 29 Jan 2027 at the latest: 90 days from the later of the end of your bank’s 30 days and its last reply/)
+    // A reply before the 30 are up never brings the day forward: complaint and reply on 2 Nov, still 2 Mar 2027.
+    const early = failed({ steps: [{ kind: 'bank', date: TODAY, ref: null }], repliedAt: TODAY })
+    expect(say(raiseHelp('ombudsman', early, { today: TODAY }).steps[0] as HelpText)).toContain('2 Mar 2027')
+    expect(say(raiseHelp('ombudsman', { ...raised, rail: 'wallet' }, { today: TODAY }).steps[0] as HelpText)).toContain('the wallet company’s 30 days')
+    // Before it can be filed (no reply, the 30 days not up), the rule itself.
+    expect(keys(raiseHelp('ombudsman', { ...early, repliedAt: null }, { today: TODAY }).steps)[0]).toBe('stuckhelp.ombudsman.when')
+    const post = help.steps.find((s) => s.key === 'stuckhelp.ombudsman.post') as HelpText
+    expect(say(post)).toBe(
+      'Can’t use the website? Email the complaint to crpc@rbi.org.in, or post it, signed, with copies of your papers to: CRPC, Reserve Bank of India, 4th Floor, Sector 17, Central Vista, Chandigarh 160017.',
+    )
+    // Past the last day, or with no complaint noted: the rule itself.
+    expect(keys(raiseHelp('ombudsman', raised, { today: '2027-01-30' }).steps)[0]).toBe('stuckhelp.ombudsman.when')
+    expect(say(raiseHelp('ombudsman', failed(), { today: TODAY }).steps[0] as HelpText)).toContain('90 days from the later of the end of those 30 days and the bank’s last reply')
   })
 
   it('sends the helpline message on WhatsApp, with 1915, 1800-11-4000 and the website besides', () => {

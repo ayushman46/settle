@@ -2,6 +2,7 @@
 import type { Messages } from '../types'
 
 export const you = {
+  'you.owed.label': 'ನಿಮಗೆ ಬರಬೇಕಾದ ಹಣ',
   'you.shortcuts.label': 'ಶಾರ್ಟ್‌ಕಟ್‌ಗಳು',
   'you.shortcuts.people.title': 'ಜನರು',
   'you.shortcuts.recurring.title': 'ಪುನರಾವರ್ತಿತ ಸ್ಪ್ಲಿಟ್‌ಗಳು',

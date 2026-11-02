@@ -39,6 +39,9 @@ export const app = {
   'app.title.collection': 'Collection',
   'app.title.editCollection': 'Edit collection',
   'app.title.pro': 'Pro',
+  'app.title.stuck': 'Stuck money',
+  'app.title.stuckNew': 'Add stuck money',
+  'app.title.stuckEdit': 'Edit stuck money',
 
   // When the phone won't save (storage full or blocked).
   'app.storage.title': 'This phone isn’t saving your changes',

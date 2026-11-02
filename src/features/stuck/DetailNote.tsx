@@ -10,7 +10,10 @@ import styles from './Stuck.module.css'
 /** As much as a note keeps (the store's limit). */
 const NOTE_MAX = 500
 
-/** Notes on a stuck payment: who you spoke to, what they said, a ticket number — kept with it, on this phone. */
+/**
+ * Notes on a stuck payment: who you spoke to, what they said, a ticket number — kept with it, on
+ * this phone. The sheet counts the characters, and says so when a note reaches what it keeps.
+ */
 export function DetailNote({ payment: s }: { payment: StuckPayment }) {
   const t = useT()
   const headingId = useId()
@@ -58,7 +61,12 @@ function NoteFrame({ open, onClose, payment }: { open: boolean; onClose: () => v
   const t = useT()
   const toast = useToast()
   const fieldId = useId()
+  const countId = useId()
   const [text, setText] = useState(payment.note ?? '')
+  // Named for what the button said (kept while the sheet slides away after saving).
+  const [adding] = useState(() => !payment.note?.trim())
+  // At the limit (a long paste is cut there): said out loud, not just counted.
+  const full = text.length >= NOTE_MAX
 
   const save = (): void => {
     const undo = updateStuck(payment.id, { note: text.trim() || null })
@@ -71,7 +79,7 @@ function NoteFrame({ open, onClose, payment }: { open: boolean; onClose: () => v
     <BottomSheet
       open={open}
       onClose={onClose}
-      title={t('stuck.note.heading')}
+      title={adding ? t('stuck.note.add') : t('stuck.note.edit.aria')}
       footer={
         <ActionBar>
           <Button block iconStart={<Check />} onClick={save}>
@@ -91,8 +99,17 @@ function NoteFrame({ open, onClose, payment }: { open: boolean; onClose: () => v
           value={text}
           maxLength={NOTE_MAX}
           placeholder={t('stuck.note.empty')}
+          aria-describedby={countId}
           onChange={(event) => setText(event.target.value)}
         />
+        <div>
+          <p id={countId} className={styles.fine}>
+            {t('stuck.note.count', { count: text.length, max: NOTE_MAX })}
+          </p>
+          <p className={styles.fieldIssue} aria-live="polite">
+            {full ? t('stuck.note.full', { max: NOTE_MAX }) : null}
+          </p>
+        </div>
       </div>
     </BottomSheet>
   )

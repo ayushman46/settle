@@ -7,7 +7,8 @@ export const home = {
   'home.quick.scan': 'பில் ஸ்கேன்',
   'home.quick.split': 'தொகை பிரி',
   'home.quick.lend': 'கடன் கொடு / வாங்கு',
-  'home.quick.collect': 'பணம் வசூலி',
+  // Collections (pools): chipping in together for a gift, a party or a trip.
+  'home.quick.collect': 'குழு வசூல்',
   'home.quick.sms': 'SMS மூலம்',
   'home.quick.food': 'உணவு ஆர்டர்',
   'home.quick.group': 'புதிய குழு',
@@ -19,10 +20,11 @@ export const home = {
   'home.template.subscription': 'சந்தா',
   'home.template.utilities': 'மின்சாரம், நீர்',
   'home.template.transport': 'கேப்',
-  // The sheet behind the More tile.
+  // The sheet behind the More tile: money back from friends, then from banks and shops, then ways to start a split.
   'home.more.title': 'மேலும்',
   'home.more.subtitle': 'உங்கள் பணத்தைத் திரும்பப் பெறுங்கள், அல்லது ஒரு பிரிப்பைத் தொடங்குங்கள்.',
-  'home.more.back': 'உங்கள் பணத்தைத் திரும்பப் பெறுங்கள்',
+  'home.more.back': 'நண்பர்களிடமிருந்து',
+  'home.more.banks': 'வங்கிகள், கடைகளிடமிருந்து',
   'home.more.split': 'ஒரு பிரிப்பைத் தொடங்குங்கள்',
   'home.more.proof': 'செலுத்திய சான்று',
   // "Just say it" (the describe sheet and the search pill on Home).

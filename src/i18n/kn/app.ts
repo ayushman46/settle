@@ -35,6 +35,9 @@ export const app = {
   'app.title.collection': 'ಸಂಗ್ರಹ',
   'app.title.editCollection': 'ಸಂಗ್ರಹ ಬದಲಿಸಿ',
   'app.title.pro': 'Pro',
+  'app.title.stuck': 'ಸಿಲುಕಿದ ಹಣ',
+  'app.title.stuckNew': 'ಸಿಲುಕಿದ ಹಣ ಸೇರಿಸಿ',
+  'app.title.stuckEdit': 'ಸಿಲುಕಿದ ಹಣ ಬದಲಿಸಿ',
 
   'app.storage.title': 'ಈ ಫೋನ್ ನಿಮ್ಮ ಬದಲಾವಣೆಗಳನ್ನು ಉಳಿಸುತ್ತಿಲ್ಲ',
   'app.storage.body': 'ಇದರ ಸಂಗ್ರಹಣೆ ತುಂಬಿರಬಹುದು ಅಥವಾ ತಡೆಹಿಡಿಯಲಾಗಿರಬಹುದು. ಸ್ವಲ್ಪ ಜಾಗ ಖಾಲಿ ಮಾಡಿ — {brand} ತೆರೆದಿರುವಾಗ ಎಲ್ಲವೂ ಇಲ್ಲೇ ಉಳಿಯುತ್ತದೆ.',

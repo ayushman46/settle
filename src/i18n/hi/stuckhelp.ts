@@ -23,6 +23,7 @@ export const stuckhelp: Messages = {
   'stuckhelp.lead.ombudsman': 'RBI की शिकायत सेवा, जब आपके बैंक ने मामला नहीं सुलझाया हो।',
   'stuckhelp.lead.ombudsmanWallet': 'RBI की शिकायत सेवा, जब वॉलेट कंपनी ने मामला नहीं सुलझाया हो।',
   'stuckhelp.lead.merchant': 'शुरुआत कंपनी से ही करें — लिखकर, ऑर्डर नंबर के साथ।',
+  'stuckhelp.lead.airline': 'शुरुआत एयरलाइन से ही करें — लिखकर, अपने PNR के साथ।',
   'stuckhelp.lead.nch': 'सरकार की हेल्पलाइन आपकी शिकायत आपकी ओर से कंपनी तक पहुँचाती है।',
   'stuckhelp.lead.airsewa': 'एयरलाइन की शिकायतों के लिए नागरिक उड्डयन मंत्रालय का पोर्टल।',
   'stuckhelp.lead.commission': 'उपभोक्ता आयोग (कंज़्यूमर कोर्ट) मामले का फ़ैसला करता है। शिकायत ऑनलाइन दर्ज होती है।',
@@ -58,11 +59,15 @@ export const stuckhelp: Messages = {
   'stuckhelp.compensation.sendWallet': 'नीचे वाला पत्र वॉलेट कंपनी के शिकायत अधिकारी को भेजें: ईमेल से, या उसके ऐप के हेल्प सेक्शन से।',
   'stuckhelp.compensation.why': 'RBI के नियमों के हिसाब से यह बिना माँगे मिलना चाहिए। पत्र इसे लिखकर माँगता है, दिन गिनकर।',
 
-  // The RBI Ombudsman ({phone}: 14448; {issuer}: "Paytm Payments Bank Ltd").
+  // The RBI Ombudsman ({phone}: 14448; {issuer}: "Paytm Payments Bank Ltd"; {email}: crpc@rbi.org.in; {address}: the RBI's postal address, in English).
   'stuckhelp.ombudsman.when':
-    'बैंक से शिकायत के 30 दिन बाद आप शिकायत दर्ज कर सकते हैं (बैंक ने जवाब दिया और आप संतुष्ट नहीं, तो पहले भी), और उसके बाद 90 दिन के अंदर।',
+    'बैंक से शिकायत के 30 दिन बाद आप शिकायत दर्ज कर सकते हैं (बैंक ने जवाब दिया और आप संतुष्ट नहीं, तो पहले भी)। फिर आपके पास 90 दिन होते हैं — ये 30 दिन पूरे होने या बैंक के आख़िरी जवाब से, जो भी बाद में हो।',
   'stuckhelp.ombudsman.whenWallet':
-    'वॉलेट कंपनी से शिकायत के 30 दिन बाद आप शिकायत दर्ज कर सकते हैं (कंपनी ने जवाब दिया और आप संतुष्ट नहीं, तो पहले भी), और उसके बाद 90 दिन के अंदर।',
+    'वॉलेट कंपनी से शिकायत के 30 दिन बाद आप शिकायत दर्ज कर सकते हैं (कंपनी ने जवाब दिया और आप संतुष्ट नहीं, तो पहले भी)। फिर आपके पास 90 दिन होते हैं — ये 30 दिन पूरे होने या कंपनी के आख़िरी जवाब से, जो भी बाद में हो।',
+  // This case's last day ({date}: "2 Mar 2027"; {kind}: bank or wallet).
+  'stuckhelp.ombudsman.lastDay':
+    '{kind, select, wallet {ज़्यादा से ज़्यादा {date} तक शिकायत दर्ज करें: वॉलेट कंपनी के 30 दिन पूरे होने या उसके आख़िरी जवाब से, जो भी बाद में हो, 90 दिन (RBI एकीकृत लोकपाल योजना, 2026)।} other {ज़्यादा से ज़्यादा {date} तक शिकायत दर्ज करें: आपके बैंक के 30 दिन पूरे होने या उसके आख़िरी जवाब से, जो भी बाद में हो, 90 दिन (RBI एकीकृत लोकपाल योजना, 2026)।}}',
+  'stuckhelp.ombudsman.post': 'वेबसाइट इस्तेमाल नहीं कर पा रहे? शिकायत {email} पर ईमेल करें, या उस पर दस्तख़त करके, अपने काग़ज़ों की कॉपी के साथ इस पते पर डाक से भेजें: {address}।',
   'stuckhelp.ombudsman.file': 'cms.rbi.org.in पर अपने बैंक के ख़िलाफ़ शिकायत दर्ज करें। फ़ॉर्म के लिए जानकारी नीचे है।',
   'stuckhelp.ombudsman.fileWallet': 'cms.rbi.org.in पर {issuer} के ख़िलाफ़ शिकायत दर्ज करें — यही कंपनी यह वॉलेट चलाती है। फ़ॉर्म के लिए जानकारी नीचे है।',
   'stuckhelp.ombudsman.fileWalletAny': 'cms.rbi.org.in पर वॉलेट चलाने वाली कंपनी के ख़िलाफ़ शिकायत दर्ज करें। फ़ॉर्म के लिए जानकारी नीचे है।',
@@ -85,6 +90,11 @@ export const stuckhelp: Messages = {
   'stuckhelp.merchant.page': '{name} का हेल्प पेज खोलें, यह ऑर्डर ढूँढें और वहीं से सपोर्ट से संपर्क करें।',
   'stuckhelp.merchant.app': '{name} के ऐप या वेबसाइट में यह ऑर्डर खोलें और वहीं से सपोर्ट से संपर्क करें।',
   'stuckhelp.merchant.unknown': 'कंपनी के सपोर्ट से संपर्क करें, हो सके तो ऑर्डर से ही।',
+  // An airline: a booking, not an order.
+  'stuckhelp.merchant.pageBooking': '{name} का हेल्प पेज खोलें, यह बुकिंग ढूँढें और वहीं से सपोर्ट से संपर्क करें।',
+  'stuckhelp.merchant.appBooking': '{name} के ऐप या वेबसाइट में यह बुकिंग खोलें और वहीं से सपोर्ट से संपर्क करें।',
+  'stuckhelp.merchant.nodal': 'कुछ दिन में जवाब नहीं आया? अपने PNR और टिकट नंबर के साथ {name} के शिकायत वाले नोडल अधिकारी को लिखें (संपर्क उसकी वेबसाइट पर मिलेगा)।',
+  'stuckhelp.merchant.nodalAny': 'कुछ दिन में जवाब नहीं आया? अपने PNR और टिकट नंबर के साथ एयरलाइन के शिकायत वाले नोडल अधिकारी को लिखें (संपर्क उसकी वेबसाइट पर मिलेगा)।',
   'stuckhelp.merchant.paste': 'नीचे वाला मैसेज पेस्ट करें और टिकट नंबर माँगें।',
   // Settle's own advice (a week), not the law's month.
   'stuckhelp.merchant.nextNch': 'उन्हें एक हफ़्ता दें। फिर भी न सुलझे? आप राष्ट्रीय उपभोक्ता हेल्पलाइन के पास जा सकते हैं; पूरे महीने का इंतज़ार ज़रूरी नहीं।',
@@ -124,8 +134,10 @@ export const stuckhelp: Messages = {
   'stuckhelp.links.aria': 'उन तक पहुँचने के और तरीके',
   'stuckhelp.newTab': '{label} (नए टैब में खुलेगा)',
 
-  // The sheet.
+  // The sheet. Above the title, what's still owed ({amount}, {rest}, {owed}: "₹49"; {name}: who it was paid to, or the business).
   'stuckhelp.eyebrow': '{amount} · {name}',
+  'stuckhelp.eyebrow.part': '{amount} में से {rest} बाकी · {name}',
+  'stuckhelp.eyebrow.owed': 'देरी के बदले {owed} · {name}',
   'stuckhelp.party.failed': 'फ़ेल पेमेंट',
   'stuckhelp.party.refund': 'रिफ़ंड',
   'stuckhelp.how.heading': 'कहाँ और कैसे',
@@ -145,12 +157,16 @@ export const stuckhelp: Messages = {
   'stuckhelp.field.copy': '{field} कॉपी करें',
   'stuckhelp.field.copied': '{field} कॉपी हो गया',
 
-  // Your details for letters: asked once, kept on this phone. The letters are in English, so the example stays in English letters.
+  // Your details for letters: asked once, kept on this phone. The name and UPI ID go to your profile.
   'stuckhelp.me.heading': 'आपकी जानकारी',
   'stuckhelp.me.hint': 'Settle इन्हें पत्र में डालता है। ये इसी फ़ोन पर रहती हैं, कहीं भेजी नहीं जातीं।',
+  'stuckhelp.me.name': 'आपका नाम',
   'stuckhelp.me.mobile': 'मोबाइल नंबर',
+  'stuckhelp.me.upi': 'आपकी UPI ID (ज़रूरी नहीं)',
+  'stuckhelp.me.upiHint': 'इससे बैंक को UPI पेमेंट ढूँढने में मदद मिलती है। Settle इसे आपकी प्रोफ़ाइल में सेव करता है।',
   'stuckhelp.me.place': 'शहर और राज्य',
-  'stuckhelp.me.placeExample': 'Pune, Maharashtra',
+  // Under the empty field, so it never looks filled in. The letters are in English, so the example stays in English letters.
+  'stuckhelp.me.placeExample': 'जैसे: Pune, Maharashtra',
   'stuckhelp.me.address': 'पता (ज़रूरी नहीं)',
   'stuckhelp.me.change': 'बदलें',
   'stuckhelp.me.changeLabel': 'अपनी जानकारी बदलें',
@@ -169,17 +185,31 @@ export const stuckhelp: Messages = {
     '{kind, select, wallet {वॉलेट कंपनी का शिकायत वाला ईमेल, जो उसके ऐप के हेल्प में मिलेगा।} business {कंपनी का सपोर्ट ईमेल, अगर हो।} other {आपके बैंक का शिकायत वाला ईमेल, जो उसकी वेबसाइट या ऐप में मिलेगा।}} Settle इसे इसी फ़ोन पर याद रखता है।',
   'stuckhelp.email.crpc': 'ईमेल RBI के शिकायत केंद्र को जाता है: {email}',
 
+  // The payment's reference, when it wasn't saved ({kind}: upi, imps, wallet, nach or other).
+  'stuckhelp.ref.label':
+    '{kind, select, upi {UPI रेफ़रेंस (12 अंक)} imps {IMPS रेफ़रेंस (12 अंक)} wallet {वॉलेट ट्रांज़ैक्शन ID} nach {मैंडेट (UMRN) या डेबिट रेफ़रेंस} other {ट्रांज़ैक्शन रेफ़रेंस}}',
+  'stuckhelp.ref.hint': 'बैंक के SMS में, या अपने ऐप में इस पेमेंट पर मिलेगा। Settle इसे इस पेमेंट के साथ सेव करता है।',
+
   // The letter's box: {kind} is letter, message or summary.
   'stuckhelp.letter.heading': '{kind, select, message {मैसेज} summary {सारांश} other {पत्र}}',
   'stuckhelp.letter.blanks':
     '{count, plural, one {[ब्रैकेट] वाला # हिस्सा अभी भरना बाकी है। भेजने से पहले उसे भर दें।} other {[ब्रैकेट] वाले # हिस्से अभी भरने बाकी हैं। भेजने से पहले उन्हें भर दें।}}',
   'stuckhelp.letter.actions': 'पत्र भेजें',
+  // Sending while a [bracket] is still empty: said first ({count}: how many; {action}: copy, share, print, email or send).
+  'stuckhelp.blanks.title': '{count, plural, one {# हिस्सा अभी खाली है} other {# हिस्से अभी खाली हैं}}',
+  'stuckhelp.blanks.description':
+    '{count, plural, one {वह [ब्रैकेट] में दिखाया गया है। पहले उसे भर दें, या जैसा है वैसा भेज दें और जहाँ पेस्ट करें, वहाँ भर दें।} other {वे [ब्रैकेट] में दिखाए गए हैं। पहले उन्हें भर दें, या जैसा है वैसा भेज दें और जहाँ पेस्ट करें, वहाँ भर दें।}}',
+  'stuckhelp.blanks.list': 'अभी खाली',
+  'stuckhelp.blanks.fill': '{count, plural, one {उसे भरें} other {उन्हें भरें}}',
+  'stuckhelp.blanks.anyway': '{action, select, copy {फिर भी कॉपी करें} share {फिर भी शेयर करें} print {फिर भी प्रिंट करें} email {फिर भी ईमेल करें} other {फिर भी भेजें}}',
   // Above the letter, in the app's language: what it asks for ({amount}, {compensation}, {total}: "₹500").
   'stuckhelp.summary.reverse': 'इसमें {amount} वापस माँगे गए हैं, और देरी के हर दिन के ₹100।',
   'stuckhelp.summary.reverseOwed': 'इसमें {amount} वापस माँगे गए हैं, और देरी के बदले अब तक बने {compensation} (हर दिन ₹100)।',
   'stuckhelp.summary.compensation': 'इसमें उन दिनों के {compensation} माँगे गए हैं जितने दिन पैसे देर से आए (हर दिन ₹100)।',
   'stuckhelp.summary.compensationAny': 'इसमें उन दिनों का मुआवज़ा माँगा गया है जितने दिन पैसे देर से आए (हर दिन ₹100)।',
   'stuckhelp.summary.ombudsman': 'यह RBI लोकपाल को बताता है कि क्या हुआ और आपकी शिकायत पर क्या हुआ, और अब तक बने {total} माँगता है।',
+  'stuckhelp.summary.ombudsmanBoth':
+    'यह RBI लोकपाल को बताता है कि क्या हुआ और आपकी शिकायत पर क्या हुआ, और आपके {amount} वापस माँगता है, साथ में देरी के बदले अब तक बने {compensation} (हर दिन ₹100)।',
   'stuckhelp.summary.ombudsmanAny': 'यह RBI लोकपाल को बताता है कि क्या हुआ और आपकी शिकायत पर क्या हुआ, और जो आपको मिलना है, वह माँगता है।',
   'stuckhelp.summary.refund': 'इसमें आपके {amount} का रिफ़ंड माँगा गया है — या, अगर वह भेजा जा चुका है, तो उसका रेफ़रेंस नंबर, ताकि आप उसका पता लगा सकें।',
   'stuckhelp.summary.confirm': 'इसमें उनसे लिखकर पुष्टि माँगी गई है कि आपके {amount} उन तक पहुँचे या नहीं, ताकि आप अपने बैंक को दिखा सकें।',
@@ -203,6 +233,8 @@ export const stuckhelp: Messages = {
   'stuckhelp.raised.ref': '{kind, select, merchant {टिकट नंबर} nch {डॉकेट नंबर} airsewa {रेफ़रेंस नंबर} commission {केस नंबर} other {शिकायत नंबर}}',
   'stuckhelp.raised.refHint': 'ज़रूरी नहीं, अगर मिला हो तो',
   'stuckhelp.raised.save': 'सेव करें',
+  // Not "Back": in a money app that reads as money returned ({kind}: letter, message or summary).
+  'stuckhelp.raised.back': '{kind, select, message {मैसेज पर लौटें} summary {सारांश पर लौटें} other {पत्र पर लौटें}}',
   // {date}: "2 Nov"; {name}: the business.
   'stuckhelp.raised.toast':
     '{kind, select, bank {नोट किया: {date} को अपने बैंक से शिकायत की} ombudsman {नोट किया: {date} को RBI लोकपाल के पास ले गए} merchant {नोट किया: {date} को {name} से शिकायत की} nch {नोट किया: {date} को राष्ट्रीय उपभोक्ता हेल्पलाइन पर शिकायत की} airsewa {नोट किया: {date} को AirSewa पर शिकायत की} other {नोट किया: {date} को उपभोक्ता आयोग में शिकायत दर्ज की}}',

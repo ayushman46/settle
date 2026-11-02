@@ -203,7 +203,7 @@ test.describe('stuck money', () => {
     // Its page: the deadline, the days late, what the wait is worth — the clock in date order.
     await expect(page).toHaveURL(/\/app\/stuck\/[^/]+$/)
     await expect(page.getByText('Tracking it — Settle will count the days')).toBeVisible()
-    await expect(page.getByRole('heading', { level: 1, name: 'Swiggy' })).toBeVisible()
+    await expect(page.getByRole('heading', { level: 1, name: 'Failed payment to Swiggy' })).toBeVisible()
     await expect(page.getByText('UPI to a shop · HDFC ••4821 · GPay', { exact: true })).toBeVisible()
     await expect(nowCard(page)).toContainText('3 days late — your bank owes you ₹300')
     await expect(nowCard(page)).toContainText(
@@ -282,7 +282,7 @@ test.describe('stuck money', () => {
     await expect(backSheet).toContainText('The RBI’s rules say ₹300: 3 days late at ₹100 a day.')
     await backSheet.getByRole('button', { name: 'Mark it back' }).click()
     await expect(page.getByText('Your ₹649 to Swiggy is back in your account — 3 days late, so your bank owes you ₹300 for the wait')).toBeVisible()
-    await expect(nowCard(page)).toContainText('Your ₹649 is back. Your bank still owes ₹300 for the wait')
+    await expect(nowCard(page)).toContainText('Your ₹649 is back — your bank still owes ₹300 for the wait')
     await expect(nowCard(page).getByRole('button', { name: 'They’ve paid the ₹300' })).toBeVisible()
     await page.getByRole('button', { name: /^Undo: Your ₹649 to Swiggy is back in your account/ }).click()
     await expect(nowCard(page).getByRole('button', { name: 'It’s back' })).toBeVisible()
@@ -295,7 +295,7 @@ test.describe('stuck money', () => {
     const burst = page.getByRole('dialog', { name: 'All back!' })
     await expect(burst).toContainText('₹949')
     await expect(burst).toContainText('Failed payment to Swiggy')
-    await expect(page.getByText('Your ₹649 to Swiggy is back in your account', { exact: true })).toBeVisible()
+    await expect(page.getByText('Your ₹649 to Swiggy is back in your account · plus ₹300 for the wait', { exact: true })).toBeVisible()
     await expect(burst).toBeHidden()
     await expect(nowCard(page)).toHaveCount(0)
     await expect(winCard(page)).toContainText('You got ₹649 back, plus ₹300 for the wait')
@@ -305,7 +305,7 @@ test.describe('stuck money', () => {
     await expect(clockCard(page)).toContainText('+₹300 for the wait, paid')
     await winCard(page).getByRole('button', { name: 'Share the win' }).click()
     const brag = (await shared()).sheets.at(-1)?.text ?? ''
-    expect(brag).toBe('HDFC paid me ₹300 for the days my money was stuck — the RBI’s ₹100-a-day rule, claimed with Settle.')
+    expect(brag).toBe('My bank paid me ₹300 for the days my money was stuck — the RBI’s ₹100-a-day rule, claimed with Settle.\nhttps://settleupi.vercel.app')
 
     // The list: under "Got back", and nothing stuck.
     await back(page).click()
@@ -316,7 +316,8 @@ test.describe('stuck money', () => {
     await expect(anySection(page, 'Not due yet')).toHaveCount(0)
     await expect(summary(page)).toContainText('Nothing stuck right now')
     await expect(summary(page)).toContainText('Got back so far')
-    await expect(summary(page)).toContainText('₹949')
+    // The money and the compensation, apart: never one mixed-up total.
+    await expect(summary(page)).toContainText('₹649 · +₹300 for the wait')
   })
 
   test('a Flipkart refund past the promised day: asked of Flipkart, with the ticket number, then back in two parts', async ({ page, shared }) => {
@@ -333,7 +334,7 @@ test.describe('stuck money', () => {
     await page.getByRole('textbox', { name: 'Order or booking number (optional)' }).fill('OD432198765432100')
     await page.getByRole('button', { name: 'Start tracking' }).click()
 
-    await expect(page.getByRole('heading', { level: 1, name: 'Flipkart' })).toBeVisible()
+    await expect(page.getByRole('heading', { level: 1, name: 'Flipkart refund' })).toBeVisible()
     // The day it started is the day it started — as Add asked it and the clock says it — not a promise (that's "They said by").
     const facts = page.getByRole('region', { name: 'Details' })
     await expect(facts).toContainText(/They said by\s*28 Oct/)
@@ -354,7 +355,9 @@ test.describe('stuck money', () => {
     await expect(message).toContainText('It asks for your ₹1,299 refund, or its reference number if it was already sent, so you can trace it.')
     await expect(message).toContainText('Subject: Refund of ₹1,299 for order OD432198765432100 not received')
     await expect(message).toContainText('You said it would reach me by 28 October 2026. It is now 5 days past that date, and the money has not reached my account.')
+    // A blank left ([your mobile number]): asked first, then copied anyway.
     await sheet.getByRole('button', { name: 'Copy the message' }).click()
+    await page.getByRole('dialog', { name: '1 part is still empty' }).getByRole('button', { name: 'Copy it anyway' }).click()
     expect((await shared()).clipboard.at(-1) ?? '').toContain('Order / booking number: OD432198765432100')
 
     await noteRaised(page, 'Ticket number', 'FK-88231')
@@ -372,13 +375,13 @@ test.describe('stuck money', () => {
     await expect(backSheet).toContainText('₹299 still to come')
     await backSheet.getByRole('button', { name: 'Mark it back' }).click()
     await expect(page.getByText('₹1,000 of ₹1,299 from Flipkart is back — ₹299 still to come')).toBeVisible()
-    await expect(page.getByText('₹1,000 back · ₹299 still to come', { exact: true })).toBeVisible()
+    await expect(page.getByText('Still to come · ₹1,000 of ₹1,299 came back', { exact: true })).toBeVisible()
     await expect(nowCard(page)).toContainText('Raised with Flipkart on 2 Nov')
     await expect(nowCard(page)).toContainText('₹1,000 of ₹1,299 came back on 2 Nov. The other ₹299 is still to come.')
     await expect(clockCard(page)).toContainText('Part back · ₹1,000 of ₹1,299')
     await back(page).click()
     const waiting = section(page, 'Waiting on them', 1)
-    await expect(waiting).toContainText('Flipkart refund · Order …5432100')
+    await expect(waiting).toContainText('Flipkart refund Order …5432100')
     await expect(waiting).toContainText('Part back · ₹299 still to come · Raised with Flipkart · 5 days late · give them till 9 Nov')
     await expect(summary(page)).toContainText('₹299')
 
@@ -386,14 +389,14 @@ test.describe('stuck money', () => {
     await waiting.getByRole('button', { name: /^Flipkart refund/ }).click()
     await nowCard(page).getByRole('button', { name: 'More came back' }).click()
     const more = page.getByRole('dialog', { name: 'More came back' })
-    await expect(more).toContainText('Flipkart · ₹1,000 of ₹1,299 back so far')
+    await expect(more).toContainText('Flipkart refund · ₹1,000 of ₹1,299 back so far')
     await expect(more.getByRole('textbox', { name: 'How much came back this time?' })).toHaveValue('299')
     await more.getByRole('button', { name: 'Mark it back' }).click()
-    await expect(page.getByText('₹1,299 from Flipkart is back', { exact: true })).toBeVisible()
+    await expect(page.getByText('The last ₹299 from Flipkart is back — all ₹1,299 returned', { exact: true })).toBeVisible()
     await expect(winCard(page)).toContainText('You got ₹1,299 back')
     await expect(winCard(page)).toContainText('It came back on 2 Nov, 5 days late.')
     await winCard(page).getByRole('button', { name: 'Share the win' }).click()
-    expect((await shared()).sheets.at(-1)?.text).toBe('Got my ₹1,299 refund from Flipkart — Settle counted the days and told me who to ask.')
+    expect((await shared()).sheets.at(-1)?.text).toBe('Got my ₹1,299 refund from Flipkart — Settle counted the days and told me who to ask.\nhttps://settleupi.vercel.app')
   })
 
   test('a week after asking Flipkart, the National Consumer Helpline is next: WhatsApp, the message typed in', async ({ page }) => {
@@ -409,7 +412,7 @@ test.describe('stuck money', () => {
     })
     await open(page, '/app/stuck', [flipkart])
     const needs = section(page, 'Needs you', 1)
-    await expect(needs).toContainText('Flipkart refund · Order …5432100')
+    await expect(needs).toContainText('Flipkart refund Order …5432100')
     await expect(needs).toContainText('12 days late · take it to the National Consumer Helpline')
     await needs.getByRole('button', { name: /^Flipkart refund/ }).click()
 
@@ -475,7 +478,7 @@ test.describe('stuck money', () => {
     await expect(paidWith.getByRole('textbox', { name: 'Last 4 digits of your account' })).toHaveValue('4821')
     await page.getByRole('button', { name: 'Start tracking' }).click()
 
-    await expect(page.getByRole('heading', { level: 1, name: 'Swiggy' })).toBeVisible()
+    await expect(page.getByRole('heading', { level: 1, name: 'Failed payment to Swiggy' })).toBeVisible()
     await expect(nowCard(page)).toContainText('Nothing to do yet')
     await expect(nowCard(page)).toContainText('Your bank has till 4 Nov to put it back.')
     await expect(nowCard(page).getByRole('button', { name: 'Remind me on 5 Nov' })).toBeVisible()
@@ -513,7 +516,7 @@ test.describe('stuck money', () => {
     const needs = section(page, 'Needs you', 1)
     await expect(needs).toContainText('Back 5 days late · your bank owes you ₹500')
     await needs.getByRole('button', { name: /^Failed payment to Riya Sharma/ }).click()
-    await expect(page.getByText('Back · your bank still owes ₹500 for the wait', { exact: true })).toBeVisible()
+    await expect(page.getByText('For the wait · your ₹499 is back', { exact: true })).toBeVisible()
     await expect(nowCard(page)).toContainText('Back, but 5 days late')
     await expect(nowCard(page)).toContainText('The RBI’s rules say your bank owes you ₹500 for the wait, paid without being asked. If it hasn’t come, claim it.')
     await expect(nowCard(page).getByRole('button', { name: 'Claim ₹500 from your bank' })).toBeVisible()
@@ -530,12 +533,15 @@ test.describe('stuck money', () => {
     await expect(found.getByRole('checkbox', { name: /^Amazon · ₹1,299/ })).toBeChecked()
     await expect(found.getByRole('button', { name: 'Check first: Swiggy' })).toBeVisible()
     await expect(sheet.getByText('2 messages skipped (OTP, money in)')).toBeVisible()
+    // Neither message prints its day: asked, never assumed.
+    await expect(sheet.getByRole('button', { name: 'Track these 2' })).toBeDisabled()
+    await sheet.getByRole('group', { name: '2 messages don’t say the day — when did they come?' }).getByRole('button', { name: 'Today' }).click()
     await sheet.getByRole('button', { name: 'Track these 2' }).click()
     await expect(sheet).toBeHidden()
     await expect(page.getByText('Tracking 2 stuck payments — Settle will count the days')).toBeVisible()
     // The failure didn't say the money left: it's asked. Amazon's "3-5 business days" runs to Mon 9 Nov.
     await expect(section(page, 'Needs you', 1)).toContainText('Failed payment to Swiggy Did ₹649 leave your account?')
-    await expect(section(page, 'Not due yet', 1)).toContainText('Amazon refund · Order …1234567 Due back by 9 Nov')
+    await expect(section(page, 'Not due yet', 1)).toContainText('Amazon refund Order …1234567 Due back by 9 Nov')
     await expect(summary(page)).toContainText('Banks and shops owe you₹1,299')
 
     await page.getByRole('button', { name: /^Undo: Tracking 2 stuck payments/ }).click()
@@ -582,31 +588,31 @@ test.describe('stuck money', () => {
     await expect(section(page, 'Needs you', 1)).not.toContainText('Riya Sharma')
     await expect(section(page, 'Set aside', 2)).toContainText('Failed payment to Riya Sharma Set aside')
 
-    // Home: the card says what's owed and opens the list.
+    // Home: the card names the most urgent one, says how many more, and opens the list.
     await back(page).click()
     await expect(page).toHaveURL(/\/app$/)
     const card = page.getByRole('region', { name: 'Stuck money' })
-    await expect(card).toContainText('₹5,149 stuck with banks and shops')
-    await expect(card).toContainText('1 to act on · ₹300 owed for the wait')
+    await expect(card).toContainText('Failed payment to Swiggy · ₹649')
+    await expect(card).toContainText('3 days late · your bank owes you ₹300 · + 1 more')
     await card.getByRole('button').click()
     await expect(page).toHaveURL(/\/app\/stuck$/)
 
-    // Home's grid has the tile.
+    // Home's grid leaves it to the card (the tile is for finding it before anything's stuck), and New group keeps its tile.
     await back(page).click()
-    await page.getByRole('list', { name: 'Quick actions' }).getByRole('button', { name: 'Stuck money', exact: true }).click()
-    await expect(page).toHaveURL(/\/app\/stuck$/)
+    const grid = page.getByRole('list', { name: 'Quick actions' })
+    await expect(grid.getByRole('button', { name: 'New group', exact: true })).toBeVisible()
+    await expect(grid.getByRole('button', { name: 'Stuck money', exact: true })).toHaveCount(0)
 
-    // Home's More sheet has it too, first among the ways to get your money back.
-    await back(page).click()
-    await page.getByRole('list', { name: 'Quick actions' }).getByRole('button', { name: 'More', exact: true }).click()
+    // Home's More sheet has it, as the money back from banks and shops.
+    await grid.getByRole('button', { name: 'More', exact: true }).click()
     const moreSheet = page.getByRole('dialog', { name: 'More' })
-    await moreSheet.getByRole('region', { name: 'Get your money back' }).getByRole('button', { name: 'Stuck money', exact: true }).click()
+    await moreSheet.getByRole('region', { name: 'From banks and shops' }).getByRole('button', { name: 'Stuck money', exact: true }).click()
     await expect(page).toHaveURL(/\/app\/stuck$/)
     await expect(page.getByRole('heading', { level: 1, name: 'Stuck money' })).toBeVisible()
 
-    // You → Shortcuts.
+    // You → Money owed to you.
     await page.goto('/app/you')
-    const row = page.getByRole('list', { name: 'Shortcuts' }).getByRole('button', { name: /^Stuck money/ })
+    const row = page.getByRole('list', { name: 'Money owed to you' }).getByRole('button', { name: /^Stuck money/ })
     await expect(row).toContainText('₹5,149 with banks and shops')
     await row.click()
     await expect(page).toHaveURL(/\/app\/stuck$/)
@@ -614,11 +620,11 @@ test.describe('stuck money', () => {
 
   test('deleting one is asked first, offers to set it aside instead, and has Undo', async ({ page }) => {
     await open(page, '/app/stuck/swiggy', MIX)
-    await expect(page.getByRole('heading', { level: 1, name: 'Swiggy' })).toBeVisible()
+    await expect(page.getByRole('heading', { level: 1, name: 'Failed payment to Swiggy' })).toBeVisible()
     const deleteFromMenu = async (): Promise<Locator> => {
       await page.getByRole('button', { name: 'More options' }).click()
-      await page.getByRole('dialog', { name: 'Swiggy' }).getByRole('button', { name: 'Delete' }).click()
-      return page.getByRole('dialog', { name: 'Delete Swiggy?' })
+      await page.getByRole('dialog', { name: /^Failed payment to Swiggy/ }).getByRole('button', { name: 'Delete' }).click()
+      return page.getByRole('dialog', { name: 'Delete “Failed payment to Swiggy”?' })
     }
 
     // Asked first: Keep it changes nothing.
@@ -626,16 +632,16 @@ test.describe('stuck money', () => {
     await expect(confirm).toContainText('It goes from this phone for good. Just not worth chasing? Set it aside instead — it stays here, not counted.')
     await confirm.getByRole('button', { name: 'Keep it' }).click()
     await expect(confirm).toBeHidden()
-    await expect(page.getByRole('heading', { level: 1, name: 'Swiggy' })).toBeVisible()
+    await expect(page.getByRole('heading', { level: 1, name: 'Failed payment to Swiggy' })).toBeVisible()
 
     // Delete: the list, without it — and Undo puts it back.
     confirm = await deleteFromMenu()
     await confirm.getByRole('button', { name: 'Delete' }).click()
     await expect(page).toHaveURL(/\/app\/stuck$/)
-    await expect(page.getByText('Swiggy deleted')).toBeVisible()
+    await expect(page.getByText('Failed payment to Swiggy deleted')).toBeVisible()
     await expect(section(page, 'Needs you', 1)).not.toContainText('Swiggy')
     await expect(summary(page)).toContainText('₹4,500')
-    await page.getByRole('button', { name: /^Undo: Swiggy deleted/ }).click()
+    await page.getByRole('button', { name: /^Undo: Failed payment to Swiggy deleted/ }).click()
     await expect(section(page, 'Needs you', 2)).toContainText('Failed payment to Swiggy')
     await expect(summary(page)).toContainText('₹5,149')
   })
@@ -648,7 +654,7 @@ test.describe('stuck money', () => {
     await expect(needs).toContainText('Failed payment to Zomato 3 days late')
     await expect.soft(needs, 'the list row names who owes the wait').not.toContainText('your bank')
     await needs.getByRole('button', { name: /^Failed payment to Zomato/ }).click()
-    await expect(page.getByText('Wallet · Paytm', { exact: true })).toBeVisible()
+    await expect(page.getByText('Wallet balance, same wallet · Paytm', { exact: true })).toBeVisible()
     await expect(nowCard(page)).toContainText('3 days late')
     await expect(nowCard(page)).toContainText('Raise it with Paytm.')
     await expect.soft(nowCard(page), '"What to do now" names who owes the wait').not.toContainText('your bank')
@@ -702,14 +708,14 @@ test.describe('stuck money', () => {
     test('a payment’s page', async ({ page }) => {
       await open(page, '/app/stuck', MIX)
       await section(page, 'Needs you', 2).getByRole('button', { name: /^Failed payment to Swiggy/ }).click()
-      await expect(page.getByRole('heading', { level: 1, name: 'Swiggy' })).toBeVisible()
+      await expect(page.getByRole('heading', { level: 1, name: 'Failed payment to Swiggy' })).toBeVisible()
       await expectFits320(page, page.getByRole('main'))
       await expectAccessible(page)
     })
 
     test('the raise sheet, with its letter', async ({ page }) => {
       await open(page, '/app/stuck/swiggy', MIX)
-      await expect(page.getByRole('heading', { level: 1, name: 'Swiggy' })).toBeVisible()
+      await expect(page.getByRole('heading', { level: 1, name: 'Failed payment to Swiggy' })).toBeVisible()
       await nowCard(page).getByRole('button', { name: 'Raise it with your bank' }).click()
       const sheet = page.getByRole('dialog', { name: 'Raise it with your bank' })
       await expect(sheet.getByRole('region', { name: 'The letter' })).toBeVisible()

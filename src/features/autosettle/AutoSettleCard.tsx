@@ -38,7 +38,7 @@ export function AutoSettleCard() {
           </span>
           <div className={styles.text}>
             <h2 className={styles.title}>{t('autosettle.on.title')}</h2>
-            <p className={styles.body}>{t('autosettle.on.text')}</p>
+            <p className={styles.body}>{t(status.sms ? 'autosettle.on.text' : 'autosettle.on.text.noSms')}</p>
           </div>
           <Button size="sm" variant="ghost" onClick={() => setOpen(true)}>
             {t('autosettle.manage')}
@@ -72,12 +72,15 @@ export function AutoSettleCard() {
 export function AutoSettleSheet({ open, onClose, status, onChanged }: { open: boolean; onClose: () => void; status: AutoSettleStatus; onChanged: () => void }) {
   const t = useT()
   const toast = useToast()
-  const [sms, setSms] = useState(status.sms)
-  const [seen, setSeen] = useState(status.sms)
+  // Before it's on, bank SMS starts on — most failed payments and money coming back are only told by
+  // SMS — and the person can switch it off before allowing. Once it's on: the phone's setting.
+  const chosen = status.granted ? status.sms : true
+  const [sms, setSms] = useState(chosen)
+  const [seen, setSeen] = useState(chosen)
   // Follow the phone's setting when it changes (back from Android's settings).
-  if (seen !== status.sms) {
-    setSeen(status.sms)
-    setSms(status.sms)
+  if (seen !== chosen) {
+    setSeen(chosen)
+    setSms(chosen)
   }
 
   const allow = async () => {

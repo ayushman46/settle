@@ -2,17 +2,17 @@ import { useState } from 'react'
 import { QuickAction, QuickActionGrid } from '../../components'
 import { useT } from '../../i18n'
 import { MoreActionsSheet } from './MoreActionsSheet'
-import { homeGridActions } from './quickActions'
+import { homeGridActions, type GridOptions } from './quickActions'
 
 /**
  * Home's grid of colourful quick actions: scan, split and what's switched on (lend, collect, SMS,
- * food order), a group, everyday templates to fill two rows, and More for the rest (see
- * `quickActions.ts`).
+ * food order), Stuck money until Home has its card, a group, everyday templates to fill two rows,
+ * and More for the rest (see `quickActions.ts`).
  */
-export function HomeQuickActions() {
+export function HomeQuickActions({ stuckCard = false }: GridOptions) {
   const t = useT()
   const [moreOpen, setMoreOpen] = useState(false)
-  const actions = homeGridActions(() => setMoreOpen(true))
+  const actions = homeGridActions(() => setMoreOpen(true), { stuckCard })
   return (
     <>
       <QuickActionGrid label={t('home.quick.label')}>
@@ -20,7 +20,7 @@ export function HomeQuickActions() {
           <QuickAction key={id} icon={<Icon />} label={label} tone={tone} onClick={run} />
         ))}
       </QuickActionGrid>
-      <MoreActionsSheet open={moreOpen} onClose={() => setMoreOpen(false)} />
+      <MoreActionsSheet open={moreOpen} onClose={() => setMoreOpen(false)} stuckCard={stuckCard} />
     </>
   )
 }

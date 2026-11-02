@@ -84,7 +84,8 @@ const URL_PATTERN = /\b(?:https?:\/\/|www\.)\S+|\b[a-z0-9-]+\.(?:com|in|co|io|ly
  */
 const OTP = /\b(?:otp|one[\s-]?time[\s-]?password|verification code|passcode)\b|ओटीपी/i
 const REQUEST = /\b(?:has requested|requested (?:rs\.?|inr|₹)|requested ₹|collect request|requesting (?:rs\.?|inr|₹)|payment request)/i
-const FAILED = /\b(?:failed|declined|unsuccessful|could not be (?:processed|completed)|was not successful|has been rejected|payment failed)\b|विफल|असफल|अस्वीकृत/i
+/** Failed — and a debit the bank returned unpaid (a bounced NACH, a dishonoured cheque): no money moved. */
+const FAILED = /\b(?:failed|declined|unsuccessful|could not be (?:processed|completed)|was not successful|has been rejected|payment failed|returned unpaid|bounced|dishono(?:u)?red)\b|विफल|असफल|अस्वीकृत/i
 const REFUND_WORD = /\b(?:refund(?:ed)?|reversed|reversal)\b|रिफ\u093c?ंड|रिवर्स|वापस/i
 const REFUND_DONE = /\b(?:credited|reversed|has been processed|processed to|refunded to)\b|जमा (?:कर दिए गए|किए गए|किये गये|किया गया|की गई|हो गए|हो गया|हो गई)|वापस (?:आ गए|आ गया)/i
 const REFUND_FUTURE = /\bwill be (?:refunded|reversed|credited)\b|\bif debited\b|जाएंगे|जायेंगे|जाएगा|जायेगा|जाएगी|जायेगी/i
@@ -98,13 +99,13 @@ const BALANCE = /\b(?:avl\.?|available|avail\.?|a\/c)?\s*bal(?:ance)?\b|शे�
 /** Words that make an amount next to a balance the price of something (not just a balance update). */
 const SPEND_WORD = /\b(?:paid|cost|total|order|trip|recharge|bill)\b/i
 
-/** Owner-side debit and credit phrasing. */
+/** Owner-side debit and credit phrasing. Banking Hindi's "नामे" is a debit (as "जमा" is a credit), and "निकासी" a withdrawal. */
 const DEBIT =
-  /\b(?:debited|debit (?:of|by)|has a debit|is debited|dr\.?(?=\s|$)|spent|withdrawn|sent|paid|payment of|payment to|purchase|deducted|transferred to|trf to)\b|डेबिट|(?:कटे|कटी|काटे)(?![\u0900-\u097F])/i
+  /(?:^|[^\u0900-\u097F])(?:नामे|निकासी)(?![\u0900-\u097F])|\b(?:debited|debit (?:of|by)|has a debit|is debited|dr\.?(?=\s|$)|spent|withdrawn|sent|paid|payment of|payment to|purchase|deducted|transferred to|trf to)\b|डेबिट|(?:कटे|कटी|काटे)(?![\u0900-\u097F])/i
 const CREDIT = /\b(?:credited|received|money received|deposited|deposit by|cr\.?(?=\s|$)|added to your)\b|जमा|प्राप्त/i
 /** "debited from your a/c … and Cr. to swiggy" / "; SWIGGY credited" — the owner's side is the debit. */
 const OWNER_DEBIT =
-  /\b(?:debited (?:from|by|for|with)|is debited|has been debited|has a debit|dr\.? from|debited\b[^.\n]{0,40}\ba\/?c|a\/?c\b[^.\n]{0,30}\bdebited|sent (?:rs\.?|inr|₹)|^sent\b|spent\b|withdrawn|paid (?:rs\.?|inr|₹)|^paid\b|₹[\d,.]+ paid|you paid|i have paid|payment (?:of|to)\b[^\n]*\b(?:successful|was successful)|(?:transaction|txn) of (?:rs\.?|inr|₹)\s?[\d,.]+ (?:done|at)\b|debited\b)|डेबिट (?:हुए|हुआ|हुई|हो गए|हो गया|हो गई|किए गए|किया गया|की गई)|(?:कटे|कटी|काटे)(?![\u0900-\u097F])/im
+  /नामे (?:हुए|हुआ|हुई|हो गए|हो गया|हो गई|किए गए|किये गये|किया गया|की गई)|\b(?:debited (?:from|by|for|with)|is debited|has been debited|has a debit|dr\.? from|debited\b[^.\n]{0,40}\ba\/?c|a\/?c\b[^.\n]{0,30}\bdebited|sent (?:rs\.?|inr|₹)|^sent\b|spent\b|withdrawn|paid (?:rs\.?|inr|₹)|^paid\b|₹[\d,.]+ paid|you paid|i have paid|payment (?:of|to)\b[^\n]*\b(?:successful|was successful)|(?:transaction|txn) of (?:rs\.?|inr|₹)\s?[\d,.]+ (?:done|at)\b|debited\b)|डेबिट (?:हुए|हुआ|हुई|हो गए|हो गया|हो गई|किए गए|किया गया|की गई)|(?:कटे|कटी|काटे)(?![\u0900-\u097F])/im
 const OWNER_CREDIT =
   /\b(?:credited (?:to|in|with|by)|is credited|has been credited|credited:|\bcredited\n|received (?:rs\.?|inr|₹)|you received|^received\b|money received|credited inr|credited rs|deposit by)|जमा (?:हुए|हुआ|हुई|हो गए|हो गया|हो गई|किए गए|किये गये|किया गया|की गई)|प्राप्त (?:हुए|हुआ|हुई)/im
 
@@ -242,8 +243,11 @@ function titleCase(name: string): string {
     .join(' ')
 }
 
+/** Rail words a bank prints next to a name ("POS RELIANCE SMART", "MOBILE HUB IMPS", "FAILED/LAKSHMI KIRANA"): never part of it. */
+const RAIL_WORDS = /^(?:(?:pos|upi|imps|neft|rtgs|p2[pma]|failed|success(?:ful)?)(?:\s*\/\s*|\s+))+|(?:\s+(?:pos|upi|imps|neft|rtgs))+$/gi
+
 function cleanName(raw: string): string | null {
-  let name = raw.replace(/\s+/g, ' ').replace(/^[\s:;,\-–/]+|[\s:;,.\-–/]+$/g, '')
+  let name = raw.replace(/\s+/g, ' ').replace(/^[\s:;,\-–/]+|[\s:;,.\-–/]+$/g, '').replace(RAIL_WORDS, '')
   // Cut at the first token with digits (masked numbers, dates) or a filler word.
   const cut = name.search(/\s(?:\S*\d\S*|on|ref|upi|via|using|from|avl|bal|not|is|was|has)\b/i)
   if (cut > 0) name = name.slice(0, cut)
@@ -281,6 +285,9 @@ const DEBIT_PATTERNS: readonly RegExp[] = [
   /\bpayment (?:of\s+(?:rs\.?|inr|₹)\s?[\d,.]+\s+)?to\s+(.+?)(?=\s+(?:of|is|was|from)\b|\.\s|\n|$)/i,
   /\b\d{12}\s+to\s+([^\n]+?)(?=\.\s|\.$|\n|$)/i, // IDFC "UPI Ref No … to DOMINOS PIZZA."
   /\b(?:imps|txn)\s+to\s+([^\n]+?)(?=\s+on\s|\.\s|\.$|\n|$)/i, // "by IMPS to MOHAN LAL." / "for UPI txn to x@y."
+  /\bcredited to (?:a\/c|acct|account)\s+(?![x*•]+\d)([a-z][^\n(]*?)(?=\s*\(|\s+on\s|\.\s|\.$|\n|$)/i, // Indian Bank "… and credited to a/c IRCTC (UPI Ref…"
+  /\btowards\s+(?:upi|imps|neft)\s+to\s+([^\n]+?)(?=\.\s|\.$|\n|$)/i, // Canara "towards UPI to KAVYA S."
+  /\bpaid (?:thru|through)\b[^\n]*?\bto\s+([^\n,]+?)(?=,|\s+on\s|\.\s|\.$|\n|$)/i, // Canara "paid thru A/C XX4821 on … to KAVYA S, UPI Ref"
   /\bCr\. to\s+([^\s]+?)\.(?:\s|$)/i, // BoB "Cr. to swiggy.stores@axb."
   /\bsent\b[^\n]*?\bto\s+(\S+@\S+?)(?=\s+on\s|\.\s|\s|$)/i, // Kotak "Sent … to rapido.bike@axisbank on"
   /\n\d{2}-\d{2}-\d{2}[ ,]+\d{2}:\d{2}:\d{2}\n([^\n]+)\n/, // Axis card: merchant on its own line

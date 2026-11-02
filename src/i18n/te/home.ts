@@ -7,7 +7,7 @@ export const home = {
   'home.quick.scan': 'బిల్లు స్కాన్',
   'home.quick.split': 'మొత్తం పంచండి',
   'home.quick.lend': 'అప్పు లెక్కలు',
-  'home.quick.collect': 'డబ్బు వసూలు',
+  'home.quick.collect': 'గ్రూప్ వసూలు',
   'home.quick.sms': 'SMS నుంచి',
   'home.quick.food': 'ఫుడ్ ఆర్డర్',
   'home.quick.group': 'కొత్త గ్రూప్',
@@ -19,10 +19,11 @@ export const home = {
   'home.template.subscription': 'చందా',
   'home.template.utilities': 'కరెంట్, నీళ్లు',
   'home.template.transport': 'క్యాబ్',
-  // The sheet behind the More tile.
+  // The sheet behind the More tile: money back from friends, then from banks and shops, then ways to start a split.
   'home.more.title': 'ఇంకా',
   'home.more.subtitle': 'మీ డబ్బు తిరిగి పొందండి, లేదా పంచడం మొదలుపెట్టండి.',
-  'home.more.back': 'మీ డబ్బు తిరిగి పొందండి',
+  'home.more.back': 'స్నేహితుల నుంచి',
+  'home.more.banks': 'బ్యాంకులు, షాపుల నుంచి',
   'home.more.split': 'పంచడం మొదలుపెట్టండి',
   'home.more.proof': 'చెల్లింపు రుజువు',
   // "Just say it" (the describe sheet and the search pill on Home).

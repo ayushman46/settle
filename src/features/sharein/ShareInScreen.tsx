@@ -259,7 +259,7 @@ function ShareIn() {
           ) : (
             <UnknownNotice ref={firstAction} ai={ai} text={current.text} onByHand={byHand} />
           )}
-          {stuckSignal && !(current.parse.kind === 'ignored' && current.parse.reason === 'failed') && <StuckOffer signal={stuckSignal} />}
+          {stuckSignal && !(current.parse.kind === 'ignored' && current.parse.reason === 'failed') && <StuckOffer signal={stuckSignal} text={current.text} />}
           {skipped && (
             <p className={styles.skipped} role="status">
               {skipped}

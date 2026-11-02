@@ -6,7 +6,7 @@
  */
 import { describe, expect, it } from 'vitest'
 import { CORPUS_TODAY, SMS_CORPUS } from '../sharein/sms/corpus'
-import { debitToDraft, MERCHANT_APPS, readStuckMessage, signalToDraft, UPI_APP_IDS, type StuckSignal } from './detect'
+import { debitToDraft, MERCHANT_APPS, readStuckFacts, readStuckMessage, signalToDraft, UPI_APP_IDS, type StuckSignal } from './detect'
 import { merchantById } from './merchants'
 
 /* The client tsconfig has no Node types: the two functions used are typed here (as in parseSms.test.ts). */
@@ -216,6 +216,60 @@ const CASES: readonly Case[] = [
     { type: 'reversal', amount: 50_000, ref: '630412345678' }],
   ['hi-pending', 'प्रिय ग्राहक, रु.1200 का यूपीआई लेनदेन लंबित है। -एसबीआई', null, { type: 'pending', amount: 120_000 }],
 
+  // "Will be credited back" (होगी, hoga, करेंगे) is a promise: a failure, never money back.
+  ['hinglish-jama-hoga', 'Aapke A/c XX7702 se Rs 1200 kaate gaye, UPI txn Ref 630112349876 lenden asafal raha. Paisa jaldi wapas jama hoga -SBI', null,
+    { type: 'failed', amount: 120_000, debited: true, ref: '630112349876', account: 'XX7702', bank: 'sbi' }],
+  ['hi-jama-hogi', 'आपके खाते XX7702 से रु.1200 डेबिट हुए, UPI लेनदेन विफल रहा। राशि जल्द वापस जमा होगी। Ref 630112349877 -SBI', null,
+    { type: 'failed', amount: 120_000, debited: true, ref: '630112349877', account: 'XX7702' }],
+  ['hi-jama-karenge', 'प्रिय ग्राहक, रु.500 का यूपीआई लेनदेन विफल रहा, राशि डेबिट हुई। हम राशि वापस जमा करेंगे। -एसबीआई', null, { type: 'failed', amount: 50_000, debited: true }],
+  ['hinglish-wapas-hogi', 'Aapke khate XX1234 se Rs 1500 kaate gaye the, UPI lenden asafal raha. Rashi 48 ghante mein wapas hogi. -SBI', null,
+    { type: 'failed', amount: 150_000, debited: true, account: 'XX1234' }],
+  ['hi-jama-ho-gaye', 'प्रिय ग्राहक, रु.500 आपके खाते XX1234 में वापस जमा हो गए। संदर्भ 630412345679 -एसबीआई', null, { type: 'reversal', amount: 50_000, ref: '630412345679' }],
+  ['hinglish-jama-ho-gaye', 'Aapke A/c XX7702 mein Rs 1200 wapas jama ho gaye. Ref 630112349876 -SBI', null, { type: 'reversal', amount: 120_000, ref: '630112349876' }],
+  // Banking Hindi's "नामे" is a debit.
+  ['hi-name-debit', 'प्रिय ग्राहक, आपके खाते XX7712 से दिनांक 24-10-26 को ATM निकासी हेतु रु 5000.00 नामे किए गए। संदर्भ 429718003456 -SBI', null,
+    { type: 'debit', amount: 500_000, date: '2026-10-24', ref: '429718003456', account: 'XX7712', bank: 'sbi', rail: 'atm' }],
+  ['hi-name-failed', 'प्रिय ग्राहक, आपके खाते XX7712 से रु 5000.00 नामे किए गए, लेनदेन विफल। संदर्भ 429718003456 -SBI', null,
+    { type: 'failed', amount: 500_000, debited: true, ref: '429718003456' }],
+
+  /* ------------------------------------------------------------------ as the second panel pasted them */
+  ['irctc-amt', 'Dear Customer, Ticket booking for PNR could not be completed. Amt 1845 debited on 26/10/2026, Txn 100004512345678, will be refunded to source. -IRCTC', null,
+    { type: 'failed', amount: 184_500, debited: true, merchant: 'irctc', party: 'IRCTC', ref: '100004512345678', date: '2026-10-26', dated: true }],
+  ['icici-imps-debited-amount', 'Dear Customer, your IMPS transaction of Rs.12,000.00 from ICICI Bank A/c XX4821 to SRI SAI MOBILE SPARES on 30-Oct-26 has failed. IMPS Ref No 630312345678. The debited amount will be reversed to your account. -ICICI Bank', null,
+    { type: 'failed', amount: 1_200_000, debited: true, rail: 'imps', ref: '630312345678', account: 'XX4821', bank: 'icici', party: 'Sri Sai Mobile Spares' }],
+  ['sbi-transfer-imps', 'Dear SBI User, your A/c X9910 debited by Rs.3,200.00 on 29Oct26 transfer to MOBILE HUB IMPS Ref No 630211223344 failed. Amount will be credited back. If not done by you call 1800111109 -SBI', null,
+    { type: 'failed', amount: 320_000, party: 'Mobile Hub', rail: 'imps', debited: true, ref: '630211223344', date: '2026-10-29' }],
+  ['icici-pos-city', 'Your a/c XX7712 debited INR 3,200.00 on 29-Oct-26 at POS RELIANCE TRENDS MUMBAI. Transaction declined. Amount will be reversed within 5 working days. -ICICI Bank', null,
+    { type: 'failed', amount: 320_000, party: 'Reliance Trends', rail: 'card_pos', debited: true }],
+  ['sbi-card-smart-pos', 'Txn of Rs 899.00 on your SBI Debit Card XX5521 at RELIANCE SMART POS on 01-11-26 declined but amount debited. It will be reversed within 5 days.', null,
+    { type: 'failed', amount: 89_900, party: 'Reliance Smart', debited: true }],
+  ['canara-failed-slash', 'An amount of INR 2,499.00 has been DEBITED to your account XXX345 on 29/10/2026 towards UPI/430298761234/FAILED/LAKSHMI KIRANA. Total Avail.bal INR 10,000.00 - Canara Bank', null,
+    { type: 'failed', amount: 249_900, party: 'Lakshmi Kirana', rail: 'upi_merchant', debited: true, ref: '430298761234' }],
+  ['canara-towards-upi-to', 'An amount of INR 500.00 has been DEBITED to your account XXX4821 on 31/10/2026 towards UPI to KAVYA S. Transaction failed. Amount will be reversed. UPI Ref No 430412345678. Total Avail.bal INR 8,240.50 - Canara Bank', null,
+    { type: 'failed', amount: 50_000, party: 'Kavya S', rail: 'upi_person', debited: true, ref: '430412345678' }],
+  ['canara-paid-thru', 'Rs.500.00 paid thru A/C XX4821 on 31-10-26 16:45:12 to KAVYA S, UPI Ref 430412345678. If not done, SMS BLOCKUPI to 9901771222.-Canara Bank', null,
+    { type: 'debit', amount: 50_000, party: 'Kavya S', ref: '430412345678', account: 'XX4821', bank: 'canara' }],
+  ['indianbank-credited-to-ac', 'Your a/c no. XXXXXXXX4821 is debited for Rs.1845.00 on 26-10-2026 and credited to a/c IRCTC (UPI Ref no 630012345678). If not you, call 180042500000 - Indian Bank', null,
+    { type: 'debit', amount: 184_500, party: 'IRCTC', merchant: 'irctc', ref: '630012345678', bank: 'indianbank' }],
+  ['paytm-wallet-failed', 'Payment of Rs.750.00 from your Paytm Wallet to Ramesh Medical Store failed. Money debited will be refunded to your Paytm Wallet. Txn ID: T2610281234567 on 28-10-2026', null,
+    { type: 'failed', amount: 75_000, party: 'Ramesh Medical Store', rail: 'wallet', app: 'paytm', debited: true, ref: 'T2610281234567' }],
+  // A help line's "Cash not dispensed? Call…" isn't a failure: a plain withdrawal (a debit, for the person to say).
+  ['atm-helpline', 'Rs.3000.00 debited from A/c no. XX4821 on 28-10-26 at ATM HYDERABAD KUKATPALLY. Cash not dispensed? Call 18002091234. Avl Bal Rs.12,345.00 -Union Bank of India', null,
+    { type: 'debit', amount: 300_000, rail: 'atm' }],
+  ['icici-compensation', 'Dear Customer, Rs.200.00 has been credited to your ICICI Bank A/c XX4821 on 02-Nov-26 as compensation for delayed reversal of IMPS Ref 630312345678. -ICICI Bank', null,
+    { type: 'reversal', compensation: true, amount: 20_000, ref: '630312345678', account: 'XX4821', date: TODAY }],
+  ['compensation-no-reversal-word', 'Rs.200.00 credited to your A/c XX4821 on 02-11-26 as TAT compensation for failed UPI txn 630312345678. -Axis Bank', null,
+    { type: 'reversal', compensation: true, amount: 20_000, ref: '630312345678' }],
+  ['penalty-taken', 'Rs.500.00 debited from A/c XX4821 as penalty for cheque returned. -SBI', null, { type: 'debit', amount: 50_000 }],
+  ['iob-part-reversal','Rs.2,000.00 credited to A/c XX2201 on 02-11-26 towards reversal of failed UPI txn. -Indian Overseas Bank', null,
+    { type: 'reversal', amount: 200_000, account: 'XX2201', bank: 'iob', ref: null }],
+  ['indigo-card', 'Dear Customer, your refund of INR 8,450.00 for PNR X7KQ2M (flight 6E 2134 DEL-BOM, cancelled on 21 Oct 2026) has been initiated to your HDFC Bank credit card ending 4821. It will reflect within 7 working days. - IndiGo', null,
+    { type: 'refund_initiated', amount: 845_000, merchant: 'indigo', orderId: 'X7KQ2M', date: '2026-10-21', promisedBy: '2026-10-30', promisedDays: 7, toCard: true }],
+  ['redbus-ticket', 'Dear Customer, your redBus ticket TN8H29XK has been cancelled. Refund of Rs 2150 will be processed to your source account in 5-7 working days. - redBus', null,
+    { type: 'refund_initiated', amount: 215_000, merchant: 'redbus', orderId: 'TN8H29XK', promisedDays: 7, toCard: false, dated: false }],
+  ['hinglish-din-mein', 'Aapka Rs 899 ka refund Myntra order 9876543210 ke liye initiate ho gaya hai. 5-7 din mein account mein aa jayega.', null,
+    { type: 'refund_initiated', amount: 89_900, merchant: 'myntra', orderId: '9876543210', promisedBy: '2026-11-09', promisedDays: null }],
+
   /* ------------------------------------------------------------------ an OTP pasted with it */
   ['failed-and-otp', 'Your Swiggy payment of ₹649 failed. ₹649 debited from your account will be refunded within 5-7 business days. UPI Ref 430112345678\n123456 is your OTP for txn of INR 4,500.00 at FLIPKART. Do not share it.', null,
     { type: 'failed', amount: 64_900, party: 'Swiggy', ref: '430112345678', debited: true }],
@@ -261,6 +315,11 @@ const CASES: readonly Case[] = [
   ['declined-mandate', 'Hi, payment of INR 199.00 via e-mandate declined for ID: NX789XYZABC on Federal Bank Debit Card 3456.', null, null],
   ['autopay-insufficient', 'Payment of ₹649 to Netflix via UPI AutoPay failed due to insufficient balance', null, null],
   ['order-delivered', 'Your order is on its way! Total ₹412. Track it in the app', 'com.application.zomato', null],
+  // A debit the bank returned unpaid never left the account.
+  ['nach-returned-unpaid', 'Your NACH mandate debit of Rs 5,600 towards HDFC LIFE has been returned unpaid due to insufficient funds. Charges Rs 590 applicable.', null, null],
+  ['ecs-bounced', 'Your ECS debit of Rs 2,300 towards ICICI PRU has bounced due to insufficient balance. Charges Rs 500 debited.', null, null],
+  ['ecs-bounced-unsuccessful', 'ECS debit of Rs 2,300 bounced, unsuccessful. Charges Rs 500 debited from A/c XX4821. -SBI', null, null],
+  ['cheque-dishonoured', 'Your cheque no. 004512 for Rs 15,000 has been dishonoured. Charges Rs 500 debited. -HDFC Bank', null, null],
   ['no-amount', 'Your refund has been initiated and will reach you in 5-7 business days.', SWIGGY, null],
 ]
 
@@ -307,6 +366,10 @@ describe('did the money leave?', () => {
     ['UPI txn of Rs.500 to SWIGGY has FAILED. A/c no. XXXX7712 has been debited.', true],
     ['UPI txn of Rs.500 to SWIGGY has FAILED. A/c XX7712 will be debited only if it goes through.', false],
     ['UPI txn of Rs.500 to SWIGGY has FAILED. If your A/c XX7712 debited, it will be reversed.', false],
+    ['IMPS txn of Rs.500 to SWIGGY has failed. The debited amount will be reversed to your account.', true],
+    ['IMPS txn of Rs.500 to SWIGGY has failed. Any debited amount will be reversed.', false],
+    ['IMPS txn of Rs.500 to SWIGGY has failed. The debited amount, if any, will be reversed.', false],
+    ['IMPS txn of Rs.500 to SWIGGY has failed. Amount will be reversed.', false],
   ])('%s → %s', (text, debited) => {
     expect(readStuckMessage(text, { today: TODAY })).toMatchObject({ type: 'failed', debited })
   })
@@ -318,8 +381,25 @@ describe('dates', () => {
     expect(readStuckMessage('Payment failed\n₹500 to Riya Sharma', { today: TODAY, app: GPAY, at: lateLastNight })).toMatchObject({ date: '2026-11-01', at: lateLastNight })
   })
 
-  it('a pasted message without one is about today', () => {
-    expect(readStuckMessage('Payment of ₹500 to Riya Sharma failed', { today: TODAY })).toMatchObject({ date: TODAY })
+  it('a pasted message without one is about today — and says the day isn’t known', () => {
+    expect(readStuckMessage('Payment of ₹500 to Riya Sharma failed', { today: TODAY })).toMatchObject({ date: TODAY, dated: false })
+    expect(readStuckMessage('Payment of ₹500 to Riya Sharma failed on 29-10-26', { today: TODAY })).toMatchObject({ date: '2026-10-29', dated: true })
+    expect(readStuckMessage('Payment failed\n₹500 to Riya Sharma', { today: TODAY, app: GPAY, at: AT })).toMatchObject({ date: TODAY, dated: true })
+    expect(readStuckMessage('Sent Rs.250.00 From HDFC Bank A/C *4821 To SWIGGY Ref 630512345678', { today: TODAY })).toMatchObject({ type: 'debit', dated: false })
+    expect(readStuckMessage('Refund of Rs.1,299 for order OD432198765432100 has been initiated.', { today: TODAY })).toMatchObject({ dated: false })
+  })
+
+  it('"in 7 working days" is kept as working days too, to count from a corrected start', () => {
+    const refund = readStuckMessage('Hi Neha, refund of Rs. 1099 for your Myntra order 1209384756-5521 has been initiated. It will reflect in your account in 7 working days. - Myntra', { today: TODAY })
+    expect(refund).toMatchObject({ type: 'refund_initiated', merchant: 'myntra', promisedBy: '2026-11-11', promisedDays: 7, dated: false })
+    // A day, calendar days or hours: no working days.
+    expect(readStuckMessage('Refund of ₹500 for order 98765 has been initiated. Expected credit by 12 Nov 2026.', { today: TODAY })).toMatchObject({ promisedBy: '2026-11-12', promisedDays: null })
+    expect(readStuckMessage('Refund of ₹500 for order 98765 has been initiated and will reach you within 48 hrs', { today: TODAY })).toMatchObject({ promisedDays: null })
+    expect(readStuckMessage('रिफ़ंड शुरू कर दिया गया है। रु.500 की राशि 7 कार्य दिवस में आपके खाते में आ जाएगी। ऑर्डर 98765', { today: TODAY })).toMatchObject({
+      type: 'refund_initiated',
+      promisedDays: 7,
+      promisedBy: '2026-11-11',
+    })
   })
 
   it('a promised day without a year is the next one to come', () => {
@@ -333,6 +413,17 @@ describe('dates', () => {
     expect(readStuckMessage('Refund of ₹500 for order 98765 has been initiated and will reach you within 48 hrs', { today: TODAY })).toMatchObject({ promisedBy: '2026-11-04' })
     // Friday + 3 working days = Wednesday.
     expect(readStuckMessage('Refund of ₹500 for order 98765 initiated. It will be credited in 3 working days.', { today: '2026-11-06' })).toMatchObject({ promisedBy: '2026-11-11' })
+  })
+
+  it('"on 27 Oct" with no year is the latest such day', () => {
+    expect(readStuckMessage('Your refund of Rs.649 was initiated on 27 Oct. It will reflect in 5-7 business days. -Flipkart', { today: TODAY })).toMatchObject({
+      type: 'refund_initiated',
+      date: '2026-10-27',
+      dated: true,
+      promisedBy: '2026-11-05',
+      promisedDays: 7,
+    })
+    expect(readStuckMessage('Payment of Rs.500 to Swiggy failed on 28th December.', { today: '2027-01-02' })).toMatchObject({ date: '2026-12-28', dated: true })
   })
 
   it('a promise is never read as the day the money left', () => {
@@ -441,6 +532,18 @@ describe('signalToDraft', () => {
     })
   })
 
+  it('a flight refunded to a card keeps the card (the DGCA’s 7 days); other refunds keep no rail', () => {
+    const indigo = read('Dear Customer, your refund of INR 8,450.00 for PNR X7KQ2M (flight 6E 2134 DEL-BOM, cancelled on 21 Oct 2026) has been initiated to your HDFC Bank credit card ending 4821. It will reflect within 7 working days. - IndiGo')
+    expect(signalToDraft(indigo, 'sms')).toMatchObject({ kind: 'refund', merchant: 'indigo', rail: 'card_online', date: '2026-10-21', promisedBy: '2026-10-30' })
+    const original = read('Your refund of INR 4,500 for PNR K7XQ2M has been processed to the original form of payment. It should reflect within 7 days.', 'in.goindigo.android')
+    expect(original).toMatchObject({ toCard: false })
+    expect(signalToDraft(original, 'alert')).toMatchObject({ rail: null })
+    const amazon = read('Refund issued\nYour refund of ₹899.00 for order 404-1234567-7654321 has been issued. It will be credited to your HDFC Bank card XX9034 in 3-5 business days.', 'in.amazon.mShop.android.shopping')
+    expect(amazon).toMatchObject({ toCard: true })
+    expect(signalToDraft(amazon, 'alert')).toMatchObject({ rail: null })
+    expect(read('Your Myntra refund of ₹500 for order 12345 has been initiated to your gift card. -Myntra')).toMatchObject({ toCard: false })
+  })
+
   it('a payment that went through is never a stuck payment', () => {
     expect(signalToDraft(read('₹500 paid to Riya Sharma\nUPI transaction ID: 630611112299', GPAY), 'alert')).toBeNull()
   })
@@ -457,6 +560,37 @@ describe('signalToDraft', () => {
     const draft = long && signalToDraft({ ...long, party: 'P'.repeat(300), ref: 'R'.repeat(80) }, 'sms')
     expect(draft?.party).toHaveLength(120)
     expect(draft?.ref).toHaveLength(40)
+  })
+})
+
+describe('readStuckFacts — what a message gave, for a form filled in by hand', () => {
+  it('reads the amount, day, reference, account, bank and business of any message with money in it', () => {
+    expect(readStuckFacts('Dear Customer, Ticket booking for PNR could not be completed. Amt 1845 debited on 26/10/2026, Txn 100004512345678, will be refunded to source. -IRCTC', TODAY)).toEqual({
+      amount: 184_500,
+      date: '2026-10-26',
+      ref: '100004512345678',
+      orderId: null,
+      account: null,
+      bank: null,
+      merchant: 'irctc',
+      party: 'IRCTC',
+      failed: true,
+    })
+    expect(readStuckFacts('प्रिय ग्राहक, आपके खाते XX7712 से रु 5000.00 की राशि। संदर्भ 429718003456 -SBI', TODAY)).toMatchObject({
+      amount: 500_000,
+      date: null,
+      ref: '429718003456',
+      account: 'XX7712',
+      bank: 'sbi',
+      failed: false,
+    })
+  })
+
+  it('nothing without an amount, nor from an OTP; a bounced debit is not a failed payment', () => {
+    expect(readStuckFacts('Your payment failed. Try again.', TODAY)).toBeNull()
+    expect(readStuckFacts('123456 is your OTP for txn of Rs 999 at AMAZON.', TODAY)).toBeNull()
+    expect(readStuckFacts('ECS debit of Rs 2,300 bounced, unsuccessful. Charges Rs 500 debited.', TODAY)).toMatchObject({ failed: false })
+    expect(readStuckFacts(undefined as unknown as string, TODAY)).toBeNull()
   })
 })
 
@@ -479,9 +613,9 @@ describe('the apps it reads', () => {
       return new RegExp(literal.replace(/\\\\/g, '\\').replace(/^\(\?i\)/, ''), 'iu')
     }
     const [money, stuck, out, secret] = ['MONEY', 'STUCK', 'MONEY_OUT', 'SECRET'].map(pattern)
-    for (const amount of ['रु.5000', 'रू 500', '500 रुपये', '₹५००', 'Rs 1500']) expect(money?.test(amount), amount).toBe(true)
+    for (const amount of ['रु.5000', 'रू 500', '500 रुपये', '₹५००', 'Rs 1500', 'Amt 1845']) expect(money?.test(amount), amount).toBe(true)
     for (const word of ['लेनदेन विफल', 'असफल रहा', 'लंबित है', 'वापस जमा', 'रिफंड', 'रिफ\u093cंड', 'lenden asafal raha']) expect(stuck?.test(word), word).toBe(true)
-    for (const word of ['रु.5000 डेबिट हुए', 'रु.500 कटे', 'Rs 1500 kaate gaye']) expect(out?.test(word), word).toBe(true)
+    for (const word of ['रु.5000 डेबिट हुए', 'रु.500 कटे', 'Rs 1500 kaate gaye', 'रु 5000.00 नामे किए गए', 'ATM निकासी']) expect(out?.test(word), word).toBe(true)
     expect(secret?.test('आपका ओटीपी 123456 है')).toBe(true)
     expect(stuck?.test('Rs.500 paid to Riya')).toBe(false)
   })
