@@ -94,7 +94,7 @@ export function deleteStuck(id: string): StuckPayment | null {
   return found
 }
 
-/** Still owed: not back, not set aside. */
+/** Still owed: not all of it back, not set aside. */
 export function isStuckOpen(s: StuckPayment): boolean {
-  return s.back === null && s.dismissedAt === null
+  return (s.back === null || s.back.amount < s.amount) && s.dismissedAt === null
 }

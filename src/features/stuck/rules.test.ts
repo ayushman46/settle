@@ -120,6 +120,21 @@ describe('what to do next', () => {
   })
 })
 
+describe('part of it back', () => {
+  it('keeps the rest owed, still late, on the same ladder', () => {
+    const part = stuck({ kind: 'refund', rail: null, merchant: 'indigo', party: 'IndiGo', amount: 845_000, promisedBy: '2026-10-25', back: { date: '2026-10-30', amount: 810_000, compensation: 0 } })
+    expect(stillOwed(part, '2026-11-02')).toEqual({ money: 35_000, compensation: 0 })
+    expect(nextStep(part, '2026-11-02')).toEqual({ stage: 'overdue', step: 'merchant', until: null })
+    expect(daysLate(part, '2026-11-02')).toBe(8)
+  })
+
+  it('a failed payment part reversed keeps counting compensation until all of it is back', () => {
+    const part = stuck({ back: { date: '2026-10-30', amount: 40_000, compensation: 0 } })
+    expect(compensationDue(part, '2026-11-01')).toBe(30_000)
+    expect(summarize([part], '2026-11-01')).toMatchObject({ open: 1, stuck: 10_000, recovered: 40_000, recoveredCount: 0 })
+  })
+})
+
 describe('the list', () => {
   it('sums what is stuck, what is owed for the wait and what came back', () => {
     const list = [

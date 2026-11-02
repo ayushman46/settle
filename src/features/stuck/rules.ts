@@ -66,8 +66,19 @@ export function dueBy(s: Pick<StuckPayment, 'kind' | 'rail' | 'date' | 'promised
 
 /** Days late: past the deadline up to the day it came back (or today). 0 while it isn't late. */
 export function daysLate(s: StuckPayment, today: string): number {
-  const end = s.back?.date ?? today
+  // Part of it back is still late: the wait ends when all of it is.
+  const end = s.back !== null && backInFull(s) ? s.back.date : today
   return Math.max(0, daysBetween(dueBy(s), end))
+}
+
+/** All of it came back (a part refund leaves the rest owed, and still late). */
+export function backInFull(s: Pick<StuckPayment, 'amount' | 'back'>): boolean {
+  return s.back !== null && s.back.amount >= s.amount
+}
+
+/** Some of it came back, not all. */
+export function backInPart(s: Pick<StuckPayment, 'amount' | 'back'>): boolean {
+  return s.back !== null && s.back.amount > 0 && s.back.amount < s.amount
 }
 
 /** Compensation the RBI says the bank owes for the wait (failed payments the money really left on). */
@@ -133,7 +144,8 @@ function waitFor(kind: StuckStepKind): number {
 /** Where it stands today and what to do about it. */
 export function nextStep(s: StuckPayment, today: string): StuckNext {
   if (s.dismissedAt !== null) return { stage: 'dismissed', step: null, until: null }
-  if (s.back !== null) {
+  // Part of it back: the rest is still owed, and walks the same ladder.
+  if (s.back !== null && backInFull(s)) {
     const owed = stillOwed(s, today)
     if (owed.compensation > 0) {
       const bank = stepOn(s, 'bank')
@@ -202,13 +214,13 @@ export function summarize(list: readonly StuckPayment[], today: string): StuckSu
     if (s.dismissedAt !== null) continue
     const owed = stillOwed(s, today)
     const stage = nextStep(s, today).stage
-    if (s.back === null) {
+    if (!backInFull(s)) {
       out.open += 1
       if (s.confirmed) out.stuck += owed.money
     } else {
-      out.recovered += s.back.amount + s.back.compensation
       out.recoveredCount += 1
     }
+    if (s.back !== null) out.recovered += s.back.amount + s.back.compensation
     out.compensation += owed.compensation
     if (needsAction(stage)) out.act += 1
   }

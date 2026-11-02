@@ -145,7 +145,7 @@
 
 .heroTotalValue {
   margin: 0;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
   font: var(--text-headline);
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.02em;
@@ -352,7 +352,7 @@
   font: var(--text-caption);
   color: var(--ink-2);
   font-variant-numeric: tabular-nums;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 
 .rowUrgent {
@@ -570,7 +570,7 @@
 .railName {
   font: var(--text-label);
   font-weight: 600;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 
 .railDays {
@@ -654,7 +654,7 @@
   color: var(--ink);
   font: var(--text-headline);
   letter-spacing: var(--tracking-tight);
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 
 .detailTitle:focus {
@@ -702,7 +702,7 @@
 .nowTitle {
   font: var(--text-section);
   color: var(--ink);
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 
 .nowText {
@@ -809,7 +809,7 @@
 .eventTitle {
   font: var(--text-label);
   color: var(--ink);
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 
 .event-late .eventTitle {
@@ -884,7 +884,7 @@
 
 .factText {
   min-width: 0;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
   font-variant-numeric: tabular-nums;
 }
 
@@ -935,7 +935,7 @@
   font: var(--text-label);
   font-weight: 650;
   font-variant-numeric: tabular-nums;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 
 .homeLine {

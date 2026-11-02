@@ -31,6 +31,8 @@
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
+  /* Room for the marks above and below Indian scripts' letters (मात्रा), which `overflow: hidden` would cut. */
+  line-height: 1.45;
 }
 
 .icon {

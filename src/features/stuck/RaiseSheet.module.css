@@ -44,7 +44,7 @@
   padding-inline-start: calc(var(--s-6) + var(--s-3));
   font: var(--text-body);
   color: var(--ink);
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
   counter-increment: step;
 }
 
@@ -239,7 +239,7 @@
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
   transition:
     transform var(--dur-2) var(--ease-spring),
     background-color var(--dur-2) var(--ease-out);
