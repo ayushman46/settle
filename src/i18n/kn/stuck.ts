@@ -52,6 +52,7 @@ export const stuck: Messages = {
   'stuck.status.dueBy': '{date} ಒಳಗೆ ವಾಪಸ್ ಬರಬೇಕು',
   'stuck.status.check': '{amount} ನಿಮ್ಮ ಖಾತೆಯಿಂದ ಕಡಿತವಾಯಿತೇ?',
   'stuck.status.lateOwed': '{count, plural, one {# ದಿನ} other {# ದಿನ}} ತಡ · ನಿಮ್ಮ ಬ್ಯಾಂಕ್ ನಿಮಗೆ {amount} ಕೊಡಬೇಕು',
+  'stuck.status.lateOwed.wallet': '{count, plural, one {# ದಿನ} other {# ದಿನ}} ತಡ · ವಾಲೆಟ್ ಕಂಪನಿ ನಿಮಗೆ {amount} ಕೊಡಬೇಕು',
   'stuck.status.lateRaise': '{count, plural, one {# ದಿನ} other {# ದಿನ}} ತಡ · {place} ಬಳಿ ದೂರು ನೀಡಿ',
   'stuck.status.raised': '{place} ಬಳಿ ದೂರು ನೀಡಲಾಗಿದೆ · ಅವರಿಗೆ {date} ರವರೆಗೆ ಸಮಯವಿದೆ',
   'stuck.status.raisedOwed': 'ದೂರು ನೀಡಲಾಗಿದೆ · {count, plural, one {# ದಿನ} other {# ದಿನ}} ತಡ · ಇಲ್ಲಿಯವರೆಗೆ {amount} ಬರಬೇಕು',
@@ -108,7 +109,7 @@ export const stuck: Messages = {
   'stuck.clock.left': 'ಹಣ ನಿಮ್ಮ ಖಾತೆಯಿಂದ ಕಡಿತವಾಯಿತು',
   'stuck.clock.failed': 'ಪಾವತಿ ವಿಫಲವಾಯಿತು ಎಂದು ಆ್ಯಪ್ ಹೇಳಿತು',
   'stuck.clock.due': '{date} ಒಳಗೆ ವಾಪಸ್ ಬರಬೇಕು',
-  'stuck.clock.due.rail': 'RBI ನಿಯಮ — {rail}: {count, plural, one {ಮರುದಿನವೇ} other {# ದಿನಗಳೊಳಗೆ}} ವಾಪಸ್.',
+  'stuck.clock.due.rail': '{rail}: RBI ನಿಯಮದ ಪ್ರಕಾರ {count, plural, one {ಮರುದಿನವೇ} other {# ದಿನಗಳೊಳಗೆ}} ವಾಪಸ್.',
   'stuck.clock.due.unknownRail': 'RBI ಯ ಅತಿ ದೀರ್ಘ ಗಡುವು, {count} ದಿನಗಳು. ನಿಖರ ಗಡುವು ತಿಳಿಯಲು ನೀವು ಹೇಗೆ ಪಾವತಿಸಿದಿರಿ ಎಂದು ಹೇಳಿ.',
   'stuck.clock.due.promised': 'ಅಷ್ಟರೊಳಗೆ ವಾಪಸ್ ಕೊಡುವುದಾಗಿ {name} ಹೇಳಿದೆ.',
   'stuck.clock.due.dgca': 'ಕಾರ್ಡ್‌ನಲ್ಲಿ ಪಾವತಿಸಿದ ಟಿಕೆಟ್‌ನ ರಿಫಂಡ್‌ಗೆ DGCA ಏರ್‌ಲೈನ್‌ಗಳಿಗೆ {count} ದಿನ ಕೊಡುತ್ತದೆ.',
@@ -162,8 +163,11 @@ export const stuck: Messages = {
   'stuck.now.waiting.refund.merchant': '{name} ಹೇಳುವ ಸಮಯದ ಪ್ರಕಾರ {date} ರವರೆಗೆ ಅವಕಾಶವಿದೆ. ತಡವಾದರೆ, ಅದನ್ನು ಕೇಳಲು Settle ಸಹಾಯ ಮಾಡುತ್ತದೆ.',
   'stuck.now.waiting.refund.usual': 'ರಿಫಂಡ್ ಸಾಮಾನ್ಯವಾಗಿ {date} ಒಳಗೆ ಬರುತ್ತದೆ. ತಡವಾದರೆ, ಅದನ್ನು ಕೇಳಲು Settle ಸಹಾಯ ಮಾಡುತ್ತದೆ.',
   'stuck.now.overdue.failed.title': '{count, plural, one {# ದಿನ} other {# ದಿನ}} ತಡ — ನಿಮ್ಮ ಬ್ಯಾಂಕ್ ನಿಮಗೆ {amount} ಕೊಡಬೇಕು',
+  'stuck.now.overdue.failed.title.wallet': '{count, plural, one {# ದಿನ} other {# ದಿನ}} ತಡ — ವಾಲೆಟ್ ಕಂಪನಿ ನಿಮಗೆ {amount} ಕೊಡಬೇಕು',
   'stuck.now.overdue.failed.text':
     'RBI ನಿಯಮಗಳ ಪ್ರಕಾರ ಹಣ {date} ಒಳಗೆ ವಾಪಸ್ ಬರಬೇಕಿತ್ತು, ಮತ್ತು ನಂತರದ ಪ್ರತಿ ದಿನಕ್ಕೆ ನಿಮ್ಮ ಬ್ಯಾಂಕ್ ಕೇಳದೆಯೇ ₹100 ಕೊಡಬೇಕು. {place} ಬಳಿ ದೂರು ನೀಡಿ.',
+  'stuck.now.overdue.failed.text.wallet':
+    'RBI ನಿಯಮಗಳ ಪ್ರಕಾರ ಹಣ {date} ಒಳಗೆ ವಾಪಸ್ ಬರಬೇಕಿತ್ತು, ಮತ್ತು ನಂತರದ ಪ್ರತಿ ದಿನಕ್ಕೆ ವಾಲೆಟ್ ಕಂಪನಿ ಕೇಳದೆಯೇ ₹100 ಕೊಡಬೇಕು. {place} ಬಳಿ ದೂರು ನೀಡಿ.',
   'stuck.now.overdue.refund.title': '{count, plural, one {# ದಿನ} other {# ದಿನ}} ತಡ',
   'stuck.now.overdue.refund.text': '{date} ಒಳಗೆ ವಾಪಸ್ ಕೊಡುವುದಾಗಿ {name} ಹೇಳಿತ್ತು. ಅವರನ್ನು ಕೇಳಿ — ಸಂದೇಶ ಸಿದ್ಧವಿದೆ.',
   'stuck.now.overdue.refund.dgca':
@@ -187,7 +191,9 @@ export const stuck: Messages = {
   'stuck.now.escalated.text': 'ಈಗ ಅದು ಅವರ ಬಳಿ ಇದೆ. ಹಣ ಬಂದಾಗ, ಇಲ್ಲಿ ಗುರುತಿಸಿ.',
   'stuck.now.compensation.title': 'ವಾಪಸ್ ಬಂತು, ಆದರೆ {count, plural, one {# ದಿನ} other {# ದಿನ}} ತಡವಾಗಿ',
   'stuck.now.compensation.text': 'RBI ನಿಯಮಗಳ ಪ್ರಕಾರ ಕಾಯಿಸಿದ್ದಕ್ಕೆ ನಿಮ್ಮ ಬ್ಯಾಂಕ್ ನಿಮಗೆ {amount} ಕೇಳದೆಯೇ ಕೊಡಬೇಕು. ಇನ್ನೂ ಬಂದಿಲ್ಲದಿದ್ದರೆ, ಕೇಳಿ ಪಡೆಯಿರಿ.',
+  'stuck.now.compensation.text.wallet': 'RBI ನಿಯಮಗಳ ಪ್ರಕಾರ ಕಾಯಿಸಿದ್ದಕ್ಕೆ {place} ನಿಮಗೆ {amount} ಕೇಳದೆಯೇ ಕೊಡಬೇಕು. ಇನ್ನೂ ಬಂದಿಲ್ಲದಿದ್ದರೆ, ಕೇಳಿ ಪಡೆಯಿರಿ.',
   'stuck.now.claim': 'ನಿಮ್ಮ ಬ್ಯಾಂಕ್‌ನಿಂದ {amount} ಕೇಳಿ',
+  'stuck.now.claim.wallet': '{place} ಬಳಿ {amount} ಕೇಳಿ',
   'stuck.now.aside.title': 'ಪಕ್ಕಕ್ಕಿಡಲಾಗಿದೆ',
   'stuck.now.aside.text': 'ಇದನ್ನು ಲೆಕ್ಕಕ್ಕೆ ತೆಗೆದುಕೊಳ್ಳುತ್ತಿಲ್ಲ. ಇನ್ನೂ ಬರಬೇಕಿದ್ದರೆ ಮತ್ತೆ ತನ್ನಿ.',
 
@@ -223,6 +229,7 @@ export const stuck: Messages = {
   'stuck.detail.now.partBack': '{amount} ರಲ್ಲಿ {back} {date} ರಂದು ವಾಪಸ್ ಬಂತು. ಉಳಿದ {rest} ಇನ್ನೂ ಬರಬೇಕು.',
   'stuck.detail.now.moreBack': 'ಇನ್ನಷ್ಟು ವಾಪಸ್ ಬಂತು',
   'stuck.detail.now.owedSoFar': 'ಇಲ್ಲಿಯವರೆಗೆ ಕಾಯಿಸಿದ್ದಕ್ಕೆ ನಿಮ್ಮ ಬ್ಯಾಂಕ್ ನಿಮಗೆ {amount} ಕೊಡಬೇಕು, ಮತ್ತು ಪ್ರತಿದಿನ ಇನ್ನೂ {perDay}.',
+  'stuck.detail.now.owedSoFar.wallet': 'ಇಲ್ಲಿಯವರೆಗೆ ಕಾಯಿಸಿದ್ದಕ್ಕೆ ವಾಲೆಟ್ ಕಂಪನಿ ನಿಮಗೆ {amount} ಕೊಡಬೇಕು, ಮತ್ತು ಪ್ರತಿದಿನ ಇನ್ನೂ {perDay}.',
   'stuck.detail.now.askEarly': 'ಈಗಲೇ {place} ಬಳಿ ಕೇಳಿ',
   'stuck.detail.now.lastDay': 'ಹೆಚ್ಚೆಂದರೆ {date} ಒಳಗೆ RBI ಒಂಬುಡ್ಸ್‌ಮನ್ ಬಳಿ ದೂರು ದಾಖಲಿಸಿ.',
   'stuck.detail.now.paidRest': 'ಉಳಿದ {amount} ಕೂಡ ಬಂತು',
@@ -396,6 +403,8 @@ export const stuck: Messages = {
   'stuck.back.toastFailed': '{name} ಗೆ ಕಳುಹಿಸಿದ ನಿಮ್ಮ {amount} ನಿಮ್ಮ ಖಾತೆಗೆ ವಾಪಸ್ ಬಂತು',
   'stuck.back.toastFailedLate':
     '{name} ಗೆ ಕಳುಹಿಸಿದ ನಿಮ್ಮ {amount} ನಿಮ್ಮ ಖಾತೆಗೆ ವಾಪಸ್ ಬಂತು — {count, plural, one {# ದಿನ} other {# ದಿನ}} ತಡ, ಹಾಗಾಗಿ ಕಾಯಿಸಿದ್ದಕ್ಕೆ ನಿಮ್ಮ ಬ್ಯಾಂಕ್ ನಿಮಗೆ {owed} ಕೊಡಬೇಕು',
+  'stuck.back.toastFailedLate.wallet':
+    '{name} ಗೆ ಕಳುಹಿಸಿದ ನಿಮ್ಮ {amount} ವಾಪಸ್ ಬಂತು — {count, plural, one {# ದಿನ} other {# ದಿನ}} ತಡ, ಹಾಗಾಗಿ ಕಾಯಿಸಿದ್ದಕ್ಕೆ ವಾಲೆಟ್ ಕಂಪನಿ ನಿಮಗೆ {owed} ಕೊಡಬೇಕು',
   'stuck.back.toastPart': '{amount} ರಲ್ಲಿ {back} ವಾಪಸ್ ಬಂತು — ಇನ್ನೂ {rest} ಬರಬೇಕು',
   'stuck.back.toastPartFrom': '{name} ಕಡೆಯಿಂದ {amount} ರಲ್ಲಿ {back} ವಾಪಸ್ ಬಂತು — ಇನ್ನೂ {rest} ಬರಬೇಕು',
   'stuck.back.toastPartTo': '{name} ಗೆ ಕಳುಹಿಸಿದ ನಿಮ್ಮ {amount} ರಲ್ಲಿ {back} ವಾಪಸ್ ಬಂತು — ಇನ್ನೂ {rest} ಬರಬೇಕು',
