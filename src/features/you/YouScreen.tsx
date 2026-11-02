@@ -1,11 +1,11 @@
 import { useMemo, useState } from 'react'
-import { BadgeIndianRupee, Building2, ChartPie, CircleCheck, ClipboardPaste, Coins, FileText, HandCoins, KeyRound, Landmark, Languages, Repeat, ShieldCheck, Users } from 'lucide-react'
+import { BadgeIndianRupee, BanknoteArrowDown, Building2, ChartPie, CircleCheck, ClipboardPaste, Coins, FileText, HandCoins, KeyRound, Languages, Repeat, ShieldCheck, Users } from 'lucide-react'
 import { navigate } from '../../app/router'
 import { Badge, Card, List, ListRow, Screen, SuccessBurst, Switch, useToast } from '../../components'
 import { updateProfile, useDueRecurring, useFriends, usePools, useProfile, useRecurring, useStore, useSummary } from '../../data'
 import { stuckStore } from '../../data/stores'
 import { today } from '../../engine/dates'
-import { BRAND, type License } from '../../domain/types'
+import type { License } from '../../domain/types'
 import { currencyName } from '../../lib/currencies'
 import { currencySymbol, formatMoney } from '../../lib/money'
 import { languageInfo, useLang, useT } from '../../i18n'
@@ -34,9 +34,9 @@ import settings from './Settings.module.css'
 import styles from './YouScreen.module.css'
 
 /**
- * `/app/you` — you and your settings: profile and UPI ID, Settle Pro, your people, recurring
- * splits and insights, currency and appearance, backups and exports, a Pro code to redeem, the
- * legal pages, and clearing everything off the phone.
+ * `/app/you` — you and your settings: profile and UPI ID, Settle Pro, shortcuts (your people,
+ * stuck money, what's owed to you, recurring splits and insights), currency and appearance,
+ * backups and exports, a Pro code to redeem, the legal pages, and clearing everything off the phone.
  */
 export function YouScreen() {
   const [redeemOpen, setRedeemOpen] = useState(false)
@@ -79,97 +79,102 @@ function Shortcuts() {
   const [pasting, setPasting] = useState(false)
 
   return (
-    <Card padding="none">
-      <List aria-label={t('you.shortcuts.label')}>
-        <ListRow
-          leading={
-            <SettingIcon>
-              <Users />
-            </SettingIcon>
-          }
-          title={t('you.shortcuts.people.title')}
-          subtitle={peopleLine(friends)}
-          onClick={() => navigate('/app/friends')}
-          chevron
-        />
-        <ListRow
-          leading={
-            <SettingIcon>
-              <Repeat />
-            </SettingIcon>
-          }
-          title={t('you.shortcuts.recurring.title')}
-          subtitle={recurringLine(recurring, due.length, recurringOn)}
-          trailing={recurringOn ? undefined : <Badge tone="pro">Pro</Badge>}
-          onClick={() => navigate('/app/recurring')}
-          chevron
-        />
-        <ListRow
-          leading={
-            <SettingIcon>
-              <ChartPie />
-            </SettingIcon>
-          }
-          title={t('you.shortcuts.insights.title')}
-          subtitle={t('you.shortcuts.insights.subtitle')}
-          trailing={insightsOn ? undefined : <Badge tone="pro">Pro</Badge>}
-          onClick={() => navigate('/app/insights')}
-          chevron
-        />
-        {POOLS_ENABLED && <CollectionsRow />}
-        <ListRow
-          leading={
-            <SettingIcon>
-              <BadgeIndianRupee />
-            </SettingIcon>
-          }
-          title={t('collect.title')}
-          subtitle={owing > 0 ? t('collect.line', { amount: formatMoney(summary.owedToMe, summary.currency, { trimZeros: true }), count: owing }) : t('collect.line.none')}
-          onClick={() => navigate(COLLECT_PATH)}
-          chevron
-        />
-        <StuckRow />
-        {PROOF_ENABLED && (
+    <section className={settings.section} aria-labelledby="you-shortcuts">
+      <h2 id="you-shortcuts" className={settings.sectionTitle}>
+        {t('you.shortcuts.label')}
+      </h2>
+      <Card padding="none">
+        <List aria-label={t('you.shortcuts.label')}>
           <ListRow
             leading={
               <SettingIcon>
-                <CircleCheck />
+                <Users />
               </SettingIcon>
             }
-            title={t('proof.more.title')}
-            subtitle={t('proof.more.subtitle')}
-            onClick={() => navigate(PROOF_PATH)}
+            title={t('you.shortcuts.people.title')}
+            subtitle={peopleLine(friends)}
+            onClick={() => navigate('/app/friends')}
             chevron
           />
-        )}
-        {RENT_ENABLED && (
+          <StuckRow />
           <ListRow
             leading={
               <SettingIcon>
-                <Building2 />
+                <BadgeIndianRupee />
               </SettingIcon>
             }
-            title={t('rent.more.title')}
-            subtitle={t('rent.more.subtitle')}
-            onClick={() => navigate(RENT_PATH)}
+            title={t('collect.title')}
+            subtitle={owing > 0 ? t('collect.line', { amount: formatMoney(summary.owedToMe, summary.currency, { trimZeros: true }), count: owing }) : t('collect.line.none')}
+            onClick={() => navigate(COLLECT_PATH)}
             chevron
           />
-        )}
-        <ListRow
-          leading={
-            <SettingIcon>
-              <ClipboardPaste />
-            </SettingIcon>
-          }
-          title={t('expense.paidReply.paste.row')}
-          subtitle={t('expense.paidReply.paste.rowSub')}
-          aria-haspopup="dialog"
-          onClick={() => setPasting(true)}
-        />
-      </List>
-      <InstallRow />
-      <PastePaidReplySheet open={pasting} onClose={() => setPasting(false)} />
-    </Card>
+          {POOLS_ENABLED && <CollectionsRow />}
+          <ListRow
+            leading={
+              <SettingIcon>
+                <Repeat />
+              </SettingIcon>
+            }
+            title={t('you.shortcuts.recurring.title')}
+            subtitle={recurringLine(recurring, due.length, recurringOn)}
+            trailing={recurringOn ? undefined : <Badge tone="pro">Pro</Badge>}
+            onClick={() => navigate('/app/recurring')}
+            chevron
+          />
+          <ListRow
+            leading={
+              <SettingIcon>
+                <ChartPie />
+              </SettingIcon>
+            }
+            title={t('you.shortcuts.insights.title')}
+            subtitle={t('you.shortcuts.insights.subtitle')}
+            trailing={insightsOn ? undefined : <Badge tone="pro">Pro</Badge>}
+            onClick={() => navigate('/app/insights')}
+            chevron
+          />
+          {PROOF_ENABLED && (
+            <ListRow
+              leading={
+                <SettingIcon>
+                  <CircleCheck />
+                </SettingIcon>
+              }
+              title={t('proof.more.title')}
+              subtitle={t('proof.more.subtitle')}
+              onClick={() => navigate(PROOF_PATH)}
+              chevron
+            />
+          )}
+          {RENT_ENABLED && (
+            <ListRow
+              leading={
+                <SettingIcon>
+                  <Building2 />
+                </SettingIcon>
+              }
+              title={t('rent.more.title')}
+              subtitle={t('rent.more.subtitle')}
+              onClick={() => navigate(RENT_PATH)}
+              chevron
+            />
+          )}
+          <ListRow
+            leading={
+              <SettingIcon>
+                <ClipboardPaste />
+              </SettingIcon>
+            }
+            title={t('expense.paidReply.paste.row')}
+            subtitle={t('expense.paidReply.paste.rowSub')}
+            aria-haspopup="dialog"
+            onClick={() => setPasting(true)}
+          />
+        </List>
+        <InstallRow />
+        <PastePaidReplySheet open={pasting} onClose={() => setPasting(false)} />
+      </Card>
+    </section>
   )
 }
 
@@ -183,7 +188,7 @@ function StuckRow() {
     <ListRow
       leading={
         <SettingIcon>
-          <Landmark />
+          <BanknoteArrowDown />
         </SettingIcon>
       }
       title={t('stuck.title')}
@@ -344,7 +349,7 @@ function Footer() {
   return (
     <footer className={styles.footer}>
       <BrandMark size="sm" />
-      <p className={styles.tagline}>{BRAND.tagline}</p>
+      <p className={styles.tagline}>{t('app.tagline')}</p>
       <p className={styles.small}>{t('you.footer.small')}</p>
     </footer>
   )

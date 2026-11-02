@@ -20,11 +20,16 @@ export const onboarding = {
   'onboarding.slide.split.text': 'అద్దె, ట్రిప్‌లు, క్యాబ్‌లు, Netflix. లేదా చెప్పేయండి: “Riya, Sam తో క్యాబ్ 840”.',
   'onboarding.slide.settle.title': 'UPI ద్వారా తిరిగి పొందండి',
   'onboarding.slide.settle.text': 'గ్రూప్‌కు ఒక లింక్ పంపండి. స్నేహితులు తమ పేరును ట్యాప్ చేసి, ఏ UPI యాప్‌తోనైనా చెల్లిస్తారు.',
+  'onboarding.slide.stuck.title': 'డబ్బు ఇరుక్కుపోయిందా? తిరిగి పొందండి',
+  'onboarding.slide.stuck.text': 'చెల్లింపు ఫెయిల్ అయినా డబ్బు కట్ అయిందా, లేదా రీఫండ్ రానేలేదా? Settle రోజులు లెక్కపెడుతుంది, ఆలస్యానికి మీ బ్యాంక్ ఎప్పుడు పరిహారం ఇవ్వాలో చెబుతుంది, ఫిర్యాదు కూడా రాసిస్తుంది.',
   // Last step: about you.
   'onboarding.about.title': 'మిమ్మల్ని సెటప్ చేద్దాం',
   'onboarding.about.subtitle': 'మీరు పంపే అభ్యర్థనలపై స్నేహితులు మీ పేరు చూస్తారు.',
   'onboarding.about.start.cta': 'పంచడం మొదలుపెట్టండి',
   'onboarding.about.skip.cta': 'ఇప్పుడు దాటవేయండి',
+  // On the way to Stuck money, only the name is asked for.
+  'onboarding.about.stuck.subtitle': 'Settle మీ కోసం రాసే ఫిర్యాదు లేఖల్లో మీ పేరు ఉంటుంది.',
+  'onboarding.about.stuck.cta': 'కొనసాగించండి',
   'onboarding.about.name.label': 'మీ పేరు',
   'onboarding.about.name.placeholder': 'ఉదా. Ayush',
   'onboarding.about.name.error': 'మీ పేరు జోడించండి — మీరు పంపే అభ్యర్థనలపై స్నేహితులు దాన్ని చూస్తారు.',

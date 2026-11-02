@@ -62,7 +62,7 @@ test.describe('axe on every screen', () => {
     await expect(page.getByRole('heading', { level: 1, name: 'Hi, Ayush' })).toBeVisible({ timeout: 30_000 })
 
     await page.getByRole('button', { name: 'More' }).click()
-    await expect(page.getByRole('dialog', { name: 'More ways to split' })).toBeVisible()
+    await expect(page.getByRole('dialog', { name: 'More' })).toBeVisible()
     await expectNoSeriousA11y(page)
     await page.keyboard.press('Escape')
 

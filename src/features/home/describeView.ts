@@ -7,11 +7,16 @@ import { describedToPrefill, missingPeople } from '../../ai/prefill'
 import type { CategoryId, DescribedSplit, Friend, Minor, SplitMode } from '../../domain/types'
 import { CATEGORY_META } from '../../engine/categories'
 import { splitAmount } from '../../engine/split'
-import { t } from '../../i18n'
+import { countVariants, t, type MessageKey } from '../../i18n'
 import { formatBps } from '../../kit/splitInputs'
 import { formatMoney } from '../../lib/money'
 import { nameKey, normalizeName } from '../../lib/people'
 import { AVATAR_COLORS } from '../../types'
+
+/** The examples "Just say it" cycles through, in the UI language (each language gives as many as suit it). */
+export function sayExamples(): string[] {
+  return Array.from({ length: countVariants('home.say.example') }, (_, i) => t(`home.say.example.${i}` as MessageKey))
+}
 
 /** Stand-in ids for people the draft names who aren't in your people yet. */
 const NEW_PREFIX = 'new-person:'
@@ -64,12 +69,12 @@ export interface DescribeViewContext {
   currency: string
 }
 
-const MODE_LABELS: Readonly<Record<Exclude<SplitMode, 'items'>, string>> = {
-  equal: 'Split equally',
-  exact: 'Exact amounts',
-  percent: 'By percentage',
-  shares: 'By shares',
-  had: 'What each had',
+const MODE_LABELS: Readonly<Record<Exclude<SplitMode, 'items'>, MessageKey>> = {
+  equal: 'home.describe.mode.equal',
+  exact: 'home.describe.mode.exact',
+  percent: 'home.describe.mode.percent',
+  shares: 'home.describe.mode.shares',
+  had: 'home.describe.mode.had',
 }
 
 /** The people a draft names (and the payer) as a dry run of `describedToPrefill`: nobody is saved. */
@@ -150,7 +155,7 @@ export function describeView(d: DescribedSplit, ctx: DescribeViewContext): Descr
     total,
     date: prefill.date ?? null,
     mode,
-    modeLabel: MODE_LABELS[mode],
+    modeLabel: t(MODE_LABELS[mode]),
     payerId,
     payerName: personName(payerId, ctx.meId, byId),
     payerSaid: prefill.payerId !== undefined,
@@ -163,10 +168,10 @@ export function describeView(d: DescribedSplit, ctx: DescribeViewContext): Descr
 /** "You, Riya and Sam" — the people line under the amount. */
 export function peopleSummary(people: readonly Pick<DescribePerson, 'name'>[], missing: number): string {
   const names = people.map((p) => p.name)
-  if (missing > 0) names.push(`${missing} more`)
-  if (names.length === 0) return 'Pick who’s in on the next screen'
+  if (missing > 0) names.push(t('home.describe.people.more', { count: missing }))
+  if (names.length === 0) return t('home.describe.people.none')
   if (names.length === 1) return names[0] ?? ''
-  return `${names.slice(0, -1).join(', ')} and ${names[names.length - 1] ?? ''}`
+  return t('ui.list.last', { list: names.slice(0, -1).join(', '), last: names[names.length - 1] ?? '' })
 }
 
 /** A number phrase from a voice transcript that was turned into digits. */

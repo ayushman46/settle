@@ -8,6 +8,7 @@ import {
   deleteStuck,
   dismissStuck,
   isStuckOpen,
+  markBankReplied,
   markStuckBack,
   MAX_STUCK,
   restoreStuck,
@@ -41,7 +42,7 @@ const draft = (over: Partial<StuckDraft> = {}): StuckDraft => ({
 describe('stuck payments', () => {
   it('saves one, open, with no steps yet', () => {
     const s = addStuck(draft(), 100)
-    expect(s).toMatchObject({ amount: 64_900, steps: [], back: null, dismissedAt: null, note: null, createdAt: 100, updatedAt: 100 })
+    expect(s).toMatchObject({ amount: 64_900, steps: [], repliedAt: null, back: null, dismissedAt: null, note: null, createdAt: 100, updatedAt: 100 })
     expect(stuckStore.get()).toEqual([s])
     expect(isStuckOpen(s)).toBe(true)
   })
@@ -96,6 +97,34 @@ describe('stuck payments', () => {
     expect(stuckStore.get()).toHaveLength(MAX_STUCK)
     expect(stuckStore.get().some((s) => s.id === settled.id)).toBe(false)
   })
+
+  it('never drops one with only part of it back', () => {
+    const part = addStuck(draft(), 1)
+    markStuckBack(part.id, { date: '2026-10-29', amount: 40_000, compensation: 0 })
+    expect(isStuckOpen(stuckStore.get()[0]!)).toBe(true)
+    const settled = addStuck(draft(), 2)
+    markStuckBack(settled.id, { date: '2026-10-29', amount: 64_900, compensation: 0 })
+    for (let i = 0; i < MAX_STUCK - 1; i++) addStuck(draft({ amount: 100 + i }), 10 + i)
+    expect(stuckStore.get()).toHaveLength(MAX_STUCK)
+    expect(stuckStore.get().some((s) => s.id === part.id)).toBe(true)
+    expect(stuckStore.get().some((s) => s.id === settled.id)).toBe(false)
+  })
+
+  it('notes the bank’s reply, with Undo; a later complaint to the bank waits for a new one', () => {
+    const s = addStuck(draft({ steps: [{ kind: 'bank', date: '2026-10-30', ref: 'C1' }] }))
+    const undo = markBankReplied(s.id, '2026-11-02')
+    expect(stuckStore.get()[0]?.repliedAt).toBe('2026-11-02')
+    undo()
+    expect(stuckStore.get()[0]?.repliedAt).toBeNull()
+    markBankReplied(s.id, '2026-11-02')
+    // Its reference noted again on the same complaint keeps the reply…
+    addStuckStep(s.id, { kind: 'bank', date: '2026-10-30', ref: 'C1-A' })
+    expect(stuckStore.get()[0]?.repliedAt).toBe('2026-11-02')
+    // …a new complaint after it doesn't.
+    addStuckStep(s.id, { kind: 'bank', date: '2026-11-05', ref: 'C2' })
+    expect(stuckStore.get()[0]?.repliedAt).toBeNull()
+    expect(markBankReplied('nope', '2026-11-02')).toBeTypeOf('function')
+  })
 })
 
 describe('stuck payments in backups', () => {
@@ -117,6 +146,13 @@ describe('stuck payments in backups', () => {
       ['other', '430112345678'],
       [s.id, 'newer'],
     ])
+  })
+
+  it('ones saved before the bank’s reply was noted restore with no reply', () => {
+    const s = addStuck(draft())
+    const file = JSON.parse(JSON.stringify(exportBackup())) as { stuck: Array<Record<string, unknown>> }
+    for (const x of file.stuck) delete x.repliedAt
+    expect(parseBackup(file)?.stuck).toEqual([s])
   })
 
   it('older backups without them restore as none', () => {

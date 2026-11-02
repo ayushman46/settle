@@ -17,16 +17,16 @@ const { fileURLToPath } = (await import(/* @vite-ignore */ URL_MODULE)) as NodeU
 const today = CORPUS_TODAY
 
 describe('the corpus', () => {
-  it('has 179 messages with unique ids', () => {
-    expect(SMS_CORPUS).toHaveLength(179)
-    expect(new Set(SMS_CORPUS.map(([id]) => id)).size).toBe(179)
+  it('has 211 messages with unique ids', () => {
+    expect(SMS_CORPUS).toHaveLength(211)
+    expect(new Set(SMS_CORPUS.map(([id]) => id)).size).toBe(211)
   })
 
   it.each(SMS_CORPUS)('%s', (_id, text, expected) => {
     expect(parseSms(text, { today })).toEqual(expected)
   })
 
-  it('covers 12 banks and 7 UPI apps', () => {
+  it('covers 30 banks and 7 UPI apps', () => {
     const banks = new Set<string>()
     const apps = new Set<string>()
     for (const [, , want] of SMS_CORPUS) {
@@ -34,7 +34,7 @@ describe('the corpus', () => {
       if (want.bank) banks.add(want.bank)
       if (want.app) apps.add(want.app)
     }
-    expect(banks.size).toBe(12)
+    expect(banks.size).toBe(30)
     expect(apps.size).toBe(7)
   })
 })
@@ -152,7 +152,7 @@ describe('parseSms', () => {
 
 describe('the source', () => {
   it('uses no regex lookbehind (Safari < 16.4 cannot parse it)', () => {
-    for (const file of ['./parseSms.ts', './brands.ts', './smsView.ts', './matchFriend.ts']) {
+    for (const file of ['./parseSms.ts', './brands.ts', './smsView.ts', './splitAlerts.ts', './matchFriend.ts']) {
       const source = readFileSync(fileURLToPath(new URL(file, import.meta.url).href), 'utf8')
       expect(source.includes('(?<=')).toBe(false)
       expect(source.includes('(?<!')).toBe(false)

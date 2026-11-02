@@ -8,6 +8,9 @@ export const app = {
   'app.tab.activity': 'Activity',
   'app.tab.you': 'You',
 
+  // The line under the logo (You's footer).
+  'app.tagline': 'Split anything. Settle in a tap.',
+
   // The browser tab's title: "{page} · Settle".
   'app.title.format': '{page} · {brand}',
   // Page names for the browser tab (one per screen).

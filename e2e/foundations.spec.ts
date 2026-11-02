@@ -12,6 +12,7 @@ import { DELIVERY_ENABLED } from '../src/features/bill/delivery.enabled'
 import { CLAIMS_ENABLED } from '../src/features/claim/enabled'
 import { LEND_ENABLED } from '../src/features/lend/enabled'
 import { POOLS_ENABLED } from '../src/features/pools/enabled'
+import { RENT_ENABLED } from '../src/features/rent/enabled'
 import { SMS_ENABLED } from '../src/features/sharein/enabled'
 
 const RIYA = friend('riya', 'Riya')
@@ -51,6 +52,7 @@ const ACTIONS = [
   ...(POOLS_ENABLED ? ['Collect money'] : []),
   ...(SMS_ENABLED ? ['From SMS'] : []),
   ...(DELIVERY_ENABLED ? ['Food order'] : []),
+  'Stuck money',
   'New group',
 ]
 const GRID = [...ACTIONS, ...['Rent', 'Trip', 'Subscription', 'Utilities', 'Cab']].slice(0, 7).concat('More')
@@ -80,8 +82,9 @@ for (const width of [320, 360]) {
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width)
 
       await grid.getByRole('button', { name: 'More' }).click()
-      const sheet = page.getByRole('dialog', { name: 'More ways to split' })
-      for (const label of ['Rent', 'Trip', 'Subscription', 'Utilities', 'Cab']) await expect(sheet.getByRole('button', { name: label, exact: true })).toBeVisible()
+      const sheet = page.getByRole('dialog', { name: 'More' })
+      // Rent has its own screen when the rent feature is on, so its template steps aside.
+      for (const label of [...(RENT_ENABLED ? [] : ['Rent']), 'Trip', 'Subscription', 'Utilities', 'Cab']) await expect(sheet.getByRole('button', { name: label, exact: true })).toBeVisible()
       await sheet.getByRole('button', { name: 'Cab' }).click()
       await expect(page).toHaveURL(/\/app\/split\/new\?category=transport$/)
     })

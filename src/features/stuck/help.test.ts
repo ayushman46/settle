@@ -3,7 +3,22 @@ import { STUCK_RAILS, STUCK_STEP_KINDS, type StuckPayment } from '../../data/sto
 import { EN } from '../../i18n/en'
 import { formatMessage } from '../../i18n'
 import { formatMoney } from '../../lib/money'
-import { AIRSEWA_URL, EJAGRITI_URL, MERCHANT_HELP, MYUPI_URL, NCH_URL, nchWhatsAppUrl, raiseHelp, RBI_CMS_URL, upiAppOf, type HelpText, type RaiseHelp } from './help'
+import {
+  AIRSEWA_URL,
+  EJAGRITI_URL,
+  letterSummary,
+  MERCHANT_HELP,
+  MYUPI_URL,
+  NCH_URL,
+  nchWhatsAppUrl,
+  raiseHelp,
+  RBI_CMS_URL,
+  upiAppOf,
+  walletName,
+  walletOf,
+  type HelpText,
+  type RaiseHelp,
+} from './help'
 
 const TODAY = '2026-11-02'
 
@@ -25,6 +40,7 @@ function failed(over: Partial<StuckPayment> = {}): StuckPayment {
     source: 'sms',
     confirmed: true,
     steps: [],
+    repliedAt: null,
     back: null,
     dismissedAt: null,
     note: null,
@@ -48,6 +64,7 @@ const VERIFIED = new Set([
   'https://www.upihelp.npci.org.in/',
   'https://grievance.phonepe.com/',
   'tel:1915',
+  'tel:1800114000',
   'https://consumerhelpline.gov.in',
   'https://airsewa.gov.in',
   'https://e-jagriti.gov.in',
@@ -132,6 +149,112 @@ describe('raiseHelp — your bank', () => {
   })
 })
 
+describe('raiseHelp — NPCI’s UPI help site, within its 45 days', () => {
+  const at = (date: string) => raiseHelp('bank', failed({ app: 'gpay', date }), { today: TODAY })
+
+  it('offers it up to 45 days after the payment', () => {
+    const help = at('2026-09-18')
+    expect(keys(help.steps)).toContain('stuckhelp.bank.myupi')
+    expect(help.links.map((l) => l.href)).toContain(MYUPI_URL)
+    expect(help.links.map((l) => say(l.label))).toEqual(['UPI help website'])
+  })
+
+  it('says the time has passed after that, and sends you to the letter instead', () => {
+    for (const date of ['2026-09-17', '2026-09-13', '2024-03-01']) {
+      const help = at(date)
+      expect(keys(help.steps), date).not.toContain('stuckhelp.bank.myupi')
+      expect(keys(help.steps), date).toContain('stuckhelp.bank.myupiPassed')
+      expect(help.links.map((l) => l.href), date).not.toContain(MYUPI_URL)
+    }
+  })
+
+  it('never mentions it for a card or IMPS payment', () => {
+    for (const rail of ['card_online', 'imps'] as const) {
+      const steps = keys(raiseHelp('bank', failed({ rail, date: '2026-09-01' }), { today: TODAY }).steps)
+      expect(steps).not.toContain('stuckhelp.bank.myupi')
+      expect(steps).not.toContain('stuckhelp.bank.myupiPassed')
+    }
+  })
+})
+
+describe('raiseHelp — a wallet', () => {
+  const paytm = failed({ rail: 'wallet', party: 'Airtel prepaid recharge', merchant: null, app: 'paytm', bank: null, account: null })
+
+  it('knows the wallet from what was saved', () => {
+    expect(walletOf(paytm)).toBe('paytm')
+    expect(walletOf({ ...paytm, app: 'com.mobikwik_new' })).toBe('mobikwik')
+    expect(walletOf({ ...paytm, app: null, bank: 'paytm' })).toBe('paytm')
+    expect(walletOf({ ...paytm, rail: 'upi_merchant' })).toBeNull()
+    expect(walletName({ ...paytm, app: 'Freecharge' })).toBe('Freecharge')
+    expect(walletName({ ...paytm, app: null })).toBeNull()
+  })
+
+  it('raises it with the wallet, not your bank', () => {
+    const help = raiseHelp('bank', paytm, { today: TODAY })
+    expect(say(help.title)).toBe('Raise it with Paytm')
+    expect(say(help.lead)).toContain('the wallet company must put it back')
+    expect(keys(help.steps)).toEqual(['stuckhelp.wallet.app', 'stuckhelp.wallet.letter', 'stuckhelp.bank.note'])
+    expect(say(help.steps[0] as HelpText)).toBe('In Paytm, open this payment and raise a complaint from its help section.')
+    expect(say(raiseHelp('bank', { ...paytm, app: null }).title)).toBe('Raise it with the wallet company')
+  })
+
+  it('takes the wallet company to the RBI Ombudsman, by name, with the registered mobile ready', () => {
+    const help = raiseHelp('ombudsman', paytm)
+    expect(keys(help.steps)).toContain('stuckhelp.ombudsman.fileWallet')
+    expect(help.steps.map(say).join(' ')).toContain('against Paytm Payments Bank Ltd, the company behind the wallet')
+    expect(keys(help.keepReady)).toContain('stuckhelp.ready.wallet')
+    expect(keys(help.keepReady)).not.toContain('stuckhelp.ready.account')
+  })
+
+  it('claims the compensation from the wallet company once the money is back', () => {
+    const help = raiseHelp('bank', { ...paytm, back: { date: '2026-10-30', amount: 50_000, compensation: 0 } }, { today: TODAY })
+    expect(say(help.lead)).toContain('the wallet company owes')
+    expect(keys(help.steps)[0]).toBe('stuckhelp.compensation.sendWallet')
+  })
+})
+
+describe('raiseHelp — once it is raised, or partly back', () => {
+  it('says when it was raised instead of asking for the number again', () => {
+    const help = raiseHelp('bank', failed({ steps: [{ kind: 'bank', date: '2026-10-27', ref: 'HDFC-88213' }] }), { today: TODAY })
+    expect(keys(help.steps).at(-1)).toBe('stuckhelp.bank.raised')
+    expect(say(help.steps.at(-1) as HelpText)).toMatch(/^You raised it on 27 Oct\S* \(number HDFC-88213\)\. If it isn’t fixed within 30 days/)
+    const noRef = raiseHelp('bank', failed({ steps: [{ kind: 'bank', date: '2026-10-27', ref: null }] }), { today: TODAY })
+    expect(say(noRef.steps.at(-1) as HelpText)).toMatch(/^You raised it on 27 Oct\S*\. If/)
+  })
+
+  it('still asks for the money, not just the compensation, when only part came back', () => {
+    const help = raiseHelp('bank', failed({ back: { date: '2026-10-30', amount: 20_000, compensation: 0 } }), { today: TODAY })
+    expect(say(help.title)).toBe('Raise it with your bank')
+  })
+})
+
+describe('letterSummary', () => {
+  const inr = (paise: number) => formatMoney(paise, 'INR', { trimZeros: true })
+  const sum = (...args: Parameters<typeof letterSummary>) => say(letterSummary(...args))
+
+  it('says what each letter asks for, with the amounts', () => {
+    expect(sum('bank', failed(), { today: TODAY })).toBe(`It asks for ${inr(50_000)} back, and the ${inr(80_000)} owed so far for the delay (₹100 a day).`)
+    expect(sum('bank', failed(), { today: '2026-10-22' })).toBe(`It asks for ${inr(50_000)} back, and ₹100 for each day it’s late.`)
+    const back = failed({ back: { date: '2026-10-30', amount: 50_000, compensation: 0 } })
+    expect(sum('bank', back, { today: TODAY })).toBe(`It asks for the ${inr(50_000)} owed for the days the money was late (₹100 a day).`)
+    expect(sum('ombudsman', failed(), { today: TODAY })).toContain(`asks for the ${inr(1_30_000)} you’re owed so far`)
+    expect(sum('merchant', refund(), { today: TODAY })).toContain(`your ${inr(1_29_900)} refund`)
+    expect(sum('nch', refund(), { today: TODAY })).toContain(inr(1_29_900))
+    expect(sum('airsewa', refund({ merchant: 'indigo' }), { today: TODAY })).toContain('AirSewa')
+    expect(sum('commission', refund(), { today: TODAY })).toContain(inr(1_29_900))
+  })
+
+  it('asks only for what is still to come', () => {
+    const part = refund({ back: { date: '2026-10-30', amount: 1_00_000, compensation: 0 } })
+    expect(sum('merchant', part, { today: TODAY })).toContain(`your ${inr(29_900)} refund`)
+  })
+
+  it('says why the letter itself is in English', () => {
+    expect(formatMessage(EN['stuckhelp.summary.english'], { kind: 'letter' })).toMatch(/^The letter is in English/)
+    expect(formatMessage(EN['stuckhelp.summary.english'], { kind: 'message' })).toMatch(/^The message is in English/)
+  })
+})
+
 describe('raiseHelp — the rest of the ladder', () => {
   it('sends the RBI Ombudsman to cms.rbi.org.in, with 14448 and what to have ready', () => {
     const help = raiseHelp('ombudsman', failed())
@@ -145,9 +268,9 @@ describe('raiseHelp — the rest of the ladder', () => {
 
   it('opens a business’s own help when it was checked, else says where to look', () => {
     const amazon = raiseHelp('merchant', refund())
-    expect(say(amazon.title)).toBe('Ask Amazon for the refund')
+    expect(say(amazon.title)).toBe('Raise it with Amazon')
     expect(amazon.channel?.href).toBe(MERCHANT_HELP.amazon?.url)
-    expect(say(amazon.channel?.label as HelpText)).toBe('Amazon on refunds')
+    expect(say(amazon.channel?.label as HelpText)).toBe('Open Amazon’s refund help')
     expect(keys(amazon.steps)).toEqual(['stuckhelp.merchant.page', 'stuckhelp.merchant.paste', 'stuckhelp.rule.ecommerce', 'stuckhelp.merchant.nextNch'])
 
     const flipkart = raiseHelp('merchant', refund({ merchant: 'flipkart' }))
@@ -158,10 +281,10 @@ describe('raiseHelp — the rest of the ladder', () => {
     expect(say(zomato.steps[0] as HelpText)).toBe('In the Zomato app or website, open this order and contact support from it.')
 
     const shop = raiseHelp('merchant', refund({ merchant: null, party: 'Sharma Electronics' }))
-    expect(say(shop.title)).toBe('Ask Sharma Electronics for the refund')
+    expect(say(shop.title)).toBe('Raise it with Sharma Electronics')
     expect(keys(shop.steps)).toEqual(['stuckhelp.merchant.app', 'stuckhelp.merchant.paste', 'stuckhelp.merchant.nextNch'])
 
-    expect(say(raiseHelp('merchant', refund({ merchant: null })).title)).toBe('Ask for the refund')
+    expect(say(raiseHelp('merchant', refund({ merchant: null })).title)).toBe('Raise it with the business')
   })
 
   it('points an airline at the DGCA rule and AirSewa next', () => {
@@ -170,14 +293,16 @@ describe('raiseHelp — the rest of the ladder', () => {
     expect(raiseHelp('airsewa', refund({ merchant: 'indigo' })).channel?.href).toBe(AIRSEWA_URL)
   })
 
-  it('sends the helpline message on WhatsApp, with 1915 and the website besides', () => {
+  it('sends the helpline message on WhatsApp, with 1915, 1800-11-4000 and the website besides', () => {
     const help = raiseHelp('nch', refund(), { message: 'Refund of ₹1,299 not received & more' })
     expect(help.channel).toEqual({
       kind: 'whatsapp',
       href: 'https://wa.me/918800001915?text=Refund%20of%20%E2%82%B91%2C299%20not%20received%20%26%20more',
       label: { key: 'stuckhelp.link.whatsapp' },
     })
-    expect(help.links.map((l) => l.href)).toEqual(['tel:1915', NCH_URL])
+    expect(help.links.map((l) => l.href)).toEqual(['tel:1915', 'tel:1800114000', NCH_URL])
+    expect(say(help.links[1]?.label as HelpText)).toBe('Call 1800-11-4000')
+    expect(say(help.title)).toBe('Take it to the National Consumer Helpline')
     expect(say(help.steps[0] as HelpText)).toBe(
       'Send the message below on WhatsApp to +91 88000 01915, call 1915 or 1800-11-4000 (8 AM to 8 PM), or register it on consumerhelpline.gov.in.',
     )
@@ -197,6 +322,10 @@ describe('raiseHelp — every rung, every way', () => {
     ...STUCK_RAILS.map((rail) => failed({ rail })),
     failed({ rail: null, app: 'gpay', party: null, merchant: null }),
     failed({ back: { date: '2026-10-30', amount: 50_000, compensation: 0 } }),
+    failed({ back: { date: '2026-10-30', amount: 20_000, compensation: 0 } }),
+    failed({ steps: [{ kind: 'bank', date: '2026-10-27', ref: null }] }),
+    failed({ rail: 'wallet', app: null, bank: null }),
+    failed({ rail: 'wallet', app: 'mobikwik', date: '2024-01-01' }),
     refund(),
     refund({ merchant: 'akasa' }),
     refund({ merchant: null, party: null }),
@@ -207,7 +336,7 @@ describe('raiseHelp — every rung, every way', () => {
     for (const s of cases)
       for (const step of STUCK_STEP_KINDS) {
         const help = raiseHelp(step, s, { today: TODAY, message: 'x' })
-        for (const line of all(help)) {
+        for (const line of [...all(help), letterSummary(step, s, { today: TODAY }), letterSummary(step, s, { today: TODAY, compensationOnly: true })]) {
           expect(EN[line.key], line.key).toBeTypeOf('string')
           expect(say(line), line.key).not.toMatch(/[{}]/)
         }

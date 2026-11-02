@@ -65,14 +65,17 @@ export function findMerchant(text: string): Merchant | null {
   return best?.m ?? null
 }
 
-/** `iso` moved forward by `days` working days (Saturdays and Sundays skipped; holidays aren't known). */
+/** The national holidays, the same day every year (MM-DD): Republic Day, Independence Day, Gandhi Jayanti. */
+const NATIONAL_HOLIDAYS: ReadonlySet<string> = new Set(['01-26', '08-15', '10-02'])
+
+/** `iso` moved forward by `days` working days (Saturdays, Sundays and the national holidays skipped; other holidays move year to year and aren't known). */
 export function addWorkingDays(iso: string, days: number): string {
   let date = iso
   let left = days
   while (left > 0) {
     date = addDays(date, 1)
     const weekday = new Date(`${date}T00:00:00Z`).getUTCDay()
-    if (weekday !== 0 && weekday !== 6) left -= 1
+    if (weekday !== 0 && weekday !== 6 && !NATIONAL_HOLIDAYS.has(date.slice(5))) left -= 1
   }
   return date
 }

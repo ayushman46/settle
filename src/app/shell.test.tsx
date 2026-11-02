@@ -407,7 +407,7 @@ describe('preloading screens', SLOW, () => {
   it('loads the core screens’ code ahead of time', async () => {
     const screenAt = (path: string) => matchAppRoute(path)?.screen as LazyScreen
     await preloadCoreScreens()
-    for (const path of ['/app/split/new', '/app/expense/e1', '/app/groups', '/app/activity', '/app/you', '/app/bill', '/app/friends']) {
+    for (const path of ['/app/split/new', '/app/expense/e1', '/app/groups', '/app/activity', '/app/you', '/app/bill', '/app/friends', '/app/stuck', '/app/stuck/s1', '/app/stuck/new']) {
       expect(screenAt(path).loaded).toBe(true)
     }
     expect(PaywallHost.loaded).toBe(true)

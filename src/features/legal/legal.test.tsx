@@ -43,8 +43,9 @@ describe('PrivacyPage', () => {
     expect(screen.getByRole('heading', { level: 1, name: 'Privacy policy' })).toBeInTheDocument()
     expect(document.title).toBe(`Privacy policy · ${BRAND.name}`)
     const summary = screen.getByRole('region', { name: 'The short version' })
-    expect(within(summary).getAllByRole('listitem')).toHaveLength(5)
+    expect(within(summary).getAllByRole('listitem')).toHaveLength(6)
     expect(summary).toHaveTextContent('no accounts and no database')
+    expect(summary).toHaveTextContent('Stuck money keeps your references, complaint numbers and account’s last digits on this phone')
     for (const title of [
       'What stays on your device',
       'What leaves your device, and why',
@@ -76,6 +77,9 @@ describe('PrivacyPage', () => {
     expect(device).toHaveTextContent('A debit is used only to check that a payment that failed really took your money')
     const leaves = screen.getByRole('region', { name: 'What leaves your device, and why' })
     expect(leaves).toHaveTextContent('never contacts your bank, a business or anyone else for you')
+    expect(leaves).toHaveTextContent('asks our server whether the AI helper is working')
+    expect(device).toHaveTextContent('What it ignores. Every other notification and message')
+    expect(device).toHaveTextContent('A backup is a plain file')
   })
 
   it('dates the policy and gives a way to get in touch', () => {

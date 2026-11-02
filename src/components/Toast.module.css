@@ -95,9 +95,32 @@
 }
 
 .message {
+  flex: 1 1 auto;
   min-width: 0;
   padding-block: var(--s-1);
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
+}
+
+/* Undo and close, side by side. */
+.actions {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: var(--s-1);
+}
+
+/* A long message: the whole width for the words, the buttons underneath at the end. */
+.stacked {
+  flex-wrap: wrap;
+  row-gap: var(--s-1);
+}
+
+.stacked .message {
+  flex-basis: calc(100% - var(--s-8));
+}
+
+.stacked .actions {
+  margin-inline-start: auto;
 }
 
 .action {
@@ -126,8 +149,38 @@
   transition-duration: var(--dur-1);
 }
 
-.action:focus-visible {
+.action:focus-visible,
+.close:focus-visible {
   outline-color: var(--on-primary);
+}
+
+.close {
+  position: relative;
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: calc(var(--s-8) + var(--s-1));
+  height: calc(var(--s-8) + var(--s-1));
+  border-radius: 50%;
+  color: var(--on-primary);
+  opacity: 0.8;
+}
+
+.close > svg {
+  width: var(--s-4);
+  height: var(--s-4);
+}
+
+.close::after {
+  content: '';
+  position: absolute;
+  inset: calc((var(--s-8) + var(--s-1) - var(--tap)) / 2);
+}
+
+@media (hover: hover) {
+  .close:hover {
+    opacity: 1;
+  }
 }
 
 @keyframes toast-in {

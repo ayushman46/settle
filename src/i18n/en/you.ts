@@ -10,6 +10,15 @@ export const you = {
   'you.shortcuts.collections.title': 'Collections',
   'you.shortcuts.collections.subtitle.open': '{count, plural, other {# open}}',
   'you.shortcuts.collections.subtitle.none': 'Gifts, parties, trips',
+  // Under People: who you split with ("Riya, Sam and 4 more"), or a nudge before the first.
+  'you.shortcuts.people.empty': 'Add the people you split with',
+  'you.shortcuts.people.two': '{first} and {second}',
+  'you.shortcuts.people.many': '{first}, {second} and {count, plural, other {# more}}',
+  // Under Recurring splits: what they're for, or "2 active · 1 due".
+  'you.shortcuts.recurring.empty': 'Rent, Wi-Fi, subscriptions — split monthly',
+  'you.shortcuts.recurring.active': '{count, plural, other {# active}}',
+  'you.shortcuts.recurring.paused': 'All paused',
+  'you.shortcuts.recurring.due': '{count, plural, other {# due}}',
   'you.celebrate.title': 'Pro unlocked',
   'you.pref.title': 'Preferences',
   // Under the language tiles in You → Language.
@@ -41,7 +50,7 @@ export const you = {
   'you.accent.locked': '{name}, Pro',
   'you.accent.note': 'Lime is free. Mint, sky, violet and coral come with Pro.',
   'you.clear.title': 'Clear everything?',
-  'you.clear.body': 'Your profile, people, expenses, groups, recurring splits and any bill in progress are deleted from this phone.',
+  'you.clear.body': 'Your profile, people, expenses, groups, recurring splits, stuck money and any bill in progress are deleted from this phone.',
   'you.clear.confirm': 'Clear everything',
   'you.clear.keep': 'Keep my data',
   'you.clear.backupBody': 'Might you want it back one day? Save a backup file first.',
@@ -86,6 +95,24 @@ export const you = {
   'you.restore.replace.body': 'Swap everything on this phone for the backup.',
   'you.restore.replace.title': 'This replaces everything here',
   'you.restore.fresh': 'Everything in the backup comes back onto this phone, profile included.',
+  // The banner under Replace.
+  'you.restore.replace.warning': 'Your profile, people, expenses, groups, recurring splits and stuck money on this phone are swapped for the backup’s. You can undo it straight after.',
+  // The sheet's button: a fresh phone, merging, or replacing.
+  'you.restore.cta.restore': 'Restore backup',
+  'you.restore.cta.merge': 'Merge backup',
+  'you.restore.cta.replace': 'Replace everything',
+  // What the picked file holds: "Saved today · 24 expenses · 6 people · 2 stuck payments".
+  'you.restore.saved': '{when, select, today {Saved today} yesterday {Saved yesterday} other {Saved on {date}}}',
+  'you.restore.contents.expenses': '{count, plural, one {# expense} other {# expenses}}',
+  'you.restore.contents.people': '{count, plural, one {# person} other {# people}}',
+  'you.restore.contents.groups': '{count, plural, one {# group} other {# groups}}',
+  'you.restore.contents.recurring': '{count, plural, one {# recurring split} other {# recurring splits}}',
+  'you.restore.contents.stuck': '{count, plural, one {# stuck payment} other {# stuck payments}}',
+  'you.restore.contents.empty': 'Nothing in it yet',
+  // A picked file that can't be restored.
+  'you.restore.error.notBackup': 'That file isn’t a {brand} backup. Pick the .json file {brand} saved.',
+  'you.restore.error.tooBig': 'That file is too big to be a {brand} backup.',
+  'you.restore.error.unreadable': 'Couldn’t open that file. Try again, or pick it from another folder.',
   'you.pro.active': 'Active',
   'you.pro.ended': 'Ended {date}',
   'you.pro.manage': 'Manage Pro',
@@ -103,6 +130,9 @@ export const you = {
   'you.data.restored': 'Backup restored',
   'you.data.merged': 'Backup merged — {parts}',
   'you.data.merged.none': 'Backup merged — nothing new in it',
+  // The parts of "Backup merged — 3 added, 1 updated".
+  'you.data.merged.added': '{count} added',
+  'you.data.merged.updated': '{count} updated',
   'you.data.shared': 'Backup shared — keep it somewhere safe',
   'you.data.saved': 'Backup saved to your downloads',
   'you.data.saveFailed': "Couldn't save the backup. Try again.",
@@ -113,5 +143,13 @@ export const you = {
   'you.data.back': 'Everything is back',
   'you.data.notBacked': 'Not backed up yet — keep a copy somewhere safe',
   'you.data.keepCopy': 'Keep a copy of everything, just in case',
+  'you.data.lastSaved': '{when, select, today {Last saved today} yesterday {Last saved yesterday} other {Last saved on {date}}}',
+  // Under the Your data card; <link> opens Pro.
+  'you.data.footnote': 'Backups hold your people, expenses, groups, recurring splits, stuck money (with complaint numbers) and settings — not your Pro pass. Moving phones? Copy your Pro code from <link>{brand} Pro</link> and redeem it there.',
+  // The share sheet's title for each file.
+  'you.data.backup.shareTitle': '{brand} backup',
+  'you.data.csv.shareTitle': '{brand} expenses',
+  'you.data.csv.shared': '{count, plural, one {# expense exported} other {# expenses exported}}',
+  'you.data.csv.saved': '{count, plural, one {# expense saved to your downloads as CSV} other {# expenses saved to your downloads as CSV}}',
   'you.data.undo': 'Undo',
 } as const satisfies Messages

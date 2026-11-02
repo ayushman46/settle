@@ -22,11 +22,11 @@ export const bill = {
   'bill.start.thatBill': 'அந்தப் பில்',
   // "Saffron Table (3 items)".
   'bill.start.what': '{name} ({count, plural, one {# பொருள்} other {# பொருட்கள்}})',
-  'bill.start.edit.title': 'அதற்குப் பதிலாக {title} ஐத் திருத்தவா?',
+  'bill.start.edit.title': 'அதற்குப் பதிலாக {title} பில்லைத் திருத்தவா?',
   'bill.start.new.title': 'புதிய பில் தொடங்கவா?',
-  'bill.start.edit.description': '{what} இன்னும் சேமிக்கப்படவில்லை — {title} ஐத் திருத்தினால் அது மாற்றப்படும்.',
+  'bill.start.edit.description': '{what} இன்னும் சேமிக்கப்படவில்லை — {title} பில்லைத் திருத்தினால் அது மாற்றப்படும்.',
   'bill.start.new.description': '{people, select, yes {{what} மாற்றப்படும். நீங்கள் சேர்த்த நபர்கள் அப்படியே இருப்பார்கள்.} other {{what} மாற்றப்படும்.}}',
-  'bill.start.edit.cta': '{title} ஐத் திருத்து',
+  'bill.start.edit.cta': '{title} பில்லைத் திருத்து',
   'bill.start.sample.cta': 'மாதிரியை முயற்சி செய்',
   'bill.start.new.cta': 'புதிய பில் தொடங்கு',
   'bill.start.keep.cta': 'என் பில்லை வை',
@@ -98,7 +98,7 @@ export const bill = {
   'bill.assign.next.cta': 'அடுத்து',
   'bill.assign.everyone.chip': 'அனைவரும்',
   'bill.assign.who.aria': '{name} எடுத்தவர் யார்?',
-  'bill.assign.shares.aria': '{who, select, me {உங்களுக்கான பங்குகள்} other {{name} இன் பங்குகள்}}',
+  'bill.assign.shares.aria': '{who, select, me {உங்களுக்கான பங்குகள்} other {{name} அவர்களின் பங்குகள்}}',
   'bill.assign.even.cta': 'சமமாகப் பிரி',
   'bill.assign.uneven.cta': 'சமமில்லாமல் பிரி',
   'bill.assign.qty.hint': 'பில்லில் {count}',
@@ -251,7 +251,7 @@ export const bill = {
   // One person on the receipt.
   'bill.result.person.payer': 'செலுத்தியது {paid} · திரும்பக் கிடைப்பது {amount}',
   // {name} is the payer as the object of the phrase ("you", "Riya").
-  'bill.result.person.owes': '{name} அவர்களுக்கு {amount} தர வேண்டும்',
+  'bill.result.person.owes': '{name} பெற வேண்டியது {amount}',
   'bill.result.person.nothing': 'எதுவும் தர வேண்டியதில்லை',
   'bill.result.person.aria': '{name}, {amount}, {status}',
   'bill.result.person.paid': 'செலுத்தியது',
@@ -333,7 +333,7 @@ export const bill = {
   'bill.scan.outOfScans.cta': 'Pro உடன் வரம்பற்றது பெறு',
   'bill.scan.outOfScans.body': 'ஒரு நாளைக்கு {count} கிடைக்கும், நாளை மீண்டும் கிடைக்கும். இதைத் தட்டச்சு செய்ய சுமார் ஒரு நிமிடம் ஆகும்.',
   // Replacing or discarding the bill in progress.
-  'bill.scan.replace.saved.description': '{name} இல் உங்கள் மாற்றங்கள் நீக்கப்படும் — சேமித்த பில் இருந்தபடியே இருக்கும்.',
+  'bill.scan.replace.saved.description': '{name} பில்லில் நீங்கள் செய்த மாற்றங்கள் நீக்கப்படும் — சேமித்த பில் இருந்தபடியே இருக்கும்.',
   'bill.scan.keep.cta': 'வை',
   'bill.scan.discard.title': 'இந்தப் பில்லை நிராகரிக்கவா?',
   'bill.scan.discardChanges.title': 'உங்கள் மாற்றங்களை நிராகரிக்கவா?',

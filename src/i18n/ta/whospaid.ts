@@ -2,7 +2,7 @@ import type { Messages } from '../types'
 
 export const whospaid: Messages = {
   'whospaid.title': 'யார் அனுப்பினார்கள்?',
-  'whospaid.more.title': 'யார் அனுப்பினார்கள்?',
+  'whospaid.more.title': 'யார் தந்தார்?',
   'whospaid.subtitle': '{count, plural, one {# பேர்} other {# பேர்}} உங்களுக்கு {amount} தர வேண்டும். பெற்றதைக் கொண்டு வாருங்கள் — செலுத்திய அனைவரையும் Settle டிக் செய்யும்.',
   'whospaid.empty.title': 'இப்போது யாரும் உங்களுக்குத் தர வேண்டியதில்லை',
   'whospaid.empty.text': 'நண்பர்கள் பிரிப்புக்குப் பணம் தர வேண்டியிருக்கும்போது, உங்கள் UPI வரலாறு அல்லது வங்கி அறிக்கையை இங்கே கொண்டு வந்து அனைவரையும் ஒரே நேரத்தில் டிக் செய்யுங்கள்.',
@@ -44,7 +44,7 @@ export const whospaid: Messages = {
   'whospaid.known': '{count, plural, one {# ஏற்கனவே} other {# ஏற்கனவே}} குறிக்கப்பட்டிருந்தது.',
   'whospaid.skipped': 'நீங்கள் செய்த {count, plural, one {# பணம்} other {# பணங்கள்}} படிக்கப்படவில்லை.',
   'whospaid.otherApps': 'யாராவது வேறு ஆப்பில் அனுப்பினார்களா? அது வங்கி அறிக்கையில் மட்டுமே தெரியலாம்.',
-  'whospaid.confirm': '{count, plural, one {# செலுத்தியதாகக் குறி} other {# செலுத்தியதாகக் குறி}}',
+  'whospaid.confirm': '{count, plural, =0 {செலுத்தியவர்களைத் தேர்ந்தெடு} one {# செலுத்தியதாகக் குறி} other {# செலுத்தியதாகக் குறி}}',
   'whospaid.marked.toast': '{count, plural, one {# பிரிப்பு செலுத்தியதாகக் குறிக்கப்பட்டது} other {# பிரிப்புகள் செலுத்தியதாகக் குறிக்கப்பட்டன}}',
   'whospaid.undo': 'செயல்தவிர்',
   'whospaid.done.title': '{count, plural, one {# பணம் டிக் ஆனது} other {# பணங்கள் டிக் ஆனது}}',

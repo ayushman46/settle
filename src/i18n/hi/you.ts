@@ -10,6 +10,15 @@ export const you = {
   'you.shortcuts.collections.title': 'कलेक्शन',
   'you.shortcuts.collections.subtitle.open': '{count, plural, one {# चालू} other {# चालू}}',
   'you.shortcuts.collections.subtitle.none': 'गिफ़्ट, पार्टी, ट्रिप',
+  // Under People: who you split with ("रिया, सैम और 4 अन्य"), or a nudge before the first.
+  'you.shortcuts.people.empty': 'जिनके साथ खर्च बाँटते हैं, उन्हें जोड़ें',
+  'you.shortcuts.people.two': '{first} और {second}',
+  'you.shortcuts.people.many': '{first}, {second} और {count, plural, one {# अन्य} other {# अन्य}}',
+  // Under Recurring splits: what they're for, or "2 चालू · 1 देय".
+  'you.shortcuts.recurring.empty': 'किराया, वाई-फ़ाई, सब्सक्रिप्शन — हर महीने बाँटें',
+  'you.shortcuts.recurring.active': '{count, plural, one {# चालू} other {# चालू}}',
+  'you.shortcuts.recurring.paused': 'सब रुके हुए',
+  'you.shortcuts.recurring.due': '{count, plural, one {# देय} other {# देय}}',
   'you.celebrate.title': 'Pro अनलॉक हो गया',
   'you.pref.title': 'पसंद',
   'you.language.description': 'आपकी पसंद इस फ़ोन के डेटा के साथ सेव रहती है और बैकअप में भी जाती है।',
@@ -39,7 +48,7 @@ export const you = {
   'you.accent.locked': '{name}, Pro',
   'you.accent.note': 'नींबू हरा मुफ़्त है। पुदीना, आसमानी, बैंगनी और मूँगा Pro के साथ आते हैं।',
   'you.clear.title': 'सब कुछ मिटाएँ?',
-  'you.clear.body': 'आपकी प्रोफ़ाइल, लोग, खर्च, ग्रुप, रिकरिंग बँटवारे और चल रहा कोई भी बिल इस फ़ोन से हटा दिए जाएँगे।',
+  'you.clear.body': 'आपकी प्रोफ़ाइल, लोग, खर्च, ग्रुप, रिकरिंग बँटवारे, अटके पैसे और चल रहा कोई भी बिल इस फ़ोन से हटा दिए जाएँगे।',
   'you.clear.confirm': 'सब मिटाएँ',
   'you.clear.keep': 'मेरा डेटा रहने दें',
   'you.clear.backupBody': 'कभी इसकी ज़रूरत पड़ सकती है? पहले एक बैकअप फ़ाइल सेव कर लें।',
@@ -84,6 +93,24 @@ export const you = {
   'you.restore.replace.body': 'इस फ़ोन का सब कुछ बैकअप से बदल दें।',
   'you.restore.replace.title': 'इससे यहाँ का सब कुछ बदल जाएगा',
   'you.restore.fresh': 'बैकअप का सब कुछ, प्रोफ़ाइल सहित, इस फ़ोन पर वापस आ जाएगा।',
+  // The banner under Replace.
+  'you.restore.replace.warning': 'इस फ़ोन पर आपकी प्रोफ़ाइल, लोग, खर्च, ग्रुप, रिकरिंग बँटवारे और अटके पैसे बैकअप वालों से बदल दिए जाएँगे। तुरंत बाद आप इसे पहले जैसा कर सकते हैं।',
+  // The sheet's button: a fresh phone, merging, or replacing.
+  'you.restore.cta.restore': 'बैकअप वापस लाएँ',
+  'you.restore.cta.merge': 'बैकअप जोड़ें',
+  'you.restore.cta.replace': 'सब कुछ बदलें',
+  // What the picked file holds: "आज सेव हुआ · 24 खर्च · 6 लोग · 2 अटके पेमेंट".
+  'you.restore.saved': '{when, select, today {आज सेव हुआ} yesterday {कल सेव हुआ} other {{date} को सेव हुआ}}',
+  'you.restore.contents.expenses': '{count, plural, one {# खर्च} other {# खर्च}}',
+  'you.restore.contents.people': '{count, plural, one {# व्यक्ति} other {# लोग}}',
+  'you.restore.contents.groups': '{count, plural, one {# ग्रुप} other {# ग्रुप}}',
+  'you.restore.contents.recurring': '{count, plural, one {# रिकरिंग बँटवारा} other {# रिकरिंग बँटवारे}}',
+  'you.restore.contents.stuck': '{count, plural, one {# अटका पेमेंट} other {# अटके पेमेंट}}',
+  'you.restore.contents.empty': 'इसमें अभी कुछ नहीं',
+  // A picked file that can't be restored.
+  'you.restore.error.notBackup': 'यह फ़ाइल {brand} का बैकअप नहीं है। {brand} की सेव की हुई .json फ़ाइल चुनें।',
+  'you.restore.error.tooBig': 'यह फ़ाइल {brand} का बैकअप होने के लिए बहुत बड़ी है।',
+  'you.restore.error.unreadable': 'यह फ़ाइल नहीं खुली। फिर कोशिश करें, या किसी और फ़ोल्डर से चुनें।',
   'you.pro.active': 'चालू',
   'you.pro.ended': '{date} को खत्म',
   'you.pro.manage': 'Pro मैनेज करें',
@@ -101,6 +128,9 @@ export const you = {
   'you.data.restored': 'बैकअप वापस आ गया',
   'you.data.merged': 'बैकअप जुड़ गया — {parts}',
   'you.data.merged.none': 'बैकअप जुड़ गया — उसमें कुछ नया नहीं था',
+  // The parts of "बैकअप जुड़ गया — 3 जुड़े, 1 अपडेट हुए".
+  'you.data.merged.added': '{count} जुड़े',
+  'you.data.merged.updated': '{count} अपडेट हुए',
   'you.data.shared': 'बैकअप शेयर हो गया — उसे किसी सुरक्षित जगह रखें',
   'you.data.saved': 'बैकअप आपके डाउनलोड में सेव हो गया',
   'you.data.saveFailed': 'बैकअप सेव नहीं हो सका। फिर से कोशिश करें।',
@@ -111,5 +141,14 @@ export const you = {
   'you.data.back': 'सब कुछ वापस आ गया',
   'you.data.notBacked': 'अभी बैकअप नहीं है — एक कॉपी किसी सुरक्षित जगह रखें',
   'you.data.keepCopy': 'सब कुछ की एक कॉपी रखें, बस एहतियातन',
-  'you.data.undo': 'वापस लें',
+  'you.data.lastSaved': '{when, select, today {आख़िरी बार आज सेव हुआ} yesterday {आख़िरी बार कल सेव हुआ} other {आख़िरी बार {date} को सेव हुआ}}',
+  // Under the Your data card; <link> opens Pro.
+  'you.data.footnote':
+    'बैकअप में आपके लोग, खर्च, ग्रुप, रिकरिंग बँटवारे, अटके पैसे (शिकायत नंबरों के साथ) और सेटिंग्स रहती हैं — आपका Pro पास नहीं। फ़ोन बदल रहे हैं? <link>{brand} Pro</link> से अपना Pro कोड कॉपी करें और नए फ़ोन पर भुनाएँ।',
+  // The share sheet's title for each file.
+  'you.data.backup.shareTitle': '{brand} बैकअप',
+  'you.data.csv.shareTitle': '{brand} खर्च',
+  'you.data.csv.shared': '{count, plural, one {# खर्च एक्सपोर्ट हुआ} other {# खर्च एक्सपोर्ट हुए}}',
+  'you.data.csv.saved': '{count, plural, one {# खर्च CSV के रूप में आपके डाउनलोड में सेव हुआ} other {# खर्च CSV के रूप में आपके डाउनलोड में सेव हुए}}',
+  'you.data.undo': 'पहले जैसा करें',
 } as const satisfies Messages

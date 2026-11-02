@@ -1015,3 +1015,242 @@
     transition: none;
   }
 }
+
+/* ---------- A payment's page: what's still to come, the win, a reminder, notes ---------- */
+
+/* Under the amount: "₹1,000 back · ₹299 still to come". */
+.detailOwed {
+  max-width: 36ch;
+  font: var(--text-label);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+
+/* All back: the card lands with a small lift (none under reduced motion). */
+.win {
+  animation: win-in var(--dur-4) var(--ease-spring) backwards;
+}
+
+@keyframes win-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--s-2)) scale(0.97);
+  }
+}
+
+.remindCta {
+  justify-self: start;
+}
+
+.remindEvent {
+  padding: var(--s-3);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+  font: var(--text-label);
+  color: var(--ink);
+  overflow-wrap: break-word;
+}
+
+/* Google Calendar: a real link (a tap always works), looking like a secondary button. */
+.remindLink {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  width: 100%;
+  min-height: var(--btn-h);
+  padding: var(--s-2) var(--s-6);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-pill);
+  background: var(--surface);
+  color: var(--ink);
+  font: var(--text-body);
+  font-weight: 600;
+  text-align: center;
+  text-decoration: none;
+  overflow-wrap: break-word;
+}
+
+.remindLink > svg {
+  flex: none;
+  width: var(--s-5);
+  height: var(--s-5);
+}
+
+.remindLink:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 3px;
+}
+
+.noteText {
+  font: var(--text-body);
+  color: var(--ink);
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+}
+
+.noteEmpty {
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
+.noteAdd {
+  justify-self: start;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .win {
+    animation: none;
+  }
+}
+
+/* ---------- The list: waiting on them, owed for the wait, the order number, the two rules ---------- */
+
+.kind-them {
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+}
+
+.kind-owed {
+  background: var(--positive-soft);
+  color: var(--positive);
+}
+
+.rowOrder {
+  font-weight: 400;
+  color: var(--ink-2);
+}
+
+.ruleLines {
+  display: grid;
+  gap: var(--s-1);
+}
+
+/* The money back in full: the clock's last, good step. */
+.event-back .eventDot {
+  background: var(--positive);
+  box-shadow: 0 0 0 4px var(--positive-soft);
+}
+
+.event-back .eventTitle {
+  color: var(--positive);
+  font-weight: 650;
+}
+
+/* ---------- Add: the day, your bank and app ---------- */
+
+/* The date picker holding the day picked, shown like a selected chip. */
+.chips .datePicked {
+  background: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
+  color: var(--on-accent);
+}
+
+.chips .datePicked svg {
+  color: inherit;
+}
+
+.selectField {
+  display: grid;
+  gap: var(--s-2);
+  min-width: 0;
+}
+
+.selectLabel {
+  font: var(--text-label);
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.selectControl {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+/* Like a text field: the phone's own list does the picking. */
+.select {
+  width: 100%;
+  min-height: calc(var(--s-12) + var(--s-1));
+  padding-block: 0;
+  padding-inline: var(--s-4) calc(var(--s-4) + var(--s-6));
+  border: 0;
+  border-radius: var(--radius-field);
+  background: var(--field-bg);
+  box-shadow: inset 0 0 0 1px var(--field-border);
+  color: var(--ink);
+  font: var(--text-body);
+  /* Never below 16px — iOS zooms into smaller fields. */
+  font-size: max(16px, 1rem);
+  appearance: none;
+  cursor: pointer;
+}
+
+.select:focus-visible {
+  background: var(--surface);
+  box-shadow: inset 0 0 0 2px var(--ink);
+  outline: 2px solid transparent;
+}
+
+.selectChevron {
+  position: absolute;
+  inset-inline-end: var(--s-4);
+  width: var(--s-5);
+  height: var(--s-5);
+  color: var(--ink-2);
+  pointer-events: none;
+}
+
+/* ---------- Paste: more than one found ---------- */
+
+.found {
+  display: grid;
+  gap: var(--s-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.foundRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--s-2);
+  min-height: var(--tap);
+  padding: var(--s-2) var(--s-2) var(--s-2) var(--s-3);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+}
+
+.foundPick {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  min-width: 0;
+  cursor: pointer;
+}
+
+.foundCheck {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  accent-color: var(--accent);
+}
+
+.foundText {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.foundTitle {
+  font: var(--text-label);
+  font-weight: 600;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.foundMeta {
+  font: var(--text-caption);
+  color: var(--ink-2);
+}

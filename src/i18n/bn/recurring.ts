@@ -75,7 +75,7 @@ export const recurring = {
   'recurring.editor.saved.toast': 'নিয়মিত ভাগ সেভ হয়েছে',
   'recurring.editor.changesSaved.toast': 'বদল সেভ হয়েছে',
   'recurring.editor.deleted.toast': '{title} মুছে ফেলা হয়েছে',
-  'recurring.editor.undo.cta': 'ফিরিয়ে নিন',
+  'recurring.editor.undo.cta': 'আগের মতো করুন',
   'recurring.editor.delete.aria': '{title} মুছুন',
   'recurring.editor.save.new.cta': 'নিয়মিত ভাগ সেভ করুন',
   'recurring.editor.save.cta': 'বদল সেভ করুন',

@@ -62,7 +62,7 @@ export const recurring = {
   'recurring.editor.saved.toast': 'રિકરિંગ સ્પ્લિટ સેવ થઈ',
   'recurring.editor.changesSaved.toast': 'ફેરફાર સેવ થયા',
   'recurring.editor.deleted.toast': '{title} કાઢી નાખ્યું',
-  'recurring.editor.undo.cta': 'પાછું લો',
+  'recurring.editor.undo.cta': 'પહેલાં જેવું કરો',
   'recurring.editor.delete.aria': '{title} કાઢી નાખો',
   'recurring.editor.save.new.cta': 'રિકરિંગ સ્પ્લિટ સેવ કરો',
   'recurring.editor.save.cta': 'ફેરફાર સેવ કરો',

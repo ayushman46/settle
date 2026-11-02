@@ -9,8 +9,9 @@ import { useT } from '../../i18n'
 import { AmountHero, DateField } from '../../kit/index-a'
 import { haptic } from '../../lib/haptics'
 import { parseMoneyInput, toInputString } from '../../lib/money'
-import { COMPENSATION_PER_DAY, compensationDue, daysLate, stillOwed } from './rules'
-import { backLine, inr, partyName } from './view'
+import { backInPart, COMPENSATION_PER_DAY, compensationDue, daysLate, nextStep } from './rules'
+import { backToast } from './useTickBack'
+import { inr, partyName } from './view'
 import styles from './Stuck.module.css'
 
 export interface BackSheetProps {
@@ -19,12 +20,15 @@ export interface BackSheetProps {
   payment: StuckPayment
   /** Start the compensation at what's owed (from "They've paid it"). */
   compensationPaid?: boolean
+  /** Saving closed it: all the money back, and nothing more owed for the wait. */
+  onAllBack?: () => void
 }
 
 /**
  * "It's back": how much came back, on what day, and any compensation paid with it — what the RBI's
- * rules say the wait was worth is shown beside it, so a short payment is plain to see. Saving ticks
- * it back (with Undo); compensation still owed keeps it open for the claim.
+ * rules say the wait was worth is shown beside it, so a short payment is plain to see. When part of
+ * it came back before, this is the rest (or more of it), added to what came then. Saving ticks it
+ * back (with Undo); money or compensation still owed keeps it open.
  */
 export function BackSheet(props: BackSheetProps) {
   // A fresh form each time it opens (the sheet keeps its last content while it slides away).
@@ -37,14 +41,19 @@ export function BackSheet(props: BackSheetProps) {
   return <BackSheetFrame key={opened} {...props} />
 }
 
-function BackSheetFrame({ open, onClose, payment, compensationPaid = false }: BackSheetProps) {
+function BackSheetFrame({ open, onClose, payment, compensationPaid = false, onAllBack }: BackSheetProps) {
   const t = useT()
   const toast = useToast()
   const day = todayIso()
-  const [amount, setAmount] = useState<Minor | null>(payment.back?.amount ?? payment.amount)
-  const [date, setDate] = useState(payment.back?.date ?? (day < payment.date ? payment.date : day))
+  // Part of it came back already: what's asked is what came this time, the rest by default.
+  const earlier = backInPart(payment) ? (payment.back?.amount ?? 0) : 0
+  const more = earlier > 0
+  const firstDay = more ? (payment.back?.date ?? payment.date) : payment.date
+  const [amount, setAmount] = useState<Minor | null>(more ? payment.amount - earlier : (payment.back?.amount ?? payment.amount))
+  const [date, setDate] = useState(!more && payment.back ? payment.back.date : day < firstDay ? firstDay : day)
+  const total = earlier + (amount ?? 0)
   // What the wait was worth by the day it came back (failed payments the money really left).
-  const backThen = { date, amount: amount ?? 0, compensation: 0 }
+  const backThen = { date, amount: total, compensation: 0 }
   const owedByThen = compensationDue({ ...payment, back: backThen }, day)
   const late = daysLate({ ...payment, back: backThen }, day)
   const [compText, setCompText] = useState(() => {
@@ -56,22 +65,32 @@ function BackSheetFrame({ open, onClose, payment, compensationPaid = false }: Ba
   const asksCompensation = payment.kind === 'failed' && payment.confirmed
 
   const save = (): void => {
-    const back = { date, amount: amount ?? payment.amount, compensation: asksCompensation ? compensation : 0 }
+    const back = { date, amount: total, compensation: asksCompensation ? compensation : 0 }
+    const after = { ...payment, back, confirmed: true, dismissedAt: null }
+    const closes = nextStep(payment, day).stage !== 'back' && nextStep(after, day).stage === 'back'
     const undo = markStuckBack(payment.id, back)
     haptic('success')
-    const still = stillOwed({ ...payment, back, dismissedAt: null }, day).compensation
-    toast(backLine(payment, back.amount, late, still), { tone: 'success', action: undo ? { label: t('common.action.undo'), onAction: undo } : undefined })
+    toast(backToast(t, payment, back, payment.back, day), { tone: 'success', action: undo ? { label: t('common.action.undo'), onAction: undo } : undefined })
     onClose()
+    if (closes) onAllBack?.()
   }
 
-  const short = amount !== null && amount > 0 && amount < payment.amount
+  const rest = payment.amount - total
+  const short = amount !== null && amount > 0 && rest > 0
+  // A first "It's back" says a part is fine; a part already noted says what's left after this.
+  const hint = short ? t('stuck.back.short', { amount: inr(rest) }) : payment.back === null ? t('stuck.back.partial') : undefined
+  const tooMuch = owedByThen > 0 && compensation > owedByThen
 
   return (
     <BottomSheet
       open={open}
       onClose={onClose}
-      title={payment.back ? t('stuck.back.titleEdit') : t('stuck.back.title')}
-      description={t('stuck.back.description', { name: partyName(payment), amount: inr(payment.amount) })}
+      title={more ? t('stuck.back.titleMore') : payment.back ? t('stuck.back.titleEdit') : t('stuck.back.title')}
+      description={
+        more
+          ? t('stuck.back.descriptionPart', { name: partyName(payment), back: inr(earlier), amount: inr(payment.amount) })
+          : t('stuck.back.description', { name: partyName(payment), amount: inr(payment.amount) })
+      }
       footer={
         <ActionBar>
           <Button block iconStart={<Check />} disabled={amount === null || amount <= 0} onClick={save}>
@@ -81,16 +100,12 @@ function BackSheetFrame({ open, onClose, payment, compensationPaid = false }: Ba
       }
     >
       <div className={styles.backForm}>
-        <AmountHero
-          value={amount}
-          currency="INR"
-          onChange={setAmount}
-          label={t('stuck.back.amount')}
-          hint={short ? t('stuck.back.short', { amount: inr(payment.amount - (amount ?? 0)) }) : undefined}
-        />
+        <AmountHero value={amount} currency="INR" onChange={setAmount} label={more ? t('stuck.back.amountMore') : t('stuck.back.amount')} showLabel hint={hint} />
         <div className={styles.dateRow}>
-          <span className={styles.dateLabel}>{t('stuck.back.date')}</span>
-          <DateField label={t('stuck.back.date')} value={date} min={payment.date} onChange={setDate} />
+          <span className={styles.dateLabel} aria-hidden="true">
+            {t('stuck.back.date')}
+          </span>
+          <DateField label={t('stuck.back.date')} value={date} min={firstDay} onChange={setDate} />
         </div>
         {asksCompensation && (
           <AmountInput
@@ -101,9 +116,11 @@ function BackSheetFrame({ open, onClose, payment, compensationPaid = false }: Ba
             label={t('stuck.back.compensation')}
             placeholder="0"
             hint={
-              owedByThen > 0
-                ? t('stuck.back.compensation.owed', { amount: inr(owedByThen), count: late, perDay: inr(COMPENSATION_PER_DAY) })
-                : t('stuck.back.compensation.none')
+              tooMuch
+                ? t('stuck.back.compensation.more', { amount: inr(owedByThen) })
+                : owedByThen > 0
+                  ? t('stuck.back.compensation.owed', { amount: inr(owedByThen), count: late, perDay: inr(COMPENSATION_PER_DAY) })
+                  : t('stuck.back.compensation.none')
             }
           />
         )}

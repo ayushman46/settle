@@ -69,6 +69,23 @@
   height: auto;
 }
 
+/* A slide without a drawing: its icon on a big accent tile. */
+.artIcon {
+  display: grid;
+  place-items: center;
+  width: 46%;
+  aspect-ratio: 1;
+  border-radius: 32%;
+  background: var(--accent);
+  color: var(--on-accent);
+  box-shadow: var(--shadow-lg);
+}
+
+.artIcon > svg {
+  width: 54%;
+  height: 54%;
+}
+
 .slideTitle {
   font: var(--text-title);
   letter-spacing: var(--tracking-tight);

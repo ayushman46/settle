@@ -22,7 +22,7 @@ export const expense = {
   'expense.toast.markedPaid': '{who, select, me {તમને ચૂકવાયેલું તરીકે નોંધ્યું} other {{name} ચૂકવી દીધું તરીકે નોંધ્યું}}',
   'expense.toast.markedUnpaid': '{who, select, me {તમને હજી ચૂકવવાનું બાકી તરીકે નોંધ્યું} other {{name} હજી ચૂકવ્યું નથી તરીકે નોંધ્યું}}',
   'expense.toast.deleted': '{title} કાઢી નાખ્યું',
-  'expense.toast.undo': 'પાછું લો',
+  'expense.toast.undo': 'પહેલાં જેવું કરો',
   'expense.paidReply.screen': 'ચુકવણી',
   'expense.paidReply.loading': 'જવાબ વાંચીએ છીએ…',
   'expense.paidReply.empty.title': 'અહીં વાંચવા જેવું કંઈ નથી',
@@ -72,10 +72,10 @@ export const expense = {
   'expense.added': '{date} ના રોજ ઉમેર્યું',
   'expense.added.changed': 'છેલ્લે બદલ્યું {date}',
   'expense.added.source.scan': 'સ્કેન કરેલા બિલ પરથી',
-  'expense.added.source.describe': '“Just say it” થી',
+  'expense.added.source.describe': '“બસ બોલી દો” થી',
   'expense.added.source.sample': 'નમૂનાના બિલ પરથી',
   'expense.added.source.recurring': 'રિકરિંગ સ્પ્લિટ પરથી',
-  'expense.added.source.sms': 'બેંક SMS પરથી',
+  'expense.added.source.sms': 'બૅન્ક SMS પરથી',
   'expense.added.source.voice': 'અવાજથી',
 
   'expense.bill.title': 'બિલ',
@@ -106,5 +106,5 @@ export const expense = {
   'expense.actions.markAll': 'બધાને ચૂકવેલા તરીકે નોંધો',
   'expense.actions.markAll.detail': 'બધું પાછું આવી જાય ત્યારે',
   'expense.actions.delete': 'કાઢી નાખો',
-  'expense.actions.delete.detail': 'તરત પછી પાછું લઈ શકો છો',
+  'expense.actions.delete.detail': 'તરત પછી પાછું લાવી શકો છો',
 } as const satisfies Messages

@@ -56,7 +56,7 @@ function DueCard({ due, day, onSplit }: { due: RecurringDue; day: string; onSpli
           <span className={styles.dueAmount}>{formatMoney(template.total, template.currency, { trimZeros: true })}</span>
         </p>
       </div>
-      <Button variant="accent" size="sm" onClick={onSplit} aria-label={`Split ${template.title} for ${month} now`}>
+      <Button variant="accent" size="sm" onClick={onSplit} aria-label={t('recurring.list.due.split.aria', { title: template.title, month })}>
         {t('home.due.splitNow')}
       </Button>
     </article>

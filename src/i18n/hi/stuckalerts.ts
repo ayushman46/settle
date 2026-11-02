@@ -4,6 +4,13 @@ import type { Messages } from '../types'
 export const stuckalerts: Messages = {
   'stuckalerts.failed': '{name} को {amount} का पेमेंट फ़ेल हुआ, पर पैसे कट गए — अटके पैसे में ट्रैक हो रहा है',
   'stuckalerts.failed.anon': '{amount} का एक पेमेंट फ़ेल हुआ, पर पैसे कट गए — अटके पैसे में ट्रैक हो रहा है',
+  'stuckalerts.failed.late':
+    '{name} को {amount} का पेमेंट फ़ेल हुआ, पर पैसे कट गए — {days, plural, one {# दिन की देरी} other {# दिन की देरी}} हो चुकी है: अब तक देरी के बदले बैंक को आपको {compensation} देने हैं',
+  'stuckalerts.failed.anon.late':
+    '{amount} का एक पेमेंट फ़ेल हुआ, पर पैसे कट गए — {days, plural, one {# दिन की देरी} other {# दिन की देरी}} हो चुकी है: अब तक देरी के बदले बैंक को आपको {compensation} देने हैं',
+  'stuckalerts.failed.atm': 'ATM से {amount} नहीं निकले, पर आपके खाते से कट गए — अटके पैसे में ट्रैक हो रहा है',
+  'stuckalerts.failed.atm.late':
+    'ATM से {amount} नहीं निकले, पर आपके खाते से कट गए — {days, plural, one {# दिन की देरी} other {# दिन की देरी}} हो चुकी है: अब तक देरी के बदले बैंक को आपको {compensation} देने हैं',
   'stuckalerts.check': '{name} को {amount} का पेमेंट शायद अटक गया — क्या पैसे आपके खाते से कटे?',
   'stuckalerts.check.anon': '{amount} का एक पेमेंट शायद अटक गया — क्या पैसे आपके खाते से कटे?',
   'stuckalerts.refund': '{name} से {amount} का रिफ़ंड — आने तक ट्रैक कर रहे हैं',
@@ -17,5 +24,9 @@ export const stuckalerts: Messages = {
     'एक फ़ेल पेमेंट के {amount} वापस आ गए — {days, plural, one {# दिन की देरी से} other {# दिन की देरी से}}: देरी के बदले बैंक को आपको {compensation} देने हैं',
   'stuckalerts.back.refund': '{name} से {amount} का रिफ़ंड आ गया',
   'stuckalerts.back.refund.anon': '{amount} का रिफ़ंड आ गया',
+  'stuckalerts.back.part': 'आपके {amount} में से {back} वापस आ गए — {rest} अभी आने बाकी हैं, Settle इन्हें ट्रैक करता रहेगा',
   'stuckalerts.back.many': '{count, plural, one {# अटका पेमेंट वापस आया} other {# अटके पेमेंट वापस आए}}',
+  'stuckalerts.cleared': '{name} को {amount} का पेमेंट आख़िरकार पूरा हो गया — कुछ नहीं अटका',
+  'stuckalerts.cleared.anon': '{amount} का एक पेमेंट आख़िरकार पूरा हो गया — कुछ नहीं अटका',
+  'stuckalerts.cleared.many': '{count, plural, one {# पेमेंट आख़िरकार पूरा हो गया} other {# पेमेंट आख़िरकार पूरे हो गए}} — कुछ नहीं अटका',
 }

@@ -116,7 +116,7 @@ test.describe('paid? drop the screenshot', () => {
     await seed(page, { friends: [friend('riya', 'Riya Sharma')], expenses: [riyaOwes420()] })
     await page.goto('/app')
     await page.getByRole('button', { name: 'More' }).click()
-    await page.getByRole('button', { name: 'Paid? Drop the screenshot' }).click()
+    await page.getByRole('button', { name: 'Paid screenshot' }).click()
     await expect(page).toHaveURL(/\/app\/proof$/)
     await expect(page.getByRole('heading', { level: 1, name: 'Paid? Drop the screenshot' })).toBeVisible()
   })

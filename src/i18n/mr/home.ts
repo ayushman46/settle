@@ -11,6 +11,8 @@ export const home = {
   'home.quick.sms': 'SMS वरून',
   'home.quick.food': 'फूड ऑर्डर',
   'home.quick.group': 'नवीन ग्रुप',
+  // Failed payments and refunds that haven't come back (Stuck money), there even before the first one.
+  'home.quick.stuck': 'अडकलेले पैसे',
   'home.quick.more': 'आणखी',
   // One-tap starts for everyday splits (a tile each, or in the More sheet).
   'home.template.rent': 'भाडे',
@@ -18,9 +20,13 @@ export const home = {
   'home.template.subscription': 'सबस्क्रिप्शन',
   'home.template.utilities': 'वीज-पाणी',
   'home.template.transport': 'कॅब',
-  // The sheet behind the More tile.
-  'home.more.title': 'वाटणीचे आणखी मार्ग',
-  'home.more.subtitle': 'यापैकी कशासाठीही, फक्त रकमेपासून सुरुवात करा.',
+  // The sheet behind the More tile: getting money back, then ways to start a split.
+  'home.more.title': 'आणखी',
+  'home.more.subtitle': 'तुमचे पैसे परत मिळवा, किंवा वाटणी सुरू करा.',
+  'home.more.back': 'तुमचे पैसे परत मिळवा',
+  'home.more.split': 'वाटणी सुरू करा',
+  // Short tile name for "Paid? Drop the screenshot".
+  'home.more.proof': 'पेमेंट स्क्रीनशॉट',
   // "Just say it" — what the AI reading of a sentence shows.
   'home.describe.looksRight': 'बरोबर आहे',
   'home.describe.changeWords': 'मी जे म्हणालो ते बदला',
@@ -33,6 +39,18 @@ export const home = {
   'home.describe.reading': 'तुमची वाटणी वाचली जात आहे…',
   'home.describe.noAmount': 'पुढच्या स्क्रीनवर रक्कम टाका',
   'home.describe.paidBy': '{name} यांनी दिले · {mode}',
+  // How the draft is split, as {mode} above.
+  'home.describe.mode.equal': 'समान वाटणी',
+  'home.describe.mode.exact': 'अचूक रकमा',
+  'home.describe.mode.percent': 'टक्केवारीनुसार',
+  'home.describe.mode.shares': 'हिस्स्यांनुसार',
+  'home.describe.mode.had': 'कोणाचे किती',
+  // Who's in: "You, Riya and 2 more" (joined with ui.list.last), or a nudge when the text named nobody.
+  'home.describe.people.more': 'आणखी {count} जण',
+  'home.describe.people.none': 'कोण-कोण आहे ते पुढच्या स्क्रीनवर निवडा',
+  // What a screen reader hears when the draft appears.
+  'home.describe.announce': 'वाटणी अशी आहे: {title}, {people}. {mode}, पैसे देणारे: {name}.',
+  'home.describe.announce.nobody': 'वाटणी अशी आहे: {title}. {mode}, पैसे देणारे: {name}.',
   // The first-run card and the split-now prompt.
   'home.first.title': 'तुमचा पहिला खर्च वाटा',
   'home.first.body': 'जेवण, भाडे, घरी जाणारी कॅब — Settle कोणाचे किती येणे-देणे आहे ते ठरवते आणि UPI ने पैसे परत मिळवून देते.',
@@ -84,11 +102,28 @@ export const home = {
   'home.header.proOn': 'Settle Pro चालू आहे',
   'home.header.renew': 'Pro नूतनीकरण करा',
   'home.header.go': 'Pro घ्या',
+  // The avatar in the corner, which opens You.
+  'home.header.youAria': 'तुम्ही: प्रोफाइल आणि सेटिंग्ज',
   'home.recent.title': 'अलीकडील व्यवहार',
   'home.recent.all': 'सर्व पहा',
   'home.recent.allAria': 'सर्व व्यवहार पहा',
   'home.draft.finish': 'तुमच्या बिलातील बदल पूर्ण करा',
   'home.draft.continue': 'तुमचे बिल सुरू ठेवा',
+  'home.draft.saved': 'सेव्ह केलेले बिल',
+  'home.draft.inProgress': 'अर्धवट बिल',
+  'home.draft.items': '{count, plural, one {# आयटम} other {# आयटम}}',
+  'home.people.seeAllAria': 'सर्व लोक पहा',
+  // Spoken for the Add tile and for a person with money out ("Riya ₹540, owes you"); the visible name and amount come first.
+  'home.people.addAria': 'व्यक्ती जोडा',
+  'home.people.owesYouAria': '{name} {amount}, तुम्हाला येणे आहे',
+  'home.people.youOweAria': '{name} {amount}, तुमचे देणे आहे',
+  'home.due.title': 'लवकरच देय',
+  'home.due.seeAllAria': 'सर्व नियमित वाटण्या पहा',
+  'home.say.example.0': 'Riya आणि Sam सोबत डिनर 2400',
+  'home.say.example.1': 'भाडे 32000, मी 40%, Aditya 30%, Neha 30%',
+  'home.say.example.2': 'कॅब 840, Riya आणि Sam सोबत, Sam दुप्पट देईल',
+  'home.say.example.3': 'Netflix 649, 4 जणांत',
+  'home.say.example.4': 'किराणा 1260, Neha ने भरले, माझ्यासोबत वाटा',
   'home.allowance.left': '{count, plural, one {आज # मोफत स्प्लिट} other {आज # मोफत स्प्लिट}}',
   'home.allowance.used': 'आजचे मोफत AI स्प्लिट संपले',
   'home.allowance.unlimited': 'Pro सोबत अमर्याद',

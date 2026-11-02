@@ -6,11 +6,12 @@ import { firstName } from '../../share/text'
 /** Names that don't say who the owner is (a skipped onboarding saves "You"). */
 const PLACEHOLDERS: ReadonlySet<string> = new Set(['', 'you', 'me', 'myself', 'i'])
 
-/** "Good morning" (5–11), "Good afternoon" (12–16), "Good evening" otherwise. */
-export function timeOfDayGreeting(hour: number): string {
+/** "Good morning" (5–11), "Good afternoon" (12–16), "Good evening" (17–23); nothing after midnight, when "Hi, Ayush" says enough. */
+export function timeOfDayGreeting(hour: number): string | null {
   if (hour >= 5 && hour < 12) return t('home.greet.morning')
   if (hour >= 12 && hour < 17) return t('home.greet.afternoon')
-  return t('home.greet.evening')
+  if (hour >= 17) return t('home.greet.evening')
+  return null
 }
 
 /** The current local hour (0–23). */

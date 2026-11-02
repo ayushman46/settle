@@ -6,7 +6,7 @@
  */
 import { describe, expect, it } from 'vitest'
 import { CORPUS_TODAY, SMS_CORPUS } from '../sharein/sms/corpus'
-import { MERCHANT_APPS, readStuckMessage, signalToDraft, UPI_APP_IDS, type StuckSignal } from './detect'
+import { debitToDraft, MERCHANT_APPS, readStuckMessage, signalToDraft, UPI_APP_IDS, type StuckSignal } from './detect'
 import { merchantById } from './merchants'
 
 /* The client tsconfig has no Node types: the two functions used are typed here (as in parseSms.test.ts). */
@@ -58,7 +58,22 @@ const CASES: readonly Case[] = [
   ['card-failed-domain', 'Your credit card transaction of RS. 1234.56 on flipkart.com failed.', null,
     { type: 'failed', amount: 123_456, party: 'Flipkart', rail: 'card_online', debited: false }],
   ['bank-failed-shop', 'Your UPI transaction of INR 750.00 from A/c XX1234 to KRISHNA GENERAL STORE has failed. Money if debited will be refunded in 48 hrs -Canara Bank', null,
-    { type: 'failed', amount: 75_000, party: 'Krishna General Store', rail: 'upi_merchant', debited: false }],
+    { type: 'failed', amount: 75_000, party: 'Krishna General Store', rail: 'upi_merchant', debited: false, bank: 'canara' }],
+  ['bank-failed-ac-debited', 'Dear Customer, your UPI txn of Rs.1,850 to IRCTC has FAILED. A/c XX7712 debited. Amount will be reversed within 1 working day. Ref 630312345678 -SBI', null,
+    { type: 'failed', amount: 185_000, party: 'IRCTC', debited: true, account: 'XX7712', bank: 'sbi', ref: '630312345678' }],
+  ['bank-ac-debited-first', 'Your A/c XX7712 debited Rs.1,850 UPI txn failed -SBI', null, { type: 'failed', amount: 185_000, debited: true, account: 'XX7712' }],
+  ['bank-card-ending-debited', 'Card ending 4417 debited for Rs.2,100 at CROMA but the transaction failed. Amount will be reversed in 5 days. -Federal Bank', null,
+    { type: 'failed', amount: 210_000, debited: true, bank: 'federal' }],
+  ['bank-p2a-ref', 'Rs.2,000 debited from A/c XX4821 for UPI-P2A txn 630333344455 which failed. Amount will be reversed by T+1. -Karur Vysya Bank', null,
+    { type: 'failed', amount: 200_000, debited: true, ref: '630333344455', rail: 'upi_person', bank: 'kvb' }],
+  ['bank-vpa-shop', 'Your UPI payment of Rs.4,999.00 to croma.retail@hdfcbank failed. Rs.4,999.00 debited from A/c XX4821 will be reversed. -Indian Bank', null,
+    { type: 'failed', vpa: 'croma.retail@hdfcbank', party: null, rail: 'upi_merchant', debited: true, bank: 'indianbank' }],
+  ['bank-vpa-landlord', 'Your UPI payment of Rs.18,000.00 to landlord.sharma@okaxis failed. Any amount debited will be reversed. -Indian Overseas Bank', null,
+    { type: 'failed', vpa: 'landlord.sharma@okaxis', rail: 'upi_person', debited: false, bank: 'iob' }],
+  ['bank-future-date', 'Rs.799 debited from A/c XX4821 on 15-11-26 for UPI txn to ZOMATO failed. Ref 630412349999 -Bank of India', null,
+    { type: 'failed', date: TODAY, dateDoubt: '2026-11-15', debited: true, bank: 'boi' }],
+  ['wallet-order-id', 'Payment of Rs.450 failed on Paytm. Order ID 37124598812. Money if debited will be refunded in 3-5 days.', null,
+    { type: 'failed', amount: 45_000, ref: '37124598812', app: 'paytm', debited: false }],
   ['bank-not-credited', 'Rs.2,000.00 debited from your A/c XX4821 on 01-11-26 but not credited to the beneficiary. UPI Ref 630511223344. It will be reversed within T+1 day. -HDFC Bank', null,
     { type: 'failed', amount: 200_000, debited: true, ref: '630511223344', date: '2026-11-01' }],
 
@@ -83,6 +98,11 @@ const CASES: readonly Case[] = [
     { type: 'pending', amount: 34_900, party: 'Blinkit', debited: true }],
   ['phonepe-bill-pending', 'Your bill payment of ₹1,180 for BESCOM is pending. We will update you in 24 hours.', PHONEPE,
     { type: 'pending', amount: 118_000, party: 'BESCOM', rail: 'upi_merchant' }],
+  ['bank-pending-refunded-if', 'Transaction of Rs.1,999.00 to BIGBASKET via UPI is pending. If debited, amount will be refunded within 48 hrs.', null,
+    { type: 'pending', amount: 199_900, party: 'BigBasket', merchant: 'bigbasket', rail: 'upi_merchant', debited: false }],
+  ['paytm-pending-refunded-if', 'Your payment of ₹1,000 to Priya is pending. Money if debited will be refunded in 3-5 working days.', PAYTM,
+    { type: 'pending', amount: 100_000, party: 'Priya', debited: false }],
+  ['pending-gets-refunded', 'Your payment of ₹1,000 to Priya is pending. Amount, if debited, gets refunded automatically.', PAYTM, { type: 'pending', amount: 100_000 }],
   ['swiggy-app-failed', 'Your Swiggy payment of ₹649 failed. ₹649 debited from your account will be refunded within 5-7 business days.', SWIGGY,
     { type: 'failed', amount: 64_900, party: 'Swiggy', merchant: 'swiggy', debited: true }],
 
@@ -147,6 +167,12 @@ const CASES: readonly Case[] = [
     { type: 'refund_initiated', amount: 199_900, party: 'BookMyShow', merchant: 'bookmyshow', date: '2026-10-22', promisedBy: '2026-10-29' }],
   ['card-refund-initiated', 'Refund initiated: Amt: Rs.3,274.66 on HDFC Bank Credit Card 1111. To receive your Refund,please update your Bank details: TnC.', null,
     { type: 'refund_initiated', amount: 327_466, party: null, merchant: null, account: 'XX1111' }],
+  ['flipkart-processed-by', 'Your refund of Rs.2,499 for order OD330012345678901000 has been processed by Flipkart. It will reflect in 5-7 business days.', null,
+    { type: 'refund_initiated', amount: 249_900, party: 'Flipkart', merchant: 'flipkart', orderId: 'OD330012345678901000', promisedBy: '2026-11-11' }],
+  ['flipkart-order-only', 'Refund of Rs.2,499 for order OD330012345678901000 has been initiated.', null,
+    { type: 'refund_initiated', merchant: 'flipkart', party: 'Flipkart', orderId: 'OD330012345678901000' }],
+  ['amazon-order-only', 'Refund of Rs.1,299 for order 402-1234567-1234567 has been initiated and will reach you in 3-5 business days.', null,
+    { type: 'refund_initiated', merchant: 'amazon', orderId: '402-1234567-1234567' }],
 
   /* ------------------------------------------------------------------ money that left (pairing only) */
   ['hdfc-sent', 'Sent Rs.250.00\nFrom HDFC Bank A/C *4821\nTo SWIGGY\nOn 01/11/26\nRef 630512345678\nNot You?\nCall 18002586161/SMS BLOCK UPI to 7308080808', null,
@@ -160,6 +186,39 @@ const CASES: readonly Case[] = [
   ['atm-maybe-reversed', 'INR 2,000 debited from A/c XX1234 for ATM withdrawal on 30-10-26. If cash is not dispensed, amount will be reversed within 24 hours.', null,
     { type: 'debit', amount: 200_000 }],
   ['fee-processing', 'Processing fee of Rs.499 debited from A/c XX4821 for your loan. -HDFC Bank', null, { type: 'debit', amount: 49_900 }],
+  ['hdfc-sent-one-line', 'Sent Rs.649.00 From HDFC Bank A/C *4821 To SWIGGY On 01/11/26 Ref 430598765432', null,
+    { type: 'debit', amount: 64_900, party: 'Swiggy', merchant: 'swiggy', ref: '430598765432', date: '2026-11-01', bank: 'hdfc', account: 'XX4821' }],
+  ['sbi-trf-irctc', 'Dear UPI user A/C X3367 debited by 1845.00 on date 01Nov26 trf to IRCTC Refno 630012345678 -SBI', null,
+    { type: 'debit', amount: 184_500, party: 'IRCTC', merchant: 'irctc', ref: '630012345678', rail: 'upi_merchant', bank: 'sbi' }],
+  ['bob-pos', 'Rs.3200.00 debited from A/c XX7731 on 01-11-26 by POS txn at CROMA. RRN 630012345678 -Bank of Baroda', null,
+    { type: 'debit', amount: 320_000, party: 'Croma', ref: '630012345678', rail: 'card_pos', bank: 'bob', account: 'XX7731' }],
+  ['canara-p2p', 'INR 500.00 has been DEBITED from your account XX1234 on 01-11-26 UPI/P2P/430412345678/SHWETA - Canara Bank', null,
+    { type: 'debit', amount: 50_000, party: 'Shweta', ref: '430412345678', rail: 'upi_person', bank: 'canara', account: 'XX1234' }],
+  ['canara-nach', 'Rs 2,000 debited from Canara Bank A/c XX1234 on 01-11-26 towards NACH-DR- ACH HDFC LTD 4432112', null,
+    { type: 'debit', amount: 200_000, rail: 'nach', bank: 'canara' }],
+  ['union-debit', 'Your Union Bank of India A/c XX1234 debited Rs 500. Ref 630412345671', null, { type: 'debit', bank: 'union' }],
+  ['sbi-full-name', 'Your State Bank of India A/c XX1234 debited Rs 500. Ref 630412345671', null, { type: 'debit', bank: 'sbi' }],
+  ['south-indian-debit', 'Rs 500 debited from South Indian Bank A/c XX1234 Ref 630412345671', null, { type: 'debit', bank: 'southindian' }],
+
+  /* ------------------------------------------------------------------ Hindi and Hinglish */
+  ['hi-atm-failed', 'प्रिय ग्राहक, आपके खाते XX4821 से 24-10-26 को एटीएम पर रु.5000 डेबिट हुए, लेनदेन विफल। संदर्भ 429812345678 -एसबीआई', null,
+    { type: 'failed', amount: 500_000, date: '2026-10-24', ref: '429812345678', account: 'XX4821', bank: 'sbi', rail: 'atm', debited: true, party: null }],
+  ['hinglish-failed', 'Aapke khate XX1234 se Rs 1500 kaate gaye the, UPI lenden asafal raha. Ref 630412345678 -PNB', null,
+    { type: 'failed', amount: 150_000, debited: true, ref: '630412345678', account: 'XX1234', bank: 'pnb' }],
+  ['hi-upi-failed-debited', 'प्रिय ग्राहक, आपके खाते XX1234 से रु.750 का यूपीआई भुगतान विफल रहा। राशि डेबिट हो गई है और 1 दिन में वापस जमा कर दी जाएगी। -पीएनबी', null,
+    { type: 'failed', amount: 75_000, debited: true, bank: 'pnb' }],
+  ['hi-maybe-debited', 'प्रिय ग्राहक, रु.500 का यूपीआई लेनदेन विफल रहा। यदि राशि कटी है तो 1 दिन में वापस कर दी जाएगी। -एसबीआई', null,
+    { type: 'failed', amount: 50_000, debited: false, bank: 'sbi' }],
+  ['hi-rupaye-kate', 'आपके खाते से 500 रुपये कटे, लेनदेन असफल। -बैंक ऑफ़ बड़ौदा', null, { type: 'failed', amount: 50_000, debited: true, bank: 'bob' }],
+  ['hi-devanagari-digits', 'प्रिय ग्राहक, रु.५०० आपके खाते XX1234 से डेबिट हुए, यूपीआई लेनदेन विफल। -एसबीआई', null,
+    { type: 'failed', amount: 50_000, debited: true, account: 'XX1234' }],
+  ['hi-reversed', 'प्रिय ग्राहक, रु.500 आपके खाते XX1234 में वापस जमा किए गए। संदर्भ 630412345678 -एसबीआई', null,
+    { type: 'reversal', amount: 50_000, ref: '630412345678' }],
+  ['hi-pending', 'प्रिय ग्राहक, रु.1200 का यूपीआई लेनदेन लंबित है। -एसबीआई', null, { type: 'pending', amount: 120_000 }],
+
+  /* ------------------------------------------------------------------ an OTP pasted with it */
+  ['failed-and-otp', 'Your Swiggy payment of ₹649 failed. ₹649 debited from your account will be refunded within 5-7 business days. UPI Ref 430112345678\n123456 is your OTP for txn of INR 4,500.00 at FLIPKART. Do not share it.', null,
+    { type: 'failed', amount: 64_900, party: 'Swiggy', ref: '430112345678', debited: true }],
 
   /* ------------------------------------------------------------------ went through (only to clear a pending one) */
   ['gpay-paid', 'Payment successful\n₹1,049 paid to BigBasket\nUPI Ref: 629315542103', GPAY, { type: 'success', amount: 104_900, party: 'BigBasket', ref: '629315542103', app: 'gpay' }],
@@ -171,6 +230,13 @@ const CASES: readonly Case[] = [
 
   /* ------------------------------------------------------------------ never anything */
   ['otp', '481923 is your OTP for UPI refund of Rs.250.00 at SWIGGY. Do not share it with anyone', null, null],
+  ['otp-two-lines', '123456 is your OTP for txn of INR 4,500.00 at FLIPKART.\nValid for 10 mins. Do not share it with anyone.', null, null],
+  ['otp-and-debit', 'Rs.4,500 debited from A/c XX4821 at FLIPKART.\n123456 is your OTP for txn of INR 4,500.00 at FLIPKART.', null, null],
+  ['hi-otp', 'रु.4500 के लेनदेन के लिए आपका ओटीपी 123456 है। किसी से साझा न करें।', null, null],
+  ['hi-insufficient', 'प्रिय ग्राहक, अपर्याप्त शेष के कारण रु.500 का यूपीआई लेनदेन विफल। -एसबीआई', null, null],
+  ['hi-friend-credit', 'आपके खाते में रु.2000 जमा किए गए। -एसबीआई', null, null],
+  ['hi-promo', 'शानदार ऑफर! रु.500 कैशबैक पाएं। अभी खरीदें।', null, null],
+  ['refund-once-approved', 'We have raised a refund request for ₹349 for your Swiggy order #12345678. The refund will be processed once approved.', SWIGGY, null],
   ['promo-cashback', 'Get ₹100 cashback on your first UPI payment! Pay now on PhonePe.', PHONEPE, null],
   ['promo-refunds', 'Big Billion Days Sale! Up to ₹5,000 off + instant refunds. Shop now', 'com.flipkart.android', null],
   ['promo-won', 'Congratulations! You have won a ₹500 refund voucher. Claim it today', null, null],
@@ -237,6 +303,10 @@ describe('did the money leave?', () => {
     ['Payment of ₹500 to Swiggy failed. Money deducted from your account will be refunded in 3-5 days.', true],
     ['Rs.500 debited from A/c XX4821. UPI txn to SWIGGY failed. Amount will be reversed.', true],
     ['Payment of ₹500 to Swiggy failed. The amount debited will be refunded in 5 days.', true],
+    ['UPI txn of Rs.500 to SWIGGY has FAILED. A/c XX7712 debited. Amount will be reversed.', true],
+    ['UPI txn of Rs.500 to SWIGGY has FAILED. A/c no. XXXX7712 has been debited.', true],
+    ['UPI txn of Rs.500 to SWIGGY has FAILED. A/c XX7712 will be debited only if it goes through.', false],
+    ['UPI txn of Rs.500 to SWIGGY has FAILED. If your A/c XX7712 debited, it will be reversed.', false],
   ])('%s → %s', (text, debited) => {
     expect(readStuckMessage(text, { today: TODAY })).toMatchObject({ type: 'failed', debited })
   })
@@ -281,6 +351,19 @@ describe('readStuckMessage — anything at all', () => {
   })
 })
 
+describe('Hindi and English', () => {
+  const fields = (text: string) => {
+    const s = readStuckMessage(text, { today: TODAY })
+    return s && { type: s.type, amount: s.amount, date: s.date, ref: s.ref, account: s.account, bank: s.bank, rail: 'rail' in s ? s.rail : null, debited: 'debited' in s ? s.debited : null }
+  }
+
+  it('the same SBI failure reads the same in both', () => {
+    const hindi = fields('प्रिय ग्राहक, आपके खाते XX4821 से 24-10-26 को एटीएम पर रु.5000 डेबिट हुए, लेनदेन विफल। संदर्भ 429812345678 -एसबीआई')
+    expect(hindi).toEqual(fields('Dear Customer, Rs.5000 debited from A/c XX4821 on 24-10-26 at ATM, transaction failed. Ref 429812345678 -SBI'))
+    expect(hindi).toEqual({ type: 'failed', amount: 500_000, date: '2026-10-24', ref: '429812345678', account: 'XX4821', bank: 'sbi', rail: 'atm', debited: true })
+  })
+})
+
 describe('signalToDraft', () => {
   const read = (text: string, app: string | null = null) => readStuckMessage(text, { today: TODAY, app, at: AT }) as StuckSignal
 
@@ -299,6 +382,43 @@ describe('signalToDraft', () => {
       account: 'XX4821',
       app: null,
       source: 'alert',
+      confirmed: true,
+    })
+  })
+
+  it('a bank SMS that says "A/c … debited" is confirmed', () => {
+    expect(signalToDraft(read('Dear Customer, your UPI txn of Rs.1,850 to IRCTC has FAILED. A/c XX7712 debited. Amount will be reversed within 1 working day. -SBI'), 'sms')).toMatchObject({
+      kind: 'failed',
+      confirmed: true,
+      bank: 'sbi',
+    })
+  })
+
+  it('paid to a UPI ID with no name: the UPI ID is who', () => {
+    expect(signalToDraft(read('Your UPI payment of Rs.1,200.00 to rahul@okhdfcbank failed. Any amount debited will be reversed in 48 hrs.'), 'sms')).toMatchObject({
+      party: 'rahul@okhdfcbank',
+      rail: 'upi_person',
+    })
+  })
+
+  it('a plain debit the person says failed is a confirmed failed payment, with everything the SMS gave', () => {
+    const debit = read('INR 500.00 has been DEBITED from your account XX1234 on 01-11-26 UPI/P2P/430412345678/SHWETA - Canara Bank')
+    expect(signalToDraft(debit, 'sms')).toBeNull()
+    if (debit.type !== 'debit') throw new Error('not a debit')
+    expect(debitToDraft(debit, 'sms')).toEqual({
+      kind: 'failed',
+      rail: 'upi_person',
+      party: 'Shweta',
+      merchant: null,
+      amount: 50_000,
+      date: '2026-11-01',
+      promisedBy: null,
+      ref: '430412345678',
+      orderId: null,
+      bank: 'canara',
+      account: 'XX1234',
+      app: null,
+      source: 'sms',
       confirmed: true,
     })
   })
@@ -348,6 +468,22 @@ describe('the apps it reads', () => {
   it('the Android listener listens to the same apps', () => {
     const java = source('../../../android/app/src/main/java/in/settleupi/app/PaymentAlertsListener.java')
     for (const pkg of [...Object.keys(UPI_APP_IDS), ...Object.keys(MERCHANT_APPS)]) expect(java).toContain(`"${pkg}"`)
+  })
+
+  it('the Android listener keeps Hindi and Hinglish bank SMS, and drops their OTPs', () => {
+    const java = source('../../../android/app/src/main/java/in/settleupi/app/PaymentAlertsListener.java')
+    // A Java pattern as JavaScript reads it: the string literal unescaped, (?i) as the i flag.
+    const pattern = (name: string): RegExp => {
+      const literal = new RegExp(`Pattern ${name} = Pattern\\.compile\\("((?:[^"\\\\]|\\\\.)*)"\\)`).exec(java)?.[1]
+      if (literal === undefined) throw new Error(`No pattern ${name}`)
+      return new RegExp(literal.replace(/\\\\/g, '\\').replace(/^\(\?i\)/, ''), 'iu')
+    }
+    const [money, stuck, out, secret] = ['MONEY', 'STUCK', 'MONEY_OUT', 'SECRET'].map(pattern)
+    for (const amount of ['रु.5000', 'रू 500', '500 रुपये', '₹५००', 'Rs 1500']) expect(money?.test(amount), amount).toBe(true)
+    for (const word of ['लेनदेन विफल', 'असफल रहा', 'लंबित है', 'वापस जमा', 'रिफंड', 'रिफ\u093cंड', 'lenden asafal raha']) expect(stuck?.test(word), word).toBe(true)
+    for (const word of ['रु.5000 डेबिट हुए', 'रु.500 कटे', 'Rs 1500 kaate gaye']) expect(out?.test(word), word).toBe(true)
+    expect(secret?.test('आपका ओटीपी 123456 है')).toBe(true)
+    expect(stuck?.test('Rs.500 paid to Riya')).toBe(false)
   })
 
   it('uses no regex lookbehind (Safari < 16.4 cannot parse it)', () => {

@@ -4,7 +4,7 @@ import { AmountInput } from '../components'
 import type { Minor } from '../domain/types'
 import { useT } from '../i18n'
 import { cx } from '../lib/cx'
-import { cleanAmountText, currencySymbol, MAX_MINOR, parseMoneyInput, toInputString } from '../lib/money'
+import { cleanAmountText, commaIsDecimal, currencySymbol, MAX_MINOR, parseMoneyInput, toInputString } from '../lib/money'
 import { amountInWords } from './amountWords'
 import styles from './AmountHero.module.css'
 
@@ -19,6 +19,8 @@ export interface AmountHeroProps {
   autoFocus?: boolean
   /** Accessible name. Default "Amount". */
   label?: string
+  /** Show the label above the digits (for an amount in the middle of a form); default hidden, the screen's title says what it is. */
+  showLabel?: boolean
   /** Line under the amount. Default: the amount in words for rupees ("Two thousand rupees"). */
   hint?: ReactNode
   error?: ReactNode
@@ -49,6 +51,7 @@ export function AmountHero({
   onCurrencyClick,
   autoFocus = false,
   label,
+  showLabel = false,
   hint,
   error,
   disabled = false,
@@ -71,6 +74,8 @@ export function AmountHero({
 
   const words = hint === undefined ? amountInWords(shown, currency) : null
   const symbol = currencySymbol(currency)
+  // Rupees, dollars…: a typed "99,99,999" is grouped, not "99.99".
+  const commaGroups = !commaIsDecimal(currency)
 
   return (
     <div className={cx(styles.hero, className)}>
@@ -95,6 +100,7 @@ export function AmountHero({
         id={id}
         size="hero"
         label={label ?? t('kit.amount.label')}
+        hideLabel={!showLabel}
         currency={currency}
         value={text}
         placeholder="0"
@@ -103,8 +109,9 @@ export function AmountHero({
         hint={hint}
         error={error}
         enterKeyHint="done"
+        commaGroups={commaGroups}
         onChange={(raw) => {
-          const next = cleanAmountText(raw, currency)
+          const next = cleanAmountText(raw, currency, { commaGroups })
           setText(next)
           const minor = parseMoneyInput(next, currency)
           if (minor !== shown) onChange(minor)

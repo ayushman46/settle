@@ -7,6 +7,8 @@ export const app = {
   'app.tab.activity': 'વ્યવહાર',
   'app.tab.you': 'તમે',
 
+  'app.tagline': 'કંઈ પણ વહેંચો. એક ટૅપમાં હિસાબ પતાવો.',
+
   'app.title.format': '{page} · {brand}',
   'app.title.home': 'હોમ',
   'app.title.welcome': 'સ્વાગત',

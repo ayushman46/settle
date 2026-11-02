@@ -9,9 +9,9 @@ export const split = {
   // The screen's title, heading and tab title.
   'split.screen.new.title': 'புதிய பிரிப்பு',
   'split.screen.edit.title': 'பிரிப்பைத் திருத்து',
-  'split.screen.edit.heading': '{title} ஐத் திருத்து',
+  'split.screen.edit.heading': '{title} செலவைத் திருத்து',
   // The browser tab while editing: "Edit Dinner at Toit · Settle".
-  'split.screen.edit.docTitle': '{title} ஐத் திருத்து · {brand}',
+  'split.screen.edit.docTitle': '{title} செலவைத் திருத்து · {brand}',
   'split.save.new.cta': 'பிரிப்பைச் சேமி',
   'split.save.cta': 'மாற்றங்களைச் சேமி',
   'split.currency.toast': 'இப்போது {code} இல்',
@@ -23,7 +23,7 @@ export const split = {
   'split.amount.itemized.hint': 'வரி, டிப் மற்றும் தள்ளுபடிகள் மீண்டும் பொருட்களுக்கு இடையே பிரிக்கப்படும்.',
   'split.title.label': 'இது எதற்காக?',
   // Under the details when the group keeps balances in another currency.
-  'split.groupCurrency.note': '{currency} இல் இருப்பதால், இது நபருக்கு நபர் தீர்க்கப்படும் — {group} இன் {groupCurrency} இருப்புகளில் அல்ல.',
+  'split.groupCurrency.note': '{currency} இல் இருப்பதால், இது நபருக்கு நபர் தீர்க்கப்படும் — {group} குழுவின் {groupCurrency} இருப்புகளில் அல்ல.',
   // The trip tip (travel without a group).
   'split.tip.trip.title': 'முழுப் பயணத்தையும் பிரிக்கிறீர்களா?',
   'split.tip.trip.body': 'ஒரு குழுவில் வையுங்கள்: ஒவ்வொரு செலவும் சேரும், கடைசியில் {brand} குறைந்த எண்ணிக்கையிலான பணப் பரிமாற்றங்களைக் கணக்கிடும்.',
@@ -45,7 +45,7 @@ export const split = {
   'split.discard.new.title': 'இந்தப் பிரிப்பை நிராகரிக்கவா?',
   'split.discard.title': 'மாற்றங்களை நிராகரிக்கவா?',
   'split.discard.new.description': 'நீங்கள் உள்ளிட்டவை சேமிக்கப்படாது.',
-  'split.discard.description': '{title} இல் உங்கள் மாற்றங்கள் சேமிக்கப்படாது.',
+  'split.discard.description': '{title} செலவில் நீங்கள் செய்த மாற்றங்கள் சேமிக்கப்படாது.',
   'split.discard.cta': 'நிராகரி',
   'split.keep.cta': 'தொடர்ந்து திருத்து',
   // Where a prefilled split came from.
@@ -55,7 +55,7 @@ export const split = {
   'split.origin.recurring.title': 'இந்த மாதத்தின் {title}',
   'split.origin.recurring.untitled': 'தொடர் பிரிப்பிலிருந்து',
   'split.origin.recurring.body': 'சரிபார்த்து, வசூலிக்கத் தொடங்க சேமியுங்கள்.',
-  'split.origin.duplicate.title': '{title} இன் நகல்',
+  'split.origin.duplicate.title': '{title} செலவின் நகல்',
   'split.origin.duplicate.untitled': 'ஒரு நகல்',
   'split.origin.duplicate.body': 'இன்றைய தேதியில், இன்னும் யாரும் செலுத்தியதாகக் குறிக்கப்படவில்லை.',
   'split.origin.sms.title': 'உங்கள் SMS இலிருந்து நிரப்பப்பட்டது',
@@ -76,7 +76,7 @@ export const split = {
   // {names}: "Riya and Sam", "Riya, Sam and Ali".
   'split.outcome.each.future': '{names} ஒவ்வொருவரும் உங்களுக்கு {amount} தர வேண்டியிருக்கும்',
   'split.outcome.each.now': '{names} ஒவ்வொருவரும் உங்களுக்கு {amount} தர வேண்டும்',
-  'split.outcome.inAll.future': '{names} இடமிருந்து மொத்தம் {amount} திரும்பக் கிடைக்கும்',
+  'split.outcome.inAll.future': '{names} ஆகியோரிடமிருந்து மொத்தம் {amount} திரும்பக் கிடைக்கும்',
   'split.outcome.inAll.now': '{names} உங்களுக்கு மொத்தம் {amount} தர வேண்டும்',
   'split.outcome.many.future': '{count} நபர்களிடமிருந்து மொத்தம் {amount} திரும்பக் கிடைக்கும்',
   'split.outcome.many.now': '{count} நபர்கள் உங்களுக்கு {amount} தர வேண்டும்',

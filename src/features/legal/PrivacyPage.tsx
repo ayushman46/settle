@@ -14,6 +14,7 @@ export function PrivacyPage() {
     t('legal.privacy.summary.2'),
     t('legal.privacy.summary.3'),
     t('legal.privacy.summary.4'),
+    t('legal.privacy.summary.5'),
   ]
   return (
     <LegalLayout title={t('legal.privacy.title')} description={t('legal.privacy.description', { brand: NAME })} summary={summary}>
@@ -25,27 +26,43 @@ export function PrivacyPage() {
         </p>
         <p>
           Clearing this site’s data in your browser, or removing the app, deletes it. Keep a backup file (under
-          You → Backup) if you’d like to move to a new phone or be safe.
+          You → Backup) if you’d like to move to a new phone or be safe. A backup is a plain file: anyone who opens
+          it can read what’s inside, including the account digits and complaint numbers of your stuck payments, so
+          keep it somewhere private.
         </p>
         <p>
           <strong>Stuck money.</strong> For each failed payment or refund you track, {NAME} keeps the amount, the
           dates, who it was paid to or who owes the refund, the reference or order number, your bank or UPI app and
           the account’s last digits as the message printed them, the complaints you’ve raised (the date and any
-          complaint number) and any note you add. It stays on this phone and goes into your backup file with
-          everything else. A bank SMS you paste or share is read on your phone; only what it says about the payment
-          is kept.
+          complaint number), the day your bank replied, and any note you add. It stays on this phone and goes into
+          your backup file with everything else. A bank SMS you paste or share is read on your phone; only what it
+          says about the payment is kept. The details you add for letters — your mobile number, city and address,
+          the email addresses you send complaints to, and whether you cancelled a mandate — stay on this phone too,
+          and aren’t put in backups.
         </p>
         <p>
-          <strong>Auto-settle and Stuck money (the Android app).</strong> If you turn on notification access, the app
-          reads the alerts Google Pay, PhonePe, Paytm, BHIM, Amazon Pay, MobiKwik and CRED show when money arrives,
-          when a payment fails or is pending, when a payment goes through (only to clear a pending one it was
-          tracking), and when money is reversed or refunded; refund alerts from a short list
-          of shopping, food and travel apps (such as Flipkart, Swiggy, Zomato, IRCTC and airlines); and — only if you
-          allow it — bank SMS that say money was credited, reversed or refunded, or that money was debited. A debit
-          is used only to check that a payment that failed really took your money, and isn’t kept for anything else.
-          These alerts are kept on your phone until {NAME} reads them, then deleted; every other notification is
-          ignored, never stored and never sent. Turn it off any time in Android’s notification access settings. Bank
-          statements and SMS you add to “Who’s paid?” are read on your phone too.
+          <strong>Auto-settle and Stuck money (the Android app).</strong> Only if you turn on notification access:
+        </p>
+        <ul>
+          <li>
+            <strong>What it reads.</strong> The alerts Google Pay, PhonePe, Paytm, BHIM, Amazon Pay, MobiKwik and
+            CRED show when money arrives, when a payment fails or is pending, when a payment goes through (only to
+            clear a pending one it was tracking), and when money is reversed or refunded; refund alerts from a short
+            list of shopping, food and travel apps (such as Flipkart, Swiggy, Zomato, IRCTC and airlines); and — only
+            if you allow it — bank SMS that say money was credited, reversed or refunded, or that money was debited.
+          </li>
+          <li>
+            <strong>What it keeps.</strong> These alerts stay on your phone until {NAME} reads them, then they’re
+            deleted; only what they say about the payment is kept. A debit is used only to check that a payment that
+            failed really took your money, and isn’t kept for anything else.
+          </li>
+          <li>
+            <strong>What it ignores.</strong> Every other notification and message: never stored, never sent.
+          </li>
+        </ul>
+        <p>
+          Turn it off any time in Android’s notification access settings. Bank statements and SMS you add to “Who’s
+          paid?” are read on your phone too.
         </p>
       </LegalSection>
 
@@ -78,6 +95,11 @@ export function PrivacyPage() {
             allowance.
           </li>
           <li>
+            <strong>Checking in.</strong> When it opens, the app asks our server whether the AI helper is working,
+            and pages that show Pro’s prices fetch them from it. These requests carry nothing you’ve entered — only
+            what any web request does, like your IP address.
+          </li>
+          <li>
             <strong>Nudges and sharing.</strong> Sending a reminder or sharing a split opens WhatsApp, your messages
             app or your phone’s share sheet with the text ready. What you send from there is between you and that app.
           </li>
@@ -86,6 +108,11 @@ export function PrivacyPage() {
             itself, and never contacts your bank, a business or anyone else for you. A letter leaves your phone only
             when you copy, share or email it, or open the RBI’s complaint site, the National Consumer Helpline or
             AirSewa from it — what you send there is between you and them.
+          </li>
+          <li>
+            <strong>Reminders (Stuck money).</strong> “Add to my calendar” makes the event on your phone. “Open in
+            Google Calendar” sends the event to Google — its title names the amount and who owes it — so use the
+            first if you’d rather not.
           </li>
         </ul>
       </LegalSection>

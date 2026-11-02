@@ -24,9 +24,10 @@ vi.mock('../bill/delivery.enabled', () => ({
 }))
 
 import { resetNavForTests } from '../../app/router'
+import { CATEGORY_ICONS } from '../../components'
 import { poolsStore, resetDataForTests } from '../../data'
 import { resetBillLaunchForTests, takeBillStart, takeScanHint } from '../bill/launch'
-import { GRID_SIZE, homeGridActions, quickActionDefs, templateActionDefs } from './quickActions'
+import { GRID_SIZE, homeGridActions, overflowActions, quickActionDefs, templateActionDefs } from './quickActions'
 
 const ids = (open = () => {}) => homeGridActions(open).map((a) => a.id)
 
@@ -43,21 +44,30 @@ afterEach(() => {
 })
 
 describe('homeGridActions', () => {
-  it('with every feature off: scan, split, group, four templates, More', () => {
-    expect(ids()).toEqual(['scan', 'split', 'group', 'template:rent', 'template:travel', 'template:subscription', 'template:utilities', 'more'])
-    expect(homeGridActions(() => {}).map((a) => a.label)).toEqual(['Scan bill', 'Split amount', 'New group', 'Rent', 'Trip', 'Subscription', 'Utilities', 'More'])
+  it('with every feature off: scan, split, stuck money, group, three templates, More', () => {
+    expect(ids()).toEqual(['scan', 'split', 'stuck', 'group', 'template:rent', 'template:travel', 'template:subscription', 'more'])
+    expect(homeGridActions(() => {}).map((a) => a.label)).toEqual(['Scan bill', 'Split amount', 'Stuck money', 'New group', 'Rent', 'Trip', 'Subscription', 'More'])
+    expect(overflowActions()).toEqual([])
   })
 
-  it('with every feature on: seven actions and More, no templates', () => {
+  it('with every feature on: seven actions and More, no templates; New group moves to the More sheet', () => {
     Object.assign(flags, { lend: true, pools: true, sms: true, delivery: true })
-    expect(ids()).toEqual(['scan', 'split', 'lend', 'collect', 'sms', 'food', 'group', 'more'])
+    expect(ids()).toEqual(['scan', 'split', 'lend', 'collect', 'sms', 'food', 'stuck', 'more'])
+    expect(overflowActions().map((a) => a.id)).toEqual(['group'])
   })
 
   it('back-fills with templates when only some are on', () => {
     Object.assign(flags, { lend: true, pools: true })
-    expect(ids()).toEqual(['scan', 'split', 'lend', 'collect', 'group', 'template:rent', 'template:travel', 'more'])
+    expect(ids()).toEqual(['scan', 'split', 'lend', 'collect', 'stuck', 'group', 'template:rent', 'more'])
     Object.assign(flags, { lend: false, pools: false, delivery: true })
-    expect(ids()).toEqual(['scan', 'split', 'food', 'group', 'template:rent', 'template:travel', 'template:subscription', 'more'])
+    expect(ids()).toEqual(['scan', 'split', 'food', 'stuck', 'group', 'template:rent', 'template:travel', 'more'])
+  })
+
+  it('always offers Stuck money on the grid, even before anything is stuck', () => {
+    for (const mask of [0, 15]) {
+      Object.assign(flags, { lend: !!(mask & 1), pools: !!(mask & 2), sms: !!(mask & 4), delivery: !!(mask & 8) })
+      expect(ids()).toContain('stuck')
+    }
   })
 
   it('is always two rows of four', () => {
@@ -74,6 +84,12 @@ describe('homeGridActions', () => {
     expect(open).toHaveBeenCalledOnce()
     expect(templateActionDefs().map((a) => a.label)).toEqual(['Rent', 'Trip', 'Subscription', 'Utilities', 'Cab'])
   })
+
+  it('gives Utilities its own icon, apart from Electricity’s bolt', () => {
+    const utilities = templateActionDefs().find((a) => a.id === 'template:utilities')
+    expect(utilities?.icon).toBeDefined()
+    expect(utilities?.icon).not.toBe(CATEGORY_ICONS.utilities)
+  })
 })
 
 describe('where the tiles go', () => {
@@ -84,6 +100,7 @@ describe('where the tiles go', () => {
     ['lend', '/app/lend'],
     ['sms', '/app/share'],
     ['group', '/app/groups?new=1'],
+    ['stuck', '/app/stuck'],
   ])('%s → %s', (id, path) => {
     run(id)
     expect(window.location.pathname + window.location.search).toBe(path)

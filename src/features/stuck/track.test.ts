@@ -4,7 +4,7 @@ import { stuckSeenStore, stuckStore } from '../../data/stores'
 import { addStuck, type StuckDraft } from '../../data/stuck'
 import { resetDataForTests } from '../../data/testing'
 import { readStuckMessage, type StuckSignal } from './detect'
-import { alertSignals, SEEN_MS, trackStuckSignals } from './track'
+import { alertSignals, findStuckTwin, PENDING_WAIT_MS, SEEN_MS, trackStuckSignals } from './track'
 
 const GPAY = 'com.google.android.apps.nbu.paisa.user'
 const PHONEPE = 'com.phonepe.app'
@@ -73,13 +73,42 @@ describe('new stuck payments', () => {
     expect(stuckStore.get()[0]?.ref).toBe('630611112222')
   })
 
-  it('a pending payment that then fails is the same payment', () => {
+  it('a pending payment waits, unsaved; when it then fails, that is saved — once', () => {
     const pending = heard('Payment pending\n₹500 to Riya Sharma. Your bank is taking longer than usual.', PHONEPE, T)
-    trackStuckSignals([pending], 'alert', T + MIN)
+    expect(trackStuckSignals([pending], 'alert', T + MIN).added).toEqual([])
+    expect(stuckStore.get()).toEqual([])
     const failed = trackStuckSignals([FAILED_BANK(T + 3 * 60 * MIN)], 'alert', T + 3 * 60 * MIN)
-    expect(failed.added).toEqual([])
-    expect(stuckStore.get()).toHaveLength(1)
-    expect(stuckStore.get()[0]).toMatchObject({ ref: '630611112222', confirmed: false })
+    expect(failed.added).toHaveLength(1)
+    expect(stuckStore.get()).toEqual([expect.objectContaining({ ref: '630611112222', party: 'Riya Sharma', confirmed: false })])
+    // Never saved again from its pending alert.
+    expect(trackStuckSignals([], 'alert', T + 4 * 60 * MIN).added).toEqual([])
+  })
+
+  it('still pending an hour on, it is saved, waiting for a tap — as it was told when the alert is at hand', () => {
+    const pending = heard('Payment pending\n₹850 to Murugan Tea Stall. Your bank is taking longer than usual.', PHONEPE, T)
+    // Settle opened after the hour: the alert itself is read.
+    const late = trackStuckSignals([pending], 'alert', T + PENDING_WAIT_MS + MIN)
+    expect(late.added).toEqual([expect.objectContaining({ kind: 'failed', amount: 85_000, party: 'Murugan Tea Stall', rail: 'upi_merchant', app: 'phonepe', confirmed: false, source: 'alert', date: TODAY })])
+
+    resetDataForTests()
+    // Within the hour, then again after it: what was remembered.
+    expect(trackStuckSignals([pending], 'alert', T + MIN).added).toEqual([])
+    expect(trackStuckSignals([], 'alert', T + PENDING_WAIT_MS - MIN).added).toEqual([])
+    const later = trackStuckSignals([], 'alert', T + PENDING_WAIT_MS)
+    expect(later.added).toEqual([expect.objectContaining({ amount: 85_000, party: 'Murugan Tea Stall', confirmed: false, date: TODAY })])
+    later.undo()
+    expect(stuckStore.get()).toEqual([])
+    expect(trackStuckSignals([], 'alert', T + 3 * PENDING_WAIT_MS).added).toEqual([])
+  })
+
+  it('…even when Settle isn’t opened for days', () => {
+    trackStuckSignals([heard('Payment pending\n₹850 to Murugan Tea Stall.', PHONEPE, T)], 'alert', T + MIN)
+    expect(trackStuckSignals([], 'alert', T + SEEN_MS + 60 * MIN).added).toHaveLength(1)
+  })
+
+  it('a pending payment pasted in is saved at once: the person asked for it', () => {
+    const pending = heard('Payment pending\n₹850 to Murugan Tea Stall.', PHONEPE, T)
+    expect(trackStuckSignals([pending], 'sms', T + MIN).added).toHaveLength(1)
   })
 
   it('a different amount, or the same amount to someone else, is another payment', () => {
@@ -109,6 +138,44 @@ describe('new stuck payments', () => {
   it('a refund from no one in particular is not saved', () => {
     const anonymous = heard('Refund initiated: Amt: Rs.3,274.66 on HDFC Bank Credit Card 1111.', MESSAGES)
     expect(trackStuckSignals([anonymous], 'alert', T).added).toEqual([])
+  })
+})
+
+describe('one reference, one stuck payment', () => {
+  it('findStuckTwin: the same reference or order number however printed, an open one first', () => {
+    const closed = addStuck(manual({ ref: '630314567890' }), T)
+    stuckStore.set(stuckStore.get().map((s) => ({ ...s, dismissedAt: T })))
+    expect(findStuckTwin(stuckStore.get(), { ref: '630314567890' })?.id).toBe(closed.id)
+    const open = addStuck(manual({ ref: '630314567890' }), T)
+    expect(findStuckTwin(stuckStore.get(), { ref: ' 6303 1456 7890 ' })?.id).toBe(open.id)
+    const order = addStuck(manual({ kind: 'refund', rail: null, orderId: 'OD432198765432100' }), T)
+    expect(findStuckTwin(stuckStore.get(), { orderId: '#od432198765432100' })?.id).toBe(order.id)
+    expect(findStuckTwin(stuckStore.get(), { ref: 'OD432198765432100' })?.id).toBe(order.id)
+    // Another reference, nothing to go on, or too short to be sure of.
+    expect(findStuckTwin(stuckStore.get(), { ref: '630314567891' })).toBeNull()
+    expect(findStuckTwin(stuckStore.get(), {})).toBeNull()
+    addStuck(manual({ kind: 'refund', rail: null, orderId: '1234' }), T)
+    expect(findStuckTwin(stuckStore.get(), { orderId: '#1234' })).toBeNull()
+  })
+
+  it('the same failed-payment SMS pasted again, days later, is not saved twice', () => {
+    const sms = (at: number) =>
+      readStuckMessage('Dear Customer, your UPI txn of Rs.12,000.00 to KAVYA RAO has failed. Rs.12,000.00 debited from A/c XX4821 will be reversed. Ref No. 630314567890 -ICICI Bank', { today: TODAY, at }) as StuckSignal
+    expect(trackStuckSignals([sms(T)], 'sms', T + MIN).added).toHaveLength(1)
+    const again = trackStuckSignals([sms(T + 3 * 86_400_000)], 'sms', T + 3 * 86_400_000)
+    expect(again.added).toEqual([])
+    expect(stuckStore.get()).toHaveLength(1)
+  })
+
+  it('a refund saved by hand under its order number learns from the business’s alert, and isn’t saved again once it came back', () => {
+    const own = addStuck(manual({ kind: 'refund', rail: null, party: 'Amazon', merchant: 'amazon', amount: 129_900, orderId: '402-1234567-1234567' }), T)
+    const issued = heard('Refund issued\nYour refund of ₹1,299.00 for order 402-1234567-1234567 has been issued. It will be credited to your card in 3-5 business days.', 'in.amazon.mShop.android.shopping', T)
+    expect(trackStuckSignals([issued], 'alert', T + MIN).added).toEqual([])
+    expect(stuckStore.get()).toEqual([expect.objectContaining({ id: own.id, promisedBy: '2026-11-09' })])
+    stuckStore.set(stuckStore.get().map((s) => ({ ...s, back: { date: TODAY, amount: 129_900, compensation: 0 } })))
+    const told = heard('Refund issued\nYour refund of ₹1,299.00 for order 402-1234567-1234567 has been issued.', 'in.amazon.mShop.android.shopping', T + 3 * 86_400_000)
+    expect(trackStuckSignals([told], 'alert', T + 3 * 86_400_000).added).toEqual([])
+    expect(stuckStore.get()).toHaveLength(1)
   })
 })
 
@@ -148,7 +215,7 @@ describe('did the money leave? — the debit decides', () => {
 
   it('a pending payment is never confirmed by a debit (it may still go through)', () => {
     const pending = heard('Payment pending\n₹500 to Riya Sharma. Your bank is taking longer than usual.', PHONEPE, T)
-    expect(trackStuckSignals([DEBIT(T - MIN, '630699990000'), pending], 'alert', T + MIN).added[0]?.confirmed).toBe(false)
+    expect(trackStuckSignals([DEBIT(T - MIN, '630699990000'), pending], 'alert', T + PENDING_WAIT_MS).added[0]?.confirmed).toBe(false)
   })
 
   it('a failure that says the money was taken needs no debit', () => {
@@ -228,12 +295,22 @@ describe('a payment that went through after all', () => {
     expect(stuckStore.get()).toEqual([])
   })
 
-  it('told later, it sets the waiting one aside — and Undo brings it back', () => {
-    trackStuckSignals([PENDING()], 'alert', T + 30 * 1000)
-    const waiting = stuckStore.get()
+  it('told within the hour, the pending one was never saved: nothing is kept, nothing to say', () => {
+    expect(trackStuckSignals([PENDING()], 'alert', T + 30 * 1000).added).toEqual([])
     const result = trackStuckSignals([WENT_THROUGH(T + 5 * MIN)], 'alert', T + 6 * MIN)
+    expect(result).toMatchObject({ added: [], back: [], cleared: [] })
+    expect(trackStuckSignals([], 'alert', T + 2 * PENDING_WAIT_MS).added).toEqual([])
+    expect(stuckStore.get()).toEqual([])
+  })
+
+  it('told after it was saved, it sets the waiting one aside — and Undo brings it back', () => {
+    trackStuckSignals([PENDING()], 'alert', T + 30 * 1000)
+    trackStuckSignals([], 'alert', T + PENDING_WAIT_MS)
+    const waiting = stuckStore.get()
+    expect(waiting).toHaveLength(1)
+    const result = trackStuckSignals([WENT_THROUGH(T + PENDING_WAIT_MS + 5 * MIN)], 'alert', T + PENDING_WAIT_MS + 6 * MIN)
     expect(result.added).toEqual([])
-    expect(result.cleared).toEqual([expect.objectContaining({ id: waiting[0]?.id, dismissedAt: T + 6 * MIN, back: null })])
+    expect(result.cleared).toEqual([expect.objectContaining({ id: waiting[0]?.id, dismissedAt: T + PENDING_WAIT_MS + 6 * MIN, back: null })])
     result.undo()
     expect(stuckStore.get()).toEqual(waiting)
   })
@@ -251,7 +328,7 @@ describe('a payment that went through after all', () => {
     // A failure the bank said took the money: the payment that went through is the retry.
     const taken = heard('Payment Failed\nMoney Deducted / Transaction Not Completed. ₹500 to Riya Sharma will be refunded in 3-5 days.', PHONEPE, T + 2 * MIN)
     // Someone else, the same amount.
-    const swiggy = heard('Payment pending\n₹500 to Swiggy. Your bank is taking longer than usual.', PHONEPE, T + 3 * MIN)
+    const swiggy = heard('Payment failed\n₹500 to Swiggy', GPAY, T + 3 * MIN)
     trackStuckSignals([taken, swiggy], 'alert', T + 4 * MIN)
     const before = stuckStore.get()
     expect(before.map((s) => s.confirmed)).toEqual([true, false])
@@ -264,7 +341,7 @@ describe('a payment that went through after all', () => {
     trackStuckSignals([PENDING()], 'alert', T + MIN)
     expect(trackStuckSignals([WENT_THROUGH(T - 10 * MIN)], 'alert', T + 2 * MIN).cleared).toEqual([])
     expect(trackStuckSignals([WENT_THROUGH(T + 49 * 60 * MIN)], 'alert', T + 49 * 60 * MIN).cleared).toEqual([])
-    expect(stuckStore.get()[0]?.dismissedAt).toBeNull()
+    expect(stuckStore.get()).toEqual([expect.objectContaining({ amount: 50_000, dismissedAt: null })])
   })
 })
 

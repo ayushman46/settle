@@ -48,7 +48,9 @@
   gap: 6px;
   min-width: 0;
   min-height: var(--seg-h);
-  padding: var(--s-1) var(--s-3);
+  padding: var(--s-1) var(--s-2);
+  /* Its icon makes way for the label when the segment is narrow (see below). */
+  container: seg-option / inline-size;
   border-radius: var(--radius-pill);
   color: var(--ink-2);
   font: var(--text-label);
@@ -100,9 +102,17 @@
   height: 18px;
 }
 
+/* Lines break between words ("অন্ধকার" stays whole); only a word wider than the segment is split. */
 .label {
   min-width: 0;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
+}
+
+/* A narrow segment (three in a phone-width card, or larger text): the label gets the room. */
+@container seg-option (max-width: 7rem) {
+  .icon {
+    display: none;
+  }
 }
 
 /* Windows high contrast: the thumb's fill is dropped, so outline the checked option instead. */

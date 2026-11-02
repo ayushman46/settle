@@ -4,7 +4,7 @@ import type { Messages } from '../types'
 export const bill = {
   // Shared across the bill flow.
   'bill.count.items': '{count, plural, one {# টি আইটেম} other {# টি আইটেম}}',
-  'bill.undo.cta': 'ফিরিয়ে নিন',
+  'bill.undo.cta': 'আগের মতো করুন',
 
   // Browser tab titles per step (also what the long-press Back menu lists).
   'bill.step.scan.docTitle': 'বিল স্ক্যান · {brand}',
@@ -118,7 +118,7 @@ export const bill = {
   'bill.people.search.label': 'টেবিলের মানুষজন খুঁজুন বা যোগ করুন',
   'bill.people.removed.toast': '{name} সরানো হয়েছে',
   'bill.people.back.toast': '{name} আগেই ফিরে এসেছেন',
-  'bill.people.undoFull.toast': 'ফিরিয়ে নেওয়া যায়নি — টেবিল ভর্তি',
+  'bill.people.undoFull.toast': 'আগের মতো করা গেল না — টেবিল ভর্তি',
   'bill.people.needTwo.hint': 'অন্তত 2 জন বেছে নিন',
   'bill.people.needOne.hint': 'আরও একজন বেছে নিন',
   'bill.people.next.cta': 'পরের ধাপ: কে কী নিয়েছিল',
@@ -304,7 +304,7 @@ export const bill = {
   'bill.review.added.toast': '{name} যোগ হয়েছে',
   'bill.review.removed.toast': '{name} সরানো হয়েছে',
   'bill.review.removedUnnamed.toast': 'আইটেম সরানো হয়েছে',
-  'bill.review.undoFull.toast': 'ফিরিয়ে নেওয়া যায়নি — বিল ভর্তি',
+  'bill.review.undoFull.toast': 'আগের মতো করা গেল না — বিল ভর্তি',
   'bill.review.currency.toast': '{code}-তে বদলানো হয়েছে',
 
   // The scan step.

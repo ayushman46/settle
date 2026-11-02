@@ -21,7 +21,7 @@ export const delivery = {
   'delivery.review.fees.removed.toast': '{label} हटाया',
   'delivery.review.fees.full.toast': 'एक बिल में ज़्यादा से ज़्यादा {max} चार्ज हो सकते हैं।',
   'delivery.review.fees.converted.toast': '{label} अब एक आइटम है — अगले स्टेप में बताएँ किसने लिया',
-  'delivery.review.fees.undoFailed.toast': 'वापस नहीं ले पाए — बिल बदल गया है',
+  'delivery.review.fees.undoFailed.toast': 'पहले जैसा नहीं हो सका — बिल बदल गया है',
   // The sheet for one fee.
   'delivery.fee.title': 'चार्ज',
   'delivery.fee.name.label': 'नाम',

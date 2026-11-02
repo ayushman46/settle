@@ -10,6 +10,15 @@ export const you = {
   'you.shortcuts.collections.title': 'வசூல்கள்',
   'you.shortcuts.collections.subtitle.open': '{count, plural, one {# திறந்தது} other {# திறந்தவை}}',
   'you.shortcuts.collections.subtitle.none': 'பரிசுகள், விருந்துகள், பயணங்கள்',
+  // Under People: who you split with ("Riya, Sam and 4 more"), or a nudge before the first.
+  'you.shortcuts.people.empty': 'நீங்கள் பிரித்துக்கொள்ளும் நபர்களைச் சேருங்கள்',
+  'you.shortcuts.people.two': '{first} மற்றும் {second}',
+  'you.shortcuts.people.many': '{first}, {second} மற்றும் {count, plural, one {இன்னும் # பேர்} other {இன்னும் # பேர்}}',
+  // Under Recurring splits: what they're for, or "2 active · 1 due".
+  'you.shortcuts.recurring.empty': 'வாடகை, Wi-Fi, சந்தாக்கள் — மாதாமாதம் பிரிக்க',
+  'you.shortcuts.recurring.active': '{count, plural, one {# செயலில்} other {# செயலில்}}',
+  'you.shortcuts.recurring.paused': 'அனைத்தும் நிறுத்தப்பட்டுள்ளன',
+  'you.shortcuts.recurring.due': '{count, plural, one {# செலுத்த வேண்டியது} other {# செலுத்த வேண்டியவை}}',
   'you.celebrate.title': 'Pro திறக்கப்பட்டது',
   'you.pref.title': 'விருப்பங்கள்',
   // Under the language tiles in You → Language.
@@ -42,7 +51,7 @@ export const you = {
   'you.accent.locked': '{name}, Pro',
   'you.accent.note': 'லைம் இலவசம். மின்ட், வானம், ஊதா மற்றும் கோரல் Pro உடன் வரும்.',
   'you.clear.title': 'எல்லாவற்றையும் அழிக்கவா?',
-  'you.clear.body': 'உங்கள் சுயவிவரம், நபர்கள், செலவுகள், குழுக்கள், தொடர் பிரிப்புகள் மற்றும் நடந்துகொண்டிருக்கும் பில் அனைத்தும் இந்த ஃபோனிலிருந்து நீக்கப்படும்.',
+  'you.clear.body': 'உங்கள் சுயவிவரம், நபர்கள், செலவுகள், குழுக்கள், தொடர் பிரிப்புகள், சிக்கிய பணம், நடந்துகொண்டிருக்கும் பில் அனைத்தும் இந்த ஃபோனிலிருந்து நீக்கப்படும்.',
   'you.clear.confirm': 'எல்லாவற்றையும் அழி',
   'you.clear.keep': 'என் தரவை வை',
   'you.clear.backupBody': 'ஒரு நாள் இது திரும்பத் தேவைப்படுமா? முதலில் ஒரு காப்புப் பிரதி கோப்பைச் சேமியுங்கள்.',
@@ -87,6 +96,24 @@ export const you = {
   'you.restore.replace.body': 'இந்த ஃபோனில் உள்ள அனைத்தையும் காப்புப் பிரதிக்கு மாற்று.',
   'you.restore.replace.title': 'இது இங்குள்ள அனைத்தையும் மாற்றும்',
   'you.restore.fresh': 'காப்புப் பிரதியில் உள்ள அனைத்தும், சுயவிவரம் உட்பட, இந்த ஃபோனுக்குத் திரும்பும்.',
+  // The banner under Replace.
+  'you.restore.replace.warning': 'இந்த ஃபோனில் உள்ள உங்கள் சுயவிவரம், நபர்கள், செலவுகள், குழுக்கள், தொடர் பிரிப்புகள், சிக்கிய பணம் அனைத்தும் காப்புப் பிரதியில் உள்ளவற்றால் மாற்றப்படும். உடனே செயல்தவிர்க்கலாம்.',
+  // The sheet's button: a fresh phone, merging, or replacing.
+  'you.restore.cta.restore': 'காப்புப் பிரதியை மீட்டெடு',
+  'you.restore.cta.merge': 'காப்புப் பிரதியை இணை',
+  'you.restore.cta.replace': 'அனைத்தையும் மாற்று',
+  // What the picked file holds: "Saved today · 24 expenses · 6 people · 2 stuck payments".
+  'you.restore.saved': '{when, select, today {இன்று சேமிக்கப்பட்டது} yesterday {நேற்று சேமிக்கப்பட்டது} other {{date} அன்று சேமிக்கப்பட்டது}}',
+  'you.restore.contents.expenses': '{count, plural, one {# செலவு} other {# செலவுகள்}}',
+  'you.restore.contents.people': '{count, plural, one {# நபர்} other {# நபர்கள்}}',
+  'you.restore.contents.groups': '{count, plural, one {# குழு} other {# குழுக்கள்}}',
+  'you.restore.contents.recurring': '{count, plural, one {# தொடர் பிரிப்பு} other {# தொடர் பிரிப்புகள்}}',
+  'you.restore.contents.stuck': '{count, plural, one {# சிக்கிய பணம்} other {# சிக்கிய பணங்கள்}}',
+  'you.restore.contents.empty': 'இதில் இன்னும் எதுவுமில்லை',
+  // A picked file that can't be restored.
+  'you.restore.error.notBackup': 'அந்தக் கோப்பு {brand} காப்புப் பிரதி அல்ல. {brand} சேமித்த .json கோப்பைத் தேர்ந்தெடுங்கள்.',
+  'you.restore.error.tooBig': 'அந்தக் கோப்பு {brand} காப்புப் பிரதியாக இருக்க முடியாத அளவுக்குப் பெரியது.',
+  'you.restore.error.unreadable': 'அந்தக் கோப்பைத் திறக்க முடியவில்லை. மீண்டும் முயற்சி செய்யுங்கள், அல்லது வேறு கோப்புறையிலிருந்து தேர்ந்தெடுங்கள்.',
   'you.pro.active': 'செயலில்',
   'you.pro.ended': '{date} அன்று முடிந்தது',
   'you.pro.manage': 'Pro-வை நிர்வகி',
@@ -104,6 +131,9 @@ export const you = {
   'you.data.restored': 'காப்புப் பிரதி மீட்டெடுக்கப்பட்டது',
   'you.data.merged': 'காப்புப் பிரதி இணைக்கப்பட்டது — {parts}',
   'you.data.merged.none': 'காப்புப் பிரதி இணைக்கப்பட்டது — அதில் புதிதாக எதுவுமில்லை',
+  // The parts of "Backup merged — 3 added, 1 updated".
+  'you.data.merged.added': 'சேர்த்தவை: {count}',
+  'you.data.merged.updated': 'புதுப்பித்தவை: {count}',
   'you.data.shared': 'காப்புப் பிரதி பகிரப்பட்டது — பாதுகாப்பான இடத்தில் வையுங்கள்',
   'you.data.saved': 'காப்புப் பிரதி உங்கள் பதிவிறக்கங்களில் சேமிக்கப்பட்டது',
   'you.data.saveFailed': 'காப்புப் பிரதியைச் சேமிக்க முடியவில்லை. மீண்டும் முயற்சி செய்யுங்கள்.',
@@ -114,5 +144,15 @@ export const you = {
   'you.data.back': 'எல்லாம் திரும்பியது',
   'you.data.notBacked': 'இன்னும் காப்புப் பிரதி எடுக்கவில்லை — பாதுகாப்பான இடத்தில் ஒரு நகல் வையுங்கள்',
   'you.data.keepCopy': 'எல்லாவற்றின் ஒரு நகலை வையுங்கள், ஜாக்கிரதைக்காக',
+  'you.data.lastSaved': '{when, select, today {கடைசியாக இன்று சேமிக்கப்பட்டது} yesterday {கடைசியாக நேற்று சேமிக்கப்பட்டது} other {கடைசியாக {date} அன்று சேமிக்கப்பட்டது}}',
+  // Under the Your data card; <link> opens Pro.
+  'you.data.footnote':
+    'காப்புப் பிரதிகளில் உங்கள் நபர்கள், செலவுகள், குழுக்கள், தொடர் பிரிப்புகள், சிக்கிய பணம் (புகார் எண்களுடன்), அமைப்புகள் இருக்கும் — உங்கள் Pro பாஸ் இருக்காது. ஃபோன் மாற்றுகிறீர்களா? <link>{brand} Pro</link> பகுதியிலிருந்து உங்கள் Pro குறியீட்டை நகலெடுத்து, புதிய ஃபோனில் பயன்படுத்துங்கள்.',
+  // The share sheet's title for each file.
+  'you.data.backup.shareTitle': '{brand} காப்புப் பிரதி',
+  'you.data.csv.shareTitle': '{brand} செலவுகள்',
+  'you.data.csv.shared': '{count, plural, one {# செலவு ஏற்றுமதி செய்யப்பட்டது} other {# செலவுகள் ஏற்றுமதி செய்யப்பட்டன}}',
+  'you.data.csv.saved':
+    '{count, plural, one {# செலவு CSV ஆக உங்கள் பதிவிறக்கங்களில் சேமிக்கப்பட்டது} other {# செலவுகள் CSV ஆக உங்கள் பதிவிறக்கங்களில் சேமிக்கப்பட்டன}}',
   'you.data.undo': 'செயல்தவிர்',
 } as const satisfies Messages

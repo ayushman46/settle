@@ -32,6 +32,12 @@ export interface AmountInputProps extends NativeInputProps {
    * `onChange` stay raw ("2299.50"). Default true.
    */
   grouping?: boolean
+  /**
+   * A ',' typed key by key groups digits and is dropped ("99,99,999" → "9999999"), so only '.'
+   * starts the decimals — pass `!commaIsDecimal(currency)`. Pasted amounts are read whole either
+   * way. Default false: a typed ',' is kept as the decimal separator.
+   */
+  commaGroups?: boolean
   /** Class for the outer wrapper. */
   containerClassName?: string
 }
@@ -71,6 +77,19 @@ function pastedAmount(pasted: string, currency: string): string | null {
   return toInputString(minor, currency, { trimZeros: !hadDecimals })
 }
 
+/** How many of the first `count` amount characters of `text` are commas (dropped as grouping). */
+function commasAmong(text: string, count: number): number {
+  let seen = 0
+  let commas = 0
+  for (const ch of text) {
+    if (seen >= count) break
+    if (!/[\p{Nd}.,٫٬]/u.test(ch)) continue
+    seen++
+    if (ch === ',') commas++
+  }
+  return commas
+}
+
 /** Font scale for the hero so long amounts shrink instead of overflowing (tabular digits = predictable widths). */
 function fitScale(chars: number): number {
   const comfortable = 8
@@ -93,6 +112,7 @@ export function AmountInput({
   error,
   selectOnFocus = true,
   grouping = true,
+  commaGroups = false,
   containerClassName,
   className,
   id,
@@ -181,10 +201,12 @@ export function AmountInput({
               const pasted =
                 (inputType !== undefined && PASTE_TYPES.has(inputType)) ||
                 (edit ? edit.inserted.length > 1 : input.value.length - value.length > 1)
-              const next = (pasted ? pastedAmount(raw, currency) : null) ?? clean(raw)
+              // Typed key by key, a grouping comma ("99,99,999") isn't a decimal point.
+              const dropCommas = commaGroups && !pasted
+              const next = (pasted ? pastedAmount(raw, currency) : null) ?? clean(dropCommas ? raw.replace(/,/g, '') : raw)
               if (next === value) return
               if (edit) {
-                pendingCaret.current = edit.caret
+                pendingCaret.current = dropCommas ? edit.caret - commasAmong(edit.raw, edit.caret) : edit.caret
                 // Only for the render this edit causes (React re-renders controlled inputs synchronously).
                 queueMicrotask(() => {
                   pendingCaret.current = null

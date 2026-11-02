@@ -23,6 +23,7 @@ const KEYS = {
   autoSettle: 'settle.v5.auto-settle',
   stuck: 'settle.v6.stuck',
   stuckSeen: 'settle.v6.stuck-seen',
+  letterMe: 'settle.v7.letter-me',
 } as const satisfies typeof STORAGE_KEYS
 const STORAGE_VERSION = 1 satisfies typeof STORE_VERSION
 

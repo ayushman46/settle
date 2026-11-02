@@ -59,7 +59,7 @@ export function RestoreSheet({ open, backup, hasLocalData, onClose, onRestore }:
       description={description}
       footer={
         <Button block onClick={() => onRestore(chosen)} disabled={!backup}>
-          {!hasLocalData ? 'Restore backup' : chosen === 'merge' ? 'Merge backup' : 'Replace everything'}
+          {!hasLocalData ? t('you.restore.cta.restore') : chosen === 'merge' ? t('you.restore.cta.merge') : t('you.restore.cta.replace')}
         </Button>
       }
     >
@@ -104,8 +104,7 @@ export function RestoreSheet({ open, backup, hasLocalData, onClose, onRestore }:
           </div>
           {mode === 'replace' && (
             <Banner tone="warning" title={t('you.restore.replace.title')}>
-              Your profile, people, expenses, groups and recurring splits on this phone are swapped for the backup's. You can
-              undo it straight after.
+              {t('you.restore.replace.warning')}
             </Banner>
           )}
         </div>

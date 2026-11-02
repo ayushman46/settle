@@ -3,15 +3,17 @@
  * spotted: a message pasted on the list, a failed-payment SMS shared into Settle, a failed or
  * pending payment screenshot. What's known is filled in; the person checks it and saves. Kept in
  * memory and in sessionStorage (so it survives a reload between hand-off and pick-up), and gone
- * once taken.
+ * once taken. Also reads a paste of one or more messages into what each one is (readStuckPaste).
  */
 import * as z from 'zod/mini'
 import { navigate } from '../../app/router'
-import { STUCK_KINDS, STUCK_RAILS, STUCK_SOURCES, type StuckSource } from '../../data/stores'
+import { STUCK_KINDS, STUCK_RAILS, STUCK_SOURCES, type StuckRail, type StuckSource } from '../../data/stores'
 import type { StuckDraft } from '../../data/stuck'
 import { isIsoDate } from '../../engine/dates'
 import { MAX_MINOR, toMinor } from '../../lib/money'
 import type { ProofResponse } from '../../../shared/api'
+import { findVia, parseSms, type SmsParse } from '../sharein/sms/parseSms'
+import { splitMessages } from '../sharein/sms/smsView'
 import { readStuckMessage, signalToDraft, type StuckSignal } from './detect'
 import { STUCK_NEW_PATH } from './paths'
 
@@ -175,4 +177,98 @@ export function prefillFromSignal(signal: StuckSignal, source: StuckSource): Stu
   }
   if (signal.type === 'refund_initiated') return { ...common, kind: 'refund', orderId: signal.orderId, promisedBy: signal.promisedBy, confirmed: true }
   return { ...common, kind: 'failed', rail: signal.rail, confirmed: signal.type === 'failed' && signal.debited }
+}
+
+/** What a message said, for a form filled in by hand: the amount, who, the day, the reference, the bank and account. */
+function foundIn(signal: StuckSignal): StuckPrefill {
+  return {
+    amount: signal.amount,
+    date: signal.date,
+    party: signal.party,
+    merchant: signal.merchant,
+    ref: signal.ref,
+    bank: signal.bank,
+    account: signal.account,
+    app: signal.app,
+    source: 'sms',
+  }
+}
+
+/** How a plain debit was paid, when its message makes it clear (null leaves the choice to the person). */
+function railOfDebit(text: string, merchant: string | null): StuckRail | null {
+  if (/\bnach\b|\becs\b/i.test(text)) return 'nach'
+  const via = findVia(text)
+  if (via === 'atm' || via === 'imps' || via === 'wallet') return via
+  if (via === 'card') return /\bpos\b/i.test(text) ? 'card_pos' : merchant ? 'card_online' : null
+  if (via === 'upi') return merchant || /\bp2m\b/i.test(text) ? 'upi_merchant' : /\bp2p\b/i.test(text) ? 'upi_person' : null
+  return null
+}
+
+/**
+ * A plain debit ("Sent Rs.649 to SWIGGY", "A/c X3367 debited by 1845.00 … trf to IRCTC") that the
+ * person says failed but took the money: a failed payment known to have left the account.
+ */
+export function prefillFromDebit(signal: StuckSignal, text: string): StuckPrefill {
+  const rail = ('rail' in signal ? signal.rail : null) ?? railOfDebit(text, signal.merchant)
+  return { ...foundIn(signal), kind: 'failed', rail, confirmed: true }
+}
+
+/** Why a pasted message isn't stuck money: an OTP, an offer, money in, a payment out, or something else. */
+export type PasteSkip = 'otp' | 'offer' | 'in' | 'out' | 'other'
+
+function skipOf(parsed: SmsParse): PasteSkip {
+  if (parsed.kind === 'ignored') return parsed.reason === 'otp' ? 'otp' : parsed.reason === 'promo' ? 'offer' : 'other'
+  if (parsed.kind === 'txn') return parsed.dir === 'credit' ? 'in' : 'out'
+  return 'other'
+}
+
+/** One paste, read message by message (blank lines or a new bank alert start the next; five at most). */
+export interface StuckPaste {
+  /** New stuck payments — a failure, a pending payment, a refund a business started — and what to fill in. */
+  items: Array<{ signal: StuckSignal; prefill: StuckPrefill }>
+  /** Money back: a reversal, a refund credited. */
+  back: StuckSignal[]
+  /** Plain debits not paired with a failure here: maybe a failure the bank only told as a debit. */
+  debits: Array<{ signal: StuckSignal; text: string }>
+  /** Debits that showed a failure here took the money (saved along with it, they say so again). */
+  paired: StuckSignal[]
+  /** Messages about money that came in from someone (a friend paying you back?). */
+  credits: number
+  /** Why each of the other messages isn't stuck money. */
+  skipped: PasteSkip[]
+  /** Whatever the messages gave (amount, who, day, reference) — for adding it by hand when nothing was stuck money. */
+  found: StuckPrefill | null
+}
+
+/**
+ * Reads a paste one message at a time, so an OTP or an offer pasted with a failed payment doesn't
+ * hide it, and two stuck payments in one paste are both found. A failure pasted with its own debit
+ * (the same amount, no other reference) is known to have taken the money.
+ */
+export function readStuckPaste(text: string, today: string): StuckPaste {
+  const out: StuckPaste = { items: [], back: [], debits: [], paired: [], credits: 0, skipped: [], found: null }
+  for (const message of splitMessages(text)) {
+    const signal = readStuckMessage(message, { today })
+    const prefill = signal ? prefillFromSignal(signal, 'sms') : null
+    if (signal && prefill) out.items.push({ signal, prefill })
+    else if (signal && (signal.type === 'reversal' || signal.type === 'refund_credited')) out.back.push(signal)
+    else if (signal?.type === 'debit') out.debits.push({ signal, text: message })
+    else {
+      const parsed = parseSms(message, { today })
+      if (parsed.kind === 'txn' && parsed.dir === 'credit' && !parsed.refund) out.credits += 1
+      out.skipped.push(signal ? 'out' : skipOf(parsed))
+      if (signal) out.found ??= foundIn(signal)
+    }
+  }
+  for (const item of out.items) {
+    if (item.signal.type !== 'failed' || item.prefill.confirmed !== false) continue
+    const ref = item.signal.ref
+    const at = out.debits.findIndex(({ signal }) => signal.amount === item.signal.amount && (!ref || !signal.ref || signal.ref === ref))
+    if (at < 0) continue
+    item.prefill = { ...item.prefill, confirmed: true }
+    out.paired.push(...out.debits.splice(at, 1).map((d) => d.signal))
+  }
+  const debit = out.debits[0]
+  if (debit) out.found = foundIn(debit.signal)
+  return out
 }

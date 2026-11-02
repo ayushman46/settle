@@ -45,6 +45,7 @@ import {
   type StuckPayment,
 } from './stores'
 import { LEGACY_KEYS } from './legacy'
+import { letterMeStore } from '../features/stuck/letterMe'
 
 export const BACKUP_VERSION = 4
 
@@ -394,7 +395,7 @@ export function clearAllData(): void {
       // Blocked storage — the in-memory reset below still applies.
     }
   }
-  for (const store of [profileStore, friendsStore, expensesStore, groupsStore, recurringStore, poolsStore, claimsStore, proofRefsStore, payerAliasesStore, remindersStore, autoSettleStore, stuckStore, stuckSeenStore])
+  for (const store of [profileStore, friendsStore, expensesStore, groupsStore, recurringStore, poolsStore, claimsStore, proofRefsStore, payerAliasesStore, remindersStore, autoSettleStore, stuckStore, stuckSeenStore, letterMeStore])
     store.reload()
   clearSplitPrefill()
 }

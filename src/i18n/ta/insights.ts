@@ -25,7 +25,7 @@ export const insights = {
     '{range, select, this_month {இந்த மாதம் நீங்கள் செலவு செய்தது} last_3_months {கடந்த 3 மாதங்களில் நீங்கள் செலவு செய்தது} this_year {இந்த ஆண்டு நீங்கள் செலவு செய்தது} other {நீங்கள் தொடங்கியதிலிருந்து செலவு செய்தது}}',
   'insights.spent.note': '{count, plural, one {# செலவில்} other {# செலவுகளில்}} உங்கள் பங்கு',
   // After the note, following " · ": the biggest category.
-  'insights.spent.top': '{category} இல் {percent}%',
+  'insights.spent.top': '{category}: {percent}%',
   'insights.stat.paid': 'நீங்கள் முன்பணமாகச் செலுத்தியது',
   'insights.stat.perMonth': 'சுமார் ஒரு மாதம்',
   'insights.category.title': 'வகை வாரியாக',

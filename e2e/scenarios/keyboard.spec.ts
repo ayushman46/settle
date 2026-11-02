@@ -21,8 +21,9 @@ test.describe('keyboard only', () => {
     await expect(english).toBeChecked()
     await activateWithKeyboard(page, page.getByRole('button', { name: 'Continue' }))
 
-    // The intro slides: Next twice, then Get started.
+    // The intro slides: Next three times, then Get started.
     await expect(page.getByRole('heading', { name: 'Snap the bill' })).toBeVisible()
+    await activateWithKeyboard(page, page.getByRole('button', { name: 'Next' }))
     await activateWithKeyboard(page, page.getByRole('button', { name: 'Next' }))
     await activateWithKeyboard(page, page.getByRole('button', { name: 'Next' }))
     await activateWithKeyboard(page, page.getByRole('button', { name: 'Get started' }))

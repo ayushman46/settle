@@ -20,6 +20,10 @@ export function friendLabel(id: string | null | undefined, friend: Pick<Friend, 
 /**
  * The name as the object of a phrase — "Amount for you", "Shares for Riya" — so labels never
  * need possessives ("Riya's", "James'") or a capital "You" mid-sentence.
+ *
+ * Other languages carry the case in the pronoun itself (मराठी "तुम्हाला", বাংলা "আপনাকে"), so a
+ * template whose own ending follows `{name}` doubles it or reverses who owes whom: give "you" its
+ * own key there instead, as ShareList does ('kit.shares.status.owesYou').
  */
 export function friendObjectLabel(id: string | null | undefined, friend: Pick<Friend, 'name'> | null | undefined): string {
   return id === ME_ID ? t('kit.name.you.object') : friendLabel(id, friend)

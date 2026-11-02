@@ -2,9 +2,9 @@
  * Home's quick actions as a registry, so features add their tile without sharing a file: each
  * entry says when it's on (its feature flag), what it's called and what it does. The grid shows
  * the enabled ones in order, back-fills with everyday templates to seven, and ends with More (the
- * templates that didn't fit) — always two rows of four.
+ * actions and templates that didn't fit) — always two rows of four.
  */
-import { ArrowLeftRight, Bike, HandCoins, LayoutGrid, MessageSquareText, ScanLine, Split, UsersRound, type LucideIcon } from 'lucide-react'
+import { ArrowLeftRight, BanknoteArrowDown, Bike, Droplets, HandCoins, LayoutGrid, MessageSquareText, ScanLine, Split, UsersRound, type LucideIcon } from 'lucide-react'
 import { navigate } from '../../app/router'
 import { CATEGORY_ICONS, type QuickActionTone } from '../../components'
 import { poolsStore } from '../../data/stores'
@@ -16,9 +16,10 @@ import { openBill } from '../bill/launch'
 import { LEND_ENABLED } from '../lend/enabled'
 import { POOLS_ENABLED } from '../pools/enabled'
 import { SMS_ENABLED } from '../sharein/enabled'
+import { STUCK_PATH } from '../stuck/paths'
 import { NEW_GROUP_PATH, NEW_SPLIT_PATH, templatePath } from './homeLinks'
 
-export type QuickActionId = 'scan' | 'split' | 'lend' | 'collect' | 'sms' | 'food' | 'group' | 'more'
+export type QuickActionId = 'scan' | 'split' | 'lend' | 'collect' | 'sms' | 'food' | 'stuck' | 'group' | 'more'
 
 export interface QuickActionDef {
   /** A `QuickActionId`, or `template:<category>` for a template tile. */
@@ -49,6 +50,8 @@ export function quickActionDefs(): QuickActionDef[] {
     { id: 'collect', label: t('home.quick.collect'), icon: HandCoins, tone: 'gift', run: openPools, enabled: () => POOLS_ENABLED },
     { id: 'sms', label: t('home.quick.sms'), icon: MessageSquareText, tone: 'utilities', run: () => navigate('/app/share'), enabled: () => SMS_ENABLED },
     { id: 'food', label: t('home.quick.food'), icon: Bike, tone: 'food', run: () => openBill({ kind: 'delivery' }), enabled: () => DELIVERY_ENABLED },
+    // Money a bank or shop owes you: on the grid from day one, so it's found before it's needed.
+    { id: 'stuck', label: t('home.quick.stuck'), icon: BanknoteArrowDown, tone: 'transport', run: () => navigate(STUCK_PATH), enabled: always },
     { id: 'group', label: t('home.quick.group'), icon: UsersRound, tone: 'entertainment', run: () => navigate(NEW_GROUP_PATH), enabled: always },
   ]
 }
@@ -64,20 +67,32 @@ const TEMPLATE_LABELS: Readonly<Partial<Record<CategoryId, MessageKey>>> = {
   transport: 'home.template.transport',
 }
 
+/** Tiles whose category icon would repeat a feature's (Utilities' bolt beside Electricity's). */
+const TEMPLATE_ICONS: Readonly<Partial<Record<CategoryId, LucideIcon>>> = {
+  utilities: Droplets,
+}
+
 export function templateActionDefs(): QuickActionDef[] {
   return TEMPLATE_CATEGORIES.map((category) => ({
     id: `template:${category}`,
     label: t(TEMPLATE_LABELS[category] ?? 'home.template.rent'),
-    icon: CATEGORY_ICONS[category],
+    icon: TEMPLATE_ICONS[category] ?? CATEGORY_ICONS[category],
     tone: category,
     run: () => navigate(templatePath(category)),
     enabled: always,
   }))
 }
 
+/** Enabled actions that don't fit the grid (New group, with everything on): the More sheet offers them. */
+export function overflowActions(): QuickActionDef[] {
+  return quickActionDefs()
+    .filter((a) => a.enabled())
+    .slice(GRID_SIZE - 1)
+}
+
 /**
  * The grid: enabled actions in order, templates back-filling to seven, then More (which opens
- * the sheet of all templates).
+ * the sheet of the rest and all templates).
  */
 export function homeGridActions(openMore: () => void): QuickActionDef[] {
   const actions = quickActionDefs().filter((a) => a.enabled())

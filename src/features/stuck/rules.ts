@@ -7,8 +7,9 @@
  * DPSS.CO.PD No.629/02.01.014/2019-20, 20 September 2019): each kind of payment has a deadline
  * counted from T, the calendar day of the transaction, and beyond it the bank owes ₹100 for each
  * day of delay — paid on its own, without being asked. Unpaid, it's a complaint to the bank, then
- * after 30 days without a fix to the RBI Ombudsman (Reserve Bank – Integrated Ombudsman Scheme,
- * 2026, in force from 1 July 2026: file within 90 days of those 30 days or of the bank's last reply).
+ * to the RBI Ombudsman once the bank has turned it down or replied without fixing it, or has had 30
+ * days (Reserve Bank – Integrated Ombudsman Scheme, 2026, in force from 1 July 2026: file within 90
+ * days of those 30 days or of the bank's reply).
  *
  * Refunds follow the business's own promise (or its usual timeline, src/features/stuck/merchants.ts);
  * overdue, it's the business's support, then the National Consumer Helpline, then a consumer
@@ -16,7 +17,7 @@
  */
 import { addDays, daysBetween } from '../../engine/dates'
 import type { StuckPayment, StuckRail, StuckStepKind } from '../../data/stores'
-import { addWorkingDays, merchantById, refundWorkingDays } from './merchants'
+import { addWorkingDays, DEFAULT_REFUND_WORKING_DAYS, merchantById, refundWorkingDays } from './merchants'
 
 /** One row of the RBI's TAT table: the deadline (days after T) and the row it comes from. */
 export interface RailRule {
@@ -49,19 +50,62 @@ export const COMPENSATION_PER_DAY = 10_000
 /** The circular itself, for letters and the "why" line. */
 export const RBI_CIRCULAR = 'RBI/2019-20/67, DPSS.CO.PD No.629/02.01.014/2019-20 dated 20 September 2019'
 
-/** A bank has this long to answer a complaint before the RBI Ombudsman takes it. */
+/** A bank has this long to answer a complaint before the RBI Ombudsman takes it (unless it replies sooner). */
 export const OMBUDSMAN_WAIT_DAYS = 30
 /** A business gets a week from your complaint before the National Consumer Helpline. */
 export const MERCHANT_WAIT_DAYS = 7
 /** The National Consumer Helpline gets a month before a consumer commission. */
 export const NCH_WAIT_DAYS = 30
-/** The Ombudsman takes a complaint within 90 days of the bank's 30 days running out (or of its last reply), by the 2026 scheme. */
+/** The Ombudsman takes a complaint within 90 days of the bank's 30 days running out (or of its reply), by the 2026 scheme. */
 export const OMBUDSMAN_WINDOW_DAYS = 90
 
+/**
+ * An airline refunds a ticket paid by card within 7 days, whatever it says itself (DGCA, Civil
+ * Aviation Requirement on refunds of airline tickets, Section 3, Series M, Part II). Paid any other
+ * way (cash, a travel agent or portal: 14 working days), the airline's own timeline stands.
+ */
+export const DGCA_CARD_REFUND_DAYS = 7
+
+const CARD_RAILS: ReadonlySet<StuckRail> = new Set<StuckRail>(['card_online', 'card_pos', 'card_transfer'])
+
+type DueFields = Pick<StuckPayment, 'kind' | 'rail' | 'date' | 'promisedBy' | 'merchant'>
+
+/** The DGCA's last day for an airline refund paid by card, or null when the rule doesn't apply. */
+function dgcaDue(s: DueFields): string | null {
+  if (s.kind !== 'refund' || s.rail === null || !CARD_RAILS.has(s.rail) || merchantById(s.merchant)?.category !== 'airline') return null
+  return addDays(s.date, DGCA_CARD_REFUND_DAYS)
+}
+
+/** A refund's own due day: the date the business gave, or its usual timeline. */
+function ownRefundDue(s: DueFields): string {
+  return s.promisedBy ?? addWorkingDays(s.date, refundWorkingDays(s.merchant))
+}
+
 /** The day the money should be back by. */
-export function dueBy(s: Pick<StuckPayment, 'kind' | 'rail' | 'date' | 'promisedBy' | 'merchant'>): string {
-  if (s.kind === 'refund') return s.promisedBy ?? addWorkingDays(s.date, refundWorkingDays(s.merchant))
+export function dueBy(s: DueFields): string {
+  if (s.kind === 'refund') {
+    const own = ownRefundDue(s)
+    const dgca = dgcaDue(s)
+    return dgca !== null && dgca < own ? dgca : own
+  }
   return addDays(s.date, s.rail ? RAIL_RULES[s.rail].days : UNKNOWN_RAIL_DAYS)
+}
+
+/** Where a refund's due date comes from: the DGCA's 7 days for a card-paid flight, a date the business gave, its own usual timeline, or the usual 7 working days. */
+export type RefundDueBasis =
+  | { kind: 'dgca'; days: number }
+  | { kind: 'promised' }
+  | { kind: 'merchant'; name: string; workingDays: number }
+  | { kind: 'default'; workingDays: number }
+
+/** Why a refund is due when it is, in dueBy()'s order — so nothing claims a promise the business never made. */
+export function refundDueBasis(s: DueFields): RefundDueBasis {
+  const dgca = dgcaDue(s)
+  if (dgca !== null && dgca < ownRefundDue(s)) return { kind: 'dgca', days: DGCA_CARD_REFUND_DAYS }
+  if (s.promisedBy) return { kind: 'promised' }
+  const merchant = merchantById(s.merchant)
+  if (merchant) return { kind: 'merchant', name: merchant.name, workingDays: merchant.workingDays }
+  return { kind: 'default', workingDays: DEFAULT_REFUND_WORKING_DAYS }
 }
 
 /** Days late: past the deadline up to the day it came back (or today). 0 while it isn't late. */
@@ -109,8 +153,14 @@ export type StuckStage =
   | 'escalate'
   /** Taken as high as Settle can take it; waiting on them. */
   | 'escalated'
-  /** The money's back but the bank still owes compensation for the delay. */
+  /** The money's back but the bank still owes compensation for the delay: claim it. */
   | 'compensation'
+  /** The money's back; the compensation is raised with the bank, and its time to answer isn't up. */
+  | 'compensationRaised'
+  /** The money's back; the bank hasn't paid the compensation in its time (or turned it down): the RBI Ombudsman. */
+  | 'compensationEscalate'
+  /** The money's back; the compensation is with the RBI Ombudsman. */
+  | 'compensationEscalated'
   /** All back. */
   | 'back'
   /** Set aside. */
@@ -120,12 +170,23 @@ export interface StuckNext {
   stage: StuckStage
   /** The complaint to raise now, when there is one. */
   step: StuckStepKind | null
-  /** The day the current wait ends (waiting, raised, escalated), or null. */
+  /** The last day of the current wait (waiting, raised), or null. */
   until: string | null
 }
 
 function stepOn(s: StuckPayment, kind: StuckStepKind) {
   return s.steps.find((x) => x.kind === kind) ?? null
+}
+
+/** The bank answered the complaint (turned it down, or replied without fixing it): the Ombudsman needn't wait for its 30 days. */
+export function bankReplied(s: StuckPayment): boolean {
+  const bank = stepOn(s, 'bank')
+  return bank !== null && s.repliedAt !== null && s.repliedAt >= bank.date
+}
+
+/** The bank's time to answer is up (the last day it had has passed), or it has answered. */
+function bankDone(s: StuckPayment, bank: { date: string }, today: string): boolean {
+  return bankReplied(s) || today > rungEnds('bank', bank.date)
 }
 
 /** The ladder for a refund from this business: its support, then AirSewa (airlines) or the National Consumer Helpline, then a commission. */
@@ -141,44 +202,59 @@ function waitFor(kind: StuckStepKind): number {
   return NCH_WAIT_DAYS
 }
 
-/** Where it stands today and what to do about it. */
+/** The places it's taken, in order: the bank, then the RBI Ombudsman; or the business, (AirSewa,) the helpline, a commission. */
+export function ladderOf(s: StuckPayment): StuckStepKind[] {
+  return s.kind === 'failed' ? ['bank', 'ombudsman'] : refundLadder(s)
+}
+
+/** The last day a complaint raised at this rung on `date` gets before the next rung opens. */
+export function rungEnds(kind: StuckStepKind, date: string): string {
+  return addDays(date, waitFor(kind))
+}
+
+/**
+ * Where it stands today and what to do about it. Each wait runs to its last day (`until`); the next
+ * rung opens the day after — or at once for the RBI Ombudsman when the bank has replied. The last
+ * rung has no deadline of its own (the Ombudsman and a commission take their own time).
+ */
 export function nextStep(s: StuckPayment, today: string): StuckNext {
   if (s.dismissedAt !== null) return { stage: 'dismissed', step: null, until: null }
-  // Part of it back: the rest is still owed, and walks the same ladder.
-  if (s.back !== null && backInFull(s)) {
-    const owed = stillOwed(s, today)
-    if (owed.compensation > 0) {
-      const bank = stepOn(s, 'bank')
-      if (!bank) return { stage: 'compensation', step: 'bank', until: null }
-      if (stepOn(s, 'ombudsman')) return { stage: 'escalated', step: null, until: null }
-      const until = addDays(bank.date, OMBUDSMAN_WAIT_DAYS)
-      return today >= until ? { stage: 'escalate', step: 'ombudsman', until: null } : { stage: 'raised', step: null, until }
-    }
-    return { stage: 'back', step: null, until: null }
+  // All of it back: what's left is the compensation. (Part of it back walks the same ladder as none.)
+  if (backInFull(s)) {
+    if (stillOwed(s, today).compensation === 0) return { stage: 'back', step: null, until: null }
+    const bank = stepOn(s, 'bank')
+    if (!bank) return { stage: 'compensation', step: 'bank', until: null }
+    if (stepOn(s, 'ombudsman')) return { stage: 'compensationEscalated', step: null, until: null }
+    if (bankDone(s, bank, today)) return { stage: 'compensationEscalate', step: 'ombudsman', until: null }
+    return { stage: 'compensationRaised', step: null, until: rungEnds('bank', bank.date) }
   }
   if (!s.confirmed) return { stage: 'check', step: null, until: null }
   const due = dueBy(s)
   if (today <= due) return { stage: 'waiting', step: null, until: due }
-  const ladder: StuckStepKind[] = s.kind === 'failed' ? ['bank', 'ombudsman'] : refundLadder(s)
+  const ladder = ladderOf(s)
   // The highest rung reached so far.
   let reached = -1
   for (let i = 0; i < ladder.length; i++) if (stepOn(s, ladder[i] as StuckStepKind)) reached = i
   if (reached < 0) return { stage: 'overdue', step: ladder[0] as StuckStepKind, until: null }
+  if (reached === ladder.length - 1) return { stage: 'escalated', step: null, until: null }
   const last = ladder[reached] as StuckStepKind
   const lastStep = stepOn(s, last)
-  const until = addDays(lastStep?.date ?? today, waitFor(last))
-  if (reached === ladder.length - 1) return { stage: 'escalated', step: null, until }
-  return today >= until ? { stage: 'escalate', step: ladder[reached + 1] as StuckStepKind, until: null } : { stage: 'raised', step: null, until }
+  const until = rungEnds(last, lastStep?.date ?? today)
+  const done = last === 'bank' && lastStep ? bankDone(s, lastStep, today) : today > until
+  return done ? { stage: 'escalate', step: ladder[reached + 1] as StuckStepKind, until: null } : { stage: 'raised', step: null, until }
 }
 
 /** Open ones first by urgency, then the newest. */
 const STAGE_ORDER: Readonly<Record<StuckStage, number>> = {
   escalate: 0,
+  compensationEscalate: 0,
   overdue: 1,
   compensation: 2,
   check: 3,
   raised: 4,
+  compensationRaised: 4,
   escalated: 5,
+  compensationEscalated: 5,
   waiting: 6,
   back: 7,
   dismissed: 8,
@@ -190,7 +266,12 @@ export function stageRank(stage: StuckStage): number {
 
 /** Needs you to do something today. */
 export function needsAction(stage: StuckStage): boolean {
-  return stage === 'escalate' || stage === 'overdue' || stage === 'compensation' || stage === 'check'
+  return stage === 'escalate' || stage === 'compensationEscalate' || stage === 'overdue' || stage === 'compensation' || stage === 'check'
+}
+
+/** The money is back and only compensation for the wait is still owed. */
+export function owedForWait(stage: StuckStage): boolean {
+  return stage === 'compensation' || stage === 'compensationRaised' || stage === 'compensationEscalate' || stage === 'compensationEscalated'
 }
 
 export interface StuckSummary {
@@ -232,8 +313,20 @@ export function sortStuck(list: readonly StuckPayment[], today: string): StuckPa
   return [...list].sort((a, b) => stageRank(nextStep(a, today).stage) - stageRank(nextStep(b, today).stage) || b.date.localeCompare(a.date) || b.createdAt - a.createdAt)
 }
 
-/** The Ombudsman's window has closed: 90 days after the bank's 30 days ran out (a later reply from the bank reopens it). */
-export function ombudsmanTooLate(s: StuckPayment, today: string): boolean {
+/**
+ * The last day to take it to the RBI Ombudsman: 90 days after the bank's reply, or after its 30 days
+ * ran out when it didn't reply. Null when there's no complaint to the bank yet, or it's already with
+ * the Ombudsman.
+ */
+export function ombudsmanLastDay(s: StuckPayment): string | null {
   const bank = stepOn(s, 'bank')
-  return bank !== null && daysBetween(bank.date, today) > OMBUDSMAN_WINDOW_DAYS + OMBUDSMAN_WAIT_DAYS
+  if (!bank || stepOn(s, 'ombudsman')) return null
+  const from = bankReplied(s) && s.repliedAt !== null ? s.repliedAt : rungEnds('bank', bank.date)
+  return addDays(from, OMBUDSMAN_WINDOW_DAYS)
+}
+
+/** The Ombudsman's window has closed (a later reply from the bank reopens it). */
+export function ombudsmanTooLate(s: StuckPayment, today: string): boolean {
+  const last = ombudsmanLastDay(s)
+  return last !== null && today > last
 }

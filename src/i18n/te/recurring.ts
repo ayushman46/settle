@@ -70,7 +70,7 @@ export const recurring = {
   'recurring.editor.saved.toast': 'రిపీట్ స్ప్లిట్ సేవ్ అయింది',
   'recurring.editor.changesSaved.toast': 'మార్పులు సేవ్ అయ్యాయి',
   'recurring.editor.deleted.toast': '{title} తొలగించబడింది',
-  'recurring.editor.undo.cta': 'వెనక్కి తీసుకోండి',
+  'recurring.editor.undo.cta': 'రద్దు',
   'recurring.editor.delete.aria': '{title} తొలగించండి',
   'recurring.editor.save.new.cta': 'రిపీట్ స్ప్లిట్ సేవ్ చేయండి',
   'recurring.editor.save.cta': 'మార్పులు సేవ్ చేయండి',

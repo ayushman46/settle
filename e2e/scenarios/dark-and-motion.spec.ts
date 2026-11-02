@@ -34,7 +34,7 @@ test.describe('dark mode and reduced motion', () => {
 
     // Reduced motion: the More sheet is open at once, with no long animation still running.
     await page.getByRole('button', { name: 'More' }).click()
-    const sheet = page.getByRole('dialog', { name: 'More ways to split' })
+    const sheet = page.getByRole('dialog', { name: 'More' })
     await expect(sheet).toBeVisible()
     const running = await page.evaluate(() =>
       document

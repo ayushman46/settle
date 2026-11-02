@@ -1,7 +1,7 @@
 import type { Messages } from '../types'
 
 export const collect: Messages = {
-  'collect.title': 'ಬರಬೇಕಾದದ್ದು',
+  'collect.title': 'ಬರಬೇಕಾದ ಹಣ',
   'collect.subtitle': '{count, plural, one {# ಜನರಿಂದ} other {# ಜನರಿಂದ}} {amount} ಬರಬೇಕು. ನೆನಪಿಸಿ, ಅಥವಾ ಪಾವತಿಸಿದವರನ್ನು ಟಿಕ್ ಮಾಡಿ.',
   'collect.empty.title': 'ಬರಬೇಕಾದದ್ದು ಏನೂ ಇಲ್ಲ',
   'collect.empty.text': 'ಯಾರಾದರೂ ನಿಮಗೆ ಬಾಕಿ ಇದ್ದರೆ ಅವರು ಇಲ್ಲಿರುತ್ತಾರೆ — ನೆನಪಿಸುವ ಸಂದೇಶ ಸಿದ್ಧವಾಗಿರುತ್ತದೆ.',

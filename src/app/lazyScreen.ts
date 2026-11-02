@@ -87,7 +87,7 @@ export function isChunkLoadError(error: unknown): boolean {
   if (!(error instanceof Error)) return false
   return (
     error.name === 'ChunkLoadError' ||
-    /dynamically imported module|importing a module script failed|error loading dynamically imported module|failed to load module script/i.test(
+    /dynamically imported module|importing a module script failed|error loading dynamically imported module|failed to load module script|unable to preload css/i.test(
       error.message,
     )
   )

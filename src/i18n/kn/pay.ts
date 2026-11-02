@@ -42,7 +42,7 @@ export const pay = {
 
   'pay.tell.title': 'ಪಾವತಿಸಿದಿರಾ?',
   'pay.tell.cta': '{name} ಅವರಿಗೆ ಪಾವತಿಸಿದ್ದೇನೆ ಎಂದು ತಿಳಿಸಿ',
-  'pay.tell.copied.status': 'ಸಂದೇಶ ಕಾಪಿ ಆಗಿದೆ — ನಿಮ್ಮ ಚಾಟ್‌ನಲ್ಲಿ ಅಂಟಿಸಿ.',
+  'pay.tell.copied.status': 'ಸಂದೇಶ ನಕಲಿಸಲಾಗಿದೆ — ನಿಮ್ಮ ಚಾಟ್‌ನಲ್ಲಿ ಅಂಟಿಸಿ.',
   'pay.tell.shared.status': 'ಕಳುಹಿಸಲಾಗಿದೆ. ಲೆಕ್ಕ ಚುಕ್ತಾ ಮಾಡಿದ್ದಕ್ಕೆ ಧನ್ಯವಾದ!',
   'pay.tell.failed.status': 'ಸಂದೇಶ ಹಂಚಲಾಗಲಿಲ್ಲ. ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.',
   'pay.tell.message': 'ಹಾಯ್ {name}! {title} ಗಾಗಿ {amount} ಈಗಷ್ಟೇ ಪಾವತಿಸಿದೆ ✓',
@@ -59,7 +59,7 @@ export const pay = {
   'pay.tell.opened.status': 'WhatsApp ತೆರೆದಿದೆ — {name} ಅವರಿಗೆ ಕಳುಹಿಸಿ.',
 
   'pay.problem.invalid.title': 'ಈ ಪೇ ಲಿಂಕ್ ಕೆಲಸ ಮಾಡುತ್ತಿಲ್ಲ',
-  'pay.problem.invalid.body': 'ಕಾಪಿ ಮಾಡುವಾಗ ಅದು ಕತ್ತರಿಸಲ್ಪಟ್ಟಿರಬಹುದು. ಕಳುಹಿಸಿದವರನ್ನು ಮತ್ತೆ ಹಂಚಲು ಕೇಳಿ.',
+  'pay.problem.invalid.body': 'ನಕಲಿಸುವಾಗ ಅದು ಕತ್ತರಿಸಲ್ಪಟ್ಟಿರಬಹುದು. ಕಳುಹಿಸಿದವರನ್ನು ಮತ್ತೆ ಹಂಚಲು ಕೇಳಿ.',
   'pay.problem.empty.title': 'ಇಲ್ಲಿ ಯಾವ ಪೇ ಲಿಂಕ್ ಇಲ್ಲ',
   'pay.problem.empty.body': 'ನಿಮ್ಮ ಸ್ನೇಹಿತರು ಹಂಚಿದ ಲಿಂಕ್ ತೆರೆಯಿರಿ — ಅವರಿಗೆ ಪಾವತಿಸಲು ಬೇಕಾದ ಎಲ್ಲವೂ ಅದರಲ್ಲಿದೆ.',
   'pay.loading.status': 'ಪೇ ಲಿಂಕ್ ತೆರೆಯಲಾಗುತ್ತಿದೆ…',

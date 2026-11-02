@@ -45,7 +45,7 @@ export const whospaid = {
   'whospaid.known': '{count, plural, one {# was} other {# were}} already marked.',
   'whospaid.skipped': '{count, plural, one {# payment you made is left out.} other {# payments you made are left out.}}',
   'whospaid.otherApps': 'Someone paid on another app? Their payment may only show in your bank statement.',
-  'whospaid.confirm': '{count, plural, one {Mark # as paid} other {Mark # as paid}}',
+  'whospaid.confirm': '{count, plural, =0 {Pick who paid} one {Mark # as paid} other {Mark # as paid}}',
   'whospaid.marked.toast': '{count, plural, one {# split marked paid} other {# splits marked paid}}',
   'whospaid.undo': 'Undo',
   'whospaid.done.title': '{count, plural, one {# payment ticked off} other {# payments ticked off}}',

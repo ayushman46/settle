@@ -252,13 +252,47 @@ export function toInputString(minor: Minor | null, code: string, opts: InputStri
 /** Most whole-unit digits an amount field accepts (₹9,99,99,99,999). */
 export const MAX_INTEGER_DIGITS = 10
 
+/** Currencies whose home countries write ',' as the decimal mark ("12,50 €", "R$ 12,50"). */
+const COMMA_DECIMAL_CURRENCIES: ReadonlySet<string> = new Set(['EUR', 'BRL', 'IDR', 'VND', 'TRY', 'RUB', 'ARS', 'CLP', 'COP', 'DKK', 'NOK', 'SEK', 'PLN', 'CZK', 'HUF', 'RON', 'UAH'])
+
+let phoneCommaDecimal: boolean | null = null
+
+/** This phone writes decimals with a comma (its decimal keypad has ',' where '.' would be). */
+function phoneWritesCommaDecimal(): boolean {
+  if (phoneCommaDecimal === null) {
+    try {
+      phoneCommaDecimal = new Intl.NumberFormat().formatToParts(1.5).find((p) => p.type === 'decimal')?.value === ','
+    } catch {
+      phoneCommaDecimal = false
+    }
+  }
+  return phoneCommaDecimal
+}
+
+/**
+ * Whether a ',' typed into an amount of this currency is its decimal mark: the currency is written
+ * that way ("12,50 €"), or this phone's keypad offers ',' for decimals. Otherwise (rupees, dollars…)
+ * a typed ',' groups digits ("99,99,999") and only '.' starts the decimals.
+ */
+export function commaIsDecimal(code: string): boolean {
+  return COMMA_DECIMAL_CURRENCIES.has(code.toUpperCase()) || phoneWritesCommaDecimal()
+}
+
+export interface CleanAmountOptions {
+  /**
+   * A typed ',' groups digits ("99,99,999" → "9999999") and only '.' starts the decimals — pass
+   * `!commaIsDecimal(code)`. Default false: the first '.' or ',' typed starts them.
+   */
+  commaGroups?: boolean
+}
+
 /**
  * Tidies an amount field as the user types, like a payments app: digits and ONE decimal
  * separator (`.` or `,`, as typed) only, no more decimals than the currency has, no leading
  * zeros, at most `MAX_INTEGER_DIGITS` whole digits. Pasted formatted amounts ("₹1,234.50")
  * become plain ("1234.50"). Parse the result with `parseMoneyInput`.
  */
-export function cleanAmountText(text: string, code: string): string {
+export function cleanAmountText(text: string, code: string, opts: CleanAmountOptions = {}): string {
   let ascii = asciiDigits(text)
   // A pasted formatted amount ("1,234.50", "1.234,50", "1,23,456"): read it as a whole first.
   const core = ascii.replace(/[^\d.,]/g, '')
@@ -278,6 +312,9 @@ export function cleanAmountText(text: string, code: string): string {
       } else if (fraction.length < digits) {
         fraction += ch
       }
+    } else if (ch === ',' && opts.commaGroups === true) {
+      // A typed grouping mark ("99,99,999"): dropped; only '.' starts the decimals.
+      continue
     } else if ((ch === '.' || ch === ',') && separator === null && digits > 0) {
       separator = ch
     }

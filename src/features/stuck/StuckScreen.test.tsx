@@ -74,7 +74,8 @@ describe('StuckScreen — nothing yet', SLOW, () => {
     const { user } = renderAt('/app/stuck', <StuckScreen />)
     expect(screen.getByRole('heading', { level: 1, name: 'Stuck money' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Money stuck with a bank or a shop?' })).toBeInTheDocument()
-    expect(screen.getByText('Banks must put a failed UPI payment to a person back the next day. After that, they owe you ₹100 a day.')).toBeInTheDocument()
+    expect(screen.getByText(/^Failed UPI to a person, IMPS and wallet payments must be back the next day; UPI to a shop, card payments and ATM withdrawals within 5 days/)).toBeInTheDocument()
+    expect(screen.getByText('A refund that’s late? Settle counts from the business’s own deadline.')).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Paste a message' }))
     expect(await screen.findByRole('dialog', { name: 'Paste a message' })).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Close' }))
@@ -90,37 +91,72 @@ describe('StuckScreen — the list', SLOW, () => {
     const hero = screen.getByRole('region', { name: 'What you’re owed' })
     expect(hero).toHaveTextContent('Banks and shops owe you')
     expect(hero).toHaveTextContent('₹4,700')
-    expect(within(hero).getByText('For the wait').nextSibling).toHaveTextContent('+ ₹300')
+    expect(within(hero).getByText('For the wait').nextSibling).toHaveTextContent('+₹300')
     expect(within(hero).getByText('Got back so far').nextSibling).toHaveTextContent('₹740')
     expect(hero).toHaveTextContent('2 need you')
   })
 
-  it('puts what needs you first, then what’s on its way, what came back, and what was set aside (folded)', async () => {
+  it('puts what needs you first, then what’s not due yet, what came back, and what was set aside (folded)', async () => {
     seedFive()
     const { user } = renderAt('/app/stuck', <StuckScreen />)
     const section = (name: RegExp) => screen.getByRole('region', { name })
     const rows = (name: RegExp) => within(section(name)).getAllByRole('listitem')
 
+    expect(section(/^Needs you/)).toHaveAccessibleName('Needs you, 2 payments')
     expect(rows(/^Needs you/).map((li) => li.textContent)).toEqual([
-      expect.stringMatching(/^Riya Sharma 3 days late · your bank owes you ₹300 ₹500/),
-      expect.stringMatching(/^Zepto Did ₹249 leave your account\? ₹249/),
+      expect.stringMatching(/^Failed payment to Riya Sharma 3 days late · your bank owes you ₹300 ₹500/),
+      expect.stringMatching(/^Failed payment to Zepto Did ₹249 leave your account\? ₹249/),
     ])
-    expect(rows(/^On its way/)[0]).toHaveTextContent('Amazon Due back by 5 Nov ₹4,200')
-    expect(rows(/^Got back/)[0]).toHaveTextContent('Swiggy Back on 30 Oct ₹740')
+    expect(rows(/^Not due yet/)[0]).toHaveTextContent('Amazon refund Due back by 5 Nov ₹4,200')
+    expect(rows(/^Got back/)[0]).toHaveTextContent('Failed payment to Swiggy Back on 30 Oct ₹740')
 
-    const aside = screen.getByRole('button', { name: /^Set aside/ })
+    const aside = screen.getByRole('button', { name: 'Set aside, 1 payment' })
     expect(aside).toHaveAttribute('aria-expanded', 'false')
-    expect(screen.queryByText('Rapido')).not.toBeVisible()
+    expect(screen.queryByText('Failed payment to Rapido')).not.toBeVisible()
     await user.click(aside)
     expect(aside).toHaveAttribute('aria-expanded', 'true')
-    expect(screen.getByText('Rapido')).toBeVisible()
+    expect(screen.getByText('Failed payment to Rapido')).toBeVisible()
   })
 
   it('opens a payment', async () => {
     seedFive()
     const { user } = renderAt('/app/stuck', <StuckScreen />)
-    await user.click(screen.getByRole('button', { name: /^Amazon/ }))
+    await user.click(screen.getByRole('button', { name: /^Amazon refund/ }))
     expect(currentUrl()).toBe('/app/stuck/refund')
+  })
+
+  it('files a raised one under Waiting on them, still saying how late, and money back with only the wait owed under Owed for the wait', () => {
+    seedStuck(
+      stuckPayment({ id: 'raised', party: 'Swiggy', amount: 64_900, steps: [{ kind: 'bank', date: '2026-10-31', ref: null }] }),
+      stuckPayment({ id: 'owed', party: 'Kabir Mehta', amount: 450_000, steps: [{ kind: 'bank', date: '2026-10-31', ref: null }], back: { date: '2026-11-01', amount: 450_000, compensation: 0 } }),
+    )
+    renderAt('/app/stuck', <StuckScreen />)
+    expect(within(screen.getByRole('region', { name: /^Waiting on them/ })).getByRole('listitem')).toHaveTextContent(
+      'Failed payment to Swiggy Raised · 3 days late · ₹300 owed so far ₹649',
+    )
+    expect(within(screen.getByRole('region', { name: /^Owed for the wait/ })).getByRole('listitem')).toHaveTextContent(
+      'Failed payment to Kabir Mehta ₹4,500 back · raised for the ₹300 · they have till 30 Nov ₹300',
+    )
+    expect(screen.queryByRole('region', { name: /^Not due yet/ })).not.toBeInTheDocument()
+  })
+
+  it('a part back keeps it open, the row showing only what’s still to come; an order number tells two apart', () => {
+    seedStuck(
+      stuckPayment({ id: 'part', kind: 'refund', rail: null, party: null, merchant: 'flipkart', amount: 129_900, date: '2026-10-20', orderId: 'OD4311223344556677', back: { date: '2026-10-31', amount: 100_000, compensation: 0 } }),
+    )
+    renderAt('/app/stuck', <StuckScreen />)
+    expect(screen.getByRole('region', { name: 'What you’re owed' })).toHaveTextContent('₹299')
+    expect(within(screen.getByRole('region', { name: /^Needs you/ })).getByRole('listitem')).toHaveTextContent(
+      'Flipkart refund · Order …4556677 Part back · ₹299 still to come · 3 days late · raise it with Flipkart ₹299',
+    )
+  })
+
+  it('with only payments to check, the hero asks about them rather than saying nothing’s stuck', () => {
+    seedStuck(stuckPayment({ id: 'a', confirmed: false }), stuckPayment({ id: 'b', party: 'Zepto', confirmed: false }))
+    renderAt('/app/stuck', <StuckScreen />)
+    const hero = screen.getByRole('region', { name: 'What you’re owed' })
+    expect(hero).toHaveTextContent('2 payments to check — did the money leave your account?')
+    expect(hero).not.toHaveTextContent('Nothing stuck right now')
   })
 })
 
@@ -128,7 +164,7 @@ describe('StuckScreen — did it leave your account?', SLOW, () => {
   it('Yes counts it, with Undo', async () => {
     seedFive()
     const { user } = renderAt('/app/stuck', <StuckScreen />)
-    await user.click(within(screen.getByRole('group', { name: 'Zepto Did ₹249 leave your account?' })).getByRole('button', { name: 'Yes, it left' }))
+    await user.click(within(screen.getByRole('group', { name: 'Failed payment to Zepto Did ₹249 leave your account?' })).getByRole('button', { name: 'Yes, it left — ₹249 to Zepto' }))
     expect(storedStuck('check')?.confirmed).toBe(true)
     expect(await screen.findByText('Got it — Settle’s counting the days')).toBeInTheDocument()
     expect(screen.getByRole('region', { name: 'What you’re owed' })).toHaveTextContent('₹4,949')
@@ -139,10 +175,10 @@ describe('StuckScreen — did it leave your account?', SLOW, () => {
   it('No sets it aside, with Undo', async () => {
     seedFive()
     const { user } = renderAt('/app/stuck', <StuckScreen />)
-    await user.click(within(screen.getByRole('group', { name: 'Zepto Did ₹249 leave your account?' })).getByRole('button', { name: 'No' }))
+    await user.click(within(screen.getByRole('group', { name: 'Failed payment to Zepto Did ₹249 leave your account?' })).getByRole('button', { name: 'No — ₹249 to Zepto' }))
     expect(storedStuck('check')?.dismissedAt).not.toBeNull()
     expect(within(screen.getByRole('region', { name: /^Needs you/ })).getAllByRole('listitem')).toHaveLength(1)
-    expect(screen.getByRole('button', { name: /^Set aside 2/ })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Set aside, 2 payments' })).toBeInTheDocument()
     await user.click(await screen.findByRole('button', { name: /^Undo/ }))
     expect(storedStuck('check')?.dismissedAt).toBeNull()
   })
@@ -173,7 +209,7 @@ describe('StuckScreen — paste a message', SLOW, () => {
     fake.back = [stuckPayment({ id: 'late', back: { date: '2026-11-01', amount: 50_000, compensation: 0 } })]
     const { user } = renderAt('/app/stuck', <StuckScreen />)
     await paste(user, 'Rs 500 reversed to your account for failed UPI txn 430112345678')
-    expect(await screen.findByText('₹500 from Riya Sharma is back — 3 days late, so your bank owes you ₹300 for the wait')).toBeInTheDocument()
+    expect(await screen.findByText('Your ₹500 to Riya Sharma is back in your account — 3 days late, so your bank owes you ₹300 for the wait')).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: /^Undo/ }))
     expect(fake.undo).toHaveBeenCalledOnce()
   })

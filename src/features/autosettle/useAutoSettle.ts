@@ -16,7 +16,7 @@ import { haptic } from '../../lib/haptics'
 import { formatMoney } from '../../lib/money'
 import { callPlugin, hasPlugin, listenToPlugin } from '../../lib/nativeApp'
 import { merchantById } from '../stuck/merchants'
-import { compensationDue, daysLate } from '../stuck/rules'
+import { backInPart, compensationDue, daysLate } from '../stuck/rules'
 import { alertSignals, trackStuckSignals, type TrackResult } from '../stuck/track'
 import { undoMatches } from '../whospaid/sources'
 import { readRawAlerts } from './alerts'
@@ -36,14 +36,19 @@ function nameOf(s: StuckPayment): string | null {
 
 /**
  * What the toast says about stuck money just noticed: money back first (the good news), then what
- * was added. Null when nothing changed.
+ * was added — already late, it says by how much and what the bank owes so far — then a payment
+ * that went through after all. Null when nothing changed.
  */
-export function stuckToastMessage(result: Pick<TrackResult, 'added' | 'back'>, t: Translate, day: string): string | null {
+export function stuckToastMessage(result: Pick<TrackResult, 'added' | 'back'> & Partial<Pick<TrackResult, 'cleared'>>, t: Translate, day: string): string | null {
   const back = result.back[0]
   if (result.back.length > 1) return t('stuckalerts.back.many', { count: result.back.length })
   if (back) {
     const name = nameOf(back)
     const amount = inr(back.back?.amount ?? back.amount)
+    // Only part of it came back: the rest stays open.
+    if (back.back !== null && backInPart(back)) {
+      return t('stuckalerts.back.part', { back: amount, amount: inr(back.amount), rest: inr(back.amount - back.back.amount) })
+    }
     if (back.kind === 'refund') return name ? t('stuckalerts.back.refund', { name, amount }) : t('stuckalerts.back.refund.anon', { amount })
     const owed = compensationDue(back, day) - (back.back?.compensation ?? 0)
     if (owed > 0) {
@@ -54,12 +59,32 @@ export function stuckToastMessage(result: Pick<TrackResult, 'added' | 'back'>, t
   }
   const added = result.added[0]
   if (result.added.length > 1) return t('stuckalerts.added.many', { count: result.added.length })
-  if (!added) return null
+  if (!added) return clearedMessage(result.cleared ?? [], t)
   const name = nameOf(added)
   const amount = inr(added.amount)
   if (added.kind === 'refund') return name ? t('stuckalerts.refund', { name, amount }) : t('stuckalerts.refund.anon', { amount })
-  if (added.confirmed) return name ? t('stuckalerts.failed', { name, amount }) : t('stuckalerts.failed.anon', { amount })
+  if (added.confirmed) {
+    // Told late (Settle wasn't opened for days): already past the RBI's deadline.
+    const owed = compensationDue(added, day)
+    if (owed > 0) {
+      const late = { amount, days: daysLate(added, day), compensation: inr(owed) }
+      if (added.rail === 'atm') return t('stuckalerts.failed.atm.late', late)
+      return name ? t('stuckalerts.failed.late', { ...late, name }) : t('stuckalerts.failed.anon.late', late)
+    }
+    if (added.rail === 'atm') return t('stuckalerts.failed.atm', { amount })
+    return name ? t('stuckalerts.failed', { name, amount }) : t('stuckalerts.failed.anon', { amount })
+  }
   return name ? t('stuckalerts.check', { name, amount }) : t('stuckalerts.check.anon', { amount })
+}
+
+/** A payment that was waiting for a tap went through after all. */
+function clearedMessage(cleared: readonly StuckPayment[], t: Translate): string | null {
+  const first = cleared[0]
+  if (!first) return null
+  if (cleared.length > 1) return t('stuckalerts.cleared.many', { count: cleared.length })
+  const name = nameOf(first)
+  const amount = inr(first.amount)
+  return name ? t('stuckalerts.cleared', { name, amount }) : t('stuckalerts.cleared.anon', { amount })
 }
 
 /** Reads the phone's waiting alerts: settles who paid, and tracks stuck money. */
@@ -87,7 +112,7 @@ export function useAutoSettle(): void {
     const tellStuck = (result: TrackResult): void => {
       const message = stuckToastMessage(result, t, today())
       if (message === null) return
-      const good = result.back.length > 0
+      const good = result.back.length > 0 || (result.added.length === 0 && result.cleared.length > 0)
       haptic(good ? 'success' : 'warning')
       toast(message, { tone: good ? 'success' : 'info', action: { label: t('common.action.undo'), onAction: result.undo } })
     }

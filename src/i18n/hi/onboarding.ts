@@ -16,11 +16,16 @@ export const onboarding = {
   'onboarding.slide.split.text': 'किराया, ट्रिप, कैब, Netflix। या बस बोल दीजिए: “कैब 840 रिया और सैम के साथ”।',
   'onboarding.slide.settle.title': 'UPI से पैसे वापस पाएँ',
   'onboarding.slide.settle.text': 'ग्रुप में एक लिंक भेजें। दोस्त अपना नाम टैप करें और किसी भी UPI ऐप से पे करें।',
+  'onboarding.slide.stuck.title': 'पैसे अटके? वापस पाएँ',
+  'onboarding.slide.stuck.text': 'पेमेंट फ़ेल हुआ पर पैसे कट गए, या रिफ़ंड आया ही नहीं? Settle दिन गिनता है, बताता है कि देरी के बदले बैंक को आपको कब से पैसे देने होंगे, और शिकायत लिख देता है।',
 
   'onboarding.about.title': 'चलिए, शुरू करते हैं',
   'onboarding.about.subtitle': 'आपके भेजे रिक्वेस्ट पर दोस्तों को आपका नाम दिखेगा।',
   'onboarding.about.start.cta': 'स्प्लिट शुरू करें',
   'onboarding.about.skip.cta': 'अभी छोड़ें',
+  // On the way to Stuck money, only the name is asked for.
+  'onboarding.about.stuck.subtitle': 'आपका नाम उन शिकायत पत्रों में जाता है जो Settle आपके लिए लिखता है।',
+  'onboarding.about.stuck.cta': 'आगे बढ़ें',
   'onboarding.about.name.label': 'आपका नाम',
   'onboarding.about.name.placeholder': 'जैसे: आयुष',
   'onboarding.about.name.error': 'अपना नाम डालें — आपके भेजे रिक्वेस्ट पर दोस्तों को यही दिखेगा।',

@@ -61,20 +61,27 @@ public class PaymentAlertsListener extends NotificationListenerService {
         "com.bets.airindia.ui" // Air India
     );
 
-    /** An amount of money: ₹420, Rs.420, Rs 420.50, INR 420. */
-    private static final Pattern MONEY = Pattern.compile("(?i)(₹|\\brs\\.?|\\binr)\\s?\\d");
+    /*
+     * Hindi and Hinglish too, as SBI, PNB and other banks send them ("खाते से रु.500 डेबिट हुए, लेनदेन
+     * विफल"). Devanagari words sit outside \b (it only knows ASCII letters); a nukta letter (फ़) can
+     * come precomposed or as the letter and U+093C, so both are written. Kept in step with
+     * src/features/stuck/detect.ts (detect.test.ts reads these patterns).
+     */
+
+    /** An amount of money: ₹420, Rs.420, Rs 420.50, INR 420, रु.420, 420 रुपये — in any Indian digits. */
+    private static final Pattern MONEY = Pattern.compile("(?i)(₹|\\brs\\.?|\\binr|रु\\.?|रू\\.?)\\s?\\p{Nd}|\\p{Nd}\\s?(रुपये|रुपए)");
     /** Money coming in. */
     private static final Pattern MONEY_IN = Pattern.compile("(?i)\\b(received|credited|deposited|paid you|sent you|added to)\\b|प्राप्त|जमा");
     /** A payment that failed, waits, or is coming back. */
-    private static final Pattern STUCK = Pattern.compile("(?i)\\b(failed|failure|declined|unsuccessful|pending|processing|reversed|reversal|refunds?|refunded|credited back|will be refunded)\\b");
+    private static final Pattern STUCK = Pattern.compile("(?i)\\b(failed|failure|declined|unsuccessful|pending|processing|reversed|reversal|refunds?|refunded|credited back|will be refunded|asafal|vifal|wapas|vapas)\\b|विफल|असफल|अस्वीकृत|लंबित|वापस|रिवर्स|रिफ(\\u093c)?ंड|रि\\u095eंड");
     /** Money going out of your account (bank SMS): only to pair with a failure. */
-    private static final Pattern MONEY_OUT = Pattern.compile("(?i)\\b(debited|deducted|spent|sent|paid|withdrawn)\\b");
+    private static final Pattern MONEY_OUT = Pattern.compile("(?i)\\b(debited|deducted|spent|sent|paid|withdrawn|kaate|kate gaye|kat gaye|debit hu[ae])\\b|डेबिट|कटे|कटी|काटे|कट गए");
     /** A payment that went through (UPI apps): only to clear one that was pending. */
     private static final Pattern WENT_THROUGH = Pattern.compile("(?i)\\b(successful|successfully|paid|sent)\\b");
     /** A business's refund. */
-    private static final Pattern REFUND = Pattern.compile("(?i)\\b(refunds?|refunded|reversed|reversal|credited back)\\b");
+    private static final Pattern REFUND = Pattern.compile("(?i)\\b(refunds?|refunded|reversed|reversal|credited back)\\b|रिफ(\\u093c)?ंड|रि\\u095eंड");
     /** Never kept, whatever else they say. */
-    private static final Pattern SECRET = Pattern.compile("(?i)\\b(otp|one[- ]time password|verification code|passcode|cvv|pin)\\b");
+    private static final Pattern SECRET = Pattern.compile("(?i)\\b(otp|one[- ]time password|verification code|passcode|cvv|pin)\\b|ओटीपी|पिन");
 
     @Override
     public void onNotificationPosted(StatusBarNotification sbn) {

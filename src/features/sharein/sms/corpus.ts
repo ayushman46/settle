@@ -1,6 +1,7 @@
 /**
  * SYNTHETIC corpus for the on-device bank/UPI SMS parser (spec 02), copied verbatim from the
- * verified reference corpus (features/02-sms-corpus.mjs, 179 messages). Every message is invented
+ * verified reference corpus (features/02-sms-corpus.mjs, 179 messages), then 32 more: the
+ * public-sector, regional and small-finance banks, layouts the customer panel pasted, and Hindi. Every message is invented
  * (made-up accounts, refs, names, VPAs) but follows the layout of real Indian bank and UPI-app alerts.
  *
  * Parse with today = '2026-10-23'. A `txn` expectation lists EVERY field the parser returns; all of
@@ -401,4 +402,70 @@ export const SMS_CORPUS: ReadonlyArray<readonly [id: string, text: string, expec
     T('debit', 89900, 'JioCinema', null, '2026-10-12', '628812004451', 'XX3041', 'yes', null, 'autopay')],
   ['ho-28', 'Transaction of INR 2,250.00 done on IndusInd Credit Card XX7104 at BIGBASKET on 23-10-2026 07:15 PM. Available limit INR 56,110.00',
     T('debit', 225000, 'BigBasket', null, '2026-10-23', null, 'XX7104', 'indusind', null, 'card')],
+
+  /* ------------------------------------------------------------------ public-sector, regional and small-finance banks */
+  ['canara-01', 'An amount of INR 1,250.00 has been DEBITED to your account XXX4521 on 21/10/2026 towards UPI/P2M/629412345678/BIGBASKET. Total Avail.bal INR 12,345.67. - Canara Bank',
+    T('debit', 125000, 'BigBasket', null, '2026-10-21', '629412345678', 'XX4521', 'canara', null, 'upi')],
+  ['union-01', 'Your A/c XX2231 is debited for Rs.500.00 on 21-10-26 by UPI Ref No 629412345611 to RAHUL KUMAR. -Union Bank of India',
+    T('debit', 50000, 'Rahul Kumar', null, '2026-10-21', '629412345611', 'XX2231', 'union', null, 'upi')],
+  ['union-02', 'Your Union Bank of India A/c XX1234 debited for Rs.500.00 on 21-10-26. UPI Ref 629412345630',
+    T('debit', 50000, null, null, '2026-10-21', '629412345630', 'XX1234', 'union', null, 'upi')],
+  ['boi-01', 'BOI - Rs.800.00 debited from A/c XX5512 on 20-10-26 for UPI/629412345612/ZOMATO. Avl Bal Rs.4,200.00',
+    T('debit', 80000, 'Zomato', null, '2026-10-20', '629412345612', 'XX5512', 'boi', null, 'upi')],
+  ['central-01', 'Rs.1,000.00 credited to A/c XX1199 on 22-10-26 by UPI from PRIYA NAIR. Ref 629412345613 -Central Bank of India',
+    T('credit', 100000, 'Priya Nair', null, '2026-10-22', '629412345613', 'XX1199', 'central', null, 'upi')],
+  ['central-02', 'Rs.500.00 debited from Central Bank of India A/c XX1234 on 21-10-26. UPI Ref 629412345631',
+    T('debit', 50000, null, null, '2026-10-21', '629412345631', 'XX1234', 'central', null, 'upi')],
+  ['indianbank-01', 'Your A/c XX3341 debited INR 350.00 on 22-10-26 UPI Ref 629412345614 to SWIGGY. -Indian Bank',
+    T('debit', 35000, 'Swiggy', null, '2026-10-22', '629412345614', 'XX3341', 'indianbank', null, 'upi')],
+  ['iob-01', 'IOB: A/c XX8812 debited Rs.200.00 on 19-10-26 UPI ref 629412345615. Avl Bal Rs.900.00',
+    T('debit', 20000, null, null, '2026-10-19', '629412345615', 'XX8812', 'iob', null, 'upi')],
+  ['uco-01', 'Rs.450.00 debited from A/c XX2210 on 21-10-26 UPI Ref 629412345616 -UCO Bank',
+    T('debit', 45000, null, null, '2026-10-21', '629412345616', 'XX2210', 'uco', null, 'upi')],
+  ['mahabank-01', 'Your A/c XX7781 debited for Rs.600.00 on 21-10-26 UPI Ref 629412345617 -Bank of Maharashtra',
+    T('debit', 60000, null, null, '2026-10-21', '629412345617', 'XX7781', 'mahabank', null, 'upi')],
+  ['idbi-01', 'IDBI Bank A/c XX4410 debited Rs.1,500.00 on 20-10-26 UPI Ref 629412345618',
+    T('debit', 150000, null, null, '2026-10-20', '629412345618', 'XX4410', 'idbi', null, 'upi')],
+  ['federal-01', 'Rs.300.00 debited from your A/c XX6612 on 21-10-26 UPI Ref 629412345619 -Federal Bank',
+    T('debit', 30000, null, null, '2026-10-21', '629412345619', 'XX6612', 'federal', null, 'upi')],
+  ['southindian-01', 'Rs.250.00 credited to A/c XX3399 on 22-10-26 from ARUN DAS. UPI Ref 629412345620 -South Indian Bank',
+    T('credit', 25000, 'Arun Das', null, '2026-10-22', '629412345620', 'XX3399', 'southindian', null, 'upi')],
+  ['kvb-01', 'Rs.700.00 debited from A/c XX9911 on 22-10-26 UPI Ref 629412345621 -Karur Vysya Bank',
+    T('debit', 70000, null, null, '2026-10-22', '629412345621', 'XX9911', 'kvb', null, 'upi')],
+  ['cub-01', 'Rs.900.00 debited from A/c XX1288 on 21-10-26 UPI Ref 629412345622 -City Union Bank',
+    T('debit', 90000, null, null, '2026-10-21', '629412345622', 'XX1288', 'cub', null, 'upi')],
+  ['tmb-01', 'Rs.150.00 debited from A/c XX7720 on 21-10-26 UPI Ref 629412345623 -Tamilnad Mercantile Bank',
+    T('debit', 15000, null, null, '2026-10-21', '629412345623', 'XX7720', 'tmb', null, 'upi')],
+  ['karnataka-01', 'Rs.400.00 debited from A/c XX1023 on 20-10-26 UPI Ref 629412345624 -Karnataka Bank',
+    T('debit', 40000, null, null, '2026-10-20', '629412345624', 'XX1023', 'karnataka', null, 'upi')],
+  ['rbl-01', 'Rs.999.00 spent on RBL Bank Credit Card XX5521 at AMAZON on 20-10-26.',
+    T('debit', 99900, 'Amazon', null, '2026-10-20', null, 'XX5521', 'rbl', null, 'card')],
+  ['au-01', 'Rs.2,000.00 debited from AU Small Finance Bank A/c XX4471 on 22-10-26 UPI Ref 629412345625',
+    T('debit', 200000, null, null, '2026-10-22', '629412345625', 'XX4471', 'au', null, 'upi')],
+  ['equitas-01', 'Rs.120.00 debited from Equitas A/c XX8820 on 22-10-26 UPI Ref 629412345626',
+    T('debit', 12000, null, null, '2026-10-22', '629412345626', 'XX8820', 'equitas', null, 'upi')],
+
+  /* ------------------------------------------------------------------ layouts the customer panel pasted */
+  ['panel-01', 'You have received Rs.2,000.00 from IMRAN KHAN (imrankhan@ybl) on 21-10-26. UPI Ref 629412345627 -Kotak Bank',
+    T('credit', 200000, 'Imran Khan', 'imrankhan@ybl', '2026-10-21', '629412345627', null, 'kotak', null, 'upi')],
+  ['panel-02', 'Rs.7200.00 credited to a/c XX4821 on 22-10-26 by UPI from ARJUN MEHTA (arjun@okaxis) Ref 629412345628 -HDFC Bank',
+    T('credit', 720000, 'Arjun Mehta', 'arjun@okaxis', '2026-10-22', '629412345628', 'XX4821', 'hdfc', null, 'upi')],
+  ['panel-03', 'Rs.6000 received from ROHIT VERMA via UPI on 22-10-26. -SBI',
+    T('credit', 600000, 'Rohit Verma', null, '2026-10-22', null, null, 'sbi', null, 'upi')],
+  ['panel-04', 'Sent Rs.250.00 From HDFC Bank A/C *4821 To SWIGGY On 21/10/26 Ref 629420113457',
+    T('debit', 25000, 'Swiggy', null, '2026-10-21', '629420113457', 'XX4821', 'hdfc', null, null)],
+  ['panel-05', 'Rs.1,000.00 debited from A/c XX4821 on 21-10-26 for UPI-P2A txn 629412345629. -HDFC Bank',
+    T('debit', 100000, null, null, '2026-10-21', '629412345629', 'XX4821', 'hdfc', null, 'upi')],
+
+  /* ------------------------------------------------------------------ Hindi (names aren't read) */
+  ['hi-01', 'प्रिय ग्राहक, आपके खाते XX1234 से 21-10-26 को रु.500 डेबिट हुए। संदर्भ 629412345632 -एसबीआई',
+    T('debit', 50000, null, null, '2026-10-21', '629412345632', 'XX1234', 'sbi', null, null)],
+  ['hi-02', 'प्रिय ग्राहक, आपके खाते XX1234 में 22-10-26 को रु.2,000 जमा किए गए। संदर्भ 629412345633 -पीएनबी',
+    T('credit', 200000, null, null, '2026-10-22', '629412345633', 'XX1234', 'pnb', null, null)],
+  ['hi-03', 'प्रिय ग्राहक, रु.500 आपके खाते XX1234 में वापस जमा किए गए। संदर्भ 629412345634 -एसबीआई',
+    T('credit', 50000, null, null, null, '629412345634', 'XX1234', 'sbi', null, null, true)],
+  ['hi-04', 'प्रिय ग्राहक, आपके खाते XX4821 से 21-10-26 को एटीएम पर रु.5000 डेबिट हुए, लेनदेन विफल। संदर्भ 429812345678 -एसबीआई', X('failed')],
+  ['hi-05', 'रु.4500 के लेनदेन के लिए आपका ओटीपी 123456 है। किसी से साझा न करें। -एसबीआई', X('otp')],
+  ['hi-06', 'प्रिय ग्राहक, आपके खाते XX1234 में उपलब्ध शेष रु.12,000 है। -एसबीआई', X('balance')],
+  ['hi-07', 'शानदार ऑफर! रु.500 कैशबैक पाएं। अभी खरीदें।', X('promo')],
 ]

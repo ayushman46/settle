@@ -3,7 +3,7 @@ import type { Messages } from '../types'
 
 export const pro = {
   'pro.perk.ai.title': 'અમર્યાદિત AI',
-  'pro.perk.ai.body': 'બિલ અને “Just say it” તમને જોઈએ એટલી વાર સ્કૅન કરો — વાજબી વપરાશ, દિવસના {count} સુધી.',
+  'pro.perk.ai.body': 'બિલ સ્કૅન કરો અને “બસ બોલી દો” વાપરો, જેટલી વાર જોઈએ — વાજબી વપરાશ, દિવસના {count} સુધી.',
   'pro.perk.recurring.title': 'રિકરિંગ સ્પ્લિટ',
   'pro.perk.recurring.body': 'ભાડું, Wi-Fi, Netflix: દર મહિને યાદ અપાવણી અને એક ટૅપમાં સ્પ્લિટ.',
   'pro.perk.insights.title': 'ઇનસાઇટ્સ',
@@ -23,7 +23,7 @@ export const pro = {
   'pro.pitch.general.cta': 'Pro જુઓ',
   'pro.pitch.ai.title': 'Pro સાથે અમર્યાદિત AI',
   'pro.pitch.ai.body':
-    'મફતમાં દિવસના {free} AI સ્કૅન અથવા “Just say it” સ્પ્લિટ મળે છે, અને તે મધ્યરાત્રિએ ફરી શરૂ થાય છે. Pro મર્યાદા દૂર કરે છે — વાજબી વપરાશ, દિવસના {count} સુધી.',
+    'મફતમાં દિવસના {free} AI સ્કૅન અથવા “બસ બોલી દો” સ્પ્લિટ મળે છે, અને તે મધ્યરાત્રિએ ફરી શરૂ થાય છે. Pro મર્યાદા દૂર કરે છે — વાજબી વપરાશ, દિવસના {count} સુધી.',
   'pro.pitch.ai.cta': 'અમર્યાદિત AI મેળવો',
   'pro.pitch.recurring.title': 'રિકરિંગ સ્પ્લિટ Pro નો ભાગ છે',
   'pro.pitch.recurring.body': 'ભાડું, Wi-Fi કે Netflix એકવાર સેટ કરો. દર મહિને તમને યાદ અપાવણી મળે અને એક ટૅપમાં વહેંચો.',

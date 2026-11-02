@@ -1,4 +1,5 @@
-import { BadgeIndianRupee, Building2, CircleCheck, Landmark, ListChecks, Zap } from 'lucide-react'
+import { useId, type ReactNode } from 'react'
+import { BadgeIndianRupee, BanknoteArrowDown, Building2, CircleCheck, ListChecks, Zap } from 'lucide-react'
 import { navigate } from '../../app/router'
 import { BottomSheet, QuickAction, QuickActionGrid } from '../../components'
 import { useT } from '../../i18n'
@@ -8,7 +9,8 @@ import { PROOF_ENABLED, PROOF_PATH } from '../proof/enabled'
 import { RENT_ENABLED, RENT_PATH } from '../rent/enabled'
 import { STUCK_PATH } from '../stuck/paths'
 import { WHOS_PAID_PATH } from '../whospaid/paths'
-import { templateActionDefs } from './quickActions'
+import { overflowActions, templateActionDefs } from './quickActions'
+import styles from './HomeScreen.module.css'
 
 export interface MoreActionsSheetProps {
   open: boolean
@@ -16,91 +18,69 @@ export interface MoreActionsSheetProps {
 }
 
 /**
- * Behind Home's More tile: one-tap starts for everyday splits (Rent, Trip, Subscription, Utilities, Cab),
- * and the switched-on features that didn't fit the grid (to collect, stuck money, who's paid, paid? drop the screenshot).
+ * Behind Home's More tile, in two groups: getting your money back (stuck money, to collect, who's
+ * paid, paid? drop the screenshot), then starting a split — the grid's actions that didn't fit,
+ * rent and electricity, and the everyday templates (Trip, Subscription, Utilities, Cab; Rent
+ * when the rent feature isn't there to do it better).
  */
 export function MoreActionsSheet({ open, onClose }: MoreActionsSheetProps) {
   const t = useT()
+  const go = (path: string) => () => {
+    onClose()
+    navigate(path)
+  }
+  const templates = templateActionDefs().filter((a) => !(RENT_ENABLED && a.id === 'template:rent'))
   return (
     <BottomSheet open={open} onClose={onClose} title={t('home.more.title')} description={t('home.more.subtitle')}>
-      <QuickActionGrid label={t('home.more.title')}>
-        <QuickAction
-          key="collect"
-          icon={<BadgeIndianRupee />}
-          label={t('collect.title')}
-          tone="accent"
-          onClick={() => {
-            onClose()
-            navigate(COLLECT_PATH)
-          }}
-        />
-        <QuickAction
-          key="stuck"
-          icon={<Landmark />}
-          label={t('stuck.title')}
-          tone="accent"
-          onClick={() => {
-            onClose()
-            navigate(STUCK_PATH)
-          }}
-        />
-        <QuickAction
-          key="whospaid"
-          icon={<ListChecks />}
-          label={t('whospaid.more.title')}
-          tone="accent"
-          onClick={() => {
-            onClose()
-            navigate(WHOS_PAID_PATH)
-          }}
-        />
-        {PROOF_ENABLED && (
-          <QuickAction
-            key="proof"
-            icon={<CircleCheck />}
-            label={t('proof.more.title')}
-            tone="accent"
-            onClick={() => {
-              onClose()
-              navigate(PROOF_PATH)
-            }}
-          />
-        )}
-        {RENT_ENABLED && (
-          <QuickAction
-            key="rent"
-            icon={<Building2 />}
-            label={t('rent.more.title')}
-            tone="rent"
-            onClick={() => {
-              onClose()
-              navigate(RENT_PATH)
-            }}
-          />
-        )}
-        <QuickAction
-          key="bijli"
-          icon={<Zap />}
-          label={t('bijli.more.title')}
-          tone="utilities"
-          onClick={() => {
-            onClose()
-            navigate(BIJLI_PATH)
-          }}
-        />
-        {templateActionDefs().map(({ id, label, icon: Icon, tone, run }) => (
-          <QuickAction
-            key={id}
-            icon={<Icon />}
-            label={label}
-            tone={tone}
-            onClick={() => {
-              onClose()
-              run()
-            }}
-          />
-        ))}
-      </QuickActionGrid>
+      <div className={styles.more}>
+        <MoreGroup title={t('home.more.back')}>
+          <QuickAction key="stuck" icon={<BanknoteArrowDown />} label={t('home.quick.stuck')} tone="transport" onClick={go(STUCK_PATH)} />
+          <QuickAction key="collect" icon={<BadgeIndianRupee />} label={t('collect.title')} tone="accent" onClick={go(COLLECT_PATH)} />
+          <QuickAction key="whospaid" icon={<ListChecks />} label={t('whospaid.more.title')} tone="accent" onClick={go(WHOS_PAID_PATH)} />
+          {PROOF_ENABLED && <QuickAction key="proof" icon={<CircleCheck />} label={t('home.more.proof')} tone="accent" onClick={go(PROOF_PATH)} />}
+        </MoreGroup>
+        <MoreGroup title={t('home.more.split')}>
+          {overflowActions().map(({ id, label, icon: Icon, tone, run }) => (
+            <QuickAction
+              key={id}
+              icon={<Icon />}
+              label={label}
+              tone={tone}
+              onClick={() => {
+                onClose()
+                run()
+              }}
+            />
+          ))}
+          {RENT_ENABLED && <QuickAction key="rent" icon={<Building2 />} label={t('rent.more.title')} tone="rent" onClick={go(RENT_PATH)} />}
+          <QuickAction key="bijli" icon={<Zap />} label={t('bijli.more.title')} tone="utilities" onClick={go(BIJLI_PATH)} />
+          {templates.map(({ id, label, icon: Icon, tone, run }) => (
+            <QuickAction
+              key={id}
+              icon={<Icon />}
+              label={label}
+              tone={tone}
+              onClick={() => {
+                onClose()
+                run()
+              }}
+            />
+          ))}
+        </MoreGroup>
+      </div>
     </BottomSheet>
+  )
+}
+
+/** A titled group of tiles in the sheet. */
+function MoreGroup({ title, children }: { title: string; children: ReactNode }) {
+  const id = useId()
+  return (
+    <section className={styles.moreGroup} aria-labelledby={id}>
+      <h3 id={id} className={styles.moreHeading}>
+        {title}
+      </h3>
+      <QuickActionGrid>{children}</QuickActionGrid>
+    </section>
   )
 }

@@ -89,11 +89,11 @@ export const pro = {
   'pro.pass.endsToday': 'ఈరోజుతో ముగుస్తుంది',
   'pro.pass.endsTomorrow': 'రేపుతో ముగుస్తుంది',
   'pro.pass.endsIn': '{count, plural, one {# రోజులో ముగుస్తుంది} other {# రోజుల్లో ముగుస్తుంది}}',
-  'pro.pass.endedOn': '{date} న ముగిసింది',
+  'pro.pass.endedOn': '{date} తేదీన ముగిసింది',
   'pro.pass.lifetime': 'జీవితకాలం',
   'pro.pass.active': 'యాక్టివ్',
   // A locked Pro feature.
-  'pro.lock.ended': 'మీ Pro పాస్ {date} న ముగిసింది.',
+  'pro.lock.ended': 'మీ Pro పాస్ {date} తేదీన ముగిసింది.',
   'pro.lock.renew.cta': 'Pro ను పునరుద్ధరించండి',
   'pro.lock.from': 'Pro {price} నుంచి · ఒక్కసారి చెల్లింపు, ఏదీ రెన్యూ కాదు',
   // Redeem a code. {prefix} is how every code starts.

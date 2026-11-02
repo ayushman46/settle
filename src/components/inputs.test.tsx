@@ -213,6 +213,37 @@ describe('AmountInput', () => {
     expect(onText).toHaveBeenLastCalledWith('1,500')
   })
 
+  it('with commaGroups, drops commas typed key by key as grouping (and keeps the caret after the same digit)', async () => {
+    const user = userEvent.setup()
+    const onText = vi.fn()
+    function Grouped() {
+      const [value, setValue] = useState('')
+      return (
+        <AmountInput
+          label="Amount paid"
+          currency="INR"
+          value={value}
+          commaGroups
+          onChange={(text) => {
+            onText(text)
+            setValue(text)
+          }}
+        />
+      )
+    }
+    render(<Grouped />)
+    const input = screen.getByRole<HTMLInputElement>('textbox', { name: 'Amount paid' })
+    await user.type(input, '99,99,999')
+    expect(onText).toHaveBeenLastCalledWith('9999999')
+    expect(input).toHaveValue('99,99,999')
+    await user.clear(input)
+    await user.type(input, '1,234.5')
+    expect(onText).toHaveBeenLastCalledWith('1234.5')
+    await user.clear(input)
+    await user.paste('2,299.50')
+    expect(onText).toHaveBeenLastCalledWith('2299.50')
+  })
+
   it('shows the currency symbol and the placeholder', () => {
     render(<Controlled />)
     expect(screen.getAllByText(currencySymbol('INR')).length).toBeGreaterThan(0)

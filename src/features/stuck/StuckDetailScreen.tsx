@@ -1,7 +1,7 @@
-import { useId, useState, type ReactNode } from 'react'
-import { ArchiveRestore, Archive, Check, Copy, MoreVertical, Pencil, Trash2, Undo2 } from 'lucide-react'
+import { useEffect, useId, useState, type ReactNode } from 'react'
+import { ArchiveRestore, Archive, CalendarPlus, Check, CircleCheck, Copy, MessageSquareReply, MoreVertical, Pencil, SkipForward, Trash2, Undo2 } from 'lucide-react'
 import { goBack, navigate, useRoute } from '../../app/router'
-import { Badge, Banner, BottomSheet, Button, IconButton, List, ListRow, Money, PageTitle, Screen, TopBar, useToast } from '../../components'
+import { ActionBar, Badge, Banner, BottomSheet, Button, IconButton, List, ListRow, Money, PageTitle, Screen, SuccessBurst, TopBar, useToast } from '../../components'
 import { useStore } from '../../data'
 import { stuckStore, type StuckPayment, type StuckStepKind } from '../../data/stores'
 import { confirmStuck, deleteStuck, dismissStuck, restoreStuck, updateStuck } from '../../data/stuck'
@@ -10,29 +10,72 @@ import { useT } from '../../i18n'
 import { cx } from '../../lib/cx'
 import { haptic } from '../../lib/haptics'
 import { copyText } from '../../lib/share'
-import { shortDate } from '../recurring/recurringLabels'
 import { BackSheet } from './BackSheet'
+import { DetailNote } from './DetailNote'
+import { DetailRemindSheet } from './DetailRemindSheet'
+import { DetailReplySheet } from './DetailReplySheet'
+import { merchantById } from './merchants'
 import { STUCK_PATH, stuckEditPath } from './paths'
 import { RaiseSheet } from './RaiseSheet'
-import { compensationDue, daysLate, dueBy, nextStep, OMBUDSMAN_WINDOW_DAYS, ombudsmanTooLate, stillOwed, type StuckNext } from './rules'
+import { reminderFor, type StuckReminder } from './reminder'
+import {
+  backInFull,
+  backInPart,
+  COMPENSATION_PER_DAY,
+  compensationDue,
+  daysLate,
+  dueBy,
+  nextStep,
+  OMBUDSMAN_WINDOW_DAYS,
+  ombudsmanLastDay,
+  ombudsmanTooLate,
+  owedForWait,
+  stillOwed,
+  type StuckNext,
+} from './rules'
 import { KindIcon } from './StuckParts'
-import { accountLine, appLabel, clockOf, inr, knownParty, partyName, railLabel, sectionOf, sourceLabel, stageBadge, stepPlace, type ClockEvent } from './view'
+import {
+  accountLine,
+  appLabel,
+  clockOf,
+  inr,
+  knownParty,
+  partyName,
+  railLabel,
+  refundDueText,
+  sectionOf,
+  sourceLabel,
+  stageBadge,
+  stepPlace,
+  stuckDate,
+  stuckTitle,
+  type ClockEvent,
+} from './view'
+import { WinCard } from './WinCard'
 import styles from './Stuck.module.css'
 
 const ROUTES = ['/app/stuck/:id'] as const
 
 /**
- * `/app/stuck/:id` — one stuck payment: how much and who owes it, the clock (the day the money
- * left, the RBI's deadline or the business's own, how late it is and the ₹100 a day that's earned,
- * each complaint, the money back), and "What to do now" with one clear next step — check it left,
- * wait, raise it, take it higher, claim the compensation, or say it's back. Edit, set aside and
- * delete are under ⋮, each with Undo.
+ * `/app/stuck/:id` — one stuck payment: how much and who owes it (and what's still to come of a
+ * part), the clock (the day the money left, the RBI's deadline or the business's own, how late it
+ * is and the ₹100 a day that's earned, each complaint, the money back), and "What to do now" with
+ * one clear next step — check it left, wait, raise it, take it higher, claim the compensation, or
+ * say it's back — with a calendar reminder for the next date. All back, it's a win to share. Edit,
+ * set aside and delete (asked first) are under ⋮, each with Undo.
  */
 export function StuckDetailScreen() {
   const t = useT()
   const { params } = useRoute(ROUTES)
   const id = params.id ?? null
   const payment = useStore(stuckStore, (all) => (id ? (all.find((s) => s.id === id) ?? null) : null))
+  // Here a moment ago and now gone (an Undo took it back off): the list, not a dead end.
+  const [seen, setSeen] = useState(false)
+  if (payment && !seen) setSeen(true)
+  const vanished = payment === null && seen
+  useEffect(() => {
+    if (vanished) navigate(STUCK_PATH, { replace: true })
+  }, [vanished])
   if (!payment) {
     return (
       <Screen header={<TopBar onBack={() => goBack(STUCK_PATH)} />}>
@@ -49,6 +92,13 @@ interface Raise {
   compensationOnly: boolean
 }
 
+/** "They don't answer": a refund not yet past the business can go straight to the next place — no working support is reason enough. */
+function skipTo(s: StuckPayment, next: StuckNext): StuckStepKind | null {
+  if (s.kind !== 'refund' || s.dismissedAt !== null || backInFull(s)) return null
+  if (next.stage === 'escalate' || s.steps.some((x) => x.kind !== 'merchant')) return null
+  return merchantById(s.merchant)?.category === 'airline' ? 'airsewa' : 'nch'
+}
+
 function Detail({ payment: s }: { payment: StuckPayment }) {
   const t = useT()
   const toast = useToast()
@@ -56,13 +106,27 @@ function Detail({ payment: s }: { payment: StuckPayment }) {
   const next = nextStep(s, day)
   const section = sectionOf(next.stage)
   const badge = stageBadge(s, next, day)
+  const owed = stillOwed(s, day)
+  const part = s.dismissedAt === null && backInPart(s) ? s.back : null
+  const skip = skipTo(s, next)
+  const reminder = reminderFor(s, next, day)
   const [menu, setMenu] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
   const [back, setBack] = useState<{ open: boolean; compensationPaid: boolean }>({ open: false, compensationPaid: false })
+  const [celebrate, setCelebrate] = useState(false)
+  const [reply, setReply] = useState(false)
+  const [remind, setRemind] = useState(false)
   // The last rung opened stays put while its sheet slides away.
   const [raise, setRaise] = useState<Raise | null>(null)
   const [raiseOpen, setRaiseOpen] = useState(false)
   // The way it was paid, unless the title already says it (nobody's name on it).
   const meta = [s.kind === 'failed' && knownParty(s) !== null ? railLabel(s.rail) : null, accountLine(s), appLabel(s.app)].filter(Boolean).join(' · ')
+  // Under the amount: what's still to come of a part, or what the bank owes for the wait once it's all back.
+  const owedLine = part
+    ? t('stuck.detail.partBack', { back: inr(part.amount), rest: inr(owed.money) })
+    : owedForWait(next.stage)
+      ? t('stuck.detail.owedWait', { owed: inr(owed.compensation) })
+      : null
 
   const openRaise = (step: StuckStepKind, compensationOnly = false): void => {
     haptic('tap')
@@ -82,14 +146,31 @@ function Detail({ payment: s }: { payment: StuckPayment }) {
     haptic('success')
     undoable(t('stuck.restore.toast'), updateStuck(s.id, { dismissedAt: null }))
   }
-  const remove = (): void => {
+  // A fee they won't refund: what came back is what it comes to.
+  const keepRest = (): void => {
     setMenu(false)
+    if (!part) return
+    haptic('tap')
+    undoable(t('stuck.detail.keptRest.toast', { amount: inr(part.amount) }), updateStuck(s.id, { amount: part.amount }), 'info')
+  }
+  const askDelete = (): void => {
+    setMenu(false)
+    setConfirmDelete(true)
+  }
+  const remove = (): void => {
+    setConfirmDelete(false)
     const removed = deleteStuck(s.id)
     navigate(STUCK_PATH, { replace: true })
     if (!removed) return
     const name = knownParty(removed)
     undoable(name ? t('stuck.delete.toast', { name }) : t('stuck.delete.toastNoName'), () => restoreStuck(removed), 'info')
   }
+  const deleteText = [
+    s.steps.length > 0 ? t('stuck.delete.textSteps', { count: s.steps.length }) : t('stuck.delete.text'),
+    s.dismissedAt === null && !backInFull(s) ? t('stuck.delete.aside') : null,
+  ]
+    .filter(Boolean)
+    .join(' ')
 
   return (
     <Screen
@@ -114,6 +195,7 @@ function Detail({ payment: s }: { payment: StuckPayment }) {
         <div className={styles.detailAmount}>
           <Money value={s.amount} currency="INR" size="xl" trimZeros />
         </div>
+        {owedLine && <p className={styles.detailOwed}>{owedLine}</p>}
         {meta && <p className={styles.detailMeta}>{meta}</p>}
         <Badge tone={badge.tone} size="md">
           {badge.label}
@@ -135,11 +217,16 @@ function Detail({ payment: s }: { payment: StuckPayment }) {
           haptic('tap')
           undoable(t('stuck.check.no.toast'), dismissStuck(s.id), 'info')
         }}
+        onReply={() => setReply(true)}
+        reminder={reminder}
+        onRemind={() => setRemind(true)}
       />
 
       <Clock events={clockOf(s, day)} />
 
       <Details payment={s} />
+
+      <DetailNote payment={s} />
 
       <BottomSheet open={menu} onClose={() => setMenu(false)} title={partyName(s)}>
         <List>
@@ -152,16 +239,68 @@ function Detail({ payment: s }: { payment: StuckPayment }) {
             }}
           />
           {s.dismissedAt === null ? (
-            s.back === null && <ListRow leading={<Archive aria-hidden="true" />} title={t('stuck.detail.aside')} subtitle={t('stuck.detail.aside.text')} onClick={setAside} />
+            !backInFull(s) && <ListRow leading={<Archive aria-hidden="true" />} title={t('stuck.detail.aside')} subtitle={t('stuck.detail.aside.text')} onClick={setAside} />
           ) : (
             <ListRow leading={<ArchiveRestore aria-hidden="true" />} title={t('stuck.detail.restore')} onClick={bringBack} />
           )}
-          <ListRow leading={<Trash2 aria-hidden="true" />} title={t('common.action.delete')} onClick={remove} />
+          {part && (
+            <ListRow
+              leading={<CircleCheck aria-hidden="true" />}
+              title={t('stuck.detail.keptRest')}
+              subtitle={t('stuck.detail.keptRest.text', { amount: inr(owed.money) })}
+              onClick={keepRest}
+            />
+          )}
+          {skip && (
+            <ListRow
+              leading={<SkipForward aria-hidden="true" />}
+              title={t('stuck.other.skip')}
+              subtitle={t('stuck.other.skip.text', { place: stepPlace(skip, s) })}
+              onClick={() => {
+                setMenu(false)
+                openRaise(skip)
+              }}
+            />
+          )}
+          <ListRow leading={<Trash2 aria-hidden="true" />} title={t('common.action.delete')} onClick={askDelete} />
         </List>
       </BottomSheet>
 
-      <BackSheet open={back.open} compensationPaid={back.compensationPaid} onClose={() => setBack((b) => ({ ...b, open: false }))} payment={s} />
+      <BottomSheet
+        open={confirmDelete}
+        onClose={() => setConfirmDelete(false)}
+        title={t('stuck.delete.title', { name: partyName(s) })}
+        description={deleteText}
+        footer={
+          <ActionBar>
+            <Button block variant="danger" iconStart={<Trash2 />} onClick={remove}>
+              {t('stuck.delete.confirm')}
+            </Button>
+            <Button block variant="secondary" onClick={() => setConfirmDelete(false)}>
+              {t('stuck.delete.cancel')}
+            </Button>
+          </ActionBar>
+        }
+      />
+
+      <BackSheet
+        open={back.open}
+        compensationPaid={back.compensationPaid}
+        onClose={() => setBack((b) => ({ ...b, open: false }))}
+        onAllBack={() => setCelebrate(true)}
+        payment={s}
+      />
       {raise && <RaiseSheet open={raiseOpen} onClose={() => setRaiseOpen(false)} payment={s} step={raise.step} compensationOnly={raise.compensationOnly} />}
+      <DetailReplySheet open={reply} onClose={() => setReply(false)} payment={s} />
+      {reminder && <DetailRemindSheet open={remind} onClose={() => setRemind(false)} id={s.id} reminder={reminder} />}
+      {celebrate && s.back && (
+        <SuccessBurst
+          title={t('stuck.win.burst')}
+          amount={<Money value={s.back.amount + s.back.compensation} currency="INR" size="lg" trimZeros strong />}
+          subtitle={stuckTitle(s)}
+          onDone={() => setCelebrate(false)}
+        />
+      )}
     </Screen>
   )
 }
@@ -176,29 +315,67 @@ interface NowCardProps {
   onBringBack: () => void
   onConfirm: () => void
   onNotLeft: () => void
+  /** "My bank replied or said no". */
+  onReply: () => void
+  /** The next date worth a calendar reminder, or null. */
+  reminder: StuckReminder | null
+  onRemind: () => void
 }
 
-/** "What to do now": where it stands, in plain words, and the one thing to do about it. */
-function NowCard({ payment: s, next, day, onRaise, onBack, onBringBack, onConfirm, onNotLeft }: NowCardProps) {
+/** "What to do now": where it stands, in plain words, and the one thing to do about it — or, all back, the win. */
+function NowCard({ payment: s, next, day, onRaise, onBack, onBringBack, onConfirm, onNotLeft, onReply, reminder, onRemind }: NowCardProps) {
   const t = useT()
   const headingId = useId()
-  const name = partyName(s)
   const amount = inr(s.amount)
-  const due = shortDate(dueBy(s))
+  const due = stuckDate(dueBy(s), day)
   const late = daysLate(s, day)
-  const owed = stillOwed(s, day).compensation
+  const owed = stillOwed(s, day)
   const lastStep = s.steps.at(-1) ?? null
-  const itsBack = (
-    <Button block variant="ghost" iconStart={<Undo2 />} onClick={() => onBack(false)}>
-      {t('stuck.now.back')}
+  const was = lastStep ? stepPlace(lastStep.kind, s) : t('stuck.place.bank')
+  const ombudsman = stepPlace('ombudsman', s)
+  // Compensation already paid in part: the rest is what's asked for.
+  const paidSoFar = s.back?.compensation ?? 0
+  const part = backInPart(s) ? s.back : null
+  // A bank that answered without fixing it opens the RBI Ombudsman before its 30 days are up.
+  const canReply = lastStep?.kind === 'bank' && s.repliedAt === null
+
+  const itsBack = (variant: 'secondary' | 'ghost') => (
+    <Button block variant={variant} iconStart={<Undo2 />} onClick={() => onBack(false)}>
+      {part ? t('stuck.detail.now.moreBack') : t('stuck.now.back')}
     </Button>
   )
+  const paid = (variant: 'secondary' | 'ghost') => (
+    <Button block variant={variant} iconStart={<Check />} onClick={() => onBack(true)}>
+      {paidSoFar > 0 ? t('stuck.detail.now.paidRest', { amount: inr(owed.compensation) }) : t('stuck.now.paid', { amount: inr(owed.compensation) })}
+    </Button>
+  )
+  const letterAgain = (compensationOnly: boolean) =>
+    lastStep && (
+      <Button block variant="ghost" onClick={() => onRaise(lastStep.kind, compensationOnly)}>
+        {t('stuck.now.letterAgain')}
+      </Button>
+    )
+  const replied = canReply && (
+    <Button block variant="ghost" iconStart={<MessageSquareReply />} onClick={onReply}>
+      {t('stuck.reply.cta')}
+    </Button>
+  )
+  // The last day for the RBI Ombudsman, or that it may have passed.
+  const ombudsmanNote = (): ReactNode => {
+    if (ombudsmanTooLate(s, day)) return <Banner tone="warning">{t('stuck.now.tooLate', { days: OMBUDSMAN_WINDOW_DAYS })}</Banner>
+    const last = ombudsmanLastDay(s)
+    return last ? <p className={styles.nowText}>{t('stuck.detail.now.lastDay', { date: stuckDate(last, day) })}</p> : null
+  }
+  const compPart = (): string =>
+    t('stuck.detail.now.compPart', { due: inr(compensationDue(s, day)), paid: inr(paidSoFar), rest: inr(owed.compensation) })
+
+  if (next.stage === 'back') return <WinCard payment={s} day={day} />
 
   let title: string
   let text: string | null
+  const lines: string[] = []
   let actions: ReactNode = null
   let note: ReactNode = null
-  let done = false
 
   switch (next.stage) {
     case 'check':
@@ -215,99 +392,126 @@ function NowCard({ payment: s, next, day, onRaise, onBack, onBringBack, onConfir
         </>
       )
       break
-    case 'waiting':
+    case 'waiting': {
       title = t('stuck.now.waiting.title')
-      text = s.kind === 'failed' ? t('stuck.now.waiting.failed', { date: due }) : t('stuck.now.waiting.refund', { name, date: due })
+      text = s.kind === 'failed' ? t('stuck.now.waiting.failed', { date: due }) : refundDueText(s, day)
+      // No need to wait: asking now is allowed, gently.
+      const first = s.kind === 'failed' ? 'bank' : 'merchant'
       actions = (
-        <Button block variant="secondary" iconStart={<Undo2 />} onClick={() => onBack(false)}>
-          {t('stuck.now.back')}
-        </Button>
+        <>
+          {itsBack('secondary')}
+          {lastStep ? (
+            letterAgain(false)
+          ) : (
+            <Button block variant="ghost" onClick={() => onRaise(first)}>
+              {t('stuck.detail.now.askEarly', { place: stepPlace(first, s) })}
+            </Button>
+          )}
+        </>
       )
       break
+    }
     case 'overdue': {
       const step = next.step ?? (s.kind === 'failed' ? 'bank' : 'merchant')
       if (s.kind === 'failed') {
-        title = t('stuck.now.overdue.failed.title', { count: late, amount: inr(compensationDue(s, day)) })
-        text = t('stuck.now.overdue.failed.text', { date: due })
+        const wallet = s.rail === 'wallet'
+        title = t(wallet ? 'stuck.now.overdue.failed.title.wallet' : 'stuck.now.overdue.failed.title', { count: late, amount: inr(compensationDue(s, day)) })
+        const upi = s.rail === 'upi_person' || s.rail === 'upi_merchant'
+        text = t(wallet ? 'stuck.now.overdue.failed.text.wallet' : 'stuck.now.overdue.failed.text', { date: due, place: upi ? t('stuck.place.bankOrApp') : stepPlace('bank', s) })
       } else {
         title = t('stuck.now.overdue.refund.title', { count: late })
-        text = t('stuck.now.overdue.refund.text', { name, date: due })
+        text = refundDueText(s, day)
       }
       actions = (
         <>
           <Button block onClick={() => onRaise(step)}>
             {t('stuck.now.raise', { place: stepPlace(step, s) })}
           </Button>
-          {itsBack}
+          {itsBack('ghost')}
         </>
       )
       break
     }
     case 'raised':
-      title = t('stuck.now.raised.title', { place: lastStep ? stepPlace(lastStep.kind, s) : t('stuck.place.bank'), date: shortDate(lastStep?.date ?? day) })
-      text = t('stuck.now.raised.text', { date: shortDate(next.until ?? day) })
+      title = t('stuck.now.raised.title', { place: was, date: stuckDate(lastStep?.date ?? day, day) })
+      text = t('stuck.now.raised.text', { date: stuckDate(next.until ?? day, day) })
       actions = (
         <>
-          <Button block variant="secondary" iconStart={<Undo2 />} onClick={() => onBack(s.back !== null)}>
-            {s.back !== null ? t('stuck.now.paid', { amount: inr(owed) }) : t('stuck.now.back')}
-          </Button>
-          {lastStep && (
-            <Button block variant="ghost" onClick={() => onRaise(lastStep.kind, s.back !== null)}>
-              {t('stuck.now.letterAgain')}
-            </Button>
-          )}
+          {itsBack('secondary')}
+          {letterAgain(false)}
+          {replied}
         </>
       )
       break
     case 'escalate': {
       const step = next.step ?? 'ombudsman'
       title = t('stuck.now.escalate.title', { place: stepPlace(step, s) })
-      text = t('stuck.now.escalate.text', { was: lastStep ? stepPlace(lastStep.kind, s) : t('stuck.place.bank') })
-      if (step === 'ombudsman' && ombudsmanTooLate(s, day)) note = <Banner tone="warning">{t('stuck.now.tooLate', { days: OMBUDSMAN_WINDOW_DAYS })}</Banner>
+      text = step === 'ombudsman' && s.repliedAt !== null ? t('stuck.reply.escalate', { date: stuckDate(s.repliedAt, day) }) : t('stuck.now.escalate.text', { was })
+      if (step === 'ombudsman') note = ombudsmanNote()
       actions = (
         <>
-          <Button block onClick={() => onRaise(step, s.back !== null)}>
+          <Button block onClick={() => onRaise(step)}>
             {t('stuck.now.take', { place: stepPlace(step, s) })}
           </Button>
-          {s.back === null ? itsBack : null}
+          {itsBack('ghost')}
         </>
       )
       break
     }
     case 'escalated':
-      title = t('stuck.now.escalated.title', { place: lastStep ? stepPlace(lastStep.kind, s) : t('stuck.place.ombudsman') })
+      title = t('stuck.now.escalated.title', { place: lastStep ? stepPlace(lastStep.kind, s) : ombudsman })
       text = t('stuck.now.escalated.text')
-      actions = (
-        <Button block variant="secondary" iconStart={<Undo2 />} onClick={() => onBack(s.back !== null)}>
-          {s.back !== null ? t('stuck.now.paid', { amount: inr(owed) }) : t('stuck.now.back')}
-        </Button>
-      )
+      actions = itsBack('secondary')
       break
     case 'compensation':
       title = t('stuck.now.compensation.title', { count: late })
-      text = t('stuck.now.compensation.text', { amount: inr(owed) })
+      text =
+        paidSoFar > 0
+          ? compPart()
+          : s.rail === 'wallet'
+            ? t('stuck.now.compensation.text.wallet', { amount: inr(owed.compensation), place: stepPlace('bank', s) })
+            : t('stuck.now.compensation.text', { amount: inr(owed.compensation) })
       actions = (
         <>
           <Button block onClick={() => onRaise('bank', true)}>
-            {t('stuck.now.claim', { amount: inr(owed) })}
+            {s.rail === 'wallet' ? t('stuck.now.claim.wallet', { amount: inr(owed.compensation), place: stepPlace('bank', s) }) : t('stuck.now.claim', { amount: inr(owed.compensation) })}
           </Button>
           <Button block variant="ghost" iconStart={<Check />} onClick={() => onBack(true)}>
-            {t('stuck.now.paidShort')}
+            {paidSoFar > 0 ? t('stuck.detail.now.paidRest', { amount: inr(owed.compensation) }) : t('stuck.now.paidShort')}
           </Button>
         </>
       )
       break
-    case 'back': {
-      done = true
-      const back = s.back
-      title = t('stuck.now.done.title')
-      text = back
-        ? back.compensation > 0
-          ? t('stuck.now.done.textPaid', { amount: inr(back.amount), date: shortDate(back.date), compensation: inr(back.compensation) })
-          : t('stuck.now.done.text', { amount: inr(back.amount), date: shortDate(back.date) })
-        : null
+    case 'compensationRaised':
+      title = t('stuck.detail.now.compRaised.title', { amount, owed: inr(owed.compensation) })
+      text = t('stuck.detail.now.compRaised.text', { date: stuckDate(lastStep?.date ?? day, day), until: stuckDate(next.until ?? day, day) })
+      if (paidSoFar > 0) lines.push(compPart())
+      actions = (
+        <>
+          {paid('secondary')}
+          {letterAgain(true)}
+          {replied}
+        </>
+      )
       break
-    }
+    case 'compensationEscalate':
+      title = t('stuck.detail.now.compEscalate.title', { owed: inr(owed.compensation), place: ombudsman })
+      text = t('stuck.detail.now.compEscalate.text', { amount, count: late, owed: inr(owed.compensation) })
+      note = ombudsmanNote()
+      actions = (
+        <>
+          <Button block onClick={() => onRaise('ombudsman', true)}>
+            {t('stuck.now.take', { place: ombudsman })}
+          </Button>
+          {paid('ghost')}
+        </>
+      )
+      break
+    case 'compensationEscalated':
+      title = t('stuck.now.escalated.title', { place: ombudsman })
+      text = t('stuck.detail.now.compEscalated.text', { amount, owed: inr(owed.compensation), place: ombudsman })
+      actions = paid('secondary')
+      break
     case 'dismissed':
       title = t('stuck.now.aside.title')
       text = t('stuck.now.aside.text')
@@ -319,15 +523,33 @@ function NowCard({ payment: s, next, day, onRaise, onBack, onBringBack, onConfir
       break
   }
 
+  // While a complaint is open, the ₹100 a day keeps counting: say so, not just in the clock.
+  if ((next.stage === 'raised' || next.stage === 'escalate' || next.stage === 'escalated') && s.kind === 'failed' && compensationDue(s, day) > 0) {
+    lines.push(t(s.rail === 'wallet' ? 'stuck.detail.now.owedSoFar.wallet' : 'stuck.detail.now.owedSoFar', { amount: inr(compensationDue(s, day)), perDay: inr(COMPENSATION_PER_DAY) }))
+  }
+  if (part && next.stage !== 'dismissed') {
+    lines.push(t('stuck.detail.now.partBack', { back: inr(part.amount), amount, date: stuckDate(part.date, day), rest: inr(owed.money) }))
+  }
+
   return (
-    <section className={cx(styles.now, done && styles.nowDone, needsYou(next) && styles.nowUrgent)} aria-labelledby={headingId}>
+    <section className={cx(styles.now, needsYou(next) && styles.nowUrgent)} aria-labelledby={headingId}>
       <h2 id={headingId} className={styles.nowHeading}>
         {t('stuck.now.heading')}
       </h2>
       <p className={styles.nowTitle}>{title}</p>
       {text && <p className={styles.nowText}>{text}</p>}
+      {lines.map((line) => (
+        <p key={line} className={styles.nowText}>
+          {line}
+        </p>
+      ))}
       {note}
       {actions && <div className={styles.nowActions}>{actions}</div>}
+      {reminder && (
+        <Button size="sm" variant="ghost" iconStart={<CalendarPlus />} className={styles.remindCta} onClick={onRemind}>
+          {t('stuck.remind.cta', { date: stuckDate(reminder.date, day) })}
+        </Button>
+      )}
     </section>
   )
 }
@@ -352,7 +574,7 @@ function Clock({ events }: { events: ClockEvent[] }) {
             <div className={styles.eventBody}>
               <p className={styles.eventHead}>
                 <span className={styles.eventTitle}>{event.title}</span>
-                {event.date && <span className={styles.eventDate}>{shortDate(event.date)}</span>}
+                {event.date && <span className={styles.eventDate}>{stuckDate(event.date)}</span>}
               </p>
               {event.detail && <p className={styles.eventDetail}>{event.detail}</p>}
             </div>
@@ -377,8 +599,8 @@ function Details({ payment: s }: { payment: StuckPayment }) {
   const rows: Array<{ key: string; label: string; value: string; copyable?: boolean }> = []
   if (s.kind === 'failed') rows.push({ key: 'rail', label: t('stuck.detail.rail'), value: railLabel(s.rail) })
   if (s.party) rows.push({ key: 'party', label: s.kind === 'failed' ? t('stuck.detail.to') : t('stuck.detail.from'), value: s.party })
-  rows.push({ key: 'date', label: s.kind === 'failed' ? t('stuck.detail.date.failed') : t('stuck.detail.date.refund'), value: shortDate(s.date) })
-  if (s.promisedBy) rows.push({ key: 'promised', label: t('stuck.detail.promised'), value: shortDate(s.promisedBy) })
+  rows.push({ key: 'date', label: s.kind === 'failed' ? t('stuck.detail.date.failed') : t('stuck.detail.date.refund'), value: stuckDate(s.date) })
+  if (s.promisedBy) rows.push({ key: 'promised', label: t('stuck.detail.promised'), value: stuckDate(s.promisedBy) })
   const account = accountLine(s)
   if (account) rows.push({ key: 'account', label: t('stuck.detail.account'), value: account })
   const app = appLabel(s.app)

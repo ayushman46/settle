@@ -94,6 +94,33 @@ describe('AmountHero', () => {
     expect(amountBox()).toHaveValue('12.5')
   })
 
+  it('reads commas typed key by key as Indian grouping, never as paise', async () => {
+    const user = userEvent.setup()
+    render(<Harness />)
+    await user.type(amountBox(), '99,99,999')
+    expect(valueOut()).toBe('999999900')
+    expect(amountBox()).toHaveValue('99,99,999')
+    expect(screen.getByText('Ninety-nine lakh ninety-nine thousand nine hundred ninety-nine rupees')).toBeInTheDocument()
+    await user.clear(amountBox())
+    await user.type(amountBox(), '1,234.50')
+    expect(valueOut()).toBe('123450')
+  })
+
+  it('a comma is still the decimal mark for euros', async () => {
+    const user = userEvent.setup()
+    render(<Harness currency="EUR" />)
+    await user.type(amountBox(), '12,5')
+    expect(valueOut()).toBe('1250')
+  })
+
+  it('can show its label above the digits', () => {
+    const { rerender } = render(<AmountHero value={null} currency="INR" onChange={() => {}} label="How much is stuck?" />)
+    expect(screen.getByText('How much is stuck?')).toHaveClass('visually-hidden')
+    rerender(<AmountHero value={null} currency="INR" onChange={() => {}} label="How much is stuck?" showLabel />)
+    expect(screen.getByText('How much is stuck?')).not.toHaveClass('visually-hidden')
+    expect(screen.getByRole('textbox', { name: 'How much is stuck?' })).toBeInTheDocument()
+  })
+
   it('never takes more decimals than the currency has', async () => {
     const user = userEvent.setup()
     render(<Harness />)

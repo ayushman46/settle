@@ -114,6 +114,14 @@
   line-clamp: 2;
 }
 
+/* Indian scripts have no hyphenation and longer words: a third line rather than a word split in two. */
+.label:not(:lang(en)) {
+  -webkit-hyphens: manual;
+  hyphens: manual;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+}
+
 /* Narrow columns (a 320px phone): a touch smaller and tighter, so "Subscription" stays whole. */
 @container qa-cell (max-width: 72px) {
   .label {

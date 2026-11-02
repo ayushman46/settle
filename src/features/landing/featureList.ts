@@ -33,7 +33,7 @@ export const FEATURES: readonly Feature[] = [
     id: 'stuck',
     eyebrow: 'Stuck money',
     title: 'Payment failed, money gone? Get it back.',
-    text: `A UPI, card or ATM payment that failed but took your money, or a refund that never came. ${BRAND.name} knows the RBI’s deadline for every kind of payment, counts the ₹100 a day the bank owes you after it, and has the next complaint ready — your bank, the RBI Ombudsman, the consumer helpline. The Android app spots them by itself.`,
+    text: `A UPI, card or ATM payment that failed but took your money, or a refund that never came. ${BRAND.name} knows the RBI’s deadline for UPI, IMPS, card, ATM, AePS, NACH and wallet failures, counts the ₹100 a day the bank owes you after it, and has the next complaint ready — your bank, the RBI Ombudsman, the consumer helpline. The Android app spots them by itself.`,
     isNew: true,
     size: 'full',
   },

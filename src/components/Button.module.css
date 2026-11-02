@@ -120,11 +120,15 @@
   font-weight: 600;
 }
 
-/* Keeps the touch target at 44px while the pill stays compact. */
+/* Keeps the touch target at 44px while the pill stays compact. It's placed against the padding
+   box, inside the 1px border, so it reaches over the border too — and grows with a label that wraps. */
 .sm::after {
   content: '';
   position: absolute;
-  inset: calc((var(--s-8) + var(--s-1) - var(--tap)) / 2) 0;
+  inset-inline: -1px;
+  top: 50%;
+  height: max(calc(100% + 2px), var(--tap));
+  translate: 0 -50%;
 }
 
 .ghost.lg,

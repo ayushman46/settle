@@ -117,7 +117,7 @@ export const claim = {
   'claim.updated.seeBill': 'બિલ જુઓ',
   'claim.updated.done': 'થઈ ગયું',
   'claim.paste.title': 'જવાબ પેસ્ટ કરો',
-  'claim.paste.label': 'સંદેશ કે લિંક પેસ્ટ કરો',
+  'claim.paste.label': 'મેસેજ કે લિંક પેસ્ટ કરો',
   'claim.paste.read': 'વાંચો',
   'claim.paste.none': 'એ લખાણમાં કોઈ જવાબ લિંક નથી.',
   'claim.reply.loading': 'જવાબ વાંચી રહ્યા છીએ…',

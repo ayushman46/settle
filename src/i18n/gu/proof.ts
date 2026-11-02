@@ -3,7 +3,7 @@ import type { Messages } from '../types'
 
 export const proof = {
   'proof.screen.title': 'પેમેન્ટ થયું? સ્ક્રીનશોટ નાખો',
-  'proof.screen.subtitle': 'GPay, PhonePe, Paytm કે તમારી બેંક એપનો પેમેન્ટનો સ્ક્રીનશોટ નાખો. Settle તેને તપાસીને જણાવશે કે તમને કોણે ચૂકવ્યું.',
+  'proof.screen.subtitle': 'GPay, PhonePe, Paytm કે તમારી બૅન્ક એપનો પેમેન્ટનો સ્ક્રીનશોટ નાખો. Settle તેને તપાસીને જણાવશે કે તમને કોણે ચૂકવ્યું.',
   'proof.drop.choose': 'સ્ક્રીનશોટ પસંદ કરો',
   'proof.drop.aria': 'પેમેન્ટનો સ્ક્રીનશોટ પસંદ કરો',
   'proof.drop.hint': 'JPG, PNG કે WebP. એક વાર વંચાય છે; કશું સચવાતું નથી.',

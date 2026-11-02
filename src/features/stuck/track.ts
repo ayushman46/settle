@@ -4,7 +4,11 @@
  *
  * - One payment told twice (the UPI app and the bank's SMS, minutes apart) is one: the same UPI
  *   reference, or the same amount to the same party within 15 minutes. A pending payment that then
- *   fails (within two days) is the same one too.
+ *   fails (within two days) is the same one too. Nothing is saved twice under one reference or order
+ *   number: the one already saved (by hand, from a paste or an alert, open or not) learns from it instead.
+ * - A payment the phone was told is pending isn't stuck yet: it waits, unsaved, for its "failed"
+ *   (saved then) or its "successful" (forgotten). Still pending an hour on, it's saved, waiting for
+ *   a tap. A pending payment pasted in is saved at once: the person asked for it.
  * - A failure is confirmed — the money did leave — by a debit for exactly its amount: the same
  *   reference, or one from up to 30 minutes before it was told to 2 minutes after. A debit later
  *   than that is more likely the retry that went through, so the failure waits for a tap instead.
@@ -18,10 +22,11 @@
  * - What was seen is remembered for 48 hours (stuckSeenStore, on this phone, not backed up), so an
  *   alert told again, or a payment taken away with Undo, isn't added twice.
  */
-import { daysBetween } from '../../engine/dates'
+import { daysBetween, toIsoDate } from '../../engine/dates'
 import { stuckSeenStore, stuckStore, type StuckPayment, type StuckSeen, type StuckSeenKind, type StuckSource } from '../../data/stores'
 import { addStuck, deleteStuck, dismissStuck, isStuckOpen, markStuckBack, restoreStuck, updateStuck } from '../../data/stuck'
 import { readStuckMessage, signalToDraft, type StuckSignal } from './detect'
+import { findMerchant } from './merchants'
 
 export interface TrackResult {
   /** Stuck payments saved just now. */
@@ -52,6 +57,8 @@ export const BACK_WITHIN_DAYS = 120
 export const SUCCESS_WITHIN_MS = 48 * 60 * 60 * 1000
 /** A business's second message about one refund ("initiated", then "processed") comes within this long. */
 export const SAME_REFUND_DAYS = 14
+/** A payment the phone was told is pending waits this long for its "failed" or "successful" before it's saved. */
+export const PENDING_WAIT_MS = 60 * 60 * 1000
 
 type Failure = Extract<StuckSignal, { type: 'failed' | 'pending' }>
 type Debit = Extract<StuckSignal, { type: 'debit' }>
@@ -106,6 +113,48 @@ function only<T>(items: readonly T[]): T | null {
   return items.length === 1 ? (items[0] as T) : null
 }
 
+/** A reference or order number as compared ("OD 4321…", "#4321…" and "od4321…" agree); null when too short to go on. */
+function refKey(ref: string | null | undefined): string | null {
+  const key = (ref ?? '').replace(/[\s#:/.-]+/g, '').toUpperCase()
+  return key.length >= 6 ? key : null
+}
+
+/**
+ * The stuck payment already saved under this reference or order number — an open one first, else
+ * one that came back or was set aside — or null. Whoever told it (an alert, a pasted SMS, by hand):
+ * one payment is one stuck payment.
+ */
+export function findStuckTwin(list: readonly StuckPayment[], c: { ref?: string | null; orderId?: string | null }): StuckPayment | null {
+  const keys = new Set([refKey(c.ref), refKey(c.orderId)].filter((k): k is string => k !== null))
+  if (keys.size === 0) return null
+  const same = list.filter((s) => [refKey(s.ref), refKey(s.orderId)].some((k) => k !== null && keys.has(k)))
+  return same.find(isStuckOpen) ?? same[0] ?? null
+}
+
+/** A pending alert remembered, not yet saved. */
+function isHeld(e: StuckSeen): boolean {
+  return e.kind === 'pending' && e.stuckId === null
+}
+
+/** A pending payment as remembered, when its alert is gone: no rail, bank or app (those weren't kept; no rail is the longer, safe deadline). */
+function pendingFrom(e: StuckSeen): Failure {
+  return {
+    type: 'pending',
+    amount: e.amount,
+    date: toIsoDate(new Date(e.at)),
+    at: e.at,
+    ref: e.ref,
+    party: e.party,
+    vpa: e.vpa,
+    merchant: findMerchant(e.party ?? '')?.id ?? null,
+    bank: null,
+    account: e.account,
+    app: null,
+    rail: null,
+    debited: false,
+  }
+}
+
 function told(kind: StuckSeenKind, signal: StuckSignal, stuckId: string | null, ref: string | null = signal.ref): StuckSeen {
   return {
     kind,
@@ -121,11 +170,13 @@ function told(kind: StuckSeenKind, signal: StuckSignal, stuckId: string | null, 
 
 /** Applies what the messages said. `now` is epoch ms. */
 export function trackStuckSignals(signals: readonly StuckSignal[], source: StuckSource, now: number = Date.now()): TrackResult {
-  // Copies: entries are joined to the payments they make as this goes.
+  // Copies: entries are joined to the payments they make as this goes. A pending one still held is kept until it's saved.
   const seen: StuckSeen[] = stuckSeenStore
     .get()
-    .filter((e) => now - e.at < SEEN_MS)
+    .filter((e) => now - e.at < SEEN_MS || isHeld(e))
     .map((e) => ({ ...e }))
+  /** Pending alerts held in this go, as they were told (with the rail, bank and app the memory doesn't keep). */
+  const heldSignals = new Map<StuckSeen, Failure>()
   const before = new Map<string, StuckPayment | null>()
   const added: string[] = []
   const back: string[] = []
@@ -188,22 +239,59 @@ export function trackStuckSignals(signals: readonly StuckSignal[], source: Stuck
       const window = e.kind === 'pending' && signal.type === 'failed' ? PENDING_THEN_FAILED_MS : SAME_ALERT_MS
       return Math.abs(signal.at - e.at) <= window
     })
-    const id = earlier ? earlier.stuckId : signal.ref ? (stuckStore.get().find((s) => s.kind === 'failed' && s.ref === signal.ref)?.id ?? null) : null
-    if (earlier || id) {
+    // A pending alert before it, held unsaved: this one decides.
+    const held = earlier && isHeld(earlier) ? earlier : null
+    const id = earlier && !held ? earlier.stuckId : (findStuckTwin(stuckStore.get(), { ref: signal.ref })?.id ?? null)
+    if ((earlier && !held) || id) {
       seen.push(told(signal.type, signal, id))
+      if (held) held.stuckId = id
       const s = id ? current(id) : null
-      // Taken away with Undo, or already settled: leave it be.
-      if (s && isStuckOpen(s)) learn(s, signal)
+      // Taken away with Undo, or already settled: leave it be. A refund under the same reference keeps its own details.
+      if (s && isStuckOpen(s) && s.kind === 'failed') learn(s, signal)
+      return
+    }
+    // Pending, as the phone told it: held for its "failed" or "successful" (saved after PENDING_WAIT_MS without either).
+    if (signal.type === 'pending' && source === 'alert') {
+      if (!held) {
+        const entry = told('pending', signal, null)
+        seen.push(entry)
+        heldSignals.set(entry, signal)
+        return
+      }
+      if (held.ref === null && signal.ref) held.ref = signal.ref.slice(0, 60)
+      if (held.party === null && signal.party) held.party = signal.party.slice(0, 120)
+      if (held.vpa === null && signal.vpa) held.vpa = signal.vpa
+      if (held.account === null && signal.account) held.account = signal.account
       return
     }
     const draft = signalToDraft(signal, source)
     if (!draft) return
-    const debit = signal.type === 'failed' && !draft.confirmed ? debitFor(signal, signal.at) : null
-    const made = addStuck({ ...draft, confirmed: draft.confirmed || debit !== null }, now)
+    // The debit that shows it took the money came when it was first told — its pending alert, if it had one.
+    const debit = signal.type === 'failed' && !draft.confirmed ? debitFor(signal, Math.min(signal.at, held?.at ?? signal.at)) : null
+    const made = addStuck({ ...draft, party: draft.party ?? held?.party ?? null, confirmed: draft.confirmed || debit !== null }, now)
     before.set(made.id, null)
     added.push(made.id)
     seen.push(told(signal.type, signal, made.id))
+    if (held) held.stuckId = made.id
     if (debit) debit.stuckId = made.id
+  }
+
+  /** Pending alerts with no "failed" or "successful" after PENDING_WAIT_MS: saved now, waiting for a tap. */
+  const onStillPending = (): void => {
+    for (const e of seen) {
+      if (!isHeld(e) || now - e.at < PENDING_WAIT_MS) continue
+      const heard = heldSignals.get(e)
+      const signal: Failure = heard ? { ...heard, ref: heard.ref ?? e.ref, party: heard.party ?? e.party, account: heard.account ?? e.account } : pendingFrom(e)
+      // Saved meanwhile — by hand, or from a pasted SMS.
+      const twin = findStuckTwin(stuckStore.get(), { ref: signal.ref })
+      const draft = twin ? null : signalToDraft(signal, 'alert')
+      if (draft) {
+        const made = addStuck(draft, now)
+        before.set(made.id, null)
+        added.push(made.id)
+        e.stuckId = made.id
+      } else e.stuckId = twin?.id ?? null
+    }
   }
 
   const onDebit = (signal: Debit): void => {
@@ -239,16 +327,34 @@ export function trackStuckSignals(signals: readonly StuckSignal[], source: Stuck
     seen.push(entry)
     const open = stuckStore.get().filter(isStuckOpen)
     const target =
-      (signal.ref ? open.find((s) => s.ref === signal.ref) : undefined) ??
+      findStuckTwin(open, { ref: signal.ref }) ??
       only(open.filter((s) => s.amount === signal.amount && s.date <= signal.date && daysBetween(s.date, signal.date) <= BACK_WITHIN_DAYS && fits(signal, s)))
     if (!target) return
     remember(target.id)
-    markStuckBack(target.id, { date: signal.date < target.date ? target.date : signal.date, amount: Math.min(signal.amount, target.amount), compensation: 0 })
+    // Added to any part that came back before, never more than was taken.
+    const total = Math.min((target.back?.amount ?? 0) + signal.amount, target.amount)
+    markStuckBack(target.id, { date: signal.date < target.date ? target.date : signal.date, amount: total, compensation: target.back?.compensation ?? 0 })
     entry.stuckId = target.id
     back.push(target.id)
   }
 
   const onSuccess = (signal: Success): void => {
+    // A pending alert still held: it went through, so there's nothing to save (or to tell).
+    const pendingOnes = seen.filter(isHeld)
+    const answered =
+      pendingOnes.find((e) => compareRefs(e.ref, signal.ref) === 'same') ??
+      only(
+        pendingOnes.filter((e) => {
+          if (e.amount !== signal.amount) return false
+          const party = e.vpa && signal.vpa ? e.vpa === signal.vpa : e.party !== null && signal.party !== null && sameParty({ party: e.party }, { party: signal.party })
+          return party && signal.at >= e.at - PAIR_AFTER_MS && signal.at - e.at <= SUCCESS_WITHIN_MS
+        }),
+      )
+    if (answered) {
+      seen.splice(seen.indexOf(answered), 1)
+      heldSignals.delete(answered)
+      return
+    }
     const waiting = stuckStore.get().filter((s) => s.kind === 'failed' && !s.confirmed && isStuckOpen(s))
     const target =
       waiting.find((s) => compareRefs(s.ref, signal.ref) === 'same') ??
@@ -287,8 +393,8 @@ export function trackStuckSignals(signals: readonly StuckSignal[], source: Stuck
     if (earlier) twin = earlier.stuckId ? current(earlier.stuckId) : null
     else
       twin =
-        (signal.orderId ? open.find((s) => s.orderId === signal.orderId) : undefined) ??
-        (signal.ref ? open.find((s) => s.ref === signal.ref) : undefined) ??
+        // Its order number or reference, saved already in any state: told again, not owed twice.
+        findStuckTwin(stuckStore.get(), { ref: signal.ref, orderId: signal.orderId }) ??
         open.find(
           (s) =>
             s.amount === signal.amount &&
@@ -299,7 +405,7 @@ export function trackStuckSignals(signals: readonly StuckSignal[], source: Stuck
         null
     if (earlier || twin) {
       seen.push(told('refund', signal, twin ? twin.id : (earlier?.stuckId ?? null), key))
-      if (twin && isStuckOpen(twin)) learn(twin, signal)
+      if (twin && isStuckOpen(twin) && twin.kind === 'refund') learn(twin, signal)
       return
     }
     const draft = signalToDraft(signal, source)
@@ -317,6 +423,7 @@ export function trackStuckSignals(signals: readonly StuckSignal[], source: Stuck
     else if (signal.type === 'refund_initiated') onRefundStarted(signal)
     else if (signal.type === 'reversal' || signal.type === 'refund_credited') onBack(signal)
   }
+  onStillPending()
 
   stuckSeenStore.set(seen.filter((e) => now - e.at < SEEN_MS).slice(-MAX_SEEN))
   const found = (ids: readonly string[]) => ids.map(current).filter((s): s is StuckPayment => s !== null)

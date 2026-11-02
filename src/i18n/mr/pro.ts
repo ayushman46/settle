@@ -4,7 +4,7 @@ import type { Messages } from '../types'
 export const pro = {
   // What Pro adds (the perk list). {count} is Pro's fair-use AI allowance a day.
   'pro.perk.ai.title': 'अमर्याद AI',
-  'pro.perk.ai.body': 'बिलाचे फोटो आणि “Just say it” हवे तितक्या वेळा — फेअर यूज, दिवसाला {count} पर्यंत.',
+  'pro.perk.ai.body': 'बिलाचे फोटो आणि “फक्त सांगा” हवे तितक्या वेळा — फेअर यूज, दिवसाला {count} पर्यंत.',
   'pro.perk.recurring.title': 'नियमित वाटण्या',
   'pro.perk.recurring.body': 'भाडे, Wi-Fi, Netflix: दर महिन्याला आठवण आणि एका टॅपमध्ये वाटणी.',
   'pro.perk.insights.title': 'विश्लेषण',
@@ -25,7 +25,7 @@ export const pro = {
   'pro.pitch.general.cta': 'Pro पहा',
   'pro.pitch.ai.title': 'Pro सह अमर्याद AI',
   // {free}: the free AI allowance a day; {count}: Pro's fair-use cap.
-  'pro.pitch.ai.body': 'मोफत मध्ये दिवसाला {free} AI स्कॅन किंवा “Just say it” वाटण्या असतात, आणि त्या मध्यरात्री पुन्हा सुरू होतात. Pro मर्यादा काढतो — फेअर यूज, दिवसाला {count} पर्यंत.',
+  'pro.pitch.ai.body': 'मोफत मध्ये दिवसाला {free} AI स्कॅन किंवा “फक्त सांगा” वाटण्या असतात, आणि त्या मध्यरात्री पुन्हा सुरू होतात. Pro मर्यादा काढतो — फेअर यूज, दिवसाला {count} पर्यंत.',
   'pro.pitch.ai.cta': 'अमर्याद AI मिळवा',
   'pro.pitch.recurring.title': 'नियमित वाटण्या Pro चा भाग आहेत',
   'pro.pitch.recurring.body': 'भाडे, Wi-Fi किंवा Netflix एकदाच सेट करा. दर महिन्याला आठवण मिळेल आणि एका टॅपमध्ये वाटता येईल.',

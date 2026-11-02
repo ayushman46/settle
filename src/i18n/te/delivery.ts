@@ -19,7 +19,7 @@ export const delivery = {
   'delivery.review.fees.removed.toast': '{label} తీసేయబడింది',
   'delivery.review.fees.full.toast': 'ఒక బిల్లులో గరిష్టంగా {max} ఫీజులు ఉండవచ్చు.',
   'delivery.review.fees.converted.toast': '{label} ఇప్పుడు ఒక ఐటమ్ — తర్వాతి అడుగుల్లో ఎవరు తీసుకున్నారో చెప్పండి',
-  'delivery.review.fees.undoFailed.toast': 'వెనక్కి తీసుకోలేకపోయాం — బిల్లు మారిపోయింది',
+  'delivery.review.fees.undoFailed.toast': 'రద్దు చేయలేకపోయాం — బిల్లు మారిపోయింది',
   // The sheet for one fee.
   'delivery.fee.title': 'ఫీజు',
   'delivery.fee.name.label': 'పేరు',

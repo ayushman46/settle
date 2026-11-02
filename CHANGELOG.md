@@ -1,5 +1,34 @@
 # Changelog
 
+## v7.1 — 2 Nov 2026
+
+Stuck money, after 24 people tried it on phones — in English and all seven Indian languages — and told us what got in their way.
+
+### Fixes
+- **Part of it back.** Marking ₹1,000 of a ₹1,299 refund back no longer closes it as "All back": the other ₹299 stays open, keeps its days late, and is what the list, Home, the letters and the next "It's back" (which starts at what's still owed) talk about. More of it back adds up. An Android reversal alert for part of it does the same.
+- **Back, but the bank still owes for the wait.** Once the money is back, the case shows the compensation owed — not the original amount "On its way" — under a new "Owed for the wait" section, and walks the bank → RBI Ombudsman ladder for that amount.
+- **The list says where each one stands**: Needs you, Waiting on them, Owed for the wait, Not due yet, Got back, Set aside. Raised cases keep their days late and the ₹ owed. Titles say what it is ("Failed payment to Swiggy", "Flipkart refund") so a shop never looks like a friend who owes you; rows show the order number.
+- **The clock is in date order**, says where each due date comes from (the date they gave, their own timeline, or the usual 7 working days — never a promise that wasn't made), and shows what comes next and the last day for the RBI Ombudsman.
+- **Ombudsman timing.** The bank's 30th day is still the bank's; the Ombudsman is offered from day 31 — or at once after "My bank replied or said no". The 90-day window counts from that reply. No more made-up deadline after a complaint is with the Ombudsman, and a closed window is said plainly.
+- **Airline refunds paid by card** are due within the DGCA's 7 days even when the airline says later, and the app and the letters say it's the DGCA's rule.
+- **Wallets and NACH.** A wallet payment's complaint goes to the wallet company (Paytm, PhonePe, Amazon Pay, MobiKwik), not "your bank". A debit after you cancelled a NACH mandate gets a letter that says exactly that, not "the payment failed".
+- **Amounts and dates.** "99,99,999" typed with Indian commas is ₹99,99,999, not ₹99.99. Future days and a promise before the cancellation are caught. Dates from another year show the year.
+- **Duplicates.** The same reference or order number can't be tracked twice (it opens the one you have); a pasted SMS you've already tracked says so.
+- Undo after adding a case no longer lands on "This one's gone"; Delete asks first (and offers Set aside).
+
+### New
+- **Your bank, app and account on the form**, with labels for the way you paid (ATM slip number, card's last 4, IMPS reference, mandate UMRN, PNR), so letters no longer say "[your bank's name]". "Failed payment or refund?" says which is which (an IRCTC booking that failed but took the money is a failed payment).
+- **Letters ready to send**: your mobile, city and address filled in once (kept on this phone, never in backups), the email address you send to remembered per bank or business, a two-line summary in your language of what the English letter asks, the complaint history carried into every later step (the NCH message includes the AirSewa complaint), a printable copy with an acknowledgement slip for the branch, and NPCI's MyUPI only within its 45 days.
+- **Paste several messages at once.** Each is read on its own, so an OTP in the paste no longer hides a failed payment; a debit SMS can become a failed payment with one "Yes, it failed"; anything not recognised keeps what it found for the form. Hindi and Hinglish bank SMS, and 18 more banks (Canara, Union, Bank of India, Indian Bank, IOB, Karur Vysya, City Union and others), are recognised. A pending payment waits for its final SMS instead of being called stuck.
+- **Remind me** on the next deadline, as a calendar event made on the phone (or Google Calendar). **A win card** when it's all back, with something to share that carries no references or account digits. **Notes** on a case. **"They don't answer"** goes straight to the next step.
+- **Easier to find.** A Stuck money tile on Home from day one; the Home card names the case and opens it; it sits above the first-split card when something needs you; onboarding has a Stuck money slide, and arriving from a Stuck money link lands there. The More sheet is now "More": getting your money back, then starting a split.
+- Backup, restore and Clear all data count stuck payments.
+
+### Changed
+- Toasts give long messages (and long translations) time to be read, have a close button, stay with the page they were shown on, and sit above an open sheet instead of over its buttons; a plain message makes way for a sheet, an Undo stays.
+- **Regional languages.** Hindi and Bengali vowel signs no longer clipped in status pills; words no longer break mid-word; Tamil and Bengali case endings no longer glued on with a hyphen; Undo no longer reads as "take the money back"; "you" no longer flips the meaning of a share line. Rent & HRA is now in all eight languages, and the You tab, backup note, Home's example sentence and screen-reader labels are translated.
+- Privacy policy: letter details stay on the phone and out of backups; a backup file is readable by anyone who has it; what the Google Calendar link sends; the app's check-ins with the server.
+
 ## v7 — 2 Nov 2026
 
 From "friends who owe you" to "banks and businesses who owe you": money stuck in a failed payment or a refund that never came, tracked to the day and claimed the way the RBI says.

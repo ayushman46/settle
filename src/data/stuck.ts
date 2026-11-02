@@ -9,14 +9,14 @@ import { stuckStore, type StuckBack, type StuckPayment, type StuckStep } from '.
 /** Enough for anyone; the oldest settled ones fall off first. */
 export const MAX_STUCK = 300
 
-export type StuckDraft = Omit<StuckPayment, 'id' | 'steps' | 'back' | 'note' | 'dismissedAt' | 'createdAt' | 'updatedAt'> &
-  Partial<Pick<StuckPayment, 'steps' | 'back' | 'note'>>
+export type StuckDraft = Omit<StuckPayment, 'id' | 'steps' | 'repliedAt' | 'back' | 'note' | 'dismissedAt' | 'createdAt' | 'updatedAt'> &
+  Partial<Pick<StuckPayment, 'steps' | 'repliedAt' | 'back' | 'note'>>
 
-/** Keeps the list within MAX_STUCK, dropping the oldest closed ones (open ones are never dropped). */
+/** Keeps the list within MAX_STUCK, dropping the oldest closed ones (open ones — part of it back too — are never dropped). */
 function capped(list: StuckPayment[]): StuckPayment[] {
   if (list.length <= MAX_STUCK) return list
   const closed = list
-    .filter((s) => s.back !== null || s.dismissedAt !== null)
+    .filter((s) => !isStuckOpen(s))
     .sort((a, b) => a.updatedAt - b.updatedAt)
     .slice(0, list.length - MAX_STUCK)
   const drop = new Set(closed.map((s) => s.id))
@@ -46,6 +46,7 @@ export function addStuck(draft: StuckDraft, now: number = Date.now()): StuckPaym
     ...draft,
     id: newId(),
     steps: draft.steps ?? [],
+    repliedAt: draft.repliedAt ?? null,
     back: draft.back ?? null,
     note: draft.note ?? null,
     dismissedAt: null,
@@ -68,10 +69,20 @@ export function markStuckBack(id: string, back: StuckBack): (() => void) | null 
   return done ? () => restoreStuck(done.before) : null
 }
 
-/** Notes a complaint raised (a second one of the same kind replaces the first). */
+/** Notes a complaint raised (a second one of the same kind replaces the first; a new one to the bank waits for a new reply). */
 export function addStuckStep(id: string, step: StuckStep): (() => void) | null {
-  const done = patch(id, (s) => ({ ...s, steps: [...s.steps.filter((x) => x.kind !== step.kind), step].sort((a, b) => a.date.localeCompare(b.date)) }))
+  const done = patch(id, (s) => ({
+    ...s,
+    steps: [...s.steps.filter((x) => x.kind !== step.kind), step].sort((a, b) => a.date.localeCompare(b.date)),
+    repliedAt: step.kind === 'bank' && s.repliedAt !== null && step.date > s.repliedAt ? null : s.repliedAt,
+  }))
   return done ? () => restoreStuck(done.before) : null
+}
+
+/** The bank replied to the complaint or turned it down, on `date` (null: it hasn't after all). The RBI Ombudsman opens from then. */
+export function markBankReplied(id: string, date: string | null): () => void {
+  const done = patch(id, (s) => ({ ...s, repliedAt: date }))
+  return done ? () => restoreStuck(done.before) : () => undefined
 }
 
 /** It did leave the account (an app said it failed; you checked). */

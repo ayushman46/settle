@@ -142,7 +142,7 @@ export const pools = {
   'pools.detail.tick': 'टिक करें',
   'pools.detail.tickLabel': '{name} का पेमेंट टिक करें',
   'pools.detail.ticked': '{name} पर टिक लगा ✓',
-  'pools.detail.undo': 'वापस लें',
+  'pools.detail.undo': 'पहले जैसा करें',
   'pools.detail.others': 'और लोग',
   'pools.detail.othersText': 'आपकी लिस्ट में नहीं थे, फिर भी दिया।',
   'pools.detail.contributors': 'जिन्होंने दिया',

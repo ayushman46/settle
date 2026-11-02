@@ -222,6 +222,116 @@ describe('Toast', () => {
     expect(liveRegion()).not.toHaveTextContent('Hold on')
   })
 
+  it('puts an action toast away from its close button', async () => {
+    const user = userEvent.setup()
+    const undo = vi.fn()
+    renderToasts()
+    act(() => {
+      show('Removed Ben', { action: { label: 'Undo', onAction: undo } })
+    })
+    await user.click(screen.getByRole('button', { name: 'Hide message' }))
+    expect(undo).not.toHaveBeenCalled()
+    expect(liveRegion()).not.toHaveTextContent('Removed Ben')
+  })
+
+  it('stays longer when there is more to read', () => {
+    vi.useFakeTimers()
+    renderToasts()
+    const long = 'Tracking it — Settle will count the days and tell you when the bank owes you for the wait.'
+    act(() => {
+      show(long, { action: { label: 'Undo', onAction: () => {} } })
+    })
+    act(() => {
+      vi.advanceTimersByTime(9000)
+    })
+    expect(liveRegion()).toHaveTextContent('Tracking it')
+    act(() => {
+      vi.advanceTimersByTime(6000)
+    })
+    expect(liveRegion()).not.toHaveTextContent('Tracking it')
+  })
+
+  describe('belongs where it was shown', () => {
+    afterEach(() => {
+      window.history.replaceState(null, '', '/')
+      for (const el of document.querySelectorAll('[data-test-page]')) el.remove()
+    })
+
+    /** A page change as the app makes one: a new address, then new content. */
+    async function goTo(path: string): Promise<void> {
+      await act(async () => {
+        window.history.pushState(null, '', path)
+        const page = document.createElement('main')
+        page.setAttribute('data-test-page', '')
+        document.body.append(page)
+        await Promise.resolve()
+        vi.advanceTimersByTime(20)
+      })
+    }
+
+    async function openSheet(): Promise<void> {
+      await act(async () => {
+        const sheet = document.createElement('div')
+        sheet.setAttribute('role', 'dialog')
+        sheet.setAttribute('aria-modal', 'true')
+        sheet.setAttribute('data-test-page', '')
+        document.body.append(sheet)
+        await Promise.resolve()
+        vi.advanceTimersByTime(20)
+      })
+    }
+
+    async function closeSheet(): Promise<void> {
+      await act(async () => {
+        for (const sheet of document.querySelectorAll('[role="dialog"][data-test-page]')) sheet.remove()
+        await Promise.resolve()
+        vi.advanceTimersByTime(20)
+      })
+    }
+
+    it('goes away on another page, but follows the page it was shown on the way to', async () => {
+      vi.useFakeTimers()
+      window.history.replaceState(null, '', '/app/stuck/new')
+      renderToasts()
+      act(() => {
+        show('Tracking it', { action: { label: 'Undo', onAction: () => {} } })
+      })
+      // Saved, then straight to the new page: the toast comes along.
+      await goTo('/app/stuck/s1')
+      expect(liveRegion()).toHaveTextContent('Tracking it')
+      act(() => {
+        vi.advanceTimersByTime(2000)
+      })
+      // Later, to Edit: it stays behind.
+      await goTo('/app/stuck/s1/edit')
+      expect(liveRegion()).not.toHaveTextContent('Tracking it')
+    })
+
+    it('goes away when a sheet opens over it, unless it has an Undo, and stays when shown in one', async () => {
+      vi.useFakeTimers()
+      renderToasts()
+      act(() => {
+        show('Saved')
+      })
+      await openSheet()
+      expect(liveRegion()).not.toHaveTextContent('Saved')
+      await closeSheet()
+
+      // An Undo stays above the sheet: opening something else first mustn't lose the way back.
+      act(() => {
+        show('Removed', { action: { label: 'Undo', onAction: () => {} } })
+      })
+      await openSheet()
+      expect(liveRegion()).toHaveTextContent('Removed')
+
+      act(() => {
+        show('Copied')
+      })
+      await goTo(window.location.pathname)
+      expect(liveRegion()).toHaveTextContent('Copied')
+    })
+  })
+
   it('throws a helpful error outside the provider', () => {
     const spy = vi.spyOn(console, 'error').mockImplementation(() => {})
     expect(() => render(<Capture />)).toThrow(/ToastProvider/)

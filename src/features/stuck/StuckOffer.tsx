@@ -1,5 +1,5 @@
 import { useId, type ReactNode } from 'react'
-import { CircleCheck, Landmark, Store } from 'lucide-react'
+import { CircleCheck, CopyCheck, Landmark, Store } from 'lucide-react'
 import { navigate } from '../../app/router'
 import { Button, Card } from '../../components'
 import { useStore } from '../../data'
@@ -7,7 +7,8 @@ import { stuckStore } from '../../data/stores'
 import { isStuckOpen } from '../../data/stuck'
 import { useT } from '../../i18n'
 import type { StuckSignal } from './detect'
-import { STUCK_PATH } from './paths'
+import { findStuckTwin } from './duplicates'
+import { STUCK_PATH, stuckPath } from './paths'
 import { openStuckAdd, prefillFromSignal } from './prefill'
 import { useTickBack } from './useTickBack'
 import styles from './Stuck.module.css'
@@ -15,11 +16,13 @@ import styles from './Stuck.module.css'
 /**
  * Under a message read elsewhere in Settle (a bank SMS pasted or shared in): when it's about stuck
  * money — a payment that failed or is pending, a refund a business has started, or money back for
- * something being tracked — the way into Stuck money. Nothing for anything else.
+ * something being tracked — the way into Stuck money (or to the one already tracked, when it has
+ * the same reference or order number). Nothing for anything else.
  */
 export function StuckOffer({ signal }: { signal: StuckSignal }) {
   const t = useT()
-  const anyOpen = useStore(stuckStore, (all) => all.some(isStuckOpen))
+  const all = useStore(stuckStore, (list) => list)
+  const anyOpen = all.some(isStuckOpen)
   const tickBack = useTickBack()
   if (signal.type === 'debit') return null
 
@@ -47,6 +50,22 @@ export function StuckOffer({ signal }: { signal: StuckSignal }) {
 
   const prefill = prefillFromSignal(signal, 'sms')
   if (!prefill) return null
+  const twin = findStuckTwin(all, prefill)
+  if (twin?.sure && isStuckOpen(twin.payment)) {
+    const found = twin.payment
+    return (
+      <Offer
+        icon={<CopyCheck />}
+        title={t('stuck.dupe.title')}
+        text={twin.by === 'order' ? t('stuck.dupe.sureOrder') : t('stuck.dupe.sure')}
+        action={
+          <Button block variant="secondary" onClick={() => navigate(stuckPath(found.id))}>
+            {t('stuck.dupe.open')}
+          </Button>
+        }
+      />
+    )
+  }
   const refund = signal.type === 'refund_initiated'
   return (
     <Offer

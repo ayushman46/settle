@@ -2,7 +2,7 @@ import type { Messages } from '../types'
 
 export const whospaid: Messages = {
   'whospaid.title': 'ಯಾರು ಕಳುಹಿಸಿದರು?',
-  'whospaid.more.title': 'ಯಾರು ಕಳುಹಿಸಿದರು?',
+  'whospaid.more.title': 'ಯಾರು ಕೊಟ್ಟರು?',
   'whospaid.subtitle': '{count, plural, one {# ಜನರು} other {# ಜನರು}} ನಿಮಗೆ {amount} ಕೊಡಬೇಕು. ಬಂದದ್ದನ್ನು ತನ್ನಿ — ಪಾವತಿಸಿದ ಎಲ್ಲರನ್ನೂ Settle ಟಿಕ್ ಮಾಡುತ್ತದೆ.',
   'whospaid.empty.title': 'ಈಗ ಯಾರೂ ನಿಮಗೆ ಬಾಕಿ ಇಲ್ಲ',
   'whospaid.empty.text': 'ಸ್ನೇಹಿತರು ಹಂಚಿಕೆಯ ಹಣ ಬಾಕಿ ಇಟ್ಟಾಗ, ನಿಮ್ಮ UPI ಇತಿಹಾಸ ಅಥವಾ ಬ್ಯಾಂಕ್ ಸ್ಟೇಟ್‌ಮೆಂಟ್ ಇಲ್ಲಿ ತಂದು ಎಲ್ಲರನ್ನೂ ಒಮ್ಮೆಗೇ ಟಿಕ್ ಮಾಡಿ.',
@@ -44,7 +44,7 @@ export const whospaid: Messages = {
   'whospaid.known': '{count, plural, one {# ಈಗಾಗಲೇ} other {# ಈಗಾಗಲೇ}} ಗುರುತಿಸಲಾಗಿತ್ತು.',
   'whospaid.skipped': 'ನೀವು ಮಾಡಿದ {count, plural, one {# ಪಾವತಿ} other {# ಪಾವತಿಗಳನ್ನು}} ಓದಿಲ್ಲ.',
   'whospaid.otherApps': 'ಯಾರಾದರೂ ಬೇರೆ ಆ್ಯಪ್‌ನಲ್ಲಿ ಕಳುಹಿಸಿದರೇ? ಅದು ಬ್ಯಾಂಕ್ ಸ್ಟೇಟ್‌ಮೆಂಟ್‌ನಲ್ಲಿ ಮಾತ್ರ ಕಾಣಬಹುದು.',
-  'whospaid.confirm': '{count, plural, one {# ಪಾವತಿಸಿದೆ ಎಂದು ಗುರುತಿಸಿ} other {# ಪಾವತಿಸಿದೆ ಎಂದು ಗುರುತಿಸಿ}}',
+  'whospaid.confirm': '{count, plural, =0 {ಯಾರು ಪಾವತಿಸಿದರು ಎಂದು ಆರಿಸಿ} one {# ಪಾವತಿಸಿದೆ ಎಂದು ಗುರುತಿಸಿ} other {# ಪಾವತಿಸಿದೆ ಎಂದು ಗುರುತಿಸಿ}}',
   'whospaid.marked.toast': '{count, plural, one {# ಹಂಚಿಕೆ ಪಾವತಿಸಿದೆ ಎಂದು ಗುರುತಿಸಲಾಗಿದೆ} other {# ಹಂಚಿಕೆಗಳು ಪಾವತಿಸಿದೆ ಎಂದು ಗುರುತಿಸಲಾಗಿದೆ}}',
   'whospaid.undo': 'ರದ್ದುಮಾಡಿ',
   'whospaid.done.title': '{count, plural, one {# ಪಾವತಿ ಟಿಕ್ ಆಯಿತು} other {# ಪಾವತಿಗಳು ಟಿಕ್ ಆದವು}}',

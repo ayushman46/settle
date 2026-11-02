@@ -32,7 +32,7 @@ export const recurring = {
   'recurring.preset.help': 'வீட்டு வேலையாள்',
   // "Split now" (list, editor).
   'recurring.splitNow.cta': 'இப்போதே பிரி',
-  'recurring.splitNow.error.toast': '{title} ஐப் பிரிக்க முடியவில்லை. {reason}',
+  'recurring.splitNow.error.toast': '{title} செலவைப் பிரிக்க முடியவில்லை. {reason}',
   'recurring.splitNow.edit.cta': 'திருத்து',
   // The success moment's title: "Rent split".
   'recurring.splitNow.done.title': '{title} பிரிக்கப்பட்டது',
@@ -51,8 +51,8 @@ export const recurring = {
   'recurring.list.paused.title': 'நிறுத்தப்பட்டவை',
   'recurring.list.paused.description': 'நீங்கள் மீண்டும் இயக்கும் வரை நினைவூட்டல்கள் இருக்காது.',
   'recurring.list.new.cta': 'புதிய தொடர் பிரிப்பு',
-  'recurring.list.due.split.aria': '{month} மாதத்துக்கான {title} ஐ இப்போதே பிரி',
-  'recurring.list.edit.aria': '{title} ஐத் திருத்து',
+  'recurring.list.due.split.aria': '{month} மாதத்துக்கான {title} செலவை இப்போதே பிரி',
+  'recurring.list.edit.aria': '{title} செலவைத் திருத்து',
   'recurring.list.edit.cta': 'திருத்து',
   'recurring.list.paused.badge': 'நிறுத்தப்பட்டது',
   // A row's subtitle: "₹32,000 · on the 1st · 3 people".
@@ -63,7 +63,7 @@ export const recurring = {
   // The editor (`/app/recurring/new`, `/app/recurring/:id`).
   'recurring.editor.new.title': 'புதிய தொடர் பிரிப்பு',
   'recurring.editor.title': 'தொடர் பிரிப்பு',
-  'recurring.editor.edit.title': '{title} ஐத் திருத்து',
+  'recurring.editor.edit.title': '{title} செலவைத் திருத்து',
   'recurring.editor.gone.title': 'இந்தத் தொடர் பிரிப்பு இல்லை',
   'recurring.editor.gone.subtitle': 'இது நீக்கப்பட்டிருக்கலாம் — இந்த ஃபோனில் அல்லது வேறொரு டேபில்.',
   'recurring.editor.gone.cta': 'தொடர் பிரிப்புகளைப் பார்',
@@ -71,7 +71,7 @@ export const recurring = {
   'recurring.editor.changesSaved.toast': 'மாற்றங்கள் சேமிக்கப்பட்டன',
   'recurring.editor.deleted.toast': '{title} நீக்கப்பட்டது',
   'recurring.editor.undo.cta': 'செயல்தவிர்',
-  'recurring.editor.delete.aria': '{title} ஐ நீக்கு',
+  'recurring.editor.delete.aria': '{title} செலவை நீக்கு',
   'recurring.editor.save.new.cta': 'தொடர் பிரிப்பைச் சேமி',
   'recurring.editor.save.cta': 'மாற்றங்களைச் சேமி',
   'recurring.editor.paused.body': 'இது நிறுத்தி வைக்கப்பட்டுள்ளது. இன்னும் திருத்தலாம் அல்லது நீக்கலாம்; பிரிக்க Pro தேவை.',

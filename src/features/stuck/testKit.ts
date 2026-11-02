@@ -22,6 +22,7 @@ export function stuckPayment(over: Partial<StuckPayment> = {}): StuckPayment {
     steps: [],
     back: null,
     dismissedAt: null,
+    repliedAt: null,
     note: null,
     createdAt: 1,
     updatedAt: 1,

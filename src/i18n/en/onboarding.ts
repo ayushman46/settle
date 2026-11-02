@@ -21,12 +21,17 @@ export const onboarding = {
   'onboarding.slide.split.text': 'Rent, trips, cabs, Netflix. Or just say it: “Cab 840 with Riya and Sam”.',
   'onboarding.slide.settle.title': 'Get paid back by UPI',
   'onboarding.slide.settle.text': 'Send one link to the group. Friends tap their name and pay with any UPI app.',
+  'onboarding.slide.stuck.title': 'Money stuck? Get it back',
+  'onboarding.slide.stuck.text': 'A payment failed but the money left, or a refund never came? Settle counts the days, says when your bank owes you for the wait, and writes the complaint.',
 
   // Last step: about you.
   'onboarding.about.title': 'Let’s set you up',
   'onboarding.about.subtitle': 'Friends see your name on the requests you send.',
   'onboarding.about.start.cta': 'Start splitting',
   'onboarding.about.skip.cta': 'Skip for now',
+  // On the way to Stuck money, only the name is asked for.
+  'onboarding.about.stuck.subtitle': 'It goes on the complaint letters Settle writes for you.',
+  'onboarding.about.stuck.cta': 'Continue',
   'onboarding.about.name.label': 'Your name',
   'onboarding.about.name.placeholder': 'e.g. Ayush',
   'onboarding.about.name.error': 'Add your name — friends see it on the requests you send.',

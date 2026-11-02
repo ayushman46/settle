@@ -67,8 +67,12 @@ interface ShareRowProps extends Omit<ShareListProps, 'className'> {
   groupName: string | null
 }
 
-/** What the line says under the name. */
-function statusText(line: ShareLine, payerObject: string, groupName: string | null, currency: string): string {
+/**
+ * What the line says under the name. When you paid, "you" has its own keys rather than going
+ * into `{name}`: other languages put the case ending in the pronoun, and a template's own ending
+ * after it would double it or turn who owes whom around.
+ */
+function statusText(line: ShareLine, payerObject: string, payerIsMe: boolean, groupName: string | null, currency: string): string {
   if (line.state === 'owes' && line.paidSoFar > 0) {
     const money = (minor: number) => formatMoney(minor, currency, { trimZeros: true })
     return t('kit.shares.status.part', { paid: money(line.paidSoFar), left: money(line.share - line.paidSoFar) })
@@ -77,9 +81,10 @@ function statusText(line: ShareLine, payerObject: string, groupName: string | nu
     case 'payer':
       return t('kit.shares.status.payer')
     case 'paid':
-      return t('kit.shares.status.paid', { name: payerObject })
+      return payerIsMe ? t('kit.shares.status.paidYou') : t('kit.shares.status.paid', { name: payerObject })
     case 'owes':
-      return line.friendId === ME_ID ? t('kit.shares.status.youOwe', { name: payerObject }) : t('kit.shares.status.owes', { name: payerObject })
+      if (line.friendId === ME_ID) return t('kit.shares.status.youOwe', { name: payerObject })
+      return payerIsMe ? t('kit.shares.status.owesYou') : t('kit.shares.status.owes', { name: payerObject })
     case 'zero':
       return t('kit.shares.status.zero')
     case 'group':
@@ -94,6 +99,7 @@ function ShareRow({ line, expense, friend, payer, groupName, onTogglePaid, onPay
   const id = line.friendId
   const name = friendLabel(id, friend)
   const payerObject = friendObjectLabel(expense.payerId, payer)
+  const payerIsMe = expense.payerId === ME_ID
   const amount = formatMoney(line.share, expense.currency, { trimZeros: true })
   const actions = shareActions(line, expense)
   const paid = line.state === 'paid'
@@ -102,6 +108,12 @@ function ShareRow({ line, expense, friend, payer, groupName, onTogglePaid, onPay
   const canNudge = actions.nudge && onNudge !== undefined
   const hasItems = line.items.length > 0
   const payingPayer = id === ME_ID && expense.payerId !== ME_ID
+  const tickLabel =
+    id === ME_ID
+      ? t('kit.shares.tick.mine.aria', { payer: payerObject })
+      : payerIsMe
+        ? t('kit.shares.tick.you.aria', { name })
+        : t('kit.shares.tick.aria', { name, payer: payerObject })
 
   const toggle = () => {
     haptic(paid ? 'tap' : 'success')
@@ -116,7 +128,7 @@ function ShareRow({ line, expense, friend, payer, groupName, onTogglePaid, onPay
           <span className={styles.name}>{name}</span>
           <span className={styles.status}>
             {(paid || line.state === 'payer') && <Check aria-hidden="true" className={styles.statusIcon} strokeWidth={3} />}
-            {statusText(line, payerObject, groupName, expense.currency)}
+            {statusText(line, payerObject, payerIsMe, groupName, expense.currency)}
           </span>
         </span>
         <Money
@@ -132,7 +144,7 @@ function ShareRow({ line, expense, friend, payer, groupName, onTogglePaid, onPay
             type="button"
             className={styles.tick}
             aria-pressed={paid}
-            aria-label={t('kit.shares.tick.aria', { name, payer: payerObject })}
+            aria-label={tickLabel}
             onClick={toggle}
           >
             <span className={styles.tickMark} aria-hidden="true">

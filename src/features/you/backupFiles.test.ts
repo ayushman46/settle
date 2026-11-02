@@ -1,7 +1,9 @@
 import { act, renderHook } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { addFriend, exportBackup, parseBackup, resetDataForTests, saveExpense, updateProfile } from '../../data'
+import { stuckStore } from '../../data/stores'
 import { draft } from '../../data/testKit'
+import { stuckPayment } from '../stuck/testKit'
 import { relativeDateLabel } from '../../kit/index-a'
 import {
   backupBlob,
@@ -13,7 +15,9 @@ import {
   csvFilename,
   LAST_BACKUP_KEY,
   lastBackupAt,
+  lastSavedLine,
   MAX_BACKUP_BYTES,
+  readBackupError,
   readBackupFile,
   resetLastBackupForTests,
   savedWhen,
@@ -103,6 +107,14 @@ describe('describing a backup', () => {
     expect(backupContents(exportBackup())).toBe('1 expense · 2 people')
   })
 
+  it('counts stuck payments, so a file holding only those isn’t “empty”', () => {
+    stuckStore.set([stuckPayment({ id: 's1' }), stuckPayment({ id: 's2' })])
+    expect(backupContents(exportBackup())).toBe('2 stuck payments')
+    addFriend({ name: 'Riya' })
+    stuckStore.set([stuckPayment({ id: 's1' })])
+    expect(backupContents(exportBackup())).toBe('1 person · 1 stuck payment')
+  })
+
   it('says when a backup is empty', () => {
     expect(backupContents(exportBackup())).toBe('Nothing in it yet')
   })
@@ -115,10 +127,15 @@ describe('describing a backup', () => {
   })
 
   it('words "last saved" relative to today', () => {
-    expect(savedWhen(new Date(2026, 9, 22, 1).getTime())).toBe('today')
-    expect(savedWhen(new Date(2026, 9, 21, 23).getTime())).toBe('yesterday')
-    expect(savedWhen(new Date(2025, 11, 31, 12).getTime())).toBe(`on ${relativeDateLabel('2025-12-31', '2026-10-22')}`)
-    expect(savedWhen(new Date(2025, 11, 31, 12).getTime())).toMatch(/2025/)
+    expect(lastSavedLine(new Date(2026, 9, 22, 1).getTime())).toBe('Last saved today')
+    expect(lastSavedLine(new Date(2026, 9, 21, 23).getTime())).toBe('Last saved yesterday')
+    expect(lastSavedLine(new Date(2025, 11, 31, 12).getTime())).toBe(`Last saved on ${relativeDateLabel('2025-12-31', '2026-10-22')}`)
+    expect(savedWhen(new Date(2025, 11, 31, 12).getTime()).date).toMatch(/2025/)
+  })
+
+  it('explains a file it can’t restore', () => {
+    expect(readBackupError('not_backup')).toBe('That file isn’t a Settle backup. Pick the .json file Settle saved.')
+    expect(readBackupError('too_big')).toBe('That file is too big to be a Settle backup.')
   })
 })
 

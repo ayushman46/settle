@@ -13,12 +13,14 @@ import {
   saveExpense,
   updateProfile,
 } from '../../data'
+import { stuckStore } from '../../data/stores'
 import { draft } from '../../data/testKit'
 import { ME_ID } from '../../domain/types'
 import { licenseToken } from '../../pro'
 import { SESSION_KEY } from '../../state/persist'
 import { forgetActivityView, rememberActivityView, rememberedActivityView } from '../activity/viewMemory'
 import { paywallState } from '../pro/paywall'
+import { stuckPayment } from '../stuck/testKit'
 import { currentUrl, installPro, renderAt, resetProScreens, serveBilling, testSigner } from '../pro/testing'
 import { LAST_BACKUP_KEY, lastBackupAt, resetLastBackupForTests, setLastBackupAt } from './backupFiles'
 import { YouScreen } from './YouScreen'
@@ -190,6 +192,20 @@ describe('YouScreen — backups', () => {
     expect(profileStore.get().name).toBe('Ayush')
   })
 
+  it('counts stuck payments in a backup, and on this phone (so replacing them is a choice, with a warning)', async () => {
+    const file = backupFile(
+      () => stuckStore.set([stuckPayment({ id: 's1' }), stuckPayment({ id: 's2' })]),
+      () => stuckStore.set([stuckPayment({ id: 'here' })]),
+    )
+    const { user, container } = renderYou()
+    expect(row(/^Save a backup/)).toHaveTextContent('Not backed up yet')
+    await user.upload(fileInput(container), file)
+    const sheet = await screen.findByRole('dialog', { name: 'Restore this backup?' })
+    expect(sheet).toHaveAccessibleDescription('Saved today · 2 stuck payments')
+    await user.click(within(sheet).getByRole('radio', { name: /^Replace/ }))
+    expect(within(sheet).getByText(/recurring splits and stuck money on this phone are swapped/)).toBeInTheDocument()
+  })
+
   it('moves between merge and replace with the arrow keys', async () => {
     const file = backupFile(() => saveExpense(draft()), () => saveExpense(draft()))
     const { user, container } = renderYou()
@@ -206,7 +222,7 @@ describe('YouScreen — backups', () => {
     saveExpense(draft({ title: 'Mine' }))
     const { user, container } = renderYou()
     await user.upload(fileInput(container), new File(['{"hello":"world"}'], 'notes.json', { type: 'application/json' }))
-    expect(await screen.findByText("That file isn't a Settle backup. Pick the .json file Settle saved.")).toBeInTheDocument()
+    expect(await screen.findByText('That file isn’t a Settle backup. Pick the .json file Settle saved.')).toBeInTheDocument()
     expect(screen.queryByRole('dialog', { name: 'Restore this backup?' })).not.toBeInTheDocument()
     expect(expensesStore.get().map((e) => e.title)).toEqual(['Mine'])
   })
@@ -216,7 +232,7 @@ describe('YouScreen — backups', () => {
     const input = fileInput(container)
     const file = new File(['nope'], 'x.json')
     fireEvent.change(input, { target: { files: [file] } })
-    expect(await screen.findByText(/isn't a Settle backup/)).toBeInTheDocument()
+    expect(await screen.findByText(/isn’t a Settle backup/)).toBeInTheDocument()
     expect(input.value).toBe('')
   })
 })
@@ -273,13 +289,21 @@ describe('YouScreen — clear all data', () => {
     const { user } = renderYou()
     await user.click(row(/^Clear all data/))
     const sheet = await screen.findByRole('dialog', { name: 'Clear everything?' })
-    expect(sheet).toHaveAccessibleDescription(/Your profile, people, expenses, groups, recurring splits and any bill in progress/)
+    expect(sheet).toHaveAccessibleDescription(/Your profile, people, expenses, groups, recurring splits, stuck money and any bill in progress/)
     await user.click(within(sheet).getByRole('button', { name: 'Save a backup first' }))
     expect(await screen.findByText('Backup saved to your downloads')).toBeInTheDocument()
     expect(downloads).toHaveLength(1)
     await user.click(within(sheet).getByRole('button', { name: 'Keep my data' }))
     await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Clear everything?' })).not.toBeInTheDocument())
     expect(expensesStore.get()).toHaveLength(1)
+  })
+
+  it('offers a backup first when only stuck money is here', async () => {
+    stuckStore.set([stuckPayment()])
+    const { user } = renderYou()
+    await user.click(row(/^Clear all data/))
+    const sheet = await screen.findByRole('dialog', { name: 'Clear everything?' })
+    expect(within(sheet).getByRole('button', { name: 'Save a backup first' })).toBeInTheDocument()
   })
 
   it('clears everything on this phone, sends you to the welcome, and can undo it', async () => {

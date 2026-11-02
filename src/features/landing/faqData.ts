@@ -28,7 +28,7 @@ export const FAQ: readonly FaqEntry[] = [
     question: 'A payment failed but the money left my account. What does Stuck money do?',
     answer: [
       `It keeps track until the money is back. Paste or share the bank SMS, or add it in three taps — the ${NAME} Android app spots failed payments and refunds in your UPI app’s and (if you allow it) your bank’s alerts by itself, and ticks them off when the money comes back.`,
-      'It knows the RBI’s deadline for each kind of payment: a failed UPI payment to a person must be back by the next day; one to a shop (by UPI or card), or an ATM that didn’t give cash, within five days. When it’s late, Stuck money counts what the bank owes you for the wait and has the complaint ready — to your bank or UPI app, then after 30 days to the RBI Ombudsman.',
+      'It knows the RBI’s deadlines for failed UPI, IMPS, card, ATM, AePS, NACH and wallet payments: a failed UPI payment to a person must be back by the next day; one to a shop (by UPI or card), or an ATM that didn’t give cash, within five days. When it’s late, Stuck money counts what the bank owes you for the wait and has the complaint ready — to your bank or UPI app, then, if the bank doesn’t sort it out within 30 days, to the RBI Ombudsman.',
       'Refunds a business promised — Amazon, Flipkart, Swiggy, Zomato, IRCTC, airlines — go the same way: the business first, then the National Consumer Helpline (1915), then a consumer commission, or AirSewa for a flight.',
     ],
   },
@@ -36,7 +36,7 @@ export const FAQ: readonly FaqEntry[] = [
     id: 'stuck-compensation',
     question: 'Is the ₹100 a day real?',
     answer: [
-      'Yes. The RBI’s circular on failed transactions (RBI/2019-20/67, 20 September 2019) gives each kind of payment a deadline, counted in calendar days from the day you paid, and says that past it the bank pays you ₹100 for every day of delay — on its own, without waiting for you to complain. Most banks don’t, so Stuck money works out the amount and puts it in your letter.',
+      'Yes. The RBI’s circular on failed transactions (RBI/2019-20/67, 20 September 2019) gives each kind of payment a deadline, counted in calendar days from the day you paid, and says that past it the bank pays you ₹100 for every day of delay — on its own, without waiting for you to complain. Banks don’t always pay it on their own, so Stuck money works out the amount and puts it in your letter.',
       `It covers payments that failed but took your money — UPI, cards, ATMs, IMPS and the like — not a shop’s refund. ${NAME} states the published rules and where to complain; it isn’t legal advice, and it can’t make a bank pay.`,
     ],
   },
@@ -52,7 +52,7 @@ export const FAQ: readonly FaqEntry[] = [
     id: 'privacy',
     question: 'Where is my data stored?',
     answer: [
-      `On your phone. There’s no account and no database — your splits, friends and groups are saved in your browser on this device, and you can back them up to a file whenever you like.`,
+      `On your phone. There’s no account and no database — your splits, friends, groups and stuck payments are saved in your browser on this device, and you can back them up to a file whenever you like.`,
       'A pay link carries its split inside the link itself, after the “#”. That part never reaches a server.',
     ],
   },

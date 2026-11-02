@@ -4,7 +4,7 @@ import { Avatar, SectionHeader } from '../../components'
 import { useFriends, useSummary } from '../../data'
 import { ME_ID, type Friend, type Minor } from '../../domain/types'
 import { cx } from '../../lib/cx'
-import { useT } from '../../i18n'
+import { t, useT } from '../../i18n'
 import { formatMoney } from '../../lib/money'
 import { firstName } from '../../share/text'
 import { ADD_FRIEND_PATH, FRIENDS_PATH, friendPath, PEOPLE_SHOWN } from './homeLinks'
@@ -17,8 +17,8 @@ import styles from './HomeScreen.module.css'
 function spokenName(friend: Friend, balance: Minor, currency: string): string {
   if (balance === 0) return friend.name
   const amount = formatMoney(Math.abs(balance), currency, { trimZeros: true })
-  const who = firstName(friend.name)
-  return balance > 0 ? `${who} ${amount}, owes you` : `${who} ${amount}, you owe`
+  const name = firstName(friend.name)
+  return t(balance > 0 ? 'home.people.owesYouAria' : 'home.people.youOweAria', { name, amount })
 }
 
 /**
@@ -58,7 +58,7 @@ export function PeopleRow() {
           )
         })}
         <li className={styles.personCell}>
-          <Link to={ADD_FRIEND_PATH} className={styles.person} aria-label="Add a person">
+          <Link to={ADD_FRIEND_PATH} className={styles.person} aria-label={t('home.people.addAria')}>
             <span className={styles.addDisc} aria-hidden="true">
               <UserPlus strokeWidth={2.25} />
             </span>

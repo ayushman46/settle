@@ -147,7 +147,7 @@ export const groups = {
   'groups.menu.delete.subtitle': 'దాని అన్ని ఖర్చులతో',
   // Delete a group.
   'groups.delete.title': '{name} ను తొలగించాలా?',
-  'groups.delete.body': '{count, plural, =0 {తొలగించిన వెంటనే వెనక్కి తీసుకోవచ్చు.} one {దాని # ఖర్చు కూడా పోతుంది. తొలగించిన వెంటనే వెనక్కి తీసుకోవచ్చు.} other {దాని # ఖర్చులు కూడా పోతాయి. తొలగించిన వెంటనే వెనక్కి తీసుకోవచ్చు.}}',
+  'groups.delete.body': '{count, plural, =0 {తొలగించిన వెంటనే రద్దు చేయవచ్చు.} one {దాని # ఖర్చు కూడా పోతుంది. తొలగించిన వెంటనే రద్దు చేయవచ్చు.} other {దాని # ఖర్చులు కూడా పోతాయి. తొలగించిన వెంటనే రద్దు చేయవచ్చు.}}',
   'groups.delete.cta': 'గ్రూప్ తొలగించండి',
   'groups.delete.keep.cta': 'ఉంచండి',
   // A recorded payment, opened from the timeline.

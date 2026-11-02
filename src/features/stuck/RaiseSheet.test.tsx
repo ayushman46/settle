@@ -6,7 +6,8 @@ import { ToastProvider } from '../../components'
 import { updateProfile } from '../../data'
 import { stuckStore, type StuckPayment, type StuckStepKind } from '../../data/stores'
 import { formatMoney } from '../../lib/money'
-import { letterFor, ombudsmanFields } from './letters'
+import { letterMeStore } from './letterMe'
+import { letterFor, ombudsmanFields, withSubject } from './letters'
 import { RaiseSheet } from './RaiseSheet'
 
 const TODAY = '2026-11-02'
@@ -32,6 +33,7 @@ function failed(over: Partial<StuckPayment> = {}): StuckPayment {
     source: 'sms',
     confirmed: true,
     steps: [],
+    repliedAt: null,
     back: null,
     dismissedAt: null,
     note: null,
@@ -99,22 +101,66 @@ describe('RaiseSheet — the bank', () => {
     const letter = letterFor('bank', failed(), ME, TODAY)
     expect(letterBox()).toHaveTextContent(letter.body.replace(/\s+/g, ' '), { normalizeWhitespace: true })
     expect(letterBox()).toHaveTextContent(`compensation due so far is ${inr(80_000)}`)
-    expect(within(sheet).getByText(letter.subject)).toBeInTheDocument()
-    expect(within(sheet).getByRole('link', { name: 'NPCI’s MyUPI (opens in a new tab)' })).toHaveAttribute('href', 'https://www.upihelp.npci.org.in/')
+    // The subject once, inside the letter.
+    expect(within(sheet).getAllByText(new RegExp(`Subject: ${letter.subject.replace(/[()]/g, '.')}`))).toHaveLength(1)
+    expect(within(sheet).getByRole('link', { name: 'UPI help website (opens in a new tab)' })).toHaveAttribute('href', 'https://www.upihelp.npci.org.in/')
   })
 
-  it('marks what is left to fill in', () => {
+  it('says above the English letter, in the app’s words, what it asks for', () => {
+    const { sheet } = show(failed(), 'bank')
+    expect(within(sheet).getByText(`It asks for ${inr(50_000)} back, and the ${inr(80_000)} owed so far for the delay (₹100 a day).`)).toBeInTheDocument()
+    expect(within(sheet).getByText(/^The letter is in English/)).toBeInTheDocument()
+    expect(letterBox().closest('[lang]')).toHaveAttribute('lang', 'en')
+  })
+
+  it('leaves out the UPI help website once its 45 days are over', () => {
+    const { sheet } = show(failed({ date: '2026-09-13' }), 'bank')
+    expect(within(sheet).queryByRole('link', { name: /UPI help website/ })).not.toBeInTheDocument()
+    expect(within(sheet).getByText(/only takes complaints within 45 days of the payment, and that time has passed/)).toBeInTheDocument()
+  })
+
+  it('marks what is left to fill in, and says how much', () => {
     show(failed(), 'bank')
     const blank = within(letterBox()).getByText('[your mobile number]')
     expect(blank.tagName).toBe('MARK')
-    expect(screen.getByText('Fill in the parts in [brackets] before you send it.')).toBeInTheDocument()
+    expect(screen.getByText('1 part in [brackets] is still to fill in. Fill it in before you send it.')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Copy the letter' })).toHaveAccessibleDescription('1 part in [brackets] is still to fill in. Fill it in before you send it.')
   })
 
-  it('copies the letter and says so', async () => {
+  it('asks once for your details, puts them in the letter, and keeps them for the next one', async () => {
     const { user } = show(failed(), 'bank')
-    await user.click(screen.getByRole('button', { name: 'Copy' }))
+    expect(screen.getByRole('heading', { name: 'Your details' })).toBeInTheDocument()
+    await user.type(screen.getByRole('textbox', { name: 'Mobile number' }), '98200 12345')
+    await user.type(screen.getByRole('textbox', { name: 'Address (optional)' }), '12 MG Road, Pune')
+    expect(letterBox()).toHaveTextContent('Mobile: 98200 12345 Address: 12 MG Road, Pune', { normalizeWhitespace: true })
+    expect(within(letterBox()).queryByText('[your mobile number]')).not.toBeInTheDocument()
+    expect(screen.queryByText(/still to fill in/)).not.toBeInTheDocument()
+    expect(letterMeStore.get()).toMatchObject({ mobile: '98200 12345', address: '12 MG Road, Pune' })
+  })
+
+  it('shows details already given as one line, to change if need be', async () => {
+    letterMeStore.set({ mobile: '98200 12345', place: '', address: '', emails: {}, revoked: {} })
+    const { user } = show(failed(), 'bank')
+    expect(screen.queryByRole('textbox', { name: 'Mobile number' })).not.toBeInTheDocument()
+    expect(screen.getByText('98200 12345')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Change your details' }))
+    expect(screen.getByRole('textbox', { name: 'Mobile number' })).toHaveValue('98200 12345')
+  })
+
+  it('copies the letter from the main button, and says so', async () => {
+    const { user } = show(failed(), 'bank')
+    await user.click(screen.getByRole('button', { name: 'Copy the letter' }))
     expect(await navigator.clipboard.readText()).toBe(letterFor('bank', failed(), ME, TODAY).body)
     expect(screen.getByRole('button', { name: 'Copied' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'I’ve raised it' })).toBeInTheDocument()
+  })
+
+  it('copies a business message with its subject first', async () => {
+    const { user } = show(refund(), 'merchant')
+    await user.click(screen.getByRole('button', { name: 'Copy the message' }))
+    const message = letterFor('merchant', refund(), ME, TODAY)
+    expect(await navigator.clipboard.readText()).toBe(withSubject(message))
+    expect((await navigator.clipboard.readText()).startsWith(`Subject: ${message.subject}\n\n`)).toBe(true)
   })
 
   it('shares the letter with its subject on the share sheet', async () => {
@@ -137,10 +183,34 @@ describe('RaiseSheet — the bank', () => {
     expect(await screen.findByText('Copied. Paste it where you’re sending it.')).toBeInTheDocument()
   })
 
-  it('emails it: subject and text filled in, no recipient', () => {
+  it('emails it: subject and text filled in, no recipient until you give one', () => {
     show(failed(), 'bank')
     const letter = letterFor('bank', failed(), ME, TODAY)
     expect(screen.getByRole('link', { name: 'Email' })).toHaveAttribute('href', `mailto:?subject=${encodeURIComponent(letter.subject)}&body=${encodeURIComponent(letter.body)}`)
+  })
+
+  it('emails your bank at the address you give, and remembers it for that bank', async () => {
+    const { user } = show(failed(), 'bank')
+    await user.type(screen.getByRole('textbox', { name: 'Send it to (email)' }), 'grievance@hdfc.example')
+    expect(screen.getByRole('link', { name: 'Email' }).getAttribute('href')).toMatch(/^mailto:grievance@hdfc\.example\?subject=/)
+    expect(letterMeStore.get().emails).toEqual({ 'bank:hdfc': 'grievance@hdfc.example' })
+  })
+
+  it('prints the letter, with a line to sign and a copy for the branch to stamp', async () => {
+    const print = vi.spyOn(window, 'print').mockImplementation(() => undefined)
+    const { user } = show(failed(), 'bank')
+    await user.click(screen.getByRole('button', { name: 'Print or save as PDF' }))
+    expect(print).toHaveBeenCalledTimes(1)
+    const paper = document.body.querySelector(':scope > [lang="en"]')
+    expect(paper).toHaveTextContent('ACKNOWLEDGEMENT COPY')
+    expect(paper).toHaveTextContent('Signature:')
+    print.mockRestore()
+  })
+
+  it('has no Print where the phone can’t print (the Android app without its file plugin)', () => {
+    vi.stubGlobal('Capacitor', { isNativePlatform: () => true, getPlatform: () => 'android', PluginHeaders: [] })
+    show(failed(), 'bank')
+    expect(screen.queryByRole('button', { name: 'Print or save as PDF' })).not.toBeInTheDocument()
   })
 
   it('asks for the compensation when the money came back late', () => {
@@ -148,6 +218,20 @@ describe('RaiseSheet — the bank', () => {
     const { sheet } = show(back, 'bank', { compensationOnly: true })
     expect(sheet).toHaveAccessibleName(`Ask for the ${inr(50_000)} compensation`)
     expect(letterBox()).toHaveTextContent(`I request you to credit the compensation of ${inr(50_000)} due under the circular.`)
+  })
+})
+
+describe('RaiseSheet — a NACH debit', () => {
+  it('asks whether the mandate was cancelled first, and writes the letter to match', async () => {
+    const nach = failed({ rail: 'nach', party: 'Cult Fitness', merchant: null, app: null, date: '2026-10-30' })
+    const { user } = show(nach, 'bank')
+    const group = screen.getByRole('radiogroup', { name: 'Had you cancelled this mandate with your bank before the debit?' })
+    expect(within(group).getByRole('radio', { name: 'No' })).toBeChecked()
+    expect(letterBox()).toHaveTextContent('but the transaction failed')
+    await user.click(within(group).getByRole('radio', { name: 'Yes, I’d cancelled it' }))
+    expect(letterBox()).toHaveTextContent('although I had revoked that mandate with the bank on [date you revoked the mandate]')
+    expect(letterBox()).not.toHaveTextContent('transaction failed')
+    expect(letterMeStore.get().revoked).toEqual({ s1: '' })
   })
 })
 
@@ -174,7 +258,7 @@ describe('RaiseSheet — "I’ve raised it"', () => {
     await user.click(screen.getByRole('button', { name: 'I’ve raised it' }))
     expect(screen.getByRole('textbox', { name: 'Ticket number' })).toHaveValue('')
     await user.click(screen.getByRole('button', { name: 'Back' }))
-    expect(screen.getByRole('dialog')).toHaveAccessibleName('Ask Amazon for the refund')
+    expect(screen.getByRole('dialog')).toHaveAccessibleName('Raise it with Amazon')
     await user.click(screen.getByRole('button', { name: 'I’ve raised it' }))
     await user.click(screen.getByRole('button', { name: 'Save' }))
     expect(stuckStore.get()[0]?.steps).toEqual([{ kind: 'merchant', date: TODAY, ref: null }])
@@ -192,17 +276,33 @@ describe('RaiseSheet — further up', () => {
     expect(within(sheet).getByRole('heading', { name: 'For the form' })).toBeInTheDocument()
     const fields = ombudsmanFields(raised, ME, TODAY)
     expect(within(sheet).getByText('HDFC Bank')).toBeInTheDocument()
-    expect(within(sheet).getByText('1 Oct 2026, complaint number HDFC-88213')).toBeInTheDocument()
+    expect(within(sheet).getByText('1 October 2026, complaint number HDFC-88213')).toBeInTheDocument()
     await user.click(within(sheet).getByRole('button', { name: 'Copy Relief sought' }))
     expect(await navigator.clipboard.readText()).toBe(fields.find((f) => f.id === 'relief')?.value)
     expect(within(sheet).getByRole('button', { name: 'Relief sought copied' })).toBeInTheDocument()
     expect(letterBox()).toHaveTextContent('Reserve Bank - Integrated Ombudsman Scheme, 2026')
+    // The RBI's complaint centre takes it by email too.
+    expect(within(sheet).getByRole('link', { name: 'Email' }).getAttribute('href')).toMatch(/^mailto:crpc@rbi\.org\.in\?subject=/)
   })
 
-  it('sends the National Consumer Helpline the message on WhatsApp, or calls 1915', () => {
+  it('takes a wallet to the RBI Ombudsman as the wallet company, with the registered mobile', () => {
+    const paytm = failed({ rail: 'wallet', app: 'paytm', bank: null, account: null, steps: [{ kind: 'bank', date: '2026-10-01', ref: null }] })
+    const { sheet } = show(paytm, 'ombudsman')
+    expect(within(sheet).getByText('Wallet company')).toBeInTheDocument()
+    expect(within(sheet).getByText('Paytm Payments Bank Ltd')).toBeInTheDocument()
+    expect(within(sheet).getByText('Registered mobile')).toBeInTheDocument()
+  })
+
+  it('raises a wallet payment with the wallet', () => {
+    const { sheet } = show(failed({ rail: 'wallet', app: 'paytm', bank: null, account: null }), 'bank')
+    expect(sheet).toHaveAccessibleName('Raise it with Paytm')
+    expect(letterBox()).toHaveTextContent('Paytm Payments Bank Ltd')
+  })
+
+  it('sends the National Consumer Helpline the message on WhatsApp, or calls 1915 or 1800-11-4000', () => {
     const asked = refund({ steps: [{ kind: 'merchant', date: '2026-10-28', ref: 'TKT-55021' }] })
     const { sheet } = show(asked, 'nch')
-    expect(sheet).toHaveAccessibleName('National Consumer Helpline')
+    expect(sheet).toHaveAccessibleName('Take it to the National Consumer Helpline')
     const message = letterFor('nch', asked, ME, TODAY)
     expect(within(sheet).getByRole('heading', { name: 'The message' })).toBeInTheDocument()
     expect(within(sheet).getByRole('link', { name: 'Send on WhatsApp (opens in a new tab)' })).toHaveAttribute(
@@ -210,13 +310,26 @@ describe('RaiseSheet — further up', () => {
       `https://wa.me/918800001915?text=${encodeURIComponent(message.body)}`,
     )
     expect(within(sheet).getByRole('link', { name: 'Call 1915' })).toHaveAttribute('href', 'tel:1915')
+    expect(within(sheet).getByRole('link', { name: 'Call 1800-11-4000' })).toHaveAttribute('href', 'tel:1800114000')
+    // Email isn't how the helpline takes a complaint; copying still works.
+    expect(within(sheet).queryByRole('link', { name: 'Email' })).not.toBeInTheDocument()
+    expect(within(sheet).getByRole('button', { name: 'Copy the message' })).toBeInTheDocument()
     expect(within(sheet).getByRole('link', { name: 'consumerhelpline.gov.in (opens in a new tab)' })).toHaveAttribute('href', 'https://consumerhelpline.gov.in')
+  })
+
+  it('signs the helpline message with your city once you give it', async () => {
+    const { user } = show(refund(), 'nch')
+    await user.type(screen.getByRole('textbox', { name: 'City and state' }), 'Pune, Maharashtra')
+    const whatsapp = screen.getByRole('link', { name: 'Send on WhatsApp (opens in a new tab)' }).getAttribute('href') ?? ''
+    expect(decodeURIComponent(whatsapp)).toContain('Ayush Mishra, Pune, Maharashtra')
+    expect(decodeURIComponent(whatsapp)).not.toContain('[your city and state]')
   })
 
   it('files on AirSewa for an airline, and with a commission on e-Jagriti', () => {
     const flight = refund({ merchant: 'indigo', orderId: 'Q7XK2P' })
     const { sheet } = show(flight, 'airsewa')
-    expect(sheet).toHaveAccessibleName('Complain on AirSewa')
+    expect(sheet).toHaveAccessibleName('Take it to AirSewa')
+    expect(within(sheet).queryByRole('link', { name: 'Email' })).not.toBeInTheDocument()
     expect(within(sheet).getByRole('link', { name: 'Open AirSewa (opens in a new tab)' })).toHaveAttribute('href', 'https://airsewa.gov.in')
     expect(letterBox()).toHaveTextContent('PNR / booking reference: Q7XK2P')
   })
@@ -230,11 +343,13 @@ describe('RaiseSheet — further up', () => {
 
   it('opens the business’s own help when Settle knows it', () => {
     const { sheet } = show(refund(), 'merchant')
-    expect(sheet).toHaveAccessibleName('Ask Amazon for the refund')
-    expect(within(sheet).getByRole('link', { name: 'Amazon on refunds (opens in a new tab)' })).toHaveAttribute(
+    expect(sheet).toHaveAccessibleName('Raise it with Amazon')
+    expect(within(sheet).getByRole('link', { name: 'Open Amazon’s refund help (opens in a new tab)' })).toHaveAttribute(
       'href',
       'https://www.amazon.in/gp/help/customer/display.html?nodeId=202111770',
     )
     expect(letterBox()).toHaveTextContent('Order / booking number: 404-1234567-7654321')
+    // The main button copies the message; the help page is one of the links.
+    expect(within(sheet).getByRole('button', { name: 'Copy the message' })).toBeInTheDocument()
   })
 })

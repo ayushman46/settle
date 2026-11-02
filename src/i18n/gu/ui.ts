@@ -24,6 +24,7 @@ export const ui = {
   'ui.emoji.label': 'ઇમોજી',
   'ui.search.submit.aria': 'જાઓ',
   'ui.toast.action.aria': '{action}: {message}',
+  'ui.toast.dismiss.aria': 'મેસેજ છુપાવો',
   'ui.qr.tooLong': 'આ કોડ QR તરીકે બતાવવા માટે બહુ લાંબો છે.',
   'ui.search.example': 'દાખલા તરીકે: {example}',
 } as const satisfies Messages

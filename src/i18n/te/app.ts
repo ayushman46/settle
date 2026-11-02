@@ -7,6 +7,10 @@ export const app = {
   'app.tab.groups': 'గ్రూప్‌లు',
   'app.tab.activity': 'చరిత్ర',
   'app.tab.you': 'మీరు',
+
+  // The line under the logo (You's footer).
+  'app.tagline': 'ఏదైనా పంచండి. ఒక్క ట్యాప్‌లో లెక్క తేల్చండి.',
+
   // The browser tab's title: "{page} · Settle".
   'app.title.format': '{page} · {brand}',
   // Page names for the browser tab (one per screen).

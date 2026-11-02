@@ -23,6 +23,8 @@ test.describe('smoke', () => {
     await expect(page.getByRole('button', { name: /Slide 2:/ })).toHaveAttribute('aria-current', 'step')
     await page.getByRole('button', { name: 'Next' }).click()
     await expect(page.getByRole('button', { name: /Slide 3:/ })).toHaveAttribute('aria-current', 'step')
+    await page.getByRole('button', { name: 'Next' }).click()
+    await expect(page.getByRole('button', { name: /Slide 4:/ })).toHaveAttribute('aria-current', 'step')
     await page.getByRole('button', { name: 'Get started' }).click()
 
     // A name is required; a bad UPI ID is caught before anything is saved.

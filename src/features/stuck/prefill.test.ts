@@ -62,7 +62,7 @@ describe('from a message', () => {
   it('money coming back is not a new stuck payment', () => {
     expect(prefillFromSignal({ ...base, type: 'reversal' }, 'sms')).toBeNull()
     expect(prefillFromSignal({ ...base, type: 'refund_credited' }, 'sms')).toBeNull()
-    expect(prefillFromSignal({ ...base, type: 'debit' }, 'sms')).toBeNull()
+    expect(prefillFromSignal({ ...base, type: 'debit', vpa: null, rail: null }, 'sms')).toBeNull()
   })
 })
 

@@ -43,6 +43,13 @@ describe('HomeScreen — greeting', SLOW, () => {
     expect(screen.getByText('Good evening')).toBeInTheDocument()
   })
 
+  it('only says hi in the small hours', () => {
+    atTime(new Date(2026, 9, 22, 4, 4))
+    renderHome()
+    expect(screen.getByRole('heading', { level: 1, name: 'Hi, Ayush' })).toBeInTheDocument()
+    expect(screen.queryByText(/^Good (morning|afternoon|evening)$/)).not.toBeInTheDocument()
+  })
+
   it('says “Hi there” to someone who skipped their name', () => {
     updateProfile({ name: 'You' })
     renderHome()
@@ -100,7 +107,7 @@ describe('HomeScreen — quick actions', SLOW, () => {
   it.each([
     ['Split amount', '/app/split/new'],
     ['New group', '/app/groups?new=1'],
-    ['Rent', '/app/split/new?category=rent'],
+    ['Stuck money', '/app/stuck'],
     ['Trip', '/app/split/new?category=travel'],
     ['Subscription', '/app/split/new?category=subscription'],
     ['Utilities', '/app/split/new?category=utilities'],
@@ -113,7 +120,7 @@ describe('HomeScreen — quick actions', SLOW, () => {
       await user.click(tile)
     } else {
       await user.click(grid.getByRole('button', { name: 'More' }))
-      const sheet = await screen.findByRole('dialog', { name: 'More ways to split' })
+      const sheet = await screen.findByRole('dialog', { name: 'More' })
       await user.click(within(sheet).getByRole('button', { name: label }))
     }
     expect(currentUrl()).toBe(url)
@@ -137,22 +144,33 @@ describe('HomeScreen — quick actions', SLOW, () => {
     expect(labels.at(-1)).toBe('More')
   })
 
-  it('More opens every everyday template; Cab starts a cab split', async () => {
+  it('More opens every everyday template (Rent & HRA in place of a second Rent); Cab starts a cab split', async () => {
     const { user } = renderHome()
     await user.click(within(screen.getByRole('list', { name: 'Quick actions' })).getByRole('button', { name: 'More' }))
-    const sheet = await screen.findByRole('dialog', { name: 'More ways to split' })
-    expect(within(sheet).getAllByRole('button').map((b) => b.textContent).filter((t) => t !== 'Close')).toEqual(
-      expect.arrayContaining(['Rent', 'Trip', 'Subscription', 'Utilities', 'Cab']),
-    )
-    await user.click(within(sheet).getByRole('button', { name: 'Cab' }))
+    const sheet = await screen.findByRole('dialog', { name: 'More' })
+    const splits = within(within(sheet).getByRole('region', { name: 'Start a split' }))
+    const labels = splits.getAllByRole('button').map((b) => b.textContent)
+    expect(labels).toEqual(expect.arrayContaining(['Rent & HRA', 'Electricity', 'Trip', 'Subscription', 'Utilities', 'Cab']))
+    expect(labels).not.toContain('Rent')
+    await user.click(splits.getByRole('button', { name: 'Cab' }))
     expect(currentUrl()).toBe('/app/split/new?category=transport')
   })
 
-  it('More opens Stuck money', async () => {
+  it('More puts getting money back first, apart from the ways to split', async () => {
     const { user } = renderHome()
     await user.click(within(screen.getByRole('list', { name: 'Quick actions' })).getByRole('button', { name: 'More' }))
-    const sheet = await screen.findByRole('dialog', { name: 'More ways to split' })
-    await user.click(within(sheet).getByRole('button', { name: 'Stuck money' }))
+    const sheet = await screen.findByRole('dialog', { name: 'More' })
+    expect(sheet).toHaveAccessibleDescription('Get your money back, or start a split.')
+    const back = within(within(sheet).getByRole('region', { name: 'Get your money back' }))
+    expect(back.getAllByRole('button').map((b) => b.textContent)).toEqual(['Stuck money', 'To collect', 'Who’s paid?', 'Paid screenshot'])
+    await user.click(back.getByRole('button', { name: 'Stuck money' }))
+    expect(currentUrl()).toBe('/app/stuck')
+  })
+
+  it('offers Stuck money on the grid before anything is stuck', async () => {
+    const { user } = renderHome()
+    expect(screen.queryByRole('region', { name: 'Stuck money' })).not.toBeInTheDocument()
+    await user.click(within(screen.getByRole('list', { name: 'Quick actions' })).getByRole('button', { name: 'Stuck money' }))
     expect(currentUrl()).toBe('/app/stuck')
   })
 })
@@ -166,8 +184,33 @@ describe('HomeScreen — stuck money', SLOW, () => {
     stuckStore.set([stuckPayment({ date: '2026-10-20' })])
     const { user } = renderHome()
     const card = screen.getByRole('region', { name: 'Stuck money' })
-    await user.click(within(card).getByRole('button', { name: /^₹500 stuck with banks and shops 1 needs you/ }))
-    expect(currentUrl()).toBe('/app/stuck')
+    await user.click(within(card).getByRole('button', { name: /₹500/ }))
+    expect(currentUrl()).toMatch(/^\/app\/stuck/)
+  })
+
+  it('comes before the first-split invitation', () => {
+    stuckStore.set([stuckPayment({ date: '2026-10-20' })])
+    renderHome()
+    const card = screen.getByRole('region', { name: 'Stuck money' })
+    const invite = screen.getByRole('region', { name: 'Split your first expense' })
+    expect(card.compareDocumentPosition(invite) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
+  it('comes before the balance when it needs you, and after it while it waits', () => {
+    const riya = addFriend({ name: 'Riya' }).id
+    seedExpense({ with: [riya] })
+    // Late: due back the day after 20 Oct.
+    stuckStore.set([stuckPayment({ date: '2026-10-20' })])
+    const { unmount } = renderHome()
+    const balance = () => screen.getByRole('region', { name: 'Your balance' })
+    const stuck = () => screen.getByRole('region', { name: 'Stuck money' })
+    expect(stuck().compareDocumentPosition(balance()) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    unmount()
+    // Paid today: the bank still has time, so it waits lower down.
+    stuckStore.set([stuckPayment({ date: '2026-10-22' })])
+    renderHome()
+    expect(screen.getAllByRole('region', { name: 'Stuck money' })).toHaveLength(1)
+    expect(balance().compareDocumentPosition(stuck()) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
 })
 
@@ -329,7 +372,10 @@ describe('greeting', () => {
     expect(timeOfDayGreeting(12)).toBe('Good afternoon')
     expect(timeOfDayGreeting(16)).toBe('Good afternoon')
     expect(timeOfDayGreeting(17)).toBe('Good evening')
-    expect(timeOfDayGreeting(2)).toBe('Good evening')
+    expect(timeOfDayGreeting(23)).toBe('Good evening')
+    // After midnight "Good evening" is wrong and "Good morning" too soon: just "Hi, Ayush".
+    expect(timeOfDayGreeting(0)).toBeNull()
+    expect(timeOfDayGreeting(4)).toBeNull()
     expect(currentHour()).toBe(19)
   })
 

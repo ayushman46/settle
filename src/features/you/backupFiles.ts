@@ -7,6 +7,7 @@ import { useSyncExternalStore } from 'react'
 import { CSV_BOM, exportBackup, exportCsv, parseBackup, type BackupFile } from '../../data'
 import { BRAND, ME_ID, type Expense, type Friend, type Group } from '../../domain/types'
 import { daysBetween, toIsoDate, today } from '../../engine/dates'
+import { t, type MessageKey } from '../../i18n'
 import { relativeDateLabel } from '../../kit/index-a'
 
 /* ------------------------------------------------------------------ names */
@@ -62,43 +63,55 @@ export async function readBackupFile(file: Blob): Promise<ReadBackupResult> {
   return backup ? { ok: true, backup } : { ok: false, reason: 'not_backup' }
 }
 
-export const READ_BACKUP_ERRORS: Readonly<Record<Exclude<ReadBackupResult, { ok: true }>['reason'], string>> = {
-  not_backup: `That file isn't a ${BRAND.name} backup. Pick the .json file ${BRAND.name} saved.`,
-  too_big: `That file is too big to be a ${BRAND.name} backup.`,
-  unreadable: "Couldn't open that file. Try again, or pick it from another folder.",
+export const READ_BACKUP_ERRORS: Readonly<Record<Exclude<ReadBackupResult, { ok: true }>['reason'], MessageKey>> = {
+  not_backup: 'you.restore.error.notBackup',
+  too_big: 'you.restore.error.tooBig',
+  unreadable: 'you.restore.error.unreadable',
+}
+
+/** Why a picked file can't be restored, in the UI language. */
+export function readBackupError(reason: Exclude<ReadBackupResult, { ok: true }>['reason']): string {
+  return t(READ_BACKUP_ERRORS[reason], { brand: BRAND.name })
 }
 
 /* ------------------------------------------------------------------ describing a backup */
 
-function count(n: number, one: string, many: string): string | null {
-  return n > 0 ? `${n} ${n === 1 ? one : many}` : null
+function count(n: number, key: MessageKey): string | null {
+  return n > 0 ? t(key, { count: n }) : null
 }
 
-/** "24 expenses · 6 people · 2 groups · 1 recurring split" (only what it has); "Nothing in it yet" when empty. */
-export function backupContents(file: Pick<BackupFile, 'expenses' | 'friends' | 'groups' | 'recurring'>): string {
+/**
+ * "24 expenses · 6 people · 2 groups · 1 recurring split · 2 stuck payments" (only what it has);
+ * "Nothing in it yet" when empty.
+ */
+export function backupContents(file: Pick<BackupFile, 'expenses' | 'friends' | 'groups' | 'recurring' | 'stuck'>): string {
   const parts = [
-    count(file.expenses.length, 'expense', 'expenses'),
-    count(file.friends.filter((f) => f.id !== ME_ID).length, 'person', 'people'),
-    count(file.groups.length, 'group', 'groups'),
-    count(file.recurring.length, 'recurring split', 'recurring splits'),
+    count(file.expenses.length, 'you.restore.contents.expenses'),
+    count(file.friends.filter((f) => f.id !== ME_ID).length, 'you.restore.contents.people'),
+    count(file.groups.length, 'you.restore.contents.groups'),
+    count(file.recurring.length, 'you.restore.contents.recurring'),
+    count(file.stuck.length, 'you.restore.contents.stuck'),
   ].filter((part): part is string => part !== null)
-  return parts.length > 0 ? parts.join(' · ') : 'Nothing in it yet'
+  return parts.length > 0 ? parts.join(' · ') : t('you.restore.contents.empty')
 }
 
-/** When a backup was made: "Saved today", "Saved 12 Oct", or null when the file doesn't say. */
+/** When a backup was made: "Saved today", "Saved on 12 Oct", or null when the file doesn't say. */
 export function backupDateLabel(exportedAt: string, day: string = today()): string | null {
   const ms = Date.parse(exportedAt)
   if (!Number.isFinite(ms)) return null
-  return `Saved ${savedWhen(ms, day)}`
+  return t('you.restore.saved', savedWhen(ms, day))
 }
 
-/** "today", "yesterday", "on 12 Oct" — for "Last saved …". */
-export function savedWhen(epochMs: number, day: string = today()): string {
+/** "Last saved today", "Last saved yesterday", "Last saved on 12 Oct". */
+export function lastSavedLine(epochMs: number, day: string = today()): string {
+  return t('you.data.lastSaved', savedWhen(epochMs, day))
+}
+
+/** Which day something was saved, for the lines above: `today`, `yesterday`, or `on` with its date ("12 Oct"). */
+export function savedWhen(epochMs: number, day: string = today()): { when: 'today' | 'yesterday' | 'on'; date: string } {
   const iso = toIsoDate(new Date(epochMs))
   const ago = daysBetween(iso, day)
-  if (ago === 0) return 'today'
-  if (ago === 1) return 'yesterday'
-  return `on ${relativeDateLabel(iso, day)}`
+  return { when: ago === 0 ? 'today' : ago === 1 ? 'yesterday' : 'on', date: relativeDateLabel(iso, day) }
 }
 
 /* ------------------------------------------------------------------ when the last backup was saved */

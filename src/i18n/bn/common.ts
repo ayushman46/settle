@@ -5,7 +5,7 @@ export const common = {
   'common.action.save': 'সেভ করুন',
   'common.action.cancel': 'বাতিল',
   'common.action.done': 'হয়ে গেছে',
-  'common.action.undo': 'ফিরিয়ে নিন',
+  'common.action.undo': 'আগের মতো করুন',
   'common.action.delete': 'মুছুন',
   'common.action.edit': 'এডিট করুন',
   'common.action.close': 'বন্ধ করুন',

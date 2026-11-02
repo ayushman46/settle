@@ -1,7 +1,7 @@
 import type { Messages } from '../types'
 
 export const collect: Messages = {
-  'collect.title': 'రావలసినవి',
+  'collect.title': 'రావాల్సిన డబ్బు',
   'collect.subtitle': '{count, plural, one {# మంది నుంచి} other {# మంది నుంచి}} {amount} రావాలి. గుర్తు చేయండి, లేదా చెల్లించినవారిని టిక్ చేయండి.',
   'collect.empty.title': 'రావలసింది ఏమీ లేదు',
   'collect.empty.text': 'ఎవరైనా మీకు బాకీ ఉంటే వారు ఇక్కడ ఉంటారు — గుర్తు చేసే మెసేజ్ సిద్ధంగా ఉంటుంది.',

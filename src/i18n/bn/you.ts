@@ -10,6 +10,15 @@ export const you = {
   'you.shortcuts.collections.title': 'চাঁদা',
   'you.shortcuts.collections.subtitle.open': '{count, plural, other {# টি চলছে}}',
   'you.shortcuts.collections.subtitle.none': 'উপহার, অনুষ্ঠান, ট্রিপ',
+  // Under People: who you split with ("Riya, Sam and 4 more"), or a nudge before the first.
+  'you.shortcuts.people.empty': 'যাঁদের সঙ্গে ভাগ করেন, তাঁদের যোগ করুন',
+  'you.shortcuts.people.two': '{first} এবং {second}',
+  'you.shortcuts.people.many': '{first}, {second} এবং {count, plural, other {আরও # জন}}',
+  // Under Recurring splits: what they're for, or "2 active · 1 due".
+  'you.shortcuts.recurring.empty': 'ভাড়া, Wi-Fi, সাবস্ক্রিপশন — প্রতি মাসে ভাগ',
+  'you.shortcuts.recurring.active': '{count, plural, other {# টি চালু}}',
+  'you.shortcuts.recurring.paused': 'সবগুলো বন্ধ আছে',
+  'you.shortcuts.recurring.due': '{count, plural, other {# টির সময় হয়েছে}}',
   'you.celebrate.title': 'Pro চালু হয়েছে',
   'you.pref.title': 'পছন্দসমূহ',
   // Under the language tiles in You → Language.
@@ -29,9 +38,9 @@ export const you = {
   'you.about.terms.subtitle': 'সহজ ভাষায় নিয়মকানুন',
   'you.footer.small': 'যত্ন করে বানানো · কোনো বিজ্ঞাপন নেই · কোনো ট্র্যাকিং নেই',
   'you.theme.label': 'থিম',
-  'you.theme.system': 'ফোনের মতো',
-  'you.theme.light': 'উজ্জ্বল',
-  'you.theme.dark': 'অন্ধকার',
+  'you.theme.system': 'ফোন',
+  'you.theme.light': 'লাইট',
+  'you.theme.dark': 'ডার্ক',
   'you.accent.label': 'অ্যাকসেন্ট রং',
   'you.accent.lime': 'লাইম',
   'you.accent.mint': 'মিন্ট',
@@ -41,7 +50,7 @@ export const you = {
   'you.accent.locked': '{name}, Pro',
   'you.accent.note': 'লাইম বিনামূল্যে। মিন্ট, স্কাই, ভায়োলেট আর করাল Pro-তে আছে।',
   'you.clear.title': 'সবকিছু মুছবেন?',
-  'you.clear.body': 'আপনার প্রোফাইল, লোকজন, খরচ, গ্রুপ, নিয়মিত ভাগ আর চলমান যেকোনো বিল এই ফোন থেকে মুছে যাবে।',
+  'you.clear.body': 'আপনার প্রোফাইল, লোকজন, খরচ, গ্রুপ, নিয়মিত ভাগ, আটকে থাকা টাকার হিসাব আর চলমান যেকোনো বিল এই ফোন থেকে মুছে যাবে।',
   'you.clear.confirm': 'সবকিছু মুছুন',
   'you.clear.keep': 'আমার ডেটা রাখুন',
   'you.clear.backupBody': 'একদিন কি ফেরত চাইতে পারেন? আগে একটি ব্যাকআপ ফাইল সেভ করে রাখুন।',
@@ -86,6 +95,24 @@ export const you = {
   'you.restore.replace.body': 'এই ফোনের সবকিছু ব্যাকআপ দিয়ে বদলে দিন।',
   'you.restore.replace.title': 'এতে এখানকার সবকিছু বদলে যাবে',
   'you.restore.fresh': 'ব্যাকআপের সবকিছু এই ফোনে ফিরে আসবে, প্রোফাইলসহ।',
+  // The banner under Replace.
+  'you.restore.replace.warning': 'এই ফোনে থাকা আপনার প্রোফাইল, লোকজন, খরচ, গ্রুপ, নিয়মিত ভাগ আর আটকে থাকা টাকার হিসাব ব্যাকআপেরগুলো দিয়ে বদলে যাবে। ঠিক পরেই আগের মতো করে নিতে পারবেন।',
+  // The sheet's button: a fresh phone, merging, or replacing.
+  'you.restore.cta.restore': 'ব্যাকআপ ফেরত আনুন',
+  'you.restore.cta.merge': 'ব্যাকআপ মেশান',
+  'you.restore.cta.replace': 'সবকিছু বদলে দিন',
+  // What the picked file holds: "Saved today · 24 expenses · 6 people · 2 stuck payments".
+  'you.restore.saved': '{when, select, today {আজ সেভ করা} yesterday {গতকাল সেভ করা} other {{date}-এ সেভ করা}}',
+  'you.restore.contents.expenses': '{count, plural, one {# টি খরচ} other {# টি খরচ}}',
+  'you.restore.contents.people': '{count, plural, one {# জন লোক} other {# জন লোক}}',
+  'you.restore.contents.groups': '{count, plural, one {# টি গ্রুপ} other {# টি গ্রুপ}}',
+  'you.restore.contents.recurring': '{count, plural, one {# টি নিয়মিত ভাগ} other {# টি নিয়মিত ভাগ}}',
+  'you.restore.contents.stuck': '{count, plural, one {# টি আটকে থাকা পেমেন্ট} other {# টি আটকে থাকা পেমেন্ট}}',
+  'you.restore.contents.empty': 'এতে এখনও কিছু নেই',
+  // A picked file that can't be restored.
+  'you.restore.error.notBackup': 'এই ফাইলটি {brand}-এর ব্যাকআপ নয়। {brand}-এর সেভ করা .json ফাইলটি বেছে নিন।',
+  'you.restore.error.tooBig': 'ফাইলটি {brand}-এর ব্যাকআপ হওয়ার পক্ষে অনেক বড়।',
+  'you.restore.error.unreadable': 'ফাইলটি খোলা গেল না। আবার চেষ্টা করুন, অথবা অন্য ফোল্ডার থেকে বেছে নিন।',
   'you.pro.active': 'সক্রিয়',
   'you.pro.ended': '{date}-এ শেষ হয়েছে',
   'you.pro.manage': 'Pro পরিচালনা করুন',
@@ -103,6 +130,9 @@ export const you = {
   'you.data.restored': 'ব্যাকআপ ফেরত এসেছে',
   'you.data.merged': 'ব্যাকআপ মেশানো হয়েছে — {parts}',
   'you.data.merged.none': 'ব্যাকআপ মেশানো হয়েছে — তাতে নতুন কিছু নেই',
+  // The parts of "Backup merged — 3 added, 1 updated".
+  'you.data.merged.added': '{count}টি যোগ হয়েছে',
+  'you.data.merged.updated': '{count}টি আপডেট হয়েছে',
   'you.data.shared': 'ব্যাকআপ শেয়ার হয়েছে — নিরাপদ জায়গায় রাখুন',
   'you.data.saved': 'ব্যাকআপ আপনার ডাউনলোডে সেভ হয়েছে',
   'you.data.saveFailed': 'ব্যাকআপ সেভ করা যায়নি। আবার চেষ্টা করুন।',
@@ -113,5 +143,13 @@ export const you = {
   'you.data.back': 'সবকিছু ফিরে এসেছে',
   'you.data.notBacked': 'এখনও ব্যাকআপ নেওয়া হয়নি — নিরাপদ জায়গায় একটি কপি রাখুন',
   'you.data.keepCopy': 'সতর্কতার জন্য সবকিছুর একটি কপি রাখুন',
-  'you.data.undo': 'ফিরিয়ে নিন',
+  'you.data.lastSaved': '{when, select, today {আজ শেষ সেভ হয়েছে} yesterday {গতকাল শেষ সেভ হয়েছে} other {{date}-এ শেষ সেভ হয়েছে}}',
+  // Under the Your data card; <link> opens Pro.
+  'you.data.footnote': 'ব্যাকআপে থাকে আপনার লোকজন, খরচ, গ্রুপ, নিয়মিত ভাগ, আটকে থাকা টাকার হিসাব (অভিযোগ নম্বরসহ) আর সেটিংস — আপনার Pro পাস নয়। ফোন বদলাচ্ছেন? <link>{brand} Pro</link> থেকে আপনার Pro কোড কপি করে নতুন ফোনে ব্যবহার করুন।',
+  // The share sheet's title for each file.
+  'you.data.backup.shareTitle': '{brand} ব্যাকআপ',
+  'you.data.csv.shareTitle': '{brand}-এর খরচ',
+  'you.data.csv.shared': '{count, plural, one {# টি খরচ এক্সপোর্ট হয়েছে} other {# টি খরচ এক্সপোর্ট হয়েছে}}',
+  'you.data.csv.saved': '{count, plural, one {# টি খরচ CSV হিসেবে আপনার ডাউনলোডে সেভ হয়েছে} other {# টি খরচ CSV হিসেবে আপনার ডাউনলোডে সেভ হয়েছে}}',
+  'you.data.undo': 'আগের মতো করুন',
 } as const satisfies Messages

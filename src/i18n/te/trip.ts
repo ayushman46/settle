@@ -11,7 +11,7 @@ export const trip = {
   'trip.panel.change': 'మార్చు',
   'trip.panel.changeLabel': 'ఎక్స్చేంజ్ రేటు మార్చండి',
   'trip.panel.loading': 'రేటు తెస్తోంది…',
-  'trip.panel.unavailable': '{date} న {code} కు రేటు లేదు — జోడించండి',
+  'trip.panel.unavailable': '{date} తేదీన {code} కు రేటు లేదు — జోడించండి',
   'trip.panel.notCovered': 'ECB {name} రేట్లను ప్రచురించదు — మీ రసీదు లేదా బ్యాంక్ SMS నుంచి రేటును జోడించండి.',
   'trip.panel.addRate': 'రేటు జోడించండి',
   'trip.panel.saveHint': '{symbol} లో తీర్చేందుకు రేటు జోడించండి',
@@ -28,7 +28,7 @@ export const trip = {
   'trip.source.manualRate': 'మీ రేటు',
   'trip.source.manualTotal': 'మీ బ్యాంక్ వసూలు చేసింది',
   'trip.source.stale': '{date} నాటి రేటు — మీరు ఆఫ్‌లైన్‌లో ఉన్నారు',
-  'trip.source.frozen': '{date} న రేటు ఫ్రీజ్ చేయబడింది',
+  'trip.source.frozen': '{date} తేదీన రేటు ఫ్రీజ్ చేయబడింది',
   // The exchange rate sheet.
   'trip.sheet.title': 'ఎక్స్చేంజ్ రేటు',
   'trip.sheet.mode': 'ఎలా మార్చాలి',

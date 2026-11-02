@@ -211,6 +211,7 @@ function stuckCase(
     app: null,
     source: 'alert',
     confirmed: true,
+    repliedAt: null,
     back: null,
     dismissedAt: null,
     note: null,

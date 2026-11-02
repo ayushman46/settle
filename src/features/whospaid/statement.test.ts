@@ -162,4 +162,19 @@ INR 250.00 credited to A/c no. XX4821 on 24-10-26 (UPI Ref no 629712345678) from
       [25_000, '629712345678'],
     ])
   })
+
+  it('reads one alert per line, with the sender’s name, even without blank lines', () => {
+    const lines =
+      'Rs.7200.00 credited to a/c XX4821 on 22-10-26 by UPI from ARJUN MEHTA (arjun@okaxis) Ref 629412345628 -HDFC Bank\nRs.6000 received from ROHIT VERMA via UPI on 22-10-26. -SBI'
+    expect(splitMessages(lines)).toHaveLength(2)
+    expect(creditsFromSms(lines, '2026-10-27').credits.map((c) => [c.name, c.amount, c.vpa])).toEqual([
+      ['Arjun Mehta', 720_000, 'arjun@okaxis'],
+      ['Rohit Verma', 600_000, null],
+    ])
+  })
+
+  it('names who paid when the UPI ID follows in brackets', () => {
+    const { credits } = creditsFromSms('You have received Rs.2,000.00 from IMRAN KHAN (imrankhan@ybl) on 25-10-26. UPI Ref 629412345627 -Kotak Bank', '2026-10-27')
+    expect(credits).toEqual([expect.objectContaining({ name: 'Imran Khan', vpa: 'imrankhan@ybl', amount: 200_000, utr: '629412345627' })])
+  })
 })

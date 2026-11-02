@@ -240,7 +240,7 @@ export const bill = {
   'bill.result.outcome.owe': 'ನೀವು {name} ಅವರಿಗೆ {amount} ಕೊಡಬೇಕು',
   'bill.result.outcome.getsBack': '{name} ಅವರಿಗೆ {amount} ವಾಪಸ್ ಸಿಗುತ್ತದೆ',
   'bill.result.person.payer': '{paid} ಪಾವತಿಸಿದರು · {amount} ವಾಪಸ್ ಸಿಗುತ್ತದೆ',
-  'bill.result.person.owes': '{name} ಅವರಿಗೆ {amount} ಕೊಡಬೇಕು',
+  'bill.result.person.owes': '{name} ಪಡೆಯಬೇಕಾದದ್ದು {amount}',
   'bill.result.person.nothing': 'ಏನೂ ಕೊಡಬೇಕಿಲ್ಲ',
   'bill.result.person.aria': '{name}, {amount}, {status}',
   'bill.result.person.paid': 'ಪಾವತಿಸಲಾಗಿದೆ',

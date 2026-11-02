@@ -3,7 +3,7 @@ import type { Messages } from '../types'
 
 export const bill = {
   'bill.count.items': '{count, plural, one {# आइटम} other {# आइटम}}',
-  'bill.undo.cta': 'वापस लें',
+  'bill.undo.cta': 'पहले जैसा करें',
 
   'bill.step.scan.docTitle': 'बिल स्कैन करें · {brand}',
   'bill.step.review.docTitle': 'आइटम जाँचें · {brand}',
@@ -104,7 +104,7 @@ export const bill = {
   'bill.people.search.label': 'टेबल के लोगों को खोजें या जोड़ें',
   'bill.people.removed.toast': '{name} को हटाया',
   'bill.people.back.toast': '{name} पहले से वापस हैं',
-  'bill.people.undoFull.toast': 'वापस नहीं हो सका — टेबल भर गई है',
+  'bill.people.undoFull.toast': 'पहले जैसा नहीं हो सका — टेबल भर गई है',
   'bill.people.needTwo.hint': 'कम से कम 2 लोग चुनें',
   'bill.people.needOne.hint': 'एक और व्यक्ति चुनें',
   'bill.people.next.cta': 'आगे: किसने क्या लिया',
@@ -277,7 +277,7 @@ export const bill = {
   'bill.review.added.toast': '{name} जोड़ा',
   'bill.review.removed.toast': '{name} हटाया',
   'bill.review.removedUnnamed.toast': 'आइटम हटाया',
-  'bill.review.undoFull.toast': 'वापस नहीं हो सका — बिल भर गया है',
+  'bill.review.undoFull.toast': 'पहले जैसा नहीं हो सका — बिल भर गया है',
   'bill.review.currency.toast': 'अब {code} में',
 
   'bill.scan.title': 'बिल स्कैन करें',

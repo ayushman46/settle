@@ -8,23 +8,77 @@
  * together with a new corpus case. No regex lookbehind (Safari < 16.4 can't parse it).
  */
 
-export type BankId = 'hdfc' | 'sbi' | 'icici' | 'axis' | 'kotak' | 'pnb' | 'bob' | 'yes' | 'idfc' | 'indusind' | 'paytm' | 'airtel'
+export type BankId =
+  | 'hdfc'
+  | 'sbi'
+  | 'icici'
+  | 'axis'
+  | 'kotak'
+  | 'pnb'
+  | 'bob'
+  | 'yes'
+  | 'idfc'
+  | 'indusind'
+  | 'paytm'
+  | 'airtel'
+  | 'canara'
+  | 'union'
+  | 'boi'
+  | 'central'
+  | 'indianbank'
+  | 'iob'
+  | 'uco'
+  | 'mahabank'
+  | 'idbi'
+  | 'federal'
+  | 'southindian'
+  | 'kvb'
+  | 'cub'
+  | 'tmb'
+  | 'karnataka'
+  | 'rbl'
+  | 'au'
+  | 'equitas'
 export type UpiAppId = 'gpay' | 'phonepe' | 'paytm' | 'bhim' | 'cred' | 'amazonpay' | 'whatsapp'
 
-/** How each bank names itself in an alert (looked for in text with UPI IDs and links removed). */
+/**
+ * How each bank names itself in an alert (looked for in text with UPI IDs and links removed): full
+ * names, short forms only where nothing else uses them — never a bare "union", "federal" or
+ * "indian" ("Indian Oil" is a payee). The earliest match wins, so "State Bank of India", "Union
+ * Bank of India" and "Central Bank of India" are never read as "Bank of India", nor "South Indian
+ * Bank" as "Indian Bank". Hindi names as SBI, PNB and others sign their Hindi alerts.
+ */
 export const BANKS: ReadonlyArray<readonly [BankId, RegExp]> = [
-  ['hdfc', /\bhdfc\b/i],
-  ['sbi', /\bsbi\b|state bank of india/i],
-  ['icici', /\bicici\b/i],
+  ['hdfc', /\bhdfc\b|एचडीएफसी/i],
+  ['sbi', /\bsbi\b|state bank of india|एसबीआई|भारतीय स्टेट बैंक/i],
+  ['icici', /\bicici\b|आईसीआईसीआई/i],
   ['axis', /\baxis\b/i],
   ['kotak', /\bkotak\b/i],
-  ['pnb', /\bpnb\b|punjab national/i],
-  ['bob', /bank of baroda|\bbob\b|\bbobcard\b/i],
+  ['pnb', /\bpnb\b|punjab national|पीएनबी|पंजाब नेशनल बैंक/i],
+  ['bob', /bank of baroda|\bbob\b|\bbobcard\b|बैंक ऑफ\u093c? बड\u093c?ौदा/i],
   ['yes', /\byes bank\b/i],
   ['idfc', /\bidfc\b/i],
   ['indusind', /\bindusind\b/i],
   ['paytm', /paytm payments bank|\bppbl\b|paytm wallet/i],
   ['airtel', /airtel payments bank/i],
+  ['canara', /\bcanara bank\b|केनरा बैंक/i],
+  ['union', /\bunion bank\b|यूनियन बैंक/i],
+  ['boi', /\bbank of india\b|\bboi\b|बैंक ऑफ\u093c? इंडिया/i],
+  ['central', /\bcentral bank of india\b|सेंट्रल बैंक/i],
+  ['indianbank', /\bindian bank\b/i],
+  ['iob', /\bindian overseas bank\b|\biob\b/i],
+  ['uco', /\buco bank\b/i],
+  ['mahabank', /\bbank of maharashtra\b|\bmahabank\b/i],
+  ['idbi', /\bidbi\b/i],
+  ['federal', /\bfederal bank\b|\bfedbank\b/i],
+  ['southindian', /\bsouth indian bank\b/i],
+  ['kvb', /\bkarur vysya\b|\bkvb\b/i],
+  ['cub', /\bcity union bank\b/i],
+  ['tmb', /\btamilnad mercantile\b/i],
+  ['karnataka', /\bkarnataka bank\b/i],
+  ['rbl', /\brbl bank\b/i],
+  ['au', /\bau small finance\b|\bau bank\b/i],
+  ['equitas', /\bequitas\b/i],
 ]
 
 /** Customer-care numbers printed in alerts that don't name the bank (sender IDs never reach us). */

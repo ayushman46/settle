@@ -23,7 +23,7 @@ export const expense = {
   'expense.toast.markedPaid': '{who, select, me {మీరు చెల్లించినట్లు గుర్తించబడింది} other {{name} చెల్లించినట్లు గుర్తించబడింది}}',
   'expense.toast.markedUnpaid': '{who, select, me {మీరు ఇంకా చెల్లించలేదని గుర్తించబడింది} other {{name} ఇంకా చెల్లించలేదని గుర్తించబడింది}}',
   'expense.toast.deleted': '{title} తొలగించబడింది',
-  'expense.toast.undo': 'వెనక్కి తీసుకోండి',
+  'expense.toast.undo': 'రద్దు',
   'expense.paidReply.screen': 'చెల్లింపు',
   'expense.paidReply.loading': 'జవాబు చదువుతున్నాం…',
   'expense.paidReply.empty.title': 'ఇక్కడ చదవడానికి ఏమీ లేదు',
@@ -108,5 +108,5 @@ export const expense = {
   'expense.actions.markAll': 'అందరినీ చెల్లించినట్లు గుర్తించండి',
   'expense.actions.markAll.detail': 'అన్నీ తిరిగి వచ్చాక',
   'expense.actions.delete': 'తొలగించండి',
-  'expense.actions.delete.detail': 'వెంటనే వెనక్కి తీసుకోవచ్చు',
+  'expense.actions.delete.detail': 'వెంటనే రద్దు చేయవచ్చు',
 } as const satisfies Messages

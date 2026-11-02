@@ -15,7 +15,7 @@ export const split = {
   'split.save.new.cta': 'స్ప్లిట్ సేవ్ చేయండి',
   'split.save.cta': 'మార్పులు సేవ్ చేయండి',
   'split.currency.toast': 'ఇప్పుడు {code} లో',
-  'split.undo.cta': 'వెనక్కి తీసుకోండి',
+  'split.undo.cta': 'రద్దు',
   'split.saved.title': 'స్ప్లిట్ సేవ్ అయింది',
   // The amount and the details.
   'split.amount.label': 'మొత్తం',

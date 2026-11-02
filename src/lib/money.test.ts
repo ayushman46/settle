@@ -3,6 +3,7 @@ import {
   MAX_MINOR,
   allocate,
   cleanAmountText,
+  commaIsDecimal,
   currencyDigits,
   currencySymbol,
   formatMoney,
@@ -310,6 +311,39 @@ describe('cleanAmountText', () => {
     })
   }
 
+  describe('with commas that group (rupees typed key by key)', () => {
+    const grouped: Array<[string, string, string]> = [
+      ['99,99,999', 'INR', '9999999'],
+      ['1,234.50', 'INR', '1234.50'],
+      ['99,', 'INR', '99'],
+      ['1,234', 'INR', '1234'],
+      ['12,5', 'USD', '125'],
+      ['₹1,234.50', 'INR', '1234.50'],
+    ]
+    for (const [text, code, expected] of grouped) {
+      it(`${JSON.stringify(text)} (${code}) → ${JSON.stringify(expected)}`, () => {
+        expect(cleanAmountText(text, code, { commaGroups: true })).toBe(expected)
+      })
+    }
+
+    it('reads every prefix of "99,99,999" as rupees, never paise', () => {
+      let typed = ''
+      for (const ch of '99,99,999') {
+        typed = cleanAmountText(typed + ch, 'INR', { commaGroups: true })
+        expect(typed).not.toContain(',')
+      }
+      expect(parseMoneyInput(typed, 'INR')).toBe(999_999_900)
+    })
+  })
+
+  it('a comma is the decimal mark for currencies written that way, not for rupees or dollars', () => {
+    expect(commaIsDecimal('EUR')).toBe(true)
+    expect(commaIsDecimal('brl')).toBe(true)
+    // (Unless this phone itself writes decimals with a comma; the test runs in an English locale.)
+    expect(commaIsDecimal('INR')).toBe(false)
+    expect(commaIsDecimal('USD')).toBe(false)
+  })
+
   it('always produces something parseMoneyInput reads back the same way', () => {
     const random = rng(7)
     const alphabet = '0123456789.,₹ -a'
@@ -318,6 +352,9 @@ describe('cleanAmountText', () => {
       const cleaned = cleanAmountText(text, 'INR')
       expect(cleanAmountText(cleaned, 'INR')).toBe(cleaned)
       if (/\d/.test(cleaned)) expect(parseMoneyInput(cleaned, 'INR')).not.toBeNull()
+      const grouped = cleanAmountText(text, 'INR', { commaGroups: true })
+      expect(cleanAmountText(grouped, 'INR', { commaGroups: true })).toBe(grouped)
+      if (/\d/.test(grouped)) expect(parseMoneyInput(grouped, 'INR')).not.toBeNull()
     }
   })
 })

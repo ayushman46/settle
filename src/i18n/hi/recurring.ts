@@ -62,7 +62,7 @@ export const recurring = {
   'recurring.editor.saved.toast': 'मंथली स्प्लिट सेव हो गया',
   'recurring.editor.changesSaved.toast': 'बदलाव सेव हो गए',
   'recurring.editor.deleted.toast': '{title} हटा दिया',
-  'recurring.editor.undo.cta': 'वापस लें',
+  'recurring.editor.undo.cta': 'पहले जैसा करें',
   'recurring.editor.delete.aria': '{title} हटाएँ',
   'recurring.editor.save.new.cta': 'मंथली स्प्लिट सेव करें',
   'recurring.editor.save.cta': 'बदलाव सेव करें',

@@ -62,7 +62,7 @@ export const trip = {
   'trip.note.pegged': '{to} உடன் இணைக்கப்பட்டது, {date}',
   'trip.note.manualRate': 'உங்கள் விகிதம்',
   'trip.note.manualTotal': 'உங்கள் வங்கி: {amount}',
-  'trip.convert.text': 'இது {code} இல் உள்ளது, அதனால் {group} இன் {symbol} இருப்புகளில் சேராது.',
+  'trip.convert.text': 'இது {code} இல் உள்ளது, அதனால் {group} குழுவின் {symbol} இருப்புகளில் சேராது.',
   'trip.convert.action': '{symbol} ஆக மாற்று',
   'trip.bill.settled': '{symbol} இல் தீர்க்கப்பட்டது',
 } as const satisfies Messages

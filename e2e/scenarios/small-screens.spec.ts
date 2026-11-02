@@ -39,7 +39,7 @@ for (const width of [320, 414]) {
       const more = page.getByRole('button', { name: 'More' })
       await expect(more).toBeVisible()
       await more.click()
-      const sheet = page.getByRole('dialog', { name: 'More ways to split' })
+      const sheet = page.getByRole('dialog', { name: 'More' })
       await expect(sheet).toBeVisible()
       await expectNoSideScroll(page)
       await page.keyboard.press('Escape')

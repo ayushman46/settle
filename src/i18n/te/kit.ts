@@ -3,7 +3,7 @@ import type { Messages } from '../types'
 
 export const kit = {
   // The owner as the object of a phrase ("Amount for you", "Paid you back").
-  'kit.name.you.object': 'మీకు',
+  'kit.name.you.object': 'మీరు',
   // Dates on expenses ("Today", "18 Oct"); a missing or broken date reads "Pick a date".
   'kit.date.pick': 'తేదీ ఎంచుకోండి',
   'kit.date.tomorrow': 'రేపు',
@@ -20,7 +20,7 @@ export const kit = {
   'kit.collect.count.none': 'ఇంకా ఎవరూ చెల్లించలేదు',
   'kit.collect.count.some': '{count} లో {paid} మంది చెల్లించారు',
   // `{names}` is a readable list ("Sam and Neha", "you and Sam").
-  'kit.collect.waiting': 'ఎదురుచూస్తోంది: {names}',
+  'kit.collect.waiting': '{names} ఇంకా ఇవ్వలేదు',
   // The collect card on an expense page.
   'kit.collect.group.title': '{group} లో తేలుతుంది',
   'kit.collect.group.body': 'ఇది గ్రూప్ బ్యాలెన్స్‌లలో లెక్కిస్తారు, కాబట్టి గ్రూప్ నుంచి లెక్క తేల్చండి.',
@@ -89,12 +89,16 @@ export const kit = {
   'kit.shares.status.payer': 'బిల్లు చెల్లించారు',
   'kit.shares.status.paid': '{name} కు తిరిగి ఇచ్చారు',
   'kit.shares.status.youOwe': 'మీరు {name} కు ఇవ్వాలి',
-  'kit.shares.status.owes': '{name} ఇవ్వాలి',
+  'kit.shares.status.owes': '{name} కు ఇవ్వాలి',
+  'kit.shares.status.paidYou': 'మీకు తిరిగి ఇచ్చారు',
+  'kit.shares.status.owesYou': 'మీకు ఇవ్వాలి',
   'kit.shares.status.part': '{paid} చెల్లించారు · {left} మిగిలింది',
   'kit.shares.status.zero': 'చెల్లించాల్సింది లేదు',
   'kit.shares.status.group': '{group} లో తేలుతుంది',
   'kit.shares.status.groupUnnamed': 'గ్రూప్‌లో తేలుతుంది',
   'kit.shares.tick.aria': '{name} {payer} కు తిరిగి ఇచ్చారు',
+  'kit.shares.tick.you.aria': '{name} మీకు తిరిగి ఇచ్చారు',
+  'kit.shares.tick.mine.aria': 'మీరు {payer} కు తిరిగి ఇచ్చారు',
   'kit.shares.items.cta': '{count, plural, one {# ఐటమ్} other {# ఐటమ్‌లు}}',
   'kit.shares.items.mine.aria': 'మీరు తీసుకున్న {count, plural, one {# ఐటమ్} other {# ఐటమ్‌లు}}',
   'kit.shares.items.aria': '{name} తీసుకున్న {count, plural, one {# ఐటమ్} other {# ఐటమ్‌లు}}',
@@ -106,7 +110,7 @@ export const kit = {
   'kit.shares.pay.cta': '{name} కు చెల్లించండి',
   'kit.shares.pay.aria': 'UPI ద్వారా {name} కు {amount} చెల్లించండి',
   'kit.shares.qr.cta': 'UPI QR',
-  'kit.shares.qr.aria': '{name} కు {amount} చెల్లించడానికి UPI QR చూపించు',
+  'kit.shares.qr.aria': '{name} మీకు {amount} చెల్లించేందుకు UPI QR చూపించండి',
   'kit.shares.nudge.cta': 'గుర్తు చేయండి',
   'kit.shares.nudge.aria': '{amount} గురించి {name} కు గుర్తు చేయండి',
   // A bill's extras line per person.
@@ -129,7 +133,7 @@ export const kit = {
   'kit.transfer.remind.cta': 'గుర్తు చేయండి',
   'kit.transfer.remind.aria': '{amount} గురించి {name} కు గుర్తు చేయండి',
   'kit.transfer.record.cta': 'చెల్లింపు నమోదు',
-  'kit.transfer.record.aria': '{from} నుంచి {to} కి {amount} నమోదు చేయండి',
+  'kit.transfer.record.aria': '{amount} నమోదు చేయండి — ఇచ్చినవారు {from}, అందుకున్నవారు {to}',
   // Picking who paid.
   'kit.payer.label': 'చెల్లించినవారు',
   'kit.payer.sheet.title': 'ఎవరు చెల్లించారు?',
@@ -177,15 +181,15 @@ export const kit = {
   'kit.split.mode.exact.hint': 'ఎవరు ఎంత ఇవ్వాలో మీకు సరిగ్గా తెలుసు, మొత్తం కూడా సరిపోతుంది.',
   'kit.split.mode.percent.hint': 'మొత్తం ఎంతైనా ఒక్కొక్కరికి స్థిరమైన భాగం — గది సైజు ప్రకారం అద్దె లాగా, 40 / 30 / 30.',
   'kit.split.mode.shares.hint': 'ఎవరైనా రెట్టింపుగా లెక్కించబడతారు — జంట, లేదా రెట్టింపు తీసుకున్నవారు. 2 వాటాలు 1 వాటాకు రెట్టింపు.',
-  'kit.split.hadFor': '{name} ఎంత తిన్నారు',
+  'kit.split.hadFor': '{name} తిన్నది',
   'kit.split.pays': '{amount} ఇస్తారు',
   'kit.split.useTotal.cta': '{amount} వాడండి',
   'kit.split.rows.aria': 'అందరి వాటా',
   'kit.split.notPaying': 'చెల్లించడం లేదు',
   'kit.split.noAmount': 'ఇంకా మొత్తం లేదు',
-  'kit.split.amountFor': '{name} మొత్తం',
-  'kit.split.percentFor': '{name} శాతం',
-  'kit.split.sharesFor': '{name} వాటాలు',
+  'kit.split.amountFor': '{name} భరించే మొత్తం',
+  'kit.split.percentFor': '{name} భరించే శాతం',
+  'kit.split.sharesFor': '{name} తీసుకునే వాటాలు',
   'kit.split.empty': 'అందరి వాటాలు చూడటానికి పైన వ్యక్తులను ఎంచుకోండి.',
   'kit.split.rest.cta': 'మిగిలింది సమానంగా పంచండి',
   'kit.split.reset.cta': 'రీసెట్',

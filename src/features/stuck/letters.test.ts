@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import { STUCK_RAILS, STUCK_STEP_KINDS, type StuckPayment } from '../../data/stores'
 import { formatMoney } from '../../lib/money'
+import { BANK_LABELS } from '../sharein/sms/smsView'
 import {
   airsewaMessage,
   bankComplaint,
   bankName,
+  blanksIn,
   commissionSummary,
   compensationClaim,
   letterDate,
@@ -15,8 +17,9 @@ import {
   ombudsmanFields,
   PLACEHOLDERS,
   rupees,
+  withSubject,
 } from './letters'
-import { RAIL_RULES, RBI_CIRCULAR } from './rules'
+import { dueBy, RAIL_RULES, RBI_CIRCULAR } from './rules'
 
 const TODAY = '2026-11-02'
 const ME = { name: 'Ayush Mishra', upiId: 'ayush@okaxis' }
@@ -40,6 +43,7 @@ function failed(over: Partial<StuckPayment> = {}): StuckPayment {
     source: 'sms',
     confirmed: true,
     steps: [],
+    repliedAt: null,
     back: null,
     dismissedAt: null,
     note: null,
@@ -58,10 +62,10 @@ function refund(over: Partial<StuckPayment> = {}): StuckPayment {
 const THREATS = /\b(?:legal action|sue|lawyer|court|notice|police|or else|failing which)\b/i
 
 describe('letterDate and rupees', () => {
-  it('writes dates the same way everywhere: "28 Oct 2026"', () => {
-    expect(letterDate('2026-10-28')).toBe('28 Oct 2026')
-    expect(letterDate('2026-09-05')).toBe('5 Sep 2026')
-    expect(letterDate('2027-01-01')).toBe('1 Jan 2027')
+  it('writes dates the same way everywhere: "28 October 2026"', () => {
+    expect(letterDate('2026-10-28')).toBe('28 October 2026')
+    expect(letterDate('2026-09-05')).toBe('5 September 2026')
+    expect(letterDate('2027-01-01')).toBe('1 January 2027')
     expect(letterDate('not a date')).toBe('not a date')
   })
 
@@ -79,26 +83,173 @@ describe('letterDate and rupees', () => {
     expect(bankName(null)).toBeNull()
     expect(bankName('  ')).toBeNull()
   })
+
+  it('names every bank the SMS reader knows, never by its bare id', () => {
+    for (const id of Object.keys(BANK_LABELS)) expect(bankName(id), id).not.toBe(id)
+  })
+})
+
+describe('your details, and what is left to fill in', () => {
+  const FULL = { ...ME, mobile: '98200 12345', place: 'Pune, Maharashtra', address: '12 MG Road, Pune 411001' }
+
+  it('puts your mobile and address in the letter, so no bracket is left for them', () => {
+    const { body } = bankComplaint(failed(), FULL, TODAY)
+    expect(body.endsWith('Yours faithfully,\nAyush Mishra\nUPI ID: ayush@okaxis\nMobile: 98200 12345\nAddress: 12 MG Road, Pune 411001')).toBe(true)
+    expect(blanksIn(body)).toEqual([])
+    expect(nchMessage(refund(), FULL, TODAY).body.endsWith('Ayush Mishra, Pune, Maharashtra')).toBe(true)
+    const summary = commissionSummary(refund(), FULL, TODAY).body
+    expect(summary).toContain('Complainant: Ayush Mishra, 12 MG Road, Pune 411001\nMobile: 98200 12345')
+  })
+
+  it('signs only a UPI payment with the UPI ID', () => {
+    const imps = bankComplaint(failed({ rail: 'imps', app: null }), ME, TODAY).body
+    expect(imps).not.toContain('UPI ID')
+    expect(imps).toContain('Account: XX4821')
+    expect(merchantMessage(refund(), ME, TODAY).body).not.toContain('UPI ID')
+  })
+
+  it('lists the brackets left, each once', () => {
+    expect(blanksIn('Mobile: [your mobile number]\nUPI ID: [your UPI ID]\n[your mobile number]')).toEqual(['[your mobile number]', '[your UPI ID]'])
+    expect(blanksIn('nothing to fill')).toEqual([])
+  })
+
+  it('starts the copied text with the subject, unless the letter already has it', () => {
+    const bank = bankComplaint(failed(), ME, TODAY)
+    expect(withSubject(bank)).toBe(bank.body)
+    const shop = merchantMessage(refund(), ME, TODAY)
+    expect(withSubject(shop)).toBe(`Subject: ${shop.subject}\n\n${shop.body}`)
+  })
+})
+
+describe('what a failed-payment letter claims', () => {
+  it('says only that it failed, not that the other side never got it', () => {
+    for (const rail of STUCK_RAILS) {
+      const { body } = bankComplaint(failed({ rail }), ME, TODAY)
+      expect(body, rail).not.toContain('did not receive')
+    }
+  })
+
+  it('pays a shop "at" its card machine, and leaves a name in another script out of the sentence', () => {
+    const shop = bankComplaint(failed({ rail: 'card_pos', party: 'ઇન્ડિયન ઓઇલ પેટ્રોલ પંપ', merchant: null, app: null }), ME, TODAY).body
+    expect(shop).toContain(`${rupees(50_000)} was debited from my account for a card payment (point of sale), but the transaction failed.`)
+    expect(shop).toContain('Paid to: ઇન્ડિયન ઓઇલ પેટ્રોલ પંપ')
+    expect(bankComplaint(failed({ rail: 'card_pos', party: 'Indian Oil, SG Highway', merchant: null }), ME, TODAY).body).toContain(
+      'for a card payment (point of sale) at Indian Oil, SG Highway, but the transaction failed.',
+    )
+  })
+
+  it('counts exactly 30 days as 30, not "more than 30"', () => {
+    const raised = failed({ steps: [{ kind: 'bank', date: '2026-10-03', ref: null }] })
+    const { body } = ombudsmanComplaint(raised, ME, TODAY)
+    expect(body).toContain('30 days have passed since then, and it has not been resolved.')
+    expect(body).not.toContain('More than 30 days')
+  })
+
+  it('keeps asking for the rest when only part of it came back', () => {
+    const part = failed({ back: { date: '2026-10-30', amount: 30_000, compensation: 0 } })
+    const { subject, body } = letterFor('bank', part, ME, TODAY)
+    expect(subject).toMatch(/^Reversal and compensation/)
+    expect(body).toContain(`Only ${rupees(30_000)} of it was reversed, on 30 October 2026; ${rupees(20_000)} is still to come.`)
+    expect(body).toContain(`the remaining ${rupees(20_000)} has not been reversed`)
+    expect(body).toContain(`1. Reverse ${rupees(20_000)} to my account`)
+    expect(body).toContain(`${rupees(80_000)} as of 2 November 2026`)
+  })
+})
+
+describe('a NACH debit after the mandate was revoked', () => {
+  /** ₹3,000 taken by Cult Fitness on 30 Oct under a mandate revoked on 15 Oct. */
+  const nach = failed({ rail: 'nach', party: 'Cult Fitness', merchant: null, amount: 3_00_000, date: '2026-10-30', ref: 'HDFC7021234567890', app: null })
+  const revoked = { ...nach, mandateRevoked: true, mandateRevokedOn: '2026-10-15' }
+
+  it('says it was debited although the mandate was revoked, not that a payment failed', () => {
+    const { subject, body } = bankComplaint(revoked, ME, TODAY)
+    expect(subject).toBe(`Reversal and compensation: unauthorised NACH debit (mandate revoked) of ${rupees(3_00_000)} on 30 October 2026 (ref HDFC7021234567890)`)
+    expect(body).toContain(`On 30 October 2026, my account was debited ${rupees(3_00_000)} under a NACH mandate in favour of Cult Fitness, although I had revoked that mandate with the bank on 15 October 2026.`)
+    expect(body).toContain('Mandate (UMRN) or debit reference: HDFC7021234567890')
+    expect(body).not.toMatch(/transaction failed|did not receive/)
+    expect(body).toContain('T + 1 day, that is by 31 October 2026')
+  })
+
+  it('leaves the day it was revoked to fill in when it was not given', () => {
+    expect(bankComplaint({ ...revoked, mandateRevokedOn: null }, ME, TODAY).body).toContain(`revoked that mandate with the bank on ${PLACEHOLDERS.mandateRevoked}.`)
+  })
+
+  it('tells the Ombudsman, the helpline and a commission the same', () => {
+    expect(ombudsmanFields(revoked, ME, TODAY).find((f) => f.id === 'category')?.value).toBe('NACH — account debited despite the mandate having been revoked')
+    expect(ombudsmanComplaint(revoked, ME, TODAY).body).not.toContain('transaction failed')
+    expect(nchMessage(revoked, ME, TODAY).body).toContain('under a NACH mandate in favour of Cult Fitness that I had revoked')
+    const summary = commissionSummary(revoked, ME, TODAY).body
+    expect(summary).toContain('About: a NACH debit made after I had revoked the mandate')
+    expect(summary.indexOf('15 October 2026: I revoked the NACH mandate')).toBeLessThan(summary.indexOf('30 October 2026:'))
+  })
+
+  it('stays a failed NACH debit when nothing says the mandate was revoked', () => {
+    expect(bankComplaint(nach, ME, TODAY).subject).toMatch(/failed NACH debit/)
+  })
+})
+
+describe('when the bank has replied', () => {
+  it('tells the Ombudsman the day it replied', () => {
+    const replied = failed({ steps: [{ kind: 'bank', date: '2026-10-27', ref: null }], repliedAt: '2026-10-31' })
+    expect(ombudsmanComplaint(replied, ME, TODAY).body).toContain('I complained to the bank on 27 October 2026. The bank replied on 31 October 2026, and the reply did not resolve it.')
+  })
+})
+
+describe('a wallet payment', () => {
+  /** ₹750 from a Paytm wallet to Airtel prepaid on 28 Oct (T+1, so due 29 Oct). */
+  const paytm = failed({ rail: 'wallet', party: 'Airtel prepaid recharge', merchant: null, amount: 75_000, date: '2026-10-28', ref: 'T2610281234', bank: null, account: null, app: 'paytm' })
+
+  it('goes to the company behind the wallet, about the wallet', () => {
+    const { body } = bankComplaint(paytm, { ...ME, mobile: '98200 12345' }, TODAY)
+    expect(body).toContain('The Grievance Redressal Officer,\nPaytm Payments Bank Ltd')
+    expect(body).toContain(`${rupees(75_000)} was debited from my Paytm wallet for a payment to Airtel prepaid recharge, but the transaction failed. It has not been returned to my wallet.`)
+    expect(body).toContain('Wallet transaction ID: T2610281234')
+    expect(body).toContain('Wallet: Paytm')
+    expect(body).toContain('Registered mobile: 98200 12345')
+    expect(body).toContain(`1. Reverse ${rupees(75_000)} to my wallet`)
+    expect(body).toContain('the wallet issuer is to pay compensation')
+    expect(body).not.toContain('Account:')
+    expect(body).not.toContain(PLACEHOLDERS.bank)
+    expect(body).not.toContain('UPI ID')
+  })
+
+  it('names the issuer to the RBI Ombudsman, with the registered mobile for the account', () => {
+    const { subject, body } = ombudsmanComplaint(paytm, ME, TODAY)
+    expect(subject).toMatch(/^Complaint against Paytm Payments Bank Ltd: failed wallet payment/)
+    expect(body).toContain('I complained to the wallet company on')
+    expect(body).toContain('the wallet statement showing the debit')
+    const value = Object.fromEntries(ombudsmanFields(paytm, { ...ME, mobile: '98200 12345' }, TODAY).map((f) => [f.id, f.value]))
+    expect(value).toMatchObject({ entity: 'Paytm Payments Bank Ltd', account: '98200 12345' })
+  })
+
+  it('knows the other wallets, and leaves an unknown one to fill in', () => {
+    expect(bankComplaint({ ...paytm, app: 'com.mobikwik_new' }, ME, TODAY).body).toContain('One MobiKwik Systems Ltd')
+    expect(bankComplaint({ ...paytm, app: 'amazonpay' }, ME, TODAY).body).toContain('Amazon Pay (India) Pvt Ltd')
+    expect(bankComplaint({ ...paytm, app: 'PhonePe' }, ME, TODAY).body).toContain('PhonePe Pvt Ltd')
+    const unknown = bankComplaint({ ...paytm, app: null }, ME, TODAY).body
+    expect(unknown).toContain(`The Grievance Redressal Officer,\n${PLACEHOLDERS.wallet}`)
+    expect(unknown).toContain('debited from my wallet for a payment')
+  })
 })
 
 describe('bankComplaint', () => {
   it('states the facts, the circular and its row, the deadline, the compensation so far, and asks for both', () => {
     const { subject, body } = bankComplaint(failed(), ME, TODAY)
-    expect(subject).toBe(`Reversal and compensation: failed UPI payment of ${rupees(50_000)} on 20 Oct 2026 (UPI ref 629420113457)`)
+    expect(subject).toBe(`Reversal and compensation: failed UPI payment of ${rupees(50_000)} on 20 October 2026 (UPI ref 629420113457)`)
     expect(body).toContain('The Grievance Redressal Officer,\nHDFC Bank')
-    expect(body).toContain('Date: 2 Nov 2026')
-    expect(body).toContain(`On 20 Oct 2026, ${rupees(50_000)} was debited from my account for a UPI payment to Swiggy, but the transaction failed`)
+    expect(body).toContain('Date: 2 November 2026')
+    expect(body).toContain(`On 20 October 2026, ${rupees(50_000)} was debited from my account for a UPI payment to Swiggy, but the transaction failed`)
     expect(body).toContain('UPI reference (RRN/UTR): 629420113457')
     expect(body).toContain('Account: XX4821')
     expect(body).toContain('Paid using: Google Pay')
     expect(body).toContain(RBI_CIRCULAR)
     expect(body).toContain(RAIL_RULES.upi_merchant.row)
-    expect(body).toContain('T + 5 days, that is by 25 Oct 2026')
+    expect(body).toContain('T + 5 days, that is by 25 October 2026')
     expect(body).toContain(`it is 8 days past that date`)
-    expect(body).toContain(`the compensation due so far is ${rupees(80_000)} (8 days x ${rupees(10_000)})`)
+    expect(body).toContain(`the compensation due so far is ${rupees(80_000)} (8 days × ${rupees(10_000)})`)
     expect(body).toContain(`${rupees(10_000)} for each further day until it is reversed`)
     expect(body).toContain(`1. Reverse ${rupees(50_000)} to my account`)
-    expect(body).toContain(`2. Credit the compensation due under the circular: ${rupees(80_000)} as of 2 Nov 2026`)
+    expect(body).toContain(`2. Credit the compensation due under the circular: ${rupees(80_000)} as of 2 November 2026`)
     expect(body).toContain('share its reference number')
     expect(body.endsWith('Yours faithfully,\nAyush Mishra\nUPI ID: ayush@okaxis\nMobile: [your mobile number]')).toBe(true)
     expect(body).not.toMatch(THREATS)
@@ -107,26 +258,26 @@ describe('bankComplaint', () => {
   it('uses T + 1 for a UPI transfer to a person', () => {
     const { body } = bankComplaint(failed({ rail: 'upi_person', party: 'Riya Sharma', merchant: null }), ME, TODAY)
     expect(body).toContain(RAIL_RULES.upi_person.row)
-    expect(body).toContain('T + 1 day, that is by 21 Oct 2026')
+    expect(body).toContain('T + 1 day, that is by 21 October 2026')
     expect(body).toContain('a UPI transfer to Riya Sharma')
-    expect(body).toContain(`${rupees(1_20_000)} (12 days x`)
+    expect(body).toContain(`${rupees(1_20_000)} (12 days ×`)
   })
 
   it('takes the longest deadline when how it was paid is not known', () => {
     const { body } = bankComplaint(failed({ rail: null }), ME, TODAY)
-    expect(body).toContain('within T + 5 days at the most, that is by 25 Oct 2026')
+    expect(body).toContain('within T + 5 days at the most, that is by 25 October 2026')
   })
 
   it('before the deadline, asks for the reversal and names the date from which ₹100 a day runs', () => {
     const { body } = bankComplaint(failed(), ME, '2026-10-23')
-    expect(body).toContain('If it is not reversed by 25 Oct 2026')
-    expect(body).toContain(`I request you to reverse ${rupees(50_000)} to my account by 25 Oct 2026`)
+    expect(body).toContain('If it is not reversed by 25 October 2026')
+    expect(body).toContain(`I request you to reverse ${rupees(50_000)} to my account by 25 October 2026`)
     expect(body).not.toContain('compensation due so far')
   })
 
   it('says the cash was not dispensed at an ATM, and leaves out a UPI ID nobody needs', () => {
     const { subject, body } = bankComplaint(failed({ rail: 'atm', party: null, merchant: null, app: null, ref: null }), { name: 'Ayush', upiId: null }, TODAY)
-    expect(subject).toContain('ATM cash not dispensed')
+    expect(subject).toContain('undispensed ATM withdrawal of')
     expect(body).toContain('for an ATM withdrawal, but the cash was not dispensed')
     expect(body).toContain(RAIL_RULES.atm.row)
     expect(body).toContain(`Transaction reference: ${PLACEHOLDERS.reference}`)
@@ -156,9 +307,9 @@ describe('bankComplaint', () => {
 describe('compensationClaim', () => {
   it('counts the days it was late up to the day it came back, and asks for the ₹100 a day', () => {
     const { subject, body } = compensationClaim(failed({ back: { date: '2026-10-30', amount: 50_000, compensation: 0 } }), ME, TODAY)
-    expect(subject).toBe(`Compensation for late reversal: failed UPI payment of ${rupees(50_000)} on 20 Oct 2026 (UPI ref 629420113457)`)
-    expect(body).toContain('It was reversed on 30 Oct 2026.')
-    expect(body).toContain(`5 days after 25 Oct 2026, the date the circular required, so the compensation due is ${rupees(50_000)} (5 days x ${rupees(10_000)})`)
+    expect(subject).toBe(`Compensation for late reversal: failed UPI payment of ${rupees(50_000)} on 20 October 2026 (UPI ref 629420113457)`)
+    expect(body).toContain('It was reversed on 30 October 2026.')
+    expect(body).toContain(`5 days after 25 October 2026, the date the circular required, so the compensation due is ${rupees(50_000)} (5 days × ${rupees(10_000)})`)
     expect(body).toContain('I have not received this compensation.')
     expect(body).toContain(`I request you to credit the compensation of ${rupees(50_000)} due under the circular.`)
     expect(body).not.toMatch(THREATS)
@@ -170,10 +321,12 @@ describe('compensationClaim', () => {
     expect(body).toContain(`credit the compensation of ${rupees(30_000)}`)
   })
 
-  it('asks for the rest of the money when only part came back', () => {
+  it('asks for the rest of the money when only part came back, with the days still running', () => {
     const { body } = compensationClaim(failed({ back: { date: '2026-10-30', amount: 30_000, compensation: 0 } }), ME, TODAY)
-    expect(body).toContain(`Only ${rupees(30_000)} of it was reversed, on 30 Oct 2026; ${rupees(20_000)} is still to come.`)
-    expect(body).toContain(`reverse the remaining ${rupees(20_000)} to my account, and credit the compensation of ${rupees(50_000)}`)
+    expect(body).toContain(`Only ${rupees(30_000)} of it was reversed, on 30 October 2026; ${rupees(20_000)} is still to come.`)
+    expect(body).toContain('it is 8 days past 25 October 2026, the date the circular required, and the rest has not been reversed')
+    expect(body).not.toContain('The reversal came')
+    expect(body).toContain(`reverse the remaining ${rupees(20_000)} to my account, and credit the compensation of ${rupees(80_000)}`)
   })
 
   it('asks for nothing it is not owed when it came back in time', () => {
@@ -192,13 +345,13 @@ describe('ombudsmanComplaint', () => {
 
   it('names the scheme, the bank complaint and its number, the 30 days, and the relief worked out', () => {
     const { subject, body } = ombudsmanComplaint(raised, ME, '2026-11-28')
-    expect(subject).toBe(`Complaint against HDFC Bank: failed UPI payment of ${rupees(50_000)} on 20 Oct 2026, not reversed, compensation not paid`)
+    expect(subject).toBe(`Complaint against HDFC Bank: failed UPI payment of ${rupees(50_000)} on 20 October 2026, not reversed, compensation not paid`)
     expect(body).toContain('against HDFC Bank under the Reserve Bank - Integrated Ombudsman Scheme, 2026')
     expect(body).toContain(RBI_CIRCULAR)
     expect(body).toContain(RAIL_RULES.upi_merchant.row)
-    expect(body).toContain('I complained to the bank on 27 Oct 2026, complaint number HDFC-CRM-88213. More than 30 days have passed since then, and it has not been resolved.')
+    expect(body).toContain('I complained to the bank on 27 October 2026, complaint number HDFC-CRM-88213. More than 30 days have passed since then, and it has not been resolved.')
     expect(body).toContain(
-      `Reversal of ${rupees(50_000)}; compensation of ${rupees(3_40_000)} as of 28 Nov 2026 under RBI/2019-20/67 (34 days x ${rupees(10_000)} from 26 Oct 2026); and ${rupees(10_000)} for each further day until the reversal.`,
+      `Reversal of ${rupees(50_000)}; compensation of ${rupees(3_40_000)} as of 28 November 2026 under RBI/2019-20/67 (34 days × ${rupees(10_000)}, counted from 26 October 2026, the day after the deadline); and ${rupees(10_000)} for each further day until the reversal.`,
     )
     expect(body).toContain('Attached: my complaint to the bank and its reply (if any)')
     expect(body).not.toMatch(THREATS)
@@ -217,8 +370,8 @@ describe('ombudsmanComplaint', () => {
     const back = failed({ back: { date: '2026-10-30', amount: 50_000, compensation: 0 }, steps: [{ kind: 'bank', date: '2026-11-01', ref: null }] })
     const { subject, body } = ombudsmanComplaint(back, ME, '2026-12-05')
     expect(subject).toContain('compensation for the late reversal not paid')
-    expect(body).toContain('The money was reversed only on 30 Oct 2026.')
-    expect(body).toContain(`Compensation of ${rupees(50_000)} under RBI/2019-20/67 (5 days x ${rupees(10_000)} from 26 Oct 2026).`)
+    expect(body).toContain('The money was reversed only on 30 October 2026.')
+    expect(body).toContain(`Compensation of ${rupees(50_000)} under RBI/2019-20/67 (5 days × ${rupees(10_000)}, counted from 26 October 2026, the day after the deadline).`)
     expect(body).not.toContain('for each further day')
     expect(body).toContain('showing the debit and the reversal')
   })
@@ -232,11 +385,11 @@ describe('ombudsmanFields', () => {
     expect(value).toMatchObject({
       entity: 'HDFC Bank',
       category: 'Failed transaction: UPI — account debited but transaction confirmation not received at merchant location',
-      date: '20 Oct 2026',
+      date: '20 October 2026',
       amount: rupees(50_000),
       reference: '629420113457',
       account: 'XX4821',
-      bankComplaint: '27 Oct 2026, complaint number HDFC-CRM-88213',
+      bankComplaint: '27 October 2026, complaint number HDFC-CRM-88213',
     })
     expect(value.relief).toContain(`compensation of ${rupees(3_40_000)}`)
     expect(fields.every((f) => f.known)).toBe(true)
@@ -262,8 +415,8 @@ describe('merchantMessage', () => {
     expect(body.startsWith('Hello Amazon support,')).toBe(true)
     expect(body).toContain('Order / booking number: 404-1234567-7654321')
     expect(body).toContain(`Refund amount: ${rupees(1_29_900)}`)
-    expect(body).toContain('Refund started on: 20 Oct 2026')
-    expect(body).toContain('Your refund timeline is 5 working days, so it was due by 27 Oct 2026.')
+    expect(body).toContain('Refund started on: 20 October 2026')
+    expect(body).toContain('Your refund timeline is 5 working days, so it was due by 27 October 2026.')
     expect(body).toContain('It is now 6 days past that date')
     expect(body).toContain('reference number (ARN or UTR)')
     expect(body).toContain('Consumer Protection (E-Commerce) Rules, 2020')
@@ -271,14 +424,15 @@ describe('merchantMessage', () => {
   })
 
   it('holds the business to the day it promised', () => {
-    expect(merchantMessage(refund({ promisedBy: '2026-10-25' }), ME, TODAY).body).toContain('You said it would reach me by 25 Oct 2026. It is now 8 days past that date')
+    expect(merchantMessage(refund({ promisedBy: '2026-10-25' }), ME, TODAY).body).toContain('You said it would reach me by 25 October 2026. It is now 8 days past that date')
   })
 
   it('cites the DGCA for an airline, and no rule for a business Settle does not know', () => {
     expect(merchantMessage(refund({ merchant: 'indigo' }), ME, TODAY).body).toContain('CAR Section 3, Series M, Part II')
     const unknown = merchantMessage(refund({ merchant: null, party: 'Sharma Electronics', orderId: null }), ME, TODAY).body
     expect(unknown).toContain('Hello Sharma Electronics support,')
-    expect(unknown).toContain('It was due by ')
+    expect(unknown).toContain('Refunds usually arrive within 7 working days, so I expected it by ')
+    expect(unknown).not.toContain('You said')
     expect(unknown).toContain(`Order / booking number: ${PLACEHOLDERS.order}`)
     expect(unknown).not.toContain('E-Commerce')
     expect(unknown).toContain('share a ticket or reference number')
@@ -286,7 +440,7 @@ describe('merchantMessage', () => {
 
   it('asks a business to confirm a failed payment never arrived', () => {
     const { subject, body } = merchantMessage(failed(), ME, TODAY)
-    expect(subject).toBe(`Payment of ${rupees(50_000)} on 20 Oct 2026 failed but was debited`)
+    expect(subject).toBe(`Payment of ${rupees(50_000)} on 20 October 2026 failed but was debited`)
     expect(body).toContain('Please confirm whether you received this payment')
   })
 })
@@ -301,8 +455,9 @@ describe('nchMessage', () => {
       [
         `Complaint: refund of ${rupees(1_29_900)} from Amazon not received.`,
         'Order: 404-1234567-7654321.',
-        'Refund started 20 Oct 2026, due by 27 Oct 2026; not received as of 5 Nov 2026.',
-        'I complained to Amazon on 28 Oct 2026 (ticket TKT-55021); not resolved.',
+        "Refund started 20 October 2026; due by 27 October 2026 under Amazon's own refund timeline (5 working days); not received as of 5 November 2026.",
+        'Complained so far: 28 October 2026: complained to Amazon (ticket TKT-55021). Not resolved.',
+        'Sector: E-commerce.',
         'Please take this up with Amazon.',
         `Ayush Mishra, ${PLACEHOLDERS.place}`,
       ].join('\n'),
@@ -313,8 +468,63 @@ describe('nchMessage', () => {
   it('works without a ticket, and for a failed payment', () => {
     expect(nchMessage(refund(), ME, TODAY).body).toContain('I asked Amazon for it; not resolved.')
     const { body } = nchMessage(failed(), ME, TODAY)
-    expect(body).toContain(`a UPI payment of ${rupees(50_000)} to Swiggy on 20 Oct 2026 failed`)
+    expect(body).toContain(`a UPI payment of ${rupees(50_000)} to Swiggy on 20 October 2026 failed`)
     expect(body).toContain('Reference: 629420113457.')
+  })
+})
+
+describe('refunds, told straight', () => {
+  it('calls a flight or train booking a PNR, once', () => {
+    const flight = refund({ merchant: 'indigo', orderId: 'PNR X7K2LQ' })
+    expect(merchantMessage(flight, ME, TODAY).subject).toBe(`Refund of ${rupees(1_29_900)} for PNR X7K2LQ not received`)
+    expect(merchantMessage(flight, ME, TODAY).body).toContain('PNR / booking reference: X7K2LQ')
+    expect(airsewaMessage(flight, ME, TODAY).subject).toBe('Refund not received: IndiGo, PNR X7K2LQ')
+    expect(nchMessage(refund({ merchant: 'irctc', orderId: '4521367890' }), ME, TODAY).body).toContain('PNR: 4521367890.')
+  })
+
+  it('says a refund was usually due, not promised, when the business gave no date', () => {
+    const shop = refund({ merchant: null, party: 'keralagadgets.in', date: '2026-10-01' })
+    const nch = nchMessage(shop, ME, TODAY).body
+    const due = letterDate(dueBy(shop))
+    expect(nch).toContain(`refunds usually take up to 7 working days (by ${due})`)
+    expect(nch).not.toContain('said')
+    expect(commissionSummary(shop, ME, TODAY).body).toContain(`${due}: the end of the usual time for a refund (7 working days)`)
+    expect(nchMessage(refund({ promisedBy: '2026-10-25' }), ME, TODAY).body).toContain('Amazon said it would be back by 25 October 2026')
+  })
+
+  it('asks for the rest of a refund that came only in part', () => {
+    const part = refund({ back: { date: '2026-10-30', amount: 1_00_000, compensation: 0 } })
+    const { subject, body } = merchantMessage(part, ME, TODAY)
+    expect(subject).toBe(`Refund of ${rupees(1_29_900)} for order 404-1234567-7654321: ${rupees(29_900)} not received`)
+    expect(body).toContain(`only partly reached me: ${rupees(1_00_000)} came on 30 October 2026, and ${rupees(29_900)} is still to come.`)
+    expect(body).toContain(`Please credit the remaining ${rupees(29_900)}`)
+    expect(nchMessage(part, ME, TODAY).body).toContain(`only ${rupees(1_00_000)} received, ${rupees(29_900)} still due.`)
+    expect(commissionSummary(part, ME, TODAY).body).toContain(`Relief sought: Refund of ${rupees(29_900)}.`)
+  })
+
+  it('tells the helpline every complaint so far, in date order, with the refund reference', () => {
+    const flight = refund({
+      merchant: 'indigo',
+      orderId: 'X7Y2ZQ',
+      ref: 'ARN74512345',
+      steps: [
+        { kind: 'airsewa', date: '2026-10-01', ref: 'MOCA/E/2026/1102334' },
+        { kind: 'merchant', date: '2026-09-20', ref: 'IGO-55821934' },
+      ],
+    })
+    const { body } = nchMessage(flight, ME, TODAY)
+    expect(body).toContain(
+      'Complained so far: 20 September 2026: complained to IndiGo (ticket IGO-55821934); 1 October 2026: filed a grievance on AirSewa (reference MOCA/E/2026/1102334). Not resolved.',
+    )
+    expect(body).toContain('Refund reference (ARN/UTR): ARN74512345.')
+    expect(body).toContain('Sector: Airlines.')
+    expect(body.length).toBeLessThan(700)
+  })
+
+  it('lists the commission timeline in date order, a complaint before the due date included', () => {
+    const early = refund({ date: '2026-08-04', steps: [{ kind: 'merchant', date: '2026-08-10', ref: null }] })
+    const { body } = commissionSummary(early, ME, TODAY)
+    expect(body.indexOf('10 August 2026: complained to Amazon')).toBeLessThan(body.indexOf('11 August 2026: the date it was due by'))
   })
 })
 
@@ -325,9 +535,9 @@ describe('airsewaMessage', () => {
     expect(subject).toBe('Refund not received: IndiGo, PNR Q7XK2P')
     expect(body).toContain('Airline: IndiGo')
     expect(body).toContain('PNR / booking reference: Q7XK2P')
-    expect(body).toContain('Due by: 22 Oct 2026')
-    expect(body).toContain('Complaint to the airline: 25 Oct 2026, reference IGO-1182')
-    expect(body).toContain('As of 2 Nov 2026 it is 11 days late.')
+    expect(body).toContain('Due by: 22 October 2026')
+    expect(body).toContain('Complaint to the airline: 25 October 2026, reference IGO-1182')
+    expect(body).toContain('As of 2 November 2026 it is 11 days late.')
     expect(body).toContain('within 7 days when a ticket is paid by card, and within 14 working days when it is booked through an agent or portal')
     expect(body).toContain(`Please have IndiGo credit ${rupees(4_52_000)} to my original payment method.`)
   })
@@ -351,11 +561,11 @@ describe('commissionSummary', () => {
     expect(body).toContain('Against: Amazon')
     expect(body).toContain(
       [
-        `- 20 Oct 2026: Amazon started a refund of ${rupees(1_29_900)} for order 404-1234567-7654321`,
-        '- 27 Oct 2026: the date it was due by',
-        '- 28 Oct 2026: complained to Amazon (ticket TKT-55021)',
-        '- 5 Nov 2026: complained to the National Consumer Helpline (docket 5517283)',
-        '- 8 Dec 2026: still not received',
+        `- 20 October 2026: Amazon started a refund of ${rupees(1_29_900)} for order 404-1234567-7654321`,
+        "- 27 October 2026: the date it was due by, under Amazon's own refund timeline",
+        '- 28 October 2026: complained to Amazon (ticket TKT-55021)',
+        '- 5 November 2026: complained to the National Consumer Helpline (docket 5517283)',
+        '- 8 December 2026: still not received',
       ].join('\n'),
     )
     expect(body).toContain(`Relief sought: Refund of ${rupees(1_29_900)}.`)
@@ -365,7 +575,7 @@ describe('commissionSummary', () => {
   it('is against the bank for a failed payment', () => {
     const { subject, body } = commissionSummary(failed({ steps: [{ kind: 'bank', date: '2026-10-27', ref: null }] }), ME, TODAY)
     expect(subject).toContain('against HDFC Bank')
-    expect(body).toContain('- 27 Oct 2026: complained to HDFC Bank')
+    expect(body).toContain('- 27 October 2026: complained to HDFC Bank')
     expect(body).toContain(`Relief sought: Reversal of ${rupees(50_000)}`)
   })
 })
@@ -397,6 +607,9 @@ describe('letterFor', () => {
         for (const me of [ME, { name: '', upiId: null }]) {
           const { subject, body } = letterFor(step, s, me, TODAY)
           expect(`${subject}\n${body}`, `${step} ${s.kind} ${s.rail ?? '-'}`).not.toMatch(/undefined|null|NaN|\{|\}/)
+          // One way of writing a date: "2 November 2026", never "2 Nov" or "Sept".
+          expect(`${subject}\n${body}`, `${step} ${s.kind} ${s.rail ?? '-'}`).not.toMatch(/\b(?:Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sept?|Oct|Nov|Dec)\b/)
+          expect(body, `${step} ${s.kind} ${s.rail ?? '-'}`).not.toMatch(THREATS)
         }
   })
 })

@@ -19,11 +19,12 @@ export function HomeHeader() {
   const pro = usePro()
   // Fixed for the visit: the greeting shouldn't change under someone's thumb.
   const [hour] = useState(currentHour)
+  const greeting = timeOfDayGreeting(hour)
 
   return (
     <header className={styles.header}>
       <div className={styles.greeting}>
-        <p className={styles.hello}>{timeOfDayGreeting(hour)}</p>
+        {greeting !== null && <p className={styles.hello}>{greeting}</p>}
         <h1 className={styles.title} tabIndex={-1}>
           {helloLine(profile.name)}
         </h1>
@@ -41,7 +42,7 @@ export function HomeHeader() {
             {pro.status === 'expired' ? t('home.header.renew') : t('home.header.go')}
           </Link>
         )}
-        <Link to="/app/you" className={styles.avatarLink} aria-label="You: profile and settings">
+        <Link to="/app/you" className={styles.avatarLink} aria-label={t('home.header.youAria')}>
           <Avatar name={me.name} color={me.color} size="md" />
         </Link>
       </div>

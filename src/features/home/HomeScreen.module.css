@@ -11,16 +11,20 @@
 
 /* ---------- Greeting ---------- */
 
+/* A long greeting ("வணக்கம்," beside a long Go Pro) never splits a word: Go Pro and the avatar drop below instead. */
 .header {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: var(--s-3);
+  gap: var(--s-2) var(--s-3);
   min-width: 0;
 }
 
+/* Grows into the room left, but never narrower than its longest word. */
 .greeting {
-  min-width: 0;
+  flex: 1 1 0;
+  min-width: min-content;
 }
 
 .hello {
@@ -31,7 +35,7 @@
 .title {
   font: var(--text-title);
   letter-spacing: var(--tracking-tight);
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 
 .headerEnd {
@@ -39,6 +43,7 @@
   flex: none;
   align-items: center;
   gap: var(--s-2);
+  margin-inline-start: auto;
 }
 
 .goPro {
@@ -125,6 +130,26 @@
   color: var(--ink-2);
   font: var(--text-caption);
   text-align: end;
+}
+
+/* ---------- The More sheet ---------- */
+
+.more {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-6);
+}
+
+.moreGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+
+.moreHeading {
+  color: var(--ink-2);
+  font: var(--text-label);
+  font-weight: 650;
 }
 
 /* ---------- Bill in progress ---------- */

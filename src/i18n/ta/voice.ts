@@ -9,8 +9,8 @@ export const voice = {
   // The listening panel inside "Just say it".
   'voice.listen.title': 'கேட்டுக்கொண்டிருக்கிறது…',
   // Announced to screen readers when listening starts: "Listening in Hindi".
-  'voice.listen.aria': '{language} இல் கேட்கிறது',
-  'voice.listen.language.aria': '{native}, {language} இல் பேசுங்கள். மொழியை மாற்று',
+  'voice.listen.aria': '{language} மொழியில் கேட்கிறது',
+  'voice.listen.language.aria': '{native}, {language} மொழியில் பேசுகிறீர்கள். மொழியை மாற்று',
   'voice.listen.stop.cta': 'நிறுத்து',
   'voice.listen.tip': 'அது என்னவாக இருந்தது, எவ்வளவு, யார் இருந்தார்கள் என்று சொல்லுங்கள் — உதாரணம்',
   'voice.listen.heard.aria': 'கேட்டது: {text}',

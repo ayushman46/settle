@@ -22,7 +22,7 @@ test.describe('new features with the AI mocked', () => {
     await seed(page, { friends: [friend('riya', 'Riya Sharma')], expenses: [dinner] })
     await page.goto('/app')
     await page.getByRole('button', { name: 'More' }).click()
-    await page.getByRole('button', { name: 'Paid? Drop the screenshot' }).click()
+    await page.getByRole('button', { name: 'Paid screenshot' }).click()
     await expect(page).toHaveURL(/\/app\/proof$/)
     await expectNoRawKeys(page)
 

@@ -154,7 +154,7 @@ describe('WhosPaidScreen', () => {
     pickStatement(statementFile(STATEMENT.replace('"10,820.00"', '"99,999.00"').replace('"11,819.00"', '"12,345.00"')))
     expect(await screen.findByText('This file’s balance didn’t add up')).toBeInTheDocument()
     expect(screen.queryByRole('region', { name: /Ticked for you/ })).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Mark 0 as paid' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Pick who paid' })).toBeDisabled()
   })
 
   it('a file that is not a statement says so and stays on the choices', async () => {

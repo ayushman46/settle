@@ -7,6 +7,9 @@ export const app = {
   'app.tab.activity': 'लेन-देन',
   'app.tab.you': 'आप',
 
+  // The line under the logo (You's footer).
+  'app.tagline': 'कुछ भी बाँटें। एक टैप में हिसाब बराबर।',
+
   'app.title.format': '{page} · {brand}',
   'app.title.home': 'होम',
   'app.title.welcome': 'स्वागत है',

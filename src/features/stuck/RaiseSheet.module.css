@@ -135,7 +135,60 @@
   font-style: italic;
 }
 
+/* ---------- A NACH mandate: revoked before the debit? ---------- */
+
+.question {
+  margin: 0;
+  font: var(--text-body);
+  color: var(--ink);
+}
+
+.choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+/* ---------- Your details ---------- */
+
+.me {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+
+.meRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+}
+
+.meValues {
+  min-width: 0;
+  margin: 0;
+  font: var(--text-body);
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
 /* ---------- The letter ---------- */
+
+/* What it asks for, in the app's language, above the English letter. */
+.summary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  padding: var(--s-3) var(--s-4);
+  border-radius: var(--radius-card);
+  background: var(--surface-2);
+}
+
+.summaryAsk {
+  margin: 0;
+  font: var(--text-body);
+  color: var(--ink);
+}
 
 .paper {
   display: flex;
@@ -183,13 +236,19 @@
 }
 
 .actions {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  display: flex;
+  flex-wrap: wrap;
   gap: var(--s-2);
 }
 
+/* Side by side while each has ~7rem; narrower, they wrap. Print takes its own row. */
 .actions > * {
-  width: 100%;
+  flex: 1 1 7rem;
+  min-width: 0;
+}
+
+.actions > .wide {
+  flex-basis: 100%;
 }
 
 /* Email opens the mail app from a real link, styled as the small secondary buttons beside it. */
@@ -331,20 +390,60 @@
   color: var(--ink);
 }
 
-/* Three buttons in a row need ~330px; narrower, Email takes its own row. */
-@media (max-width: 359px) {
-  .actions {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .mail {
-    grid-column: 1 / -1;
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   .channel,
   .mail {
     transition: none;
+  }
+}
+
+/* ---------- On paper (LetterPrint) ---------- */
+
+/* Only there while printing; the page prints nothing else. */
+.print {
+  display: none;
+}
+
+@media print {
+  :global(body).printing {
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  :global(body).printing > :not(.print) {
+    display: none !important;
+  }
+
+  /* Visible even where another screen's print styles hide the rest of the page (Rent.module.css). */
+  :global(body).printing > .print,
+  :global(body).printing > .print * {
+    visibility: visible;
+  }
+
+  :global(body).printing > .print {
+    display: block;
+    padding: 0;
+    color: #000;
+    background: #fff;
+    font: 11pt/1.5 Georgia, 'Times New Roman', serif;
+  }
+
+  .printText {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  .printLine {
+    margin: 2em 0 0;
+  }
+
+  .printCopy {
+    break-before: page;
+    page-break-before: always;
+  }
+
+  .printCopy > .printLine:first-child {
+    margin: 0 0 2em;
+    font-weight: 700;
   }
 }

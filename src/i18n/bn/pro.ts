@@ -4,7 +4,7 @@ import type { Messages } from '../types'
 export const pro = {
   // What Pro adds (the perk list). {count} is Pro's fair-use AI allowance a day.
   'pro.perk.ai.title': 'সীমাহীন AI',
-  'pro.perk.ai.body': 'বিলের ছবি আর “Just say it” যতবার খুশি — ফেয়ার ইউজ, দিনে {count} পর্যন্ত।',
+  'pro.perk.ai.body': 'বিলের ছবি আর “শুধু বলুন” যতবার খুশি — ফেয়ার ইউজ, দিনে {count} পর্যন্ত।',
   'pro.perk.recurring.title': 'নিয়মিত ভাগ',
   'pro.perk.recurring.body': 'ভাড়া, Wi-Fi, Netflix: প্রতি মাসে একটি রিমাইন্ডার আর এক ট্যাপে ভাগ।',
   'pro.perk.insights.title': 'বিশ্লেষণ',
@@ -25,7 +25,7 @@ export const pro = {
   'pro.pitch.general.cta': 'Pro দেখুন',
   'pro.pitch.ai.title': 'Pro-তে সীমাহীন AI',
   // {free}: the free AI allowance a day; {count}: Pro's fair-use cap.
-  'pro.pitch.ai.body': 'বিনামূল্যে দিনে {free}টি AI স্ক্যান বা “Just say it” ভাগ থাকে, আর মাঝরাতে তা রিসেট হয়। Pro সীমা তুলে দেয় — ফেয়ার ইউজ, দিনে {count} পর্যন্ত।',
+  'pro.pitch.ai.body': 'বিনামূল্যে দিনে {free}টি AI স্ক্যান বা “শুধু বলুন” ভাগ থাকে, আর মাঝরাতে তা রিসেট হয়। Pro সীমা তুলে দেয় — ফেয়ার ইউজ, দিনে {count} পর্যন্ত।',
   'pro.pitch.ai.cta': 'সীমাহীন AI নিন',
   'pro.pitch.recurring.title': 'নিয়মিত ভাগ Pro-এর অংশ',
   'pro.pitch.recurring.body': 'ভাড়া, Wi-Fi বা Netflix একবার সেট করুন। প্রতি মাসে একটি রিমাইন্ডার পাবেন এবং এক ট্যাপে ভাগ করবেন।',

@@ -4,7 +4,7 @@ import type { Messages } from '../types'
 export const bill = {
   // Shared across the bill flow.
   'bill.count.items': '{count, plural, one {# ఐటమ్} other {# ఐటమ్‌లు}}',
-  'bill.undo.cta': 'వెనక్కి తీసుకోండి',
+  'bill.undo.cta': 'రద్దు',
   // Browser tab titles per step (also what the long-press Back menu lists).
   'bill.step.scan.docTitle': 'బిల్లు స్కాన్ చేయండి · {brand}',
   'bill.step.review.docTitle': 'ఐటమ్‌లు చెక్ చేయండి · {brand}',
@@ -108,7 +108,7 @@ export const bill = {
   'bill.people.search.label': 'టేబుల్ వద్ద వ్యక్తులను వెతకండి లేదా జోడించండి',
   'bill.people.removed.toast': '{name} తీసేయబడ్డారు',
   'bill.people.back.toast': '{name} ఇప్పటికే తిరిగి ఉన్నారు',
-  'bill.people.undoFull.toast': 'వెనక్కి తీసుకోలేకపోయాం — టేబుల్ నిండింది',
+  'bill.people.undoFull.toast': 'రద్దు చేయలేకపోయాం — టేబుల్ నిండింది',
   'bill.people.needTwo.hint': 'కనీసం 2 మందిని ఎంచుకోండి',
   'bill.people.needOne.hint': 'మరొక వ్యక్తిని ఎంచుకోండి',
   'bill.people.next.cta': 'తర్వాత: ఎవరు తీసుకున్నారు',
@@ -251,7 +251,7 @@ export const bill = {
   // One person on the receipt.
   'bill.result.person.payer': 'చెల్లించారు {paid} · తిరిగి వచ్చేది {amount}',
   // {name} is the payer as the object of the phrase ("you", "Riya").
-  'bill.result.person.owes': '{name} గారికి {amount} ఇవ్వాలి',
+  'bill.result.person.owes': '{name} అందుకోవాల్సింది {amount}',
   'bill.result.person.nothing': 'ఏమీ ఇవ్వాల్సిన అవసరం లేదు',
   'bill.result.person.aria': '{name}, {amount}, {status}',
   'bill.result.person.paid': 'చెల్లించారు',
@@ -289,7 +289,7 @@ export const bill = {
   'bill.review.added.toast': '{name} జోడించబడింది',
   'bill.review.removed.toast': '{name} తీసేయబడింది',
   'bill.review.removedUnnamed.toast': 'ఐటమ్ తీసేయబడింది',
-  'bill.review.undoFull.toast': 'వెనక్కి తీసుకోలేకపోయాం — బిల్లు నిండింది',
+  'bill.review.undoFull.toast': 'రద్దు చేయలేకపోయాం — బిల్లు నిండింది',
   'bill.review.currency.toast': '{code} కు మార్చబడింది',
   // The scan step.
   'bill.scan.title': 'బిల్లు స్కాన్ చేయండి',

@@ -16,11 +16,16 @@ export const onboarding = {
   'onboarding.slide.split.text': 'ಬಾಡಿಗೆ, ಪ್ರವಾಸ, ಕ್ಯಾಬ್, Netflix. ಅಥವಾ ಹೇಳಿಬಿಡಿ: “ರಿಯಾ ಮತ್ತು ಸ್ಯಾಮ್ ಜೊತೆ ಕ್ಯಾಬ್ 840”.',
   'onboarding.slide.settle.title': 'UPI ಮೂಲಕ ಹಣ ವಾಪಸ್ ಪಡೆಯಿರಿ',
   'onboarding.slide.settle.text': 'ಗುಂಪಿಗೆ ಒಂದು ಲಿಂಕ್ ಕಳುಹಿಸಿ. ಸ್ನೇಹಿತರು ತಮ್ಮ ಹೆಸರನ್ನು ಟ್ಯಾಪ್ ಮಾಡಿ, ಯಾವುದೇ UPI ಆ್ಯಪ್‌ನಿಂದ ಪಾವತಿಸುತ್ತಾರೆ.',
+  'onboarding.slide.stuck.title': 'ಹಣ ಸಿಲುಕಿದೆಯೇ? ವಾಪಸ್ ಪಡೆಯಿರಿ',
+  'onboarding.slide.stuck.text':
+    'ಪಾವತಿ ವಿಫಲವಾದರೂ ಹಣ ಕಡಿತವಾಯಿತೇ, ಅಥವಾ ರಿಫಂಡ್ ಬರಲೇ ಇಲ್ಲವೇ? Settle ದಿನಗಳನ್ನು ಎಣಿಸುತ್ತದೆ, ಕಾಯಿಸಿದ್ದಕ್ಕೆ ನಿಮ್ಮ ಬ್ಯಾಂಕ್ ಯಾವಾಗ ನಿಮಗೆ ಹಣ ಕೊಡಬೇಕು ಎಂದು ಹೇಳುತ್ತದೆ, ಮತ್ತು ದೂರನ್ನೂ ಬರೆದುಕೊಡುತ್ತದೆ.',
 
   'onboarding.about.title': 'ನಿಮ್ಮ ವಿವರ ಸೇರಿಸೋಣ',
   'onboarding.about.subtitle': 'ನೀವು ಕಳುಹಿಸುವ ವಿನಂತಿಗಳಲ್ಲಿ ಸ್ನೇಹಿತರು ನಿಮ್ಮ ಹೆಸರನ್ನು ನೋಡುತ್ತಾರೆ.',
   'onboarding.about.start.cta': 'ಹಂಚಲು ಶುರು ಮಾಡಿ',
   'onboarding.about.skip.cta': 'ಈಗ ಬಿಟ್ಟುಬಿಡಿ',
+  'onboarding.about.stuck.subtitle': 'Settle ನಿಮಗಾಗಿ ಬರೆಯುವ ದೂರು ಪತ್ರಗಳಲ್ಲಿ ನಿಮ್ಮ ಹೆಸರು ಇರುತ್ತದೆ.',
+  'onboarding.about.stuck.cta': 'ಮುಂದುವರಿಸಿ',
   'onboarding.about.name.label': 'ನಿಮ್ಮ ಹೆಸರು',
   'onboarding.about.name.placeholder': 'ಉದಾ. ಆಯುಷ್',
   'onboarding.about.name.error': 'ನಿಮ್ಮ ಹೆಸರು ಸೇರಿಸಿ — ನೀವು ಕಳುಹಿಸುವ ವಿನಂತಿಗಳಲ್ಲಿ ಸ್ನೇಹಿತರು ಅದನ್ನು ನೋಡುತ್ತಾರೆ.',

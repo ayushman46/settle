@@ -20,6 +20,8 @@ export interface AboutYou {
 }
 
 export interface AboutYouStepProps {
+  /** Just the name, for someone on their way to Stuck money (it goes on the letters); UPI ID and currency wait for You. */
+  nameOnly?: boolean
   onBack: () => void
   /** "Start splitting" with everything valid. */
   onDone: (about: AboutYou) => void
@@ -41,9 +43,9 @@ function startingName(saved: string): string {
 
 /**
  * The last onboarding step: your name (required), your UPI ID (optional — prefilled from a split
- * you made in the old app) and your currency. Nothing leaves the phone.
+ * you made in the old app) and your currency — or only the name (`nameOnly`). Nothing leaves the phone.
  */
-export function AboutYouStep({ onBack, onDone, onSkip }: AboutYouStepProps) {
+export function AboutYouStep({ nameOnly = false, onBack, onDone, onSkip }: AboutYouStepProps) {
   const t = useT()
   const profile = useProfile()
   const formId = useId()
@@ -59,7 +61,9 @@ export function AboutYouStep({ onBack, onDone, onSkip }: AboutYouStepProps) {
   // Until they type in it, the UPI field offers the ID the old app remembered for this name.
   const remembered = typedUpi === null ? legacyUpiIdFor(normalizeName(name)) : null
   const upi = typedUpi ?? remembered ?? ''
+  // Without the field on show, a remembered ID that doesn't check out is simply left off.
   const upiValid = upi.trim() === '' || isValidUpiId(upi)
+  const upiBlocks = !nameOnly && !upiValid
   const showUpiError = upiChecked && !upiValid
 
   const details = (fallbackName: string): AboutYou => ({
@@ -73,7 +77,7 @@ export function AboutYouStep({ onBack, onDone, onSkip }: AboutYouStepProps) {
     const missingName = normalizeName(name) === ''
     setNameError(missingName)
     setUpiChecked(true)
-    if (missingName || !upiValid) {
+    if (missingName || upiBlocks) {
       haptic('warning')
       ;(missingName ? nameRef : upiRef).current?.focus()
       return
@@ -88,7 +92,7 @@ export function AboutYouStep({ onBack, onDone, onSkip }: AboutYouStepProps) {
       footer={
         <ActionBar>
           <Button block type="submit" form={formId}>
-            {t('onboarding.about.start.cta')}
+            {nameOnly ? t('onboarding.about.stuck.cta') : t('onboarding.about.start.cta')}
           </Button>
           {/* A skipped name is saved as "You" (data, not copy: see PLACEHOLDER_NAMES). */}
           <Button block variant="ghost" onClick={() => onSkip(details('You'))}>
@@ -97,7 +101,7 @@ export function AboutYouStep({ onBack, onDone, onSkip }: AboutYouStepProps) {
         </ActionBar>
       }
     >
-      <PageTitle title={t('onboarding.about.title')} subtitle={t('onboarding.about.subtitle')} />
+      <PageTitle title={t('onboarding.about.title')} subtitle={nameOnly ? t('onboarding.about.stuck.subtitle') : t('onboarding.about.subtitle')} />
       <form id={formId} className={styles.form} noValidate onSubmit={submit}>
         <TextField
           ref={nameRef}
@@ -105,7 +109,7 @@ export function AboutYouStep({ onBack, onDone, onSkip }: AboutYouStepProps) {
           placeholder={t('onboarding.about.name.placeholder')}
           autoComplete="given-name"
           autoCapitalize="words"
-          enterKeyHint="next"
+          enterKeyHint={nameOnly ? 'done' : 'next'}
           maxLength={MAX_NAME_LENGTH * 2}
           value={name}
           error={nameError ? t('onboarding.about.name.error') : undefined}
@@ -114,55 +118,59 @@ export function AboutYouStep({ onBack, onDone, onSkip }: AboutYouStepProps) {
             if (nameError && normalizeName(event.target.value) !== '') setNameError(false)
           }}
         />
-        <TextField
-          ref={upiRef}
-          label={t('onboarding.about.upi.label')}
-          placeholder={t('onboarding.about.upi.placeholder')}
-          inputMode="email"
-          autoComplete="off"
-          autoCapitalize="none"
-          autoCorrect="off"
-          spellCheck={false}
-          enterKeyHint="done"
-          className={styles.mono}
-          value={upi}
-          hint={
-            isPhoneUpiId(upi)
-              ? t('kit.upiForm.hint.phone')
-              : remembered !== null
-                ? t('onboarding.about.upi.hint.remembered')
-                : t('onboarding.about.upi.hint')
-          }
-          error={showUpiError ? t('onboarding.about.upi.error') : undefined}
-          onChange={(event) => {
-            setTypedUpi(event.target.value)
-            if (upiChecked && (event.target.value.trim() === '' || isValidUpiId(event.target.value))) setUpiChecked(false)
-          }}
-          onBlur={() => setUpiChecked(true)}
-        />
-        <div className={styles.currencyField}>
-          <span className={styles.fieldLabel} id={`${formId}-currency`}>
-            {t('onboarding.about.currency.label')}
-          </span>
-          <button
-            type="button"
-            className={styles.currencyButton}
-            aria-labelledby={`${formId}-currency ${formId}-currency-value ${formId}-currency-change`}
-            aria-haspopup="dialog"
-            onClick={() => setPicking(true)}
-          >
-            <span className={styles.currencySymbol} aria-hidden="true">
-              {currencySymbol(currency).slice(0, 3)}
-            </span>
-            <span id={`${formId}-currency-value`} className={styles.currencyText}>
-              {currencyName(currency)} <span className={styles.currencyCode}>{currency}</span>
-            </span>
-            <span id={`${formId}-currency-change`} className={styles.currencyChange} aria-hidden="true">
-              {t('onboarding.about.currency.change')}
-              <ChevronRight strokeWidth={2.5} />
-            </span>
-          </button>
-        </div>
+        {!nameOnly && (
+          <>
+            <TextField
+              ref={upiRef}
+              label={t('onboarding.about.upi.label')}
+              placeholder={t('onboarding.about.upi.placeholder')}
+              inputMode="email"
+              autoComplete="off"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
+              enterKeyHint="done"
+              className={styles.mono}
+              value={upi}
+              hint={
+                isPhoneUpiId(upi)
+                  ? t('kit.upiForm.hint.phone')
+                  : remembered !== null
+                    ? t('onboarding.about.upi.hint.remembered')
+                    : t('onboarding.about.upi.hint')
+              }
+              error={showUpiError ? t('onboarding.about.upi.error') : undefined}
+              onChange={(event) => {
+                setTypedUpi(event.target.value)
+                if (upiChecked && (event.target.value.trim() === '' || isValidUpiId(event.target.value))) setUpiChecked(false)
+              }}
+              onBlur={() => setUpiChecked(true)}
+            />
+            <div className={styles.currencyField}>
+              <span className={styles.fieldLabel} id={`${formId}-currency`}>
+                {t('onboarding.about.currency.label')}
+              </span>
+              <button
+                type="button"
+                className={styles.currencyButton}
+                aria-labelledby={`${formId}-currency ${formId}-currency-value ${formId}-currency-change`}
+                aria-haspopup="dialog"
+                onClick={() => setPicking(true)}
+              >
+                <span className={styles.currencySymbol} aria-hidden="true">
+                  {currencySymbol(currency).slice(0, 3)}
+                </span>
+                <span id={`${formId}-currency-value`} className={styles.currencyText}>
+                  {currencyName(currency)} <span className={styles.currencyCode}>{currency}</span>
+                </span>
+                <span id={`${formId}-currency-change`} className={styles.currencyChange} aria-hidden="true">
+                  {t('onboarding.about.currency.change')}
+                  <ChevronRight strokeWidth={2.5} />
+                </span>
+              </button>
+            </div>
+          </>
+        )}
       </form>
       <p className={styles.privacy}>
         <ShieldCheck aria-hidden="true" className={styles.privacyIcon} />

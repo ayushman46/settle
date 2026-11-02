@@ -16,7 +16,7 @@ export const delivery = {
   'delivery.review.fees.removed.toast': '{label} કાઢી નાખ્યું',
   'delivery.review.fees.full.toast': 'એક બિલમાં વધુમાં વધુ {max} ચાર્જ હોઈ શકે.',
   'delivery.review.fees.converted.toast': '{label} હવે એક આઇટમ છે — આગલા પગલાંમાં કહો કે એ કોણે લીધી',
-  'delivery.review.fees.undoFailed.toast': 'પાછું લઈ શકાયું નહીં — બિલ બદલાઈ ગયું છે',
+  'delivery.review.fees.undoFailed.toast': 'પહેલાં જેવું ન થઈ શક્યું — બિલ બદલાઈ ગયું છે',
   'delivery.fee.title': 'ચાર્જ',
   'delivery.fee.name.label': 'નામ',
   'delivery.fee.amount.label': 'રકમ',

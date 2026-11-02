@@ -1,8 +1,9 @@
-import { render, screen, within } from '@testing-library/react'
+import { act, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { resetDataForTests } from '../data'
 import { ME_ID, type Expense } from '../domain/types'
+import { resetI18nForTests, setLanguage } from '../i18n'
 import { makeExpense } from '../share/testing'
 import { ShareList } from './ShareList'
 import { extrasLabel, shareActions, shareLines } from './shareLines'
@@ -14,6 +15,7 @@ beforeEach(() => {
 })
 
 afterEach(() => {
+  resetI18nForTests()
   resetDataForTests()
 })
 
@@ -175,6 +177,36 @@ describe('ShareList', () => {
     render(<ShareList expense={dinner({ groupId: group.id })} onTogglePaid={() => {}} onPayUpi={() => {}} onNudge={() => {}} />)
     expect(rows()[2]).toHaveTextContent('Settles in Goa 2026')
     expect(screen.queryByRole('button')).not.toBeInTheDocument()
+  })
+
+  it('says what you paid and are owed in your words, not "you" put into a name (Indian languages)', async () => {
+    // Each language's "you" already carries its case ending: dropped into "Owes {name}" it doubled
+    // it (আপনাকে-এর) or turned who owes whom around (मराठी: "तुम्हाला यांचे देणे आहे").
+    const want = {
+      hi: { owesYou: 'आपको देने हैं', paidYou: 'आपको चुका दिया', tickYou: 'Sam ने आपको चुका दिया', tickMine: 'आपने Riya को चुका दिया' },
+      bn: { owesYou: 'আপনাকে দেবেন', paidYou: 'আপনাকে ফেরত দিয়েছেন', tickYou: 'Sam আপনাকে ফেরত দিয়েছেন', tickMine: 'আপনি Riya-কে ফেরত দিয়েছেন' },
+      mr: { owesYou: 'तुमचे देणे लागतात', paidYou: 'तुम्हाला परत दिले', tickYou: 'Sam यांनी तुम्हाला परत दिले', tickMine: 'तुम्ही Riya यांना परत दिले' },
+      gu: { owesYou: 'તમને આપવાના છે', paidYou: 'તમને પાછા ચૂકવ્યા', tickYou: 'Sam એ તમને પાછા ચૂકવ્યા', tickMine: 'તમે Riya ને પાછા ચૂકવ્યા' },
+    } as const
+    const doubled = /तुम्हाला यांचे|तुम्हाला यांना|आप को|আপনাকে-|તમને ને/
+    for (const [code, words] of Object.entries(want)) {
+      await act(async () => {
+        expect(await setLanguage(code as keyof typeof want)).toBe(true)
+      })
+      const mine = render(<ShareList expense={dinner()} onTogglePaid={() => {}} onPayUpi={() => {}} onNudge={() => {}} />)
+      const lines = within(screen.getAllByRole('list')[0]!).getAllByRole('listitem')
+      expect(lines[1]).toHaveTextContent(words.paidYou)
+      expect(lines[2]).toHaveTextContent(words.owesYou)
+      expect(screen.getByRole('button', { name: words.tickYou })).toBeInTheDocument()
+      const qr = screen.getAllByRole('button', { name: /UPI QR/ }).map((b) => b.getAttribute('aria-label') ?? '')
+      expect(qr[0]).toMatch(/Sam/)
+      for (const text of [...lines.map((li) => li.textContent ?? ''), ...qr]) expect(text).not.toMatch(doubled)
+      mine.unmount()
+
+      const theirs = render(<ShareList expense={dinner({ payerId: 'riya', paidBack: {} })} onTogglePaid={() => {}} />)
+      expect(screen.getByRole('button', { name: words.tickMine })).toBeInTheDocument()
+      theirs.unmount()
+    }
   })
 
   it("folds out each person's items on a bill", async () => {

@@ -42,9 +42,9 @@ export const pay = {
 
   'pay.tell.title': 'ચૂકવ્યું?',
   'pay.tell.cta': '{name} ને કહો કે ચૂકવી દીધું છે',
-  'pay.tell.copied.status': 'સંદેશ કૉપી થયો — તમારી ચેટમાં પેસ્ટ કરો.',
+  'pay.tell.copied.status': 'મેસેજ કૉપી થયો — તમારી ચેટમાં પેસ્ટ કરો.',
   'pay.tell.shared.status': 'મોકલાયું. હિસાબ પતાવવા બદલ આભાર!',
-  'pay.tell.failed.status': 'સંદેશ શેર ન થયો. ફરી પ્રયાસ કરો.',
+  'pay.tell.failed.status': 'મેસેજ શેર ન થયો. ફરી પ્રયાસ કરો.',
   'pay.tell.message': 'હાય {name}! {title} માટે {amount} હમણાં જ ચૂકવ્યા ✓',
   'pay.tell.message.noName': 'હાય! {title} માટે {amount} હમણાં જ ચૂકવ્યા ✓',
   'pay.tell.message.cash': 'નમસ્તે {name}! {title} માટે {amount} રોકડા આપ્યા ✓',

@@ -11,6 +11,8 @@ export const home = {
   'home.quick.sms': 'SMS से',
   'home.quick.food': 'फ़ूड ऑर्डर',
   'home.quick.group': 'नया ग्रुप',
+  // Failed payments and refunds that haven't come back (Stuck money), there even before the first one.
+  'home.quick.stuck': 'अटके पैसे',
   'home.quick.more': 'और भी',
   // One-tap starts for everyday splits (a tile each, or in the More sheet).
   'home.template.rent': 'किराया',
@@ -18,9 +20,13 @@ export const home = {
   'home.template.subscription': 'सब्सक्रिप्शन',
   'home.template.utilities': 'बिजली-पानी',
   'home.template.transport': 'कैब',
-  // The sheet behind the More tile.
-  'home.more.title': 'बाँटने के और तरीके',
-  'home.more.subtitle': 'इनमें से किसी के लिए भी, बस रकम से शुरू करें।',
+  // The sheet behind the More tile: getting money back, then ways to start a split.
+  'home.more.title': 'और भी',
+  'home.more.subtitle': 'अपने पैसे वापस पाएँ, या कोई बँटवारा शुरू करें।',
+  'home.more.back': 'अपने पैसे वापस पाएँ',
+  'home.more.split': 'बँटवारा शुरू करें',
+  // Short tile name for "Paid? Drop the screenshot".
+  'home.more.proof': 'पेमेंट स्क्रीनशॉट',
   'home.describe.looksRight': 'सही है',
   'home.describe.changeWords': 'जो कहा, उसे बदलें',
   'home.describe.off.title': 'AI सहायक अभी बंद है',
@@ -32,6 +38,18 @@ export const home = {
   'home.describe.reading': 'आपका बँटवारा पढ़ा जा रहा है…',
   'home.describe.noAmount': 'अगली स्क्रीन पर रकम डालें',
   'home.describe.paidBy': '{name} ने चुकाए · {mode}',
+  // How the draft is split, as {mode} above (the same words as the split screen's picker).
+  'home.describe.mode.equal': 'बराबर-बराबर',
+  'home.describe.mode.exact': 'तय रकम से',
+  'home.describe.mode.percent': 'प्रतिशत से',
+  'home.describe.mode.shares': 'हिस्सों से',
+  'home.describe.mode.had': 'किसका कितना',
+  // Who's in: "आप, रिया और 2 अन्य" (joined with ui.list.last), or a nudge when the text named nobody.
+  'home.describe.people.more': '{count} अन्य',
+  'home.describe.people.none': 'कौन-कौन शामिल है, अगली स्क्रीन पर चुनें',
+  // What a screen reader hears when the draft appears.
+  'home.describe.announce': 'बँटवारा तैयार है: {title}, {people}। {mode}, {name} ने चुकाए।',
+  'home.describe.announce.nobody': 'बँटवारा तैयार है: {title}। {mode}, {name} ने चुकाए।',
   'home.first.title': 'अपना पहला खर्च बाँटें',
   'home.first.body': 'डिनर, किराया, घर तक की कैब — Settle बता देता है कि किसे कितना देना है, और UPI से वापस मिल जाता है।',
   'home.first.split': 'खर्च बाँटें',
@@ -44,7 +62,7 @@ export const home = {
   'home.people.add': 'जोड़ें',
   'home.describe.error.badRequest': 'बताएँ कि खर्च किस लिए था और कितना था — जैसे “{example}”।',
   'home.describe.error.notSplit': 'यह खर्च जैसा नहीं लग रहा — “{example}” जैसा लिखकर देखें।',
-  'home.describe.error.unreadable': 'हम इसे बँटवारे में नहीं बदल सके। “Cab 840 with Riya and Sam” जैसा लिखकर देखें।',
+  'home.describe.error.unreadable': 'हम इसे बँटवारे में नहीं बदल सके। “कैब 840 रिया और सैम के साथ” जैसा लिखकर देखें।',
   'home.describe.error.notConfigured': 'AI सहायक अभी उपलब्ध नहीं है — फिर भी आप इसे हाथ से बाँट सकते हैं।',
   'home.describe.error.upstreamAuth': 'AI सहायक अभी ठीक से काम नहीं कर रहा — फिर भी आप इसे हाथ से बाँट सकते हैं।',
   'home.describe.error.rateLimited': 'अभी बहुत सारे बँटवारे पढ़े जा रहे हैं — थोड़ी देर बाद फिर कोशिश करें।',
@@ -81,6 +99,8 @@ export const home = {
   'home.header.proOn': 'Settle Pro चालू है',
   'home.header.renew': 'Pro रिन्यू करें',
   'home.header.go': 'Pro लें',
+  // The avatar in the corner, which opens You.
+  'home.header.youAria': 'आप: प्रोफ़ाइल और सेटिंग',
   'home.recent.title': 'हाल की गतिविधि',
   'home.recent.all': 'सब देखें',
   'home.recent.allAria': 'सारी गतिविधि देखें',
@@ -93,6 +113,15 @@ export const home = {
   'home.draft.inProgress': 'बिल अधूरा है',
   'home.draft.items': '{count, plural, one {# आइटम} other {# आइटम}}',
   'home.people.seeAllAria': 'सभी लोग देखें',
+  // Spoken for the Add tile and for a person with money out ("रिया ₹540, इनसे लेने हैं").
+  'home.people.addAria': 'किसी व्यक्ति को जोड़ें',
+  'home.people.owesYouAria': '{name} {amount}, इनसे लेने हैं',
+  'home.people.youOweAria': '{name} {amount}, इन्हें देने हैं',
   'home.due.title': 'जल्द देय',
   'home.due.seeAllAria': 'सभी रिकरिंग स्प्लिट देखें',
+  'home.say.example.0': 'डिनर 2400 रिया और सैम के साथ',
+  'home.say.example.1': 'किराया 32000, मैं 40%, आदित्य 30%, नेहा 30%',
+  'home.say.example.2': 'कैब 840 रिया और सैम के साथ, सैम दोगुना देगा',
+  'home.say.example.3': 'Netflix 649, 4 लोगों में',
+  'home.say.example.4': 'राशन 1260, नेहा ने दिए, मेरे साथ बाँटो',
 } as const satisfies Messages

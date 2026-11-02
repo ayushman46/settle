@@ -16,7 +16,7 @@ export const split = {
   'split.save.new.cta': 'ভাগ সেভ করুন',
   'split.save.cta': 'বদল সেভ করুন',
   'split.currency.toast': 'এখন {code}-তে',
-  'split.undo.cta': 'ফিরিয়ে নিন',
+  'split.undo.cta': 'আগের মতো করুন',
   'split.saved.title': 'ভাগ সেভ হয়েছে',
 
   // The amount and the details.

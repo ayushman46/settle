@@ -8,6 +8,9 @@ export const app = {
   'app.tab.activity': 'লেনদেন',
   'app.tab.you': 'আপনি',
 
+  // The line under the logo (You's footer).
+  'app.tagline': 'যেকোনো কিছু ভাগ করুন। এক ট্যাপে হিসাব মেটান।',
+
   // The browser tab's title: "{page} · Settle".
   'app.title.format': '{page} · {brand}',
   // Page names for the browser tab (one per screen).

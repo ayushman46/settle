@@ -22,7 +22,7 @@ export const expense = {
   'expense.toast.markedPaid': '{who, select, me {आपको चुकाया हुआ मार्क किया} other {{name} को चुकाया हुआ मार्क किया}}',
   'expense.toast.markedUnpaid': '{who, select, me {आपको अभी बाकी मार्क किया} other {{name} को अभी बाकी मार्क किया}}',
   'expense.toast.deleted': '{title} हटा दिया',
-  'expense.toast.undo': 'वापस लें',
+  'expense.toast.undo': 'पहले जैसा करें',
   'expense.paidReply.screen': 'भुगतान',
   'expense.paidReply.loading': 'जवाब पढ़ रहे हैं…',
   'expense.paidReply.empty.title': 'यहाँ पढ़ने को कुछ नहीं',
@@ -106,5 +106,5 @@ export const expense = {
   'expense.actions.markAll': 'सबको चुकाया मार्क करें',
   'expense.actions.markAll.detail': 'जब सारे पैसे वापस आ जाएँ',
   'expense.actions.delete': 'हटाएँ',
-  'expense.actions.delete.detail': 'हटाने के तुरंत बाद वापस ले सकते हैं',
+  'expense.actions.delete.detail': 'हटाने के तुरंत बाद वापस ला सकते हैं',
 } as const satisfies Messages

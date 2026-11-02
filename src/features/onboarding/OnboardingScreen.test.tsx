@@ -44,7 +44,7 @@ async function toDetails(user: ReturnType<typeof renderWelcome>['user']) {
 }
 
 describe('OnboardingScreen — slides', SLOW, () => {
-  it('walks through three slides to the details step', async () => {
+  it('walks through four slides to the details step', async () => {
     const { user } = renderWelcome()
     toSlides()
     expect(await screen.findByRole('heading', { level: 1, name: 'Welcome to Settle' })).toBeInTheDocument()
@@ -54,10 +54,13 @@ describe('OnboardingScreen — slides', SLOW, () => {
 
     await user.click(screen.getByRole('button', { name: 'Next' }))
     expect(currentDot()).toBe('Slide 2: Split anything')
-    expect(screen.getByText('Slide 2 of 3: Split anything')).toBeInTheDocument()
+    expect(screen.getByText('Slide 2 of 4: Split anything')).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Next' }))
     expect(currentDot()).toBe('Slide 3: Get paid back by UPI')
+    // Not only splitting: money a bank or shop owes you, too.
+    await user.click(screen.getByRole('button', { name: 'Next' }))
+    expect(currentDot()).toBe('Slide 4: Money stuck? Get it back')
     await user.click(screen.getByRole('button', { name: 'Get started' }))
     expect(await screen.findByRole('heading', { level: 1, name: 'Let’s set you up' })).toBeInTheDocument()
   })
@@ -66,9 +69,9 @@ describe('OnboardingScreen — slides', SLOW, () => {
     const { user } = renderWelcome()
     toSlides()
     const slides = screen.getAllByRole('group', { hidden: true })
-    expect(slides.map((s) => s.getAttribute('aria-hidden'))).toEqual([null, 'true', 'true'])
+    expect(slides.map((s) => s.getAttribute('aria-hidden'))).toEqual([null, 'true', 'true', 'true'])
     await user.click(screen.getByRole('button', { name: 'Slide 3: Get paid back by UPI' }))
-    expect(slides.map((s) => s.getAttribute('aria-hidden'))).toEqual(['true', 'true', null])
+    expect(slides.map((s) => s.getAttribute('aria-hidden'))).toEqual(['true', 'true', null, 'true'])
   })
 
   it('moves with the arrow keys, Home and End', () => {
@@ -78,11 +81,11 @@ describe('OnboardingScreen — slides', SLOW, () => {
     fireEvent.keyDown(track, { key: 'ArrowRight' })
     expect(currentDot()).toBe('Slide 2: Split anything')
     fireEvent.keyDown(track, { key: 'End' })
-    expect(currentDot()).toBe('Slide 3: Get paid back by UPI')
+    expect(currentDot()).toBe('Slide 4: Money stuck? Get it back')
     fireEvent.keyDown(track, { key: 'ArrowRight' })
-    expect(currentDot()).toBe('Slide 3: Get paid back by UPI')
+    expect(currentDot()).toBe('Slide 4: Money stuck? Get it back')
     fireEvent.keyDown(track, { key: 'ArrowLeft' })
-    expect(currentDot()).toBe('Slide 2: Split anything')
+    expect(currentDot()).toBe('Slide 3: Get paid back by UPI')
     fireEvent.keyDown(track, { key: 'Home' })
     expect(currentDot()).toBe('Slide 1: Snap the bill')
   })
@@ -269,6 +272,35 @@ describe('OnboardingScreen — about you', SLOW, () => {
     await user.type(screen.getByLabelText('Your name'), 'Ayush')
     await user.click(screen.getByRole('button', { name: 'Start splitting' }))
     await waitFor(() => expect(currentUrl()).toBe('/app/split/new?category=rent'))
+  })
+
+  it('puts Home beneath the page it carries on to, so its back arrow stays in the app', async () => {
+    const { user } = renderWelcome('/app/welcome?next=%2Fapp%2Fbill')
+    await toDetails(user)
+    await user.type(screen.getByLabelText('Your name'), 'Ayush')
+    await user.click(screen.getByRole('button', { name: 'Start splitting' }))
+    await waitFor(() => expect(currentUrl()).toBe('/app/bill'))
+    act(() => {
+      window.history.back()
+    })
+    await waitFor(() => expect(currentUrl()).toBe('/app'))
+  })
+
+  it('on the way to Stuck money: just its slide, then only a name', async () => {
+    const { user } = renderWelcome('/app/welcome?next=%2Fapp%2Fstuck')
+    toSlides()
+    expect(await screen.findByRole('heading', { name: 'Money stuck? Get it back' })).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Snap the bill' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /^Slide \d/ })).not.toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Get started' }))
+    expect(await screen.findByRole('heading', { level: 1, name: 'Let’s set you up' })).toBeInTheDocument()
+    expect(screen.getByText('It goes on the complaint letters Settle writes for you.')).toBeInTheDocument()
+    expect(screen.queryByLabelText('Your UPI ID (optional)')).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /^Currency/ })).not.toBeInTheDocument()
+    await user.type(screen.getByLabelText('Your name'), 'Meera')
+    await user.click(screen.getByRole('button', { name: 'Continue' }))
+    expect(profileStore.get()).toMatchObject({ name: 'Meera', onboarded: true })
+    await waitFor(() => expect(currentUrl()).toBe('/app/stuck'))
   })
 
   it('never follows a `next` that leaves the app', async () => {

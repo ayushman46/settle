@@ -174,14 +174,25 @@ describe('YouScreen — shortcuts', () => {
 
   it('opens Stuck money, saying what banks and shops owe you', async () => {
     const first = renderYou()
-    expect(screen.getByRole('button', { name: /^Stuck money/ })).toHaveTextContent('Failed payments and refunds')
+    expect(screen.getByRole('button', { name: /^Stuck money/ })).toBeInTheDocument()
     first.unmount()
     stuckStore.set([stuckPayment({ date: '2026-10-21' })])
     const { user } = renderYou()
     const row = screen.getByRole('button', { name: /^Stuck money/ })
-    expect(row).toHaveTextContent('₹500 with banks and shops')
+    expect(row).toHaveTextContent('₹500')
     await user.click(row)
     await waitFor(() => expect(currentUrl()).toBe('/app/stuck'))
+  })
+
+  it('keeps the shortcuts under a heading, Stuck money straight after People (above the Pro-only rows)', () => {
+    renderYou()
+    const shortcuts = screen.getByRole('region', { name: 'Shortcuts' })
+    const rows = within(shortcuts)
+      .getAllByRole('button')
+      .map((b) => (b.textContent ?? '').trim())
+    expect(rows[0]).toMatch(/^People/)
+    expect(rows[1]).toMatch(/^Stuck money/)
+    expect(rows.findIndex((r) => r.startsWith('Stuck money'))).toBeLessThan(rows.findIndex((r) => r.startsWith('Recurring splits')))
   })
 
   it('counts recurring splits for Pro users', async () => {

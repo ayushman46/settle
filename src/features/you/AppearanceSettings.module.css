@@ -45,6 +45,7 @@
   min-width: 0;
   padding-block: 2px;
   border-radius: var(--r-md);
+  container: swatch / inline-size;
 }
 
 .swatch:focus-visible {
@@ -95,13 +96,20 @@
   transition-duration: var(--dur-1);
 }
 
+/* The whole name ("వయొలెట్"), on a second line if it must — never cut to "…". */
 .name {
   max-width: 100%;
-  overflow: hidden;
   font: var(--text-micro);
   color: var(--ink-2);
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  text-align: center;
+  overflow-wrap: break-word;
+}
+
+@container swatch (max-width: 3.5rem) {
+  .name {
+    font-size: 0.6875rem;
+    letter-spacing: -0.01em;
+  }
 }
 
 .selected .name {

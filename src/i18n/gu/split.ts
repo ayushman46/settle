@@ -13,7 +13,7 @@ export const split = {
   'split.save.new.cta': 'સ્પ્લિટ સેવ કરો',
   'split.save.cta': 'ફેરફાર સેવ કરો',
   'split.currency.toast': 'હવે {code} માં',
-  'split.undo.cta': 'પાછું લો',
+  'split.undo.cta': 'પહેલાં જેવું કરો',
   'split.saved.title': 'સ્પ્લિટ સેવ થઈ',
 
   'split.amount.label': 'રકમ',

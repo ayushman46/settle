@@ -11,19 +11,20 @@ import { useCountUp } from '../../kit/motion'
 import { cx } from '../../lib/cx'
 import { haptic } from '../../lib/haptics'
 import { STUCK_NEW_PATH, stuckPath } from './paths'
-import { summarize, type StuckSummary } from './rules'
+import { needsAction, summarize, type StuckSummary } from './rules'
 import { StuckAlertsCard } from './StuckAlertsCard'
 import { KindIcon } from './StuckParts'
 import { StuckPasteSheet } from './StuckPasteSheet'
-import { groupStuck, inr, partyName, statusLine, type StuckEntry, type StuckSection } from './view'
+import { checkLabel, groupStuck, inr, orderTail, rowAmount, statusLine, stuckTitle, type StuckEntry, type StuckSection } from './view'
 import styles from './Stuck.module.css'
 
 /**
  * `/app/stuck` — "Stuck money": what banks and shops owe you (payments that failed but took the
  * money, refunds that haven't come), with what the wait has earned you under the RBI's rules and
  * what you've got back. What needs you comes first — a failed payment to check is a Yes or a No
- * right in its row — then what's on its way, what came back, and what was set aside. Add one, or
- * paste the bank's SMS and Settle fills it in.
+ * right in its row — then what's raised and waiting on them, what's owed for the wait, what isn't
+ * due yet, what came back, and what was set aside. Add one, or paste the bank's SMS and Settle
+ * fills it in.
  */
 export function StuckScreen() {
   const t = useT()
@@ -84,6 +85,8 @@ export function StuckScreen() {
       </div>
       <StuckAlertsCard />
       <Section section="needs" entries={groups.needs} day={day} />
+      <Section section="them" entries={groups.them} day={day} />
+      <Section section="owed" entries={groups.owed} day={day} />
       <Section section="onway" entries={groups.onway} day={day} />
       <Section section="back" entries={groups.back} day={day} />
       <Section section="aside" entries={groups.aside} day={day} collapsible />
@@ -92,13 +95,16 @@ export function StuckScreen() {
   )
 }
 
-/** The rule, in one line: "Banks must put a failed UPI payment to a person back the next day…". */
+/** The rules, in two lines: the RBI's deadlines for failed payments, and a business's own for refunds. */
 function RuleNote() {
   const t = useT()
   return (
     <p className={styles.rule}>
       <Scale aria-hidden="true" className={styles.ruleIcon} />
-      <span>{t('stuck.rule')}</span>
+      <span className={styles.ruleLines}>
+        <span>{t('stuck.rule')}</span>
+        <span>{t('stuck.rule.refund')}</span>
+      </span>
     </p>
   )
 }
@@ -112,6 +118,8 @@ function SummaryHero({ summary }: { summary: StuckSummary }) {
   const shown = useCountUp(headline, { step: 100 })
   const counting = shown !== headline
   const calm = headline === 0
+  // Nothing counted yet, but failed payments to check: that's the news, not "nothing stuck".
+  const checks = calm ? summary.open : 0
   const extra = summary.compensation > 0 && !owedOnly
 
   return (
@@ -120,7 +128,7 @@ function SummaryHero({ summary }: { summary: StuckSummary }) {
         {t('stuck.summary.heading')}
       </h2>
       {calm ? (
-        <p className={styles.heroCalm}>{t('stuck.summary.calm')}</p>
+        <p className={styles.heroCalm}>{checks > 0 ? t('stuck.summary.check', { count: checks }) : t('stuck.summary.calm')}</p>
       ) : (
         <div className={styles.heroTop}>
           <p className={styles.heroLabel}>{owedOnly ? t('stuck.summary.labelWait') : t('stuck.summary.label')}</p>
@@ -146,7 +154,7 @@ function SummaryHero({ summary }: { summary: StuckSummary }) {
           )}
         </dl>
       )}
-      {summary.act > 0 && (
+      {summary.act > checks && (
         <p className={styles.heroFoot}>
           <span className={styles.heroDot} aria-hidden="true" />
           {t('stuck.summary.act', { count: summary.act })}
@@ -158,6 +166,8 @@ function SummaryHero({ summary }: { summary: StuckSummary }) {
 
 const SECTION_TITLES = {
   needs: 'stuck.section.needs',
+  them: 'stuck.section.them',
+  owed: 'stuck.section.owed',
   onway: 'stuck.section.onway',
   back: 'stuck.section.back',
   aside: 'stuck.section.aside',
@@ -168,10 +178,14 @@ function Section({ section, entries, day, collapsible = false }: { section: Stuc
   const id = useId()
   const [open, setOpen] = useState(!collapsible)
   if (entries.length === 0) return null
+  // Heard as "Needs you, 2 payments"; seen as the title and its count.
   const title: ReactNode = (
     <>
-      {t(SECTION_TITLES[section])}{' '}
-      <span className={styles.sectionCount}>{entries.length}</span>
+      <span aria-hidden="true">{t(SECTION_TITLES[section])}</span>{' '}
+      <span aria-hidden="true" className={styles.sectionCount}>
+        {entries.length}
+      </span>
+      <span className="visually-hidden">{t('stuck.section.named', { title: t(SECTION_TITLES[section]), count: entries.length })}</span>
     </>
   )
   return (
@@ -204,9 +218,11 @@ function Row({ entry, section, day }: { entry: StuckEntry; section: StuckSection
   const t = useT()
   const toast = useToast()
   const { payment: s, next } = entry
-  const name = partyName(s)
+  const name = stuckTitle(s)
+  const order = orderTail(s)
   const line = statusLine(s, next, day)
-  const urgent = next.stage === 'overdue' || next.stage === 'escalate' || next.stage === 'compensation'
+  const urgent = needsAction(next.stage) && next.stage !== 'check'
+  const checking = next.stage === 'check'
 
   const yes = (p: StuckPayment): void => {
     const undo = confirmStuck(p.id)
@@ -226,18 +242,22 @@ function Row({ entry, section, day }: { entry: StuckEntry; section: StuckSection
         <span className={styles.rowText}>
           <span id={`${id}-name`} className={styles.rowTitle}>
             {name}
+            {order && <span className={styles.rowOrder}> · {order}</span>}
           </span>{' '}
           <span id={`${id}-status`} className={cx(styles.rowStatus, urgent && styles.rowUrgent, section === 'back' && styles.rowBack)}>{line}</span>
         </span>{' '}
-        <Money value={s.amount} currency="INR" strong={section !== 'aside'} muted={section === 'aside'} trimZeros className={styles.rowAmount} />
+        {/* The question to check already says the amount: it's heard once. */}
+        <span className={styles.rowAmount} aria-hidden={checking || undefined}>
+          <Money value={rowAmount(s, next, day)} currency="INR" strong={section !== 'aside'} muted={section === 'aside'} trimZeros />
+        </span>
       </button>
-      {next.stage === 'check' && (
-        // The pair is named by its row ("Zepto · Did ₹249 leave your account?"), so each button keeps its visible words as its name.
+      {checking && (
+        // The pair is named by its row ("Zepto · Did ₹249 leave your account?"); each button starts with its visible words and says whose it is.
         <div className={styles.rowActions} role="group" aria-labelledby={`${id}-name ${id}-status`}>
-          <Button size="sm" variant="tonal" onClick={() => yes(s)}>
+          <Button size="sm" variant="tonal" onClick={() => yes(s)} aria-label={checkLabel(s, t('stuck.check.yes.short'))}>
             {t('stuck.check.yes.short')}
           </Button>
-          <Button size="sm" variant="ghost" onClick={() => no(s)}>
+          <Button size="sm" variant="ghost" onClick={() => no(s)} aria-label={checkLabel(s, t('stuck.check.no.short'))}>
             {t('stuck.check.no.short')}
           </Button>
         </div>

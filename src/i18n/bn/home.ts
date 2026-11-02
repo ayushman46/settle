@@ -11,6 +11,8 @@ export const home = {
   'home.quick.sms': 'SMS থেকে',
   'home.quick.food': 'ফুড অর্ডার',
   'home.quick.group': 'নতুন গ্রুপ',
+  // Failed payments and refunds that haven't come back (Stuck money), there even before the first one.
+  'home.quick.stuck': 'আটকে থাকা টাকা',
   'home.quick.more': 'আরও',
   // One-tap starts for everyday splits (a tile each, or in the More sheet).
   'home.template.rent': 'ভাড়া',
@@ -18,9 +20,13 @@ export const home = {
   'home.template.subscription': 'সাবস্ক্রিপশন',
   'home.template.utilities': 'বিদ্যুৎ ও জল',
   'home.template.transport': 'ক্যাব',
-  // The sheet behind the More tile.
-  'home.more.title': 'ভাগ করার আরও উপায়',
-  'home.more.subtitle': 'এর যেকোনোটির জন্য শুধু টাকার পরিমাণ দিয়ে শুরু করুন।',
+  // The sheet behind the More tile: getting money back, then ways to start a split.
+  'home.more.title': 'আরও',
+  'home.more.subtitle': 'আপনার টাকা ফেরত আনুন, বা নতুন ভাগ শুরু করুন।',
+  'home.more.back': 'আপনার টাকা ফেরত আনুন',
+  'home.more.split': 'ভাগ শুরু করুন',
+  // Short tile name for "Paid? Drop the screenshot".
+  'home.more.proof': 'পেমেন্টের স্ক্রিনশট',
   // "Just say it" — what the AI reading of a sentence shows.
   'home.describe.looksRight': 'ঠিক আছে',
   'home.describe.changeWords': 'আমি যা বলেছি তা বদলান',
@@ -33,6 +39,18 @@ export const home = {
   'home.describe.reading': 'আপনার ভাগ পড়া হচ্ছে…',
   'home.describe.noAmount': 'পরের স্ক্রিনে পরিমাণ যোগ করুন',
   'home.describe.paidBy': '{name} দিয়েছেন · {mode}',
+  // How the draft is split, as {mode} above.
+  'home.describe.mode.equal': 'সমান ভাগে',
+  'home.describe.mode.exact': 'সঠিক পরিমাণে',
+  'home.describe.mode.percent': 'শতাংশ হিসেবে',
+  'home.describe.mode.shares': 'অংশ হিসেবে',
+  'home.describe.mode.had': 'যে যা নিয়েছে',
+  // Who's in: "You, Riya and 2 more" (joined with ui.list.last), or a nudge when the text named nobody.
+  'home.describe.people.more': 'আরও {count} জন',
+  'home.describe.people.none': 'কারা আছেন, পরের স্ক্রিনে বেছে নিন',
+  // What a screen reader hears when the draft appears.
+  'home.describe.announce': 'ভাগটা এই রকম: {title}, {people}। {mode}, {name} দিয়েছেন।',
+  'home.describe.announce.nobody': 'ভাগটা এই রকম: {title}। {mode}, {name} দিয়েছেন।',
   // The first-run card and the split-now prompt.
   'home.first.title': 'আপনার প্রথম খরচ ভাগ করুন',
   'home.first.body': 'ডিনার, ভাড়া, বাড়ি ফেরার ক্যাব — Settle হিসাব করে কে কার কাছে কত পাবে, আর UPI-তে টাকা ফেরত আনতে সাহায্য করে।',
@@ -84,12 +102,31 @@ export const home = {
   'home.header.proOn': 'Settle Pro চালু আছে',
   'home.header.renew': 'Pro নবায়ন করুন',
   'home.header.go': 'Pro নিন',
+  // The avatar in the corner, which opens You.
+  'home.header.youAria': 'আপনি: প্রোফাইল ও সেটিং',
   'home.recent.title': 'সাম্প্রতিক কার্যকলাপ',
   'home.recent.all': 'সব দেখুন',
   'home.recent.allAria': 'সব কার্যকলাপ দেখুন',
   'home.draft.finish': 'বিল বদলানো শেষ করুন',
   'home.draft.continue': 'আপনার বিল চালিয়ে যান',
+  // Today's AI allowance beside "Just say it", the bill-in-progress card, and section headers.
   'home.allowance.left': '{count, plural, one {আজ # টি ফ্রি স্প্লিট} other {আজ # টি ফ্রি স্প্লিট}}',
   'home.allowance.used': 'আজকের ফ্রি AI স্প্লিট শেষ',
   'home.allowance.unlimited': 'Pro-তে আনলিমিটেড',
+  'home.draft.saved': 'সেভ করা বিল',
+  'home.draft.inProgress': 'বিল অসম্পূর্ণ',
+  'home.draft.items': '{count, plural, one {# টি আইটেম} other {# টি আইটেম}}',
+  'home.people.seeAllAria': 'সবাইকে দেখুন',
+  // Spoken for the Add tile and for a person with money out ("Riya ₹540, owes you"); the visible name and amount come first.
+  'home.people.addAria': 'কাউকে যোগ করুন',
+  'home.people.owesYouAria': '{name} {amount}, আপনাকে দেবেন',
+  'home.people.youOweAria': '{name} {amount}, আপনি দেবেন',
+  // What the "Just say it" field cycles through (in your words: give as many as suit the language).
+  'home.say.example.0': 'Riya ও Sam-এর সঙ্গে ডিনার 2400',
+  'home.say.example.1': 'ভাড়া 32000, আমি 40%, Aditya 30%, Neha 30%',
+  'home.say.example.2': 'ক্যাব 840, Riya ও Sam-এর সঙ্গে, Sam দ্বিগুণ দেবে',
+  'home.say.example.3': 'Netflix 649, 4 জনে ভাগ',
+  'home.say.example.4': 'মুদির বাজার 1260, Neha দিয়েছে, আমার সঙ্গে ভাগ',
+  'home.due.title': 'শিগগিরই দেওয়ার দিন',
+  'home.due.seeAllAria': 'সব নিয়মিত ভাগ দেখুন',
 } as const satisfies Messages

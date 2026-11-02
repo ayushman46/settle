@@ -43,13 +43,13 @@ export const lend = {
   'lend.saved.toast': 'మార్పులు సేవ్ అయ్యాయి',
   // The card on the expense page of a loan or a 1:1 entry.
   'lend.card.title': 'అప్పు',
-  'lend.card.lent': 'మీరు {date} న {name} గారికి {amount} ఇచ్చారు',
-  'lend.card.borrowed': '{name} మీకు {date} న {amount} ఇచ్చారు',
-  'lend.card.paidFor': 'మీరు {date} న {name} గారి కోసం {amount} చెల్లించారు',
-  'lend.card.paidForYou': '{name} మీ కోసం {date} న {amount} చెల్లించారు',
+  'lend.card.lent': 'మీరు {date} తేదీన {name} గారికి {amount} ఇచ్చారు',
+  'lend.card.borrowed': '{name} మీకు {date} తేదీన {amount} ఇచ్చారు',
+  'lend.card.paidFor': 'మీరు {date} తేదీన {name} గారి కోసం {amount} చెల్లించారు',
+  'lend.card.paidForYou': '{name} మీ కోసం {date} తేదీన {amount} చెల్లించారు',
   'lend.card.open.lent': 'ఇంకా {amount} రావాలి',
   'lend.card.open.borrowed': 'ఇంకా {amount} తిరిగి ఇవ్వాలి',
-  'lend.card.settled': '{date} న తేలింది ✓',
+  'lend.card.settled': '{date} తేదీన తేలింది ✓',
   'lend.card.group': '{group} లో — గ్రూప్ బ్యాలెన్స్‌లతో తేలింది.',
   'lend.card.allBack.cta': 'అంతా తిరిగి వచ్చింది',
   'lend.card.allBack.aria': '{name} నుంచి అంతా తిరిగి వచ్చింది',
@@ -75,7 +75,7 @@ export const lend = {
   'lend.repay.error.borrowed.whole': 'మొత్తం {amount} కోసం “నేను తిరిగి ఇచ్చేశాను” వాడండి.',
   'lend.repay.save.cta': 'సేవ్ చేయండి',
   // The note on the copy saved for a part-repayment.
-  'lend.repay.note': '{date} న తిరిగి ఇచ్చారు',
+  'lend.repay.note': '{date} తేదీన తిరిగి ఇచ్చారు',
   // Friend page: the second button in the bottom bar.
   'lend.friend.cta': 'అప్పు ఇవ్వు/తీసుకో',
   // Nudges about a loan (deterministic pick, like every nudge).
@@ -83,7 +83,7 @@ export const lend = {
   'lend.nudge.friendly.1': 'హాయ్ {to} 🙂 మీకు వీలైనప్పుడు — {date} నాటి {amount}. ధన్యవాదాలు!',
   'lend.nudge.funny.0': '{to}, ఆ {amount} అప్పుకు ఊరు గుర్తొస్తోంది 🏠 వీలైనప్పుడు తిరిగి పంపండి 😄',
   'lend.nudge.funny.1': 'సరదా విషయం, {to}: {amount} తన పాత పర్సును మిస్ అవుతోంది 👛',
-  'lend.nudge.firm.0': 'హాయ్ {to}, నేను {date} న ఇచ్చిన {amount} తిరిగి ఇవ్వండి.',
+  'lend.nudge.firm.0': 'హాయ్ {to}, నేను {date} తేదీన ఇచ్చిన {amount} తిరిగి ఇవ్వండి.',
   // The firm nudge when the loan's date isn't known.
   'lend.nudge.firm.undated': 'హాయ్ {to}, నేను ఇచ్చిన {amount} తిరిగి ఇవ్వండి.',
 } as const satisfies Messages

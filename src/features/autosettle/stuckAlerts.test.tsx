@@ -94,6 +94,15 @@ describe('AutoSettleWatcher — Stuck money', () => {
     expect(stuckStore.get()).toEqual([])
   })
 
+  it('a pending payment waits quietly for its "failed" or "successful": no toast, nothing saved yet', async () => {
+    const android = fakeAndroid([{ id: 'p3', app: 'com.phonepe.app', title: 'Payment pending', text: '₹850 to Murugan Tea Stall. Your bank is taking longer than usual.', postedAt: AT }])
+    renderAt('/app', <AutoSettleWatcher />)
+    await vi.waitFor(() => expect(android.drained()).toBe(1))
+    await Promise.resolve()
+    expect(screen.queryByText(/stuck|Stuck money/)).toBeNull()
+    expect(stuckStore.get()).toEqual([])
+  })
+
   it('says nothing when nothing was stuck', async () => {
     const android = fakeAndroid([{ id: 'g2', app: GPAY, title: 'Riya Sharma paid you ₹420', text: '', postedAt: AT }])
     renderAt('/app', <AutoSettleWatcher />)
@@ -122,6 +131,7 @@ describe('stuckToastMessage', () => {
     source: 'alert',
     confirmed: true,
     steps: [],
+    repliedAt: null,
     back: null,
     dismissedAt: null,
     note: null,
@@ -138,8 +148,18 @@ describe('stuckToastMessage', () => {
     [[stuck({ kind: 'refund', merchant: 'flipkart', amount: 129_900 })], 'Tracking Flipkart’s refund of ₹1,299 till it lands'],
     [[stuck({ kind: 'refund' })], 'Tracking a refund of ₹500 till it lands'],
     [[stuck({}), stuck({ id: 't' })], '2 payments added to Stuck money'],
+    // Told late: due back by 25 Oct (T+5), 8 days on, ₹100 a day.
+    [[stuck({ party: 'Swiggy', rail: 'upi_merchant', date: '2026-10-20' })], '₹500 to Swiggy failed but took your money — it’s 8 days late: your bank owes you ₹800 for the wait so far'],
+    [[stuck({ rail: 'atm' })], 'The ATM didn’t give you ₹500 but took it from your account — tracking it in Stuck money'],
+    [[stuck({ rail: 'atm', amount: 500_000, date: '2026-10-20' })], 'The ATM didn’t give you ₹5,000 but took it from your account — it’s 8 days late: your bank owes you ₹800 for the wait so far'],
   ])('added: %#', (added, message) => {
     expect(say(added)).toBe(message)
+  })
+
+  it('a payment waiting for a tap that went through after all', () => {
+    const cleared = stuck({ party: 'Murugan Tea Stall', confirmed: false, dismissedAt: 1 })
+    expect(stuckToastMessage({ added: [], back: [], cleared: [cleared] }, t, '2026-11-02')).toBe('₹500 to Murugan Tea Stall went through after all — nothing stuck')
+    expect(stuckToastMessage({ added: [], back: [], cleared: [cleared, { ...cleared, id: 't' }] }, t, '2026-11-02')).toBe('2 payments went through after all — nothing stuck')
   })
 
   it('money back comes first', () => {

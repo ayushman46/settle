@@ -10,7 +10,7 @@ export const sharein = {
   'sharein.paste.read.cta': 'ಓದಿ',
   'sharein.paste.privacy': 'ನಿಮ್ಮ ಫೋನ್‌ನಲ್ಲೇ ಓದಲಾಗುತ್ತದೆ. AI ಓದಬೇಕೆಂದು ನೀವು ಕೇಳದ ಹೊರತು ಎಲ್ಲಿಗೂ ಕಳುಹಿಸಲಾಗುವುದಿಲ್ಲ.',
   'sharein.paste.android': 'Android ನಲ್ಲಿದ್ದೀರಾ? ನಿಮ್ಮ ಮೆಸೇಜಸ್ ಆ್ಯಪ್‌ನಿಂದ SMS ಅನ್ನು ನೇರವಾಗಿ Settle ಗೆ ಹಂಚಿ.',
-  'sharein.paste.empty.toast': 'ಅಂಟಿಸಲು ಏನೂ ಇಲ್ಲ — ಮೊದಲು SMS ಕಾಪಿ ಮಾಡಿ.',
+  'sharein.paste.empty.toast': 'ಅಂಟಿಸಲು ಏನೂ ಇಲ್ಲ — ಮೊದಲು SMS ನಕಲಿಸಿ.',
   'sharein.paste.denied.toast': 'ಕ್ಲಿಪ್‌ಬೋರ್ಡ್ ಓದಲಾಗಲಿಲ್ಲ — ಕ್ಷೇತ್ರವನ್ನು ಒತ್ತಿ ಹಿಡಿದು ಅಂಟಿಸಿ.',
   'sharein.shared.show': 'ಸಂದೇಶ ತೋರಿಸಿ',
   'sharein.shared.loading.aria': 'ನೀವು ಹಂಚಿದ್ದನ್ನು ಓದಲಾಗುತ್ತಿದೆ…',

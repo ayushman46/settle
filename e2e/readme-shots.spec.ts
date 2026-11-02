@@ -189,6 +189,7 @@ function stuckMoney(id: string, fields: Partial<StuckPayment> & Pick<StuckPaymen
     steps: [],
     back: null,
     dismissedAt: null,
+    repliedAt: null,
     note: null,
     createdAt: 1_792_000_000_000,
     updatedAt: 1_792_000_000_000,
@@ -220,7 +221,7 @@ test('stuck money: what banks and shops owe you back', async ({ page }) => {
   await seed(page, { profile: { upiId: 'ayush@okicici' }, friends: PEOPLE, stuck: STUCK })
   await page.goto('/app/stuck')
   await expect(page.getByRole('heading', { level: 1, name: 'Stuck money' })).toBeVisible()
-  await expect(page.getByRole('region', { name: 'Got back 1' })).toBeVisible()
+  await expect(page.getByRole('region', { name: 'Got back, 1 payment' })).toBeVisible()
   await shot(page, 'stuck')
 })
 

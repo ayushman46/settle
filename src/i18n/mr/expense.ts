@@ -79,7 +79,7 @@ export const expense = {
   'expense.added': '{date} ला जोडले',
   'expense.added.changed': 'शेवटचे बदल {date}',
   'expense.added.source.scan': 'स्कॅन केलेल्या बिलावरून',
-  'expense.added.source.describe': '“Just say it” द्वारे',
+  'expense.added.source.describe': '“फक्त सांगा” द्वारे',
   'expense.added.source.sample': 'नमुना बिलावरून',
   'expense.added.source.recurring': 'नियमित वाटणीवरून',
   'expense.added.source.sms': 'बँक SMS वरून',

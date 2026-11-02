@@ -1,6 +1,6 @@
 import { useRef, useState, type ChangeEvent } from 'react'
 import { DatabaseBackup, Download, FileSpreadsheet, Trash2 } from 'lucide-react'
-import { t, useT } from '../../i18n'
+import { t, tx, useT } from '../../i18n'
 import { Link, navigate } from '../../app/router'
 import { Badge, Card, List, ListRow, useToast } from '../../components'
 import {
@@ -12,9 +12,12 @@ import {
   useFriendsById,
   useGroups,
   useHasData,
+  usePools,
   useRecurring,
+  useStore,
   type BackupFile,
 } from '../../data'
+import { stuckStore } from '../../data/stores'
 import { BRAND } from '../../domain/types'
 import { haptic } from '../../lib/haptics'
 import { clearLicense, licenseToken, redeemLicense, useHasFeature, usePro } from '../../pro'
@@ -29,9 +32,9 @@ import {
   csvBlob,
   csvFilename,
   lastBackupAt,
-  READ_BACKUP_ERRORS,
+  lastSavedLine,
+  readBackupError,
   readBackupFile,
-  savedWhen,
   setLastBackupAt,
   useLastBackupAt,
 } from './backupFiles'
@@ -45,7 +48,10 @@ const YOU_PATH = '/app/you'
 
 function restoredMessage(mode: RestoreMode, result: { added: number; updated: number }): string {
   if (mode === 'replace') return t('you.data.restored')
-  const parts = [result.added > 0 && `${result.added} added`, result.updated > 0 && `${result.updated} updated`].filter(Boolean)
+  const parts = [
+    result.added > 0 && t('you.data.merged.added', { count: result.added }),
+    result.updated > 0 && t('you.data.merged.updated', { count: result.updated }),
+  ].filter(Boolean)
   return parts.length > 0 ? t('you.data.merged', { parts: parts.join(', ') }) : t('you.data.merged.none')
 }
 
@@ -61,6 +67,8 @@ export function DataSettings() {
   const friendsById = useFriendsById()
   const groups = useGroups()
   const recurring = useRecurring()
+  const pools = usePools()
+  const hasStuck = useStore(stuckStore, (list) => list.length > 0)
   const hasExpensesOrGroups = useHasData()
   const pro = usePro()
   const csvUnlocked = useHasFeature('export')
@@ -70,13 +78,13 @@ export function DataSettings() {
   const [restore, setRestore] = useState<{ open: boolean; backup: BackupFile | null }>({ open: false, backup: null })
   const [clearing, setClearing] = useState(false)
 
-  // People or recurring splits count too: a "replace" would remove them.
-  const hasLocalData = hasExpensesOrGroups || friends.length > 1 || recurring.length > 0
+  // People, recurring splits, collections and stuck money count too: a "replace" would remove them.
+  const hasLocalData = hasExpensesOrGroups || friends.length > 1 || recurring.length > 0 || pools.length > 0 || hasStuck
 
   const saveBackup = async (): Promise<void> => {
     if (busy) return
     setBusy('backup')
-    const outcome = await shareFile(backupBlob(exportBackup()), backupFilename(), undefined, { title: `${BRAND.name} backup` })
+    const outcome = await shareFile(backupBlob(exportBackup()), backupFilename(), undefined, { title: t('you.data.backup.shareTitle', { brand: BRAND.name }) })
     setBusy(null)
     if (outcome === 'shared' || outcome === 'downloaded') {
       setLastBackupAt(Date.now())
@@ -96,7 +104,7 @@ export function DataSettings() {
     const result = await readBackupFile(file)
     setBusy(null)
     if (!result.ok) {
-      toast(READ_BACKUP_ERRORS[result.reason], { tone: 'error' })
+      toast(readBackupError(result.reason), { tone: 'error' })
       return
     }
     setRestore({ open: true, backup: result.backup })
@@ -126,12 +134,12 @@ export function DataSettings() {
     setBusy('csv')
     const groupsById = Object.fromEntries(groups.map((g) => [g.id, g]))
     const outcome = await shareFile(csvBlob(expenses, friendsById, groupsById), csvFilename(), undefined, {
-      title: `${BRAND.name} expenses`,
+      title: t('you.data.csv.shareTitle', { brand: BRAND.name }),
     })
     setBusy(null)
     if (outcome === 'shared' || outcome === 'downloaded') {
-      const what = `${expenses.length} ${expenses.length === 1 ? 'expense' : 'expenses'}`
-      toast(outcome === 'shared' ? `${what} exported` : `${what} saved to your downloads as CSV`, { tone: 'success' })
+      const count = expenses.length
+      toast(outcome === 'shared' ? t('you.data.csv.shared', { count }) : t('you.data.csv.saved', { count }), { tone: 'success' })
     } else if (outcome === 'failed') {
       toast(t('you.data.exportFailed'), { tone: 'error' })
     }
@@ -163,7 +171,7 @@ export function DataSettings() {
   }
 
   const backupLine = lastBackup
-    ? `Last saved ${savedWhen(lastBackup)}`
+    ? lastSavedLine(lastBackup)
     : hasLocalData
       ? t('you.data.notBacked')
       : t('you.data.keepCopy')
@@ -231,10 +239,7 @@ export function DataSettings() {
           />
         </List>
       </Card>
-      <p className={styles.footnote}>
-        Backups hold your people, expenses, groups, recurring splits and settings — not your Pro pass. Moving phones? Copy your
-        Pro code from <Link to="/app/pro">{BRAND.name} Pro</Link> and redeem it there.
-      </p>
+      <p className={styles.footnote}>{tx('you.data.footnote', { brand: BRAND.name }, { link: (chunk) => <Link to="/app/pro">{chunk}</Link> })}</p>
 
       <input
         ref={fileInput}

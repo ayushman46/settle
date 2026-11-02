@@ -20,7 +20,7 @@ export const delivery = {
   'delivery.review.fees.removed.toast': '{label} সরানো হয়েছে',
   'delivery.review.fees.full.toast': 'একটি বিলে সর্বোচ্চ {max}টি ফি রাখা যায়।',
   'delivery.review.fees.converted.toast': '{label} এখন একটি আইটেম — পরের ধাপে বলুন কে নিয়েছিল',
-  'delivery.review.fees.undoFailed.toast': 'ফিরিয়ে নেওয়া যায়নি — বিল বদলে গেছে',
+  'delivery.review.fees.undoFailed.toast': 'আগের মতো করা গেল না — বিল বদলে গেছে',
   // The sheet for one fee.
   'delivery.fee.title': 'ফি',
   'delivery.fee.name.label': 'নাম',

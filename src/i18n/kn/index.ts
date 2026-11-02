@@ -36,6 +36,7 @@ import { activity } from './activity'
 import { proof } from './proof'
 import { shagun } from './shagun'
 import { install } from './install'
+import { rent } from './rent'
 import { bijli } from './bijli'
 import { whospaid } from './whospaid'
 import { collect } from './collect'
@@ -78,6 +79,7 @@ export const KN: Messages = {
   ...proof,
   ...shagun,
   ...install,
+  ...rent,
   ...bijli,
   ...whospaid,
   ...collect,

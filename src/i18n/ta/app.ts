@@ -7,6 +7,8 @@ export const app = {
   'app.tab.groups': 'குழுக்கள்',
   'app.tab.activity': 'வரலாறு',
   'app.tab.you': 'நீங்கள்',
+  // The line under the logo (You's footer).
+  'app.tagline': 'எதையும் பிரிக்கலாம். ஒரே தட்டில் கணக்கு தீர்க்கலாம்.',
   // The browser tab's title: "{page} · Settle".
   'app.title.format': '{page} · {brand}',
   // Page names for the browser tab (one per screen).

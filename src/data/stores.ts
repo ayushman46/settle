@@ -38,6 +38,8 @@ export const STORAGE_KEYS = {
   stuck: 'settle.v6.stuck',
   /** Stuck money's short memory of the phone's recent alerts: debits, failures, money back (src/features/stuck/track.ts). */
   stuckSeen: 'settle.v6.stuck-seen',
+  /** Your mobile, city and address for complaint letters, and where each one's letters go (src/features/stuck/letterMe.ts). Not in backups. */
+  letterMe: 'settle.v7.letter-me',
 } as const
 
 /** Accepts a bare, un-enveloped value (e.g. hand-edited storage) when the schema can read it. */
@@ -291,6 +293,8 @@ export interface StuckPayment {
   /** Known to have left the account. An app saying a payment failed doesn't always mean it took the money: until then it waits for a tap. */
   confirmed: boolean
   steps: StuckStep[]
+  /** The day the bank replied to the complaint or turned it down (YYYY-MM-DD): the RBI Ombudsman opens from then. */
+  repliedAt: string | null
   back: StuckBack | null
   /** Not stuck after all (never left the account), or set aside: epoch ms. */
   dismissedAt: number | null
@@ -319,6 +323,7 @@ export const stuckSchema = z.array(
     source: z.catch(z.enum(STUCK_SOURCES), 'manual'),
     confirmed: z.catch(z.boolean(), true),
     steps: z.catch(z.array(z.object({ kind: z.enum(STUCK_STEP_KINDS), date: isoDay, ref: z.catch(z.nullable(z.string().check(z.maxLength(60))), null) })), []),
+    repliedAt: z.catch(z.nullable(isoDay), null),
     back: z.catch(z.nullable(z.object({ date: isoDay, amount: z.int().check(z.nonnegative()), compensation: z.int().check(z.nonnegative()) })), null),
     dismissedAt: z.catch(z.nullable(z.number()), null),
     note: z.catch(z.nullable(z.string().check(z.maxLength(500))), null),

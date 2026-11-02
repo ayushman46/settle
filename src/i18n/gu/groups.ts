@@ -141,7 +141,7 @@ export const groups = {
   'groups.menu.delete.subtitle': 'તેના બધા ખર્ચ સાથે',
 
   'groups.delete.title': '{name} કાઢી નાખીએ?',
-  'groups.delete.body': '{count, plural, =0 {તરત પછી તમે તેને પાછું લઈ શકો છો.} one {તેનો # ખર્ચ પણ જશે. તરત પછી તમે તેને પાછું લઈ શકો છો.} other {તેના # ખર્ચ પણ જશે. તરત પછી તમે તેને પાછું લઈ શકો છો.}}',
+  'groups.delete.body': '{count, plural, =0 {તરત પછી તમે તેને પાછું લાવી શકો છો.} one {તેનો # ખર્ચ પણ જશે. તરત પછી તમે તેને પાછું લાવી શકો છો.} other {તેના # ખર્ચ પણ જશે. તરત પછી તમે તેને પાછું લાવી શકો છો.}}',
   'groups.delete.cta': 'ગ્રુપ કાઢી નાખો',
   'groups.delete.keep.cta': 'રાખો',
 

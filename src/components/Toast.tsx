@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
-import { Check, CircleAlert, Info, TriangleAlert } from 'lucide-react'
+import { Check, CircleAlert, Info, TriangleAlert, X } from 'lucide-react'
 import { useT } from '../i18n'
 import { cx } from '../lib/cx'
 import { OVERLAY_KEEP_ATTR } from './overlayStack'
@@ -10,6 +10,13 @@ import styles from './Toast.module.css'
 const DEFAULT_MS = 2200
 /** Long enough to read the message, find the button and decide (paused while hovered or focused). */
 const ACTION_MS = 8000
+/** Reading time per character, so a long message (or a long translation) stays long enough to read. */
+const READ_MS_PER_CHAR = 60
+/** The longest a toast stays by itself: without and with an action. */
+const MAX_DEFAULT_MS = 6000
+const MAX_ACTION_MS = 15000
+/** A toast this young follows a change of page: it was shown on the way there (Save, then the new page). */
+const FOLLOW_MS = 1000
 /** Matches the exit animation (--dur-2). */
 const EXIT_MS = 200
 
@@ -19,6 +26,7 @@ interface ToastItem {
   tone: ToastTone
   action: ToastAction | undefined
   duration: number
+  shownAt: number
 }
 
 interface ToastState {
@@ -43,11 +51,27 @@ function isTextEntry(target: EventTarget | null): boolean {
   return target instanceof HTMLInputElement && !NON_TEXT_INPUTS.has(target.type)
 }
 
+/** How long a toast stays: longer with an action, and with more to read. */
+function durationFor(message: string, action: boolean): number {
+  const reading = message.length * READ_MS_PER_CHAR
+  return action ? Math.min(MAX_ACTION_MS, Math.max(ACTION_MS, reading * 2)) : Math.min(MAX_DEFAULT_MS, Math.max(DEFAULT_MS, reading))
+}
+
+/** Sheets and dialogs open now (not ones sliding away). */
+function openDialogs(): number {
+  let count = 0
+  for (const el of document.querySelectorAll('[role="dialog"][aria-modal="true"]')) if (!el.closest('[data-closing]')) count += 1
+  return count
+}
+
 /**
  * Hosts the app's single toast: a pill that floats just above the live bottom controls (the
- * screen's action bar or the open sheet's footer, the tab bar, a FAB), announced politely, auto-hiding and pausing while touched,
- * hovered or focused. A new toast replaces the current one. While one with an action (Undo) is
- * up, Ctrl/Cmd+Z runs it — so keyboard and screen-reader users don't have to reach the pill.
+ * screen's action bar or the open sheet's footer, the tab bar, a FAB — or, over a sheet without
+ * a footer, just above the sheet), announced politely, auto-hiding and pausing while touched,
+ * hovered or focused. A new toast replaces the current one. It belongs where it was shown:
+ * another page puts it away, and so does a sheet opening over a plain message. While one with an action (Undo) is up,
+ * Ctrl/Cmd+Z runs it — so keyboard and screen-reader users don't have to reach the pill — and
+ * its close button puts it away early.
  */
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<ToastState>({ current: null, leaving: null })
@@ -74,10 +98,8 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       const duration =
         options.duration !== undefined && Number.isFinite(options.duration) && options.duration > 0
           ? options.duration
-          : options.action
-            ? ACTION_MS
-            : DEFAULT_MS
-      const item: ToastItem = { id, message, tone: options.tone ?? 'neutral', action: options.action, duration }
+          : durationFor(message, options.action !== undefined)
+      const item: ToastItem = { id, message, tone: options.tone ?? 'neutral', action: options.action, duration, shownAt: Date.now() }
       setState({ current: item, leaving: null })
       return () => dismiss(id)
     },
@@ -93,6 +115,42 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   }, [current, paused, dismiss])
 
   useEffect(() => () => clearTimeout(leaveTimer.current), [])
+
+  // It stays with the page it was shown on: another page puts it away — so an Undo never follows
+  // someone around.
+  useEffect(() => {
+    const item = current
+    if (!item || typeof MutationObserver !== 'function') return
+    let path = window.location.pathname
+    let dialogs = openDialogs()
+    let frame = 0
+    const check = (): void => {
+      frame = 0
+      if (window.location.pathname !== path) {
+        if (Date.now() - item.shownAt >= FOLLOW_MS) {
+          dismiss(item.id)
+          return
+        }
+        path = window.location.pathname
+      }
+      // A sheet opening over a plain message puts it away; one with an Undo stays (it floats above
+      // the sheet's footer), so editing something else first doesn't lose the way back.
+      const now = openDialogs()
+      if (now > dialogs && !item.action) dismiss(item.id)
+      dialogs = now
+    }
+    const schedule = (): void => {
+      if (frame === 0) frame = requestAnimationFrame(check)
+    }
+    const observer = new MutationObserver(schedule)
+    observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['data-closing'] })
+    window.addEventListener('popstate', schedule)
+    return () => {
+      if (frame !== 0) cancelAnimationFrame(frame)
+      observer.disconnect()
+      window.removeEventListener('popstate', schedule)
+    }
+  }, [current, dismiss])
 
   // Ctrl/Cmd+Z = the visible toast's action (outside text fields, which keep their own undo).
   useEffect(() => {
@@ -111,15 +169,19 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     return () => document.removeEventListener('keydown', onKeyDown)
   }, [current, dismiss])
 
-  // Float above whichever action bar is live: the open sheet's footer, else the screen's.
+  // Float above whichever action bar is live: the open sheet's footer (or the sheet), else the
+  // screen's. With nothing to float above, the page gets room at its end to scroll out from under it.
   const visible = current !== null || leaving !== null
   useLayoutEffect(() => {
     const viewport = viewportRef.current
     if (!viewport || !visible) return
+    const body = document.body
+    const bodyPadding = body.style.paddingBottom
     let frame = 0
     const update = (): void => {
       frame = 0
-      const offset = anchorOffset()
+      const height = viewport.getBoundingClientRect().height
+      const offset = anchorOffset(height)
       if (offset === null) {
         viewport.removeAttribute('data-anchored')
         viewport.style.removeProperty('--toast-bottom')
@@ -127,6 +189,8 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         viewport.setAttribute('data-anchored', '')
         viewport.style.setProperty('--toast-bottom', `${offset}px`)
       }
+      const room = offset === null && height > 0 && openDialogs() === 0
+      body.style.paddingBottom = room ? `${Math.ceil(window.innerHeight - viewport.getBoundingClientRect().top)}px` : bodyPadding
     }
     const schedule = (): void => {
       if (frame === 0) frame = requestAnimationFrame(update)
@@ -142,12 +206,15 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     window.addEventListener('resize', schedule)
     window.visualViewport?.addEventListener('resize', schedule)
     document.addEventListener('transitionend', schedule, true)
+    document.addEventListener('animationend', schedule, true)
     return () => {
       if (frame !== 0) cancelAnimationFrame(frame)
       observer?.disconnect()
       window.removeEventListener('resize', schedule)
       window.visualViewport?.removeEventListener('resize', schedule)
       document.removeEventListener('transitionend', schedule, true)
+      document.removeEventListener('animationend', schedule, true)
+      body.style.paddingBottom = bodyPadding
     }
   }, [visible])
 
@@ -193,9 +260,19 @@ interface ToastPillProps {
 function ToastPill({ item, leaving = false, onDismiss, onPause, onResume }: ToastPillProps) {
   const t = useT()
   const glyph = GLYPHS[item.tone]
+  const messageRef = useRef<HTMLSpanElement>(null)
+  // More than two lines beside the buttons (a long message, a long translation): the message
+  // takes the whole width and the buttons go underneath, instead of a word or two per line.
+  const [stacked, setStacked] = useState(false)
+  useLayoutEffect(() => {
+    const message = messageRef.current
+    if (!message || !item.action || stacked) return
+    const line = Number.parseFloat(window.getComputedStyle(message).lineHeight)
+    if (Number.isFinite(line) && line > 0 && message.getBoundingClientRect().height > line * 2.5) setStacked(true)
+  }, [item.action, stacked])
   return (
     <div
-      className={cx(styles.toast, leaving && styles.leaving)}
+      className={cx(styles.toast, stacked && styles.stacked, leaving && styles.leaving)}
       onPointerEnter={onPause}
       onPointerLeave={onResume}
       onFocus={onPause}
@@ -208,22 +285,35 @@ function ToastPill({ item, leaving = false, onDismiss, onPause, onResume }: Toas
           {glyph}
         </span>
       )}
-      <span className={styles.message}>{item.message}</span>
+      <span ref={messageRef} className={styles.message}>
+        {item.message}
+      </span>
       {item.action && (
-        <button
-          type="button"
-          className={styles.action}
-          tabIndex={leaving ? -1 : undefined}
-          // "Undo: Removed Paneer Tikka" — the button alone ("Undo") wouldn't say what it undoes.
-          aria-label={t('ui.toast.action.aria', { action: item.action.label, message: item.message })}
-          aria-keyshortcuts="Control+Z Meta+Z"
-          onClick={() => {
-            item.action?.onAction()
-            onDismiss?.(item.id)
-          }}
-        >
-          {item.action.label}
-        </button>
+        <span className={styles.actions}>
+          <button
+            type="button"
+            className={styles.action}
+            tabIndex={leaving ? -1 : undefined}
+            // "Undo: Removed Paneer Tikka" — the button alone ("Undo") wouldn't say what it undoes.
+            aria-label={t('ui.toast.action.aria', { action: item.action.label, message: item.message })}
+            aria-keyshortcuts="Control+Z Meta+Z"
+            onClick={() => {
+              item.action?.onAction()
+              onDismiss?.(item.id)
+            }}
+          >
+            {item.action.label}
+          </button>
+          <button
+            type="button"
+            className={styles.close}
+            tabIndex={leaving ? -1 : undefined}
+            aria-label={t('ui.toast.dismiss.aria')}
+            onClick={() => onDismiss?.(item.id)}
+          >
+            <X strokeWidth={2.5} aria-hidden="true" />
+          </button>
+        </span>
       )}
     </div>
   )
@@ -231,15 +321,23 @@ function ToastPill({ item, leaving = false, onDismiss, onPause, onResume }: Toas
 
 /**
  * Distance (px) from the layout viewport's bottom to the top of the highest live bottom element
- * (an action bar, the open sheet's footer, the tab bar or a FAB above it), or null when none.
+ * (an action bar, the open sheet's footer, the tab bar or a FAB above it) — or, over a sheet with
+ * no footer, to the sheet's top when a toast `height` tall fits above it — or null.
  */
-function anchorOffset(): number | null {
+function anchorOffset(height: number): number | null {
   let top: number | null = null
   for (const el of document.querySelectorAll<HTMLElement>('[data-toast-anchor]')) {
     if (el.closest('[inert], [data-closing]')) continue
     const rect = el.getBoundingClientRect()
     if (rect.height === 0 && rect.top === 0) continue
     if (top === null || rect.top < top) top = rect.top
+  }
+  if (top === null) {
+    for (const panel of document.querySelectorAll<HTMLElement>('[role="dialog"][aria-modal="true"]')) {
+      if (panel.closest('[inert], [data-closing]')) continue
+      const rect = panel.getBoundingClientRect()
+      if (rect.height > 0 && rect.top > height + 24 && (top === null || rect.top < top)) top = rect.top
+    }
   }
   return top === null ? null : Math.max(0, Math.round(window.innerHeight - top))
 }

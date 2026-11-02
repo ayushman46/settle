@@ -2,7 +2,7 @@
 import type { Messages } from '../types'
 
 export const activity = {
-  'activity.title': 'ಚಟುವಟಿಕೆ',
+  'activity.title': 'ಇತಿಹಾಸ',
   'activity.newSplit.cta': 'ಹೊಸ ಸ್ಪ್ಲಿಟ್',
 
   'activity.firstRun.title': 'ನಿಮ್ಮ ಸ್ಪ್ಲಿಟ್‌ಗಳು ಇಲ್ಲಿ ಇರುತ್ತವೆ',

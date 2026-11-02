@@ -1,7 +1,7 @@
 import { lazy, Suspense, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { ArrowRight, AudioLines, PenLine, RotateCcw, Sparkles } from 'lucide-react'
 import { DESCRIBE_LIMITS } from '../../../shared/api'
-import { DESCRIBE_EXAMPLES, DescribeError, describeSplit, type DescribeErrorCode } from '../../ai'
+import { DescribeError, describeSplit, type DescribeErrorCode } from '../../ai'
 import { describedToPrefill } from '../../ai/prefill'
 import { navigate } from '../../app/router'
 import { Avatar, Badge, Banner, BottomSheet, Button, CategoryIcon, Chip, Money, SearchPill, Skeleton } from '../../components'
@@ -17,7 +17,7 @@ import { aiUsedToday, quotaFor, useAiQuota } from '../../pro/quota'
 import { hasFeature } from '../../pro/store'
 import { useHealth } from '../../state/health'
 import { openPaywall } from '../pro/paywall'
-import { describeView, heardChips, peopleSummary, type DescribeView } from './describeView'
+import { describeView, heardChips, peopleSummary, sayExamples, type DescribeView } from './describeView'
 import { NEW_SPLIT_PATH } from './homeLinks'
 import { MicButton } from './MicButton'
 import { VOICE_ENABLED } from './voice.enabled'
@@ -46,8 +46,8 @@ type Phase =
 const RETRYABLE: ReadonlySet<DescribeErrorCode> = new Set(['timeout', 'upstream_error', 'network', 'rate_limited'])
 
 
-/** Examples offered as one-tap chips (the field's placeholder cycles through all of them). */
-const CHIP_EXAMPLES = DESCRIBE_EXAMPLES.slice(0, 3)
+/** How many examples are offered as one-tap chips (the field's placeholder cycles through all of them). */
+const CHIP_COUNT = 3
 
 function quotaLine(remaining: number): string {
   if (remaining <= 0) return t('home.describe.quota.used', { limit: FREE_AI_PER_DAY })
@@ -80,6 +80,7 @@ interface VoiceState {
  */
 export function AiDescribeSheet({ open, onClose, startWith }: AiDescribeSheetProps) {
   const t = useT()
+  const examples = sayExamples()
   const profile = useProfile()
   const friends = useFriends()
   const quota = useAiQuota()
@@ -299,7 +300,7 @@ export function AiDescribeSheet({ open, onClose, startWith }: AiDescribeSheetPro
           placeholder={t('home.describe.placeholder')}
           label={t('home.describe.label')}
           submitLabel={t('home.describe.submit')}
-          examples={DESCRIBE_EXAMPLES}
+          examples={examples}
           value={text}
           onChange={edit}
           onSubmit={(value) => void read(value)}
@@ -403,7 +404,7 @@ export function AiDescribeSheet({ open, onClose, startWith }: AiDescribeSheetPro
           <div className={styles.examples}>
             <p className={styles.examplesLabel}>{t('home.describe.tryOne')}</p>
             <ul role="list" className={styles.exampleList}>
-              {CHIP_EXAMPLES.map((example) => (
+              {examples.slice(0, CHIP_COUNT).map((example) => (
                 <li key={example}>
                   <Chip
                     leading={<Sparkles />}
@@ -460,8 +461,10 @@ function voiceErrorCopy(
 
 /** What a screen reader hears when the draft appears. */
 function announce(view: DescribeView): string {
-  const people = view.people.length > 0 || view.missing > 0 ? `, ${peopleSummary(view.people, view.missing)}` : ''
-  return `Here’s the split: ${view.title}${people}. ${view.modeLabel}, paid by ${view.payerName}.`
+  const vars = { title: view.title, mode: view.modeLabel, name: view.payerName }
+  return view.people.length > 0 || view.missing > 0
+    ? t('home.describe.announce', { ...vars, people: peopleSummary(view.people, view.missing) })
+    : t('home.describe.announce.nobody', vars)
 }
 
 function QuotaLine({ limited, remaining, onUpgrade }: { limited: boolean; remaining: number; onUpgrade: () => void }) {

@@ -11,6 +11,8 @@ export const home = {
   'home.quick.sms': 'From SMS',
   'home.quick.food': 'Food order',
   'home.quick.group': 'New group',
+  // Failed payments and refunds that haven't come back (Stuck money), there even before the first one.
+  'home.quick.stuck': 'Stuck money',
   'home.quick.more': 'More',
   // One-tap starts for everyday splits (a tile each, or in the More sheet).
   'home.template.rent': 'Rent',
@@ -18,9 +20,13 @@ export const home = {
   'home.template.subscription': 'Subscription',
   'home.template.utilities': 'Utilities',
   'home.template.transport': 'Cab',
-  // The sheet behind the More tile.
-  'home.more.title': 'More ways to split',
-  'home.more.subtitle': 'Start with the amount for any of these.',
+  // The sheet behind the More tile: getting money back, then ways to start a split.
+  'home.more.title': 'More',
+  'home.more.subtitle': 'Get your money back, or start a split.',
+  'home.more.back': 'Get your money back',
+  'home.more.split': 'Start a split',
+  // Short tile name for "Paid? Drop the screenshot".
+  'home.more.proof': 'Paid screenshot',
   'home.describe.looksRight': 'Looks right',
   'home.describe.changeWords': 'Change what I said',
   'home.describe.off.title': 'The AI helper is off right now',
@@ -32,6 +38,18 @@ export const home = {
   'home.describe.reading': 'Reading your split…',
   'home.describe.noAmount': 'Add the amount on the next screen',
   'home.describe.paidBy': 'Paid by {name} · {mode}',
+  // How the draft is split, as {mode} above.
+  'home.describe.mode.equal': 'Split equally',
+  'home.describe.mode.exact': 'Exact amounts',
+  'home.describe.mode.percent': 'By percentage',
+  'home.describe.mode.shares': 'By shares',
+  'home.describe.mode.had': 'What each had',
+  // Who's in: "You, Riya and 2 more" (joined with ui.list.last), or a nudge when the text named nobody.
+  'home.describe.people.more': '{count} more',
+  'home.describe.people.none': 'Pick who’s in on the next screen',
+  // What a screen reader hears when the draft appears.
+  'home.describe.announce': 'Here’s the split: {title}, {people}. {mode}, paid by {name}.',
+  'home.describe.announce.nobody': 'Here’s the split: {title}. {mode}, paid by {name}.',
   'home.first.title': 'Split your first expense',
   'home.first.body': 'A dinner, the rent, a cab home — Settle works out who owes what, and gets you paid back over UPI.',
   'home.first.split': 'Split an expense',
@@ -81,6 +99,8 @@ export const home = {
   'home.header.proOn': 'Settle Pro is on',
   'home.header.renew': 'Renew Pro',
   'home.header.go': 'Go Pro',
+  // The avatar in the corner, which opens You.
+  'home.header.youAria': 'You: profile and settings',
   'home.recent.title': 'Recent activity',
   'home.recent.all': 'See all',
   'home.recent.allAria': 'See all activity',
@@ -94,6 +114,16 @@ export const home = {
   'home.draft.inProgress': 'Bill in progress',
   'home.draft.items': '{count, plural, one {# item} other {# items}}',
   'home.people.seeAllAria': 'See all people',
+  // Spoken for the Add tile and for a person with money out ("Riya ₹540, owes you"); the visible name and amount come first.
+  'home.people.addAria': 'Add a person',
+  'home.people.owesYouAria': '{name} {amount}, owes you',
+  'home.people.youOweAria': '{name} {amount}, you owe',
+  // What the "Just say it" field cycles through (in your words: give as many as suit the language).
+  'home.say.example.0': 'Dinner 2400 with Riya and Sam',
+  'home.say.example.1': 'Rent 32000 me 40% Aditya 30% Neha 30%',
+  'home.say.example.2': 'Cab 840 with Riya and Sam, Sam pays double',
+  'home.say.example.3': 'Netflix 649 for 4',
+  'home.say.example.4': 'Groceries 1260, Neha paid, split with me',
   'home.due.title': 'Due soon',
   'home.due.seeAllAria': 'See all recurring splits',
 } as const satisfies Messages

@@ -6,10 +6,12 @@ import { useT } from '../../i18n'
 import { cx } from '../../lib/cx'
 import { haptic } from '../../lib/haptics'
 import { BrandMark } from '../landing/BrandMark'
-import { INTRO_SLIDES } from './slides'
+import { INTRO_SLIDES, type IntroSlide } from './slides'
 import styles from './OnboardingScreen.module.css'
 
 export interface IntroSlidesProps {
+  /** What to show (default: everything Settle does). */
+  slides?: readonly IntroSlide[]
   /** "Get started" on the last slide, or "Skip" on any of them. */
   onDone: () => void
 }
@@ -26,18 +28,17 @@ function prefersReducedMotion(): boolean {
 }
 
 /**
- * Three swipeable slides — what Settle does — with dots and a Next button. Swiping is the
- * browser's own scroll snapping (native feel on every phone); the arrow keys, the dots and Next
- * move it too.
+ * Swipeable slides — what Settle does — with dots and a Next button. Swiping is the browser's own
+ * scroll snapping (native feel on every phone); the arrow keys, the dots and Next move it too.
  */
-export function IntroSlides({ onDone }: IntroSlidesProps) {
+export function IntroSlides({ slides = INTRO_SLIDES, onDone }: IntroSlidesProps) {
   const t = useT()
   const trackRef = useRef<HTMLDivElement>(null)
   const steering = useRef(false)
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [index, setIndex] = useState(0)
-  const last = INTRO_SLIDES.length - 1
-  const current = INTRO_SLIDES[index] ?? INTRO_SLIDES[0]
+  const last = slides.length - 1
+  const current = slides[index] ?? slides[0]
 
   useEffect(
     () => () => {
@@ -99,20 +100,22 @@ export function IntroSlides({ onDone }: IntroSlidesProps) {
       }
       footer={
         <ActionBar>
-          <div className={styles.dots}>
-            {INTRO_SLIDES.map((slide, i) => (
-              <button
-                key={slide.art}
-                type="button"
-                className={cx(styles.dot, i === index && styles.dotActive)}
-                aria-label={t('onboarding.intro.dot.aria', { number: i + 1, title: t(slide.title) })}
-                aria-current={i === index ? 'step' : undefined}
-                onClick={() => show(i)}
-              >
-                <span className={styles.dotMark} aria-hidden="true" />
-              </button>
-            ))}
-          </div>
+          {slides.length > 1 && (
+            <div className={styles.dots}>
+              {slides.map((slide, i) => (
+                <button
+                  key={slide.title}
+                  type="button"
+                  className={cx(styles.dot, i === index && styles.dotActive)}
+                  aria-label={t('onboarding.intro.dot.aria', { number: i + 1, title: t(slide.title) })}
+                  aria-current={i === index ? 'step' : undefined}
+                  onClick={() => show(i)}
+                >
+                  <span className={styles.dotMark} aria-hidden="true" />
+                </button>
+              ))}
+            </div>
+          )}
           <Button block onClick={next} iconEnd={index >= last ? <ArrowRight strokeWidth={2.5} /> : undefined}>
             {index >= last ? t('onboarding.intro.start.cta') : t('common.action.next')}
           </Button>
@@ -133,17 +136,17 @@ export function IntroSlides({ onDone }: IntroSlidesProps) {
         onScroll={onScroll}
         onKeyDown={onKeyDown}
       >
-        {INTRO_SLIDES.map((slide, i) => (
+        {slides.map((slide, i) => (
           <section
-            key={slide.art}
+            key={slide.title}
             className={styles.slide}
             role="group"
             aria-roledescription="slide"
-            aria-label={t('onboarding.intro.slide.aria', { number: i + 1, total: INTRO_SLIDES.length })}
+            aria-label={t('onboarding.intro.slide.aria', { number: i + 1, total: slides.length })}
             aria-hidden={i === index ? undefined : true}
           >
             <div className={styles.stage}>
-              <Illustration name={slide.art} size={232} className={styles.art} />
+              <SlideArt art={slide.art} />
             </div>
             <h2 className={styles.slideTitle}>{t(slide.title)}</h2>
             <p className={styles.slideText}>{t(slide.text)}</p>
@@ -151,8 +154,18 @@ export function IntroSlides({ onDone }: IntroSlidesProps) {
         ))}
       </div>
       <p className="visually-hidden" aria-live="polite">
-        {t('onboarding.intro.live', { number: index + 1, total: INTRO_SLIDES.length, title: current ? t(current.title) : '' })}
+        {t('onboarding.intro.live', { number: index + 1, total: slides.length, title: current ? t(current.title) : '' })}
       </p>
     </Screen>
+  )
+}
+
+/** A slide's drawing, or its icon on a tile. */
+function SlideArt({ art: Art }: { art: IntroSlide['art'] }) {
+  if (typeof Art === 'string') return <Illustration name={Art} size={232} className={styles.art} />
+  return (
+    <span className={styles.artIcon} aria-hidden="true">
+      <Art strokeWidth={1.75} />
+    </span>
   )
 }

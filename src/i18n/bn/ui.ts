@@ -36,6 +36,8 @@ export const ui = {
   'ui.search.submit.aria': 'যান',
   // A toast's action button, spoken with the message ("Undo: Expense deleted").
   'ui.toast.action.aria': '{action}: {message}',
+  // The ✕ beside a toast's action, which puts the toast away.
+  'ui.toast.dismiss.aria': 'মেসেজটি সরান',
   // The QR code's stand-in text when the content is too long for one.
   'ui.qr.tooLong': 'এই কোডটি QR হিসেবে দেখানোর জন্য খুব বড়।',
   // The hidden example of what to type in the "Just say it" search pill; `{example}` is one of them.

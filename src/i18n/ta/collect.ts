@@ -20,7 +20,7 @@ export const collect: Messages = {
   'collect.next.funny': 'அடுத்தது: நகைச்சுவையாக',
   'collect.next.firm': 'அடுத்தது: உறுதியாக',
   'collect.remind.cta': 'நினைவூட்டு',
-  'collect.remind.aria': '{name}-க்கு நினைவூட்டு',
+  'collect.remind.aria': '{name} அவர்களுக்கு நினைவூட்டு',
   'collect.paid.cta': 'பெற்றேன்',
   'collect.paid.aria': '{name} பணம் செலுத்தினார்',
   'collect.paid.toast': '{name} செலுத்தியதாகக் குறிக்கப்பட்டது',

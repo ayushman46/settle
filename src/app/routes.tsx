@@ -322,6 +322,10 @@ const CORE_SCREENS: readonly LazyScreen[] = [
   GroupDetailScreen,
   FriendDetailScreen,
   LendScreen,
+  // Stuck money: a Home tile, and needed most when the network is bad.
+  StuckScreen,
+  StuckDetailScreen,
+  StuckAddScreen,
   // Last: the paywall opens instantly the first time a free limit is reached.
   PaywallHost,
 ]

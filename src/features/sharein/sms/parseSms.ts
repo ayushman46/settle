@@ -55,8 +55,8 @@ const INDIC_ZEROS = [0x0966, 0x09e6, 0x0a66, 0x0ae6, 0x0b66, 0x0be6, 0x0c66, 0x0
 /** Longest text read (a whole inbox pasted at once keeps its first 2,000 characters). */
 export const MAX_SMS_CHARS = 2000
 
-/** NFKC, Indian digits → ASCII, no zero-width/bidi characters, tidy spaces (newlines kept). */
-export function cleanSms(raw: string): string {
+/** NFKC, Indian digits → ASCII, no zero-width/bidi characters, tidy spaces (newlines kept); the first `max` characters. */
+export function cleanSms(raw: string, max: number = MAX_SMS_CHARS): string {
   return String(raw)
     .normalize('NFKC')
     .replace(/\p{Nd}/gu, (ch) => {
@@ -69,7 +69,7 @@ export function cleanSms(raw: string): string {
     .replace(/[ \t\u00a0]+/g, ' ')
     .replace(/ *\n */g, '\n')
     .trim()
-    .slice(0, MAX_SMS_CHARS)
+    .slice(0, max)
 }
 
 /* ---------------------------------------------------------------- cues */
@@ -77,37 +77,43 @@ export function cleanSms(raw: string): string {
 const VPA = /(^|[^\w.@-])([a-z0-9][a-z0-9._-]{1,63}@[a-z][a-z0-9]{1,30})(?![\w@-]|\.[a-z])/gi
 const URL_PATTERN = /\b(?:https?:\/\/|www\.)\S+|\b[a-z0-9-]+\.(?:com|in|co|io|ly|app|bank|tm|gy|link)(?:\/\S*)?/gi
 
-const OTP = /\b(?:otp|one[\s-]?time[\s-]?password|verification code|passcode)\b/i
+/*
+ * Hindi bank SMS ("आपके खाते से रु.500 डेबिट हुए", "खाते में रु.500 जमा किए गए") sit after the English
+ * in a few patterns: outside \b, which only knows ASCII letters; (?![\u0900-\u097F]) ends a word
+ * that a longer one starts with. Names in Hindi aren't read.
+ */
+const OTP = /\b(?:otp|one[\s-]?time[\s-]?password|verification code|passcode)\b|ओटीपी/i
 const REQUEST = /\b(?:has requested|requested (?:rs\.?|inr|₹)|requested ₹|collect request|requesting (?:rs\.?|inr|₹)|payment request)/i
-const FAILED = /\b(?:failed|declined|unsuccessful|could not be (?:processed|completed)|was not successful|has been rejected|payment failed)\b/i
-const REFUND_WORD = /\b(?:refund(?:ed)?|reversed|reversal)\b/i
-const REFUND_DONE = /\b(?:credited|reversed|has been processed|processed to|refunded to)\b/i
-const REFUND_FUTURE = /\bwill be (?:refunded|reversed|credited)\b|\bif debited\b/i
+const FAILED = /\b(?:failed|declined|unsuccessful|could not be (?:processed|completed)|was not successful|has been rejected|payment failed)\b|विफल|असफल|अस्वीकृत/i
+const REFUND_WORD = /\b(?:refund(?:ed)?|reversed|reversal)\b|रिफ\u093c?ंड|रिवर्स|वापस/i
+const REFUND_DONE = /\b(?:credited|reversed|has been processed|processed to|refunded to)\b|जमा (?:कर दिए गए|किए गए|किये गये|किया गया|की गई|हो गए|हो गया|हो गई)|वापस (?:आ गए|आ गया)/i
+const REFUND_FUTURE = /\bwill be (?:refunded|reversed|credited)\b|\bif debited\b|जाएंगे|जायेंगे|जाएगा|जायेगा|जाएगी|जायेगी/i
 const MANDATE_WORD = /\b(?:auto\s?pay|mandate|e-?mandate|standing instruction)\b/i
 const MANDATE_SETUP = /\b(?:created|registered|set up|successfully set|revoked|paused|cancelled|will be debited|upcoming|scheduled|to pause)\b/i
 const STATEMENT =
   /\b(?:total (?:amt |amount )?due|min(?:imum)?\.? (?:amt |amount )?due|due date|due (?:on|by)\b|is due\b|statement (?:for|generated|is (?:ready|generated))|statement:|emi of)/i
 const PROMO =
-  /\b(?:cashback|offer|offers|discount|win|won|apply now|pre-?approved|congratulations|limited period|t&c|use code|coupon|up ?to \d+%|\d+% off|shop now|earn|reward points|enjoy|upgrade|get flat|sale|know more|tap kotak|visit|recharge now|buy now|book now|order now|unlimited|free)\b|\bonly!/i
-const BALANCE = /\b(?:avl\.?|available|avail\.?|a\/c)?\s*bal(?:ance)?\b/i
+  /\b(?:cashback|offer|offers|discount|win|won|apply now|pre-?approved|congratulations|limited period|t&c|use code|coupon|up ?to \d+%|\d+% off|shop now|earn|reward points|enjoy|upgrade|get flat|sale|know more|tap kotak|visit|recharge now|buy now|book now|order now|unlimited|free)\b|\bonly!|ऑफ\u093c?र|कैशबैक|छूट/i
+const BALANCE = /\b(?:avl\.?|available|avail\.?|a\/c)?\s*bal(?:ance)?\b|शेष|बैलेंस/i
 /** Words that make an amount next to a balance the price of something (not just a balance update). */
 const SPEND_WORD = /\b(?:paid|cost|total|order|trip|recharge|bill)\b/i
 
 /** Owner-side debit and credit phrasing. */
 const DEBIT =
-  /\b(?:debited|debit (?:of|by)|has a debit|is debited|dr\.?(?=\s|$)|spent|withdrawn|sent|paid|payment of|payment to|purchase|deducted|transferred to|trf to)\b/i
-const CREDIT = /\b(?:credited|received|money received|deposited|deposit by|cr\.?(?=\s|$)|added to your)\b/i
+  /\b(?:debited|debit (?:of|by)|has a debit|is debited|dr\.?(?=\s|$)|spent|withdrawn|sent|paid|payment of|payment to|purchase|deducted|transferred to|trf to)\b|डेबिट|(?:कटे|कटी|काटे)(?![\u0900-\u097F])/i
+const CREDIT = /\b(?:credited|received|money received|deposited|deposit by|cr\.?(?=\s|$)|added to your)\b|जमा|प्राप्त/i
 /** "debited from your a/c … and Cr. to swiggy" / "; SWIGGY credited" — the owner's side is the debit. */
 const OWNER_DEBIT =
-  /\b(?:debited (?:from|by|for|with)|is debited|has been debited|has a debit|dr\.? from|debited\b[^.\n]{0,40}\ba\/?c|a\/?c\b[^.\n]{0,30}\bdebited|sent (?:rs\.?|inr|₹)|^sent\b|spent\b|withdrawn|paid (?:rs\.?|inr|₹)|^paid\b|₹[\d,.]+ paid|you paid|i have paid|payment (?:of|to)\b[^\n]*\b(?:successful|was successful)|(?:transaction|txn) of (?:rs\.?|inr|₹)\s?[\d,.]+ (?:done|at)\b|debited\b)/im
+  /\b(?:debited (?:from|by|for|with)|is debited|has been debited|has a debit|dr\.? from|debited\b[^.\n]{0,40}\ba\/?c|a\/?c\b[^.\n]{0,30}\bdebited|sent (?:rs\.?|inr|₹)|^sent\b|spent\b|withdrawn|paid (?:rs\.?|inr|₹)|^paid\b|₹[\d,.]+ paid|you paid|i have paid|payment (?:of|to)\b[^\n]*\b(?:successful|was successful)|(?:transaction|txn) of (?:rs\.?|inr|₹)\s?[\d,.]+ (?:done|at)\b|debited\b)|डेबिट (?:हुए|हुआ|हुई|हो गए|हो गया|हो गई|किए गए|किया गया|की गई)|(?:कटे|कटी|काटे)(?![\u0900-\u097F])/im
 const OWNER_CREDIT =
-  /\b(?:credited (?:to|in|with|by)|is credited|has been credited|credited:|\bcredited\n|received (?:rs\.?|inr|₹)|you received|^received\b|money received|credited inr|credited rs|deposit by)/im
+  /\b(?:credited (?:to|in|with|by)|is credited|has been credited|credited:|\bcredited\n|received (?:rs\.?|inr|₹)|you received|^received\b|money received|credited inr|credited rs|deposit by)|जमा (?:हुए|हुआ|हुई|हो गए|हो गया|हो गई|किए गए|किये गये|किया गया|की गई)|प्राप्त (?:हुए|हुआ|हुई)/im
 
 /* ---------------------------------------------------------------- amounts */
 
-const MONEY = /(?:rs\.?|inr|₹)\s?([0-9][0-9,]*(?:\.[0-9]{1,2})?)|(?:debited|credited) by\s?(?:rs\.?|inr)?\s?([0-9][0-9,]*(?:\.[0-9]+)?)/gi
+const MONEY =
+  /(?:rs\.?|inr|₹|रु\.?|रू\.?)\s?([0-9][0-9,]*(?:\.[0-9]{1,2})?)|(?:debited|credited) by\s?(?:rs\.?|inr)?\s?([0-9][0-9,]*(?:\.[0-9]+)?)|\b([0-9][0-9,]*(?:\.[0-9]{1,2})?)\s?(?:रुपये|रुपए)/gi
 /** An amount right after these words (within 14 characters) is a balance or a limit, not the payment. */
-const NOT_THE_AMOUNT = /(?:bal(?:ance)?|avl|avail(?:able)?|limit|lmt|due|outstanding|o\/s|amt)\W{0,4}$/i
+const NOT_THE_AMOUNT = /(?:bal(?:ance)?|avl|avail(?:able)?|limit|lmt|due|outstanding|o\/s|amt|शेष|बैलेंस)\W{0,4}$/i
 const LOOK_BACK = 14
 
 /** "1,02,500.00" → 10250000 paise; half-up past two decimals; null for nothing or zero. */
@@ -123,7 +129,7 @@ function findAmount(text: string): Minor | null {
   for (const m of text.matchAll(MONEY)) {
     const before = text.slice(Math.max(0, m.index - LOOK_BACK), m.index)
     if (NOT_THE_AMOUNT.test(before)) continue
-    const value = toPaise(m[1] ?? m[2] ?? '')
+    const value = toPaise(m[1] ?? m[2] ?? m[3] ?? '')
     if (value !== null) return value
   }
   return null
@@ -150,6 +156,18 @@ function addDays(day: string, n: number): string {
 
 /** The first date printed (day first), never later than tomorrow; null when none is. Also read by Stuck money (src/features/stuck/detect.ts). */
 export function findDate(text: string, today: string): string | null {
+  // A clock or a typo can print a date in the future: never later than tomorrow.
+  const latest = validDay(today) ? addDays(today, 1) : null
+  return printedDates(text).find((date) => latest === null || date <= latest) ?? null
+}
+
+/** The first real date printed (day first), even one still to come — for Stuck money to flag it. */
+export function findPrintedDate(text: string): string | null {
+  return printedDates(text)[0] ?? null
+}
+
+/** Every real date printed, in the order printed. */
+function printedDates(text: string): string[] {
   const found: Array<[number, string | null]> = []
   for (const m of text.matchAll(/\b(20\d{2})[-:/](\d{2})[-:/](\d{2})\b/g)) {
     found.push([m.index, iso(Number(m[1]), Number(m[2]), Number(m[3]))])
@@ -161,12 +179,7 @@ export function findDate(text: string, today: string): string | null {
     found.push([m.index, iso(fullYear(m[3] ?? ''), MONTHS.indexOf((m[2] ?? '').toLowerCase()) + 1, Number(m[1]))])
   }
   found.sort((a, b) => a[0] - b[0])
-  // A clock or a typo can print a date in the future: never later than tomorrow.
-  const latest = validDay(today) ? addDays(today, 1) : null
-  for (const [, date] of found) {
-    if (date !== null && (latest === null || date <= latest)) return date
-  }
-  return null
+  return found.map(([, date]) => date).filter((date): date is string => date !== null)
 }
 
 function validDay(day: string): boolean {
@@ -176,7 +189,7 @@ function validDay(day: string): boolean {
 /* ---------------------------------------------------------------- refs, accounts, via */
 
 const REF12 =
-  /(?:\bupi\b[\s:/-]*(?:p2[ma]\/|ref(?:erence)?\.?\s*(?:no\.?|id)?|txn|transaction\s*id|mandate\/)?|\bref(?:erence)?\.?\s*(?:no\.?|id)?|\brefno|\brrn|\butr(?:\s*no\.?)?|\bimps(?:\s*ref(?:\s*no\.?)?)?|\bmandate\/)[\s:.#/-]*(\d{12})\b/i
+  /(?:\bupi\b[\s:/-]*(?:p2[amp](?:[\s:/-]*(?:txn|transaction(?:\s*id)?))?|ref(?:erence)?\.?\s*(?:no\.?|id)?|txn|transaction\s*id|mandate\/)?|\bref(?:erence)?\.?\s*(?:no\.?|id)?|\brefno|\brrn|\butr(?:\s*no\.?)?|\bimps(?:\s*ref(?:\s*no\.?)?)?|\bmandate\/|संदर्भ(?:\s*(?:सं\.?|संख्या|नं\.?))?)[\s:.#/-]*(\d{12})\b/i
 const NEFT_REF = /\bneft[-/]([a-z0-9]{12,22})\b/i
 const TXN_ID = /\btxn\s*id[:\s]*([a-z0-9]{8,30})\b/i
 
@@ -203,12 +216,12 @@ export function findAccount(text: string): string | null {
 /** How the money moved (UPI, card, ATM…), when the message says. */
 export function findVia(text: string): PayVia | null {
   if (/\bauto\s?pay\b|\bupi mandate\b|\bmandate\//i.test(text)) return 'autopay'
-  if (/\batm\b|\bwithdrawn\b/i.test(text)) return 'atm'
-  if (/(?:\b|bob)card\b|\bpos\b/i.test(text)) return 'card'
+  if (/\batm\b|\bwithdrawn\b|एटीएम/i.test(text)) return 'atm'
+  if (/(?:\b|bob)card\b|\bpos\b|कार्ड/i.test(text)) return 'card'
   if (/\bwallet\b/i.test(text)) return 'wallet'
   if (/\bneft\b/i.test(text)) return 'neft'
-  if (/\bimps\b/i.test(text)) return 'imps'
-  if (/\bupi\b|\bvpa\b|\butr\b|@[a-z]/i.test(text)) return 'upi'
+  if (/\bimps\b|आईएमपीएस/i.test(text)) return 'imps'
+  if (/\bupi\b|\bvpa\b|\butr\b|@[a-z]|यूपीआई/i.test(text)) return 'upi'
   return null
 }
 
@@ -246,7 +259,7 @@ function cleanName(raw: string): string | null {
 
 /** Shared by both directions: bank-specific layouts that name the other party unambiguously. */
 const COMMON_PATTERNS: readonly RegExp[] = [
-  /\bUPI(?:\s*Mandate)?\/(?:P2[MA]\/)?\d{6,}\/([^\n]+?)(?=\s+on\s|\.\s|\.$|\n|$)/i, // Axis, Yes, IDFC, IndusInd
+  /\bUPI(?:\s*Mandate)?\/(?:P2[MAP]\/)?\d{6,}\/([^\n]+?)(?=\s+on\s|\s+-\s|\.\s|\.$|\n|$)/i, // Axis, Yes, IDFC, IndusInd, Canara
   /\bUPI-\d{6,}-([^\n.]+)/i, // ICICI "Info UPI-…-RIYA SHARMA"
   /\bNEFT[-/][A-Z0-9]+[-/]([^\n.]+)/i, // NEFT narration
 ]
@@ -255,6 +268,7 @@ const COMMON_PATTERNS: readonly RegExp[] = [
 const DEBIT_PATTERNS: readonly RegExp[] = [
   /\bTo:\s*([^\n(]+?)\s*\(/i, // GPay receipt "To: Swiggy (swiggy@icici)"
   /\bTo\s+([^\n]+?)\s*\n\s*On\s/i, // HDFC "To SWIGGY\nOn 21/10/26"
+  /\bTo\s+([^\n]+?)\s+On\s+\d{1,2}\/\d{1,2}\/\d{2,4}\b/, // the same HDFC alert copied as one line
   /\btrf to\s+(.+?)\s+Refno\b/i, // SBI
   /;\s*([^;\n]+?)\s+credited\b/i, // ICICI "; BLINKIT credited"
   ...COMMON_PATTERNS,
@@ -276,13 +290,13 @@ const DEBIT_PATTERNS: readonly RegExp[] = [
 
 /** Where the money came from. */
 const CREDIT_PATTERNS: readonly RegExp[] = [
-  /\b(?:you received|^received)\s+(?:rs\.?|inr|₹)\s?[\d,.]+\s+from\s+([^\n.]+?)(?=\n|\.|$)/im,
+  /\b(?:you (?:have )?received|^received)\s+(?:rs\.?|inr|₹)\s?[\d,.]+\s+from\s+([^\n.(]+?)(?=\s*\(|\n|\.|$)/im, // "…from IMRAN KHAN (imrankhan@ybl)"
   /\brefund of\s+(?:rs\.?|inr|₹)\s?[\d,.]+\s+(?:from|for)\s+(.+?)\s+has\b/i,
   /\bas refund from\s+([^\n.]+)/i,
   ...COMMON_PATTERNS,
   /\bby\s+(?:a\/c linked to vpa\s+)?(\S+@[a-z][a-z0-9]+)/i, // "by riya.s@okaxis"
   /\bfrom\s+(\S+@[a-z][a-z0-9]+)/i,
-  /\bfrom\s+([A-Z][A-Z .]+?)(?=\.\s|\.$|\n|\s+UPI|\s+has|$)/, // "from KABIR MEHTA. UPI Ref", "from ANANYA RAO."
+  /\bfrom\s+([A-Z][A-Z .]+?)(?=\.\s|\.$|\n|\s*\(|\s+(?:UPI|has|via|on|in|Ref|ref|REF)\b|\s+-|$)/, // "from KABIR MEHTA. UPI Ref", "from ANANYA RAO.", "from ROHIT VERMA via UPI"
 ]
 
 /** A printed name as people know it ("BUNDL TECHNOLOGIES PVT LTD" → "Swiggy", "RIYA SHARMA" → "Riya Sharma"), or null when it isn't a name. */

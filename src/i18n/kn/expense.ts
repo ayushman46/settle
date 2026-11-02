@@ -72,7 +72,7 @@ export const expense = {
   'expense.added': '{date} ರಂದು ಸೇರಿಸಲಾಗಿದೆ',
   'expense.added.changed': 'ಕೊನೆಯ ಬದಲಾವಣೆ {date}',
   'expense.added.source.scan': 'ಸ್ಕ್ಯಾನ್ ಮಾಡಿದ ಬಿಲ್‌ನಿಂದ',
-  'expense.added.source.describe': '“Just say it” ಮೂಲಕ',
+  'expense.added.source.describe': '“ಹೇಳಿಬಿಡಿ” ಮೂಲಕ',
   'expense.added.source.sample': 'ಮಾದರಿ ಬಿಲ್‌ನಿಂದ',
   'expense.added.source.recurring': 'ಪುನರಾವರ್ತಿತ ಸ್ಪ್ಲಿಟ್‌ನಿಂದ',
   'expense.added.source.sms': 'ಬ್ಯಾಂಕ್ SMS ನಿಂದ',

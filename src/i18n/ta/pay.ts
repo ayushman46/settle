@@ -24,7 +24,7 @@ export const pay = {
   'pay.who.paid': 'செலுத்தியது',
   // One person's share.
   'pay.panel.notYou.cta': '{name} இல்லையா? பெயர் தேர்',
-  'pay.panel.share.title': '{name} இன் பங்கு',
+  'pay.panel.share.title': '{name} அவர்களின் பங்கு',
   'pay.panel.partPaid': '{share}-இல் {paid} ஏற்கனவே செலுத்தப்பட்டது — இது மீதி',
   'pay.panel.paid.title': 'கணக்கு சரியாக உள்ளது',
   'pay.panel.paid.body': 'உங்கள் பங்கை {name} செலுத்தியதாகக் குறித்துள்ளார்.',
@@ -49,10 +49,10 @@ export const pay = {
   'pay.tell.shared.status': 'அனுப்பப்பட்டது. கணக்கைத் தீர்த்ததற்கு நன்றி!',
   'pay.tell.failed.status': 'செய்தியைப் பகிர முடியவில்லை. மீண்டும் முயற்சி செய்யுங்கள்.',
   // The message itself ({title} is what the bill was for).
-  'pay.tell.message': 'வணக்கம் {name}! {title} க்கான {amount} இப்போதுதான் செலுத்தினேன் ✓',
-  'pay.tell.message.noName': 'வணக்கம்! {title} க்கான {amount} இப்போதுதான் செலுத்தினேன் ✓',
-  'pay.tell.message.cash': 'வணக்கம் {name}! {title}-க்கு {amount} ரொக்கமாகக் கொடுத்தேன் ✓',
-  'pay.tell.message.cash.noName': 'வணக்கம்! {title}-க்கு {amount} ரொக்கமாகக் கொடுத்தேன் ✓',
+  'pay.tell.message': 'வணக்கம் {name}! {title} செலவுக்கான {amount} இப்போதுதான் செலுத்தினேன் ✓',
+  'pay.tell.message.noName': 'வணக்கம்! {title} செலவுக்கான {amount} இப்போதுதான் செலுத்தினேன் ✓',
+  'pay.tell.message.cash': 'வணக்கம் {name}! {title} செலவுக்காக {amount} ரொக்கமாகக் கொடுத்தேன் ✓',
+  'pay.tell.message.cash.noName': 'வணக்கம்! {title} செலவுக்காக {amount} ரொக்கமாகக் கொடுத்தேன் ✓',
   'pay.tell.message.ref': 'UPI குறிப்பு: {ref}',
   'pay.tell.message.link': 'நான் செலுத்தியதாகக் குறிக்கத் தட்டுங்கள் 👇',
   'pay.tell.how.upi': 'UPI-ல்',
@@ -60,7 +60,7 @@ export const pay = {
   'pay.tell.utr.label': 'UPI குறிப்பு எண் (விருப்பம்)',
   'pay.tell.utr.hint': '12 இலக்கங்கள், உங்கள் UPI ஆப்பின் பணம் விவரங்களில்',
   'pay.tell.utr.error': 'UPI குறிப்பு எண்ணில் 12 இலக்கங்கள் இருக்கும்.',
-  'pay.tell.opened.status': 'WhatsApp திறந்தது — {name}-க்கு அனுப்புங்கள்.',
+  'pay.tell.opened.status': 'WhatsApp திறந்தது — {name} அவர்களுக்கு அனுப்புங்கள்.',
   // A link that can't be shown.
   'pay.problem.invalid.title': 'இந்தப் பணம் செலுத்தும் இணைப்பு வேலை செய்யவில்லை',
   'pay.problem.invalid.body': 'நகலெடுக்கும்போது அது பாதியில் வெட்டப்பட்டிருக்கலாம். அனுப்பியவரிடம் மீண்டும் பகிரச் சொல்லுங்கள்.',

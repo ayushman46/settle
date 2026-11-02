@@ -30,9 +30,9 @@ export function Hero() {
     <section className={styles.hero} aria-labelledby="hero-title">
       <div className={styles.heroInner}>
         <div className={styles.heroCopy}>
-          <Link to={STUCK_PATH} className={styles.announce}>
-            <span className={styles.announceTag}>New</span>
-            <span className="visually-hidden">:</span>{' '}
+          {/* One name, read in one go (pieces of text are read with pauses: "New, colon, Stuck money"). */}
+          <Link to={STUCK_PATH} className={styles.announce} aria-label="New: Stuck money — get back what banks and shops owe you">
+            <span className={styles.announceTag}>New</span>{' '}
             <span>Stuck money — get back what banks and shops owe you</span>
             <ArrowRight aria-hidden="true" strokeWidth={2.25} />
           </Link>
@@ -47,7 +47,8 @@ export function Hero() {
           </h1>
           <p className={styles.sub}>
             Dinners, rent, trips, flatmates, subscriptions — {BRAND.name} works out who owes what, then sends one link
-            so everyone pays you back by UPI in a tap.
+            so everyone pays you back by UPI in a tap. A payment failed but the money left? It tracks the RBI’s
+            deadline, and what your bank owes you for the wait.
           </p>
           <div className={styles.ctas}>
             <CtaLink to="/app" iconEnd={<ArrowRight strokeWidth={2.25} />}>
