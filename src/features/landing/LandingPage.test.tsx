@@ -125,13 +125,25 @@ describe('LandingPage', () => {
     expect(screen.getByRole('heading', { level: 1 })).toHaveFocus()
   })
 
-  it('announces Stuck money above the tagline and opens it in the app, in place', async () => {
+  it('announces Bank charges above the tagline and opens it in the app, in place', async () => {
     const { user } = renderLanding()
-    const link = screen.getByRole('link', { name: 'New: Stuck money — get back what banks and shops owe you' })
-    expect(link).toHaveAttribute('href', '/app/stuck')
+    const link = screen.getByRole('link', { name: 'New: Bank charges — get back what your bank shouldn’t have taken' })
+    expect(link).toHaveAttribute('href', '/app/fees')
     expect(link.compareDocumentPosition(screen.getByRole('heading', { level: 1 })) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     await user.click(link)
-    expect(path()).toBe('/app/stuck')
+    expect(path()).toBe('/app/fees')
+  })
+
+  it('lets the Bank charges tile open Bank charges, with the real rules’ numbers in its mockup', async () => {
+    const { user } = renderLanding()
+    const tile = screen.getByRole('heading', { name: 'Your bank took charges it shouldn’t have. Get them back.' }).closest('li') as HTMLElement
+    expect(tile).toHaveTextContent('RBI Ombudsman')
+    expect(tile).toHaveTextContent('It took your balance below zero')
+    expect(tile).toHaveTextContent('NEFT sent online from a savings account is free.')
+    const link = within(tile).getByRole('link', { name: 'Check your bank charges' })
+    expect(link).toHaveAttribute('href', '/app/fees')
+    await user.click(link)
+    expect(path()).toBe('/app/fees')
   })
 
   it('lets the Stuck money tile itself open Stuck money', async () => {
@@ -143,12 +155,13 @@ describe('LandingPage', () => {
     expect(path()).toBe('/app/stuck')
   })
 
-  it('shows every signature feature, Stuck money first; new and Pro ones marked', () => {
+  it('shows every signature feature, Bank charges first and Stuck money next; new and Pro ones marked', () => {
     renderLanding()
     const section = screen.getByRole('region', { name: 'One app for every split' })
     const titles = within(section).getAllByRole('heading', { level: 3 })
     expect(titles.map((t) => t.textContent)).toEqual(FEATURES.map((f) => f.title))
-    expect(FEATURES[0]).toMatchObject({ id: 'stuck', isNew: true, size: 'full' })
+    expect(FEATURES[0]).toMatchObject({ id: 'fees', isNew: true, size: 'full' })
+    expect(FEATURES[1]).toMatchObject({ id: 'stuck', isNew: true, size: 'full' })
     for (const feature of FEATURES) {
       const tile = screen.getByRole('heading', { name: feature.title }).closest('li') as HTMLElement
       expect(within(tile).queryByText('Pro') !== null).toBe(feature.pro === true)
@@ -172,7 +185,7 @@ describe('LandingPage', () => {
 
   it('tells the Stuck money story in its tile: the RBI’s deadline, ₹100 a day, the ladder', () => {
     renderLanding()
-    const stuck = FEATURES[0] as (typeof FEATURES)[number]
+    const stuck = FEATURES.find((f) => f.id === 'stuck') as (typeof FEATURES)[number]
     const tile = screen.getByRole('heading', { name: stuck.title }).closest('li') as HTMLElement
     expect(tile).toHaveTextContent('RBI’s deadline')
     expect(tile).toHaveTextContent('₹100 a day')

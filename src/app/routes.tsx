@@ -232,6 +232,11 @@ const StuckDetailScreen = lazyScreen(
   () => import('../features/stuck/StuckDetailScreen'),
   (m) => m.StuckDetailScreen,
 )
+const FeesScreen = lazyScreen(
+  'FeesScreen',
+  () => import('../features/fees/FeesScreen'),
+  (m) => m.FeesScreen,
+)
 const UpgradeScreen = lazyScreen(
   'UpgradeScreen',
   () => import('../features/pro/UpgradeScreen'),
@@ -303,6 +308,7 @@ export const APP_ROUTES: readonly AppRoute[] = [
   { pattern: '/app/stuck/new', screen: StuckAddScreen, title: 'Add stuck money', tab: null },
   { pattern: '/app/stuck/:id', screen: StuckDetailScreen, title: 'Stuck money', tab: null },
   { pattern: '/app/stuck/:id/edit', screen: StuckAddScreen, title: 'Edit stuck money', tab: null },
+  { pattern: '/app/fees', screen: FeesScreen, title: 'Bank charges', tab: null },
 ]
 
 /** The app route for `path`, or null for an unknown `/app/*` path. */

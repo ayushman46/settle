@@ -47,6 +47,7 @@ import { autosettle } from './autosettle'
 import { stuck } from './stuck'
 import { stuckhelp } from './stuckhelp'
 import { stuckalerts } from './stuckalerts'
+import { fees } from './fees'
 
 export const TE: Messages = {
   ...common,
@@ -90,6 +91,7 @@ export const TE: Messages = {
   ...stuck,
   ...stuckhelp,
   ...stuckalerts,
+  ...fees,
 }
 
 export default TE

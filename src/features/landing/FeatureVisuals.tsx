@@ -29,6 +29,7 @@ import {
   GROUP_DEMO,
   INSIGHTS_DEMO,
   RECURRING_DEMO,
+  feesDemo,
   stuckDemo,
 } from './demo'
 import type { FeatureId } from './featureList'
@@ -36,6 +37,48 @@ import styles from './FeatureVisuals.module.css'
 
 const money = (minor: number) => formatMoney(minor, DEMO_CURRENCY, { trimZeros: true })
 const noop = () => {}
+
+function FeesVisual() {
+  const { owed, rows, ladder } = feesDemo()
+  return (
+    <div className={styles.stuck}>
+      <div className={styles.stuckCard}>
+        <div className={styles.stuckHead}>
+          <span className={styles.muted}>Your bank owes you</span>
+          <Money value={owed} currency={DEMO_CURRENCY} size="lg" trimZeros strong />
+          <span className={styles.owed}>
+            <Landmark strokeWidth={2.25} />
+            {rows.length} charges break the RBI’s rules
+          </span>
+        </div>
+        {rows.map((row) => (
+          <div key={row.id} className={styles.stuckRow}>
+            <CategoryIcon category={row.kind === 'atm' ? 'transport' : row.kind === 'neft' ? 'utilities' : 'other'} size="sm" />
+            <span className={styles.billText}>
+              <span className={styles.stuckTitle}>{row.title}</span>
+              <span className={styles.late}>{row.why}</span>
+            </span>
+            <Money value={row.claim} currency={DEMO_CURRENCY} size="sm" trimZeros strong />
+          </div>
+        ))}
+      </div>
+      <div className={styles.ladder}>
+        <p className={styles.ladderHead}>Next for HDFC Bank</p>
+        <ol className={styles.rungs}>
+          {ladder.map((rung) => (
+            <li key={rung.label} className={cx(styles.rung, styles[`rung-${rung.state}`])}>
+              <span className={styles.rungDot}>{rung.state === 'now' && <FileText strokeWidth={2.5} />}</span>
+              <span className={styles.rungText}>
+                <span className={styles.rungLabel}>{rung.label}</span>
+                <span className={styles.rungNote}>{rung.note}</span>
+              </span>
+            </li>
+          ))}
+        </ol>
+      </div>
+    </div>
+  )
+}
 
 function StuckVisual() {
   const { rows, summary, ladder, ladderFor } = stuckDemo()
@@ -376,6 +419,7 @@ function InsightsVisual() {
 }
 
 const VISUALS: Readonly<Record<FeatureId, () => JSX.Element>> = {
+  fees: FeesVisual,
   stuck: StuckVisual,
   scan: ScanVisual,
   describe: DescribeVisual,

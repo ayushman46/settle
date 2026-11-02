@@ -47,6 +47,7 @@ import { autosettle } from './autosettle'
 import { stuck } from './stuck'
 import { stuckhelp } from './stuckhelp'
 import { stuckalerts } from './stuckalerts'
+import { fees } from './fees'
 
 export const MR: Messages = {
   ...common,
@@ -90,6 +91,7 @@ export const MR: Messages = {
   ...stuck,
   ...stuckhelp,
   ...stuckalerts,
+  ...fees,
 }
 
 export default MR

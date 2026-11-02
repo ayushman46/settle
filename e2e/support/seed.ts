@@ -24,6 +24,7 @@ const KEYS = {
   stuck: 'settle.v6.stuck',
   stuckSeen: 'settle.v6.stuck-seen',
   letterMe: 'settle.v7.letter-me',
+  fees: 'settle.v7.fees',
 } as const satisfies typeof STORAGE_KEYS
 const STORAGE_VERSION = 1 satisfies typeof STORE_VERSION
 
@@ -39,6 +40,8 @@ export interface SeedData {
   claims?: ClaimRound[]
   /** Money stuck with banks and businesses. */
   stuck?: StuckPayment[]
+  /** Bank charges: the store's whole state (src/features/fees/store.ts FeesState). */
+  fees?: unknown
 }
 
 /** A friend record with sensible defaults. */
@@ -73,6 +76,7 @@ export function seedEntries(data: SeedData, now = Date.now()): Record<string, st
   if (data.pools) entries[KEYS.pools] = envelope(data.pools)
   if (data.claims) entries[KEYS.claims] = envelope(data.claims)
   if (data.stuck) entries[KEYS.stuck] = envelope(data.stuck)
+  if (data.fees) entries[KEYS.fees] = envelope(data.fees)
   return entries
 }
 

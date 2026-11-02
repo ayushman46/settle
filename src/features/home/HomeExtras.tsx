@@ -1,3 +1,4 @@
+import { FeesCard } from '../fees/FeesCard'
 import { ActivePoolsCard } from '../pools/ActivePoolsCard'
 import { POOLS_ENABLED } from '../pools/enabled'
 import { StuckCard } from '../stuck/StuckCard'
@@ -12,6 +13,7 @@ export function HomeExtras({ withoutStuck = false }: HomeExtrasProps) {
   return (
     <>
       {!withoutStuck && <StuckCard />}
+      <FeesCard />
       {POOLS_ENABLED && <ActivePoolsCard />}
     </>
   )

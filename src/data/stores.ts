@@ -40,6 +40,8 @@ export const STORAGE_KEYS = {
   stuckSeen: 'settle.v6.stuck-seen',
   /** Your mobile, city and address for complaint letters, and where each one's letters go (src/features/stuck/letterMe.ts). Not in backups. */
   letterMe: 'settle.v7.letter-me',
+  /** Bank charges: the charges read from statements and SMS, your answers, and your claims (src/features/fees/store.ts). */
+  fees: 'settle.v7.fees',
 } as const
 
 /** Accepts a bare, un-enveloped value (e.g. hand-edited storage) when the schema can read it. */

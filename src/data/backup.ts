@@ -46,6 +46,7 @@ import {
 } from './stores'
 import { LEGACY_KEYS } from './legacy'
 import { letterMeStore } from '../features/stuck/letterMe'
+import { emptyFees, feesSchema, feesStore, type FeesState } from '../features/fees/store'
 
 export const BACKUP_VERSION = 4
 
@@ -71,6 +72,8 @@ export interface BackupFile {
   reminders: Reminder[]
   /** Money stuck with banks and businesses. Absent in older files. */
   stuck: StuckPayment[]
+  /** Bank charges: the charges read, your answers and your claims. Absent in older files. */
+  fees: FeesState
 }
 
 const backupSchema = z.object({
@@ -89,6 +92,7 @@ const backupSchema = z.object({
   payerAliases: z.catch(z.optional(payerAliasesSchema), []),
   reminders: z.catch(z.optional(remindersSchema), []),
   stuck: z.catch(z.optional(stuckSchema), []),
+  fees: z.catch(z.optional(feesSchema), undefined),
 })
 
 export function exportBackup(): BackupFile {
@@ -107,6 +111,7 @@ export function exportBackup(): BackupFile {
     payerAliases: payerAliasesStore.get(),
     reminders: remindersStore.get(),
     stuck: stuckStore.get(),
+    fees: feesStore.get(),
   }
 }
 
@@ -138,6 +143,7 @@ export function parseBackup(json: unknown): BackupFile | null {
     payerAliases: data.payerAliases ?? [],
     reminders: data.reminders ?? [],
     stuck: data.stuck ?? [],
+    fees: data.fees ?? emptyFees(),
   }
 }
 
@@ -257,6 +263,7 @@ export function importBackup(file: BackupFile, mode: 'merge' | 'replace'): { add
     payerAliasesStore.set([...file.payerAliases])
     remindersStore.set([...file.reminders])
     stuckStore.set([...file.stuck])
+    feesStore.set({ ...file.fees })
     clearSplitPrefill()
     flushAllStores()
     const added =
@@ -373,6 +380,21 @@ export function importBackup(file: BackupFile, mode: 'merge' | 'replace'): { add
   const stuck = mergeById(stuckStore.get(), file.stuck, (inc, loc) => (inc.updatedAt > loc.updatedAt ? inc : null))
   stuckStore.set(stuck.list)
 
+  // Bank charges: charges and claims by id (the newer claim wins), answers and accounts kept from here first.
+  const fees = feesStore.get()
+  const charges = mergeById(fees.charges, file.fees.charges, () => null)
+  const feeClaims = mergeById(fees.claims, file.fees.claims, (inc, loc) => (inc.updatedAt > loc.updatedAt ? inc : null))
+  const notices = [...fees.notices, ...file.fees.notices.filter((n) => !fees.notices.some((m) => m.date === n.date && m.bank === n.bank && m.account === n.account))]
+  feesStore.set({
+    charges: charges.list,
+    claims: feeClaims.list,
+    accounts: { ...file.fees.accounts, ...fees.accounts },
+    answers: { ...file.fees.answers, ...fees.answers },
+    dismissed: [...new Set([...fees.dismissed, ...file.fees.dismissed])],
+    checks: [...fees.checks, ...file.fees.checks.filter((c) => !fees.checks.some((m) => m.at === c.at))].slice(-200),
+    notices: notices.slice(-500),
+  })
+
   flushAllStores()
   return {
     added: added + expenses.added + groups.added + recurring.added + pools.added + claims.added + stuck.added,
@@ -395,7 +417,7 @@ export function clearAllData(): void {
       // Blocked storage — the in-memory reset below still applies.
     }
   }
-  for (const store of [profileStore, friendsStore, expensesStore, groupsStore, recurringStore, poolsStore, claimsStore, proofRefsStore, payerAliasesStore, remindersStore, autoSettleStore, stuckStore, stuckSeenStore, letterMeStore])
+  for (const store of [profileStore, friendsStore, expensesStore, groupsStore, recurringStore, poolsStore, claimsStore, proofRefsStore, payerAliasesStore, remindersStore, autoSettleStore, stuckStore, stuckSeenStore, letterMeStore, feesStore])
     store.reload()
   clearSplitPrefill()
 }

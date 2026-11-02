@@ -10,6 +10,7 @@ import { useT } from '../../i18n'
 import { useCountUp } from '../../kit/motion'
 import { cx } from '../../lib/cx'
 import { haptic } from '../../lib/haptics'
+import { FeesLink } from '../fees/FeesLink'
 import { STUCK_NEW_PATH, stuckPath } from './paths'
 import { needsAction, owedForWait, summarize, type StuckSummary } from './rules'
 import { StuckAlertsCard } from './StuckAlertsCard'
@@ -66,6 +67,7 @@ export function StuckScreen() {
         />
         <RuleNote />
         <StuckAlertsCard />
+        <FeesLink />
         <StuckPasteSheet open={pasting} onClose={() => setPasting(false)} />
       </Screen>
     )
@@ -90,6 +92,7 @@ export function StuckScreen() {
       <Section section="onway" entries={groups.onway} day={day} />
       <Section section="back" entries={groups.back} day={day} />
       <Section section="aside" entries={groups.aside} day={day} collapsible />
+      <FeesLink />
       <StuckPasteSheet open={pasting} onClose={() => setPasting(false)} />
     </Screen>
   )

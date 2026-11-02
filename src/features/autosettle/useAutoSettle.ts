@@ -15,6 +15,10 @@ import { friendLabel } from '../../kit/index-a'
 import { haptic } from '../../lib/haptics'
 import { formatMoney } from '../../lib/money'
 import { callPlugin, hasPlugin, listenToPlugin } from '../../lib/nativeApp'
+import { navigate } from '../../app/router'
+import { feeToastMessage } from '../fees/alertToast'
+import { FEES_PATH } from '../fees/paths'
+import { trackFeeAlerts } from '../fees/track'
 import { merchantById } from '../stuck/merchants'
 import { backInPart, backParts, compensationDue, daysLate, stillOwed } from '../stuck/rules'
 import { alertSignals, trackStuckSignals, type TrackResult } from '../stuck/track'
@@ -121,12 +125,21 @@ export function useAutoSettle(): void {
       toast(message, { tone: 'success', action: { label: t('common.action.undo'), onAction: () => undoMatches(applied) } })
       return true
     }
-    const tellStuck = (result: TrackResult): void => {
+    /** Toasts what Stuck money noticed; false when it noticed nothing. */
+    const tellStuck = (result: TrackResult): boolean => {
       const message = stuckToastMessage(result, t, today())
-      if (message === null) return
+      if (message === null) return false
       const good = result.back.length > 0 || result.paid.length > 0 || (result.added.length === 0 && result.cleared.length > 0)
       haptic(good ? 'success' : 'warning')
       toast(message, { tone: good ? 'success' : 'info', action: { label: t('common.action.undo'), onAction: result.undo } })
+      return true
+    }
+    /** Toasts a bank charge just read that breaks a rule (or needs one answer), or one put back. */
+    const tellFees = (result: ReturnType<typeof trackFeeAlerts>): void => {
+      const message = feeToastMessage(result, t)
+      if (message === null) return
+      haptic(message.good ? 'success' : 'warning')
+      toast(message.text, { tone: message.good ? 'success' : 'info', action: { label: t('fees.title'), onAction: () => navigate(FEES_PATH) } })
     }
     const run = async () => {
       if (running) return
@@ -141,8 +154,15 @@ export function useAutoSettle(): void {
           // Auto-settle couldn't use them; Stuck money still reads them.
         }
         const stuck = trackStuckSignals(alertSignals(raw, today()), 'alert')
-        // One toast at a time: someone paying you back comes first (stuck money is on its screen either way).
-        if (!ticked) tellStuck(stuck)
+        // Bank charges in the same SMS: kept, and checked against the RBI's rules.
+        let fees: ReturnType<typeof trackFeeAlerts> | null = null
+        try {
+          fees = trackFeeAlerts(raw, today())
+        } catch {
+          // A charge Settle couldn't read: the rest still counts.
+        }
+        // One toast at a time: someone paying you back comes first, then stuck money, then a bank charge (each is on its screen either way).
+        if (!ticked && !tellStuck(stuck) && fees) tellFees(fees)
       } catch {
         // The phone said nothing usable: next time.
       } finally {

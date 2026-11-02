@@ -10,6 +10,8 @@ import { splitAmount, type AmountSplitMode } from '../../engine/split'
 import { formatPercent } from '../../lib/format'
 import { formatMoney } from '../../lib/money'
 import { compensationDue, daysLate, nextStep, summarize, type StuckStage, type StuckSummary } from '../stuck/rules'
+import { emptyFees, type FeeCharge, type FeesState } from '../fees/store'
+import { feesView, kindLabel, whyLine } from '../fees/view'
 
 export interface DemoPerson {
   id: string
@@ -331,3 +333,62 @@ export const RECURRING_DEMO: ReadonlyArray<{ category: CategoryId; title: string
   { category: 'utilities', title: 'Wi-Fi', amount: 99_900, due: 'Due on the 5th' },
   { category: 'subscription', title: 'Netflix', amount: 64_900, due: 'Due on the 12th' },
 ]
+
+/* ------------------------------------------------------------------ bank charges */
+
+const FEES_TODAY = '2026-11-03'
+
+function demoCharge(c: Partial<FeeCharge> & Pick<FeeCharge, 'id' | 'date' | 'kind' | 'amount' | 'gst'>): FeeCharge {
+  return {
+    reversed: 0,
+    text: '',
+    bank: 'hdfc',
+    account: 'XX4821',
+    balanceBefore: null,
+    balanceAfter: null,
+    monthAtm: null,
+    onFailed: false,
+    online: null,
+    avg: null,
+    idleDays: null,
+    monthWithdrawals: null,
+    source: 'statement',
+    addedAt: 0,
+    ...c,
+  }
+}
+
+/** A month of one bank's charges, checked by the real rules (src/features/fees/rules.ts). */
+const FEES_STATE: FeesState = {
+  ...emptyFees(),
+  charges: [
+    demoCharge({ id: 'demo-mab', date: '2026-11-02', kind: 'minbal', amount: 600_00, gst: 108_00, balanceBefore: 118_00, balanceAfter: -590_00, text: 'AMB CHRG INCL GST FOR OCT2026' }),
+    demoCharge({ id: 'demo-atm', date: '2026-10-31', kind: 'atm', amount: 23_00, gst: 4_14, monthAtm: 2, text: 'ATM WDL CHGS' }),
+    demoCharge({ id: 'demo-neft', date: '2026-10-20', kind: 'neft', amount: 2_50, gst: 45, online: true, text: 'NEFT CHGS' }),
+    demoCharge({ id: 'demo-sms', date: '2026-10-02', kind: 'sms', amount: 15_00, gst: 2_70, text: 'INST-ALERT CHG INC GST JUL-SEP2026' }),
+  ],
+  // The demo's person's answer: no balance checks at other banks' ATMs that month.
+  answers: { 'atmFree:demo-atm': true },
+}
+
+export interface FeesDemoRow {
+  id: string
+  kind: FeeCharge['kind']
+  title: string
+  why: string
+  claim: Minor
+}
+
+export function feesDemo(): { owed: Minor; total: Minor; rows: FeesDemoRow[]; ladder: { label: string; note: string; state: 'now' | 'next' }[] } {
+  const view = feesView(FEES_STATE, FEES_TODAY)
+  const rows = view.groups.flatMap((g) => g.findings).map((f) => ({ id: f.charge.id, kind: f.charge.kind, title: kindLabel(f.charge.kind), why: whyLine(f), claim: f.claim }))
+  return {
+    owed: view.owed,
+    total: view.total,
+    rows,
+    ladder: [
+      { label: 'Your bank', note: 'Letter ready', state: 'now' },
+      { label: 'RBI Ombudsman', note: 'If it isn’t fixed in 30 days', state: 'next' },
+    ],
+  }
+}

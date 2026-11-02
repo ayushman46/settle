@@ -223,7 +223,7 @@ export function readNarration(text: string): Narration {
 
 /* ---------------------------------------------------------------- the table */
 
-type Column = keyof typeof SYNONYMS
+export type Column = keyof typeof SYNONYMS
 
 function columnsOf(header: readonly string[]): Partial<Record<Column, number>> {
   const out: Partial<Record<Column, number>> = {}
@@ -241,7 +241,7 @@ function columnsOf(header: readonly string[]): Partial<Record<Column, number>> {
 }
 
 /** The header row: within the first 40, a date column and a money column. */
-function findHeader(rows: readonly string[][]): { at: number; cols: Partial<Record<Column, number>> } | null {
+export function findHeader(rows: readonly string[][]): { at: number; cols: Partial<Record<Column, number>> } | null {
   for (let i = 0; i < Math.min(rows.length, 40); i++) {
     const cols = columnsOf(rows[i] ?? [])
     const date = cols.date ?? cols.valueDate

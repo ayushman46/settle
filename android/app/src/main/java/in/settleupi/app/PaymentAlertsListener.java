@@ -18,6 +18,8 @@ import java.util.regex.Pattern;
  *   Stuck money can clear one it was told was pending.
  * - From your SMS app (if you allowed it): money leaving your account, only so Stuck money can see
  *   that a failed payment really took it. Settle forgets these within two days.
+ * - From your SMS app (if you allowed it): your bank's warning that the balance is below the
+ *   minimum, for Bank charges (the bank must warn you a month before charging for it).
  * - From the shops and travel apps below: refunds, for Stuck money. Nothing else from them.
  *
  * Only these apps are listened to. The package name of a notification is the app that really
@@ -81,6 +83,8 @@ public class PaymentAlertsListener extends NotificationListenerService {
     /** A business's refund. */
     private static final Pattern REFUND = Pattern.compile("(?i)\\b(refunds?|refunded|reversed|reversal|credited back)\\b|रिफ(\\u093c)?ंड|रि\\u095eंड");
     /** Never kept, whatever else they say. */
+    /** A bank's warning that the balance is below the required minimum or average balance. */
+    private static final Pattern LOW_BALANCE = Pattern.compile("(?i)\\b(below|less than|short of|shortfall|maintain)\\b.{0,60}\\b(minimum|min\\.?|average|avg\\.?|mab|amb|aqb)\\b.{0,40}\\b(balance|bal)\\b");
     private static final Pattern SECRET = Pattern.compile("(?i)\\b(otp|one[- ]time password|verification code|passcode|cvv|pin)\\b|ओटीपी|पिन");
 
     @Override
@@ -105,6 +109,7 @@ public class PaymentAlertsListener extends NotificationListenerService {
                 : MONEY_IN.matcher(all).find()
                     || STUCK.matcher(all).find()
                     || (sms && MONEY_OUT.matcher(all).find())
+                    || (sms && LOW_BALANCE.matcher(all).find())
                     || (upi && WENT_THROUGH.matcher(all).find());
             if (!keep) return;
             PaymentAlertsStore.Alert alert = new PaymentAlertsStore.Alert(sbn.getKey() + "@" + sbn.getPostTime(), app, title, body, sbn.getPostTime());

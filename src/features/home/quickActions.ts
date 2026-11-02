@@ -5,7 +5,7 @@
  * actions and templates that didn't fit) — always two rows of four. When there are more than
  * seven, the spare ones make room first.
  */
-import { ArrowLeftRight, BanknoteArrowDown, Bike, Droplets, HandCoins, LayoutGrid, MessageSquareText, ScanLine, Split, UsersRound, type LucideIcon } from 'lucide-react'
+import { ArrowLeftRight, BanknoteArrowDown, Bike, Droplets, HandCoins, Landmark, LayoutGrid, MessageSquareText, ScanLine, Split, UsersRound, type LucideIcon } from 'lucide-react'
 import { navigate } from '../../app/router'
 import { CATEGORY_ICONS, type QuickActionTone } from '../../components'
 import { poolsStore } from '../../data/stores'
@@ -17,10 +17,11 @@ import { openBill } from '../bill/launch'
 import { LEND_ENABLED } from '../lend/enabled'
 import { POOLS_ENABLED } from '../pools/enabled'
 import { SMS_ENABLED } from '../sharein/enabled'
+import { FEES_PATH } from '../fees/paths'
 import { STUCK_PATH } from '../stuck/paths'
 import { NEW_GROUP_PATH, NEW_SPLIT_PATH, templatePath } from './homeLinks'
 
-export type QuickActionId = 'scan' | 'split' | 'lend' | 'collect' | 'sms' | 'food' | 'stuck' | 'group' | 'more'
+export type QuickActionId = 'scan' | 'split' | 'lend' | 'collect' | 'sms' | 'food' | 'stuck' | 'fees' | 'group' | 'more'
 
 export interface QuickActionDef {
   /** A `QuickActionId`, or `template:<category>` for a template tile. */
@@ -61,7 +62,10 @@ export function quickActionDefs({ stuckCard = false }: GridOptions = {}): QuickA
     // needed. While something is, Home's card leads there (and More still has it), and the tile
     // makes way — for Group collection, back in its place.
     { id: 'stuck', label: t('home.quick.stuck'), icon: BanknoteArrowDown, tone: 'accent', run: () => navigate(STUCK_PATH), enabled: () => !stuckCard },
-    { id: 'sms', label: t('home.quick.sms'), icon: MessageSquareText, tone: 'utilities', run: () => navigate('/app/share'), enabled: () => SMS_ENABLED },
+    // Charges your bank shouldn't have taken: always on the grid, next to Stuck money.
+    { id: 'fees', label: t('fees.tile'), icon: Landmark, tone: 'accent', run: () => navigate(FEES_PATH), enabled: always },
+    // Pasting an SMS to split it: the second to move to More when the grid is full (sharing an SMS in still works).
+    { id: 'sms', label: t('home.quick.sms'), icon: MessageSquareText, tone: 'utilities', run: () => navigate('/app/share'), enabled: () => SMS_ENABLED, spare: true },
     { id: 'food', label: t('home.quick.food'), icon: Bike, tone: 'food', run: () => openBill({ kind: 'delivery' }), enabled: () => DELIVERY_ENABLED },
     { id: 'group', label: t('home.quick.group'), icon: UsersRound, tone: 'entertainment', run: () => navigate(NEW_GROUP_PATH), enabled: always },
   ]

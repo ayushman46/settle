@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { BadgeIndianRupee, BanknoteArrowDown, Building2, ChartPie, CircleCheck, ClipboardPaste, Coins, FileText, HandCoins, KeyRound, Languages, Repeat, ShieldCheck, Users } from 'lucide-react'
+import { BadgeIndianRupee, BanknoteArrowDown, Building2, Landmark, ChartPie, CircleCheck, ClipboardPaste, Coins, FileText, HandCoins, KeyRound, Languages, Repeat, ShieldCheck, Users } from 'lucide-react'
 import { navigate } from '../../app/router'
 import { Badge, Card, List, ListRow, Screen, SuccessBurst, Switch, useToast } from '../../components'
 import { updateProfile, useDueRecurring, useFriends, usePools, useProfile, useRecurring, useStore, useSummary } from '../../data'
@@ -11,6 +11,8 @@ import { currencySymbol, formatMoney } from '../../lib/money'
 import { languageInfo, useLang, useT } from '../../i18n'
 import { useHasFeature } from '../../pro'
 import { COLLECT_PATH } from '../collect/paths'
+import { useFeesLine } from '../fees/useFeesLine'
+import { FEES_PATH } from '../fees/paths'
 import { PastePaidReplySheet } from '../expense/PastePaidReplySheet'
 import { POOLS_ENABLED } from '../pools/enabled'
 import { InstallRow } from '../install'
@@ -100,6 +102,7 @@ function Shortcuts() {
               chevron
             />
             <StuckRow />
+            <FeesRow />
           </List>
         </Card>
       </section>
@@ -207,6 +210,25 @@ function StuckRow() {
       title={t('stuck.title')}
       subtitle={summary.stuck > 0 ? t('stuck.you.line', { amount: formatMoney(summary.stuck, 'INR', { trimZeros: true }) }) : t('stuck.you.none')}
       onClick={() => navigate(STUCK_PATH)}
+      chevron
+    />
+  )
+}
+
+/** Bank charges: what the bank owes you, or what it's for. */
+function FeesRow() {
+  const t = useT()
+  const lines = useFeesLine()
+  return (
+    <ListRow
+      leading={
+        <SettingIcon>
+          <Landmark />
+        </SettingIcon>
+      }
+      title={t('fees.title')}
+      subtitle={lines ? lines.title : t('fees.you.none')}
+      onClick={() => navigate(FEES_PATH)}
       chevron
     />
   )

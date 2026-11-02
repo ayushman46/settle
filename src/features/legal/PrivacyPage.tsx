@@ -21,7 +21,7 @@ export function PrivacyPage() {
       <LegalSection title={t('legal.privacy.section.device')}>
         <p>
           Everything you put into {NAME} — your name and UPI ID, the people you split with (their names, UPI IDs and
-          phone numbers), expenses, groups, recurring splits, stuck payments, settings and your Pro pass — is saved
+          phone numbers), expenses, groups, recurring splits, stuck payments, bank charges, settings and your Pro pass — is saved
           in your browser’s storage on this device. It is not sent to us, and we can’t see it.
         </p>
         <p>
@@ -41,7 +41,16 @@ export function PrivacyPage() {
           and aren’t put in backups.
         </p>
         <p>
-          <strong>Auto-settle and Stuck money (the Android app).</strong> Only if you turn on notification access:
+          <strong>Bank charges.</strong> A bank statement you add is read on your phone and never uploaded. {NAME}
+          keeps only its charges — the date, the amount and GST, the narration as your bank printed it, the balance
+          just before and after, and how many ATM withdrawals that month — plus the bank, the account’s last digits,
+          the days the statement covered, your answers about the account and each charge, and the claims you make
+          (the dates, complaint numbers and money back). Every other line of the statement is dropped as soon as it’s
+          read. It stays on this phone and goes into your backup file with everything else.
+        </p>
+        <p>
+          <strong>Auto-settle, Stuck money and Bank charges (the Android app).</strong> Only if you turn on notification
+          access:
         </p>
         <ul>
           <li>
@@ -49,12 +58,14 @@ export function PrivacyPage() {
             CRED show when money arrives, when a payment fails or is pending, when a payment goes through (only to
             clear a pending one it was tracking), and when money is reversed or refunded; refund alerts from a short
             list of shopping, food and travel apps (such as Flipkart, Swiggy, Zomato, IRCTC and airlines); and — only
-            if you allow it — bank SMS that say money was credited, reversed or refunded, or that money was debited.
+            if you allow it — bank SMS that say money was credited, reversed or refunded, that money was debited
+            (including a bank charge), or that your balance is below the minimum.
           </li>
           <li>
             <strong>What it keeps.</strong> These alerts stay on your phone until {NAME} reads them, then they’re
             deleted; only what they say about the payment is kept. A debit is used only to check that a payment that
-            failed really took your money, and isn’t kept for anything else.
+            failed really took your money, or to note a bank charge for Bank charges, and isn’t kept for anything
+            else.
           </li>
           <li>
             <strong>What it ignores.</strong> Every other notification and message: never stored, never sent.
@@ -104,7 +115,7 @@ export function PrivacyPage() {
             app or your phone’s share sheet with the text ready. What you send from there is between you and that app.
           </li>
           <li>
-            <strong>Complaint letters (Stuck money).</strong> {NAME} drafts them on your phone and never sends them
+            <strong>Complaint letters (Stuck money and Bank charges).</strong> {NAME} drafts them on your phone and never sends them
             itself, and never contacts your bank, a business or anyone else for you. A letter leaves your phone only
             when you copy, share or email it, or open the RBI’s complaint site, the National Consumer Helpline or
             AirSewa from it — what you send there is between you and them.

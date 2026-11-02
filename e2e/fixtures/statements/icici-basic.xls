@@ -1,0 +1,19 @@
+<html><head><meta charset="utf-8"><title>Detailed Statement</title></head><body>
+<table>
+<tr><td>ICICI Bank Limited</td></tr>
+<tr><td>Account Number</td><td>XXXXXXXX7712</td></tr>
+<tr><td>Account Type</td><td>BASIC SAVINGS BANK DEPOSIT ACCOUNT (BSBDA)</td></tr>
+<tr><td>IFSC</td><td>ICIC0000456</td></tr>
+</table>
+<table>
+<tr><th>S No.</th><th>Value Date</th><th>Transaction Date</th><th>Cheque Number</th><th>Transaction Remarks</th><th>Withdrawal Amount (INR )</th><th>Deposit Amount (INR )</th><th>Balance (INR )</th></tr>
+<tr><td>1</td><td>01/09/2026</td><td>01/09/2026</td><td>-</td><td>NEFT-SCHOLARSHIP NSP-PFMS-DBT</td><td>0.00</td><td>6000.00</td><td>6420.00</td></tr>
+<tr><td>2</td><td>05/09/2026</td><td>05/09/2026</td><td>-</td><td>VAT/5123XXXX7712/KOLKATA</td><td>1000.00</td><td>0.00</td><td>5420.00</td></tr>
+<tr><td>3</td><td>18/09/2026</td><td>18/09/2026</td><td>-</td><td>NFS/CASH WDL/5123XXXX7712/HOWRAH</td><td>1500.00</td><td>0.00</td><td>3920.00</td></tr>
+<tr><td>4</td><td>30/09/2026</td><td>30/09/2026</td><td>-</td><td>ATM TXN CHGS SEP26</td><td>23.00</td><td>0.00</td><td>3897.00</td></tr>
+<tr><td>5</td><td>30/09/2026</td><td>30/09/2026</td><td>-</td><td>CGST @9% ON ATM CHGS</td><td>2.07</td><td>0.00</td><td>3894.93</td></tr>
+<tr><td>6</td><td>30/09/2026</td><td>30/09/2026</td><td>-</td><td>SGST @9% ON ATM CHGS</td><td>2.07</td><td>0.00</td><td>3892.86</td></tr>
+<tr><td>7</td><td>02/10/2026</td><td>02/10/2026</td><td>-</td><td>MABchgs-SEP-26+GST</td><td>295.00</td><td>0.00</td><td>3597.86</td></tr>
+<tr><td>8</td><td>15/10/2026</td><td>15/10/2026</td><td>-</td><td>DCARDFEE 7712 OCT26-SEP27+GST</td><td>354.00</td><td>0.00</td><td>3243.86</td></tr>
+</table>
+</body></html>

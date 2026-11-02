@@ -2,7 +2,7 @@ import { ArrowRight, BadgeCheck, Ban, Smartphone, UserRoundCheck } from 'lucide-
 import { Link } from '../../app/router'
 import { QrCode } from '../../components'
 import { BRAND } from '../../domain/types'
-import { STUCK_PATH } from '../stuck/paths'
+import { FEES_PATH } from '../fees/paths'
 import { ctaClassName } from './cta'
 import { CtaLink, SectionLink } from './CtaLink'
 import { HeroDemo } from './HeroDemo'
@@ -30,10 +30,10 @@ export function Hero() {
     <section className={styles.hero} aria-labelledby="hero-title">
       <div className={styles.heroInner}>
         <div className={styles.heroCopy}>
-          {/* One name, read in one go (pieces of text are read with pauses: "New, colon, Stuck money"). */}
-          <Link to={STUCK_PATH} className={styles.announce} aria-label="New: Stuck money — get back what banks and shops owe you">
+          {/* One name, read in one go (pieces of text are read with pauses: "New, colon, Bank charges"). */}
+          <Link to={FEES_PATH} className={styles.announce} aria-label="New: Bank charges — get back what your bank shouldn’t have taken">
             <span className={styles.announceTag}>New</span>{' '}
-            <span>Stuck money — get back what banks and shops owe you</span>
+            <span>Bank charges — get back what your bank shouldn’t have taken</span>
             <ArrowRight aria-hidden="true" strokeWidth={2.25} />
           </Link>
           <h1 id="hero-title" className={styles.h1}>

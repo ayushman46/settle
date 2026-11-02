@@ -1,0 +1,720 @@
+/* Bank charges: the screen, its hero and sections, the charge sheet, pasting SMS and Home's line. */
+
+.content {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  gap: var(--s-5);
+  padding-bottom: var(--s-8);
+}
+
+.emptyActions {
+  display: grid;
+  gap: var(--s-2);
+  width: min(100%, 20rem);
+}
+
+.fine {
+  margin: 0;
+  font: var(--text-caption);
+  color: var(--ink-2);
+  overflow-wrap: break-word;
+}
+
+.error {
+  margin: 0;
+  font: var(--text-caption);
+  color: var(--negative);
+}
+
+.how {
+  display: grid;
+  gap: var(--s-1);
+  padding: var(--s-4);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+}
+
+.howTitle {
+  margin: 0;
+  font: var(--text-label);
+  font-weight: 650;
+  color: var(--ink);
+}
+
+.howText {
+  margin: 0;
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
+.rule {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-2);
+  margin: 0;
+  padding: var(--s-3) var(--s-4);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
+.ruleIcon {
+  flex: none;
+  width: var(--s-4);
+  height: var(--s-4);
+  margin-top: 1px;
+}
+
+/* "Check another statement" keeps to its label; "Paste bank SMS" takes the rest. */
+.listActions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+  gap: var(--s-2);
+}
+
+/* ---------- The hero: the dark card, like Home's balance ---------- */
+
+.hero {
+  --ink: var(--balance-card-ink);
+  --ink-2: var(--balance-card-ink-2);
+  --line: var(--balance-card-line);
+  --focus-ring: var(--balance-card-ink);
+
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+  min-width: 0;
+  padding: var(--s-5);
+  overflow: clip;
+  border-radius: var(--radius-card);
+  background: var(--balance-card-gradient);
+  color: var(--balance-card-ink);
+  box-shadow: var(--shadow-md);
+}
+
+.hero::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  top: -96px;
+  right: -72px;
+  width: 200px;
+  aspect-ratio: 1;
+  border: 1px solid var(--balance-card-line);
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 28px rgb(255 255 255 / 0.018),
+    0 0 0 29px var(--balance-card-line),
+    0 0 0 60px rgb(255 255 255 / 0.012);
+  pointer-events: none;
+}
+
+.heroTop {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  min-width: 0;
+}
+
+.heroLabel,
+.heroSub {
+  margin: 0;
+  font: var(--text-label);
+  color: var(--balance-card-ink-2);
+}
+
+.heroAmount {
+  color: var(--accent);
+}
+
+.heroTotals {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
+  gap: var(--s-2);
+  margin: 0;
+}
+
+.heroTotal {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding: var(--s-3);
+  border-radius: var(--r-md);
+  background: rgb(255 255 255 / 0.06);
+  box-shadow: inset 0 0 0 1px var(--balance-card-line);
+}
+
+.heroTotalLabel {
+  font: var(--text-caption);
+  color: var(--balance-card-ink-2);
+}
+
+.heroTotalValue {
+  margin: 0;
+  overflow-wrap: break-word;
+  font: var(--text-label);
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+
+.heroFoot {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin: 0;
+  padding-top: var(--s-3);
+  border-top: 1px solid var(--balance-card-line);
+  font: var(--text-label);
+  color: var(--balance-card-ink);
+}
+
+.heroDot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--warning);
+  box-shadow: 0 0 0 4px rgb(251 191 36 / 0.18);
+}
+
+/* ---------- Sections ---------- */
+
+.section {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--s-3);
+  min-width: 0;
+}
+
+.sectionBody {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--s-3);
+  min-width: 0;
+}
+
+.sectionBody[hidden] {
+  display: none;
+}
+
+.sectionTitle {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin: 0;
+  font: var(--text-section);
+  color: var(--ink);
+}
+
+.sectionTitle > span {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.sectionCount {
+  display: inline-grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  padding-inline: 6px;
+  border-radius: var(--r-pill);
+  background: var(--surface-3);
+  font: var(--text-micro);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-2);
+}
+
+.sectionToggle {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2);
+  min-height: var(--tap);
+  color: inherit;
+  font: inherit;
+  text-align: start;
+}
+
+.sectionToggle > span {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.sectionToggle:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+  border-radius: var(--r-sm);
+}
+
+.chevron,
+.chevronOpen {
+  flex: none;
+  width: var(--s-5);
+  height: var(--s-5);
+  color: var(--ink-2);
+  transition: transform var(--dur-3) var(--ease-spring);
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+}
+
+.cardTitle {
+  margin: 0;
+  font: var(--text-label);
+  font-weight: 700;
+  color: var(--ink);
+  overflow-wrap: break-word;
+}
+
+/* ---------- The kind of charge, tinted by where it stands ---------- */
+
+.kindIcon {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: var(--s-10);
+  height: var(--s-10);
+  border-radius: var(--radius-tile);
+  background: var(--surface-3);
+  color: var(--ink-2);
+}
+
+.kindIcon > svg {
+  width: var(--s-5);
+  height: var(--s-5);
+}
+
+.tone-wrong {
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+}
+
+.tone-ask {
+  background: var(--warning-soft);
+  color: var(--warning-ink);
+}
+
+.tone-back {
+  background: var(--positive-soft);
+  color: var(--positive);
+}
+
+/* ---------- Lists ---------- */
+
+.list {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.row {
+  position: relative;
+}
+
+.row + .row::before {
+  content: '';
+  position: absolute;
+  inset: 0 var(--s-4) auto calc(var(--s-4) + var(--s-10) + var(--s-3));
+  height: 1px;
+  background: var(--line);
+}
+
+.rowMain {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: start;
+  gap: var(--s-3);
+  width: 100%;
+  min-height: 64px;
+  padding: var(--s-3) var(--s-4);
+  color: var(--ink);
+  text-align: start;
+}
+
+button.rowMain {
+  cursor: pointer;
+}
+
+button.rowMain:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: -2px;
+  border-radius: var(--r-md);
+}
+
+@media (hover: hover) {
+  button.rowMain:hover {
+    background: var(--surface-2);
+  }
+}
+
+.rowText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.rowTitle {
+  font: var(--text-label);
+  font-weight: 650;
+  overflow-wrap: break-word;
+}
+
+.rowStatus {
+  margin: 0;
+  font: var(--text-caption);
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.rowAmount {
+  padding-top: 2px;
+}
+
+.why {
+  margin: 0;
+  font: var(--text-caption);
+  color: var(--ink);
+  overflow-wrap: break-word;
+}
+
+.ref {
+  margin: 0;
+  font: var(--text-micro);
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
+}
+
+.urgent {
+  color: var(--warning-ink);
+  font-weight: 600;
+}
+
+.good {
+  color: var(--positive);
+  font-weight: 600;
+}
+
+/* ---------- Your account ---------- */
+
+.account {
+  display: grid;
+  gap: var(--s-4);
+}
+
+.clear {
+  justify-self: center;
+}
+
+.accountDone {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--s-3);
+}
+
+.choices {
+  display: grid;
+  gap: var(--s-2);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.question {
+  margin: 0;
+  padding: 0;
+  font: var(--text-label);
+  font-weight: 600;
+  color: var(--ink);
+  overflow-wrap: break-word;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+/* Answers can be long (and longer in Tamil or Malayalam): a chip wraps rather than running off a 320 px phone. */
+.chips > button {
+  height: auto;
+  min-height: calc(var(--s-8) + var(--s-1));
+  padding-block: var(--s-1);
+  white-space: normal;
+  text-align: start;
+}
+
+.otherRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: var(--s-2);
+}
+
+/* ---------- One question each ---------- */
+
+.ask {
+  display: grid;
+  gap: var(--s-3);
+}
+
+.askList {
+  display: grid;
+  gap: var(--s-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.askItem {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--s-3);
+}
+
+.answers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+/* ---------- Claims ---------- */
+
+.claim {
+  display: grid;
+  overflow: clip;
+}
+
+.claimDone {
+  opacity: 0.9;
+}
+
+.claimHead {
+  display: grid;
+  gap: 2px;
+  padding: var(--s-4) var(--s-4) var(--s-2);
+}
+
+.claimActions {
+  display: grid;
+  gap: var(--s-2);
+  padding: var(--s-2) var(--s-4) var(--s-4);
+}
+
+.late {
+  display: grid;
+  gap: var(--s-3);
+  justify-items: start;
+}
+
+/* ---------- Avoidable ---------- */
+
+.avoid {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--s-3);
+  padding: var(--s-3) var(--s-4);
+}
+
+.avoid + .avoid {
+  border-top: 1px solid var(--line);
+}
+
+.avoidCta {
+  justify-self: start;
+  margin-top: var(--s-2);
+}
+
+/* ---------- Every charge, by kind ---------- */
+
+.kindCard {
+  display: grid;
+  overflow: clip;
+}
+
+.kindHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  padding: var(--s-3) var(--s-4);
+  border-bottom: 1px solid var(--line);
+  background: var(--surface-2);
+}
+
+/* ---------- One charge, close up ---------- */
+
+.sheetActions {
+  display: grid;
+  gap: var(--s-2);
+}
+
+.chargeBody {
+  display: grid;
+  gap: var(--s-4);
+}
+
+.facts {
+  display: grid;
+  gap: var(--s-2);
+  margin: 0;
+}
+
+.facts > div {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--s-2);
+}
+
+.facts dt {
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
+.facts dd {
+  margin: 0;
+  font: var(--text-label);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.narration {
+  display: grid;
+  gap: var(--s-1);
+}
+
+.mono {
+  margin: 0;
+  padding: var(--s-3);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.8125rem;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.verdict {
+  display: grid;
+  gap: var(--s-2);
+  padding: var(--s-3) var(--s-4);
+  border-radius: var(--r-md);
+  background: var(--accent-soft);
+}
+
+/* ---------- Paste SMS ---------- */
+
+.paste {
+  display: grid;
+  gap: var(--s-3);
+}
+
+.pasteLabel {
+  font: var(--text-label);
+  color: var(--ink);
+}
+
+.area {
+  width: 100%;
+  min-height: 132px;
+  padding: var(--s-3);
+  border: 1px solid var(--field-border);
+  border-radius: var(--radius-field);
+  background: var(--field-bg);
+  color: var(--ink);
+  font: var(--text-body);
+  resize: vertical;
+}
+
+.area:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 1px;
+}
+
+.area::placeholder {
+  color: var(--ink-placeholder);
+}
+
+/* ---------- Home's line ---------- */
+
+.homeSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+
+.homeRow {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  width: 100%;
+  min-height: 64px;
+  padding: var(--s-3) var(--s-4);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+  color: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+@media (hover: hover) {
+  .homeRow:hover {
+    background: var(--surface-2);
+  }
+}
+
+.homeRow:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.homeText {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.homeTitle {
+  color: var(--ink);
+  font: var(--text-label);
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: break-word;
+}
+
+.homeLine {
+  color: var(--ink-2);
+  font: var(--text-caption);
+  font-variant-numeric: tabular-nums;
+}
+
+.homeLineAct {
+  color: var(--warning-ink);
+  font-weight: 600;
+}
+
+.homeChevron {
+  flex: none;
+  width: var(--s-5);
+  height: var(--s-5);
+  color: var(--ink-3);
+}

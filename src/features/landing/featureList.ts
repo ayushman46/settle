@@ -1,8 +1,10 @@
 /** The reasons people pick Settle (spec §1), in the order the landing page's bento grid lays them out. */
 import { BRAND } from '../../domain/types'
+import { FEES_PATH } from '../fees/paths'
 import { STUCK_PATH } from '../stuck/paths'
 
 export type FeatureId =
+  | 'fees'
   | 'stuck'
   | 'scan'
   | 'describe'
@@ -32,6 +34,15 @@ export interface Feature {
 }
 
 export const FEATURES: readonly Feature[] = [
+  {
+    id: 'fees',
+    eyebrow: 'Bank charges',
+    title: 'Your bank took charges it shouldn’t have. Get them back.',
+    text: `Add your bank statement. ${BRAND.name} checks every charge against the RBI’s rules — a minimum-balance charge that took you below zero or came without a warning, ATM charges inside your free withdrawals, fees on online NEFT or UPI, charges your bank stopped levying — and writes the letter that gets them reversed, then takes it to the RBI Ombudsman. Read on your phone; the Android app checks each charge SMS as it comes.`,
+    isNew: true,
+    size: 'full',
+    cta: { label: 'Check your bank charges', to: FEES_PATH },
+  },
   {
     id: 'stuck',
     eyebrow: 'Stuck money',

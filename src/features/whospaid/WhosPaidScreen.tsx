@@ -17,8 +17,8 @@ import { shortDate } from '../recurring/recurringLabels'
 import { matchPayments, type Credit, type MatchOption, type Proposal, type Reason } from './match'
 import { creditsFromSms } from './sms'
 import { applyMatches, knownReferences, MAX_SCREENSHOTS, mergeScreenshots, openDues, payersFor, readHistoryScreenshot, settleDue, undoMatches, type Applied } from './sources'
-import { parseDelimited, parseHtmlTable, readStatement } from './statement'
-import { readXlsx } from './xlsx'
+import { readStatement } from './statement'
+import { rowsOf, STATEMENT_ACCEPT } from './statementFile'
 import styles from './WhosPaid.module.css'
 
 type Step =
@@ -39,19 +39,6 @@ const REASON_KEYS: Record<Reason, MessageKey> = {
   several: 'whospaid.reason.several',
   part: 'whospaid.reason.part',
   over: 'whospaid.reason.over',
-}
-
-const STATEMENT_ACCEPT = '.csv,.tsv,.txt,.xls,.xlsx,text/csv,text/plain,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-
-/** Rows of a statement file, whatever kind it is (read on this phone). */
-async function rowsOf(file: File): Promise<string[][] | null> {
-  const bytes = new Uint8Array(await file.arrayBuffer())
-  // .xlsx: a ZIP ("PK").
-  if (bytes[0] === 0x50 && bytes[1] === 0x4b) return readXlsx(bytes)
-  // Old binary .xls (OLE): not readable here.
-  if (bytes[0] === 0xd0 && bytes[1] === 0xcf) return null
-  const text = new TextDecoder().decode(bytes)
-  return /<table[\s>]/i.test(text) ? parseHtmlTable(text) : parseDelimited(text)
 }
 
 /**
