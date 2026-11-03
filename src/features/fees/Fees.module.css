@@ -70,7 +70,7 @@
 /* "Check another statement" keeps to its label; "Paste bank SMS" takes the rest. */
 .listActions {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr));
   gap: var(--s-2);
 }
 
@@ -571,6 +571,7 @@ button.rowMain:focus-visible {
 
 .facts {
   display: grid;
+  outline: none;
   gap: var(--s-2);
   margin: 0;
 }
@@ -623,6 +624,14 @@ button.rowMain:focus-visible {
 .paste {
   display: grid;
   gap: var(--s-3);
+}
+
+.pasteHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2);
 }
 
 .pasteLabel {

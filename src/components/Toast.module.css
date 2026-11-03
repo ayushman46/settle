@@ -29,8 +29,9 @@
  */
 .toast {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: var(--s-3);
+  gap: var(--s-1) var(--s-3);
   max-width: 100%;
   min-height: var(--s-12);
   padding: var(--s-2) var(--s-2) var(--s-2) var(--s-5);
@@ -94,23 +95,27 @@
   height: var(--s-5);
 }
 
-/* Two lines at most: a long message (or a long translation) mustn't cover the screen. */
+/*
+ * Three lines at most: a long message (or a long translation) mustn't cover the screen. It keeps
+ * room to be read (11rem); Undo and close go under it when they won't fit beside it.
+ */
 .message {
   display: -webkit-box;
-  flex: 1 1 auto;
+  flex: 1 1 11rem;
   min-width: 0;
   overflow: hidden;
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
   margin-block: var(--s-1);
   overflow-wrap: break-word;
 }
 
-/* Undo (when there is one) and close, side by side. */
+/* Undo (when there is one) and close, side by side, at the end of the row (or under the message). */
 .actions {
   display: flex;
   flex: none;
+  margin-inline-start: auto;
   align-items: center;
   gap: var(--s-1);
 }

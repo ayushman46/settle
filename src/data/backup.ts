@@ -273,7 +273,8 @@ export function importBackup(file: BackupFile, mode: 'merge' | 'replace'): { add
       file.recurring.length +
       file.pools.length +
       file.claims.length +
-      file.stuck.length
+      file.stuck.length +
+      file.fees.charges.length
     return { added, updated: 0 }
   }
 
@@ -393,6 +394,7 @@ export function importBackup(file: BackupFile, mode: 'merge' | 'replace'): { add
     dismissed: [...new Set([...fees.dismissed, ...file.fees.dismissed])],
     checks: [...fees.checks, ...file.fees.checks.filter((c) => !fees.checks.some((m) => m.at === c.at))].slice(-200),
     notices: notices.slice(-500),
+    late: [...fees.late, ...file.fees.late.filter((l) => !fees.late.some((m) => m.date === l.date && m.amount === l.amount && m.backOn === l.backOn))].slice(-200),
   })
 
   flushAllStores()

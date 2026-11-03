@@ -15,6 +15,37 @@ export type ChargeDraft = Omit<FeeCharge, 'id' | 'addedAt'>
 /** The most a charge line can be (a loan's prepayment charge aside): anything bigger is a payment. */
 const MAX_CHARGE: Minor = 25_000_00
 const MAX_PREPAY: Minor = 5_00_000_00
+/** The most each kind of charge costs (GST included, with room): more is a payment that happens to say "charges" or "fee". */
+export const MAX_BY_KIND: Readonly<Partial<Record<FeeKind, Minor>>> = {
+  minbal: 2_500_00,
+  atm: 1_000_00,
+  atmDecline: 500_00,
+  sms: 500_00,
+  card: 5_000_00,
+  neft: 500_00,
+  rtgs: 500_00,
+  imps: 500_00,
+  upi: 500_00,
+  chequeBook: 2_000_00,
+  bounce: 2_500_00,
+  cash: 2_500_00,
+  dormant: 1_000_00,
+  statement: 1_000_00,
+  late: 3_000_00,
+  other: 5_000_00,
+}
+
+/** A UPI ID, an IFSC, or a transfer to a named payee ("NEFT DR-SBIN0001234-NAME-…", "UPI/P2M/…/NAME"): a payment, not a charge. */
+const VPA = /\b[a-z0-9][a-z0-9._-]{1,63}@[a-z][a-z0-9]{1,30}\b/i
+const IFSC_IN = /\b[A-Z]{4}0[A-Z0-9]{6}\b/
+const TRANSFER_TO = /^\s*(?:upi|neft|imps|rtgs|ach|nach|ecs|bil|billpay|pos|ecom|vps|ips|mmt|to transfer|by transfer|trf)\b[\s/:-]*(?:dr|cr|p2a|p2m|p2p|out|in)?[\s/:-]+(?:\d{6,}[\s/:-]+)?[a-z]{3,}/i
+
+export function isPayment(narration: string): boolean {
+  const t = narration.trim()
+  // The bank's own charge lines name the charge first ("NEFT CHGS", "UPI TXN CHARGES", "IMPS CHG"): those aren't payments.
+  if (/^\s*(?:neft|rtgs|imps|upi|atm|nfs|sms|gst|cgst|sgst|igst)\s*(?:txn\s*|p2a\s*|inward\s*|outward\s*|i\/w\s*|o\/w\s*)?(?:chg|chgs|chrg|chrgs|charges?|comm|fee)\b/i.test(t)) return false
+  return VPA.test(t) || IFSC_IN.test(t) || TRANSFER_TO.test(t)
+}
 /** GST on a bank charge: 18% (or 9% + 9% as two lines). */
 const GST_RATE = 0.18
 /** The GST is inside the charge line itself. */
@@ -202,7 +233,9 @@ export function scanCharges(lines: readonly StatementLine[], opts: { bank?: stri
     if (kind === null && !loneTax) continue
     kind ??= 'other'
     const amount = -line.delta
-    if (amount > (kind === 'prepay' ? MAX_PREPAY : MAX_CHARGE)) continue
+    // A payment to someone ("UPI-CULT FIT-…-SMS CHARGES WAIVED", "NEFT DR-…-PES UNIVERSITY-COLLEGE FEE") is never the bank's charge.
+    if (kind !== 'prepay' && isPayment(line.narration)) continue
+    if (amount > (kind === 'prepay' ? MAX_PREPAY : (MAX_BY_KIND[kind] ?? MAX_CHARGE))) continue
     used.add(line.at)
     let gst = loneTax ? 0 : taxFor(line, lines, used)
     let base = amount
@@ -239,7 +272,8 @@ export function scanCharges(lines: readonly StatementLine[], opts: { bank?: stri
     let avg: ChargeDraft['avg'] = null
     if (kind === 'minbal' && trusted) {
       const period = chargePeriod(line.date, QUARTERLY.test(line.narration))
-      const balance = periodAverage(lines, period.from, period.to, isMinbalLine)
+      // Only this period's own charge is left out of its average; last period's, taken in this one, really did lower the balance.
+      const balance = periodAverage(lines, period.from, period.to, (l) => isMinbalLine(l) && chargePeriod(l.date, QUARTERLY.test(l.narration)).label === period.label)
       if (balance !== null) avg = { period: period.label, balance }
     }
     charges.push({

@@ -31,6 +31,7 @@ export const fees = {
   'fees.reading': 'Reading your statement…',
   'fees.read.found':
     '{count, plural, =0 {No bank charges in it} one {# charge found} other {# charges found}} · {lines, plural, one {# line} other {# lines}}, {from} to {to}',
+  'fees.read.toast': '{count, plural, one {# charge found} other {# charges found}}',
   'fees.read.nothingNew': 'Already checked: nothing new in this statement',
   'fees.read.unreadable': 'Settle couldn’t find a table of dates and amounts in that file. Download the statement as Excel or CSV and try again.',
   'fees.read.oldXls': 'That’s an old Excel file Settle can’t open. Save it as .xlsx or CSV, or download CSV from net banking.',
@@ -43,9 +44,12 @@ export const fees = {
   'fees.hero.owedSub': '{count, plural, one {# charge breaks} other {# charges break}} the RBI’s rules',
   'fees.hero.checked': 'Charges checked',
   'fees.hero.checkedSub': '{count, plural, one {# charge} other {# charges}}, none against the RBI’s rules so far',
+  'fees.hero.checkedAsk': '{count, plural, one {# charge} other {# charges}} checked. Answer below to see what you can claim back.',
   'fees.hero.period': '{from} to {to}',
   'fees.hero.total': '{amount} in charges',
   'fees.hero.back': '{amount} back so far',
+  'fees.hero.backLabel': 'Back from your bank',
+  'fees.hero.backSub': '{count, plural, one {# charge} other {# charges}} broke the RBI’s rules: all of it back',
   'fees.hero.ask': '{count, plural, one {# charge needs} other {# charges need}} one answer',
 
   // Sections.
@@ -77,13 +81,14 @@ export const fees = {
   'fees.account.saved': 'Saved. The checks use it now.',
   'fees.account.summary': '{type} · {mab, select, none {average balance not given} other {needs {mab} average}}',
   'fees.account.change': 'Change',
+  'fees.account.summaryBasic': '{type} · no minimum balance',
 
   // One question per charge: the answer that settles it.
   'fees.q.warned': 'Did your bank warn you, by SMS, email or letter, at least a month before charging for the minimum balance?',
   'fees.q.warned.yes': 'Yes, it warned me',
   'fees.q.warned.no': 'No warning came',
   'fees.q.warned.unsure': 'Not sure',
-  'fees.q.atmEnquiry': 'That month, did you check your balance or get a mini statement at another bank’s ATM?',
+  'fees.q.atmEnquiry': 'That month, how many times did you check your balance or get a mini statement at another bank’s ATM?',
   'fees.q.declineReason': 'Was it declined because there wasn’t enough money in the account?',
   'fees.q.online': 'Did you send this NEFT from net banking or your bank’s app?',
   'fees.q.inoperative': 'Before this charge, had you stopped using the account for over two years?',
@@ -91,6 +96,9 @@ export const fees = {
   'fees.q.floating': 'Was it a floating-rate loan (linked to the repo rate or MCLR) in your own name, not for a business?',
   'fees.q.paidInTime': 'Did you pay at least the minimum due within 3 days after the due date?',
   'fees.q.upiSmall': 'Was the UPI payment it was charged on ₹2,000 or less?',
+  'fees.q.atmEnquiry.none': 'None',
+  'fees.q.atmEnquiry.many': '3 or more',
+  'fees.ask.more': 'Answer this and {amount} more can be claimed',
   'fees.answer.yes': 'Yes',
   'fees.answer.no': 'No',
   'fees.answer.all': 'Same answer for all {count} like this',
@@ -104,6 +112,7 @@ export const fees = {
   'fees.why.minbalScholarship': 'A scholarship account can’t be charged for minimum balance.',
   'fees.why.minbalWaived': '{bank} stopped charging for minimum balance on savings accounts from {from}.',
   'fees.why.minbalWaived.standard': '{bank} stopped charging for minimum balance on its standard savings accounts from {from}.',
+  'fees.why.smsWaived': '{bank} stopped charging for SMS alerts on savings accounts from {from}.',
   'fees.why.minbalNotShort': 'Your average for {period} was {avg}, above the {mab} you need. You weren’t short.',
   'fees.why.minbalOverShortfall': 'You were short by {shortfall} but charged {amount}, more than the shortfall itself.',
   'fees.why.minbalOverSchedule': '{bank}’s own charges allow at most {allowed} for an average of {avg}. It took {amount}.',
@@ -113,7 +122,7 @@ export const fees = {
   'fees.why.basicWithdrawals': 'A Basic Savings account gets 4 free withdrawals a month. You made {count}.',
   'fees.why.basicFree': 'This is free on a Basic Savings account.',
   'fees.why.atmFree':
-    'Only {count, plural, =0 {no withdrawals} one {# withdrawal} other {# withdrawals}} went through that month{failed, select, 1 { (failed ones don’t count)} other {}}. At least 3 a month are free at any ATM.',
+    '{count, plural, =0 {No withdrawal went through} one {Only # withdrawal went through} other {Only # withdrawals went through}} that month{failed, select, 1 { (failed ones don’t count)} other {}}. Your first 3 a month are free at any bank’s ATM (5 at your own bank’s).',
   'fees.why.atmDecline': 'A decline that wasn’t your fault (the machine, no cash, the network) can’t be charged.',
   'fees.why.neftOnline': 'NEFT sent online from a savings account is free.',
   'fees.why.transferInward': 'Money coming in can’t be charged for.',
@@ -126,7 +135,7 @@ export const fees = {
   'fees.why.prepay': 'A floating-rate loan to you can’t carry a prepayment charge.',
   'fees.why.lateFee': 'No late fee if you paid within 3 days of the due date.',
   'fees.why.more': '+ {count, plural, one {# more reason} other {# more reasons}}',
-  'fees.rule.source': 'RBI rule: {ref}',
+  'fees.rule.source': 'Rule: {ref}',
 
   // What each kind of charge is called.
   'fees.kind.minbal': 'Minimum balance',
@@ -156,16 +165,23 @@ export const fees = {
   'fees.charge.label.balance': 'Balance',
   'fees.charge.ok': 'Allowed by the RBI’s rules, as far as Settle can tell.',
   'fees.charge.text': 'As your statement or SMS shows it',
-  'fees.charge.balance': 'Balance {before} → {after}',
+  'fees.charge.balance': '{before} → {after}',
+  'fees.charge.backFull': 'Put back in full: it broke the RBI’s rules, and your bank fixed it.',
   'fees.charge.fine': 'It’s fine, don’t claim it',
   'fees.charge.fine.toast': 'Left out of your claim',
-  'fees.charge.remove': 'Remove: read wrong',
+  'fees.charge.remove': 'Not a bank charge: remove it',
   'fees.charge.removed': 'Charge removed',
   'fees.charge.from': '{source, select, sms {From an SMS} alert {From your bank’s SMS} other {From your statement}}',
 
   // A claim: one bank's wrong charges.
   'fees.claim.title': '{bank} owes you {amount}',
   'fees.claim.titleAny': 'Your bank owes you {amount}',
+  'fees.claim.titleBack': '{bank} put back {amount}',
+  'fees.claim.titleBackAny': 'Your bank put back {amount}',
+  'fees.claim.ref': 'Complaint number {ref}',
+  'fees.claim.partOf': '{claim} of the {amount} charge',
+  'fees.claim.status.part': '{back} of {amount} back so far. {rest} still to come.',
+  'fees.claims.count': '{count, plural, one {# claim} other {# claims}}',
   'fees.claim.count': '{count, plural, one {# charge} other {# charges}}{account, select, none {} other { on {account}}}',
   'fees.claim.cta': 'Claim {amount} back',
   'fees.claim.status.ready': 'Not sent yet',
@@ -175,6 +191,7 @@ export const fees = {
   'fees.claim.status.ombudsmanRaised': 'With the RBI Ombudsman since {date}.',
   'fees.claim.status.closed': 'The 90 days for the RBI Ombudsman ended on {last}.',
   'fees.claim.status.back': '{amount} back on {date}',
+  'fees.claim.status.backAll': '{amount} back from your bank',
   'fees.claim.raise': 'Write to the bank',
   'fees.claim.raiseAgain': 'See the letter',
   'fees.claim.ombudsman': 'Take it to the RBI Ombudsman',
@@ -193,6 +210,7 @@ export const fees = {
   // The letter sheet.
   'fees.sheet.bank.title': 'Write to {bank}',
   'fees.sheet.bank.titleAny': 'Write to your bank',
+  'fees.sheet.bank.leadSent': 'You sent this on {date}. Send it again as a reminder, or take it to the RBI Ombudsman once the bank’s 30 days are up.',
   'fees.sheet.bank.lead': 'Your bank must reply within 30 days. The RBI Ombudsman only takes it once the bank has had its chance, so this comes first.',
   'fees.sheet.bank.step1': 'Email it to your bank’s grievance address (on its “Grievance Redressal” page), or use the complaint form in net banking.',
   'fees.sheet.bank.step2': 'Or print it and hand it in at your branch: ask them to stamp your copy with the date.',
@@ -200,6 +218,9 @@ export const fees = {
   'fees.sheet.summary': 'It asks {bank} to reverse {amount}: {count, plural, one {# charge} other {# charges}}, each with the RBI rule it breaks.',
   'fees.sheet.summaryAny': 'It asks your bank to reverse {amount}: {count, plural, one {# charge} other {# charges}}, each with the RBI rule it breaks.',
   'fees.sheet.english': 'In English, as banks expect.',
+  'fees.sheet.ombudsman.summary': 'It asks the RBI Ombudsman to have {bank} reverse {amount}: {count, plural, one {# charge} other {# charges}}, each with the RBI rule it breaks.',
+  'fees.sheet.ombudsman.summaryAny': 'It asks the RBI Ombudsman to have your bank reverse {amount}: {count, plural, one {# charge} other {# charges}}, each with the RBI rule it breaks.',
+  'fees.sheet.englishRbi': 'In English, as the RBI’s complaint form expects.',
   'fees.sheet.sent': 'I’ve sent it',
   'fees.sheet.sent.title': 'When did you send it?',
   'fees.sheet.sent.description': 'Settle counts the bank’s 30 days from this day.',
@@ -216,7 +237,7 @@ export const fees = {
   'fees.avoid.minbal': '{amount} for minimum balance. A Basic Savings (BSBD) account has no minimum balance at all, and your bank must switch you within 7 days of asking.',
   'fees.avoid.minbal.cta': 'Ask to switch to Basic Savings',
   'fees.avoid.atm': '{amount} on ATM charges. Your own bank’s ATMs give you 5 free a month; other banks’ only 3 in the big cities.',
-  'fees.avoid.sms': '{amount} on SMS alerts. The RBI says they must be charged on what’s actually sent.',
+  'fees.avoid.sms': '{amount} on SMS alerts. Ask your bank which alerts you can turn off: it may charge only for those it actually sends.',
   'fees.avoid.imps': '{amount} on IMPS. UPI, and NEFT sent online, cost nothing.',
   'fees.avoid.card': '{amount} on debit card fees. A Basic Savings account’s card has no annual fee.',
   'fees.avoid.bounce': '{amount} for returned payments. Keep the money in a day before an EMI or autopay date.',
@@ -230,6 +251,7 @@ export const fees = {
   'fees.late.text': '{amount} the ATM didn’t give you on {date} came back on {backOn}, {days, plural, one {# day} other {# days}} after the RBI’s 5. The bank owes ₹100 for each day late.',
   'fees.late.cta': 'Claim it in Stuck money',
   'fees.late.added': 'Added to Stuck money',
+  'fees.late.open': 'Open in Stuck money',
 
   // Pasting SMS.
   'fees.paste.title': 'Paste your bank’s SMS',
@@ -237,7 +259,9 @@ export const fees = {
   'fees.paste.label': 'Bank SMS',
   'fees.paste.placeholder': 'Rs.590 debited from A/c XX4821 towards non-maintenance of AMB charges…',
   'fees.paste.check': 'Check them',
+  'fees.paste.fromClipboard': 'Paste from clipboard',
   'fees.paste.none': 'No bank charges in that text.',
+  'fees.paste.known': 'Already in Bank charges: nothing new',
   'fees.paste.found': '{count, plural, one {# charge added} other {# charges added}}{back, plural, =0 {} one {, # put back} other {, # put back}}',
 
   // Home.
@@ -250,10 +274,10 @@ export const fees = {
   'fees.you.none': 'Check your statement for charges your bank shouldn’t have taken',
 
   // Android: a charge SMS just read.
-  'fees.alert.wrong': '{bank} took {amount} ({kind}). That breaks the RBI’s rules: claim it back in Bank charges',
-  'fees.alert.wrongAny': 'Your bank took {amount} ({kind}). That breaks the RBI’s rules: claim it back in Bank charges',
-  'fees.alert.check': '{bank} took {amount} ({kind}). One question in Bank charges says if you can get it back',
-  'fees.alert.checkAny': 'Your bank took {amount} ({kind}). One question in Bank charges says if you can get it back',
+  'fees.alert.wrong': '{bank} took {amount} ({kind}) against the RBI’s rules',
+  'fees.alert.wrongAny': 'Your bank took {amount} ({kind}) against the RBI’s rules',
+  'fees.alert.check': '{bank} took {amount} ({kind}): one question says if it’s claimable',
+  'fees.alert.checkAny': 'Your bank took {amount} ({kind}): one question says if it’s claimable',
   'fees.alert.back': '{amount} of a bank charge was put back',
   'fees.alert.many': '{count, plural, one {# bank charge} other {# bank charges}} checked in Bank charges',
 

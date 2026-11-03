@@ -7,34 +7,47 @@
 import { addDays } from '../../engine/dates'
 import { t } from '../../i18n'
 import type { MessageKey } from '../../i18n'
+import { intlLocale } from '../../i18n/languages'
+import { getLanguage } from '../../i18n/runtime'
 import { formatMoney } from '../../lib/money'
 import { bankName } from '../stuck/letters'
 import { BANK_REPLY_DAYS, OMBUDSMAN_DAYS } from './letters'
 import { findingsOf, MINBAL_WAIVED, open, type FeeFinding, type FeeQuestion, type FeeRule } from './rules'
 import type { FeeCharge, FeeClaim, FeeKind, FeesState } from './store'
 
+type Translate = typeof t
+
 export const inr = (paise: number): string => formatMoney(paise, 'INR', { trimZeros: true })
 
 /** "−₹490" for a negative balance (a word joiner keeps the sign with the amount). */
 export const signedInr = (paise: number): string => (paise < 0 ? `−⁠${inr(-paise)}` : inr(paise))
 
-const MONTHS_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-
-/** "2 Nov 2026". */
-export function dayLabel(iso: string): string {
-  const [y, m, d] = iso.split('-').map(Number)
-  return y && m && d ? `${d} ${MONTHS_SHORT[m - 1] ?? ''} ${y}` : iso
+/** A date in the app's language ("2 Nov 2026", "2 नव॰ 2026"), digits always 0–9. */
+function formatDay(y: number, m: number, d: number | null): string {
+  try {
+    const options: Intl.DateTimeFormatOptions = { month: 'short', year: 'numeric', timeZone: 'UTC', numberingSystem: 'latn', ...(d === null ? {} : { day: 'numeric' }) }
+    return new Intl.DateTimeFormat(intlLocale(getLanguage()), options).format(new Date(Date.UTC(y, m - 1, d ?? 1)))
+  } catch {
+    return d === null ? `${y}-${String(m).padStart(2, '0')}` : `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`
+  }
 }
 
-/** "Oct 2026", or "Jul–Sep 2026" for a quarter. */
+/** "2 Nov 2026", in the app's language. */
+export function dayLabel(iso: string): string {
+  const [y, m, d] = iso.split('-').map(Number)
+  return y && m && d ? formatDay(y, m, d) : iso
+}
+
+/** "Oct 2026", or "Jul–Sep 2026" for a quarter, in the app's language. */
 export function periodLabel(period: string): string {
   const q = /^(\d{4})-Q([1-4])$/.exec(period)
   if (q) {
-    const first = (Number(q[2]) - 1) * 3
-    return `${MONTHS_SHORT[first] ?? ''}–${MONTHS_SHORT[first + 2] ?? ''} ${q[1]}`
+    const year = Number(q[1])
+    const first = (Number(q[2]) - 1) * 3 + 1
+    return `${formatDay(year, first, null)}–${formatDay(year, first + 2, null)}`
   }
   const [y, m] = period.split('-').map(Number)
-  return y && m ? `${MONTHS_SHORT[m - 1] ?? ''} ${y}` : period
+  return y && m ? formatDay(y, m, null) : period
 }
 
 export const KIND_KEYS: Readonly<Record<FeeKind, MessageKey>> = {
@@ -68,6 +81,7 @@ export const RULE_REFS: Readonly<Record<FeeRule, string>> = {
   minbalBasic: 'RBI/DOR/2025-26/170, paras 86–89',
   minbalScholarship: 'RBI/DOR/2025-26/170, para 161',
   minbalWaived: 'RBI/DOR/2025-26/170, para 81(7)',
+  smsWaived: 'RBI/DOR/2025-26/170, para 81(7)',
   minbalNotShort: 'RBI/DOR/2025-26/170, para 160(4)',
   minbalOverShortfall: 'RBI/DOR/2025-26/170, para 160(4)–(5)',
   minbalOverSchedule: 'RBI/DOR/2025-26/170, para 81(7)',
@@ -107,6 +121,8 @@ export function whyLine(f: Pick<FeeFinding, 'rule' | 'facts' | 'charge'>): strin
       const bank = bankName(c.bank) ?? ''
       return t(n('standard') ? 'fees.why.minbalWaived.standard' : 'fees.why.minbalWaived', { bank, from })
     }
+    case 'smsWaived':
+      return t('fees.why.smsWaived', { bank: bankName(c.bank) ?? '', from: dayLabel(s('from')) })
     case 'minbalNotShort':
       return t('fees.why.minbalNotShort', { period: periodLabel(s('period')), avg: inr(n('avg')), mab: inr(n('mab')) })
     case 'minbalOverShortfall':
@@ -192,19 +208,24 @@ export interface ClaimView {
   /** The day the bank's 30 days end, and the last day for the RBI Ombudsman. */
   until: string | null
   last: string | null
+  /** Money back so far (noted, or the reversals of its charges), and what's still to come. */
+  backSoFar: number
+  rest: number
 }
 
 export interface FeesView {
   /** Every finding, with your answers applied. */
   findings: FeeFinding[]
-  /** Findings that need one answer. */
+  /** Findings that need one answer (and questions that could make a firm one claim more). */
   asks: FeeFinding[]
   /** Wrong charges not yet in a claim, per bank and account. */
   groups: ClaimGroup[]
   claims: ClaimView[]
-  /** What the bank owes: wrong charges claimed or claimable, not yet back. */
+  /** What the bank owes: wrong charges claimable or claimed, less what's back. */
   owed: number
   owedCount: number
+  /** Charges found against the rules, claimed or not (what's come back included). */
+  found: number
   /** Money back from claims. */
   back: number
   /** All charges kept: total (GST included), how many, and the days they cover. */
@@ -218,40 +239,59 @@ export interface FeesView {
   byKind: { kind: FeeKind; amount: number; charges: FeeCharge[] }[]
 }
 
-function groupKey(c: Pick<FeeCharge, 'bank' | 'account'>): string {
-  return `${c.bank ?? '?'}:${(c.account ?? '').replace(/\D/g, '').slice(-4) || '?'}`
+/** A credit card's charges and a loan's are claimed apart from the savings account's. */
+export function productOf(kind: FeeKind): 'card' | 'loan' | 'account' {
+  return kind === 'late' ? 'card' : kind === 'prepay' ? 'loan' : 'account'
 }
 
-/** Where a claim stands on `today`. */
-export function claimStage(claim: FeeClaim, today: string): Pick<ClaimView, 'stage' | 'until' | 'last'> {
-  if (claim.back !== null) return { stage: 'back', until: null, last: null }
-  if (claim.dismissedAt !== null) return { stage: 'dropped', until: null, last: null }
+function groupKey(c: Pick<FeeCharge, 'bank' | 'account' | 'kind'>): string {
+  return `${c.bank ?? '?'}:${(c.account ?? '').replace(/\D/g, '').slice(-4) || '?'}:${productOf(c.kind)}`
+}
+
+/** Where a claim stands on `today`, with `backSoFar` of it back. */
+export function claimStage(claim: FeeClaim, today: string, backSoFar: number = claim.back?.amount ?? 0): Pick<ClaimView, 'stage' | 'until' | 'last' | 'backSoFar' | 'rest'> {
+  const rest = Math.max(0, claim.amount - backSoFar)
+  const money = { backSoFar, rest }
+  if (claim.dismissedAt !== null) return { stage: 'dropped', until: null, last: null, ...money }
+  // All of it back (a rupee's leeway for rounding).
+  if (backSoFar > 0 && rest <= 100) return { stage: 'back', until: null, last: null, ...money }
   const ombudsman = claim.steps.find((s) => s.kind === 'ombudsman')
-  if (ombudsman) return { stage: 'ombudsmanRaised', until: null, last: null }
+  if (ombudsman) return { stage: 'ombudsmanRaised', until: null, last: null, ...money }
   const bank = claim.steps.find((s) => s.kind === 'bank')
-  if (!bank) return { stage: 'ready', until: null, last: null }
+  if (!bank) return { stage: 'ready', until: null, last: null, ...money }
   const until = addDays(bank.date, BANK_REPLY_DAYS)
   // The RBI Ombudsman's 90 days run from the later of the bank's 30 days and its last reply.
   const from = claim.repliedAt !== null && claim.repliedAt > until ? claim.repliedAt : until
   const last = addDays(from, OMBUDSMAN_DAYS)
-  if (today > last) return { stage: 'closed', until, last }
-  if (claim.repliedAt !== null) return { stage: 'replied', until, last }
-  return { stage: today >= until ? 'ombudsman' : 'raised', until, last }
+  if (today > last) return { stage: 'closed', until, last, ...money }
+  if (claim.repliedAt !== null) return { stage: 'replied', until, last, ...money }
+  return { stage: today >= until ? 'ombudsman' : 'raised', until, last, ...money }
 }
+
+const byDate = (a: FeeFinding, b: FeeFinding) => a.charge.date.localeCompare(b.charge.date)
 
 /** Everything Bank charges' screen shows, on `today`. */
 export function feesView(state: FeesState, today: string): FeesView {
   const findings = findingsOf(state)
   const byId = new Map(findings.map((f) => [f.charge.id, f]))
+  const charges = new Map(state.charges.map((c) => [c.id, c]))
   const inClaim = new Set<string>()
   const claims: ClaimView[] = []
   for (const claim of state.claims) {
-    const own = claim.chargeIds.map((id) => byId.get(id)).filter((f): f is FeeFinding => f !== undefined && f.verdict === 'wrong')
-    const stage = claimStage(claim, today)
+    const own = claim.chargeIds
+      .map((id) => byId.get(id))
+      .filter((f): f is FeeFinding => f !== undefined && f.verdict === 'wrong')
+      .sort(byDate)
+    // Back so far: what you noted, or what the bank's reversals of these charges add up to, whichever is more.
+    const reversed = claim.chargeIds.reduce((sum, id) => sum + (charges.get(id)?.reversed ?? 0), 0)
+    const stage = claimStage(claim, today, Math.max(claim.back?.amount ?? 0, reversed))
     if (stage.stage !== 'dropped') for (const id of claim.chargeIds) inClaim.add(id)
     claims.push({ claim, findings: own, ...stage })
   }
-  const asks = findings.filter((f) => f.verdict === 'ask' && !inClaim.has(f.charge.id))
+  const asks = [
+    ...findings.filter((f) => f.verdict === 'ask' && !inClaim.has(f.charge.id)),
+    ...findings.flatMap((f) => (f.upgrade && !inClaim.has(f.charge.id) ? [f.upgrade] : [])),
+  ]
   const groupsMap = new Map<string, ClaimGroup>()
   for (const f of findings) {
     if (f.verdict !== 'wrong' || inClaim.has(f.charge.id) || f.claim <= 0) continue
@@ -261,13 +301,14 @@ export function feesView(state: FeesState, today: string): FeesView {
     g.amount += f.claim
     groupsMap.set(key, g)
   }
-  const groups = [...groupsMap.values()].sort((a, b) => b.amount - a.amount)
-  const open_ = claims.filter((c) => c.stage !== 'back' && c.stage !== 'dropped' && c.stage !== 'closed')
-  const owed = groups.reduce((s, g) => s + g.amount, 0) + open_.reduce((s, c) => s + c.claim.amount, 0)
-  const owedCount = groups.reduce((s, g) => s + g.findings.length, 0) + open_.reduce((s, c) => s + c.claim.chargeIds.length, 0)
-  const back = claims.reduce((s, c) => s + (c.claim.back?.amount ?? 0), 0)
+  const groups = [...groupsMap.values()].map((g) => ({ ...g, findings: g.findings.sort(byDate) })).sort((a, b) => b.amount - a.amount)
+  const live = claims.filter((c) => c.stage !== 'back' && c.stage !== 'dropped' && c.stage !== 'closed')
+  const owed = groups.reduce((s, g) => s + g.amount, 0) + live.reduce((s, c) => s + c.rest, 0)
+  const owedCount = groups.reduce((s, g) => s + g.findings.length, 0) + live.reduce((s, c) => s + c.claim.chargeIds.length, 0)
+  const found = groups.reduce((s, g) => s + g.findings.length, 0) + claims.filter((c) => c.stage !== 'dropped').reduce((s, c) => s + c.claim.chargeIds.length, 0)
+  const back = claims.filter((c) => c.stage !== 'dropped').reduce((s, c) => s + c.backSoFar, 0)
 
-  const flagged = new Set(findings.map((f) => f.charge.id))
+  const flagged = new Set([...findings.map((f) => f.charge.id), ...inClaim])
   const kinds = new Map<FeeKind, { kind: FeeKind; amount: number; charges: FeeCharge[] }>()
   const avoid = new Map<FeeKind, { kind: FeeKind; amount: number; count: number }>()
   let total = 0
@@ -275,11 +316,11 @@ export function feesView(state: FeesState, today: string): FeesView {
   let to: string | null = null
   for (const c of state.charges) {
     const cost = open(c)
-    total += cost
+    total += c.amount + c.gst
     if (from === null || c.date < from) from = c.date
     if (to === null || c.date > to) to = c.date
     const k = kinds.get(c.kind) ?? { kind: c.kind, amount: 0, charges: [] }
-    k.amount += cost
+    k.amount += c.amount + c.gst
     k.charges.push(c)
     kinds.set(c.kind, k)
     if (!flagged.has(c.id) && cost > 0) {
@@ -295,12 +336,13 @@ export function feesView(state: FeesState, today: string): FeesView {
   }
   const byKind = [...kinds.values()].map((k) => ({ ...k, charges: k.charges.sort((a, b) => b.date.localeCompare(a.date)) })).sort((a, b) => b.amount - a.amount)
   const avoidable = [...avoid.values()].sort((a, b) => b.amount - a.amount)
-  return { findings, asks, groups, claims, owed, owedCount, back, total, count: state.charges.length, from, to, avoidable, byKind }
+  return { findings, asks, groups, claims, owed, owedCount, found, back, total, count: state.charges.length, from, to, avoidable, byKind }
 }
 
-/** What a claim group's or claim's heading says: "HDFC Bank owes you ₹590". */
-export function owesLine(bank: string | null, amount: number): string {
+/** What a claim group's or claim's heading says: "HDFC Bank owes you ₹590" — or, all of it back, "HDFC Bank put back ₹590". */
+export function owesLine(bank: string | null, amount: number, back = false): string {
   const name = bankName(bank)
+  if (back) return name ? t('fees.claim.titleBack', { bank: name, amount: inr(amount) }) : t('fees.claim.titleBackAny', { amount: inr(amount) })
   return name ? t('fees.claim.title', { bank: name, amount: inr(amount) }) : t('fees.claim.titleAny', { amount: inr(amount) })
 }
 
@@ -330,3 +372,29 @@ export function avoidLine(kind: FeeKind, amount: number): string {
                   : 'fees.avoid.other'
   return t(key, { amount: inr(amount) })
 }
+
+/** Where a claim stands, in a line (part of it back: said first). */
+export function statusLine(c: ClaimView, t: Translate): string {
+  const bank = c.claim.steps.find((s) => s.kind === 'bank')
+  const ombudsman = c.claim.steps.find((s) => s.kind === 'ombudsman')
+  const part = c.backSoFar > 0 && c.stage !== 'back' ? `${t('fees.claim.status.part', { back: inr(c.backSoFar), amount: inr(c.claim.amount), rest: inr(c.rest) })} ` : ''
+  switch (c.stage) {
+    case 'ready':
+      return part + t('fees.claim.status.ready')
+    case 'raised':
+      return part + t('fees.claim.status.raised', { date: dayLabel(bank?.date ?? ''), until: dayLabel(c.until ?? '') }) + (bank?.ref ? ` ${t('fees.claim.ref', { ref: bank.ref })}` : '')
+    case 'ombudsman':
+      return part + t('fees.claim.status.ombudsman', { last: dayLabel(c.last ?? '') })
+    case 'replied':
+      return part + t('fees.claim.status.replied', { date: dayLabel(c.claim.repliedAt ?? ''), last: dayLabel(c.last ?? '') })
+    case 'ombudsmanRaised':
+      return part + t('fees.claim.status.ombudsmanRaised', { date: dayLabel(ombudsman?.date ?? '') }) + (ombudsman?.ref ? ` ${t('fees.claim.ref', { ref: ombudsman.ref })}` : '')
+    case 'closed':
+      return part + t('fees.claim.status.closed', { last: dayLabel(c.last ?? '') })
+    case 'back':
+      return c.claim.back ? t('fees.claim.status.back', { amount: inr(c.backSoFar), date: dayLabel(c.claim.back.date) }) : t('fees.claim.status.backAll', { amount: inr(c.backSoFar) })
+    case 'dropped':
+      return ''
+  }
+}
+

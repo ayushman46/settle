@@ -52,7 +52,7 @@ export const you = {
   'you.accent.locked': '{name}, Pro',
   'you.accent.note': 'লাইম বিনামূল্যে। মিন্ট, স্কাই, ভায়োলেট আর করাল Pro-তে আছে।',
   'you.clear.title': 'সবকিছু মুছবেন?',
-  'you.clear.body': 'আপনার প্রোফাইল, লোকজন, খরচ, গ্রুপ, নিয়মিত ভাগ, আটকে থাকা টাকার হিসাব আর চলমান যেকোনো বিল এই ফোন থেকে মুছে যাবে।',
+  'you.clear.body': 'আপনার প্রোফাইল, লোকজন, খরচ, গ্রুপ, নিয়মিত ভাগ, আটকে থাকা টাকা ও ব্যাংক চার্জের হিসাব আর চলমান যেকোনো বিল এই ফোন থেকে মুছে যাবে।',
   'you.clear.confirm': 'সবকিছু মুছুন',
   'you.clear.keep': 'আমার ডেটা রাখুন',
   'you.clear.backupBody': 'একদিন কি ফেরত চাইতে পারেন? আগে একটি ব্যাকআপ ফাইল সেভ করে রাখুন।',
@@ -98,7 +98,7 @@ export const you = {
   'you.restore.replace.title': 'এতে এখানকার সবকিছু বদলে যাবে',
   'you.restore.fresh': 'ব্যাকআপের সবকিছু এই ফোনে ফিরে আসবে, প্রোফাইলসহ।',
   // The banner under Replace.
-  'you.restore.replace.warning': 'এই ফোনে থাকা আপনার প্রোফাইল, লোকজন, খরচ, গ্রুপ, নিয়মিত ভাগ আর আটকে থাকা টাকার হিসাব ব্যাকআপেরগুলো দিয়ে বদলে যাবে। ঠিক পরেই আগের মতো করে নিতে পারবেন।',
+  'you.restore.replace.warning': 'এই ফোনে থাকা আপনার প্রোফাইল, লোকজন, খরচ, গ্রুপ, নিয়মিত ভাগ, আটকে থাকা টাকা আর ব্যাংক চার্জের হিসাব ব্যাকআপেরগুলো দিয়ে বদলে যাবে। ঠিক পরেই আগের মতো করে নিতে পারবেন।',
   // The sheet's button: a fresh phone, merging, or replacing.
   'you.restore.cta.restore': 'ব্যাকআপ ফেরত আনুন',
   'you.restore.cta.merge': 'ব্যাকআপ মেশান',
@@ -110,6 +110,7 @@ export const you = {
   'you.restore.contents.groups': '{count, plural, one {# টি গ্রুপ} other {# টি গ্রুপ}}',
   'you.restore.contents.recurring': '{count, plural, one {# টি নিয়মিত ভাগ} other {# টি নিয়মিত ভাগ}}',
   'you.restore.contents.stuck': '{count, plural, one {# টি আটকে থাকা পেমেন্ট} other {# টি আটকে থাকা পেমেন্ট}}',
+  'you.restore.contents.fees': '{count, plural, one {# টি ব্যাংক চার্জ} other {# টি ব্যাংক চার্জ}}',
   'you.restore.contents.empty': 'এতে এখনও কিছু নেই',
   // A picked file that can't be restored.
   'you.restore.error.notBackup': 'এই ফাইলটি {brand}-এর ব্যাকআপ নয়। {brand}-এর সেভ করা .json ফাইলটি বেছে নিন।',
@@ -147,7 +148,7 @@ export const you = {
   'you.data.keepCopy': 'সতর্কতার জন্য সবকিছুর একটি কপি রাখুন',
   'you.data.lastSaved': '{when, select, today {আজ শেষ সেভ হয়েছে} yesterday {গতকাল শেষ সেভ হয়েছে} other {{date}-এ শেষ সেভ হয়েছে}}',
   // Under the Your data card; <link> opens Pro.
-  'you.data.footnote': 'ব্যাকআপে থাকে আপনার লোকজন, খরচ, গ্রুপ, নিয়মিত ভাগ, আটকে থাকা টাকার হিসাব (অভিযোগ নম্বরসহ) আর সেটিংস — আপনার Pro পাস নয়। ফোন বদলাচ্ছেন? <link>{brand} Pro</link> থেকে আপনার Pro কোড কপি করে নতুন ফোনে ব্যবহার করুন।',
+  'you.data.footnote': 'ব্যাকআপে থাকে আপনার লোকজন, খরচ, গ্রুপ, নিয়মিত ভাগ, আটকে থাকা টাকা ও ব্যাংক চার্জের হিসাব (অভিযোগ নম্বরসহ) আর সেটিংস — আপনার Pro পাস নয়। ফোন বদলাচ্ছেন? <link>{brand} Pro</link> থেকে আপনার Pro কোড কপি করে নতুন ফোনে ব্যবহার করুন।',
   // The share sheet's title for each file.
   'you.data.backup.shareTitle': '{brand} ব্যাকআপ',
   'you.data.csv.shareTitle': '{brand}-এর খরচ',

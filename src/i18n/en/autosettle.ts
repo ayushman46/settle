@@ -20,7 +20,7 @@ export const autosettle = {
   'autosettle.sheet.private': 'It all stays on this phone. Nothing is uploaded, and every other notification is ignored, never kept.',
   'autosettle.sheet.stop': 'Settle reads these through Android’s notification access, which you can turn off in Android’s settings any time.',
   'autosettle.sheet.sms.label': 'Bank SMS too',
-  'autosettle.sheet.sms.description': 'Needed for most failed payments and money coming back: many banks only tell you by SMS. Only messages about money credited, failed payments and refunds are read — plus debits, just to check a failed payment really took your money.',
+  'autosettle.sheet.sms.description': 'Needed for most failed payments and money coming back: many banks only tell you by SMS. Only messages about money credited, failed payments and refunds are read — plus debits, to check a failed payment really took your money and to check a bank charge, and the bank’s low-balance warnings.',
   'autosettle.sheet.allow': 'Allow in Android settings',
   'autosettle.sheet.later': 'Not now',
   'autosettle.sheet.done': 'Done',

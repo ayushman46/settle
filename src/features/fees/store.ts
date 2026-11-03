@@ -105,10 +105,30 @@ export interface FeesState {
   checks: { at: number; from: string; to: string; bank: string | null; account: string | null; lines: number; charges: number }[]
   /** Findings you said were fine ("rule:chargeId"). */
   dismissed: string[]
-  /** Your answers to the questions findings ask, by finding key (true: the answer that makes the charge wrong). */
-  answers: Readonly<Record<string, boolean>>
+  /**
+   * Your answers to the questions findings ask, by finding key: true is the answer that makes the
+   * charge wrong, false the one that makes it fine, 'unsure' a "Not sure" (the letter then asks the
+   * bank to show what it relies on, rather than saying it didn't happen).
+   */
+  answers: Readonly<Record<string, FeeAnswer>>
   /** Your bank's warnings that the balance was short (Android, from its SMS): the day, and the account. */
   notices: { date: string; bank: string | null; account: string | null }[]
+  /** ATM withdrawals a statement showed coming back after the RBI's 5 days (owed ₹100 a day): kept until claimed in Stuck money. */
+  late: LateRefund[]
+}
+
+export type FeeAnswer = boolean | 'unsure'
+
+/** An ATM withdrawal that failed and came back late. */
+export interface LateRefund {
+  date: string
+  backOn: string
+  amount: number
+  text: string
+  bank: string | null
+  account: string | null
+  /** Claimed in Stuck money (the stuck payment's id), or null. */
+  stuckId: string | null
 }
 
 /** Enough for years of charges; the oldest go first. */
@@ -179,14 +199,30 @@ export const feesSchema = z.object({
     [],
   ),
   dismissed: z.catch(z.array(z.string().check(z.maxLength(120))).check(z.maxLength(2000)), []),
-  answers: z.catch(z.record(z.string().check(z.maxLength(120)), z.boolean()), {}),
+  answers: z.catch(z.record(z.string().check(z.maxLength(120)), z.union([z.boolean(), z.literal('unsure')])), {}),
   notices: z.catch(
     z.array(z.object({ date: isoDay, bank: z.catch(z.nullable(z.string().check(z.maxLength(40))), null), account: z.catch(z.nullable(z.string().check(z.maxLength(20))), null) })).check(z.maxLength(500)),
     [],
   ),
+  late: z.catch(
+    z
+      .array(
+        z.object({
+          date: isoDay,
+          backOn: isoDay,
+          amount: z.int().check(z.positive()),
+          text: z.catch(z.string().check(z.maxLength(200)), ''),
+          bank: z.catch(z.nullable(z.string().check(z.maxLength(40))), null),
+          account: z.catch(z.nullable(z.string().check(z.maxLength(20))), null),
+          stuckId: z.catch(z.nullable(z.string().check(z.maxLength(80))), null),
+        }),
+      )
+      .check(z.maxLength(200)),
+    [],
+  ),
 })
 
-export const emptyFees = (): FeesState => ({ charges: [], accounts: {}, claims: [], checks: [], dismissed: [], answers: {}, notices: [] })
+export const emptyFees = (): FeesState => ({ charges: [], accounts: {}, claims: [], checks: [], dismissed: [], answers: {}, notices: [], late: [] })
 
 export const feesStore = createStore<FeesState>({
   key: FEES_KEY,

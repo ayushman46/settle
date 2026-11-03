@@ -203,7 +203,7 @@ describe('YouScreen — backups', () => {
     const sheet = await screen.findByRole('dialog', { name: 'Restore this backup?' })
     expect(sheet).toHaveAccessibleDescription('Saved today · 2 stuck payments')
     await user.click(within(sheet).getByRole('radio', { name: /^Replace/ }))
-    expect(within(sheet).getByText(/recurring splits and stuck money on this phone are swapped/)).toBeInTheDocument()
+    expect(within(sheet).getByText(/recurring splits, stuck money and bank charges on this phone are swapped/)).toBeInTheDocument()
   })
 
   it('moves between merge and replace with the arrow keys', async () => {
@@ -289,7 +289,7 @@ describe('YouScreen — clear all data', () => {
     const { user } = renderYou()
     await user.click(row(/^Clear all data/))
     const sheet = await screen.findByRole('dialog', { name: 'Clear everything?' })
-    expect(sheet).toHaveAccessibleDescription(/Your profile, people, expenses, groups, recurring splits, stuck money and any bill in progress/)
+    expect(sheet).toHaveAccessibleDescription(/Your profile, people, expenses, groups, recurring splits, stuck money, bank charges and any bill in progress/)
     await user.click(within(sheet).getByRole('button', { name: 'Save a backup first' }))
     expect(await screen.findByText('Backup saved to your downloads')).toBeInTheDocument()
     expect(downloads).toHaveLength(1)

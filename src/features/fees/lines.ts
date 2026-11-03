@@ -46,6 +46,8 @@ export function readLines(rows: readonly string[][]): StatementLines | null {
     }
     const date = parseDate(cell(row, dateCol))
     if (!date) continue
+    // "OPENING BALANCE" / "CLOSING BALANCE" rows aren't transactions (but their balance is the one to start from).
+    const balanceRow = /^\s*(?:opening|closing|brought forward|b\/f|carried forward|c\/f)\b/i.test(cell(row, cols.narration))
     let delta = 0
     const credit = cols.credit !== undefined ? parseAmount(cell(row, cols.credit)) : null
     const debit = cols.debit !== undefined ? parseAmount(cell(row, cols.debit)) : null
@@ -59,12 +61,14 @@ export function readLines(rows: readonly string[][]): StatementLines | null {
         delta = sign === 1 ? amount.paise : sign === -1 ? -amount.paise : 0
       }
     }
-    if (delta === 0) continue
+    if (delta === 0 || balanceRow) continue
     const balance = cols.balance !== undefined ? parseAmount(cell(row, cols.balance)) : null
+    // Kotak-style files say Dr / Cr for the balance in the next column: a "Dr" balance is below zero.
+    const drNext = cols.balance !== undefined && /^\s*dr\.?\s*$/i.test(cell(row, cols.balance + 1))
     read.push({
       date,
       delta,
-      balance: balance ? balance.paise * (balance.sign === -1 ? -1 : 1) : null,
+      balance: balance ? balance.paise * (balance.sign === -1 || drNext ? -1 : 1) : null,
       narration: cell(row, cols.narration).replace(/\s+/g, ' ').trim(),
       ref: cell(row, cols.ref).replace(/[^A-Za-z0-9]/g, ''),
     })

@@ -34,6 +34,7 @@ export const fees = {
   'fees.reading': 'ನಿಮ್ಮ ಸ್ಟೇಟ್‌ಮೆಂಟ್ ಓದಲಾಗುತ್ತಿದೆ…',
   'fees.read.found':
     '{count, plural, =0 {ಇದರಲ್ಲಿ ಬ್ಯಾಂಕ್ ಶುಲ್ಕಗಳಿಲ್ಲ} one {# ಶುಲ್ಕ ಸಿಕ್ಕಿತು} other {# ಶುಲ್ಕಗಳು ಸಿಕ್ಕಿದವು}} · {lines, plural, one {# ವಹಿವಾಟು} other {# ವಹಿವಾಟುಗಳು}}, {from} ರಿಂದ {to}',
+  'fees.read.toast': '{count, plural, one {# ಶುಲ್ಕ ಸಿಕ್ಕಿತು} other {# ಶುಲ್ಕಗಳು ಸಿಕ್ಕಿದವು}}',
   'fees.read.nothingNew': 'ಈಗಾಗಲೇ ಪರಿಶೀಲಿಸಲಾಗಿದೆ: ಈ ಸ್ಟೇಟ್‌ಮೆಂಟ್‌ನಲ್ಲಿ ಹೊಸದೇನೂ ಇಲ್ಲ',
   'fees.read.unreadable': 'ಆ ಫೈಲ್‌ನಲ್ಲಿ ದಿನಾಂಕ ಮತ್ತು ಮೊತ್ತಗಳ ಟೇಬಲ್ Settle ಗೆ ಸಿಗಲಿಲ್ಲ. ಸ್ಟೇಟ್‌ಮೆಂಟ್ ಅನ್ನು Excel ಅಥವಾ CSV ಆಗಿ ಡೌನ್‌ಲೋಡ್ ಮಾಡಿ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.',
   'fees.read.oldXls': 'ಅದು Settle ತೆರೆಯಲಾಗದ ಹಳೆಯ Excel ಫೈಲ್. ಅದನ್ನು .xlsx ಅಥವಾ CSV ಆಗಿ ಉಳಿಸಿ, ಅಥವಾ ನೆಟ್ ಬ್ಯಾಂಕಿಂಗ್‌ನಿಂದ CSV ಡೌನ್‌ಲೋಡ್ ಮಾಡಿ.',
@@ -46,9 +47,13 @@ export const fees = {
   'fees.hero.owedSub': '{count, plural, one {# ಶುಲ್ಕ RBI ನಿಯಮಗಳಿಗೆ ವಿರುದ್ಧವಾಗಿದೆ} other {# ಶುಲ್ಕಗಳು RBI ನಿಯಮಗಳಿಗೆ ವಿರುದ್ಧವಾಗಿವೆ}}',
   'fees.hero.checked': 'ಪರಿಶೀಲಿಸಿದ ಶುಲ್ಕಗಳು',
   'fees.hero.checkedSub': '{count, plural, one {# ಶುಲ್ಕ} other {# ಶುಲ್ಕಗಳು}}, ಇಲ್ಲಿಯವರೆಗೆ ಯಾವುದೂ RBI ನಿಯಮಗಳಿಗೆ ವಿರುದ್ಧವಾಗಿಲ್ಲ',
+  'fees.hero.checkedAsk': '{count, plural, one {# ಶುಲ್ಕವನ್ನು} other {# ಶುಲ್ಕಗಳನ್ನು}} ಪರಿಶೀಲಿಸಲಾಗಿದೆ. ಎಷ್ಟು ವಾಪಸ್ ಕೇಳಬಹುದು ಎಂದು ನೋಡಲು ಕೆಳಗೆ ಉತ್ತರಿಸಿ.',
   'fees.hero.period': '{from} ರಿಂದ {to}',
   'fees.hero.total': 'ಒಟ್ಟು ಶುಲ್ಕ {amount}',
   'fees.hero.back': 'ಇಲ್ಲಿಯವರೆಗೆ {amount} ವಾಪಸ್ ಬಂದಿದೆ',
+  'fees.hero.backLabel': 'ನಿಮ್ಮ ಬ್ಯಾಂಕ್‌ನಿಂದ ವಾಪಸ್ ಬಂದದ್ದು',
+  'fees.hero.backSub':
+    '{count, plural, one {# ಶುಲ್ಕ RBI ನಿಯಮಗಳಿಗೆ ವಿರುದ್ಧವಾಗಿತ್ತು} other {# ಶುಲ್ಕಗಳು RBI ನಿಯಮಗಳಿಗೆ ವಿರುದ್ಧವಾಗಿದ್ದವು}}: ಪೂರ್ತಿ ವಾಪಸ್ ಬಂದಿದೆ',
   'fees.hero.ask': '{count, plural, one {# ಶುಲ್ಕಕ್ಕೆ ಒಂದು ಉತ್ತರ ಬೇಕು} other {# ಶುಲ್ಕಗಳಿಗೆ ತಲಾ ಒಂದು ಉತ್ತರ ಬೇಕು}}',
 
   // Sections.
@@ -80,13 +85,14 @@ export const fees = {
   'fees.account.saved': 'ಉಳಿಸಲಾಗಿದೆ. ಪರಿಶೀಲನೆಗಳು ಈಗ ಇದನ್ನು ಬಳಸುತ್ತವೆ.',
   'fees.account.summary': '{type} · {mab, select, none {ಸರಾಸರಿ ಬ್ಯಾಲೆನ್ಸ್ ನೀಡಿಲ್ಲ} other {ಸರಾಸರಿ {mab} ಬೇಕು}}',
   'fees.account.change': 'ಬದಲಿಸಿ',
+  'fees.account.summaryBasic': '{type} · ಕನಿಷ್ಠ ಬ್ಯಾಲೆನ್ಸ್ ಇಲ್ಲ',
 
   // One question per charge: the answer that settles it.
   'fees.q.warned': 'ಕನಿಷ್ಠ ಬ್ಯಾಲೆನ್ಸ್ ಶುಲ್ಕ ವಿಧಿಸುವುದಕ್ಕೆ ಒಂದು ತಿಂಗಳಾದರೂ ಮೊದಲು, ನಿಮ್ಮ ಬ್ಯಾಂಕ್ SMS, ಇಮೇಲ್ ಅಥವಾ ಪತ್ರದ ಮೂಲಕ ನಿಮಗೆ ಎಚ್ಚರಿಕೆ ಕೊಟ್ಟಿತ್ತೇ?',
   'fees.q.warned.yes': 'ಹೌದು, ಎಚ್ಚರಿಕೆ ಕೊಟ್ಟಿತ್ತು',
   'fees.q.warned.no': 'ಯಾವ ಎಚ್ಚರಿಕೆಯೂ ಬರಲಿಲ್ಲ',
   'fees.q.warned.unsure': 'ಖಚಿತವಿಲ್ಲ',
-  'fees.q.atmEnquiry': 'ಆ ತಿಂಗಳು ಬೇರೆ ಬ್ಯಾಂಕ್‌ನ ATM ನಲ್ಲಿ ಬ್ಯಾಲೆನ್ಸ್ ನೋಡಿದಿರಾ, ಅಥವಾ ಮಿನಿ ಸ್ಟೇಟ್‌ಮೆಂಟ್ ತೆಗೆದಿರಾ?',
+  'fees.q.atmEnquiry': 'ಆ ತಿಂಗಳು ಬೇರೆ ಬ್ಯಾಂಕ್‌ನ ATM ನಲ್ಲಿ ಎಷ್ಟು ಬಾರಿ ಬ್ಯಾಲೆನ್ಸ್ ನೋಡಿದಿರಿ, ಅಥವಾ ಮಿನಿ ಸ್ಟೇಟ್‌ಮೆಂಟ್ ತೆಗೆದಿರಿ?',
   'fees.q.declineReason': 'ಖಾತೆಯಲ್ಲಿ ಸಾಕಷ್ಟು ಹಣ ಇಲ್ಲದ ಕಾರಣಕ್ಕೇ ವಹಿವಾಟು ನಿರಾಕರಿಸಲಾಯಿತೇ?',
   'fees.q.online': 'ಈ NEFT ಅನ್ನು ನೆಟ್ ಬ್ಯಾಂಕಿಂಗ್ ಅಥವಾ ನಿಮ್ಮ ಬ್ಯಾಂಕ್ ಆ್ಯಪ್‌ನಿಂದ ಕಳುಹಿಸಿದಿರಾ?',
   'fees.q.inoperative': 'ಈ ಶುಲ್ಕಕ್ಕೂ ಮೊದಲು, ನೀವು ಎರಡು ವರ್ಷಕ್ಕೂ ಹೆಚ್ಚು ಕಾಲ ಈ ಖಾತೆಯನ್ನು ಬಳಸದೆ ಬಿಟ್ಟಿದ್ದಿರಾ?',
@@ -94,6 +100,9 @@ export const fees = {
   'fees.q.floating': 'ಇದು ನಿಮ್ಮ ಸ್ವಂತ ಹೆಸರಿನ, ವ್ಯವಹಾರಕ್ಕಾಗಿ ಅಲ್ಲದ, ಫ್ಲೋಟಿಂಗ್ ಬಡ್ಡಿ ದರದ ಸಾಲವಾಗಿತ್ತೇ (ರೆಪೊ ದರ ಅಥವಾ MCLR ಗೆ ಜೋಡಿಸಿದ್ದು)?',
   'fees.q.paidInTime': 'ಪಾವತಿಯ ಕೊನೆಯ ದಿನಾಂಕ ಕಳೆದು 3 ದಿನಗಳೊಳಗೆ ಕನಿಷ್ಠ ಬಾಕಿ ಮೊತ್ತವನ್ನಾದರೂ ಪಾವತಿಸಿದ್ದಿರಾ?',
   'fees.q.upiSmall': 'ಈ ಶುಲ್ಕ ವಿಧಿಸಿದ UPI ಪಾವತಿ ₹2,000 ಅಥವಾ ಅದಕ್ಕಿಂತ ಕಡಿಮೆ ಇತ್ತೇ?',
+  'fees.q.atmEnquiry.none': 'ಒಮ್ಮೆಯೂ ಇಲ್ಲ',
+  'fees.q.atmEnquiry.many': '3 ಅಥವಾ ಹೆಚ್ಚು',
+  'fees.ask.more': 'ಇದಕ್ಕೆ ಉತ್ತರಿಸಿದರೆ ಇನ್ನೂ {amount} ವಾಪಸ್ ಕೇಳಬಹುದು',
   'fees.answer.yes': 'ಹೌದು',
   'fees.answer.no': 'ಇಲ್ಲ',
   'fees.answer.all': 'ಇಂತಹ ಎಲ್ಲ {count} ಶುಲ್ಕಗಳಿಗೂ ಇದೇ ಉತ್ತರ ಅನ್ವಯಿಸುತ್ತದೆ',
@@ -107,6 +116,7 @@ export const fees = {
   'fees.why.minbalScholarship': 'ವಿದ್ಯಾರ್ಥಿವೇತನ ಬರುವ ಖಾತೆಗೆ ಕನಿಷ್ಠ ಬ್ಯಾಲೆನ್ಸ್ ಶುಲ್ಕ ವಿಧಿಸುವಂತಿಲ್ಲ.',
   'fees.why.minbalWaived': '{from} ರಿಂದ {bank} ಉಳಿತಾಯ ಖಾತೆಗಳಿಗೆ ಕನಿಷ್ಠ ಬ್ಯಾಲೆನ್ಸ್ ಶುಲ್ಕ ವಿಧಿಸುವುದನ್ನು ನಿಲ್ಲಿಸಿದೆ.',
   'fees.why.minbalWaived.standard': '{from} ರಿಂದ {bank} ತನ್ನ ಸಾಮಾನ್ಯ ಉಳಿತಾಯ ಖಾತೆಗಳಿಗೆ ಕನಿಷ್ಠ ಬ್ಯಾಲೆನ್ಸ್ ಶುಲ್ಕ ವಿಧಿಸುವುದನ್ನು ನಿಲ್ಲಿಸಿದೆ.',
+  'fees.why.smsWaived': '{from} ರಿಂದ {bank} ಉಳಿತಾಯ ಖಾತೆಗಳಿಗೆ SMS ಅಲರ್ಟ್ ಶುಲ್ಕ ವಿಧಿಸುವುದನ್ನು ನಿಲ್ಲಿಸಿದೆ.',
   'fees.why.minbalNotShort': '{period} ರಲ್ಲಿ ನಿಮ್ಮ ಸರಾಸರಿ ಬ್ಯಾಲೆನ್ಸ್ {avg} ಇತ್ತು — ಬೇಕಾದ {mab} ಗಿಂತ ಹೆಚ್ಚು. ನಿಮ್ಮ ಬ್ಯಾಲೆನ್ಸ್ ಕಡಿಮೆ ಇರಲಿಲ್ಲ.',
   'fees.why.minbalOverShortfall': 'ನಿಮ್ಮ ಬ್ಯಾಲೆನ್ಸ್‌ನಲ್ಲಿ {shortfall} ಕೊರತೆ ಇತ್ತು, ಆದರೆ {amount} ಶುಲ್ಕ ವಿಧಿಸಲಾಗಿದೆ — ಕೊರತೆಗಿಂತಲೂ ಹೆಚ್ಚು.',
   'fees.why.minbalOverSchedule': '{bank} ನ ಸ್ವಂತ ಶುಲ್ಕ ಪಟ್ಟಿಯಂತೆ, {avg} ಸರಾಸರಿ ಬ್ಯಾಲೆನ್ಸ್‌ಗೆ ಹೆಚ್ಚೆಂದರೆ {allowed} ವಿಧಿಸಬಹುದು. ಅದು {amount} ಕಡಿತ ಮಾಡಿದೆ.',
@@ -116,7 +126,7 @@ export const fees = {
   'fees.why.basicWithdrawals': 'ಬೇಸಿಕ್ ಸೇವಿಂಗ್ಸ್ ಖಾತೆಯಲ್ಲಿ ತಿಂಗಳಿಗೆ 4 ವಿತ್‌ಡ್ರಾ ಉಚಿತ. ನೀವು {count} ಬಾರಿ ಹಣ ತೆಗೆದಿದ್ದೀರಿ.',
   'fees.why.basicFree': 'ಬೇಸಿಕ್ ಸೇವಿಂಗ್ಸ್ ಖಾತೆಯಲ್ಲಿ ಇದು ಉಚಿತ.',
   'fees.why.atmFree':
-    'ಆ ತಿಂಗಳು {count, plural, =0 {ಒಂದು ವಿತ್‌ಡ್ರಾ ಕೂಡ ಆಗಿರಲಿಲ್ಲ} one {# ವಿತ್‌ಡ್ರಾ ಮಾತ್ರ ಆಗಿತ್ತು} other {# ವಿತ್‌ಡ್ರಾ ಮಾತ್ರ ಆಗಿದ್ದವು}}{failed, select, 1 { (ವಿಫಲವಾದವು ಲೆಕ್ಕಕ್ಕೆ ಬರುವುದಿಲ್ಲ)} other {}}. ಯಾವುದೇ ATM ನಲ್ಲಿ ತಿಂಗಳಿಗೆ ಕನಿಷ್ಠ 3 ವಿತ್‌ಡ್ರಾ ಉಚಿತ.',
+    'ಆ ತಿಂಗಳು {count, plural, =0 {ಒಂದು ವಿತ್‌ಡ್ರಾ ಕೂಡ ಆಗಿರಲಿಲ್ಲ} one {# ವಿತ್‌ಡ್ರಾ ಮಾತ್ರ ಆಗಿತ್ತು} other {# ವಿತ್‌ಡ್ರಾ ಮಾತ್ರ ಆಗಿದ್ದವು}}{failed, select, 1 { (ವಿಫಲವಾದವು ಲೆಕ್ಕಕ್ಕೆ ಬರುವುದಿಲ್ಲ)} other {}}. ಯಾವುದೇ ಬ್ಯಾಂಕ್‌ನ ATM ನಲ್ಲಿ ತಿಂಗಳ ಮೊದಲ 3 ವಿತ್‌ಡ್ರಾ ಉಚಿತ (ನಿಮ್ಮ ಸ್ವಂತ ಬ್ಯಾಂಕ್‌ನ ATM ನಲ್ಲಿ 5).',
   'fees.why.atmDecline': 'ನಿಮ್ಮ ತಪ್ಪಿಲ್ಲದೆ ವಹಿವಾಟು ನಿರಾಕರಿಸಲ್ಪಟ್ಟರೆ (ಯಂತ್ರದ ದೋಷ, ATM ನಲ್ಲಿ ಹಣ ಇಲ್ಲ, ನೆಟ್‌ವರ್ಕ್) ಅದಕ್ಕೆ ಶುಲ್ಕ ವಿಧಿಸುವಂತಿಲ್ಲ.',
   'fees.why.neftOnline': 'ಉಳಿತಾಯ ಖಾತೆಯಿಂದ ಆನ್‌ಲೈನ್‌ನಲ್ಲಿ ಕಳುಹಿಸುವ NEFT ಉಚಿತ.',
   'fees.why.transferInward': 'ನಿಮ್ಮ ಖಾತೆಗೆ ಬರುವ ಹಣಕ್ಕೆ ಶುಲ್ಕ ವಿಧಿಸುವಂತಿಲ್ಲ.',
@@ -129,10 +139,10 @@ export const fees = {
   'fees.why.prepay': 'ನಿಮ್ಮ ಹೆಸರಿನ ಫ್ಲೋಟಿಂಗ್ ಬಡ್ಡಿ ದರದ ಸಾಲಕ್ಕೆ ಅವಧಿಪೂರ್ವ ಪಾವತಿ ಶುಲ್ಕ ವಿಧಿಸುವಂತಿಲ್ಲ.',
   'fees.why.lateFee': 'ಕೊನೆಯ ದಿನಾಂಕದಿಂದ 3 ದಿನಗಳೊಳಗೆ ಪಾವತಿಸಿದ್ದರೆ ವಿಳಂಬ ಶುಲ್ಕ ಇಲ್ಲ.',
   'fees.why.more': '+ {count, plural, one {ಇನ್ನೂ # ಕಾರಣ} other {ಇನ್ನೂ # ಕಾರಣಗಳು}}',
-  'fees.rule.source': 'RBI ನಿಯಮ: {ref}',
+  'fees.rule.source': 'ನಿಯಮ: {ref}',
 
-  // What each kind of charge is called. Also fills {kind} in the Android alerts below, after
-  // "ಹೆಸರಿನಲ್ಲಿ" ("in the name of"), so each works as a bare noun there.
+  // What each kind of charge is called. Also fills {kind} in brackets in the Android alerts below,
+  // so each works as a bare noun there.
   'fees.kind.minbal': 'ಕನಿಷ್ಠ ಬ್ಯಾಲೆನ್ಸ್',
   'fees.kind.atm': 'ATM',
   'fees.kind.atmDecline': 'ATM ನಿರಾಕರಣೆ',
@@ -160,16 +170,23 @@ export const fees = {
   'fees.charge.label.balance': 'ಬ್ಯಾಲೆನ್ಸ್',
   'fees.charge.ok': 'Settle ಗೆ ತಿಳಿದ ಮಟ್ಟಿಗೆ, RBI ನಿಯಮಗಳು ಇದಕ್ಕೆ ಅನುಮತಿ ನೀಡುತ್ತವೆ.',
   'fees.charge.text': 'ನಿಮ್ಮ ಸ್ಟೇಟ್‌ಮೆಂಟ್ ಅಥವಾ SMS ನಲ್ಲಿ ಇರುವಂತೆ',
-  'fees.charge.balance': 'ಬ್ಯಾಲೆನ್ಸ್ {before} → {after}',
+  'fees.charge.balance': '{before} → {after}',
+  'fees.charge.backFull': 'ಪೂರ್ತಿ ವಾಪಸ್ ಹಾಕಲಾಗಿದೆ: ಇದು RBI ನಿಯಮಗಳಿಗೆ ವಿರುದ್ಧವಾಗಿತ್ತು, ಮತ್ತು ನಿಮ್ಮ ಬ್ಯಾಂಕ್ ಅದನ್ನು ಸರಿಪಡಿಸಿದೆ.',
   'fees.charge.fine': 'ಸರಿಯಿದೆ, ಕ್ಲೇಮ್‌ಗೆ ಸೇರಿಸಬೇಡಿ',
   'fees.charge.fine.toast': 'ನಿಮ್ಮ ಕ್ಲೇಮ್‌ನಿಂದ ಹೊರಗಿಡಲಾಗಿದೆ',
-  'fees.charge.remove': 'ತೆಗೆದುಹಾಕಿ: ತಪ್ಪಾಗಿ ಓದಲಾಗಿದೆ',
+  'fees.charge.remove': 'ಇದು ಬ್ಯಾಂಕ್ ಶುಲ್ಕ ಅಲ್ಲ: ತೆಗೆದುಹಾಕಿ',
   'fees.charge.removed': 'ಶುಲ್ಕ ತೆಗೆದುಹಾಕಲಾಗಿದೆ',
   'fees.charge.from': '{source, select, sms {ಒಂದು SMS ನಿಂದ} alert {ನಿಮ್ಮ ಬ್ಯಾಂಕ್‌ನ SMS ನಿಂದ} other {ನಿಮ್ಮ ಸ್ಟೇಟ್‌ಮೆಂಟ್‌ನಿಂದ}}',
 
   // A claim: one bank's wrong charges.
   'fees.claim.title': '{bank} ನಿಮಗೆ {amount} ಕೊಡಬೇಕು',
   'fees.claim.titleAny': 'ನಿಮ್ಮ ಬ್ಯಾಂಕ್ ನಿಮಗೆ {amount} ಕೊಡಬೇಕು',
+  'fees.claim.titleBack': '{bank} {amount} ವಾಪಸ್ ಹಾಕಿದೆ',
+  'fees.claim.titleBackAny': 'ನಿಮ್ಮ ಬ್ಯಾಂಕ್ {amount} ವಾಪಸ್ ಹಾಕಿದೆ',
+  'fees.claim.ref': 'ದೂರು ಸಂಖ್ಯೆ {ref}',
+  'fees.claim.partOf': '{amount} ಶುಲ್ಕದಲ್ಲಿ {claim}',
+  'fees.claim.status.part': '{amount} ರಲ್ಲಿ ಇಲ್ಲಿಯವರೆಗೆ {back} ವಾಪಸ್ ಬಂದಿದೆ. ಉಳಿದ {rest} ಇನ್ನೂ ಬರಬೇಕು.',
+  'fees.claims.count': '{count, plural, one {# ಕ್ಲೇಮ್} other {# ಕ್ಲೇಮ್‌ಗಳು}}',
   'fees.claim.count': '{count, plural, one {# ಶುಲ್ಕ} other {# ಶುಲ್ಕಗಳು}}{account, select, none {} other {, ಖಾತೆ {account}}}',
   'fees.claim.cta': '{amount} ವಾಪಸ್ ಕೇಳಿ',
   'fees.claim.status.ready': 'ಇನ್ನೂ ಕಳುಹಿಸಿಲ್ಲ',
@@ -179,6 +196,7 @@ export const fees = {
   'fees.claim.status.ombudsmanRaised': '{date} ರಿಂದ RBI ಒಂಬುಡ್ಸ್‌ಮನ್ ಬಳಿ ಇದೆ.',
   'fees.claim.status.closed': 'RBI ಒಂಬುಡ್ಸ್‌ಮನ್ ಬಳಿ ಹೋಗುವ 90 ದಿನಗಳು {last} ರಂದು ಮುಗಿದವು.',
   'fees.claim.status.back': '{date} ರಂದು {amount} ವಾಪಸ್ ಬಂತು',
+  'fees.claim.status.backAll': 'ನಿಮ್ಮ ಬ್ಯಾಂಕ್‌ನಿಂದ {amount} ವಾಪಸ್ ಬಂತು',
   'fees.claim.raise': 'ಬ್ಯಾಂಕ್‌ಗೆ ಬರೆಯಿರಿ',
   'fees.claim.raiseAgain': 'ಪತ್ರ ನೋಡಿ',
   'fees.claim.ombudsman': 'RBI ಒಂಬುಡ್ಸ್‌ಮನ್ ಬಳಿಗೆ ಕೊಂಡೊಯ್ಯಿರಿ',
@@ -199,6 +217,8 @@ export const fees = {
   // The letter sheet.
   'fees.sheet.bank.title': '{bank} ಗೆ ಬರೆಯಿರಿ',
   'fees.sheet.bank.titleAny': 'ನಿಮ್ಮ ಬ್ಯಾಂಕ್‌ಗೆ ಬರೆಯಿರಿ',
+  'fees.sheet.bank.leadSent':
+    'ನೀವು ಇದನ್ನು {date} ರಂದು ಕಳುಹಿಸಿದ್ದೀರಿ. ನೆನಪಿಸಲು ಮತ್ತೆ ಕಳುಹಿಸಿ, ಅಥವಾ ಬ್ಯಾಂಕ್‌ನ 30 ದಿನಗಳು ಮುಗಿದ ನಂತರ RBI ಒಂಬುಡ್ಸ್‌ಮನ್ ಬಳಿಗೆ ಕೊಂಡೊಯ್ಯಿರಿ.',
   'fees.sheet.bank.lead': 'ನಿಮ್ಮ ಬ್ಯಾಂಕ್ 30 ದಿನಗಳೊಳಗೆ ಉತ್ತರಿಸಬೇಕು. ಬ್ಯಾಂಕ್‌ಗೆ ಅವಕಾಶ ಸಿಕ್ಕ ನಂತರವೇ RBI ಒಂಬುಡ್ಸ್‌ಮನ್ ದೂರು ಸ್ವೀಕರಿಸುತ್ತಾರೆ, ಹಾಗಾಗಿ ಮೊದಲು ಇದು.',
   // The bank's page name as banks write it.
   'fees.sheet.bank.step1': 'ನಿಮ್ಮ ಬ್ಯಾಂಕ್‌ನ ದೂರು ಇಮೇಲ್ ವಿಳಾಸಕ್ಕೆ (ಅದರ “Grievance Redressal” ಪುಟದಲ್ಲಿರುತ್ತದೆ) ಇಮೇಲ್ ಮಾಡಿ, ಅಥವಾ ನೆಟ್ ಬ್ಯಾಂಕಿಂಗ್‌ನ ದೂರು ಫಾರ್ಮ್ ಬಳಸಿ.',
@@ -209,6 +229,11 @@ export const fees = {
   'fees.sheet.summaryAny':
     'ಇದು ನಿಮ್ಮ ಬ್ಯಾಂಕ್‌ಗೆ {amount} ವಾಪಸ್ ಹಾಕಲು ಕೇಳುತ್ತದೆ: {count, plural, one {# ಶುಲ್ಕ} other {# ಶುಲ್ಕಗಳು}}, ಪ್ರತಿಯೊಂದರ ಜೊತೆಗೆ ಅದು ಉಲ್ಲಂಘಿಸುವ RBI ನಿಯಮ.',
   'fees.sheet.english': 'ಇಂಗ್ಲಿಷ್‌ನಲ್ಲಿದೆ, ಬ್ಯಾಂಕ್‌ಗಳು ನಿರೀಕ್ಷಿಸುವಂತೆ.',
+  'fees.sheet.ombudsman.summary':
+    'ಇದು {bank} ನಿಂದ {amount} ವಾಪಸ್ ಹಾಕಿಸಲು RBI ಒಂಬುಡ್ಸ್‌ಮನ್ ಅವರನ್ನು ಕೇಳುತ್ತದೆ: {count, plural, one {# ಶುಲ್ಕ} other {# ಶುಲ್ಕಗಳು}}, ಪ್ರತಿಯೊಂದರ ಜೊತೆಗೆ ಅದು ಉಲ್ಲಂಘಿಸುವ RBI ನಿಯಮ.',
+  'fees.sheet.ombudsman.summaryAny':
+    'ಇದು ನಿಮ್ಮ ಬ್ಯಾಂಕ್‌ನಿಂದ {amount} ವಾಪಸ್ ಹಾಕಿಸಲು RBI ಒಂಬುಡ್ಸ್‌ಮನ್ ಅವರನ್ನು ಕೇಳುತ್ತದೆ: {count, plural, one {# ಶುಲ್ಕ} other {# ಶುಲ್ಕಗಳು}}, ಪ್ರತಿಯೊಂದರ ಜೊತೆಗೆ ಅದು ಉಲ್ಲಂಘಿಸುವ RBI ನಿಯಮ.',
+  'fees.sheet.englishRbi': 'ಇಂಗ್ಲಿಷ್‌ನಲ್ಲಿದೆ, RBI ಯ ದೂರು ಫಾರ್ಮ್ ನಿರೀಕ್ಷಿಸುವಂತೆ.',
   'fees.sheet.sent': 'ಕಳುಹಿಸಿದ್ದೇನೆ',
   'fees.sheet.sent.title': 'ಯಾವಾಗ ಕಳುಹಿಸಿದಿರಿ?',
   'fees.sheet.sent.description': 'ಬ್ಯಾಂಕ್‌ನ 30 ದಿನಗಳನ್ನು Settle ಈ ದಿನದಿಂದ ಎಣಿಸುತ್ತದೆ.',
@@ -226,7 +251,7 @@ export const fees = {
     'ಕನಿಷ್ಠ ಬ್ಯಾಲೆನ್ಸ್‌ಗಾಗಿ {amount} ಹೋಗಿದೆ. ಬೇಸಿಕ್ ಸೇವಿಂಗ್ಸ್ (BSBD) ಖಾತೆಗೆ ಕನಿಷ್ಠ ಬ್ಯಾಲೆನ್ಸ್ ಇಲ್ಲವೇ ಇಲ್ಲ, ಮತ್ತು ನೀವು ಕೇಳಿದ 7 ದಿನಗಳೊಳಗೆ ನಿಮ್ಮ ಬ್ಯಾಂಕ್ ಖಾತೆಯನ್ನು ಬದಲಿಸಿಕೊಡಬೇಕು.',
   'fees.avoid.minbal.cta': 'ಬೇಸಿಕ್ ಸೇವಿಂಗ್ಸ್‌ಗೆ ಬದಲಿಸಲು ಕೇಳಿ',
   'fees.avoid.atm': 'ATM ಶುಲ್ಕಗಳಿಗೆ {amount} ಹೋಗಿದೆ. ನಿಮ್ಮದೇ ಬ್ಯಾಂಕ್‌ನ ATM ಗಳಲ್ಲಿ ತಿಂಗಳಿಗೆ 5 ಉಚಿತ; ದೊಡ್ಡ ನಗರಗಳಲ್ಲಿ ಬೇರೆ ಬ್ಯಾಂಕ್‌ಗಳ ATM ಗಳಲ್ಲಿ 3 ಮಾತ್ರ.',
-  'fees.avoid.sms': 'SMS ಅಲರ್ಟ್‌ಗಳಿಗೆ {amount} ಹೋಗಿದೆ. ನಿಜವಾಗಿ ಕಳುಹಿಸಿದ SMS ಗಳಿಗೆ ಮಾತ್ರ ಶುಲ್ಕ ವಿಧಿಸಬೇಕು ಎಂದು RBI ಹೇಳುತ್ತದೆ.',
+  'fees.avoid.sms': 'SMS ಅಲರ್ಟ್‌ಗಳಿಗೆ {amount} ಹೋಗಿದೆ. ಯಾವ ಅಲರ್ಟ್‌ಗಳನ್ನು ನಿಲ್ಲಿಸಬಹುದು ಎಂದು ನಿಮ್ಮ ಬ್ಯಾಂಕ್ ಅನ್ನು ಕೇಳಿ: ನಿಜವಾಗಿ ಕಳುಹಿಸಿದವುಗಳಿಗೆ ಮಾತ್ರ ಅದು ಶುಲ್ಕ ವಿಧಿಸಬಹುದು.',
   'fees.avoid.imps': 'IMPS ಗೆ {amount} ಹೋಗಿದೆ. UPI, ಮತ್ತು ಆನ್‌ಲೈನ್‌ನಲ್ಲಿ ಕಳುಹಿಸುವ NEFT ಉಚಿತ.',
   'fees.avoid.card': 'ಡೆಬಿಟ್ ಕಾರ್ಡ್ ಶುಲ್ಕಕ್ಕೆ {amount} ಹೋಗಿದೆ. ಬೇಸಿಕ್ ಸೇವಿಂಗ್ಸ್ ಖಾತೆಯ ಕಾರ್ಡ್‌ಗೆ ವಾರ್ಷಿಕ ಶುಲ್ಕ ಇಲ್ಲ.',
   'fees.avoid.bounce': 'ಬೌನ್ಸ್ ಆದ ಪಾವತಿಗಳಿಗೆ {amount} ಹೋಗಿದೆ. EMI ಅಥವಾ ಆಟೋಪೇ ದಿನಾಂಕಕ್ಕೆ ಒಂದು ದಿನ ಮೊದಲೇ ಖಾತೆಯಲ್ಲಿ ಹಣ ಇಟ್ಟುಕೊಳ್ಳಿ.',
@@ -241,6 +266,7 @@ export const fees = {
     '{date} ರಂದು ATM ಕೊಡದ {amount}, {backOn} ರಂದು ವಾಪಸ್ ಬಂತು — RBI ಯ 5 ದಿನಗಳ ಗಡುವಿಗಿಂತ {days, plural, one {# ದಿನ} other {# ದಿನ}} ತಡವಾಗಿ. ತಡವಾದ ಪ್ರತಿ ದಿನಕ್ಕೆ ಬ್ಯಾಂಕ್ ₹100 ಕೊಡಬೇಕು.',
   'fees.late.cta': 'ಸಿಲುಕಿದ ಹಣ ವಿಭಾಗದಲ್ಲಿ ಕೇಳಿ ಪಡೆಯಿರಿ',
   'fees.late.added': 'ಸಿಲುಕಿದ ಹಣ ವಿಭಾಗಕ್ಕೆ ಸೇರಿಸಲಾಗಿದೆ',
+  'fees.late.open': 'ಸಿಲುಕಿದ ಹಣ ವಿಭಾಗದಲ್ಲಿ ತೆರೆಯಿರಿ',
 
   // Pasting SMS. The placeholder stays an English bank SMS, as banks send them.
   'fees.paste.title': 'ನಿಮ್ಮ ಬ್ಯಾಂಕ್‌ನ SMS ಅಂಟಿಸಿ',
@@ -248,7 +274,9 @@ export const fees = {
   'fees.paste.label': 'ಬ್ಯಾಂಕ್ SMS',
   'fees.paste.placeholder': 'Rs.590 debited from A/c XX4821 towards non-maintenance of AMB charges…',
   'fees.paste.check': 'ಪರಿಶೀಲಿಸಿ',
+  'fees.paste.fromClipboard': 'ನಕಲಿಸಿದ್ದನ್ನು ಅಂಟಿಸಿ',
   'fees.paste.none': 'ಆ ಪಠ್ಯದಲ್ಲಿ ಯಾವುದೇ ಬ್ಯಾಂಕ್ ಶುಲ್ಕ ಇಲ್ಲ.',
+  'fees.paste.known': 'ಈಗಾಗಲೇ ಬ್ಯಾಂಕ್ ಶುಲ್ಕಗಳು ವಿಭಾಗದಲ್ಲಿದೆ: ಹೊಸದೇನೂ ಇಲ್ಲ',
   'fees.paste.found':
     '{count, plural, one {# ಶುಲ್ಕ ಸೇರಿಸಲಾಗಿದೆ} other {# ಶುಲ್ಕಗಳನ್ನು ಸೇರಿಸಲಾಗಿದೆ}}{back, plural, =0 {} one {, # ವಾಪಸ್ ಹಾಕಲಾಗಿದೆ} other {, # ವಾಪಸ್ ಹಾಕಲಾಗಿದೆ}}',
 
@@ -262,11 +290,10 @@ export const fees = {
   'fees.you.none': 'ನಿಮ್ಮ ಬ್ಯಾಂಕ್ ವಿಧಿಸಬಾರದಿದ್ದ ಶುಲ್ಕಗಳಿಗಾಗಿ ನಿಮ್ಮ ಸ್ಟೇಟ್‌ಮೆಂಟ್ ಪರಿಶೀಲಿಸಿ',
 
   // Android: a charge SMS just read ({kind}: a fees.kind.* above, lower-cased).
-  'fees.alert.wrong': '{bank} {kind} ಹೆಸರಿನಲ್ಲಿ {amount} ಕಡಿತ ಮಾಡಿದೆ. ಇದು RBI ನಿಯಮಗಳಿಗೆ ವಿರುದ್ಧ: ಬ್ಯಾಂಕ್ ಶುಲ್ಕಗಳು ವಿಭಾಗದಲ್ಲಿ ವಾಪಸ್ ಕೇಳಿ',
-  'fees.alert.wrongAny': 'ನಿಮ್ಮ ಬ್ಯಾಂಕ್ {kind} ಹೆಸರಿನಲ್ಲಿ {amount} ಕಡಿತ ಮಾಡಿದೆ. ಇದು RBI ನಿಯಮಗಳಿಗೆ ವಿರುದ್ಧ: ಬ್ಯಾಂಕ್ ಶುಲ್ಕಗಳು ವಿಭಾಗದಲ್ಲಿ ವಾಪಸ್ ಕೇಳಿ',
-  'fees.alert.check': '{bank} {kind} ಹೆಸರಿನಲ್ಲಿ {amount} ಕಡಿತ ಮಾಡಿದೆ. ಬ್ಯಾಂಕ್ ಶುಲ್ಕಗಳು ವಿಭಾಗದಲ್ಲಿ ಒಂದು ಪ್ರಶ್ನೆಗೆ ಉತ್ತರಿಸಿದರೆ, ಅದನ್ನು ವಾಪಸ್ ಪಡೆಯಬಹುದೇ ಎಂದು ತಿಳಿಯುತ್ತದೆ',
-  'fees.alert.checkAny':
-    'ನಿಮ್ಮ ಬ್ಯಾಂಕ್ {kind} ಹೆಸರಿನಲ್ಲಿ {amount} ಕಡಿತ ಮಾಡಿದೆ. ಬ್ಯಾಂಕ್ ಶುಲ್ಕಗಳು ವಿಭಾಗದಲ್ಲಿ ಒಂದು ಪ್ರಶ್ನೆಗೆ ಉತ್ತರಿಸಿದರೆ, ಅದನ್ನು ವಾಪಸ್ ಪಡೆಯಬಹುದೇ ಎಂದು ತಿಳಿಯುತ್ತದೆ',
+  'fees.alert.wrong': '{bank} RBI ನಿಯಮಗಳಿಗೆ ವಿರುದ್ಧವಾಗಿ {amount} ({kind}) ಕಡಿತ ಮಾಡಿದೆ',
+  'fees.alert.wrongAny': 'ನಿಮ್ಮ ಬ್ಯಾಂಕ್ RBI ನಿಯಮಗಳಿಗೆ ವಿರುದ್ಧವಾಗಿ {amount} ({kind}) ಕಡಿತ ಮಾಡಿದೆ',
+  'fees.alert.check': '{bank} {amount} ({kind}) ಕಡಿತ ಮಾಡಿದೆ: ವಾಪಸ್ ಕೇಳಬಹುದೇ ಎಂದು ಒಂದು ಪ್ರಶ್ನೆಯಿಂದ ತಿಳಿಯುತ್ತದೆ',
+  'fees.alert.checkAny': 'ನಿಮ್ಮ ಬ್ಯಾಂಕ್ {amount} ({kind}) ಕಡಿತ ಮಾಡಿದೆ: ವಾಪಸ್ ಕೇಳಬಹುದೇ ಎಂದು ಒಂದು ಪ್ರಶ್ನೆಯಿಂದ ತಿಳಿಯುತ್ತದೆ',
   'fees.alert.back': 'ಬ್ಯಾಂಕ್ ಶುಲ್ಕದ {amount} ವಾಪಸ್ ಹಾಕಲಾಗಿದೆ',
   'fees.alert.many': '{count, plural, one {# ಬ್ಯಾಂಕ್ ಶುಲ್ಕವನ್ನು ಪರಿಶೀಲಿಸಲಾಗಿದೆ} other {# ಬ್ಯಾಂಕ್ ಶುಲ್ಕಗಳನ್ನು ಪರಿಶೀಲಿಸಲಾಗಿದೆ}}: ಬ್ಯಾಂಕ್ ಶುಲ್ಕಗಳು ವಿಭಾಗದಲ್ಲಿ ನೋಡಿ',
 

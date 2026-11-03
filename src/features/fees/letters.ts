@@ -67,6 +67,8 @@ export function ruleSentence(f: Pick<FeeFinding, 'rule' | 'facts' | 'charge'>): 
       const from = MINBAL_WAIVED[c.bank ?? '']?.from ?? s('from')
       return `${name} has announced that it no longer levies charges for non-maintenance of minimum balance on savings accounts, from ${letterDate(from)}. A bank may collect only those charges it has notified to the customer (${RBC_SHORT}, para 81(7)).`
     }
+    case 'smsWaived':
+      return `${bankName(c.bank) ?? 'The bank'} has announced that it no longer levies SMS alert charges on savings accounts, from ${letterDate(s('from'))}. A bank may collect only those charges it has notified to the customer (${RBC_SHORT}, para 81(7)).`
     case 'minbalNotShort':
       return `My average balance for ${periodWords(s('period'))} was ${rupees(n('avg'))}, above the ${rupees(n('mab'))} the account requires, so there was no shortfall. Penal charges must be directly proportionate to the shortfall (${RBC_SHORT}, para 160(4)).`
     case 'minbalOverShortfall':
@@ -76,7 +78,9 @@ export function ruleSentence(f: Pick<FeeFinding, 'rule' | 'facts' | 'charge'>): 
     case 'minbalNotice':
       return f.facts['notice']
         ? `Your notice of the shortfall came on ${letterDate(s('notice'))}, and the charge was taken on ${letterDate(c.date)}, before the month the rules give to restore the balance (${RBC_SHORT}, para 160(1) and (2)).`
-        : `I received no notice of a shortfall by SMS, email or letter before this charge. Penal charges may be recovered only if the balance is not restored within at least one month of such a notice (${RBC_SHORT}, para 160(1) and (2)). If you sent one, please share a copy of it.`
+        : f.facts['unsure']
+          ? `I do not recall any notice of a shortfall by SMS, email or letter before this charge. Penal charges may be recovered only if the balance is not restored within at least one month of such a notice (${RBC_SHORT}, para 160(1) and (2)). Please share a copy of the notice and the date it was sent, or reverse the charge.`
+          : `I received no notice of a shortfall by SMS, email or letter before this charge. Penal charges may be recovered only if the balance is not restored within at least one month of such a notice (${RBC_SHORT}, para 160(1) and (2)). If you sent one, please share a copy of it.`
     case 'minbalInoperative':
       return `There was no transaction by me in the account for over two years before this charge. No penal charge for non-maintenance of minimum balance may be levied on an inoperative account (${RBC_SHORT}, para 209).`
     case 'basicWithdrawals':
@@ -155,14 +159,27 @@ function accountWords(account: string | null): string {
   return account ? `account ending ${account.replace(/\D/g, '').slice(-4)}` : PLACEHOLDERS.account
 }
 
-/** One numbered item per charge: the day, what it was, the amount, the narration, why it's wrong, what to put back. */
-function items(findings: readonly FeeFinding[]): string {
-  return findings
+/** What the charges were taken on: a savings account, a credit card (a late fee) or a loan (a prepayment charge). */
+function productWords(findings: readonly FeeFinding[], account: string | null): { what: string; held: string } {
+  const digits = account ? account.replace(/\D/g, '').slice(-4) : null
+  const kinds = new Set(findings.map((f) => f.charge.kind))
+  if (kinds.size === 1 && kinds.has('late')) return { what: digits ? `credit card ending ${digits}` : PLACEHOLDERS.card, held: 'I hold' }
+  if (kinds.size === 1 && kinds.has('prepay')) return { what: digits ? `loan account ending ${digits}` : PLACEHOLDERS.account, held: 'I had' }
+  return { what: `savings ${accountWords(account)}`, held: 'I hold' }
+}
+
+/**
+ * One numbered item per charge, oldest first: the day, what it was, the amount, the narration as the
+ * bank printed it, why it's wrong, and — when only part of it is claimed — that part.
+ */
+function items(findings: readonly FeeFinding[], to: 'bank' | 'ombudsman' = 'bank'): string {
+  return [...findings]
+    .sort((a, b) => a.charge.date.localeCompare(b.charge.date))
     .map((f, i) => {
       const c = f.charge
       const reasons = [f, ...f.also].map((reason) => ruleSentence({ charge: c, rule: reason.rule, facts: reason.facts }))
-      const back = f.claim < open(c) ? ` Please reverse ${rupees(f.claim)} of it.` : ''
-      return `${i + 1}. ${letterDate(c.date)}: ${chargeWords(c.kind)} of ${amountWords(c)}${c.text ? ` (shown as "${c.text.slice(0, 80)}")` : ''}.\n${reasons.join(' ')}${back}`
+      const part = f.claim < open(c) ? (to === 'bank' ? ` Please reverse ${rupees(f.claim)} of it.` : ` ${rupees(f.claim)} of it should be reversed.`) : ''
+      return `${i + 1}. ${letterDate(c.date)}: ${chargeWords(c.kind)} of ${amountWords(c)}${c.text ? ` (shown as "${c.text}")` : ''}.\n${reasons.join(' ')}${part}`
     })
     .join('\n\n')
 }
@@ -176,17 +193,17 @@ export function claimTotal(findings: readonly FeeFinding[]): number {
 export function bankLetter(findings: readonly FeeFinding[], me: LetterSender, today: string, raisedOn: string | null = null): Letter {
   const first = findings[0]?.charge
   const bank = bankName(first?.bank ?? null) ?? PLACEHOLDERS.bank
-  const account = accountWords(first?.account ?? null)
+  const { what, held } = productWords(findings, first?.account ?? null)
   const total = claimTotal(findings)
   const count = findings.length
-  const subject = `Reversal of ${count === 1 ? 'a charge' : `${count} charges`} wrongly debited from my ${account}`
+  const subject = `Reversal of ${count === 1 ? 'a charge' : `${count} charges`} wrongly debited from my ${what}`
   const follow = raisedOn && raisedOn < today ? `\n\nI first wrote to you about this on ${letterDate(raisedOn)}, and it has not been resolved.` : ''
   const body = [
     `To: The Branch Manager / Grievance Redressal Officer, ${bank}`,
     `Date: ${letterDate(today)}`,
     `Subject: ${subject}`,
     'Dear Sir or Madam,',
-    `I hold savings ${account} with you. The ${count === 1 ? 'charge' : 'charges'} below ${count === 1 ? 'was' : 'were'} debited from it against the Reserve Bank of India's rules. Please reverse ${rupees(total)} in all, with the GST on it, and confirm in writing.${follow}`,
+    `${held} ${what} with you. The ${count === 1 ? 'charge' : 'charges'} below ${count === 1 ? 'was' : 'were'} debited from it against the Reserve Bank of India's rules. Please reverse ${rupees(total)} in all (GST included) and confirm in writing.${follow}`,
     items(findings),
     `Total to be reversed: ${rupees(total)}`,
     `If this is not resolved within ${BANK_REPLY_DAYS} days, I will take it to the RBI Ombudsman under ${RBIOS}.`,
@@ -199,19 +216,19 @@ export function bankLetter(findings: readonly FeeFinding[], me: LetterSender, to
 export function ombudsmanLetter(claim: FeeClaim, findings: readonly FeeFinding[], me: LetterSender, today: string): Letter {
   const first = findings[0]?.charge
   const bank = bankName(claim.bank ?? first?.bank ?? null) ?? PLACEHOLDERS.bank
-  const account = accountWords(claim.account ?? first?.account ?? null)
+  const { what } = productWords(findings, claim.account ?? first?.account ?? null)
   const step = claim.steps.find((s) => s.kind === 'bank') ?? null
   const raised = step ? `${letterDate(step.date)}${step.ref ? ` (complaint number ${step.ref})` : ''}` : `${PLACEHOLDERS.complaintDate} (complaint number ${PLACEHOLDERS.complaintNumber})`
   const reply = claim.repliedAt ? `The bank replied on ${letterDate(claim.repliedAt)} without reversing them.` : `The bank has not resolved it within ${BANK_REPLY_DAYS} days.`
   const total = claimTotal(findings)
-  const subject = `Complaint against ${bank}: charges debited from my savings ${account} against RBI directions`
+  const subject = `Complaint against ${bank}: charges debited from my ${what} against RBI directions`
   const body = [
     'To: The RBI Ombudsman (through the Complaint Management System, cms.rbi.org.in)',
     `Date: ${letterDate(today)}`,
     `Subject: ${subject}`,
-    `I complained to ${bank} on ${raised} about the charges below, debited from my savings ${account}. ${reply}`,
-    items(findings),
-    `Relief sought: reversal of ${rupees(total)}, the charges with the GST on them, and compensation for the time and expense of pursuing this, as the Ombudsman considers fit under ${RBIOS}.`,
+    `I complained to ${bank} on ${raised} about the charges below, debited from my ${what}. ${reply}`,
+    items(findings, 'ombudsman'),
+    `Relief sought: reversal of ${rupees(total)} (the charges, GST included), and compensation for the time and expense of pursuing this, as the Ombudsman considers fit under ${RBIOS}.`,
     'I confirm that this complaint is not pending before, or decided by, any court, tribunal, arbitrator or other forum.',
     signOff(me, 'Yours faithfully,'),
   ]

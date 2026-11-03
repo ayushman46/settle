@@ -27,16 +27,17 @@ describe('sample statements', () => {
     expect(summary()).toEqual(['2026-10-20 neft neftOnline wrong 295', '2026-10-31 atm atmFree ask 2714', '2026-11-02 minbal minbalNegative wrong 63809'])
   })
 
-  it('SBI: minimum balance after SBI stopped charging it, and a UPI charge (before the law changed in Aug 2026)', () => {
+  it('SBI: minimum balance and SMS charges after SBI stopped levying them, and a UPI charge (before the law changed in Aug 2026)', () => {
     checkRows(parseDelimited(fixture('sbi-2026.csv')), 'sbi-2026.csv')
-    expect(summary()).toEqual(['2026-06-10 upi upi wrong 590', '2026-07-01 minbal minbalWaived wrong 11800', '2026-10-01 minbal minbalWaived wrong 11800'])
+    expect(summary()).toEqual(['2026-06-10 upi upi wrong 590', '2026-07-01 minbal minbalWaived wrong 11800', '2026-07-11 sms smsWaived wrong 1770', '2026-10-01 minbal minbalWaived wrong 11800'])
   })
 
   it('ICICI basic account (the .xls web page banks email): minimum balance, a card fee and ATM charges all free on BSBD', () => {
     const html = fixture('icici-basic.xls')
     const check = checkRows(parseHtmlTable(html), 'icici-basic.xls', Date.now(), htmlTextAround(html))
     expect(check).toMatchObject({ kind: 'read', meta: { bank: 'icici', account: 'XX7712', type: 'basic' } })
-    feesStore.set({ ...feesStore.get(), accounts: { '*': { type: 'basic', mab: null } } })
+    // The header said it's a basic account: Settle doesn't ask.
+    expect(feesStore.get().accounts).toEqual({ 'icici:XX7712': { type: 'basic', mab: null } })
     expect(summary()).toEqual(['2026-09-30 atm basicWithdrawals wrong 2714', '2026-10-02 minbal minbalBasic wrong 29500', '2026-10-15 card basicFree wrong 35400'])
   })
 

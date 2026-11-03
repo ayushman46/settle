@@ -41,8 +41,8 @@ export function PrivacyPage() {
           and aren’t put in backups.
         </p>
         <p>
-          <strong>Bank charges.</strong> A bank statement you add is read on your phone and never uploaded. {NAME}
-          keeps only its charges — the date, the amount and GST, the narration as your bank printed it, the balance
+          <strong>Bank charges.</strong> A bank statement you add is read on your phone and never uploaded. {NAME} keeps
+          only its charges — the date, the amount and GST, the narration as your bank printed it, the balance
           just before and after, and how many ATM withdrawals that month — plus the bank, the account’s last digits,
           the days the statement covered, your answers about the account and each charge, and the claims you make
           (the dates, complaint numbers and money back). Every other line of the statement is dropped as soon as it’s

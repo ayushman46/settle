@@ -27,6 +27,7 @@ export const fees = {
   'fees.reading': 'તમારું સ્ટેટમેન્ટ વાંચી રહ્યા છીએ…',
   'fees.read.found':
     '{count, plural, =0 {આમાં કોઈ બૅન્ક ચાર્જ નથી} one {# ચાર્જ મળ્યો} other {# ચાર્જ મળ્યા}} · {lines, plural, one {# લાઇન} other {# લાઇન}}, {from} થી {to}',
+  'fees.read.toast': '{count, plural, one {# ચાર્જ મળ્યો} other {# ચાર્જ મળ્યા}}',
   'fees.read.nothingNew': 'પહેલેથી તપાસેલું: આ સ્ટેટમેન્ટમાં કંઈ નવું નથી',
   'fees.read.unreadable': 'Settleને એ ફાઇલમાં તારીખ અને રકમવાળું ટેબલ ન મળ્યું. સ્ટેટમેન્ટ Excel કે CSV તરીકે ડાઉનલોડ કરીને ફરી પ્રયત્ન કરો.',
   'fees.read.oldXls': 'એ જૂની Excel ફાઇલ છે, જે Settle ખોલી શકતું નથી. તેને .xlsx કે CSV તરીકે સેવ કરો, કે નેટ બૅન્કિંગમાંથી CSV ડાઉનલોડ કરો.',
@@ -39,9 +40,12 @@ export const fees = {
   'fees.hero.owedSub': '{count, plural, one {# ચાર્જ} other {# ચાર્જ}} RBIના નિયમો વિરુદ્ધ છે',
   'fees.hero.checked': 'તપાસેલા ચાર્જ',
   'fees.hero.checkedSub': '{count, plural, one {# ચાર્જ} other {# ચાર્જ}}, અત્યાર સુધી એક પણ RBIના નિયમો વિરુદ્ધ નથી',
+  'fees.hero.checkedAsk': '{count, plural, one {# ચાર્જ તપાસ્યો} other {# ચાર્જ તપાસ્યા}}. શું પાછું મળી શકે તે જોવા નીચે જવાબ આપો.',
   'fees.hero.period': '{from} થી {to}',
   'fees.hero.total': '{amount}ના ચાર્જ',
   'fees.hero.back': 'અત્યાર સુધી {amount} પાછા મળ્યા',
+  'fees.hero.backLabel': 'તમારી બૅન્ક પાસેથી પાછા મળ્યા',
+  'fees.hero.backSub': '{count, plural, one {# ચાર્જ RBIના નિયમો વિરુદ્ધ હતો} other {# ચાર્જ RBIના નિયમો વિરુદ્ધ હતા}}: બધું પાછું મળ્યું',
   'fees.hero.ask': '{count, plural, one {# ચાર્જ માટે} other {# ચાર્જ માટે}} એક જવાબ જોઈએ',
 
   // Sections.
@@ -73,13 +77,14 @@ export const fees = {
   'fees.account.saved': 'સેવ થયું. હવે તપાસમાં આ વપરાય છે.',
   'fees.account.summary': '{type} · {mab, select, none {સરેરાશ બૅલેન્સ જણાવ્યું નથી} other {{mab} સરેરાશ બૅલેન્સ જરૂરી}}',
   'fees.account.change': 'બદલો',
+  'fees.account.summaryBasic': '{type} · કોઈ મિનિમમ બૅલેન્સ નહીં',
 
   // One question per charge: the answer that settles it.
   'fees.q.warned': 'તમારી બૅન્કે મિનિમમ બૅલેન્સનો ચાર્જ કાપ્યો તેના ઓછામાં ઓછા એક મહિના પહેલાં SMS, ઇમેઇલ કે પત્રથી તમને જાણ કરી હતી?',
   'fees.q.warned.yes': 'હા, જાણ કરી હતી',
   'fees.q.warned.no': 'ના, કોઈ જાણ નહોતી કરી',
   'fees.q.warned.unsure': 'ખાતરી નથી',
-  'fees.q.atmEnquiry': 'એ મહિને, તમે બીજી બૅન્કના ATM પર બૅલેન્સ જોયું હતું કે મિની સ્ટેટમેન્ટ કાઢ્યું હતું?',
+  'fees.q.atmEnquiry': 'એ મહિને, તમે બીજી બૅન્કના ATM પર કેટલી વાર બૅલેન્સ જોયું કે મિની સ્ટેટમેન્ટ કાઢ્યું?',
   'fees.q.declineReason': 'ખાતામાં પૂરતા પૈસા નહોતા, એટલે એ નકારાયું હતું?',
   'fees.q.online': 'આ NEFT તમે નેટ બૅન્કિંગ કે તમારી બૅન્કની એપથી મોકલ્યું હતું?',
   'fees.q.inoperative': 'આ ચાર્જ પહેલાં, બે વર્ષથી વધુ સમયથી તમે આ ખાતું વાપરવાનું બંધ કર્યું હતું?',
@@ -87,6 +92,9 @@ export const fees = {
   'fees.q.floating': 'એ તમારા પોતાના નામની ફ્લોટિંગ-રેટ લોન (રેપો રેટ કે MCLR સાથે જોડાયેલી) હતી, બિઝનેસ માટેની નહીં?',
   'fees.q.paidInTime': 'ડ્યૂ ડેટ પછીના 3 દિવસમાં તમે ઓછામાં ઓછી મિનિમમ ડ્યૂ રકમ ભરી દીધી હતી?',
   'fees.q.upiSmall': 'જે UPI પેમેન્ટ પર આ ચાર્જ લાગ્યો, તે ₹2,000 કે તેથી ઓછું હતું?',
+  'fees.q.atmEnquiry.none': 'એક પણ વાર નહીં',
+  'fees.q.atmEnquiry.many': '3 કે વધુ',
+  'fees.ask.more': 'આનો જવાબ આપો, તો વધુ {amount} પાછા માગી શકાશે',
   'fees.answer.yes': 'હા',
   'fees.answer.no': 'ના',
   'fees.answer.all': 'આ જવાબ આવા બધા {count} ચાર્જને લાગુ પડશે',
@@ -100,6 +108,7 @@ export const fees = {
   'fees.why.minbalScholarship': 'શિષ્યવૃત્તિ આવતા ખાતા પર મિનિમમ બૅલેન્સનો ચાર્જ ન લગાવી શકાય.',
   'fees.why.minbalWaived': '{bank}એ {from} થી બચત ખાતાં પર મિનિમમ બૅલેન્સનો ચાર્જ લેવાનું બંધ કર્યું છે.',
   'fees.why.minbalWaived.standard': '{bank}એ {from} થી તેનાં સામાન્ય બચત ખાતાં પર મિનિમમ બૅલેન્સનો ચાર્જ લેવાનું બંધ કર્યું છે.',
+  'fees.why.smsWaived': '{bank}એ {from} થી બચત ખાતાં પર SMS અલર્ટનો ચાર્જ લેવાનું બંધ કર્યું છે.',
   'fees.why.minbalNotShort': '{period} માટે તમારું સરેરાશ બૅલેન્સ {avg} હતું, જરૂરી {mab} કરતાં વધુ. તમારું બૅલેન્સ ઓછું નહોતું.',
   'fees.why.minbalOverShortfall': 'તમારું બૅલેન્સ {shortfall} ઓછું હતું, પણ ચાર્જ {amount} કપાયો — ઘટ કરતાં પણ વધુ.',
   'fees.why.minbalOverSchedule': '{bank}ના પોતાના ચાર્જના દર મુજબ, {avg}ના સરેરાશ બૅલેન્સ પર વધુમાં વધુ {allowed} લઈ શકાય. બૅન્કે {amount} કાપ્યા.',
@@ -109,7 +118,7 @@ export const fees = {
   'fees.why.basicWithdrawals': 'બેઝિક સેવિંગ્સ ખાતામાં મહિને 4 ઉપાડ મફત મળે છે. તમે {count} ઉપાડ કર્યા.',
   'fees.why.basicFree': 'બેઝિક સેવિંગ્સ ખાતામાં આ મફત છે.',
   'fees.why.atmFree':
-    'એ મહિને {count, plural, =0 {એક પણ ઉપાડ ન થયો} one {ફક્ત # ઉપાડ થયો} other {ફક્ત # ઉપાડ થયા}}{failed, select, 1 { (ફેલ થયેલા ગણાતા નથી)} other {}}. કોઈ પણ ATM પર મહિનાના ઓછામાં ઓછા 3 ઉપાડ મફત હોય છે.',
+    'એ મહિને {count, plural, =0 {એક પણ ઉપાડ ન થયો} one {ફક્ત # ઉપાડ થયો} other {ફક્ત # ઉપાડ થયા}}{failed, select, 1 { (ફેલ થયેલા ગણાતા નથી)} other {}}. કોઈ પણ બૅન્કના ATM પર મહિનાના પહેલા 3 ઉપાડ મફત હોય છે (તમારી પોતાની બૅન્કના ATM પર 5).',
   'fees.why.atmDecline': 'તમારો વાંક ન હોય (મશીનની ખામી, રોકડ ખલાસ, નેટવર્ક) એવા નકારાયેલા ઉપાડનો ચાર્જ ન લઈ શકાય.',
   'fees.why.neftOnline': 'બચત ખાતામાંથી ઑનલાઇન મોકલેલું NEFT મફત છે.',
   'fees.why.transferInward': 'આવતા પૈસા પર ચાર્જ ન લઈ શકાય.',
@@ -122,7 +131,7 @@ export const fees = {
   'fees.why.prepay': 'તમારા નામની ફ્લોટિંગ-રેટ લોન પર પ્રીપેમેન્ટ ચાર્જ ન લઈ શકાય.',
   'fees.why.lateFee': 'ડ્યૂ ડેટના 3 દિવસમાં ભરી દીધું હોય, તો લેટ ફી ન લાગે.',
   'fees.why.more': '+ {count, plural, one {# વધુ કારણ} other {# વધુ કારણ}}',
-  'fees.rule.source': 'RBIનો નિયમ: {ref}',
+  'fees.rule.source': 'નિયમ: {ref}',
 
   // What each kind of charge is called. Lower-cased into {kind} in the Android alerts, so they're written to read inside a sentence too.
   'fees.kind.minbal': 'મિનિમમ બૅલેન્સ',
@@ -152,16 +161,23 @@ export const fees = {
   'fees.charge.label.balance': 'બૅલેન્સ',
   'fees.charge.ok': 'Settle જોઈ શકે ત્યાં સુધી, RBIના નિયમો મુજબ માન્ય.',
   'fees.charge.text': 'તમારા સ્ટેટમેન્ટ કે SMSમાં જેમ લખ્યું છે તેમ',
-  'fees.charge.balance': 'બૅલેન્સ {before} → {after}',
+  'fees.charge.balance': '{before} → {after}',
+  'fees.charge.backFull': 'આખો ચાર્જ પાછો જમા થયો: એ RBIના નિયમો વિરુદ્ધ હતો, અને તમારી બૅન્કે ભૂલ સુધારી લીધી.',
   'fees.charge.fine': 'બરાબર છે, પાછા ન માગો',
   'fees.charge.fine.toast': 'તમારા દાવામાંથી બાકાત રાખ્યો',
-  'fees.charge.remove': 'કાઢી નાખો: ખોટું વંચાયું',
+  'fees.charge.remove': 'બૅન્ક ચાર્જ નથી: કાઢી નાખો',
   'fees.charge.removed': 'ચાર્જ કાઢી નાખ્યો',
   'fees.charge.from': '{source, select, sms {SMSમાંથી} alert {તમારી બૅન્કના SMSમાંથી} other {તમારા સ્ટેટમેન્ટમાંથી}}',
 
   // A claim: one bank's wrong charges.
   'fees.claim.title': '{bank}એ તમને {amount} પાછા આપવાના છે',
   'fees.claim.titleAny': 'તમારી બૅન્કે તમને {amount} પાછા આપવાના છે',
+  'fees.claim.titleBack': '{bank}એ {amount} પાછા જમા કર્યા',
+  'fees.claim.titleBackAny': 'તમારી બૅન્કે {amount} પાછા જમા કર્યા',
+  'fees.claim.ref': 'ફરિયાદ નંબર {ref}',
+  'fees.claim.partOf': '{amount}ના ચાર્જમાંથી {claim}',
+  'fees.claim.status.part': 'અત્યાર સુધી {amount}માંથી {back} પાછા મળ્યા. {rest} હજુ આવવાના બાકી.',
+  'fees.claims.count': '{count, plural, one {# દાવો} other {# દાવા}}',
   'fees.claim.count': '{count, plural, one {# ચાર્જ} other {# ચાર્જ}}{account, select, none {} other {, ખાતું {account}}}',
   'fees.claim.cta': '{amount} પાછા માગો',
   'fees.claim.status.ready': 'હજુ મોકલ્યો નથી',
@@ -171,6 +187,7 @@ export const fees = {
   'fees.claim.status.ombudsmanRaised': '{date} થી RBI લોકપાલ પાસે.',
   'fees.claim.status.closed': 'RBI લોકપાલ પાસે જવાના 90 દિવસ {last} ના રોજ પૂરા થયા.',
   'fees.claim.status.back': '{date} ના રોજ {amount} પાછા મળ્યા',
+  'fees.claim.status.backAll': 'તમારી બૅન્ક પાસેથી {amount} પાછા મળ્યા',
   'fees.claim.raise': 'બૅન્કને લખો',
   'fees.claim.raiseAgain': 'પત્ર જુઓ',
   'fees.claim.ombudsman': 'RBI લોકપાલ પાસે લઈ જાઓ',
@@ -189,6 +206,7 @@ export const fees = {
   // The letter sheet.
   'fees.sheet.bank.title': '{bank}ને લખો',
   'fees.sheet.bank.titleAny': 'તમારી બૅન્કને લખો',
+  'fees.sheet.bank.leadSent': 'તમે આ {date} ના રોજ મોકલ્યો હતો. યાદ અપાવવા ફરી મોકલો, કે બૅન્કના 30 દિવસ પૂરા થાય પછી RBI લોકપાલ પાસે લઈ જાઓ.',
   'fees.sheet.bank.lead': 'તમારી બૅન્કે 30 દિવસમાં જવાબ આપવો પડે. બૅન્કને મોકો મળી જાય પછી જ RBI લોકપાલ ફરિયાદ લે છે, એટલે પહેલાં આ.',
   'fees.sheet.bank.step1': 'તમારી બૅન્કના ફરિયાદ માટેના ઇમેઇલ પર મોકલો (એ તેના “Grievance Redressal” પેજ પર હોય છે), કે નેટ બૅન્કિંગમાં ફરિયાદ ફોર્મ વાપરો.',
   'fees.sheet.bank.step2': 'કે પ્રિન્ટ કાઢીને તમારી શાખામાં આપો: તમારી નકલ પર તારીખ સાથે સિક્કો મરાવો.',
@@ -196,6 +214,11 @@ export const fees = {
   'fees.sheet.summary': 'તે {bank}ને {amount} પાછા જમા કરવા કહે છે: {count, plural, one {# ચાર્જ} other {# ચાર્જ}}, અને દરેક RBIના કયા નિયમ વિરુદ્ધ છે તે પણ.',
   'fees.sheet.summaryAny': 'તે તમારી બૅન્કને {amount} પાછા જમા કરવા કહે છે: {count, plural, one {# ચાર્જ} other {# ચાર્જ}}, અને દરેક RBIના કયા નિયમ વિરુદ્ધ છે તે પણ.',
   'fees.sheet.english': 'પત્ર અંગ્રેજીમાં છે, જેમ બૅન્કો અપેક્ષા રાખે છે.',
+  'fees.sheet.ombudsman.summary':
+    'તે RBI લોકપાલને કહે છે કે {bank} પાસે {amount} પાછા જમા કરાવે: {count, plural, one {# ચાર્જ} other {# ચાર્જ}}, અને દરેક RBIના કયા નિયમ વિરુદ્ધ છે તે પણ.',
+  'fees.sheet.ombudsman.summaryAny':
+    'તે RBI લોકપાલને કહે છે કે તમારી બૅન્ક પાસે {amount} પાછા જમા કરાવે: {count, plural, one {# ચાર્જ} other {# ચાર્જ}}, અને દરેક RBIના કયા નિયમ વિરુદ્ધ છે તે પણ.',
+  'fees.sheet.englishRbi': 'ફરિયાદ અંગ્રેજીમાં છે, જેમ RBIનું ફરિયાદ ફોર્મ અપેક્ષા રાખે છે.',
   'fees.sheet.sent': 'મેં મોકલી દીધો',
   'fees.sheet.sent.title': 'તમે ક્યારે મોકલ્યો?',
   'fees.sheet.sent.description': 'Settle બૅન્કના 30 દિવસ આ દિવસથી ગણે છે.',
@@ -212,7 +235,7 @@ export const fees = {
   'fees.avoid.minbal': 'મિનિમમ બૅલેન્સ પેટે {amount}. બેઝિક સેવિંગ્સ (BSBD) ખાતામાં કોઈ મિનિમમ બૅલેન્સ જ નથી, અને તમે માગો તેના 7 દિવસમાં બૅન્કે ખાતું ફેરવી આપવું પડે.',
   'fees.avoid.minbal.cta': 'બેઝિક સેવિંગ્સ ખાતું માગો',
   'fees.avoid.atm': 'ATM ચાર્જ પેટે {amount}. તમારી પોતાની બૅન્કના ATM પર મહિને 5 વાર મફત; બીજી બૅન્કના ATM પર મોટાં શહેરોમાં ફક્ત 3.',
-  'fees.avoid.sms': 'SMS અલર્ટ પેટે {amount}. RBI કહે છે કે ખરેખર જેટલા SMS મોકલાયા હોય, એ પ્રમાણે જ ચાર્જ લેવાય.',
+  'fees.avoid.sms': 'SMS અલર્ટ પેટે {amount}. તમારી બૅન્કને પૂછો કે કયા અલર્ટ બંધ કરી શકાય: બૅન્ક ખરેખર મોકલેલા અલર્ટનો જ ચાર્જ લઈ શકે.',
   'fees.avoid.imps': 'IMPS ચાર્જ પેટે {amount}. UPI, અને ઑનલાઇન મોકલેલું NEFT, મફત છે.',
   'fees.avoid.card': 'ડેબિટ કાર્ડની ફી પેટે {amount}. બેઝિક સેવિંગ્સ ખાતાના કાર્ડની કોઈ વાર્ષિક ફી નથી.',
   'fees.avoid.bounce': 'પાછા ફરેલા પેમેન્ટ પેટે {amount}. EMI કે AutoPayની તારીખના એક દિવસ પહેલાં ખાતામાં પૈસા રાખો.',
@@ -227,6 +250,7 @@ export const fees = {
     '{date} ના રોજ ATMમાંથી ન નીકળેલા {amount} {backOn} ના રોજ પાછા આવ્યા — RBIના 5 દિવસ પછી {days, plural, one {# દિવસ} other {# દિવસ}} મોડા. મોડું થાય તે દરેક દિવસના ₹100 બૅન્કે આપવા પડે.',
   'fees.late.cta': 'અટકેલા પૈસામાં માગો',
   'fees.late.added': 'અટકેલા પૈસામાં ઉમેર્યું',
+  'fees.late.open': 'અટકેલા પૈસામાં ખોલો',
 
   // Pasting SMS.
   'fees.paste.title': 'તમારી બૅન્કના SMS પેસ્ટ કરો',
@@ -235,7 +259,9 @@ export const fees = {
   // A bank's own SMS, as banks send it: stays in English.
   'fees.paste.placeholder': 'Rs.590 debited from A/c XX4821 towards non-maintenance of AMB charges…',
   'fees.paste.check': 'તપાસો',
+  'fees.paste.fromClipboard': 'ક્લિપબોર્ડથી પેસ્ટ કરો',
   'fees.paste.none': 'એ લખાણમાં કોઈ બૅન્ક ચાર્જ નથી.',
+  'fees.paste.known': 'પહેલેથી બૅન્ક ચાર્જમાં છે: કંઈ નવું નથી',
   'fees.paste.found': '{count, plural, one {# ચાર્જ ઉમેર્યો} other {# ચાર્જ ઉમેર્યા}}{back, plural, =0 {} one {, # પાછો જમા થયો} other {, # પાછા જમા થયા}}',
 
   // Home.
@@ -248,10 +274,10 @@ export const fees = {
   'fees.you.none': 'તમારી બૅન્કે ન કાપવા જોઈએ એવા ચાર્જ માટે સ્ટેટમેન્ટ તપાસો',
 
   // Android: a charge SMS just read. {kind} sits in brackets so any kind reads right (Gujarati would otherwise change its ending).
-  'fees.alert.wrong': '{bank}એ {amount} કાપ્યા ({kind}). એ RBIના નિયમો વિરુદ્ધ છે: બૅન્ક ચાર્જમાં પાછા માગો',
-  'fees.alert.wrongAny': 'તમારી બૅન્કે {amount} કાપ્યા ({kind}). એ RBIના નિયમો વિરુદ્ધ છે: બૅન્ક ચાર્જમાં પાછા માગો',
-  'fees.alert.check': '{bank}એ {amount} કાપ્યા ({kind}). પાછા મળી શકે કે નહીં, તે બૅન્ક ચાર્જમાં એક સવાલથી ખબર પડશે',
-  'fees.alert.checkAny': 'તમારી બૅન્કે {amount} કાપ્યા ({kind}). પાછા મળી શકે કે નહીં, તે બૅન્ક ચાર્જમાં એક સવાલથી ખબર પડશે',
+  'fees.alert.wrong': '{bank}એ RBIના નિયમો વિરુદ્ધ {amount} કાપ્યા ({kind})',
+  'fees.alert.wrongAny': 'તમારી બૅન્કે RBIના નિયમો વિરુદ્ધ {amount} કાપ્યા ({kind})',
+  'fees.alert.check': '{bank}એ {amount} કાપ્યા ({kind}): પાછા માગી શકાય કે નહીં, તે એક સવાલથી ખબર પડશે',
+  'fees.alert.checkAny': 'તમારી બૅન્કે {amount} કાપ્યા ({kind}): પાછા માગી શકાય કે નહીં, તે એક સવાલથી ખબર પડશે',
   'fees.alert.back': 'એક બૅન્ક ચાર્જમાંથી {amount} પાછા જમા થયા',
   'fees.alert.many': '{count, plural, one {# બૅન્ક ચાર્જ તપાસ્યો} other {# બૅન્ક ચાર્જ તપાસ્યા}}: બૅન્ક ચાર્જમાં જુઓ',
 

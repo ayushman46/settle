@@ -4,7 +4,7 @@
  * with the bank or the RBI Ombudsman, replied to, money back. Every change returns its Undo.
  */
 import { newId } from '../../lib/ids'
-import { accountKey, emptyFees, feesStore, MAX_CHARGES, MAX_CLAIMS, type FeeAccount, type FeeCharge, type FeeClaim, type FeesState, type FeeStep } from './store'
+import { accountKey, emptyFees, feesStore, MAX_CHARGES, MAX_CLAIMS, type LateRefund, type FeeAccount, type FeeAnswer, type FeeCharge, type FeeClaim, type FeesState, type FeeStep } from './store'
 
 type Undo = () => void
 
@@ -76,7 +76,9 @@ export function addCharges(seen: readonly Omit<FeeCharge, 'id' | 'addedAt'>[], c
   const charges = [...before.charges]
   const added: FeeCharge[] = []
   const known: FeeCharge[] = []
+  const removed = new Set(before.dismissed.filter((k) => k.startsWith('removed:')))
   for (const draft of seen) {
+    if (removed.has(removedKey(draft))) continue
     const charge: FeeCharge = { ...draft, id: newId(), addedAt: now }
     const at = charges.findIndex((c) => sameCharge(c, charge) && !added.includes(c))
     const kept = charges[at]
@@ -112,7 +114,7 @@ export function setAccount(bank: string | null, account: string | null, answers:
 }
 
 /** Your answer to the question findings `keys` ask (true: the answer that makes the charge wrong; null: not answered). */
-export function answerFindings(keys: readonly string[], answer: boolean | null): Undo {
+export function answerFindings(keys: readonly string[], answer: FeeAnswer | null): Undo {
   return change((s) => {
     const answers = { ...s.answers }
     for (const key of keys) {
@@ -141,7 +143,17 @@ export function addNotice(notice: FeesState['notices'][number]): Undo {
 /** Removes charges (read wrong): they and their findings go; a claim keeps the others. */
 export function removeCharges(ids: readonly string[]): Undo {
   const drop = new Set(ids)
-  return change((s) => ({ ...s, charges: s.charges.filter((c) => !drop.has(c.id)) }))
+  return change((s) => ({
+    ...s,
+    charges: s.charges.filter((c) => !drop.has(c.id)),
+    // Remembered, so the same statement read again doesn't bring them back.
+    dismissed: [...new Set([...s.dismissed, ...s.charges.filter((c) => drop.has(c.id)).map(removedKey)])].slice(-2000),
+  }))
+}
+
+/** How a charge read wrong is remembered: its day, amount, kind and account. */
+function removedKey(c: Pick<FeeCharge, 'date' | 'amount' | 'kind' | 'account'>): string {
+  return `removed:${c.date}|${c.amount}|${c.kind}|${digits(c.account ?? '')}`
 }
 
 /** Clears everything Bank charges kept. */
@@ -190,4 +202,20 @@ export function dismissClaim(id: string, dismissed = true): Undo {
 /** Deletes a claim (its charges stay). */
 export function deleteClaim(id: string): Undo {
   return change((s) => ({ ...s, claims: s.claims.filter((c) => c.id !== id) }))
+}
+
+/* ---------------------------------------------------------------- late ATM refunds */
+
+/** Keeps late ATM refunds a statement showed (each once: the same day, amount and day back). */
+export function addLate(found: readonly Omit<LateRefund, 'stuckId'>[]): Undo {
+  return change((s) => {
+    const late = [...s.late]
+    for (const l of found) if (!late.some((k) => k.date === l.date && k.amount === l.amount && k.backOn === l.backOn)) late.push({ ...l, stuckId: null })
+    return { ...s, late: late.slice(-200) }
+  })
+}
+
+/** Notes that a late refund was claimed in Stuck money (its stuck payment's id). */
+export function markLateClaimed(late: Pick<LateRefund, 'date' | 'amount' | 'backOn'>, stuckId: string): Undo {
+  return change((s) => ({ ...s, late: s.late.map((l) => (l.date === late.date && l.amount === late.amount && l.backOn === late.backOn ? { ...l, stuckId } : l)) }))
 }

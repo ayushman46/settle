@@ -36,7 +36,8 @@ async function addStatement(page: Page, name: string, mimeType = 'text/csv'): Pr
 }
 
 const region = (page: Page, name: string | RegExp) => page.getByRole('region', { name })
-const hero = (page: Page) => page.getByRole('region', { name: 'Bank charges' }).first()
+/** The dark card at the top, named by what it shows. */
+const hero = (page: Page) => page.getByRole('region', { name: /^(?:Your bank owes you|Charges checked|Back from your bank)$/ })
 
 async function expectFits320(page: Page, scope: Locator): Promise<void> {
   const before = page.viewportSize()
@@ -97,26 +98,31 @@ test.describe('bank charges', () => {
     await expect(page.getByText('Read on this phone. Settle keeps only the charges, never the rest of your statement.')).toBeVisible()
 
     await addStatement(page, 'hdfc-oct-2026.csv')
-    await expect(page.getByRole('status').or(page.getByText('4 charges found · 12 lines, 30 Sep 2026 to 2 Nov 2026')).first()).toBeVisible()
+    await expect(page.getByRole('status').or(page.getByText('4 charges found · 11 lines, 1 Oct 2026 to 3 Nov 2026')).first()).toBeVisible()
     await expect(hero(page)).toContainText('Your bank owes you')
     await expect(hero(page)).toContainText('₹641.04')
     await expect(hero(page)).toContainText('2 charges break the RBI’s rules')
-    await expect(hero(page)).toContainText('1 charge needs one answer')
+    // The ATM charge, and whether HDFC warned before the minimum-balance charge (no warning: all ₹708 of it, not just the part below zero).
+    await expect(hero(page)).toContainText('2 charges need one answer')
 
     // The claim, per bank: each charge with why and the rule.
     const claim = region(page, /^Claim back/)
     await expect(claim).toContainText('HDFC Bank owes you ₹641.04')
     await expect(claim).toContainText('It took your balance below zero, from ₹69.91 to −⁠₹638.09. That isn’t allowed.')
-    await expect(claim).toContainText('RBI rule: RBI/DOR/2025-26/170, para 160(6)')
+    await expect(claim).toContainText('Rule: RBI/DOR/2025-26/170, para 160(6)')
     await expect(claim).toContainText('NEFT sent online from a savings account is free.')
 
     // One question: no balance checks at other banks' ATMs that month, so the ATM charge is claimable too.
     const ask = region(page, /^One question each/)
-    await expect(ask).toContainText('Only 1 withdrawal went through that month (failed ones don’t count). At least 3 a month are free at any ATM.')
-    await ask.getByRole('button', { name: 'No', exact: true }).click()
+    await expect(ask).toContainText('Only 1 withdrawal went through that month (failed ones don’t count). Your first 3 a month are free at any bank’s ATM (5 at your own bank’s).')
+    await ask.getByRole('button', { name: 'None', exact: true }).click()
     await expect(page.getByText('Added to what you can claim back')).toBeVisible()
     await expect(hero(page)).toContainText('₹668.18')
+    const warned = region(page, /^One question each/)
+    await expect(warned).toContainText('Answer this and ₹69.91 more can be claimed')
+    await warned.getByRole('button', { name: 'Yes, it warned me' }).click()
     await expect(region(page, /^One question each/)).toHaveCount(0)
+    await expect(hero(page)).toContainText('₹668.18')
 
     // The account's two answers: the card folds to one line.
     const account = region(page, 'About your account')
@@ -131,7 +137,7 @@ test.describe('bank charges', () => {
     await expect(sheet).toBeVisible()
     const letter = sheet.getByTestId('fee-letter')
     await expect(letter).toContainText('To: The Branch Manager / Grievance Redressal Officer, HDFC Bank')
-    await expect(letter).toContainText('Reversal of 3 charges wrongly debited from my account ending 4821')
+    await expect(letter).toContainText('Reversal of 3 charges wrongly debited from my savings account ending 4821')
     await expect(letter).toContainText('para 160(6)')
     await expect(letter).toContainText('HDFC Bank\'s own published schedule of charges allows at most ₹300')
     await expect(letter).toContainText('RBI/2019-20/116')
@@ -160,19 +166,19 @@ test.describe('bank charges', () => {
     await open(page, '/app/fees')
     await addStatement(page, 'sbi-2026.csv')
     const claim = region(page, /^Claim back/)
-    await expect(claim).toContainText('State Bank of India owes you ₹241.90')
+    await expect(claim).toContainText('State Bank of India owes you ₹259.60')
     await expect(claim).toContainText('State Bank of India stopped charging for minimum balance on savings accounts from 11 Mar 2020.')
     await expect(claim).toContainText('UPI payments couldn’t be charged for at all on this date.')
     const avoid = region(page, 'Allowed, but avoidable')
-    await expect(avoid).toContainText('₹17.70 on SMS alerts.')
+    await expect(claim).toContainText('State Bank of India stopped charging for SMS alerts on savings accounts from 11 Mar 2020.')
     await expect(avoid).toContainText('₹236 on debit card fees.')
   })
 
   test('the ICICI .xls banks email, on a Basic Savings account: what must be free', async ({ page }) => {
     await open(page, '/app/fees')
     await addStatement(page, 'icici-basic.xls', 'application/vnd.ms-excel')
-    const account = region(page, 'About your account')
-    await account.getByRole('button', { name: 'Basic Savings (BSBD) or Jan Dhan' }).click()
+    // The statement says it's a Basic Savings account: no question, the answer shown.
+    await expect(region(page, 'About your account')).toContainText('Basic Savings (BSBD) or Jan Dhan · no minimum balance')
     const claim = region(page, /^Claim back/)
     await expect(claim).toContainText('ICICI Bank owes you ₹676.14')
     await expect(claim).toContainText('A Basic Savings account can’t be charged for minimum balance.')
@@ -194,7 +200,9 @@ test.describe('bank charges', () => {
     const back = page.getByRole('dialog', { name: 'How much came back?' })
     await back.getByRole('button', { name: 'Save' }).click()
     await expect(page.getByText('₹508 back from your bank. Nice.')).toBeVisible()
+    await expect(region(page, /^Your claims/)).toContainText('HDFC Bank put back ₹508')
     await expect(region(page, /^Your claims/)).toContainText('₹508 back on 3 Nov 2026')
+    await expect(hero(page)).toContainText('Back from your bank')
   })
 
   test('pasted SMS: three charges, one put back; a PDF is said to be unreadable; Undo', async ({ page }) => {
@@ -203,7 +211,8 @@ test.describe('bank charges', () => {
     const paste = page.getByRole('dialog', { name: 'Paste your bank’s SMS' })
     await paste.getByRole('textbox', { name: 'Bank SMS' }).fill(fixture('charge-sms.txt').toString())
     await paste.getByRole('button', { name: 'Check them' }).click()
-    await expect(page.getByText('3 charges added, 1 put back')).toBeVisible()
+    // The reversal SMS is dated 5 Nov, after today: it hasn't happened yet, so nothing is put back.
+    await expect(page.getByText('3 charges added', { exact: true })).toBeVisible()
     await expect(region(page, /^All charges/)).toBeVisible()
 
     await page.getByLabel('Check a statement', { exact: true }).setInputFiles({ name: 'statement.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.4') })

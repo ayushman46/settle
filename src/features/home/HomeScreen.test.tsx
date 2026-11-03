@@ -165,7 +165,7 @@ describe('HomeScreen — quick actions', SLOW, () => {
     const friends = within(within(sheet).getByRole('region', { name: 'From friends' }))
     expect(friends.getAllByRole('button').map((b) => b.textContent)).toEqual(['To collect', 'Who’s paid?', 'Paid screenshot'])
     const banks = within(within(sheet).getByRole('region', { name: 'From banks and shops' }))
-    expect(banks.getAllByRole('button').map((b) => b.textContent)).toEqual(['Stuck money'])
+    expect(banks.getAllByRole('button').map((b) => b.textContent)).toEqual(['Stuck money', 'Bank charges'])
     await user.click(banks.getByRole('button', { name: 'Stuck money' }))
     expect(currentUrl()).toBe('/app/stuck')
   })

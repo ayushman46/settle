@@ -2,24 +2,30 @@ import { useMemo } from 'react'
 import { today as todayIso } from '../../engine/dates'
 import { useT } from '../../i18n'
 import { useFees } from './store'
-import { feesView, inr } from './view'
+import { feesView, inr, statusLine } from './view'
 
-/** What Home and You say about Bank charges: what the bank owes, what needs one answer, or nothing. */
+/**
+ * What Home and You say about Bank charges, by where things stand: charges to claim ("Your bank
+ * owes you ₹590 · claim it back"), a claim due at the RBI Ombudsman, a claim with the bank (its 30
+ * days), a charge that needs one answer — or nothing.
+ */
 export function useFeesLine(): { title: string; line: string; act: boolean } | null {
   const t = useT()
   const state = useFees((s) => s)
   const day = todayIso()
   return useMemo(() => {
     const view = feesView(state, day)
-    if (view.owed > 0) {
-      const waiting = view.groups.length === 0 && view.claims.some((c) => c.stage === 'raised')
-      return {
-        title: waiting ? t('fees.home.raised', { amount: inr(view.owed) }) : t('fees.home.owed', { amount: inr(view.owed) }),
-        line: t('fees.home.owedLine', { count: view.owedCount }),
-        act: !waiting,
-      }
+    if (view.owed <= 0 && view.asks.length === 0) return null
+    const owedTitle = t('fees.home.owed', { amount: inr(view.owed) })
+    if (view.groups.length > 0) return { title: owedTitle, line: t('fees.home.owedLine', { count: view.groups.reduce((s, g) => s + g.findings.length, 0) }), act: true }
+    const live = view.claims.filter((c) => c.stage !== 'back' && c.stage !== 'dropped' && c.stage !== 'closed')
+    // The claim that needs you soonest: the RBI Ombudsman's window, then one not sent yet, then one with the bank.
+    const order = ['ombudsman', 'replied', 'ready', 'raised', 'ombudsmanRaised'] as const
+    const next = [...live].sort((a, b) => order.indexOf(a.stage as (typeof order)[number]) - order.indexOf(b.stage as (typeof order)[number]))[0]
+    if (next) {
+      const waiting = next.stage === 'raised' || next.stage === 'ombudsmanRaised'
+      return { title: waiting ? t('fees.home.raised', { amount: inr(view.owed) }) : owedTitle, line: statusLine(next, t), act: !waiting }
     }
-    if (view.asks.length > 0) return { title: t('fees.home.ask', { count: view.asks.length }), line: t('fees.home.askLine'), act: true }
-    return null
+    return { title: t('fees.home.ask', { count: view.asks.length }), line: t('fees.home.askLine'), act: true }
   }, [state, day, t])
 }

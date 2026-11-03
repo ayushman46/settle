@@ -4,6 +4,7 @@
  * the one it reverses. With Undo.
  */
 import { useId, useState } from 'react'
+import { ClipboardPaste } from 'lucide-react'
 import { BottomSheet, Button, useToast } from '../../components'
 import { today as todayIso } from '../../engine/dates'
 import { useT } from '../../i18n'
@@ -24,8 +25,14 @@ export function FeePasteSheet({ open, onClose }: { open: boolean; onClose: () =>
       setNone(true)
       return
     }
-    haptic('success')
-    toast(t('fees.paste.found', { count: result.added.length, back: result.reversed }), { tone: 'success', action: { label: t('common.action.undo'), onAction: result.undo } })
+    if (result.added.length + result.reversed === 0) {
+      // Only charges already kept: nothing to undo.
+      haptic('tap')
+      toast(t('fees.paste.known'))
+    } else {
+      haptic('success')
+      toast(t('fees.paste.found', { count: result.added.length, back: result.reversed }), { tone: 'success', action: { label: t('common.action.undo'), onAction: result.undo } })
+    }
     setText('')
     setNone(false)
     onClose()
@@ -43,9 +50,28 @@ export function FeePasteSheet({ open, onClose }: { open: boolean; onClose: () =>
       }
     >
       <div className={styles.paste}>
-        <label htmlFor={`${id}-sms`} className={styles.pasteLabel}>
-          {t('fees.paste.label')}
-        </label>
+        <div className={styles.pasteHead}>
+          <label htmlFor={`${id}-sms`} className={styles.pasteLabel}>
+            {t('fees.paste.label')}
+          </label>
+          {canReadClipboard() && (
+            <Button
+              size="sm"
+              variant="secondary"
+              iconStart={<ClipboardPaste />}
+              onClick={() =>
+                void navigator.clipboard
+                  .readText()
+                  .then((value) => {
+                    if (value.trim()) setText((current) => (current.trim() ? `${current.trim()}\n\n${value.trim()}` : value.trim()))
+                  })
+                  .catch(() => undefined)
+              }
+            >
+              {t('fees.paste.fromClipboard')}
+            </Button>
+          )}
+        </div>
         <textarea
           id={`${id}-sms`}
           className={styles.area}
@@ -66,4 +92,9 @@ export function FeePasteSheet({ open, onClose }: { open: boolean; onClose: () =>
       </div>
     </BottomSheet>
   )
+}
+
+/** The browser can read the clipboard here (asked on the tap). */
+function canReadClipboard(): boolean {
+  return typeof navigator !== 'undefined' && typeof navigator.clipboard?.readText === 'function'
 }

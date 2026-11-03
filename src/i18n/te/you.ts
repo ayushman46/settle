@@ -53,7 +53,7 @@ export const you = {
   'you.accent.locked': '{name}, Pro',
   'you.accent.note': 'లైమ్ ఉచితం. మింట్, స్కై, ఊదా, కోరల్ Pro తో వస్తాయి.',
   'you.clear.title': 'అన్నీ తీసేయాలా?',
-  'you.clear.body': 'మీ ప్రొఫైల్, వ్యక్తులు, ఖర్చులు, గ్రూప్‌లు, రిపీట్ స్ప్లిట్‌లు, ఇరుక్కున్న డబ్బు మరియు జరుగుతున్న ఏ బిల్లైనా ఈ ఫోన్ నుంచి తొలగించబడతాయి.',
+  'you.clear.body': 'మీ ప్రొఫైల్, వ్యక్తులు, ఖర్చులు, గ్రూప్‌లు, రిపీట్ స్ప్లిట్‌లు, ఇరుక్కున్న డబ్బు, బ్యాంక్ ఛార్జీలు మరియు జరుగుతున్న ఏ బిల్లైనా ఈ ఫోన్ నుంచి తొలగించబడతాయి.',
   'you.clear.confirm': 'అన్నీ తీసేయండి',
   'you.clear.keep': 'నా డేటా ఉంచండి',
   'you.clear.backupBody': 'ఒక రోజు ఇది మళ్ళీ కావాలా? ముందుగా బ్యాకప్ ఫైల్ సేవ్ చేయండి.',
@@ -99,7 +99,7 @@ export const you = {
   'you.restore.replace.title': 'ఇది ఇక్కడ ఉన్నవన్నీ మారుస్తుంది',
   'you.restore.fresh': 'బ్యాకప్‌లోని అన్నీ, ప్రొఫైల్‌తో సహా, ఈ ఫోన్‌కు తిరిగి వస్తాయి.',
   // The banner under Replace.
-  'you.restore.replace.warning': 'ఈ ఫోన్‌లోని మీ ప్రొఫైల్, వ్యక్తులు, ఖర్చులు, గ్రూప్‌లు, రిపీట్ స్ప్లిట్‌లు, ఇరుక్కున్న డబ్బు — అన్నీ బ్యాకప్‌లోని వాటితో మారతాయి. వెంటనే రద్దు చేయవచ్చు.',
+  'you.restore.replace.warning': 'ఈ ఫోన్‌లోని మీ ప్రొఫైల్, వ్యక్తులు, ఖర్చులు, గ్రూప్‌లు, రిపీట్ స్ప్లిట్‌లు, ఇరుక్కున్న డబ్బు, బ్యాంక్ ఛార్జీలు — అన్నీ బ్యాకప్‌లోని వాటితో మారతాయి. వెంటనే రద్దు చేయవచ్చు.',
   // The sheet's button: a fresh phone, merging, or replacing.
   'you.restore.cta.restore': 'బ్యాకప్ పునరుద్ధరించండి',
   'you.restore.cta.merge': 'బ్యాకప్ కలపండి',
@@ -111,6 +111,7 @@ export const you = {
   'you.restore.contents.groups': '{count, plural, one {# గ్రూప్} other {# గ్రూప్‌లు}}',
   'you.restore.contents.recurring': '{count, plural, one {# రిపీట్ స్ప్లిట్} other {# రిపీట్ స్ప్లిట్‌లు}}',
   'you.restore.contents.stuck': '{count, plural, one {ఇరుక్కుపోయిన # చెల్లింపు} other {ఇరుక్కుపోయిన # చెల్లింపులు}}',
+  'you.restore.contents.fees': '{count, plural, one {# బ్యాంక్ ఛార్జీ} other {# బ్యాంక్ ఛార్జీలు}}',
   'you.restore.contents.empty': 'అందులో ఇంకా ఏమీ లేదు',
   // A picked file that can't be restored.
   'you.restore.error.notBackup': 'ఆ ఫైల్ {brand} బ్యాకప్ కాదు. {brand} సేవ్ చేసిన .json ఫైల్ ఎంచుకోండి.',
@@ -148,7 +149,7 @@ export const you = {
   'you.data.keepCopy': 'ఒక్కసారి అవసరమైతే ఉండేలా అన్నింటికీ ఒక కాపీ ఉంచండి',
   'you.data.lastSaved': '{when, select, today {చివరిగా ఈరోజు సేవ్ చేశారు} yesterday {చివరిగా నిన్న సేవ్ చేశారు} other {చివరిగా {date} తేదీన సేవ్ చేశారు}}',
   // Under the Your data card; <link> opens Pro.
-  'you.data.footnote': 'బ్యాకప్‌లలో మీ వ్యక్తులు, ఖర్చులు, గ్రూప్‌లు, రిపీట్ స్ప్లిట్‌లు, ఇరుక్కున్న డబ్బు (ఫిర్యాదు నంబర్లతో), సెట్టింగ్‌లు ఉంటాయి — మీ Pro పాస్ ఉండదు. ఫోన్ మారుతున్నారా? <link>{brand} Pro</link> నుంచి మీ Pro కోడ్ కాపీ చేసి, కొత్త ఫోన్‌లో ఉపయోగించండి.',
+  'you.data.footnote': 'బ్యాకప్‌లలో మీ వ్యక్తులు, ఖర్చులు, గ్రూప్‌లు, రిపీట్ స్ప్లిట్‌లు, ఇరుక్కున్న డబ్బు, బ్యాంక్ ఛార్జీలు (ఫిర్యాదు నంబర్లతో), సెట్టింగ్‌లు ఉంటాయి — మీ Pro పాస్ ఉండదు. ఫోన్ మారుతున్నారా? <link>{brand} Pro</link> నుంచి మీ Pro కోడ్ కాపీ చేసి, కొత్త ఫోన్‌లో ఉపయోగించండి.',
   // The share sheet's title for each file.
   'you.data.backup.shareTitle': '{brand} బ్యాకప్',
   'you.data.csv.shareTitle': '{brand} ఖర్చులు',

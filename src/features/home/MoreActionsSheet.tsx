@@ -1,5 +1,5 @@
 import { useId, type ReactNode } from 'react'
-import { BadgeIndianRupee, BanknoteArrowDown, Building2, CircleCheck, ListChecks, Zap } from 'lucide-react'
+import { BadgeIndianRupee, BanknoteArrowDown, Building2, CircleCheck, ListChecks, Zap, Landmark } from 'lucide-react'
 import { navigate } from '../../app/router'
 import { BottomSheet, QuickAction, QuickActionGrid } from '../../components'
 import { useT } from '../../i18n'
@@ -7,6 +7,7 @@ import { BIJLI_PATH } from '../bijli/paths'
 import { COLLECT_PATH } from '../collect/paths'
 import { PROOF_ENABLED, PROOF_PATH } from '../proof/enabled'
 import { RENT_ENABLED, RENT_PATH } from '../rent/enabled'
+import { FEES_PATH } from '../fees/paths'
 import { STUCK_PATH } from '../stuck/paths'
 import { WHOS_PAID_PATH } from '../whospaid/paths'
 import { overflowActions, templateActionDefs, type GridOptions } from './quickActions'
@@ -40,6 +41,7 @@ export function MoreActionsSheet({ open, onClose, stuckCard = false }: MoreActio
         </MoreGroup>
         <MoreGroup title={t('home.more.banks')}>
           <QuickAction key="stuck" icon={<BanknoteArrowDown />} label={t('home.quick.stuck')} tone="accent" onClick={go(STUCK_PATH)} />
+          <QuickAction key="fees" icon={<Landmark />} label={t('fees.tile')} tone="accent" onClick={go(FEES_PATH)} />
         </MoreGroup>
         <MoreGroup title={t('home.more.split')}>
           {overflowActions({ stuckCard }).map(({ id, label, icon: Icon, tone, run }) => (

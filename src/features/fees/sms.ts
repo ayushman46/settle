@@ -33,8 +33,9 @@ const CREDITED = /\b(?:credited|refunded|reversed|has been credited|is credited|
 const PAYMENT = /\bto\s+(?:vpa\b|[a-z0-9._-]+@[a-z]+)|\bpaid to\b|\bsent to\b|\btrf to\b|\bpurchase\b|\bspent\b|\bat\s+[A-Z][A-Za-z]+.*\bon\b/i
 /** Where the charge's reason is said: "towards …", "for …", "as …", "being …", "on account of …". */
 const REASON = /\b(?:towards|for|as|being|on a\/?c of|on account of|due to|reason)\b\s*[:-]?\s*(.{3,120})/i
-const BALANCE = /\b(?:avl\.?|available|avbl\.?|avail\.?|clear|net)\s*(?:bal(?:ance)?|bal\.?)\s*(?:is|:|-|of)?\s*(?:inr|rs\.?|₹)?\s*(-?\s?[\d,]+(?:\.\d{1,2})?)\s*(dr|cr)?\b/i
-const GST_AMOUNT = /\b(?:\+|plus|incl(?:uding|\.)?|inclusive of)\s*(?:gst|taxes)\s*(?:of)?\s*(?:inr|rs\.?|₹)?\s*([\d,]+(?:\.\d{1,2})?)?/i
+// The separator may be a dash ("Avl Bal- Rs 500"), but a dash right before the digits is a minus ("AVl Bal -68.20").
+const BALANCE = /\b(?:avl\.?|available|avbl\.?|avail\.?|clear|net)\s*(?:bal(?:ance)?|bal\.?)\s*(?:is|:|of|-(?!\s?\d))?\s*(?:inr|rs\.?|₹)?\s*(-?\s?[\d,]+(?:\.\d{1,2})?)\s*(dr|cr)?\b/i
+const GST_AMOUNT = /(?:\+|\bplus\b|\bincl(?:uding|\.)?|\binclusive of)\s*(?:gst|taxes)\s*(?:of)?\s*(?:inr|rs\.?|₹)?\s*([\d,]+(?:\.\d{1,2})?)?/i
 const MONEY = /(?:rs\.?|inr|₹|रु\.?)\s?([0-9][0-9,]*(?:\.[0-9]{1,2})?)/i
 
 /** The balance printed, signed ("INR -254.00", "Rs.254.00 Dr" → −25400). */
@@ -80,9 +81,16 @@ export function readChargeSms(raw: string, today: string): SmsChargeRead | null 
 
 /** Splits pasted text into messages: blank lines, or a new message starting where a bank's alert does. */
 export function splitMessages(pasted: string): string[] {
-  return cleanSms(pasted, 20_000)
+  const text = cleanSms(pasted, 20_000)
+  const blocks = text
     .split(/\n\s*\n|\n(?=(?:dear customer|rs\.?\s?\d|inr\s?\d|₹\s?\d|your a\/?c|a\/?c\s|acct\s))/i)
     .map((m) => m.trim())
     .filter((m) => m.length > 10)
+  // Pasted one per line: a block whose lines each carry their own amount is several messages.
+  return blocks
+    .flatMap((block) => {
+      const lines = block.split('\n').map((l) => l.trim()).filter(Boolean)
+      return lines.length > 1 && lines.every((l) => MONEY.test(l) && l.length > 30) ? lines : [block]
+    })
     .slice(0, 100)
 }

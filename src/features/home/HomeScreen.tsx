@@ -9,6 +9,8 @@ import { isSpeechSupported } from '../../lib/speech'
 import { useAiQuota } from '../../pro/quota'
 import { useHealth } from '../../state/health'
 import { COLLECT_PATH } from '../collect/paths'
+import { FeesCard } from '../fees/FeesCard'
+import { useFeesLine } from '../fees/useFeesLine'
 import { StuckCard } from '../stuck/StuckCard'
 import { AiDescribeSheet } from './AiDescribeSheet'
 import { BillDraftCard } from './BillDraftCard'
@@ -37,6 +39,8 @@ import styles from './HomeScreen.module.css'
 export function HomeScreen() {
   const hasData = useHasData()
   const stuck = useStuckPlace(hasData)
+  // Money your bank owes you, with something to do about it: near the top, like Stuck money's.
+  const feesTop = useFeesLine()?.act === true
   const summary = useSummary()
   const onlyOwed = summary.owedToMe > 0 && summary.iOwe === 0
   const quota = useAiQuota()
@@ -80,6 +84,8 @@ export function HomeScreen() {
 
       {stuck === 'top' && <StuckCard compact />}
 
+      {feesTop && <FeesCard compact />}
+
       {hasData ? (
         // Only owed money: the way forward is getting it back (everyone who owes you, each with a reminder).
         onlyOwed ? (
@@ -93,7 +99,7 @@ export function HomeScreen() {
 
       <DueSplits />
 
-      <HomeExtras withoutStuck={stuck === 'top'} />
+      <HomeExtras withoutStuck={stuck === 'top'} withoutFees={feesTop} />
 
       <PeopleRow />
 

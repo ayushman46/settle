@@ -5,12 +5,12 @@
  * kept (src/features/fees/actions.ts). Only the charges are kept; the rest of the statement isn't.
  */
 import { BANKS } from '../sharein/sms/brands'
-import { findHeader } from '../whospaid/statement'
+import { findHeader, parseDate } from '../whospaid/statement'
 import { rowsOf } from '../whospaid/statementFile'
-import { addCharges, type AddResult } from './actions'
+import { addCharges, addLate, setAccount, type AddResult } from './actions'
 import { readLines, type StatementLine } from './lines'
 import { scanCharges } from './scan'
-import type { AccountType } from './store'
+import { accountKey, feesStore, type AccountType } from './store'
 
 /** The bank an IFSC's first four letters name. */
 const IFSC_BANKS: Readonly<Record<string, string>> = {
@@ -52,7 +52,12 @@ export interface StatementMeta {
   account: string | null
   /** What the statement says the account is, when it says. */
   type: AccountType | null
+  /** The days the statement says it covers ("Statement From : 01/10/2026 To : 03/11/2026"), when it says. */
+  period?: { from: string; to: string } | null
 }
+
+/** "From 01/10/2026 To 03/11/2026", "Period: 1 Apr 2026 to 30 Sep 2026". */
+const PERIOD = /\b(?:from|period)\b\s*[:-]?\s*(\d{1,2}[/.-]\d{1,2}[/.-]\d{2,4}|\d{1,2}[\s-][a-z]{3}[a-z]*[\s-]\d{2,4}|\d{4}-\d{2}-\d{2})\s*(?:to|-|–)\s*[:-]?\s*(\d{1,2}[/.-]\d{1,2}[/.-]\d{2,4}|\d{1,2}[\s-][a-z]{3}[a-z]*[\s-]\d{2,4}|\d{4}-\d{2}-\d{2})/i
 
 const IFSC = /\b([A-Z]{4})0[A-Z0-9]{6}\b/
 const ACCOUNT = /\b(?:a\/?c|acct|account)(?:\s*(?:no|number|num))?\.?\s*[:#-]?\s*[x*]*\s*(\d{4,18})\b/i
@@ -88,7 +93,10 @@ export function statementMeta(rows: readonly string[][], fileName = '', around =
           : SENIOR.test(top)
             ? 'senior'
             : null
-  return { bank, account, type }
+  const range = PERIOD.exec(top)
+  const from = range?.[1] ? parseDate(range[1]) : null
+  const to = range?.[2] ? parseDate(range[2]) : null
+  return { bank, account, type, period: from && to && from <= to ? { from, to } : null }
 }
 
 /** An ATM withdrawal that failed and came back after the RBI's 5 days: the bank owes ₹100 a day for the wait (Stuck money claims it). */
@@ -146,15 +154,23 @@ export function checkRows(rows: readonly string[][], fileName = '', now: number 
   const { charges } = scanCharges(read.lines, { bank: meta.bank, account: meta.account, trusted: read.trusted })
   const check = {
     at: now,
-    from: read.from ?? read.lines[0]?.date ?? '1970-01-01',
-    to: read.to ?? read.lines.at(-1)?.date ?? '1970-01-01',
+    from: meta.period?.from ?? read.from ?? read.lines[0]?.date ?? '1970-01-01',
+    to: meta.period?.to ?? read.to ?? read.lines.at(-1)?.date ?? '1970-01-01',
     bank: meta.bank,
     account: meta.account,
     lines: read.lines.length,
     charges: charges.length,
   }
-  const result = addCharges(charges, check, now)
-  return { kind: 'read', meta, from: read.from, to: read.to, lines: read.lines.length, trusted: read.trusted, result, lateReversals: lateAtmReversals(read.lines) }
+  const before = feesStore.get()
+  const added = addCharges(charges, check, now)
+  // The statement says what kind of account it is (a Basic Savings, scholarship or minor's account): no need to ask.
+  const known = before.accounts[accountKey(meta.bank, meta.account)]
+  if (meta.type && meta.type !== 'salary' && meta.type !== 'senior' && (!known || known.type === 'unknown')) setAccount(meta.bank, meta.account, { type: meta.type })
+  const result: AddResult = { ...added, undo: () => feesStore.set(before) }
+  // Late ATM refunds: kept (with the account) until claimed in Stuck money.
+  const lateReversals = lateAtmReversals(read.lines)
+  if (lateReversals.length > 0) addLate(lateReversals.map((l) => ({ ...l, bank: meta.bank, account: meta.account })))
+  return { kind: 'read', meta, from: check.from, to: check.to, lines: read.lines.length, trusted: read.trusted, result, lateReversals }
 }
 
 /** Reads a statement file on the phone and keeps its charges. */

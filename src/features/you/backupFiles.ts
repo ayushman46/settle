@@ -84,13 +84,14 @@ function count(n: number, key: MessageKey): string | null {
  * "24 expenses · 6 people · 2 groups · 1 recurring split · 2 stuck payments" (only what it has);
  * "Nothing in it yet" when empty.
  */
-export function backupContents(file: Pick<BackupFile, 'expenses' | 'friends' | 'groups' | 'recurring' | 'stuck'>): string {
+export function backupContents(file: Pick<BackupFile, 'expenses' | 'friends' | 'groups' | 'recurring' | 'stuck'> & Partial<Pick<BackupFile, 'fees'>>): string {
   const parts = [
     count(file.expenses.length, 'you.restore.contents.expenses'),
     count(file.friends.filter((f) => f.id !== ME_ID).length, 'you.restore.contents.people'),
     count(file.groups.length, 'you.restore.contents.groups'),
     count(file.recurring.length, 'you.restore.contents.recurring'),
     count(file.stuck.length, 'you.restore.contents.stuck'),
+    count(file.fees?.charges.length ?? 0, 'you.restore.contents.fees'),
   ].filter((part): part is string => part !== null)
   return parts.length > 0 ? parts.join(' · ') : t('you.restore.contents.empty')
 }

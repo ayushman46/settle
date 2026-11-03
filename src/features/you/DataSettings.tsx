@@ -18,6 +18,7 @@ import {
   type BackupFile,
 } from '../../data'
 import { stuckStore } from '../../data/stores'
+import { feesStore } from '../fees/store'
 import { BRAND } from '../../domain/types'
 import { haptic } from '../../lib/haptics'
 import { clearLicense, licenseToken, redeemLicense, useHasFeature, usePro } from '../../pro'
@@ -69,6 +70,7 @@ export function DataSettings() {
   const recurring = useRecurring()
   const pools = usePools()
   const hasStuck = useStore(stuckStore, (list) => list.length > 0)
+  const hasFees = useStore(feesStore, (s) => s.charges.length > 0 || s.claims.length > 0)
   const hasExpensesOrGroups = useHasData()
   const pro = usePro()
   const csvUnlocked = useHasFeature('export')
@@ -78,8 +80,8 @@ export function DataSettings() {
   const [restore, setRestore] = useState<{ open: boolean; backup: BackupFile | null }>({ open: false, backup: null })
   const [clearing, setClearing] = useState(false)
 
-  // People, recurring splits, collections and stuck money count too: a "replace" would remove them.
-  const hasLocalData = hasExpensesOrGroups || friends.length > 1 || recurring.length > 0 || pools.length > 0 || hasStuck
+  // People, recurring splits, collections, stuck money and bank charges count too: a "replace" would remove them.
+  const hasLocalData = hasExpensesOrGroups || friends.length > 1 || recurring.length > 0 || pools.length > 0 || hasStuck || hasFees
 
   const saveBackup = async (): Promise<void> => {
     if (busy) return

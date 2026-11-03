@@ -94,12 +94,15 @@ function Frame({ open, onClose, claimId, mode: startMode, bank: basicBank = null
   const [mode, setMode] = useState<LetterMode | 'sent'>(startMode)
   const [copied, setCopied] = useState<string | null>(null)
   const [printRun, setPrintRun] = useState(0)
-  const step = mode === 'ombudsman' ? 'ombudsman' : 'bank'
+  // The rung "I've sent it" notes: the sheet's own (the Ombudsman's when it opened on the Ombudsman, even on its "sent" page).
+  const step = startMode === 'ombudsman' ? 'ombudsman' : 'bank'
   const noted = claim?.steps.find((s) => s.kind === step) ?? null
   // The day sent: as noted (changing it), else today; the day money came back: today.
   const [date, setDate] = useState(startMode === 'bank' || startMode === 'ombudsman' ? (noted?.date ?? day) : day)
   const [ref, setRef] = useState(noted?.ref ?? '')
-  const [backAmount, setBackAmount] = useState(() => (claim ? toInputString(claim.amount, 'INR') : ''))
+  // What came back this time: what's still to come, to start with.
+  const backBefore = claim ? Math.max(claim.back?.amount ?? 0, claim.chargeIds.reduce((sum, id) => sum + (state.charges.find((c) => c.id === id)?.reversed ?? 0), 0)) : 0
+  const [backAmount, setBackAmount] = useState(() => (claim ? toInputString(Math.max(0, claim.amount - backBefore), 'INR') : ''))
   const [repliedOn, setRepliedOn] = useState(claim?.repliedAt ?? day)
 
   useEffect(() => {
@@ -130,6 +133,9 @@ function Frame({ open, onClose, claimId, mode: startMode, bank: basicBank = null
     else setTypedTo(value.trim())
   }
   const amount = claim ? claimTotal(findings) || claim.amount : 0
+  // Sent no earlier than the last charge in it (the Ombudsman: no earlier than the complaint to the bank).
+  const lastCharge = findings.reduce((latest, f) => (f.charge.date > latest ? f.charge.date : latest), '')
+  const earliest = (step === 'ombudsman' ? raisedOn : null) ?? (lastCharge || undefined)
 
   const copy = async (value: string, what: string): Promise<void> => {
     if (await copyText(value)) {
@@ -169,7 +175,7 @@ function Frame({ open, onClose, claimId, mode: startMode, bank: basicBank = null
     if (!claim) return
     const paise = parseMoneyInput(backAmount, 'INR') ?? 0
     if (paise <= 0) return
-    const undo = markClaimBack(claim.id, { date, amount: paise })
+    const undo = markClaimBack(claim.id, { date, amount: Math.min(claim.amount, backBefore + paise) })
     haptic('success')
     toast(t('fees.claim.back.toast', { amount: inr(paise) }), { tone: 'success', action: { label: t('common.action.undo'), onAction: undo } })
     onClose()
@@ -200,7 +206,7 @@ function Frame({ open, onClose, claimId, mode: startMode, bank: basicBank = null
           <span className={raise.dateLabel} aria-hidden="true">
             {t('fees.sheet.sent.date')}
           </span>
-          <DateField label={t('fees.sheet.sent.date')} value={date} max={day} onChange={setDate} />
+          <DateField label={t('fees.sheet.sent.date')} value={date} min={earliest} max={day} onChange={setDate} />
         </div>
         <TextField
           label={t('fees.sheet.sent.ref')}
@@ -258,7 +264,7 @@ function Frame({ open, onClose, claimId, mode: startMode, bank: basicBank = null
     const basic = mode === 'basic'
     const ombudsman = mode === 'ombudsman'
     title = basic ? t('fees.basic.title') : ombudsman ? t('fees.sheet.ombudsman.title') : name ? t('fees.sheet.bank.title', { bank: name }) : t('fees.sheet.bank.titleAny')
-    description = basic ? t('fees.basic.lead') : ombudsman ? t('fees.sheet.ombudsman.lead') : t('fees.sheet.bank.lead')
+    description = basic ? t('fees.basic.lead') : ombudsman ? t('fees.sheet.ombudsman.lead') : raisedOn ? t('fees.sheet.bank.leadSent', { date: dayLabel(raisedOn) }) : t('fees.sheet.bank.lead')
     footer = (
       <ActionBar key="letter">
         <Button block iconStart={copied === 'letter' ? <Check /> : <Copy />} onClick={() => void copy(full, 'letter')}>
@@ -341,9 +347,15 @@ function Frame({ open, onClose, claimId, mode: startMode, bank: basicBank = null
           {!basic && (
             <div className={raise.summary}>
               <p className={raise.summaryAsk}>
-                {name ? t('fees.sheet.summary', { bank: name, amount: inr(amount), count: findings.length }) : t('fees.sheet.summaryAny', { amount: inr(amount), count: findings.length })}
+                {ombudsman
+                  ? name
+                    ? t('fees.sheet.ombudsman.summary', { bank: name, amount: inr(amount), count: findings.length })
+                    : t('fees.sheet.ombudsman.summaryAny', { amount: inr(amount), count: findings.length })
+                  : name
+                    ? t('fees.sheet.summary', { bank: name, amount: inr(amount), count: findings.length })
+                    : t('fees.sheet.summaryAny', { amount: inr(amount), count: findings.length })}
               </p>
-              <p className={raise.hint}>{t('fees.sheet.english')}</p>
+              <p className={raise.hint}>{t(ombudsman ? 'fees.sheet.englishRbi' : 'fees.sheet.english')}</p>
             </div>
           )}
           <div className={raise.paper} lang="en">

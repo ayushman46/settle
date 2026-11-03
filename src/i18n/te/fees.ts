@@ -27,6 +27,7 @@ export const fees = {
   'fees.reading': 'మీ స్టేట్‌మెంట్ చదువుతోంది…',
   'fees.read.found':
     '{count, plural, =0 {ఇందులో బ్యాంక్ ఛార్జీలు లేవు} one {# ఛార్జీ దొరికింది} other {# ఛార్జీలు దొరికాయి}} · {lines, plural, one {# లావాదేవీ} other {# లావాదేవీలు}}, {from} నుంచి {to} వరకు',
+  'fees.read.toast': '{count, plural, one {# ఛార్జీ దొరికింది} other {# ఛార్జీలు దొరికాయి}}',
   'fees.read.nothingNew': 'ఇదివరకే సరిచూశాం: ఈ స్టేట్‌మెంట్‌లో కొత్తగా ఏమీ లేదు',
   'fees.read.unreadable': 'ఆ ఫైల్‌లో తేదీలు, మొత్తాలు ఉన్న పట్టిక ఏదీ కనిపించలేదు. స్టేట్‌మెంట్‌ను Excel లేదా CSV గా డౌన్‌లోడ్ చేసి మళ్ళీ ప్రయత్నించండి.',
   'fees.read.oldXls': 'అది Settle తెరవలేని పాత Excel ఫైల్. దాన్ని .xlsx లేదా CSV గా సేవ్ చేయండి, లేదా నెట్ బ్యాంకింగ్ నుంచి CSV డౌన్‌లోడ్ చేయండి.',
@@ -39,9 +40,12 @@ export const fees = {
   'fees.hero.owedSub': '{count, plural, one {# ఛార్జీ} other {# ఛార్జీలు}} RBI నియమాలకు విరుద్ధం',
   'fees.hero.checked': 'సరిచూసిన ఛార్జీలు',
   'fees.hero.checkedSub': '{count, plural, one {# ఛార్జీ} other {# ఛార్జీలు}}, ఇప్పటివరకు ఏదీ RBI నియమాలకు విరుద్ధం కాదు',
+  'fees.hero.checkedAsk': '{count, plural, one {# ఛార్జీ సరిచూశాం} other {# ఛార్జీలు సరిచూశాం}}. ఏది తిరిగి క్లెయిమ్ చేయవచ్చో తెలియాలంటే కింద జవాబివ్వండి.',
   'fees.hero.period': '{from} నుంచి {to} వరకు',
   'fees.hero.total': 'మొత్తం ఛార్జీలు {amount}',
   'fees.hero.back': 'ఇప్పటివరకు {amount} తిరిగి వచ్చింది',
+  'fees.hero.backLabel': 'మీ బ్యాంక్ నుంచి తిరిగి వచ్చింది',
+  'fees.hero.backSub': '{count, plural, one {# ఛార్జీ} other {# ఛార్జీలు}} RBI నియమాలకు విరుద్ధం: మొత్తం తిరిగి వచ్చింది',
   'fees.hero.ask': '{count, plural, one {# ఛార్జీకి} other {# ఛార్జీలకు}} ఒక్క జవాబు కావాలి',
 
   // Sections.
@@ -73,13 +77,14 @@ export const fees = {
   'fees.account.saved': 'సేవ్ అయింది. ఇక నుంచి దీన్ని బట్టే సరిచూస్తాం.',
   'fees.account.summary': '{type} · {mab, select, none {సగటు బ్యాలెన్స్ చెప్పలేదు} other {సగటు {mab} ఉంచాలి}}',
   'fees.account.change': 'మార్చండి',
+  'fees.account.summaryBasic': '{type} · మినిమమ్ బ్యాలెన్స్ అక్కర్లేదు',
 
   // One question per charge: the answer that settles it.
   'fees.q.warned': 'మినిమమ్ బ్యాలెన్స్ ఛార్జీ వేయడానికి కనీసం ఒక నెల ముందు, మీ బ్యాంక్ SMS, ఈమెయిల్ లేదా లేఖ ద్వారా మిమ్మల్ని హెచ్చరించిందా?',
   'fees.q.warned.yes': 'అవును, హెచ్చరించింది',
   'fees.q.warned.no': 'ఏ హెచ్చరికా రాలేదు',
   'fees.q.warned.unsure': 'ఖచ్చితంగా తెలియదు',
-  'fees.q.atmEnquiry': 'ఆ నెలలో వేరే బ్యాంక్ ATM లో బ్యాలెన్స్ చూశారా, లేదా మినీ స్టేట్‌మెంట్ తీసుకున్నారా?',
+  'fees.q.atmEnquiry': 'ఆ నెలలో వేరే బ్యాంక్ ATM లో బ్యాలెన్స్ చూడటం లేదా మినీ స్టేట్‌మెంట్ తీసుకోవడం ఎన్నిసార్లు చేశారు?',
   'fees.q.declineReason': 'ఖాతాలో సరిపడా డబ్బు లేకపోవడం వల్లే డిక్లైన్ అయిందా?',
   'fees.q.online': 'ఈ NEFT ని నెట్ బ్యాంకింగ్ లేదా మీ బ్యాంక్ యాప్ నుంచి పంపారా?',
   'fees.q.inoperative': 'ఈ ఛార్జీ పడక ముందు, రెండేళ్లకు పైగా ఈ ఖాతాను వాడటం మానేశారా?',
@@ -87,6 +92,9 @@ export const fees = {
   'fees.q.floating': 'ఇది ఫ్లోటింగ్ రేట్ లోనా (రెపో రేట్ లేదా MCLR తో ముడిపడినది), వ్యాపారం కోసం కాకుండా మీ సొంత పేరు మీద తీసుకున్నదా?',
   'fees.q.paidInTime': 'గడువు తేదీ తర్వాత 3 రోజుల్లోపు కనీసం మినిమమ్ డ్యూ అయినా కట్టారా?',
   'fees.q.upiSmall': 'ఛార్జీ వేసిన UPI చెల్లింపు ₹2,000 లేదా అంతకంటే తక్కువదా?',
+  'fees.q.atmEnquiry.none': 'ఒక్కసారీ లేదు',
+  'fees.q.atmEnquiry.many': '3 లేదా ఎక్కువ',
+  'fees.ask.more': 'దీనికి జవాబిస్తే ఇంకా {amount} క్లెయిమ్ చేయవచ్చు',
   'fees.answer.yes': 'అవును',
   'fees.answer.no': 'లేదు',
   'fees.answer.all': 'ఇలాంటి {count} ఛార్జీలన్నిటికీ ఇదే జవాబు',
@@ -100,6 +108,7 @@ export const fees = {
   'fees.why.minbalScholarship': 'స్కాలర్‌షిప్ ఖాతాపై మినిమమ్ బ్యాలెన్స్ ఛార్జీ వేయకూడదు.',
   'fees.why.minbalWaived': '{from} నుంచి {bank} సేవింగ్స్ ఖాతాలపై మినిమమ్ బ్యాలెన్స్ ఛార్జీ వేయడం ఆపేసింది.',
   'fees.why.minbalWaived.standard': '{from} నుంచి {bank} తన సాధారణ సేవింగ్స్ ఖాతాలపై మినిమమ్ బ్యాలెన్స్ ఛార్జీ వేయడం ఆపేసింది.',
+  'fees.why.smsWaived': '{from} నుంచి {bank} సేవింగ్స్ ఖాతాలపై SMS అలర్ట్‌లకు ఛార్జీ వేయడం ఆపేసింది.',
   'fees.why.minbalNotShort': '{period} లో మీ సగటు బ్యాలెన్స్ {avg} — మీరు ఉంచాల్సిన {mab} కంటే ఎక్కువే. బ్యాలెన్స్ తక్కువ కాలేదు.',
   'fees.why.minbalOverShortfall': 'బ్యాలెన్స్ {shortfall} మాత్రమే తక్కువైంది, కానీ {amount} ఛార్జీ వేశారు — తక్కువైన మొత్తం కంటే ఎక్కువ.',
   'fees.why.minbalOverSchedule': '{bank} సొంత ఛార్జీల జాబితా ప్రకారం {avg} సగటుకు గరిష్ఠంగా {allowed} మాత్రమే. కానీ {amount} కట్ చేసింది.',
@@ -109,7 +118,7 @@ export const fees = {
   'fees.why.basicWithdrawals': 'బేసిక్ సేవింగ్స్ ఖాతాకు నెలకు 4 విత్‌డ్రాలు ఉచితం. మీరు చేసినవి {count} మాత్రమే.',
   'fees.why.basicFree': 'బేసిక్ సేవింగ్స్ ఖాతాలో ఇది ఉచితం.',
   'fees.why.atmFree':
-    'ఆ నెలలో {count, plural, =0 {ఒక్క విత్‌డ్రా కూడా పూర్తి కాలేదు} one {# విత్‌డ్రా మాత్రమే పూర్తయింది} other {# విత్‌డ్రాలు మాత్రమే పూర్తయ్యాయి}}{failed, select, 1 { (ఫెయిల్ అయినవి లెక్కలోకి రావు)} other {}}. ఏ ATM లో అయినా నెలకు కనీసం 3 ఉచితం.',
+    'ఆ నెలలో {count, plural, =0 {ఒక్క విత్‌డ్రా కూడా పూర్తి కాలేదు} one {# విత్‌డ్రా మాత్రమే పూర్తయింది} other {# విత్‌డ్రాలు మాత్రమే పూర్తయ్యాయి}}{failed, select, 1 { (ఫెయిల్ అయినవి లెక్కలోకి రావు)} other {}}. ఏ బ్యాంక్ ATM లో అయినా నెలకు మొదటి 3 ఉచితం (మీ సొంత బ్యాంక్ ATM లో 5).',
   'fees.why.atmDecline': 'మీ తప్పు లేకుండా (మెషిన్ సమస్య, నగదు లేకపోవడం, నెట్‌వర్క్) డిక్లైన్ అయితే ఛార్జీ వేయకూడదు.',
   'fees.why.neftOnline': 'సేవింగ్స్ ఖాతా నుంచి ఆన్‌లైన్‌లో పంపిన NEFT ఉచితం.',
   'fees.why.transferInward': 'మీ ఖాతాలోకి వచ్చే డబ్బుకు ఛార్జీ వేయకూడదు.',
@@ -122,7 +131,7 @@ export const fees = {
   'fees.why.prepay': 'మీ పేరు మీద ఉన్న ఫ్లోటింగ్ రేట్ లోన్‌పై ముందస్తు చెల్లింపు ఛార్జీ వేయకూడదు.',
   'fees.why.lateFee': 'గడువు తేదీ నుంచి 3 రోజుల్లోపు కట్టి ఉంటే ఆలస్య రుసుము వేయకూడదు.',
   'fees.why.more': '+ {count, plural, one {ఇంకో # కారణం} other {ఇంకా # కారణాలు}}',
-  'fees.rule.source': 'RBI నియమం: {ref}',
+  'fees.rule.source': 'నియమం: {ref}',
 
   // What each kind of charge is called. The Android alerts below put one in brackets, so it needs no case ending.
   'fees.kind.minbal': 'మినిమమ్ బ్యాలెన్స్',
@@ -152,16 +161,23 @@ export const fees = {
   'fees.charge.label.balance': 'బ్యాలెన్స్',
   'fees.charge.ok': 'Settle చూసినంత వరకు, RBI నియమాల ప్రకారం ఇది సరైనదే.',
   'fees.charge.text': 'మీ స్టేట్‌మెంట్ లేదా SMS లో ఉన్నట్టుగా',
-  'fees.charge.balance': 'బ్యాలెన్స్ {before} → {after}',
+  'fees.charge.balance': '{before} → {after}',
+  'fees.charge.backFull': 'పూర్తిగా తిరిగి జమ అయింది: ఇది RBI నియమాలకు విరుద్ధం, మీ బ్యాంక్ సరిచేసింది.',
   'fees.charge.fine': 'ఇది సరైనదే, క్లెయిమ్ వద్దు',
   'fees.charge.fine.toast': 'మీ క్లెయిమ్ నుంచి తీసేశాం',
-  'fees.charge.remove': 'తీసేయండి: తప్పుగా చదివింది',
+  'fees.charge.remove': 'ఇది బ్యాంక్ ఛార్జీ కాదు: తీసేయండి',
   'fees.charge.removed': 'ఛార్జీ తీసేశాం',
   'fees.charge.from': '{source, select, sms {ఒక SMS నుంచి} alert {మీ బ్యాంక్ SMS నుంచి} other {మీ స్టేట్‌మెంట్ నుంచి}}',
 
   // A claim: one bank's wrong charges ({account}: the account's last digits, "··4821").
   'fees.claim.title': '{bank} మీకు {amount} ఇవ్వాలి',
   'fees.claim.titleAny': 'మీ బ్యాంక్ మీకు {amount} ఇవ్వాలి',
+  'fees.claim.titleBack': '{bank} {amount} తిరిగి జమ చేసింది',
+  'fees.claim.titleBackAny': 'మీ బ్యాంక్ {amount} తిరిగి జమ చేసింది',
+  'fees.claim.ref': 'ఫిర్యాదు నంబర్ {ref}',
+  'fees.claim.partOf': '{amount} ఛార్జీలో {claim}',
+  'fees.claim.status.part': 'ఇప్పటివరకు {amount} లో {back} తిరిగి వచ్చింది. ఇంకా {rest} రావాలి.',
+  'fees.claims.count': '{count, plural, one {# క్లెయిమ్} other {# క్లెయిమ్‌లు}}',
   'fees.claim.count': '{count, plural, one {# ఛార్జీ} other {# ఛార్జీలు}}{account, select, none {} other {, ఖాతా {account}}}',
   'fees.claim.cta': '{amount} తిరిగి క్లెయిమ్ చేయండి',
   'fees.claim.status.ready': 'ఇంకా పంపలేదు',
@@ -171,6 +187,7 @@ export const fees = {
   'fees.claim.status.ombudsmanRaised': '{date} నుంచి RBI అంబుడ్స్‌మన్ దగ్గర ఉంది.',
   'fees.claim.status.closed': 'RBI అంబుడ్స్‌మన్ దగ్గర దాఖలు చేయడానికి ఉన్న 90 రోజుల గడువు {last} తేదీన ముగిసింది.',
   'fees.claim.status.back': '{date} తేదీన {amount} తిరిగి వచ్చింది',
+  'fees.claim.status.backAll': 'మీ బ్యాంక్ నుంచి {amount} తిరిగి వచ్చింది',
   'fees.claim.raise': 'బ్యాంక్ దగ్గర ఫిర్యాదు చేయండి',
   'fees.claim.raiseAgain': 'లేఖ మళ్ళీ చూడండి',
   'fees.claim.ombudsman': 'RBI అంబుడ్స్‌మన్ దృష్టికి తీసుకెళ్లండి',
@@ -191,6 +208,7 @@ export const fees = {
   // The letter sheet. Its title says the same as the button that opens it (fees.claim.raise).
   'fees.sheet.bank.title': '{bank} దగ్గర ఫిర్యాదు చేయండి',
   'fees.sheet.bank.titleAny': 'మీ బ్యాంక్ దగ్గర ఫిర్యాదు చేయండి',
+  'fees.sheet.bank.leadSent': 'దీన్ని {date} తేదీన పంపారు. గుర్తు చేయడానికి మళ్ళీ పంపండి, లేదా బ్యాంక్‌కు ఉన్న 30 రోజులు ముగిశాక RBI అంబుడ్స్‌మన్ దృష్టికి తీసుకెళ్లండి.',
   'fees.sheet.bank.lead': 'మీ బ్యాంక్ 30 రోజుల్లోగా జవాబివ్వాలి. బ్యాంక్‌కు ముందు అవకాశం ఇచ్చాకే RBI అంబుడ్స్‌మన్ ఫిర్యాదు తీసుకుంటారు, అందుకే ఇది మొదటి అడుగు.',
   'fees.sheet.bank.step1': 'మీ బ్యాంక్ ఫిర్యాదుల ఈమెయిల్‌కు (దాని “Grievance Redressal” పేజీలో ఉంటుంది) దీన్ని ఈమెయిల్ చేయండి, లేదా నెట్ బ్యాంకింగ్‌లోని ఫిర్యాదు ఫారం వాడండి.',
   'fees.sheet.bank.step2': 'లేదా ప్రింట్ తీసి మీ బ్రాంచ్‌లో ఇవ్వండి: మీ కాపీపై తేదీతో స్టాంప్ వేయమని అడగండి.',
@@ -199,6 +217,9 @@ export const fees = {
   'fees.sheet.summary': 'ఇది {bank} నుంచి {amount} తిరిగి అడుగుతుంది: {count, plural, one {# ఛార్జీ} other {# ఛార్జీలు}}, ప్రతి దానికీ అది ఉల్లంఘించిన RBI నియమంతో.',
   'fees.sheet.summaryAny': 'ఇది మీ బ్యాంక్ నుంచి {amount} తిరిగి అడుగుతుంది: {count, plural, one {# ఛార్జీ} other {# ఛార్జీలు}}, ప్రతి దానికీ అది ఉల్లంఘించిన RBI నియమంతో.',
   'fees.sheet.english': 'లేఖ ఇంగ్లీష్‌లో ఉంది — బ్యాంకులు అదే ఆశిస్తాయి.',
+  'fees.sheet.ombudsman.summary': 'ఇది {bank} నుంచి {amount} తిరిగి ఇప్పించమని RBI అంబుడ్స్‌మన్‌ను అడుగుతుంది: {count, plural, one {# ఛార్జీ} other {# ఛార్జీలు}}, ప్రతి దానికీ అది ఉల్లంఘించిన RBI నియమంతో.',
+  'fees.sheet.ombudsman.summaryAny': 'ఇది మీ బ్యాంక్ నుంచి {amount} తిరిగి ఇప్పించమని RBI అంబుడ్స్‌మన్‌ను అడుగుతుంది: {count, plural, one {# ఛార్జీ} other {# ఛార్జీలు}}, ప్రతి దానికీ అది ఉల్లంఘించిన RBI నియమంతో.',
+  'fees.sheet.englishRbi': 'ఫిర్యాదు ఇంగ్లీష్‌లో ఉంది — RBI ఫిర్యాదు ఫారం అదే ఆశిస్తుంది.',
   'fees.sheet.sent': 'పంపాను',
   'fees.sheet.sent.title': 'ఎప్పుడు పంపారు?',
   'fees.sheet.sent.description': 'బ్యాంక్‌కు ఉన్న 30 రోజులను Settle ఈ రోజు నుంచి లెక్కిస్తుంది.',
@@ -215,7 +236,7 @@ export const fees = {
   'fees.avoid.minbal': 'మినిమమ్ బ్యాలెన్స్‌కు {amount}. బేసిక్ సేవింగ్స్ (BSBD) ఖాతాకు మినిమమ్ బ్యాలెన్స్ అసలే ఉండదు, మీరు అడిగిన 7 రోజుల్లోగా మీ బ్యాంక్ మార్చాలి.',
   'fees.avoid.minbal.cta': 'బేసిక్ సేవింగ్స్‌కు మార్చమని అడగండి',
   'fees.avoid.atm': 'ATM ఛార్జీలకు {amount}. మీ సొంత బ్యాంక్ ATM లలో నెలకు 5 ఉచితం; వేరే బ్యాంకుల ATM లలో పెద్ద నగరాల్లో 3 మాత్రమే.',
-  'fees.avoid.sms': 'SMS అలర్ట్‌లకు {amount}. నిజంగా పంపిన వాటికే ఛార్జీ వేయాలని RBI చెబుతుంది.',
+  'fees.avoid.sms': 'SMS అలర్ట్‌లకు {amount}. ఏ అలర్ట్‌లు ఆపేయవచ్చో మీ బ్యాంక్‌ను అడగండి: నిజంగా పంపిన వాటికే అది ఛార్జీ వేయవచ్చు.',
   'fees.avoid.imps': 'IMPS కి {amount}. UPI, ఆన్‌లైన్‌లో పంపే NEFT ఉచితం.',
   'fees.avoid.card': 'డెబిట్ కార్డ్ ఫీజులకు {amount}. బేసిక్ సేవింగ్స్ ఖాతా కార్డ్‌కు వార్షిక ఫీజు ఉండదు.',
   'fees.avoid.bounce': 'బౌన్స్ అయిన చెల్లింపులకు {amount}. EMI లేదా ఆటోపే తేదీకి ఒక రోజు ముందే ఖాతాలో డబ్బు ఉంచండి.',
@@ -230,6 +251,7 @@ export const fees = {
     '{date} తేదీన ATM ఇవ్వని {amount}, {backOn} తేదీన తిరిగి వచ్చింది — RBI ఇచ్చే 5 రోజుల గడువు కంటే {days, plural, one {# రోజు} other {# రోజులు}} ఆలస్యంగా. ఆలస్యమైన ప్రతి రోజుకు బ్యాంక్ ₹100 ఇవ్వాలి.',
   'fees.late.cta': 'ఇరుక్కున్న డబ్బులో క్లెయిమ్ చేయండి',
   'fees.late.added': 'ఇరుక్కున్న డబ్బులో చేర్చాం',
+  'fees.late.open': 'ఇరుక్కున్న డబ్బులో తెరవండి',
 
   // Pasting SMS. The example stays in English, as banks write their SMS.
   'fees.paste.title': 'మీ బ్యాంక్ SMS పేస్ట్ చేయండి',
@@ -237,7 +259,9 @@ export const fees = {
   'fees.paste.label': 'బ్యాంక్ SMS',
   'fees.paste.placeholder': 'Rs.590 debited from A/c XX4821 towards non-maintenance of AMB charges…',
   'fees.paste.check': 'సరిచూడండి',
+  'fees.paste.fromClipboard': 'క్లిప్‌బోర్డ్ నుంచి పేస్ట్',
   'fees.paste.none': 'ఆ టెక్స్ట్‌లో బ్యాంక్ ఛార్జీలు ఏవీ లేవు.',
+  'fees.paste.known': 'అంతా ఇప్పటికే “బ్యాంక్ ఛార్జీలు”లో ఉంది: కొత్తగా ఏమీ లేదు',
   'fees.paste.found': '{count, plural, one {# ఛార్జీ చేర్చాం} other {# ఛార్జీలు చేర్చాం}}{back, plural, =0 {} one {, # తిరిగి జమ అయింది} other {, # తిరిగి జమ అయ్యాయి}}',
 
   // Home.
@@ -250,10 +274,10 @@ export const fees = {
   'fees.you.none': 'మీ బ్యాంక్ వేయకూడని ఛార్జీలు వేసిందేమో స్టేట్‌మెంట్‌లో చూడండి',
 
   // Android: a charge SMS just read ({kind}: a fees.kind.* label, lower-cased, so it sits in brackets).
-  'fees.alert.wrong': '{bank} {amount} కట్ చేసింది ({kind}). ఇది RBI నియమాలకు విరుద్ధం: “బ్యాంక్ ఛార్జీలు”లో తిరిగి క్లెయిమ్ చేయండి',
-  'fees.alert.wrongAny': 'మీ బ్యాంక్ {amount} కట్ చేసింది ({kind}). ఇది RBI నియమాలకు విరుద్ధం: “బ్యాంక్ ఛార్జీలు”లో తిరిగి క్లెయిమ్ చేయండి',
-  'fees.alert.check': '{bank} {amount} కట్ చేసింది ({kind}). తిరిగి పొందగలరో లేదో “బ్యాంక్ ఛార్జీలు”లో ఒక్క ప్రశ్నతో తెలుస్తుంది',
-  'fees.alert.checkAny': 'మీ బ్యాంక్ {amount} కట్ చేసింది ({kind}). తిరిగి పొందగలరో లేదో “బ్యాంక్ ఛార్జీలు”లో ఒక్క ప్రశ్నతో తెలుస్తుంది',
+  'fees.alert.wrong': '{bank} {amount} కట్ చేసింది ({kind}): RBI నియమాలకు విరుద్ధం',
+  'fees.alert.wrongAny': 'మీ బ్యాంక్ {amount} కట్ చేసింది ({kind}): RBI నియమాలకు విరుద్ధం',
+  'fees.alert.check': '{bank} {amount} కట్ చేసింది ({kind}): క్లెయిమ్ చేయగలరో లేదో ఒక్క ప్రశ్నతో తెలుస్తుంది',
+  'fees.alert.checkAny': 'మీ బ్యాంక్ {amount} కట్ చేసింది ({kind}): క్లెయిమ్ చేయగలరో లేదో ఒక్క ప్రశ్నతో తెలుస్తుంది',
   'fees.alert.back': 'ఒక బ్యాంక్ ఛార్జీలో {amount} తిరిగి జమ అయింది',
   'fees.alert.many': '{count, plural, one {# బ్యాంక్ ఛార్జీని} other {# బ్యాంక్ ఛార్జీలను}} “బ్యాంక్ ఛార్జీలు”లో సరిచూశాం',
 

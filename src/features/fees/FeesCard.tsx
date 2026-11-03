@@ -8,13 +8,19 @@ import { useFeesLine } from './useFeesLine'
 import styles from './Fees.module.css'
 
 /** Home's line for Bank charges, only while the bank owes you something or a charge needs one answer. */
-export function FeesCard() {
+export function FeesCard({ compact = false }: { compact?: boolean }) {
   const t = useT()
   const lines = useFeesLine()
   if (!lines) return null
   return (
     <section className={styles.homeSection} aria-labelledby="home-fees">
-      <SectionHeader id="home-fees" title={t('fees.title')} />
+      {compact ? (
+        <h2 id="home-fees" className="visually-hidden">
+          {t('fees.title')}
+        </h2>
+      ) : (
+        <SectionHeader id="home-fees" title={t('fees.title')} />
+      )}
       <button type="button" className={styles.homeRow} onClick={() => navigate(FEES_PATH)}>
         <span className={cx(styles.kindIcon, styles['tone-wrong'])} aria-hidden="true">
           <Landmark strokeWidth={2.25} />

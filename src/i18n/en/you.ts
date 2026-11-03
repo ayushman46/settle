@@ -52,7 +52,7 @@ export const you = {
   'you.accent.locked': '{name}, Pro',
   'you.accent.note': 'Lime is free. Mint, sky, violet and coral come with Pro.',
   'you.clear.title': 'Clear everything?',
-  'you.clear.body': 'Your profile, people, expenses, groups, recurring splits, stuck money and any bill in progress are deleted from this phone.',
+  'you.clear.body': 'Your profile, people, expenses, groups, recurring splits, stuck money, bank charges and any bill in progress are deleted from this phone.',
   'you.clear.confirm': 'Clear everything',
   'you.clear.keep': 'Keep my data',
   'you.clear.backupBody': 'Might you want it back one day? Save a backup file first.',
@@ -98,7 +98,7 @@ export const you = {
   'you.restore.replace.title': 'This replaces everything here',
   'you.restore.fresh': 'Everything in the backup comes back onto this phone, profile included.',
   // The banner under Replace.
-  'you.restore.replace.warning': 'Your profile, people, expenses, groups, recurring splits and stuck money on this phone are swapped for the backup’s. You can undo it straight after.',
+  'you.restore.replace.warning': 'Your profile, people, expenses, groups, recurring splits, stuck money and bank charges on this phone are swapped for the backup’s. You can undo it straight after.',
   // The sheet's button: a fresh phone, merging, or replacing.
   'you.restore.cta.restore': 'Restore backup',
   'you.restore.cta.merge': 'Merge backup',
@@ -110,6 +110,7 @@ export const you = {
   'you.restore.contents.groups': '{count, plural, one {# group} other {# groups}}',
   'you.restore.contents.recurring': '{count, plural, one {# recurring split} other {# recurring splits}}',
   'you.restore.contents.stuck': '{count, plural, one {# stuck payment} other {# stuck payments}}',
+  'you.restore.contents.fees': '{count, plural, one {# bank charge} other {# bank charges}}',
   'you.restore.contents.empty': 'Nothing in it yet',
   // A picked file that can't be restored.
   'you.restore.error.notBackup': 'That file isn’t a {brand} backup. Pick the .json file {brand} saved.',
@@ -147,7 +148,7 @@ export const you = {
   'you.data.keepCopy': 'Keep a copy of everything, just in case',
   'you.data.lastSaved': '{when, select, today {Last saved today} yesterday {Last saved yesterday} other {Last saved on {date}}}',
   // Under the Your data card; <link> opens Pro.
-  'you.data.footnote': 'Backups hold your people, expenses, groups, recurring splits, stuck money (with complaint numbers) and settings — not your Pro pass. Moving phones? Copy your Pro code from <link>{brand} Pro</link> and redeem it there.',
+  'you.data.footnote': 'Backups hold your people, expenses, groups, recurring splits, stuck money and bank charges (with complaint numbers) and settings — not your Pro pass. Moving phones? Copy your Pro code from <link>{brand} Pro</link> and redeem it there.',
   // The share sheet's title for each file.
   'you.data.backup.shareTitle': '{brand} backup',
   'you.data.csv.shareTitle': '{brand} expenses',

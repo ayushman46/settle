@@ -9,18 +9,18 @@ import { ArrowRightLeft, BadgeCheck, Banknote, ChevronDown, CreditCard, FileText
 import { navigate } from '../../app/router'
 import { AmountInput, Button, Card, Chip, Money, useToast } from '../../components'
 import { addStuck } from '../../data/stuck'
+import { stuckStore } from '../../data/stores'
 import { useT } from '../../i18n'
 import { cx } from '../../lib/cx'
 import { haptic } from '../../lib/haptics'
 import { parseMoneyInput } from '../../lib/money'
 import { stuckPath } from '../stuck/paths'
 import { bankName } from '../stuck/letters'
-import { answerFindings, dismissClaim, makeClaim, setAccount } from './actions'
+import { answerFindings, dismissClaim, makeClaim, markLateClaimed, setAccount } from './actions'
 import { FeeChargeSheet } from './FeeChargeSheet'
 import { useOpenLetter } from './letterContext'
-import type { LateReversal } from './read'
-import { open as openAmount, type FeeFinding } from './rules'
-import { accountKey, accountOf, ACCOUNT_TYPES, type AccountType, type FeeCharge, type FeeKind, type FeesState } from './store'
+import { ATM_FREE_ANYWHERE, open as openAmount, type FeeFinding } from './rules'
+import { accountKey, accountOf, ACCOUNT_TYPES, feesStore, type AccountType, type FeeCharge, type FeeKind, type FeesState, type LateRefund } from './store'
 import {
   accountTail,
   avoidLine,
@@ -28,6 +28,7 @@ import {
   inr,
   kindLabel,
   owesLine,
+  statusLine,
   QUESTION_KEYS,
   RULE_REFS,
   whyLine,
@@ -62,7 +63,7 @@ export function FeeKindIcon({ kind, tone = 'plain' }: { kind: FeeKind; tone?: 'p
   )
 }
 
-function Section({ title, count, children, collapsible = false }: { title: string; count?: number; children: ReactNode; collapsible?: boolean }) {
+function Section({ title, count, countLabel, children, collapsible = false }: { title: string; count?: number; countLabel?: string; children: ReactNode; collapsible?: boolean }) {
   const t = useT()
   const id = useId()
   const [open, setOpen] = useState(!collapsible)
@@ -91,7 +92,7 @@ function Section({ title, count, children, collapsible = false }: { title: strin
       <div id={`${id}-body`} hidden={!open} className={styles.sectionBody}>
         {children}
       </div>
-      {count !== undefined && <span className="visually-hidden">{t('fees.kind.count', { count })}</span>}
+      {count !== undefined && <span className="visually-hidden">{countLabel ?? t('fees.kind.count', { count })}</span>}
     </section>
   )
 }
@@ -120,11 +121,13 @@ export function AccountSection({ state }: { state: FeesState }) {
     const seen = accounts.get(key)
     accounts.set(key, { bank: c.bank, account: c.account, minbal: (seen?.minbal ?? false) || c.kind === 'minbal' })
   }
-  if (accounts.size === 0) return null
+  // The answers decide the minimum-balance checks (and what a Basic Savings account gets free): asked where there's such a charge.
+  const relevant = [...accounts.entries()].filter(([, a]) => a.minbal)
+  if (relevant.length === 0) return null
   return (
     <Section title={t('fees.section.account')}>
       <p className={styles.fine}>{t('fees.account.why')}</p>
-      {[...accounts.entries()].map(([key, a]) => (
+      {relevant.map(([key, a]) => (
         <AccountCard key={key} state={state} bank={a.bank} account={a.account} minbal={a.minbal} />
       ))}
     </Section>
@@ -136,6 +139,8 @@ function AccountCard({ state, bank, account, minbal }: { state: FeesState; bank:
   const toast = useToast()
   const id = useId()
   const answers = accountOf(state, { bank, account })
+  // Nothing is chosen until you (or the statement) say: "Not sure" isn't pre-selected.
+  const answered = state.accounts[accountKey(bank, account)] !== undefined || state.accounts['*'] !== undefined
   const [other, setOther] = useState(false)
   const [typed, setTyped] = useState('')
   const name = bankName(bank)
@@ -157,7 +162,11 @@ function AccountCard({ state, bank, account, minbal }: { state: FeesState; bank:
           <h3 id={`${id}-h`} className={styles.cardTitle}>
             {heading}
           </h3>
-          <span className={styles.rowStatus}>{t('fees.account.summary', { type: t(TYPE_KEYS[answers.type]), mab: answers.mab === null ? 'none' : inr(answers.mab) })}</span>
+          <span className={styles.rowStatus}>
+            {answers.type === 'basic' || answers.type === 'scholarship'
+              ? t('fees.account.summaryBasic', { type: t(TYPE_KEYS[answers.type]) })
+              : t('fees.account.summary', { type: t(TYPE_KEYS[answers.type]), mab: answers.mab === null ? 'none' : inr(answers.mab) })}
+          </span>
         </span>
         <Button size="sm" variant="ghost" onClick={() => setEditing(true)} aria-describedby={`${id}-h`}>
           {t('fees.account.change')}
@@ -174,7 +183,7 @@ function AccountCard({ state, bank, account, minbal }: { state: FeesState; bank:
         <legend className={styles.question}>{t('fees.account.type')}</legend>
         <div className={styles.chips}>
           {ACCOUNT_TYPES.map((type) => (
-            <Chip key={type} selected={answers.type === type} onClick={() => save({ type })} aria-pressed={answers.type === type}>
+            <Chip key={type} selected={answered && answers.type === type} onClick={() => save({ type })} aria-pressed={answered && answers.type === type}>
               {t(TYPE_KEYS[type])}
             </Chip>
           ))}
@@ -243,20 +252,22 @@ function askGroups(asks: readonly FeeFinding[]): AskGroup[] {
   return [...map.values()].sort((a, b) => b.total - a.total)
 }
 
-export function AskSection({ asks }: { asks: readonly FeeFinding[] }) {
+export function AskSection({ asks, findings }: { asks: readonly FeeFinding[]; findings: readonly FeeFinding[] }) {
   const t = useT()
   if (asks.length === 0) return null
   const groups = askGroups(asks)
+  // What a charge's firm reason already claims (a question may claim more of it).
+  const firm = new Map(findings.filter((f) => f.verdict === 'wrong').map((f) => [f.charge.id, f.claim]))
   return (
     <Section title={t('fees.section.ask')} count={asks.length}>
       {groups.map((g) => (
-        <AskCard key={g.key} group={g} />
+        <AskCard key={g.key} group={g} firm={firm} />
       ))}
     </Section>
   )
 }
 
-function AskCard({ group }: { group: AskGroup }) {
+function AskCard({ group, firm }: { group: AskGroup; firm: ReadonlyMap<string, number> }) {
   const t = useT()
   const toast = useToast()
   const id = useId()
@@ -264,13 +275,30 @@ function AskCard({ group }: { group: AskGroup }) {
   if (!first?.question) return null
   const question = first.question
   const keys = group.findings.map((f) => f.key)
-  const answer = (yes: boolean | null): void => {
-    // "Not sure" (the warning only) asks the bank to show the notice or reverse the charge: it counts as no warning.
-    const wrong = yes === null ? true : yes === WRONG_IF_YES[question]
-    const undo = answerFindings(keys, wrong)
+  const tell = (wrong: boolean, undo: () => void): void => {
     haptic(wrong ? 'success' : 'tap')
     toast(t(wrong ? 'fees.answer.toast.wrong' : 'fees.answer.toast.fine'), { tone: wrong ? 'success' : undefined, action: { label: t('common.action.undo'), onAction: undo } })
   }
+  const answer = (yes: boolean): void => {
+    const wrong = yes === WRONG_IF_YES[question]
+    tell(wrong, answerFindings(keys, wrong))
+  }
+  // "Not sure" (the warning): the letter asks the bank to show the notice, or reverse the charge.
+  const unsure = (): void => tell(true, answerFindings(keys, 'unsure'))
+  // Balance checks at other banks' ATMs count among the 3 free: wrong while withdrawals and checks stay within them.
+  const enquiries = (n: number): void => {
+    const before = feesStore.get()
+    let any = false
+    for (const f of group.findings) {
+      const wrong = Number(f.facts['count'] ?? 0) + n <= ATM_FREE_ANYWHERE
+      any ||= wrong
+      answerFindings([f.key], wrong)
+    }
+    tell(any, () => feesStore.set(before))
+  }
+  // A question that could claim more than the firm reason already does.
+  const more = group.findings.reduce((sum, f) => sum + Math.max(0, f.claim - (firm.get(f.charge.id) ?? 0)), 0)
+  const upgrade = group.findings.some((f) => firm.has(f.charge.id))
   return (
     <Card className={styles.ask} aria-labelledby={`${id}-q`}>
       <ul role="list" className={styles.askList}>
@@ -291,18 +319,32 @@ function AskCard({ group }: { group: AskGroup }) {
       <p id={`${id}-q`} className={styles.question}>
         {t(QUESTION_KEYS[question])}
       </p>
-      <p className={styles.fine}>{whyLine(first)}</p>
+      <p className={styles.fine}>{upgrade && more > 0 ? t('fees.ask.more', { amount: inr(more) }) : whyLine(first)}</p>
       <div className={styles.answers} role="group" aria-labelledby={`${id}-q`}>
         {question === 'warned' ? (
           <>
             <Button size="sm" variant="tonal" onClick={() => answer(false)}>
               {t('fees.q.warned.no')}
             </Button>
-            <Button size="sm" variant="ghost" onClick={() => answer(true)}>
+            <Button size="sm" variant="secondary" onClick={() => answer(true)}>
               {t('fees.q.warned.yes')}
             </Button>
-            <Button size="sm" variant="ghost" onClick={() => answer(null)}>
+            <Button size="sm" variant="secondary" onClick={unsure}>
               {t('fees.q.warned.unsure')}
+            </Button>
+          </>
+        ) : question === 'atmEnquiry' ? (
+          <>
+            <Button size="sm" variant="tonal" onClick={() => enquiries(0)}>
+              {t('fees.q.atmEnquiry.none')}
+            </Button>
+            {[1, 2].map((n) => (
+              <Button key={n} size="sm" variant="secondary" onClick={() => enquiries(n)}>
+                {String(n)}
+              </Button>
+            ))}
+            <Button size="sm" variant="secondary" onClick={() => enquiries(3)}>
+              {t('fees.q.atmEnquiry.many')}
             </Button>
           </>
         ) : (
@@ -310,7 +352,7 @@ function AskCard({ group }: { group: AskGroup }) {
             <Button size="sm" variant="tonal" onClick={() => answer(true)}>
               {t('fees.answer.yes')}
             </Button>
-            <Button size="sm" variant="ghost" onClick={() => answer(false)}>
+            <Button size="sm" variant="secondary" onClick={() => answer(false)}>
               {t('fees.answer.no')}
             </Button>
           </>
@@ -334,6 +376,9 @@ function FindingRow({ f, onOpen }: { f: FeeFinding; onOpen?: () => void }) {
         <span className={styles.rowTitle}>{kindLabel(f.charge.kind)}</span>
         <span className={styles.rowStatus}>{dayLabel(f.charge.date)}</span>
         <span className={styles.why}>{whyLine(f)}</span>
+        {f.claim < f.charge.amount + f.charge.gst - f.charge.reversed && (
+          <span className={styles.rowStatus}>{t('fees.claim.partOf', { claim: inr(f.claim), amount: inr(f.charge.amount + f.charge.gst) })}</span>
+        )}
         <span className={styles.ref}>
           {t('fees.rule.source', { ref: RULE_REFS[f.rule] })}
           {more > 0 ? ` · ${t('fees.why.more', { count: more })}` : ''}
@@ -403,7 +448,7 @@ export function ClaimsSection({ claims }: { claims: readonly ClaimView[] }) {
   const shown = claims.filter((c) => c.stage !== 'dropped').sort((a, b) => b.claim.updatedAt - a.claim.updatedAt)
   if (shown.length === 0) return null
   return (
-    <Section title={t('fees.section.claims')} count={shown.length}>
+    <Section title={t('fees.section.claims')} count={shown.length} countLabel={t('fees.claims.count', { count: shown.length })}>
       {shown.map((c) => (
         <ClaimCard key={c.claim.id} view={c} onSheet={(mode) => openLetter({ claimId: c.claim.id, mode })} />
       ))}
@@ -411,34 +456,14 @@ export function ClaimsSection({ claims }: { claims: readonly ClaimView[] }) {
   )
 }
 
-function statusLine(c: ClaimView, t: ReturnType<typeof useT>): string {
-  const bank = c.claim.steps.find((s) => s.kind === 'bank')
-  const ombudsman = c.claim.steps.find((s) => s.kind === 'ombudsman')
-  switch (c.stage) {
-    case 'ready':
-      return t('fees.claim.status.ready')
-    case 'raised':
-      return t('fees.claim.status.raised', { date: dayLabel(bank?.date ?? ''), until: dayLabel(c.until ?? '') })
-    case 'ombudsman':
-      return t('fees.claim.status.ombudsman', { last: dayLabel(c.last ?? '') })
-    case 'replied':
-      return t('fees.claim.status.replied', { date: dayLabel(c.claim.repliedAt ?? ''), last: dayLabel(c.last ?? '') })
-    case 'ombudsmanRaised':
-      return t('fees.claim.status.ombudsmanRaised', { date: dayLabel(ombudsman?.date ?? '') })
-    case 'closed':
-      return t('fees.claim.status.closed', { last: dayLabel(c.last ?? '') })
-    case 'back':
-      return t('fees.claim.status.back', { amount: inr(c.claim.back?.amount ?? 0), date: dayLabel(c.claim.back?.date ?? '') })
-    case 'dropped':
-      return ''
-  }
-}
-
 function ClaimCard({ view, onSheet }: { view: ClaimView; onSheet: (mode: 'bank' | 'ombudsman' | 'replied' | 'back') => void }) {
   const t = useT()
   const toast = useToast()
   const { claim, stage } = view
   const done = stage === 'back'
+  const sent = stage !== 'ready'
+  // After the bank's 30 days (or its reply): the RBI Ombudsman, while its 90 days last.
+  const ombudsmanOpen = stage === 'ombudsman' || stage === 'replied'
   const drop = (): void => {
     const undo = dismissClaim(claim.id)
     toast(t('fees.claim.dropped'), { action: { label: t('common.action.undo'), onAction: undo } })
@@ -446,8 +471,8 @@ function ClaimCard({ view, onSheet }: { view: ClaimView; onSheet: (mode: 'bank' 
   return (
     <Card padding="none" className={cx(styles.claim, done && styles.claimDone)}>
       <div className={styles.claimHead}>
-        <h3 className={styles.cardTitle}>{owesLine(claim.bank, claim.amount)}</h3>
-        <p className={cx(styles.rowStatus, (stage === 'ombudsman' || stage === 'replied') && styles.urgent, done && styles.good)}>{statusLine(view, t)}</p>
+        <h3 className={styles.cardTitle}>{done ? owesLine(claim.bank, view.backSoFar, true) : owesLine(claim.bank, view.rest)}</h3>
+        <p className={cx(styles.rowStatus, ombudsmanOpen && styles.urgent, done && styles.good)}>{statusLine(view, t)}</p>
       </div>
       {view.findings.length > 0 && !done && (
         <ul role="list" className={styles.list}>
@@ -468,20 +493,25 @@ function ClaimCard({ view, onSheet }: { view: ClaimView; onSheet: (mode: 'bank' 
               </Button>
             </>
           )}
-          {(stage === 'ombudsman' || stage === 'replied') && (
+          {ombudsmanOpen && (
             <Button block iconStart={<Landmark />} onClick={() => onSheet('ombudsman')}>
               {t('fees.claim.ombudsman')}
             </Button>
           )}
-          {stage !== 'ready' && (
+          {sent && (
             <div className={styles.answers}>
-              {(stage === 'raised' || stage === 'ombudsman') && (
-                <Button size="sm" variant="ghost" onClick={() => onSheet('bank')}>
+              {stage !== 'ombudsmanRaised' && (
+                <Button size="sm" variant="secondary" onClick={() => onSheet('bank')}>
                   {t('fees.claim.raiseAgain')}
                 </Button>
               )}
-              {stage === 'raised' && (
-                <Button size="sm" variant="ghost" onClick={() => onSheet('replied')}>
+              {stage === 'ombudsmanRaised' && (
+                <Button size="sm" variant="secondary" onClick={() => onSheet('ombudsman')}>
+                  {t('fees.claim.raiseAgain')}
+                </Button>
+              )}
+              {(stage === 'raised' || stage === 'ombudsman' || stage === 'replied') && (
+                <Button size="sm" variant="secondary" onClick={() => onSheet('replied')}>
                   {t('fees.claim.replied')}
                 </Button>
               )}
@@ -500,11 +530,19 @@ function ClaimCard({ view, onSheet }: { view: ClaimView; onSheet: (mode: 'bank' 
 
 const RBI_ATM_DAYS = 5
 
-export function LateSection({ late, onDone }: { late: readonly LateReversal[]; onDone: (l: LateReversal) => void }) {
+/** ATM refunds a statement showed coming back late: kept until claimed in Stuck money, which counts the ₹100 a day. */
+export function LateSection({ late }: { late: readonly LateRefund[] }) {
   const t = useT()
   const toast = useToast()
   if (late.length === 0) return null
-  const claim = (l: LateReversal): void => {
+  const claim = (l: LateRefund): void => {
+    // Already in Stuck money (claimed here, or added there by hand): open it rather than adding it twice.
+    const known = stuckStore.get().find((s) => s.id === l.stuckId || (s.rail === 'atm' && s.amount === l.amount && s.date === l.date))
+    if (known) {
+      if (l.stuckId !== known.id) markLateClaimed(l, known.id)
+      navigate(stuckPath(known.id))
+      return
+    }
     const s = addStuck({
       kind: 'failed',
       rail: 'atm',
@@ -515,16 +553,16 @@ export function LateSection({ late, onDone }: { late: readonly LateReversal[]; o
       promisedBy: null,
       ref: null,
       orderId: null,
-      bank: null,
-      account: null,
+      bank: l.bank,
+      account: l.account,
       app: null,
-      source: 'manual',
+      source: 'sms',
       confirmed: true,
       back: { date: l.backOn, amount: l.amount, compensation: 0, parts: [{ date: l.backOn, amount: l.amount, compensation: 0 }] },
     })
+    markLateClaimed(l, s.id)
     haptic('success')
     toast(t('fees.late.added'), { tone: 'success' })
-    onDone(l)
     navigate(stuckPath(s.id))
   }
   return (
@@ -532,11 +570,11 @@ export function LateSection({ late, onDone }: { late: readonly LateReversal[]; o
       {late.map((l) => {
         const days = Math.max(0, Math.round((Date.parse(l.backOn) - Date.parse(l.date)) / 86_400_000) - RBI_ATM_DAYS)
         return (
-          <Card key={`${l.date}-${l.amount}`} className={styles.late}>
+          <Card key={`${l.date}-${l.amount}-${l.backOn}`} className={styles.late}>
             <h3 className={styles.cardTitle}>{t('fees.late.title', { comp: inr(days * 100_00) })}</h3>
             <p className={styles.fine}>{t('fees.late.text', { amount: inr(l.amount), date: dayLabel(l.date), backOn: dayLabel(l.backOn), days })}</p>
             <Button size="md" variant="secondary" onClick={() => claim(l)}>
-              {t('fees.late.cta')}
+              {l.stuckId ? t('fees.late.open') : t('fees.late.cta')}
             </Button>
           </Card>
         )
@@ -552,7 +590,15 @@ export function AvoidSection({ avoidable, state }: { avoidable: FeesView['avoida
   const openLetter = useOpenLetter()
   if (avoidable.length === 0) return null
   const minbal = avoidable.find((a) => a.kind === 'minbal')
-  const anyMinbal = state.charges.find((c) => c.kind === 'minbal')
+  // The account that paid the most for its minimum balance is the one to switch.
+  const totals = new Map<string, { charge: FeeCharge; amount: number }>()
+  for (const c of state.charges) {
+    if (c.kind !== 'minbal') continue
+    const key = accountKey(c.bank, c.account)
+    const seen = totals.get(key)
+    totals.set(key, { charge: seen?.charge ?? c, amount: (seen?.amount ?? 0) + c.amount + c.gst })
+  }
+  const anyMinbal = [...totals.values()].sort((a, b) => b.amount - a.amount)[0]?.charge
   const basicAlready = anyMinbal ? accountOf(state, anyMinbal).type === 'basic' : false
   return (
     <Section title={t('fees.section.avoid')}>

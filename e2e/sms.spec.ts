@@ -48,7 +48,15 @@ function cab(): Expense {
 
 async function openFromHome(page: Page): Promise<void> {
   await page.goto('/app')
-  await page.getByRole('list', { name: 'Quick actions' }).getByRole('button', { name: 'From SMS' }).click()
+  // On the grid, or in More when the grid is full (it's the first to make room).
+  const grid = page.getByRole('list', { name: 'Quick actions' })
+  await expect(grid.getByRole('button', { name: 'More', exact: true })).toBeVisible()
+  if ((await grid.getByRole('button', { name: 'From SMS' }).count()) > 0) {
+    await grid.getByRole('button', { name: 'From SMS' }).click()
+  } else {
+    await grid.getByRole('button', { name: 'More', exact: true }).click()
+    await page.getByRole('dialog', { name: 'More' }).getByRole('button', { name: 'From SMS' }).click()
+  }
   await expect(page).toHaveURL(/\/app\/share$/)
   await expect(page.getByRole('heading', { level: 1, name: 'Split from an SMS' })).toBeVisible()
 }

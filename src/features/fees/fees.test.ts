@@ -88,7 +88,7 @@ describe('reading a statement', () => {
 
   it('finds the bank, the account and a basic account above the table', () => {
     const rows = csv([['01/10/26', 'X', '1.00', '', '1.00']], ['HDFC BANK Ltd.', 'Account No :XXXXXXXX4821', 'Product : BASIC SAVINGS BANK DEPOSIT A/C', 'IFSC : HDFC0001234'])
-    expect(statementMeta(rows)).toEqual({ bank: 'hdfc', account: 'XX4821', type: 'basic' })
+    expect(statementMeta(rows)).toEqual({ bank: 'hdfc', account: 'XX4821', type: 'basic', period: null })
   })
 
   it('works out the month a minimum-balance charge is for, and its average balance', () => {
@@ -97,7 +97,7 @@ describe('reading a statement', () => {
     expect(chargePeriod('2026-10-03', true)).toEqual({ from: '2026-07-01', to: '2026-09-30', label: '2026-Q3' })
     const read = readLines(
       csv([
-        ['30/09/26', 'OPENING', '', '1.00', '12000.00'],
+        ['30/09/26', 'UPI/CR/601234567890/RAHUL/SALARY ADV', '', '1.00', '12000.00'],
         ['16/10/26', 'UPI-SWIGGY-swiggy@axb', '4000.00', '', '8000.00'],
         ['02/11/26', 'NON MAINT OF AMB CHGS', '500.00', '', '7500.00'],
       ]),
@@ -127,7 +127,7 @@ describe('finding what breaks a rule', () => {
   })
 
   it('claims the whole charge once you say the bank never warned you', () => {
-    checkRows(csv([['01/10/26', 'OPENING', '', '1.00', '5000.00'], ['02/11/26', 'MIN BAL CHARGES', '300.00', '', '4700.00']]))
+    checkRows(csv([['01/10/26', 'UPI/CR/601234567890/RAHUL/SALARY ADV', '', '1.00', '5000.00'], ['02/11/26', 'MIN BAL CHARGES', '300.00', '', '4700.00']]))
     let [f] = findingsOf(feesStore.get())
     expect(f).toMatchObject({ rule: 'minbalNotice', verdict: 'ask', question: 'warned' })
     answerFindings([f?.key ?? ''], true)
@@ -136,14 +136,14 @@ describe('finding what breaks a rule', () => {
   })
 
   it("claims a minimum-balance charge from a bank that stopped charging it", () => {
-    checkRows(csv([['01/10/26', 'OPENING', '', '1.00', '5000.00'], ['02/11/26', 'MIN BAL CHARGES', '300.00', '', '4700.00']], ['State Bank of India', 'IFSC SBIN0001234']))
+    checkRows(csv([['01/10/26', 'UPI/CR/601234567890/RAHUL/SALARY ADV', '', '1.00', '5000.00'], ['02/11/26', 'MIN BAL CHARGES', '300.00', '', '4700.00']], ['State Bank of India', 'IFSC SBIN0001234']))
     expect(findingsOf(feesStore.get())[0]).toMatchObject({ rule: 'minbalWaived', verdict: 'wrong', claim: 30000 })
   })
 
   it('claims all of it on a basic account, and when the average was not short at all', () => {
     checkRows(
       csv([
-        ['30/09/26', 'OPENING', '', '1.00', '12000.00'],
+        ['30/09/26', 'UPI/CR/601234567890/RAHUL/SALARY ADV', '', '1.00', '12000.00'],
         ['02/11/26', 'NON MAINT OF AMB CHGS', '500.00', '', '11500.00'],
       ]),
     )
@@ -156,7 +156,7 @@ describe('finding what breaks a rule', () => {
   it('asks about an ATM charge in a month with only two withdrawals (a failed one not counted)', () => {
     checkRows(
       csv([
-        ['01/10/26', 'OPENING', '', '1.00', '20000.00'],
+        ['01/10/26', 'UPI/CR/601234567890/RAHUL/SALARY ADV', '', '1.00', '20000.00'],
         ['05/10/26', 'NWD-5123XXXX4821-MUMBAI', '2000.00', '', '18000.00'],
         ['09/10/26', 'NWD-5123XXXX4821-ANDHERI', '1000.00', '', '17000.00'],
         ['12/10/26', 'NWD-5123XXXX4821-BANDRA', '3000.00', '', '14000.00'],
@@ -172,7 +172,7 @@ describe('finding what breaks a rule', () => {
   it('claims an NEFT charge on a transfer sent from net banking, and a UPI charge', () => {
     checkRows(
       csv([
-        ['01/03/25', 'OPENING', '', '1.00', '20000.00'],
+        ['01/03/25', 'UPI/CR/601234567890/RAHUL/SALARY ADV', '', '1.00', '20000.00'],
         ['05/03/25', 'NEFT DR-SBIN0001234-RIYA SHARMA-NETBANK-RENT', '10000.00', '', '10000.00'],
         ['05/03/25', 'NEFT CHGS', '2.50', '', '9997.50'],
         ['05/03/25', 'GST ON NEFT CHGS', '0.45', '', '9997.05'],
@@ -189,7 +189,7 @@ describe('finding what breaks a rule', () => {
   it('claims the GST left behind when a charge was reversed alone', () => {
     checkRows(
       csv([
-        ['01/10/26', 'OPENING', '', '1.00', '20000.00'],
+        ['01/10/26', 'UPI/CR/601234567890/RAHUL/SALARY ADV', '', '1.00', '20000.00'],
         ['02/10/26', 'SMS ALERT CHGS QTR SEP26', '15.00', '', '19985.00'],
         ['02/10/26', 'GST ON SMS CHGS', '2.70', '', '19982.30'],
         ['20/10/26', 'REV SMS ALERT CHGS', '', '15.00', '19997.30'],
@@ -199,7 +199,7 @@ describe('finding what breaks a rule', () => {
   })
 
   it('keeps each charge once when the same statement is read twice', () => {
-    const rows = csv([['01/10/26', 'OPENING', '', '1.00', '5000.00'], ['02/11/26', 'MIN BAL CHARGES', '300.00', '', '4700.00']])
+    const rows = csv([['01/10/26', 'UPI/CR/601234567890/RAHUL/SALARY ADV', '', '1.00', '5000.00'], ['02/11/26', 'MIN BAL CHARGES', '300.00', '', '4700.00']])
     checkRows(rows)
     const again = checkRows(rows)
     expect(feesStore.get().charges).toHaveLength(1)
@@ -209,7 +209,7 @@ describe('finding what breaks a rule', () => {
   it('finds ATM withdrawals that came back after the 5 days', () => {
     const read = readLines(
       csv([
-        ['01/10/26', 'OPENING', '', '1.00', '20000.00'],
+        ['01/10/26', 'UPI/CR/601234567890/RAHUL/SALARY ADV', '', '1.00', '20000.00'],
         ['03/10/26', 'ATW-5123XXXX4821-PUNE', '2000.00', '', '18000.00'],
         ['14/10/26', 'ATM RVSL ATW-5123XXXX4821-PUNE', '', '2000.00', '20000.00'],
       ]),
@@ -243,7 +243,7 @@ describe('letters', () => {
     )
     feesStore.set({ ...feesStore.get(), charges: feesStore.get().charges.map((c) => ({ ...c, bank: 'hdfc', account: 'XX4821' })) })
     const letter = bankLetter(findingsOf(feesStore.get()), { name: 'Asha Rao', upiId: null, mobile: '98450 12345' }, '2026-11-03')
-    expect(letter.subject).toBe('Reversal of a charge wrongly debited from my account ending 4821')
+    expect(letter.subject).toBe('Reversal of a charge wrongly debited from my savings account ending 4821')
     expect(letter.body).toContain('To: The Branch Manager / Grievance Redressal Officer, HDFC Bank')
     expect(letter.body).toContain('1. 2 November 2026: charge for non-maintenance of minimum balance of ₹590 (₹500 + ₹90 GST)')
     expect(letter.body).toContain('from ₹100 to −₹490')
@@ -255,5 +255,33 @@ describe('letters', () => {
 
   it('asks to convert to a basic account, citing the 7 days', () => {
     expect(basicLetter('icici', 'XX1234', { name: 'Asha Rao', upiId: null }, '2026-11-03').body).toContain('within seven days')
+  })
+})
+
+describe('payments are not charges', () => {
+  it('a UPI or NEFT payment whose remark says “fee” or “charges” is left alone; the bank’s own charge line is kept', () => {
+    checkRows(
+      csv([
+        ['01/10/26', 'UPI/CR/601234567890/RAHUL/SALARY ADV', '', '30000.00', '30000.00'],
+        ['03/10/26', 'NEFT DR-CNRB0001234-PES UNIVERSITY-NETBANK-COLLEGE FEE', '24000.00', '', '6000.00'],
+        ['04/10/26', 'UPI-CULT FIT-cultfit@ybl-YESB0000001-627712340001-SMS CHARGES WAIVED PROMO', '999.00', '', '5001.00'],
+        ['05/10/26', 'NEFT CHGS', '2.50', '', '4998.50'],
+      ]),
+    )
+    expect(feesStore.get().charges.map((c) => [c.kind, c.amount])).toEqual([['neft', 250]])
+  })
+
+  it('a charge removed as read wrong stays removed when the statement is read again', async () => {
+    const rows = csv([['01/10/26', 'UPI/CR/601234567890/RAHUL/SALARY ADV', '', '5000.00', '5000.00'], ['02/11/26', 'MIN BAL CHARGES', '300.00', '', '4700.00']])
+    checkRows(rows)
+    const { removeCharges } = await import('./actions')
+    removeCharges(feesStore.get().charges.map((c) => c.id))
+    checkRows(rows)
+    expect(feesStore.get().charges).toEqual([])
+  })
+
+  it('reads a minus balance in an SMS (“AVl Bal -68.20”) and Bank of India’s “MinBalChrgs”', () => {
+    expect(readChargeSms('Dear Customer, Rs 118.00 Debited(TRE) MinBalChrgsSEP26 GST in your Ac xxx5531 on 05-10-2026. AVl Bal -68.20 -Bank of India', '2026-11-03')).toMatchObject({ kind: 'minbal', amount: 11800, balanceAfter: -6820 })
+    expect(readChargeSms('Late payment charges of Rs.500 + GST Rs.90 levied on your HDFC Bank Credit Card XX9001 on 02-11-26', '2026-11-03')).toMatchObject({ kind: 'late', amount: 50000, gst: 9000 })
   })
 })

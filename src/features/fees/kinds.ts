@@ -41,8 +41,8 @@ const NOT_A_CHARGE = /\b(?:int\.?\s*pd|interest paid|int\.coll|salary|sal\b|divi
 /** Each kind's words, in the order they're tried: the first that matches wins. */
 const KIND_WORDS: ReadonlyArray<readonly [FeeKind, RegExp, boolean]> = [
   // [kind, words, needs a charge word too]
-  ['minbal', /\b(?:mab|amb|aqb|qab)\s*chr?gs?|\b(?:nmmab|low\s*bal(?:ance)?\s*ch|min(?:imum)?\.?\s*bal(?:ance)?|minbal|m\.?a\.?b\.?|a\.?m\.?b\.?|a\.?q\.?b\.?|q\.?a\.?b\.?|avg\.?\s*bal|average\s+(?:monthly\s+|quarterly\s+)?bal(?:ance)?|non[\s.-]*maint(?:enance|enace|\.)?|nonmaint|non[\s-]*maintenance|nmmb|nmab|shortfall)\b/i, false],
-  ['card', /\b(?:debit\s*card|dc|d\/c|atm\s*card|card|rupay|visa|master\s*card|dcardfee|dcard|dbt card)\b.*\b(?:annual|amc|issuance|issue|issu|replacement|replace|renewal|reissue|fee|chg|chrg|charges?)\b|\bdcardfee\b|\bdc\s*amc\b|\bcard\s*amc\b/i, false],
+  ['minbal', /\b(?:mab|amb|aqb|qab)\s*chr?gs?|\bmin\s*bal\s*chr?gs?|\b(?:nmmab|low\s*bal(?:ance)?\s*ch|min(?:imum)?\.?\s*bal(?:ance)?|minbal|m\.?a\.?b\.?|a\.?m\.?b\.?|a\.?q\.?b\.?|q\.?a\.?b\.?|avg\.?\s*bal|average\s+(?:monthly\s+|quarterly\s+)?bal(?:ance)?|non[\s.-]*maint(?:enance|enace|\.)?|nonmaint|non[\s-]*maintenance|nmmb|nmab|shortfall)\b/i, false],
+  ['card', /\b(?:debit\s*card|dc|d\/c|atm\s*card|card|rupay|visa|master\s*card|dcardfee|dcard|dbt card)\b.*\b(?:annual|amc|issuance|issue|issu|replacement|replace|renewal|reissue|fee|chg|chrg|charges?)\b|\bdcardfee\b|\bdc\s*amc\b|\bcard\s*amc\b|\b(?:annual|amc|renewal)\s*(?:fee|fees|chg|charges?)\b.*\b(?:debit\s*card|atm\s*card|rupay\s*card)\b/i, false],
   ['atmDecline', /\b(?:atm|nfs|pos)\b.*\b(?:decline|declined|dcln|insuff|insufficient|insuf)\b|\b(?:decline|declined|insuff|insufficient)\b.*\b(?:atm|nfs)\b/i, false],
   ['atm', /\b(?:atm|nfs|atw|cash\s*wdl|cwdr|cash withdrawal at other|other bank atm|oth bk atm|excess\s+(?:atm|txn|transaction)s?)\b/i, true],
   ['sms', /\bsms\s*ch(?:a)?r?ge?s?|\b(?:sms|alert|alerts|insta[-\s]?alerts?|inst[-\s]?alerts?|mobile alert)\b/i, true],
@@ -50,7 +50,7 @@ const KIND_WORDS: ReadonlyArray<readonly [FeeKind, RegExp, boolean]> = [
   ['rtgs', /\brtgs\b/i, true],
   ['imps', /\bimps\b/i, true],
   ['upi', /\bupi\b/i, true],
-  ['bounce', /\b(?:chq|cheque|check|ecs|nach|ach|mandate|emandate|e-mandate|si|standing instruction)\b.*\b(?:rtn|return|returned|retn|bounce|bounced|dishonou?r|dishonou?red|unpaid|failed|failure|insuff|insufficient)\b|\b(?:rtn|return|bounce|dishonou?r)\b.*\b(?:chq|cheque|ecs|nach|ach|mandate)\b|\binward\s+return\b/i, false],
+  ['bounce', /\b(?:chq|cheque|check|ecs|nach|ach|mandate|emandate|e-mandate|si|standing instruction)\b.*\b(?:rtn|return|returned|retn|bounce|bounced|dishonou?r|dishonou?red|unpaid|failed|failure|insuff|insufficient)\b|\b(?:rtn|return|bounce|dishonou?r)\b.*\b(?:chq|cheque|ecs|nach|ach|mandate)\b|\binward\s+return\b/i, true],
   ['chequeBook', /\b(?:chq\s*bk|chqbk|cheque\s*book|chequebook|chq\s*book|cheque\s*leaves|chq\s*leaves)\b/i, false],
   ['cash', /\b(?:cash\s*(?:dep|deposit|deposited|handling|txn|transaction)|cash\s*wdl\s*(?:at\s*)?branch|cash\s*hndlg|chg\s*cash|cdm|non[\s-]*home\s*branch)\b/i, true],
   ['dormant', /\b(?:dormant|inoperative|inop|revival|reactivation|re-activation)\b/i, false],
@@ -70,7 +70,7 @@ export function feeKindOf(text: string): FeeKind | null {
     return kind
   }
   // "SERVICE CHARGES", "CHARGES RECOVERED", "CONSOLIDATED CHARGES": a charge of some other kind.
-  if (/\b(?:service\s*(?:chg|chgs|charges?)|ser\s*chg|charges\s*recovered|chgs?\s*recovered|consolidated\s*charges?|bank\s*charges?|misc\.?\s*charges?|other\s*charges?|handling\s*charges?)\b/i.test(t)) return 'other'
+  if (/\b(?:service\s*(?:chg|chgs|charges?)|ser\s*chg|charges\s*recovered|chgs?\s*recovered|consolidated\s*charges?|bank\s*charges?|misc\.?\s*charges?|other\s*charges?|handling\s*charges?)\b|\bmms\s*reg|\bmandate\s*reg(?:istration)?\s*(?:chg|charges?|fee)/i.test(t)) return 'other'
   return null
 }
 

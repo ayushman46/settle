@@ -50,7 +50,7 @@ export const you = {
   'you.accent.locked': '{name}, Pro',
   'you.accent.note': 'नींबू हरा मुफ़्त है। पुदीना, आसमानी, बैंगनी और मूँगा Pro के साथ आते हैं।',
   'you.clear.title': 'सब कुछ मिटाएँ?',
-  'you.clear.body': 'आपकी प्रोफ़ाइल, लोग, खर्च, ग्रुप, रिकरिंग बँटवारे, अटके पैसे और चल रहा कोई भी बिल इस फ़ोन से हटा दिए जाएँगे।',
+  'you.clear.body': 'आपकी प्रोफ़ाइल, लोग, खर्च, ग्रुप, रिकरिंग बँटवारे, अटके पैसे, बैंक चार्ज और चल रहा कोई भी बिल इस फ़ोन से हटा दिए जाएँगे।',
   'you.clear.confirm': 'सब मिटाएँ',
   'you.clear.keep': 'मेरा डेटा रहने दें',
   'you.clear.backupBody': 'कभी इसकी ज़रूरत पड़ सकती है? पहले एक बैकअप फ़ाइल सेव कर लें।',
@@ -96,7 +96,7 @@ export const you = {
   'you.restore.replace.title': 'इससे यहाँ का सब कुछ बदल जाएगा',
   'you.restore.fresh': 'बैकअप का सब कुछ, प्रोफ़ाइल सहित, इस फ़ोन पर वापस आ जाएगा।',
   // The banner under Replace.
-  'you.restore.replace.warning': 'इस फ़ोन पर आपकी प्रोफ़ाइल, लोग, खर्च, ग्रुप, रिकरिंग बँटवारे और अटके पैसे बैकअप वालों से बदल दिए जाएँगे। तुरंत बाद आप इसे पहले जैसा कर सकते हैं।',
+  'you.restore.replace.warning': 'इस फ़ोन पर आपकी प्रोफ़ाइल, लोग, खर्च, ग्रुप, रिकरिंग बँटवारे, अटके पैसे और बैंक चार्ज बैकअप वालों से बदल दिए जाएँगे। तुरंत बाद आप इसे पहले जैसा कर सकते हैं।',
   // The sheet's button: a fresh phone, merging, or replacing.
   'you.restore.cta.restore': 'बैकअप वापस लाएँ',
   'you.restore.cta.merge': 'बैकअप जोड़ें',
@@ -108,6 +108,7 @@ export const you = {
   'you.restore.contents.groups': '{count, plural, one {# ग्रुप} other {# ग्रुप}}',
   'you.restore.contents.recurring': '{count, plural, one {# रिकरिंग बँटवारा} other {# रिकरिंग बँटवारे}}',
   'you.restore.contents.stuck': '{count, plural, one {# अटका पेमेंट} other {# अटके पेमेंट}}',
+  'you.restore.contents.fees': '{count, plural, one {# बैंक चार्ज} other {# बैंक चार्ज}}',
   'you.restore.contents.empty': 'इसमें अभी कुछ नहीं',
   // A picked file that can't be restored.
   'you.restore.error.notBackup': 'यह फ़ाइल {brand} का बैकअप नहीं है। {brand} की सेव की हुई .json फ़ाइल चुनें।',
@@ -146,7 +147,7 @@ export const you = {
   'you.data.lastSaved': '{when, select, today {आख़िरी बार आज सेव हुआ} yesterday {आख़िरी बार कल सेव हुआ} other {आख़िरी बार {date} को सेव हुआ}}',
   // Under the Your data card; <link> opens Pro.
   'you.data.footnote':
-    'बैकअप में आपके लोग, खर्च, ग्रुप, रिकरिंग बँटवारे, अटके पैसे (शिकायत नंबरों के साथ) और सेटिंग्स रहती हैं — आपका Pro पास नहीं। फ़ोन बदल रहे हैं? <link>{brand} Pro</link> से अपना Pro कोड कॉपी करें और नए फ़ोन पर भुनाएँ।',
+    'बैकअप में आपके लोग, खर्च, ग्रुप, रिकरिंग बँटवारे, अटके पैसे, बैंक चार्ज (दोनों शिकायत नंबरों के साथ) और सेटिंग्स रहती हैं — आपका Pro पास नहीं। फ़ोन बदल रहे हैं? <link>{brand} Pro</link> से अपना Pro कोड कॉपी करें और नए फ़ोन पर भुनाएँ।',
   // The share sheet's title for each file.
   'you.data.backup.shareTitle': '{brand} बैकअप',
   'you.data.csv.shareTitle': '{brand} खर्च',

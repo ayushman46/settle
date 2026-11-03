@@ -52,7 +52,7 @@ export const you = {
   'you.accent.locked': '{name}, Pro',
   'you.accent.note': 'लाइम मोफत आहे. मिंट, स्काय, व्हायोलेट आणि कोरल Pro सोबत येतात.',
   'you.clear.title': 'सर्वकाही साफ करायचे?',
-  'you.clear.body': 'तुमची प्रोफाइल, लोक, खर्च, ग्रुप, नियमित वाटण्या, अडकलेले पैसे आणि सुरू असलेले कोणतेही बिल या फोनवरून हटवले जातील.',
+  'you.clear.body': 'तुमची प्रोफाइल, लोक, खर्च, ग्रुप, नियमित वाटण्या, अडकलेले पैसे, बँक शुल्क आणि सुरू असलेले कोणतेही बिल या फोनवरून हटवले जातील.',
   'you.clear.confirm': 'सर्वकाही साफ करा',
   'you.clear.keep': 'माझा डेटा ठेवा',
   'you.clear.backupBody': 'कधी परत हवा असेल? आधी बॅकअप फाइल सेव्ह करा.',
@@ -98,7 +98,7 @@ export const you = {
   'you.restore.replace.title': 'यामुळे इथले सर्वकाही बदलेल',
   'you.restore.fresh': 'बॅकअपमधील सर्वकाही प्रोफाइलसह या फोनवर परत येईल.',
   // The banner under Replace.
-  'you.restore.replace.warning': 'या फोनवरील तुमची प्रोफाइल, लोक, खर्च, ग्रुप, नियमित वाटण्या आणि अडकलेले पैसे बॅकअपमधील माहितीने बदलले जातील. हवे तर लगेच पूर्ववत करू शकता.',
+  'you.restore.replace.warning': 'या फोनवरील तुमची प्रोफाइल, लोक, खर्च, ग्रुप, नियमित वाटण्या, अडकलेले पैसे आणि बँक शुल्क बॅकअपमधील माहितीने बदलले जातील. हवे तर लगेच पूर्ववत करू शकता.',
   // The sheet's button: a fresh phone, merging, or replacing.
   'you.restore.cta.restore': 'बॅकअप परत आणा',
   'you.restore.cta.merge': 'बॅकअप मिसळा',
@@ -110,6 +110,7 @@ export const you = {
   'you.restore.contents.groups': '{count, plural, one {# ग्रुप} other {# ग्रुप}}',
   'you.restore.contents.recurring': '{count, plural, one {# नियमित वाटणी} other {# नियमित वाटण्या}}',
   'you.restore.contents.stuck': '{count, plural, one {# अडकलेले पेमेंट} other {# अडकलेले पेमेंट}}',
+  'you.restore.contents.fees': '{count, plural, one {# बँक शुल्क} other {# बँक शुल्क}}',
   'you.restore.contents.empty': 'यात अजून काही नाही',
   // A picked file that can't be restored.
   'you.restore.error.notBackup': 'ही फाइल {brand} चा बॅकअप नाही. {brand} ने सेव्ह केलेली .json फाइल निवडा.',
@@ -147,7 +148,7 @@ export const you = {
   'you.data.keepCopy': 'सावधगिरीसाठी सर्वकाहीची एक प्रत ठेवा',
   'you.data.lastSaved': '{when, select, today {शेवटचा बॅकअप आज घेतला} yesterday {शेवटचा बॅकअप काल घेतला} other {शेवटचा बॅकअप {date} ला घेतला}}',
   // Under the Your data card; <link> opens Pro.
-  'you.data.footnote': 'बॅकअपमध्ये तुमचे लोक, खर्च, ग्रुप, नियमित वाटण्या, अडकलेले पैसे (तक्रार क्रमांकांसह) आणि सेटिंग्ज असतात — तुमचा Pro पास नाही. फोन बदलताय? <link>{brand} Pro</link> मधून तुमचा Pro कोड कॉपी करा आणि नवीन फोनवर तो वापरा.',
+  'you.data.footnote': 'बॅकअपमध्ये तुमचे लोक, खर्च, ग्रुप, नियमित वाटण्या, अडकलेले पैसे व बँक शुल्क (तक्रार क्रमांकांसह), आणि सेटिंग्ज असतात — तुमचा Pro पास नाही. फोन बदलताय? <link>{brand} Pro</link> मधून तुमचा Pro कोड कॉपी करा आणि नवीन फोनवर तो वापरा.',
   // The share sheet's title for each file.
   'you.data.backup.shareTitle': '{brand} बॅकअप',
   'you.data.csv.shareTitle': '{brand} खर्च',

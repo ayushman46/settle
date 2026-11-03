@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Trash2 } from 'lucide-react'
 import { ActionBar, BottomSheet, Button, useToast } from '../../components'
 import { useT } from '../../i18n'
@@ -11,6 +11,8 @@ export function FeesClear() {
   const t = useT()
   const toast = useToast()
   const [asking, setAsking] = useState(false)
+  // Opens on Cancel: the destructive button is never where focus lands.
+  const cancel = useRef<HTMLButtonElement>(null)
   const clear = (): void => {
     const undo = clearFees()
     haptic('tap')
@@ -25,6 +27,7 @@ export function FeesClear() {
       <BottomSheet
         open={asking}
         onClose={() => setAsking(false)}
+        initialFocus={cancel}
         title={t('fees.clear')}
         description={t('fees.clear.confirm')}
         footer={
@@ -32,7 +35,7 @@ export function FeesClear() {
             <Button block variant="danger" iconStart={<Trash2 />} onClick={clear}>
               {t('fees.clear')}
             </Button>
-            <Button block variant="secondary" onClick={() => setAsking(false)}>
+            <Button ref={cancel} block variant="secondary" onClick={() => setAsking(false)}>
               {t('common.action.cancel')}
             </Button>
           </ActionBar>

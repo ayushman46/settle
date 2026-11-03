@@ -4,6 +4,7 @@
  * or that it's allowed. "It's fine" leaves it out of your claim; "Remove" drops a line Settle read
  * wrong. Both with Undo.
  */
+import { useRef } from 'react'
 import { BottomSheet, Button, useToast } from '../../components'
 import { useT } from '../../i18n'
 import { haptic } from '../../lib/haptics'
@@ -20,6 +21,9 @@ export function FeeChargeSheet({ charge, onClose }: { charge: FeeCharge | null; 
   const state = useFees((s) => s)
   const current = charge ? (state.charges.find((c) => c.id === charge.id) ?? charge) : null
   const finding = current ? (findingsOf(state).find((f) => f.charge.id === current.id) ?? null) : null
+  // The sheet opens on what it says, never on a button that drops a claim.
+  const top = useRef<HTMLDListElement>(null)
+  const putBack = current !== null && current.reversed >= current.amount + current.gst
   const fine = (): void => {
     if (!finding) return
     const undo = dismissFinding(finding.key)
@@ -38,6 +42,7 @@ export function FeeChargeSheet({ charge, onClose }: { charge: FeeCharge | null; 
     <BottomSheet
       open={current !== null}
       onClose={onClose}
+      initialFocus={top}
       eyebrow={current ? [dayLabel(current.date), bankName(current.bank)].filter(Boolean).join(' · ') : undefined}
       title={current ? `${kindLabel(current.kind)} · ${inr(current.amount + current.gst)}` : ''}
       description={current ? t('fees.charge.from', { source: current.source }) : undefined}
@@ -58,7 +63,7 @@ export function FeeChargeSheet({ charge, onClose }: { charge: FeeCharge | null; 
     >
       {current && (
         <div className={styles.chargeBody}>
-          <dl className={styles.facts}>
+          <dl ref={top} tabIndex={-1} className={styles.facts}>
             <div>
               <dt>{t('fees.charge.label.amount')}</dt>
               <dd>{t('fees.charge.amount', { amount: inr(current.amount + current.gst), gst: current.gst > 0 ? inr(current.gst) : 'none' })}</dd>
@@ -95,7 +100,7 @@ export function FeeChargeSheet({ charge, onClose }: { charge: FeeCharge | null; 
               <p className={styles.ref}>{t('fees.rule.source', { ref: RULE_REFS[finding.rule] })}</p>
             </div>
           ) : (
-            <p className={styles.fine}>{t('fees.charge.ok')}</p>
+            <p className={styles.fine}>{t(putBack ? 'fees.charge.backFull' : 'fees.charge.ok')}</p>
           )}
         </div>
       )}

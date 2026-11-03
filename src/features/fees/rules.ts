@@ -31,6 +31,7 @@ export type FeeRule =
   | 'minbalBasic'
   | 'minbalScholarship'
   | 'minbalWaived'
+  | 'smsWaived'
   | 'minbalNotShort'
   | 'minbalOverShortfall'
   | 'minbalOverSchedule'
@@ -85,6 +86,11 @@ export interface FeeFinding {
   facts: Readonly<Record<string, string | number>>
   /** Other rules the same charge breaks (more reasons for its letter). */
   also: { rule: FeeRule; facts: Readonly<Record<string, string | number>> }[]
+  /**
+   * A question that could make more of a firm finding claimable (the charge took the balance below
+   * zero — and if the bank never warned you, all of it is claimable): asked alongside.
+   */
+  upgrade: FeeFinding | null
 }
 
 /* ---------------------------------------------------------------- the dated rules */
@@ -137,6 +143,11 @@ export const MINBAL_SCHEDULES: Readonly<Record<string, (mab: number, avg: number
   axis: (mab, avg) => Math.min(Math.round(0.06 * (mab - avg)), 600_00),
 }
 
+/** Banks that stopped charging for SMS alerts on savings accounts (SBI's announcement of 11 Mar 2020, with the minimum balance). */
+export const SMS_WAIVED: Readonly<Record<string, string>> = {
+  sbi: '2020-03-11',
+}
+
 /** The most an ATM transaction may cost beyond the free ones (before GST), by the day it was charged. */
 export function atmCap(date: string): number {
   if (date >= '2025-05-01') return 23_00
@@ -161,7 +172,7 @@ function withGst(charge: FeeCharge, part: number): number {
 }
 
 function finding(rule: FeeRule, charge: FeeCharge, claim: number, facts: Record<string, string | number> = {}, question: FeeQuestion | null = null): FeeFinding {
-  return { key: `${rule}:${charge.id}`, rule, verdict: question ? 'ask' : 'wrong', charge, claim: Math.max(0, Math.min(claim, open(charge))), question, facts, also: [] }
+  return { key: `${rule}:${charge.id}`, rule, verdict: question ? 'ask' : 'wrong', charge, claim: Math.max(0, Math.min(claim, open(charge))), question, facts, also: [], upgrade: null }
 }
 
 /** Your bank's warning, from its SMS: the latest one up to `date`. */
@@ -225,7 +236,8 @@ function minbalFindings(state: Pick<FeesState, 'accounts' | 'notices'>, c: FeeCh
 
 function atmFindings(state: Pick<FeesState, 'accounts'>, c: FeeCharge): FeeFinding[] {
   const account = accountOf(state, c)
-  if (c.kind === 'atmDecline') return [finding('atmDecline', c, open(c), {}, 'declineReason')]
+  // A decline the SMS or narration already says was for too little money: the bank may charge it.
+  if (c.kind === 'atmDecline') return /\b(?:insuff|insufficient|insuf|low bal|no bal)/i.test(c.text) ? [] : [finding('atmDecline', c, open(c), {}, 'declineReason')]
   if (account.type === 'basic' && c.monthWithdrawals !== null && c.monthWithdrawals <= BASIC_FREE_WITHDRAWALS) {
     return [finding('basicWithdrawals', c, open(c), { count: c.monthWithdrawals, month: c.date.slice(0, 7) })]
   }
@@ -242,7 +254,8 @@ function neftFindings(c: FeeCharge): FeeFinding[] {
 }
 
 function upiFindings(c: FeeCharge): FeeFinding[] {
-  if (c.date < UPI_FREE_FROM) return []
+  // A "convenience fee" an app or a biller adds (no bank, no account) isn't a bank's charge.
+  if (c.date < UPI_FREE_FROM || (c.source !== 'statement' && c.bank === null && c.account === null)) return []
   // Any UPI payment, up to the 2026 amendment.
   if (c.date < UPI_GAP_FROM) return [finding('upi', c, open(c), { era: 'all' })]
   // The weeks with no mode specified: nothing firm to claim.
@@ -312,6 +325,11 @@ export function findingsOf(state: Pick<FeesState, 'charges' | 'accounts' | 'noti
         case 'upi':
           found.push(...upiFindings(c))
           break
+        case 'sms': {
+          const from = c.bank ? SMS_WAIVED[c.bank] : undefined
+          if (from && c.date >= from) found.push(finding('smsWaived', c, open(c), { from }))
+          break
+        }
         case 'statement':
           if (!/\b(?:dup|duplicate|adhoc|ad-hoc|cert|certificate)\b/i.test(c.text)) found.push(finding('statementFree', c, open(c), {}, 'duplicateStatement'))
           break
@@ -340,8 +358,8 @@ export function findingsOf(state: Pick<FeesState, 'charges' | 'accounts' | 'noti
       if (f.verdict === 'ask') {
         const answer = state.answers[f.key]
         if (answer === false) continue
-        if (answer === true) {
-          all.push({ ...f, verdict: 'wrong', question: null })
+        if (answer === true || answer === 'unsure') {
+          all.push({ ...f, verdict: 'wrong', question: null, facts: answer === 'unsure' ? { ...f.facts, unsure: 1 } : f.facts })
           continue
         }
       }
@@ -357,7 +375,10 @@ function strongestPerCharge(findings: readonly FeeFinding[]): FeeFinding[] {
   const out: FeeFinding[] = []
   for (const list of byCharge.values()) {
     const [best, ...rest] = [...list].sort((a, b) => rank(b) - rank(a))
-    if (best) out.push({ ...best, also: rest.filter((r) => r.verdict === 'wrong' && r.rule !== best.rule).map((r) => ({ rule: r.rule, facts: r.facts })) })
+    if (!best) continue
+    // A question that would claim more than the firm finding does.
+    const upgrade = best.verdict === 'wrong' ? (rest.filter((r) => r.verdict === 'ask' && r.claim > best.claim).sort((a, b) => b.claim - a.claim)[0] ?? null) : null
+    out.push({ ...best, also: rest.filter((r) => r.verdict === 'wrong' && r.rule !== best.rule).map((r) => ({ rule: r.rule, facts: r.facts })), upgrade })
   }
   return out.sort((a, b) => b.charge.date.localeCompare(a.charge.date))
 }

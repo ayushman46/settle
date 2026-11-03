@@ -1,7 +1,7 @@
 import { useId, useMemo, useRef, useState, type ChangeEvent } from 'react'
 import { ClipboardPaste, FileSpreadsheet, Landmark, Lock, Scale } from 'lucide-react'
 import { goBack } from '../../app/router'
-import { Banner, Button, EmptyState, Money, PageTitle, Screen, TopBar, useToast } from '../../components'
+import { Banner, Button, EmptyState, Money, PageTitle, Screen, TopBar } from '../../components'
 import { today as todayIso } from '../../engine/dates'
 import { useT } from '../../i18n'
 import { haptic } from '../../lib/haptics'
@@ -11,13 +11,13 @@ import { LetterSheetHost } from './FeeLetterSheet'
 import { FeePasteSheet } from './FeePasteSheet'
 import { FeesClear } from './FeesClear'
 import { AccountSection, AllCharges, AskSection, AvoidSection, ClaimGroups, ClaimsSection, LateSection } from './FeesParts'
-import { checkStatementFile, type LateReversal, type StatementCheck } from './read'
+import { checkStatementFile, type StatementCheck } from './read'
 import { useFees } from './store'
 import { dayLabel, feesView, inr } from './view'
 import styles from './Fees.module.css'
 
 /** What the last statement read said, until another is read. */
-type ReadNote = { tone: 'info' | 'success' | 'warning' | 'error'; text: string; untrusted?: boolean }
+type ReadNote = { tone: 'info' | 'success' | 'warning' | 'error'; text: string; untrusted?: boolean; undo?: () => void }
 
 function noteFor(check: StatementCheck, t: ReturnType<typeof useT>): ReadNote {
   if (check.kind === 'unreadable') return { tone: 'error', text: t(check.oldXls ? 'fees.read.oldXls' : 'fees.read.unreadable') }
@@ -40,14 +40,12 @@ function noteFor(check: StatementCheck, t: ReturnType<typeof useT>): ReadNote {
  */
 export function FeesScreen() {
   const t = useT()
-  const toast = useToast()
   const state = useFees((s) => s)
   const day = todayIso()
   const view = useMemo(() => feesView(state, day), [state, day])
   const fileRef = useRef<HTMLInputElement>(null)
   const [reading, setReading] = useState(false)
   const [note, setNote] = useState<ReadNote | null>(null)
-  const [late, setLate] = useState<LateReversal[]>([])
   const [pasting, setPasting] = useState(false)
   const headingId = useId()
 
@@ -68,9 +66,9 @@ export function FeesScreen() {
       const next = noteFor(check, t)
       setNote(next)
       if (check.kind === 'read') {
-        setLate(check.lateReversals)
         haptic(check.result.added.length > 0 ? 'success' : 'tap')
-        if (check.result.added.length > 0) toast(next.text, { tone: 'success', action: { label: t('common.action.undo'), onAction: check.result.undo } })
+        // The banner says what was read, with Undo — one message, not a toast on top of it.
+        if (check.result.added.length > 0) setNote({ ...next, undo: check.result.undo })
       } else haptic('error')
     } finally {
       setReading(false)
@@ -82,7 +80,21 @@ export function FeesScreen() {
   )
   const header = <TopBar onBack={() => goBack('/app')} />
   const readBanner = note && (
-    <Banner tone={note.tone} onDismiss={() => setNote(null)}>
+    <Banner
+      tone={note.tone}
+      onDismiss={() => setNote(null)}
+      action={
+        note.undo
+          ? {
+              label: t('common.action.undo'),
+              onAction: () => {
+                note.undo?.()
+                setNote(null)
+              },
+            }
+          : undefined
+      }
+    >
       {note.text}
       {note.untrusted ? ` ${t('fees.read.untrusted')}` : ''}
     </Banner>
@@ -131,18 +143,18 @@ export function FeesScreen() {
       <Hero view={view} />
       <div className={styles.listActions}>
         <Button size="md" iconStart={<FileSpreadsheet />} loading={reading} onClick={pick}>
-          {t('fees.check.again')}
+          {state.checks.length > 0 ? t('fees.check.again') : t('fees.check.cta')}
         </Button>
         <Button size="md" variant="secondary" iconStart={<ClipboardPaste />} onClick={() => setPasting(true)}>
           {t('fees.paste.cta')}
         </Button>
       </div>
       {readBanner}
-      <AccountSection state={state} />
-      <AskSection asks={view.asks} />
+      <AskSection asks={view.asks} findings={view.findings} />
       <ClaimGroups groups={view.groups} />
       <ClaimsSection claims={view.claims} />
-      <LateSection late={late} onDone={(done) => setLate((all) => all.filter((l) => l !== done))} />
+      <AccountSection state={state} />
+      <LateSection late={state.late} />
       <AvoidSection avoidable={view.avoidable} state={state} />
       <AllCharges view={view} />
       <RuleNote />
@@ -155,29 +167,39 @@ export function FeesScreen() {
   )
 }
 
-/** The dark card: what the bank owes you, or the charges checked when nothing breaks a rule. */
+/** The dark card: what the bank owes you; once it's all back, what came back; else the charges checked. */
 function Hero({ view }: { view: ReturnType<typeof feesView> }) {
   const t = useT()
   const id = useId()
   const owed = view.owed > 0
+  const allBack = !owed && view.back > 0
+  const label = owed ? t('fees.hero.owed') : allBack ? t('fees.hero.backLabel') : t('fees.hero.checked')
+  const amount = owed ? view.owed : allBack ? view.back : view.total
+  const sub = owed
+    ? t('fees.hero.owedSub', { count: view.owedCount })
+    : allBack
+      ? t('fees.hero.backSub', { count: view.found })
+      : view.asks.length > 0
+        ? t('fees.hero.checkedAsk', { count: view.count })
+        : t('fees.hero.checkedSub', { count: view.count })
   return (
     <section aria-labelledby={id} className={styles.hero}>
       <h2 id={id} className="visually-hidden">
-        {t('fees.title')}
+        {label}
       </h2>
       <div className={styles.heroTop}>
-        <p className={styles.heroLabel}>{owed ? t('fees.hero.owed') : t('fees.hero.checked')}</p>
-        <Money value={owed ? view.owed : view.total} currency="INR" size="xl" trimZeros className={owed ? styles.heroAmount : undefined} />
-        <p className={styles.heroSub}>{owed ? t('fees.hero.owedSub', { count: view.owedCount }) : t('fees.hero.checkedSub', { count: view.count })}</p>
+        <p className={styles.heroLabel}>{label}</p>
+        <Money value={amount} currency="INR" size="xl" trimZeros className={owed || allBack ? styles.heroAmount : undefined} />
+        <p className={styles.heroSub}>{sub}</p>
       </div>
       <dl className={styles.heroTotals}>
         {view.from && view.to && (
           <div className={styles.heroTotal}>
-            <dt className={styles.heroTotalLabel}>{t('fees.hero.period', { from: dayLabel(view.from), to: dayLabel(view.to) })}</dt>
+            <dt className={styles.heroTotalLabel}>{view.from === view.to ? dayLabel(view.from) : t('fees.hero.period', { from: dayLabel(view.from), to: dayLabel(view.to) })}</dt>
             <dd className={styles.heroTotalValue}>{t('fees.hero.total', { amount: inr(view.total) })}</dd>
           </div>
         )}
-        {view.back > 0 && (
+        {view.back > 0 && owed && (
           <div className={styles.heroTotal}>
             <dt className={styles.heroTotalLabel}>{t('fees.section.claims')}</dt>
             <dd className={styles.heroTotalValue}>{t('fees.hero.back', { amount: inr(view.back) })}</dd>
