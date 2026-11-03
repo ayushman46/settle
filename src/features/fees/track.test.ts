@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { t } from '../../i18n'
+import { answerFindings, makeClaim } from './actions'
 import { feeToastMessage } from './alertToast'
 import { findingsOf } from './rules'
 import { emptyFees, feesStore } from './store'
@@ -49,6 +50,28 @@ describe('the Android app’s bank SMS', () => {
     const back = trackChargeSms(['Rs 590 credited to your A/c XX4821 on 05-11-26 towards reversal of AMB charges. -HDFC Bank'], 'sms', '2026-11-03')
     expect(back.reversed).toBe(0)
     expect(feesStore.get().charges[0]?.reversed).toBe(0)
+  })
+
+  it('the same reversal read twice is put back once', () => {
+    trackChargeSms(['Rs.590.00 debited from A/c XX4821 on 01-11-26 towards Non Maintenance of AMB Charges incl GST. -HDFC Bank'], 'sms', '2026-11-03')
+    const reversal = 'Rs.300.00 credited to A/c XX4821 on 03-11-26 towards reversal of AMB Charges. -HDFC Bank'
+    expect(trackChargeSms([reversal], 'sms', '2026-11-03').reversed).toBe(1)
+    const again = trackChargeSms([reversal], 'sms', '2026-11-03')
+    expect(again).toMatchObject({ reversed: 0, known: 1 })
+    expect(feesStore.get().charges[0]?.reversed).toBe(300_00)
+    // The rest, when it comes, still counts.
+    expect(trackChargeSms(['Rs 290.00 credited to your A/c XX4821 on 03-11-26 towards reversal of AMB charges. -HDFC Bank'], 'sms', '2026-11-03').reversed).toBe(1)
+    expect(feesStore.get().charges[0]?.reversed).toBe(590_00)
+  })
+
+  it('a claim not sent yet takes in what a later answer adds', () => {
+    trackChargeSms(['Rs.590.00 debited from A/c XX4821 on 01-11-26 towards Non Maintenance of AMB Charges incl GST. Avl Bal INR -312.40 -HDFC Bank'], 'sms', '2026-11-03')
+    const [firm] = findingsOf(feesStore.get())
+    expect(firm?.verdict).toBe('wrong')
+    expect(firm?.upgrade).not.toBeNull()
+    const { claim } = makeClaim('hdfc', 'XX4821', [firm?.charge.id ?? ''], firm?.claim ?? 0)
+    answerFindings([firm?.upgrade?.key ?? ''], true)
+    expect(feesStore.get().claims.find((c) => c.id === claim.id)?.amount).toBe(590_00)
   })
 
   it('the same SMS read twice is one charge, and an allowed charge is kept without a toast', () => {

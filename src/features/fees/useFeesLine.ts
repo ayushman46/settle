@@ -24,7 +24,17 @@ export function useFeesLine(): { title: string; line: string; act: boolean } | n
     const next = [...live].sort((a, b) => order.indexOf(a.stage as (typeof order)[number]) - order.indexOf(b.stage as (typeof order)[number]))[0]
     if (next) {
       const waiting = next.stage === 'raised' || next.stage === 'ombudsmanRaised'
-      return { title: waiting ? t('fees.home.raised', { amount: inr(view.owed) }) : owedTitle, line: statusLine(next, t), act: !waiting }
+      // The amount this claim still waits for (other claims may be at other stages).
+      const amount = inr(next.rest)
+      const title =
+        next.stage === 'raised'
+          ? t('fees.home.raised', { amount })
+          : next.stage === 'ombudsmanRaised'
+            ? t('fees.home.ombudsmanRaised', { amount })
+            : next.stage === 'ombudsman' || next.stage === 'replied'
+              ? t('fees.home.ombudsmanDue', { amount })
+              : t('fees.home.owed', { amount })
+      return { title, line: statusLine(next, t), act: !waiting }
     }
     return { title: t('fees.home.ask', { count: view.asks.length }), line: t('fees.home.askLine'), act: true }
   }, [state, day, t])

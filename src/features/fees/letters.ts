@@ -88,7 +88,7 @@ export function ruleSentence(f: Pick<FeeFinding, 'rule' | 'facts' | 'charge'>): 
     case 'basicFree':
       return `My account is a BSBD account, for which ${basicItem(c.kind)} must be provided free of charge (${RBC_SHORT}, para 86).`
     case 'atmFree':
-      return `In ${monthWords(s('month'))} only ${n('count')} ATM withdrawal${n('count') === 1 ? '' : 's'} went through${n('failed') ? ' (the ones that failed are not counted)' : ''}. Every customer gets at least 3 free transactions a month at other banks' ATMs in the six metro centres, 5 elsewhere, and 5 at the bank's own ATMs (RBI circular RBI/2021-22/52 of 10 June 2021). Failed transactions may not be counted or charged (RBI/2019-20/41 of 14 August 2019).`
+      return `In ${monthWords(s('month'))} ${n('count') === 0 ? 'no ATM withdrawal' : `only ${n('count')} ATM withdrawal${n('count') === 1 ? '' : 's'}`} went through${n('failed') ? ' (the ones that failed are not counted)' : ''}. Every customer gets at least 3 free transactions a month at other banks' ATMs in the six metro centres, 5 elsewhere, and 5 at the bank's own ATMs (RBI circular RBI/2021-22/52 of 10 June 2021). Failed transactions may not be counted or charged (RBI/2019-20/41 of 14 August 2019).`
     case 'atmDecline':
       return `The ATM transaction was declined for a reason other than insufficient balance. Transactions that fail for technical reasons, because the ATM had no cash, or for an invalid PIN or validation may not be counted as transactions or charged (RBI/2019-20/41 of 14 August 2019, para 3).`
     case 'neftOnline':
@@ -152,7 +152,8 @@ function senderName(me: LetterSender): string {
 
 function signOff(me: LetterSender, close: string): string {
   const address = me.address?.trim() || null
-  return [close, senderName(me), `Mobile: ${me.mobile?.trim() || PLACEHOLDERS.mobile}`, address ? `Address: ${address}` : null].filter((x) => x !== null).join('\n')
+  const mobile = me.mobile?.trim() || null
+  return [close, senderName(me), mobile ? `Mobile: ${mobile}` : null, address ? `Address: ${address}` : null].filter((x) => x !== null).join('\n')
 }
 
 function accountWords(account: string | null): string {
@@ -189,23 +190,39 @@ export function claimTotal(findings: readonly FeeFinding[]): number {
   return findings.reduce((sum, f) => sum + f.claim, 0)
 }
 
+/** What already came back on a claim (paise, and the day when it's known). */
+export interface LetterBack {
+  amount: number
+  date: string | null
+}
+
+/** "₹300 of it was reversed on 3 November 2026" (none: null; all of it: null too, nothing is left to ask). */
+function backWords(back: LetterBack | null, total: number): { rest: number; words: string } | null {
+  if (!back || back.amount <= 0 || back.amount >= total) return null
+  return { rest: total - back.amount, words: `${rupees(back.amount)} of it was reversed${back.date ? ` on ${letterDate(back.date)}` : ''}` }
+}
+
 /** The letter to the bank: every wrongly taken charge on one account, and the total to put back. */
-export function bankLetter(findings: readonly FeeFinding[], me: LetterSender, today: string, raisedOn: string | null = null): Letter {
+export function bankLetter(findings: readonly FeeFinding[], me: LetterSender, today: string, raisedOn: string | null = null, back: LetterBack | null = null): Letter {
   const first = findings[0]?.charge
   const bank = bankName(first?.bank ?? null) ?? PLACEHOLDERS.bank
   const { what, held } = productWords(findings, first?.account ?? null)
   const total = claimTotal(findings)
   const count = findings.length
   const subject = `Reversal of ${count === 1 ? 'a charge' : `${count} charges`} wrongly debited from my ${what}`
-  const follow = raisedOn && raisedOn < today ? `\n\nI first wrote to you about this on ${letterDate(raisedOn)}, and it has not been resolved.` : ''
+  const part = backWords(back, total)
+  const follow = raisedOn && raisedOn < today ? `\n\nI first wrote to you about this on ${letterDate(raisedOn)}, and it has not been ${part ? 'fully ' : ''}resolved.` : ''
+  const ask = part
+    ? `${rupees(total)} in all (GST included) was debited this way. ${part.words}: please reverse the remaining ${rupees(part.rest)} and confirm in writing.`
+    : `Please reverse ${rupees(total)} in all (GST included) and confirm in writing.`
   const body = [
     `To: The Branch Manager / Grievance Redressal Officer, ${bank}`,
     `Date: ${letterDate(today)}`,
     `Subject: ${subject}`,
     'Dear Sir or Madam,',
-    `${held} ${what} with you. The ${count === 1 ? 'charge' : 'charges'} below ${count === 1 ? 'was' : 'were'} debited from it against the Reserve Bank of India's rules. Please reverse ${rupees(total)} in all (GST included) and confirm in writing.${follow}`,
+    `${held} ${what} with you. The ${count === 1 ? 'charge' : 'charges'} below ${count === 1 ? 'was' : 'were'} debited from it against the Reserve Bank of India's rules. ${ask}${follow}`,
     items(findings),
-    `Total to be reversed: ${rupees(total)}`,
+    part ? `Still to be reversed: ${rupees(part.rest)}` : `Total to be reversed: ${rupees(total)}`,
     `If this is not resolved within ${BANK_REPLY_DAYS} days, I will take it to the RBI Ombudsman under ${RBIOS}.`,
     signOff(me, 'Yours faithfully,'),
   ]
@@ -213,14 +230,20 @@ export function bankLetter(findings: readonly FeeFinding[], me: LetterSender, to
 }
 
 /** The complaint to the RBI Ombudsman, once the bank has had its 30 days (or said no). */
-export function ombudsmanLetter(claim: FeeClaim, findings: readonly FeeFinding[], me: LetterSender, today: string): Letter {
+export function ombudsmanLetter(claim: FeeClaim, findings: readonly FeeFinding[], me: LetterSender, today: string, back: LetterBack | null = null): Letter {
   const first = findings[0]?.charge
   const bank = bankName(claim.bank ?? first?.bank ?? null) ?? PLACEHOLDERS.bank
   const { what } = productWords(findings, claim.account ?? first?.account ?? null)
   const step = claim.steps.find((s) => s.kind === 'bank') ?? null
   const raised = step ? `${letterDate(step.date)}${step.ref ? ` (complaint number ${step.ref})` : ''}` : `${PLACEHOLDERS.complaintDate} (complaint number ${PLACEHOLDERS.complaintNumber})`
-  const reply = claim.repliedAt ? `The bank replied on ${letterDate(claim.repliedAt)} without reversing them.` : `The bank has not resolved it within ${BANK_REPLY_DAYS} days.`
   const total = claimTotal(findings)
+  const part = backWords(back, total)
+  const reply = part
+    ? `${claim.repliedAt ? `The bank replied on ${letterDate(claim.repliedAt)}. ` : ''}${part.words.replace(/^./, (c) => c.toUpperCase())}; ${rupees(part.rest)} is still outstanding${claim.repliedAt ? '' : ` after ${BANK_REPLY_DAYS} days`}.`
+    : claim.repliedAt
+      ? `The bank replied on ${letterDate(claim.repliedAt)} without reversing them.`
+      : `The bank has not resolved it within ${BANK_REPLY_DAYS} days.`
+  const relief = part ? `${rupees(part.rest)}, the part of the ${rupees(total)} (GST included) still not reversed` : `${rupees(total)} (the charges, GST included)`
   const subject = `Complaint against ${bank}: charges debited from my ${what} against RBI directions`
   const body = [
     'To: The RBI Ombudsman (through the Complaint Management System, cms.rbi.org.in)',
@@ -228,7 +251,7 @@ export function ombudsmanLetter(claim: FeeClaim, findings: readonly FeeFinding[]
     `Subject: ${subject}`,
     `I complained to ${bank} on ${raised} about the charges below, debited from my ${what}. ${reply}`,
     items(findings, 'ombudsman'),
-    `Relief sought: reversal of ${rupees(total)} (the charges, GST included), and compensation for the time and expense of pursuing this, as the Ombudsman considers fit under ${RBIOS}.`,
+    `Relief sought: reversal of ${relief}, and compensation for the time and expense of pursuing this, as the Ombudsman considers fit under ${RBIOS}.`,
     'I confirm that this complaint is not pending before, or decided by, any court, tribunal, arbitrator or other forum.',
     signOff(me, 'Yours faithfully,'),
   ]
@@ -236,18 +259,23 @@ export function ombudsmanLetter(claim: FeeClaim, findings: readonly FeeFinding[]
 }
 
 /** The fields the RBI's complaint form asks for, ready to copy one by one. */
-export function ombudsmanFields(claim: FeeClaim, findings: readonly FeeFinding[]): { id: 'entity' | 'category' | 'date' | 'amount' | 'reference' | 'account' | 'relief'; value: string }[] {
+export function ombudsmanFields(claim: FeeClaim, findings: readonly FeeFinding[], back: LetterBack | null = null): { id: 'entity' | 'category' | 'date' | 'amount' | 'reference' | 'account' | 'relief'; value: string }[] {
   const first = findings[0]?.charge
   const step = claim.steps.find((s) => s.kind === 'bank') ?? null
   const dates = findings.map((f) => f.charge.date).sort()
+  const total = claimTotal(findings)
+  const owed = backWords(back, total)?.rest ?? total
+  // The form's category: the product the charges were taken on.
+  const kinds = new Set(findings.map((f) => f.charge.kind))
+  const product = kinds.size === 1 && kinds.has('late') ? 'Credit card' : kinds.size === 1 && kinds.has('prepay') ? 'Loans and advances' : 'Deposit account'
   return [
     { id: 'entity', value: bankName(claim.bank ?? first?.bank ?? null) ?? PLACEHOLDERS.bank },
-    { id: 'category', value: 'Deposit account: charges levied against RBI directions' },
+    { id: 'category', value: `${product}: charges levied against RBI directions` },
     { id: 'date', value: dates.length > 1 ? `${letterDate(dates[0] ?? '')} to ${letterDate(dates.at(-1) ?? '')}` : letterDate(dates[0] ?? '') },
-    { id: 'amount', value: rupees(claimTotal(findings)) },
+    { id: 'amount', value: rupees(owed) },
     { id: 'reference', value: step ? `${letterDate(step.date)}${step.ref ? `, ${step.ref}` : ''}` : PLACEHOLDERS.complaintNumber },
     { id: 'account', value: claim.account ?? first?.account ?? PLACEHOLDERS.account },
-    { id: 'relief', value: `Reversal of ${rupees(claimTotal(findings))} wrongly charged, with GST` },
+    { id: 'relief', value: `Reversal of ${rupees(owed)} wrongly charged, with GST` },
   ]
 }
 

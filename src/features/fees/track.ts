@@ -6,7 +6,7 @@
  */
 import { UPI_APPS } from '../autosettle/alerts'
 import { MERCHANT_APPS } from '../stuck/detect'
-import { addCharges, addNotice, markReversed, type AddResult } from './actions'
+import { addCharges, addNotice, markReversed, reversalKey, type AddResult } from './actions'
 import { findBank } from '../sharein/sms/brands'
 import { findAccount, findDate, findPrintedDate, scrubSms } from '../sharein/sms/parseSms'
 import { MAX_BY_KIND } from './scan'
@@ -86,17 +86,23 @@ export function trackChargeSms(texts: readonly (string | { text: string; day: st
   }
   const result: AddResult = addCharges(drafts)
   let reversed = 0
+  let seen = 0
   for (const r of reversals) {
+    const key = reversalKey(r)
+    if (feesStore.get().dismissed.includes(key)) {
+      seen++
+      continue
+    }
     const target = feesStore
       .get()
       .charges.filter((c) => c.kind === r.kind && c.reversed < c.amount + c.gst && c.date <= r.date && (r.account === null || c.account === null || c.account.slice(-4) === r.account.slice(-4)))
       .sort((a, b) => Math.abs(a.amount + a.gst - r.amount) - Math.abs(b.amount + b.gst - r.amount))[0]
     if (target) {
-      markReversed(target.id, r.amount)
+      markReversed(target.id, r.amount, key)
       reversed++
     }
   }
-  return { added: result.added, known: result.known.length, reversed, notices, undo: () => feesStore.set(before) }
+  return { added: result.added, known: result.known.length + seen, reversed, notices, undo: () => feesStore.set(before) }
 }
 
 /** The bank SMS among the phone's alerts (Android): not a UPI app's or a shop's own alert. Read as charges, reversals and warnings. */

@@ -301,9 +301,10 @@ function duplicates(charges: readonly FeeCharge[]): Map<string, FeeCharge> {
  */
 export function findingsOf(state: Pick<FeesState, 'charges' | 'accounts' | 'notices' | 'dismissed' | 'answers'>): FeeFinding[] {
   const twice = duplicates(state.charges)
+  const left = new Set(state.dismissed.filter((k) => k.startsWith('left:')).map((k) => k.slice(5)))
   const all: FeeFinding[] = []
   for (const c of state.charges) {
-    if (open(c) <= 0) continue
+    if (open(c) <= 0 || left.has(c.id)) continue
     const account = accountOf(state, c)
     const found: FeeFinding[] = []
     // Reversed, but its GST kept.

@@ -12,12 +12,12 @@ import { FeePasteSheet } from './FeePasteSheet'
 import { FeesClear } from './FeesClear'
 import { AccountSection, AllCharges, AskSection, AvoidSection, ClaimGroups, ClaimsSection, LateSection } from './FeesParts'
 import { checkStatementFile, type StatementCheck } from './read'
-import { useFees } from './store'
+import { feesStore, useFees } from './store'
 import { dayLabel, feesView, inr } from './view'
 import styles from './Fees.module.css'
 
 /** What the last statement read said, until another is read. */
-type ReadNote = { tone: 'info' | 'success' | 'warning' | 'error'; text: string; untrusted?: boolean; undo?: () => void }
+type ReadNote = { tone: 'info' | 'success' | 'warning' | 'error'; text: string; untrusted?: boolean; undo?: () => void; after?: unknown }
 
 function noteFor(check: StatementCheck, t: ReturnType<typeof useT>): ReadNote {
   if (check.kind === 'unreadable') return { tone: 'error', text: t(check.oldXls ? 'fees.read.oldXls' : 'fees.read.unreadable') }
@@ -68,7 +68,8 @@ export function FeesScreen() {
       if (check.kind === 'read') {
         haptic(check.result.added.length > 0 ? 'success' : 'tap')
         // The banner says what was read, with Undo — one message, not a toast on top of it.
-        if (check.result.added.length > 0) setNote({ ...next, undo: check.result.undo })
+        // Undo puts back the store as it was before the read: offered only until anything else changes.
+        if (check.result.added.length > 0) setNote({ ...next, undo: check.result.undo, after: feesStore.get() })
       } else haptic('error')
     } finally {
       setReading(false)
@@ -84,7 +85,7 @@ export function FeesScreen() {
       tone={note.tone}
       onDismiss={() => setNote(null)}
       action={
-        note.undo
+        note.undo && note.after === state
           ? {
               label: t('common.action.undo'),
               onAction: () => {
@@ -181,7 +182,9 @@ function Hero({ view }: { view: ReturnType<typeof feesView> }) {
       ? t('fees.hero.backSub', { count: view.found })
       : view.asks.length > 0
         ? t('fees.hero.checkedAsk', { count: view.count })
-        : t('fees.hero.checkedSub', { count: view.count })
+        : view.found > 0
+          ? t('fees.hero.owedSub', { count: view.found })
+          : t('fees.hero.checkedSub', { count: view.count })
   return (
     <section aria-labelledby={id} className={styles.hero}>
       <h2 id={id} className="visually-hidden">

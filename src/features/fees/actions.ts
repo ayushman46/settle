@@ -4,14 +4,43 @@
  * with the bank or the RBI Ombudsman, replied to, money back. Every change returns its Undo.
  */
 import { newId } from '../../lib/ids'
+import { findingsOf } from './rules'
+import { groupKey } from './view'
 import { accountKey, emptyFees, feesStore, MAX_CHARGES, MAX_CLAIMS, type LateRefund, type FeeAccount, type FeeAnswer, type FeeCharge, type FeeClaim, type FeesState, type FeeStep } from './store'
 
 type Undo = () => void
 
 function change(next: (state: FeesState) => FeesState): Undo {
   const before = feesStore.get()
-  feesStore.set(next(before))
+  feesStore.set(syncReady(next(before)))
   return () => feesStore.set(before)
+}
+
+/**
+ * A claim not sent yet follows its charges: an answer that makes another charge of the same bank,
+ * account and product wrong adds it, one that makes a charge right takes it out, and the amount
+ * follows. A sent claim stays as it was sent.
+ */
+function syncReady(state: FeesState): FeesState {
+  if (!state.claims.some((c) => c.dismissedAt === null && c.back === null && c.steps.length === 0)) return state
+  const wrong = findingsOf(state).filter((f) => f.verdict === 'wrong' && f.claim > 0)
+  const taken = new Set(state.claims.filter((c) => c.dismissedAt === null && c.steps.length > 0).flatMap((c) => c.chargeIds))
+  let changed = false
+  const claims = state.claims.map((claim) => {
+    if (claim.dismissedAt !== null || claim.back !== null || claim.steps.length > 0) return claim
+    const first = state.charges.find((c) => claim.chargeIds.includes(c.id))
+    if (!first) return claim
+    const key = groupKey(first)
+    const own = wrong.filter((f) => !taken.has(f.charge.id) && groupKey(f.charge) === key)
+    for (const f of own) taken.add(f.charge.id)
+    if (own.length === 0) return claim
+    const ids = own.map((f) => f.charge.id).sort()
+    const amount = own.reduce((sum, f) => sum + f.claim, 0)
+    if (amount === claim.amount && ids.length === claim.chargeIds.length && ids.every((id, i) => id === claim.chargeIds[i])) return claim
+    changed = true
+    return { ...claim, chargeIds: ids, amount, updatedAt: Date.now() }
+  })
+  return changed ? { ...state, claims } : state
 }
 
 /** The same charge seen twice (a statement and its SMS, or two statements): same day give or take one, amount, kind and account. */
@@ -97,11 +126,18 @@ export function addCharges(seen: readonly Omit<FeeCharge, 'id' | 'addedAt'>[], c
 }
 
 /** Notes money put back for a charge (a reversal line or SMS): up to what it cost. */
-export function markReversed(id: string, amount: number): Undo {
+export function markReversed(id: string, amount: number, key: string | null = null): Undo {
   return change((s) => ({
     ...s,
     charges: s.charges.map((c) => (c.id === id ? { ...c, reversed: Math.min(c.amount + c.gst, c.reversed + amount) } : c)),
+    // The reversal itself, so the same one read again isn't counted twice.
+    dismissed: key ? [...new Set([...s.dismissed, key])].slice(-2000) : s.dismissed,
   }))
+}
+
+/** The key a reversal is remembered by: its day, amount, kind and account. */
+export function reversalKey(r: { date: string; amount: number; kind: string; account: string | null }): string {
+  return `reversed:${r.date}|${r.amount}|${r.kind}|${r.account ? digits(r.account) : ''}`
 }
 
 /** Your answers about an account (`bank`/`account` null: all accounts). */
@@ -196,7 +232,17 @@ export function markClaimBack(id: string, back: FeeClaim['back']): Undo {
 
 /** Sets a claim aside, or brings it back. */
 export function dismissClaim(id: string, dismissed = true): Undo {
-  return patchClaim(id, (c) => ({ ...c, dismissedAt: dismissed ? Date.now() : null }))
+  return change((s) => {
+    const claim = s.claims.find((c) => c.id === id)
+    if (!claim) return s
+    // Dropped: its charges are left out too, not offered again straight away (brought back: offered again).
+    const keys = new Set(claim.chargeIds.map((charge) => `left:${charge}`))
+    return {
+      ...s,
+      dismissed: dismissed ? [...new Set([...s.dismissed, ...keys])].slice(-2000) : s.dismissed.filter((k) => !keys.has(k)),
+      claims: s.claims.map((c) => (c.id === id ? { ...c, dismissedAt: dismissed ? Date.now() : null, updatedAt: Date.now() } : c)),
+    }
+  })
 }
 
 /** Deletes a claim (its charges stay). */

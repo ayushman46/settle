@@ -227,7 +227,7 @@ function FeesRow() {
         </SettingIcon>
       }
       title={t('fees.title')}
-      subtitle={lines ? lines.title : t('fees.you.none')}
+      subtitle={lines ? `${lines.title}. ${lines.line}` : t('fees.you.none')}
       onClick={() => navigate(FEES_PATH)}
       chevron
     />

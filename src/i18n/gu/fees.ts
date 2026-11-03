@@ -229,6 +229,7 @@ export const fees = {
   'fees.sheet.ombudsman.lead': 'મફત અને ઑનલાઇન. દરેક વિગત cms.rbi.org.in પરના ફોર્મમાં કૉપી કરો, અને ફરિયાદની વિગતોમાં આ પત્ર પેસ્ટ કરો.',
   'fees.sheet.ombudsman.open': 'cms.rbi.org.in ખોલો',
   'fees.sheet.ombudsman.call': 'RBIને 14448 પર ફોન કરો',
+  'fees.sheet.ombudsman.sent.description': 'જે દિવસે તમે cms.rbi.org.in પર ફરિયાદ નોંધાવી તે દિવસ. RBIનો ફરિયાદ નંબર પણ સાચવી રાખો: Settle તેને દાવા પર બતાવે છે.',
   'fees.sheet.ombudsman.sent.toast': 'નોંધ્યું. હવે મામલો RBI લોકપાલ પાસે છે.',
 
   // Allowed, but avoidable.
@@ -275,6 +276,8 @@ export const fees = {
 
   // Android: a charge SMS just read. {kind} sits in brackets so any kind reads right (Gujarati would otherwise change its ending).
   'fees.alert.wrong': '{bank}એ RBIના નિયમો વિરુદ્ધ {amount} કાપ્યા ({kind})',
+  'fees.home.ombudsmanDue': 'RBI લોકપાલ પાસે લઈ જાઓ: {amount}',
+  'fees.home.ombudsmanRaised': 'RBI લોકપાલ પાસે: {amount}',
   'fees.alert.wrongAny': 'તમારી બૅન્કે RBIના નિયમો વિરુદ્ધ {amount} કાપ્યા ({kind})',
   'fees.alert.check': '{bank}એ {amount} કાપ્યા ({kind}): પાછા માગી શકાય કે નહીં, તે એક સવાલથી ખબર પડશે',
   'fees.alert.checkAny': 'તમારી બૅન્કે {amount} કાપ્યા ({kind}): પાછા માગી શકાય કે નહીં, તે એક સવાલથી ખબર પડશે',

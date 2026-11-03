@@ -117,12 +117,14 @@ function Frame({ open, onClose, claimId, mode: startMode, bank: basicBank = null
   const name = bankName(bank)
   const me: LetterSender = { name: profile.name, upiId: profile.upiId, mobile: details.mobile, place: details.place, address: details.address }
   const raisedOn = claim?.steps.find((s) => s.kind === 'bank')?.date ?? null
+  // What's already back: the letters ask only for the rest.
+  const backSoFar = backBefore > 0 ? { amount: backBefore, date: claim?.back?.date ?? null } : null
   const letter =
     mode === 'basic'
       ? basicLetter(bank, account, me, day)
       : mode === 'ombudsman' && claim
-        ? ombudsmanLetter(claim, findings, me, day)
-        : bankLetter(findings, me, day, raisedOn)
+        ? ombudsmanLetter(claim, findings, me, day, backSoFar)
+        : bankLetter(findings, me, day, raisedOn, backSoFar)
   const full = withSubject(letter)
   const blanks = blanksIn(full)
   const mailKey = bank ? `bank:${bank}` : null
@@ -132,7 +134,7 @@ function Frame({ open, onClose, claimId, mode: startMode, bank: basicBank = null
     if (mailKey) setLetterEmail(mailKey, value)
     else setTypedTo(value.trim())
   }
-  const amount = claim ? claimTotal(findings) || claim.amount : 0
+  const amount = claim ? Math.max(0, (claimTotal(findings) || claim.amount) - backBefore) : 0
   // Sent no earlier than the last charge in it (the Ombudsman: no earlier than the complaint to the bank).
   const lastCharge = findings.reduce((latest, f) => (f.charge.date > latest ? f.charge.date : latest), '')
   const earliest = (step === 'ombudsman' ? raisedOn : null) ?? (lastCharge || undefined)
@@ -188,8 +190,10 @@ function Frame({ open, onClose, claimId, mode: startMode, bank: basicBank = null
   let footer: ReactNode
   let body: ReactNode
   if (mode === 'sent') {
-    title = t('fees.sheet.sent.title')
-    description = t('fees.sheet.sent.description')
+    // The Ombudsman's complaint has its own words: it doesn't start the bank's 30 days.
+    const toRbi = step === 'ombudsman'
+    title = toRbi ? t('stuckhelp.raised.title') : t('fees.sheet.sent.title')
+    description = toRbi ? t('fees.sheet.ombudsman.sent.description') : t('fees.sheet.sent.description')
     footer = (
       <ActionBar key="sent">
         <Button block iconStart={<Check />} onClick={saveSent}>
@@ -204,9 +208,9 @@ function Frame({ open, onClose, claimId, mode: startMode, bank: basicBank = null
       <div className={raise.form}>
         <div className={raise.dateRow}>
           <span className={raise.dateLabel} aria-hidden="true">
-            {t('fees.sheet.sent.date')}
+            {step === 'ombudsman' ? t('stuckhelp.raised.date') : t('fees.sheet.sent.date')}
           </span>
-          <DateField label={t('fees.sheet.sent.date')} value={date} min={earliest} max={day} onChange={setDate} />
+          <DateField label={step === 'ombudsman' ? t('stuckhelp.raised.date') : t('fees.sheet.sent.date')} value={date} min={earliest} max={day} onChange={setDate} />
         </div>
         <TextField
           label={t('fees.sheet.sent.ref')}
@@ -277,7 +281,7 @@ function Frame({ open, onClose, claimId, mode: startMode, bank: basicBank = null
         )}
       </ActionBar>
     )
-    const fields = ombudsman && claim ? ombudsmanFields(claim, findings) : null
+    const fields = ombudsman && claim ? ombudsmanFields(claim, findings, backSoFar) : null
     body = (
       <div className={raise.body}>
         {!basic && (

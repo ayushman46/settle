@@ -244,7 +244,7 @@ export function productOf(kind: FeeKind): 'card' | 'loan' | 'account' {
   return kind === 'late' ? 'card' : kind === 'prepay' ? 'loan' : 'account'
 }
 
-function groupKey(c: Pick<FeeCharge, 'bank' | 'account' | 'kind'>): string {
+export function groupKey(c: Pick<FeeCharge, 'bank' | 'account' | 'kind'>): string {
   return `${c.bank ?? '?'}:${(c.account ?? '').replace(/\D/g, '').slice(-4) || '?'}:${productOf(c.kind)}`
 }
 
@@ -276,6 +276,9 @@ export function feesView(state: FeesState, today: string): FeesView {
   const byId = new Map(findings.map((f) => [f.charge.id, f]))
   const charges = new Map(state.charges.map((c) => [c.id, c]))
   const inClaim = new Set<string>()
+  // Charges in a sent claim: their questions are no longer asked (a claim not sent yet still asks them).
+  const sent = new Set<string>()
+  const dropped = new Set<string>()
   const claims: ClaimView[] = []
   for (const claim of state.claims) {
     const own = claim.chargeIds
@@ -284,13 +287,16 @@ export function feesView(state: FeesState, today: string): FeesView {
       .sort(byDate)
     // Back so far: what you noted, or what the bank's reversals of these charges add up to, whichever is more.
     const reversed = claim.chargeIds.reduce((sum, id) => sum + (charges.get(id)?.reversed ?? 0), 0)
-    const stage = claimStage(claim, today, Math.max(claim.back?.amount ?? 0, reversed))
-    if (stage.stage !== 'dropped') for (const id of claim.chargeIds) inClaim.add(id)
-    claims.push({ claim, findings: own, ...stage })
+    // What it claims: its rows as they stand (an answer changed, a charge left out), until money comes back.
+    const shown = own.length > 0 && reversed === 0 && claim.back === null ? { ...claim, chargeIds: own.map((f) => f.charge.id), amount: own.reduce((s, f) => s + f.claim, 0) } : claim
+    const stage = claimStage(shown, today, Math.max(claim.back?.amount ?? 0, reversed))
+    for (const id of claim.chargeIds) (stage.stage === 'dropped' ? dropped : inClaim).add(id)
+    if (stage.stage !== 'dropped' && claim.steps.length > 0) for (const id of claim.chargeIds) sent.add(id)
+    claims.push({ claim: shown, findings: own, ...stage })
   }
   const asks = [
-    ...findings.filter((f) => f.verdict === 'ask' && !inClaim.has(f.charge.id)),
-    ...findings.flatMap((f) => (f.upgrade && !inClaim.has(f.charge.id) ? [f.upgrade] : [])),
+    ...findings.filter((f) => f.verdict === 'ask' && !sent.has(f.charge.id)),
+    ...findings.flatMap((f) => (f.upgrade && !sent.has(f.charge.id) ? [f.upgrade] : [])),
   ]
   const groupsMap = new Map<string, ClaimGroup>()
   for (const f of findings) {
@@ -305,10 +311,14 @@ export function feesView(state: FeesState, today: string): FeesView {
   const live = claims.filter((c) => c.stage !== 'back' && c.stage !== 'dropped' && c.stage !== 'closed')
   const owed = groups.reduce((s, g) => s + g.amount, 0) + live.reduce((s, c) => s + c.rest, 0)
   const owedCount = groups.reduce((s, g) => s + g.findings.length, 0) + live.reduce((s, c) => s + c.claim.chargeIds.length, 0)
-  const found = groups.reduce((s, g) => s + g.findings.length, 0) + claims.filter((c) => c.stage !== 'dropped').reduce((s, c) => s + c.claim.chargeIds.length, 0)
-  const back = claims.filter((c) => c.stage !== 'dropped').reduce((s, c) => s + c.backSoFar, 0)
+  // A wrong charge the bank put back in full by itself (no claim needed): found, and back.
+  const putBack = state.charges.filter((c) => c.reversed > 0 && open(c) <= 0 && !inClaim.has(c.id) && !dropped.has(c.id))
+  const fixed = putBack.length > 0 ? findingsOf({ ...state, charges: putBack.map((c) => ({ ...c, reversed: 0 })) }).filter((f) => f.verdict === 'wrong') : []
+  const fixedIds = new Set(fixed.map((f) => f.charge.id))
+  const found = groups.reduce((s, g) => s + g.findings.length, 0) + claims.filter((c) => c.stage !== 'dropped').reduce((s, c) => s + c.claim.chargeIds.length, 0) + fixed.length
+  const back = claims.filter((c) => c.stage !== 'dropped').reduce((s, c) => s + c.backSoFar, 0) + putBack.filter((c) => fixedIds.has(c.id)).reduce((s, c) => s + c.reversed, 0)
 
-  const flagged = new Set([...findings.map((f) => f.charge.id), ...inClaim])
+  const flagged = new Set([...findings.map((f) => f.charge.id), ...inClaim, ...dropped])
   const kinds = new Map<FeeKind, { kind: FeeKind; amount: number; charges: FeeCharge[] }>()
   const avoid = new Map<FeeKind, { kind: FeeKind; amount: number; count: number }>()
   let total = 0

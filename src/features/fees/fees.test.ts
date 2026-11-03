@@ -285,3 +285,27 @@ describe('payments are not charges', () => {
     expect(readChargeSms('Late payment charges of Rs.500 + GST Rs.90 levied on your HDFC Bank Credit Card XX9001 on 02-11-26', '2026-11-03')).toMatchObject({ kind: 'late', amount: 50000, gst: 9000 })
   })
 })
+
+describe('ATM charges for a month the statement doesn’t cover', () => {
+  it('a charge early in October for September, on a statement that starts in October, isn’t claimed on a count it can’t know', () => {
+    checkRows(
+      csv([
+        ['01/10/26', 'UPI/CR/601234567890/RAHUL/SALARY ADV', '', '5000.00', '5000.00'],
+        ['05/10/26', 'ATM WDL CHGS SEP26', '23.00', '', '4977.00'],
+      ]),
+    )
+    expect(feesStore.get().charges[0]).toMatchObject({ kind: 'atm', monthAtm: null })
+    expect(findingsOf(feesStore.get())).toEqual([])
+  })
+
+  it('the bank’s own count in the narration counts: 4 transactions, one past the 3 free, is allowed', () => {
+    checkRows(
+      csv([
+        ['01/09/26', 'UPI/CR/601234567890/RAHUL/SALARY ADV', '', '5000.00', '5000.00'],
+        ['05/10/26', 'ATM WDL CHGS SEP26 4 TXNS', '23.00', '', '4977.00'],
+      ]),
+    )
+    expect(feesStore.get().charges[0]).toMatchObject({ kind: 'atm', monthAtm: 4 })
+    expect(findingsOf(feesStore.get())).toEqual([])
+  })
+})

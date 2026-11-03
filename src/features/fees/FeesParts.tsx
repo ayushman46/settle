@@ -19,7 +19,7 @@ import { bankName } from '../stuck/letters'
 import { answerFindings, dismissClaim, makeClaim, markLateClaimed, setAccount } from './actions'
 import { FeeChargeSheet } from './FeeChargeSheet'
 import { useOpenLetter } from './letterContext'
-import { ATM_FREE_ANYWHERE, open as openAmount, type FeeFinding } from './rules'
+import { ATM_FREE_ANYWHERE, findingsOf, open as openAmount, type FeeFinding } from './rules'
 import { accountKey, accountOf, ACCOUNT_TYPES, feesStore, type AccountType, type FeeCharge, type FeeKind, type FeesState, type LateRefund } from './store'
 import {
   accountTail,
@@ -590,10 +590,11 @@ export function AvoidSection({ avoidable, state }: { avoidable: FeesView['avoida
   const openLetter = useOpenLetter()
   if (avoidable.length === 0) return null
   const minbal = avoidable.find((a) => a.kind === 'minbal')
-  // The account that paid the most for its minimum balance is the one to switch.
+  // The account that paid the most for its minimum balance — the charges allowed, not those claimed — is the one to switch.
+  const flagged = new Set([...findingsOf(state).map((f) => f.charge.id), ...state.claims.flatMap((c) => c.chargeIds)])
   const totals = new Map<string, { charge: FeeCharge; amount: number }>()
   for (const c of state.charges) {
-    if (c.kind !== 'minbal') continue
+    if (c.kind !== 'minbal' || flagged.has(c.id) || openAmount(c) <= 0) continue
     const key = accountKey(c.bank, c.account)
     const seen = totals.get(key)
     totals.set(key, { charge: seen?.charge ?? c, amount: (seen?.amount ?? 0) + c.amount + c.gst })

@@ -197,3 +197,63 @@ describe('after the customer panel', () => {
     expect(rules(state([charge({ id: 'u', kind: 'upi', date: '2026-03-01', bank: null, account: null, source: 'sms' })]))).toEqual([])
   })
 })
+
+describe('after the re-test', () => {
+  const below = (id: string, more: Partial<FeeCharge> = {}) => charge({ id, kind: 'minbal', amount: 500_00, gst: 90_00, balanceBefore: 100_00, balanceAfter: -490_00, ...more })
+  const sentClaim = (more: Partial<FeeClaim> = {}): FeeClaim => ({
+    id: 'k',
+    bank: 'hdfc',
+    account: 'XX4821',
+    chargeIds: ['m'],
+    amount: 590_00,
+    steps: [{ kind: 'bank', date: '2026-09-20', ref: 'SR1' }],
+    repliedAt: null,
+    back: { date: '2026-11-01', amount: 300_00 },
+    dismissedAt: null,
+    createdAt: 1,
+    updatedAt: 1,
+    ...more,
+  })
+  const me = { name: 'Asha Rao', upiId: null, mobile: '' }
+
+  it('the letters say what already came back and ask only for the rest; no blank mobile line', () => {
+    const s = state([below('m')], { answers: { 'minbalNotice:m': true }, claims: [sentClaim()] })
+    const findings = findingsOf(s)
+    const reminder = bankLetter(findings, me, '2026-11-03', '2026-09-20', { amount: 300_00, date: '2026-11-01' })
+    expect(reminder.body).toContain('₹300 of it was reversed on 1 November 2026: please reverse the remaining ₹290')
+    expect(reminder.body).toContain('Still to be reversed: ₹290')
+    expect(reminder.body).not.toContain('Mobile:')
+    const k = sentClaim()
+    const complaint = ombudsmanLetter(k, findings, me, '2026-11-03', { amount: 300_00, date: '2026-11-01' })
+    expect(complaint.body).toContain('₹300 of it was reversed on 1 November 2026; ₹290 is still outstanding after 30 days.')
+    expect(complaint.body).toContain('Relief sought: reversal of ₹290, the part of the ₹590 (GST included) still not reversed')
+    const fields = ombudsmanFields(k, findings, { amount: 300_00, date: '2026-11-01' })
+    expect(fields.find((f) => f.id === 'amount')?.value).toBe('₹290')
+    expect(fields.find((f) => f.id === 'category')?.value).toBe('Deposit account: charges levied against RBI directions')
+  })
+
+  it('a credit card’s late fee goes to the Ombudsman as a credit-card complaint', () => {
+    const s = state([charge({ id: 'l', kind: 'late', amount: 1000_00, gst: 180_00 })], { answers: { 'lateFee:l': true } })
+    expect(ombudsmanFields(sentClaim({ chargeIds: ['l'], back: null }), findingsOf(s)).find((f) => f.id === 'category')?.value).toBe('Credit card: charges levied against RBI directions')
+  })
+
+  it('a claim’s amount and count follow its rows until money comes back', () => {
+    // One of its two charges is no longer claimed: the claim says the other one's amount.
+    const s = state([below('m'), below('n', { date: '2026-09-02' })], {
+      answers: { 'minbalNotice:m': true, 'minbalNotice:n': true },
+      dismissed: ['minbalNegative:n', 'minbalNotice:n'],
+      claims: [sentClaim({ chargeIds: ['m', 'n'], amount: 1180_00, back: null })],
+    })
+    const view = feesView(s, '2026-11-03')
+    expect(view.claims[0]?.claim).toMatchObject({ amount: 590_00, chargeIds: ['m'] })
+    expect(view.owed).toBe(590_00)
+  })
+
+  it('a dropped claim leaves its charges out, not back under “Claim back”', () => {
+    const s = state([below('m')], { answers: { 'minbalNotice:m': true }, dismissed: ['left:m'], claims: [sentClaim({ steps: [], back: null, dismissedAt: 5 })] })
+    const view = feesView(s, '2026-11-03')
+    expect(view.groups).toEqual([])
+    expect(view.owed).toBe(0)
+    expect(view.avoidable).toEqual([])
+  })
+})

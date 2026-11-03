@@ -230,6 +230,7 @@ export const fees = {
   'fees.sheet.ombudsman.lead': 'ఉచితం, ఆన్‌లైన్‌లోనే. cms.rbi.org.in లోని ఫారంలో ఒక్కో వివరాన్నీ కాపీ చేసి పెట్టండి, ఫిర్యాదు వివరాల దగ్గర లేఖను పేస్ట్ చేయండి.',
   'fees.sheet.ombudsman.open': 'cms.rbi.org.in తెరవండి',
   'fees.sheet.ombudsman.call': 'RBI కి కాల్ చేయండి: 14448',
+  'fees.sheet.ombudsman.sent.description': 'cms.rbi.org.in లో ఫిర్యాదు చేసిన రోజు. RBI ఇచ్చే ఫిర్యాదు నంబర్‌ను కూడా సేవ్ చేయండి: Settle దాన్ని క్లెయిమ్‌పై చూపిస్తుంది.',
   'fees.sheet.ombudsman.sent.toast': 'నమోదైంది. ఇప్పుడు RBI అంబుడ్స్‌మన్ దగ్గర ఉంది.',
 
   // Allowed, but avoidable.
@@ -275,6 +276,8 @@ export const fees = {
 
   // Android: a charge SMS just read ({kind}: a fees.kind.* label, lower-cased, so it sits in brackets).
   'fees.alert.wrong': '{bank} {amount} కట్ చేసింది ({kind}): RBI నియమాలకు విరుద్ధం',
+  'fees.home.ombudsmanDue': 'RBI అంబుడ్స్‌మన్ దృష్టికి తీసుకెళ్లండి: {amount}',
+  'fees.home.ombudsmanRaised': 'RBI అంబుడ్స్‌మన్ దగ్గర: {amount}',
   'fees.alert.wrongAny': 'మీ బ్యాంక్ {amount} కట్ చేసింది ({kind}): RBI నియమాలకు విరుద్ధం',
   'fees.alert.check': '{bank} {amount} కట్ చేసింది ({kind}): క్లెయిమ్ చేయగలరో లేదో ఒక్క ప్రశ్నతో తెలుస్తుంది',
   'fees.alert.checkAny': 'మీ బ్యాంక్ {amount} కట్ చేసింది ({kind}): క్లెయిమ్ చేయగలరో లేదో ఒక్క ప్రశ్నతో తెలుస్తుంది',

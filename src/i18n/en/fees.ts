@@ -231,6 +231,7 @@ export const fees = {
   'fees.sheet.ombudsman.lead': 'Free, online. Copy each field into the form at cms.rbi.org.in, and paste the complaint as the details.',
   'fees.sheet.ombudsman.open': 'Open cms.rbi.org.in',
   'fees.sheet.ombudsman.call': 'Call the RBI on 14448',
+  'fees.sheet.ombudsman.sent.description': 'The day you filed it at cms.rbi.org.in. Save the RBI’s complaint number too: Settle shows it on the claim.',
   'fees.sheet.ombudsman.sent.toast': 'Noted. The RBI Ombudsman has it.',
 
   // Allowed, but avoidable.
@@ -270,6 +271,8 @@ export const fees = {
   'fees.home.ask': '{count, plural, one {# bank charge needs} other {# bank charges need}} one answer',
   'fees.home.askLine': 'Settle can tell whether you can claim it back',
   'fees.home.raised': 'Waiting on your bank: {amount}',
+  'fees.home.ombudsmanDue': 'Take it to the RBI Ombudsman: {amount}',
+  'fees.home.ombudsmanRaised': 'With the RBI Ombudsman: {amount}',
 
   'fees.you.none': 'Check your statement for charges your bank shouldn’t have taken',
 

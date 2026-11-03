@@ -265,7 +265,12 @@ export function scanCharges(lines: readonly StatementLine[], opts: { bank?: stri
       // Charges for a month are often taken in the first days of the next: count that month too, and keep the larger (the fairer to the bank).
       const day = Number(line.date.slice(8, 10))
       const doneLastMonth = day <= 10 ? (atm.done.get(prevMonth(line.date)) ?? []).length : 0
-      monthAtm = Math.max(doneThisMonth, doneLastMonth)
+      // Early in a month the charge is usually for the month before: when the statement doesn't reach back to its 1st, that count isn't known.
+      const coversLast = (lines[0]?.date ?? line.date) <= `${prevMonth(line.date)}-01`
+      const counted = day <= 10 && !coversLast ? null : Math.max(doneThisMonth, doneLastMonth)
+      // The bank's own count, when the narration prints it ("ATM WDL CHGS SEP26 4 TXNS").
+      const printed = /\b(\d{1,3})\s*TXNS?\b/i.exec(line.narration)
+      monthAtm = printed ? Math.max(Number(printed[1]), counted ?? 0) : counted
       onFailed = (atm.failed.get(month) ?? 0) + (day <= 10 ? (atm.failed.get(prevMonth(line.date)) ?? 0) : 0) > 0
     }
     const online = kind === 'neft' || kind === 'rtgs' ? onlineOf(transferFor(line, lines, kind)) : null
