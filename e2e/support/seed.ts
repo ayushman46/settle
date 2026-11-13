@@ -25,6 +25,7 @@ const KEYS = {
   stuckSeen: 'settle.v6.stuck-seen',
   letterMe: 'settle.v7.letter-me',
   fees: 'settle.v7.fees',
+  groupSync: 'settle.v8.group-sync',
 } as const satisfies typeof STORAGE_KEYS
 const STORAGE_VERSION = 1 satisfies typeof STORE_VERSION
 

@@ -1,0 +1,48 @@
+# The iPhone app: Settle in a Capacitor shell that loads the live site, like the Android one.
+# The Xcode project is made on the runner (`npx cap add ios`), not kept in the repository, and built
+# for the simulator without signing — to prove it builds. An app for real iPhones and the App Store
+# needs an Apple Developer account (signing certificate and provisioning profile) and is made by
+# hand from the same project. Until then iPhone users install from Safari: Share → Add to Home
+# Screen (the /get page). Run by hand: Actions → iOS → Run workflow.
+name: iOS
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: ios-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  simulator:
+    name: Simulator build (unsigned)
+    runs-on: macos-15
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - name: Add the iOS platform (same version as the Android one)
+        run: |
+          version=$(node -p "require('./package.json').devDependencies['@capacitor/core']")
+          npm install --no-save --no-audit --no-fund "@capacitor/ios@$version"
+          npx cap add ios
+          npx cap sync ios
+      - name: Build for the simulator
+        working-directory: ios/App
+        run: |
+          xcodebuild -workspace App.xcworkspace -scheme App -configuration Debug \
+            -sdk iphonesimulator -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO build
+      - uses: actions/upload-artifact@v7
+        with:
+          name: settle-ios-simulator
+          path: ios/App/build/Build/Products/Debug-iphonesimulator/App.app
+          retention-days: 30
+          if-no-files-found: error

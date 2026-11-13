@@ -49,12 +49,22 @@ let pending: BillStart | null = null
 let lastTaken: { value: BillStart; at: number } | null = null
 let scanHint: ScanHint | null = null
 
-/** Opens the bill flow, optionally starting something in it (see `BillStart`). */
-export function openBill(start?: BillStart): void {
+let wantedGroup: string | null = null
+
+/** Opens the bill flow, optionally starting something in it (see `BillStart`) and for a group (the bill is saved to it unless changed). */
+export function openBill(start?: BillStart, options: { groupId?: string } = {}): void {
+  wantedGroup = options.groupId ?? null
   pending = start ?? null
   lastTaken = null
   scanHint = start?.kind === 'delivery' ? 'delivery' : null
   navigate(BILL_PATH)
+}
+
+/** The group `openBill` was opened for (once) — null when none. The result step picks it unless one is chosen already. */
+export function takeBillGroup(): string | null {
+  const group = wantedGroup
+  wantedGroup = null
+  return group
 }
 
 /** The hint `openBill({ kind: 'delivery' })` left for the scan step (once) — null when none. */

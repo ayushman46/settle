@@ -289,7 +289,7 @@ export function UpiRoutes({ payeeName, vpa, amount, note, color, phone, platform
             </p>
             {direct && (
               <p className={styles.fine}>
-                <a className={styles.direct} href={direct} onClick={() => openApp(app)}>
+                <a className={styles.direct} data-direct="" href={direct} onClick={() => openApp(app)}>
                   {t('kit.upiPay.quick.direct', { app: app.name })}
                 </a>{' '}
                 {t('kit.upiPay.quick.direct.note')}

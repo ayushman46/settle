@@ -5,8 +5,9 @@
  */
 import * as z from 'zod/mini'
 import { createStore, useStore } from '../../data/store'
+import { STORAGE_KEYS } from '../../data/stores'
 
-export const GROUP_SYNC_KEY = 'settle.v8.group-sync'
+export const GROUP_SYNC_KEY = STORAGE_KEYS.groupSync
 
 /** A member as the last copy had them, and as this phone showed them then (to tell an edit made here). */
 export interface MemberSeen {

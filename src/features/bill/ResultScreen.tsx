@@ -1,4 +1,4 @@
-import { useId, useRef, useState, type CSSProperties } from 'react'
+import { useEffect, useId, useRef, useState, type CSSProperties } from 'react'
 import { ChevronDown, CircleCheck, Pencil, UsersRound } from 'lucide-react'
 import {
   ActionBar,
@@ -35,6 +35,7 @@ import { personFeeLines } from './feeView'
 import { linkToFriends } from './billPeople'
 import { countUp, useEntranceProgress } from './entranceMotion'
 import { GroupPicker } from './GroupPicker'
+import { takeBillGroup } from './launch'
 import { MerchantSheet } from './MerchantSheet'
 import { TINY_RATE } from './screenUtils'
 import styles from './ResultScreen.module.css'
@@ -79,6 +80,13 @@ export function ResultScreen() {
   const split = useSplit()
   const flow = useFlow()
   const toast = useToast()
+  // Opened from a group's page: the bill goes to that group unless another was picked.
+  useEffect(() => {
+    const wanted = takeBillGroup()
+    if (wanted && session.groupId === null) dispatch({ type: 'setGroup', groupId: wanted })
+    // Once, as the step opens.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
   const friendsById = useFriendsById()
   const profile = useProfile()
   const { currency, meta, items, people } = session

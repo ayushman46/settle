@@ -39,8 +39,8 @@ describe('live groups relay', () => {
   it('says so when live groups are off, and health reports it', async () => {
     const off = createApp(testConfig({ sync: null }), { logger: quiet })
     expect((await off.request(`/api/sync/${ROOM}`)).status).toBe(503)
-    expect((await (await off.request('/api/health')).json()).sync).toBe(false)
-    expect((await (await app().request('/api/health')).json()).sync).toBe(true)
+    expect(((await (await off.request('/api/health')).json()) as { sync?: boolean }).sync).toBe(false)
+    expect(((await (await app().request('/api/health')).json()) as { sync?: boolean }).sync).toBe(true)
   })
 
   it('a store that’s down is an error the phone can retry, never a lost group', async () => {

@@ -10,6 +10,7 @@ import { currencySymbol } from '../../lib/money'
 import { MAX_NAME_LENGTH, nameKey, normalizeName } from '../../lib/people'
 import { isPhoneUpiId, isValidUpiId, normalizeUpiId } from '../../lib/upi'
 import { CurrencySheet } from '../bill/CurrencySheet'
+import { ConnectUpi } from '../../kit/ConnectUpi'
 import styles from './OnboardingScreen.module.css'
 
 export interface AboutYou {
@@ -120,6 +121,12 @@ export function AboutYouStep({ nameOnly = false, onBack, onDone, onSkip }: About
         />
         {!nameOnly && (
           <>
+            <ConnectUpi
+              onConnect={(qr) => {
+                setTypedUpi(qr.vpa)
+                setUpiChecked(false)
+              }}
+            />
             <TextField
               ref={upiRef}
               label={t('onboarding.about.upi.label')}

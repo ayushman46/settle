@@ -37,6 +37,11 @@ export const JoinPage = lazyScreen(
   () => import('../features/groupsync/JoinPage'),
   (m) => m.JoinPage,
 )
+export const GetPage = lazyScreen(
+  'GetPage',
+  () => import('../features/install/GetPage'),
+  (m) => m.GetPage,
+)
 export const PrivacyPage = lazyScreen(
   'PrivacyPage',
   () => import('../features/legal/PrivacyPage'),
@@ -48,7 +53,7 @@ export const TermsPage = lazyScreen(
   (m) => m.TermsPage,
 )
 
-export type PublicPageKey = 'landing' | 'pay' | 'claim' | 'pool' | 'join' | 'privacy' | 'terms'
+export type PublicPageKey = 'landing' | 'pay' | 'claim' | 'pool' | 'join' | 'get' | 'privacy' | 'terms'
 
 export const PUBLIC_PAGES: Readonly<Record<string, { key: PublicPageKey; page: LazyScreen }>> = {
   '/': { key: 'landing', page: LandingPage },
@@ -56,6 +61,7 @@ export const PUBLIC_PAGES: Readonly<Record<string, { key: PublicPageKey; page: L
   '/claim': { key: 'claim', page: ClaimPage },
   '/pool': { key: 'pool', page: PoolPage },
   '/join': { key: 'join', page: JoinPage },
+  '/get': { key: 'get', page: GetPage },
   '/privacy': { key: 'privacy', page: PrivacyPage },
   '/terms': { key: 'terms', page: TermsPage },
 }

@@ -1,5 +1,28 @@
 # Changelog
 
+## v8.0 — 14 Nov 2026
+
+**Live groups, and paying through your UPI app.** A group is now the same on every friend's phone, and "Pay" hands the payment to Google Pay, PhonePe, Paytm or BHIM.
+
+### New
+- **Invite friends to a group.** On a group: "Invite friends" → one link (WhatsApp, share, copy, or a QR for the phone next to you). A friend opens it on their own phone — even one that has never opened Settle — sees the group, taps which name is theirs (or "I'm not on the list"), adds a UPI ID if they like, and joins. No sign-up, no phone number.
+- **The group stays the same everywhere, by itself.** Expenses, recorded payments, members, names and UPI IDs sync between the phones every few seconds while the app is open, and catch up when it's opened, comes back online or returns to the front. The group's page says "Live: everyone sees this group · 3 of 4 joined", and what the others add shows up with a short note. Two people changing the same thing: the later change wins on every phone; a deletion travels (and so does its Undo). Offline changes wait on the phone and go out later.
+- **End-to-end encrypted.** Each phone encrypts its copy with a key that only travels in the invite link's `#fragment` (never sent to a server). The server (`GET`/`PUT /api/sync/:room`) keeps one opaque blob per group and can't read it. It needs somewhere to keep them: Upstash Redis (Vercel → Storage → Upstash, which sets `KV_REST_API_URL` and `KV_REST_API_TOKEN`), or its own memory on a server that stays up. Where there's nowhere, groups still work **by link**: "Send update" carries the whole group, and opening it merges.
+- **Pay ₹400 with Google Pay.** Settle up → Pay now leads with one button and the UPI app you use (picked once, remembered). Up to ₹2,000 the payee's QR is handed straight to the app, which opens on the payment with the UPI ID and amount filled in (UPI's "QR share & pay"); above ₹2,000 the UPI ID is copied and the app opened, because UPI apps take nothing else for a person. A direct link to the app is offered as a try and says plainly that apps often refuse it (NPCI OC 76A tells them to). "I've paid" records it for the whole group.
+- **Connect Google Pay: no typing.** Wherever your UPI ID is asked for (joining a group, first set-up, a pay sheet), pick a screenshot of your own QR code from Google Pay, PhonePe, Paytm or BHIM: the UPI ID is read from it on the phone, with the name on the bank account shown to check. No typos, nothing uploaded. Uses the browser's own QR reader (Chrome on Android and the Android app); where there is none (iPhone Safari), the typed field stays.
+- **Android app:** a `SettlePay` plugin hands the QR to the chosen UPI app itself (no share sheet) and opens it for bigger amounts.
+- **Say it / Snap a bill on the group's page.** An expense spoken (or typed as a sentence) or read from a bill photo, started from a group, lands in that group.
+- **Get the app** (`/get`, linked from the landing page): install on Android (the browser's Install) and iPhone (Share → Add to Home Screen), a QR on a computer, and a clear note when the page is open inside WhatsApp's or Instagram's browser, where installing can't work.
+- **iPhone app build** (Actions → iOS): the Capacitor iOS project built for the simulator, unsigned. A real App Store build needs an Apple Developer account.
+- Backups and "Clear all data" include which groups are shared; the privacy policy says exactly what a shared group puts on the server.
+
+### Tested
+- The sync engine as three and four phones in one test (join, add, edit, delete and undo, payments, renames, late joiners, same-moment edits); the live loop through a stand-in server (slim invites, unreadable ciphertext, server down, server without storage); the relay's own rules.
+- In real browsers (`e2e/trip.spec.ts`): a Goa trip on three phones end to end; paying under and over ₹2,000; "Say it" in a group; `/get`; a late joiner from the first invite; a cut-off link.
+
+### Not yet tried on physical phones
+- That Google Pay, PhonePe, Paytm and BHIM each accept a QR picture shared into them (Android's share sheet, and the Android app's direct hand-over), and what each does with the direct link. The fallbacks (save the QR and upload it in the app; copy the UPI ID) are the ones that were already there.
+
 ## v7.2 — 3 Nov 2026
 
 **Bank charges** — the new headline feature. Banks took ₹7,087 crore in minimum-balance penalties alone in FY26 (Rajya Sabha, 28 Jul 2026), and the RBI's rules limit when they may — but nobody checks. No Indian app audits a statement against them; abroad, Cushion proved people want it. Settle does it on the phone, for free.

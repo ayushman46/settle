@@ -1,0 +1,28 @@
+/* "Connect Google Pay": your UPI ID read from your own QR, no typing. */
+.connect {
+  display: grid;
+  gap: var(--s-2);
+}
+
+.how,
+.found,
+.problem {
+  margin: 0;
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
+.found {
+  color: var(--positive);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.found:empty,
+.problem:empty {
+  display: none;
+}
+
+.problem {
+  color: var(--negative);
+}

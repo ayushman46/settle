@@ -283,6 +283,13 @@ export const kit = {
   'kit.upi.copy.aria': 'Copy UPI ID',
 
   // Paying one person by UPI, the ways UPI allows (QR, a saved QR up to ₹2,000, the UPI ID).
+  'kit.connect.cta': 'Connect Google Pay: no typing',
+  'kit.connect.again': 'Connected. Pick another QR',
+  'kit.connect.how': 'In Google Pay (or PhonePe, Paytm, BHIM) open your own QR code and take a screenshot. Pick it here: your UPI ID is read from it, on this phone.',
+  'kit.connect.found': 'Connected {upi}: the name on it is {name}. Check that’s you.',
+  'kit.connect.found.noName': 'Connected {upi}.',
+  'kit.connect.none': 'No QR code found in that picture. Use a screenshot of your own QR from your UPI app.',
+  'kit.connect.other': 'That QR isn’t a UPI one. Use your own QR from your UPI app: the one people scan to pay you.',
   'kit.upiPay.quick.app.aria': 'Your UPI app',
   'kit.upiPay.quick.cta': 'Pay {amount} with {app}',
   'kit.upiPay.quick.cta.noAmount': 'Pay with {app}',

@@ -42,6 +42,8 @@ export const STORAGE_KEYS = {
   letterMe: 'settle.v7.letter-me',
   /** Bank charges: the charges read from statements and SMS, your answers, and your claims (src/features/fees/store.ts). */
   fees: 'settle.v7.fees',
+  /** Shared groups: which groups this phone shares, as whom, and with which of your people (src/features/groupsync/store.ts). */
+  groupSync: 'settle.v8.group-sync',
 } as const
 
 /** Accepts a bare, un-enveloped value (e.g. hand-edited storage) when the schema can read it. */

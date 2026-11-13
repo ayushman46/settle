@@ -47,6 +47,7 @@ import {
 import { LEGACY_KEYS } from './legacy'
 import { letterMeStore } from '../features/stuck/letterMe'
 import { emptyFees, feesSchema, feesStore, type FeesState } from '../features/fees/store'
+import { groupSyncSchema, groupSyncStore, type GroupSyncState } from '../features/groupsync/store'
 
 export const BACKUP_VERSION = 4
 
@@ -74,6 +75,8 @@ export interface BackupFile {
   stuck: StuckPayment[]
   /** Bank charges: the charges read, your answers and your claims. Absent in older files. */
   fees: FeesState
+  /** Which groups are shared, and as whom: a restored phone carries on in them. */
+  groupSync: GroupSyncState
 }
 
 const backupSchema = z.object({
@@ -93,6 +96,7 @@ const backupSchema = z.object({
   reminders: z.catch(z.optional(remindersSchema), []),
   stuck: z.catch(z.optional(stuckSchema), []),
   fees: z.catch(z.optional(feesSchema), undefined),
+  groupSync: z.catch(z.optional(groupSyncSchema), undefined),
 })
 
 export function exportBackup(): BackupFile {
@@ -112,6 +116,7 @@ export function exportBackup(): BackupFile {
     reminders: remindersStore.get(),
     stuck: stuckStore.get(),
     fees: feesStore.get(),
+    groupSync: groupSyncStore.get(),
   }
 }
 
@@ -144,6 +149,7 @@ export function parseBackup(json: unknown): BackupFile | null {
     reminders: data.reminders ?? [],
     stuck: data.stuck ?? [],
     fees: data.fees ?? emptyFees(),
+    groupSync: data.groupSync ?? {},
   }
 }
 
@@ -264,6 +270,7 @@ export function importBackup(file: BackupFile, mode: 'merge' | 'replace'): { add
     remindersStore.set([...file.reminders])
     stuckStore.set([...file.stuck])
     feesStore.set({ ...file.fees })
+    groupSyncStore.set({ ...file.groupSync })
     clearSplitPrefill()
     flushAllStores()
     const added =
@@ -419,7 +426,7 @@ export function clearAllData(): void {
       // Blocked storage — the in-memory reset below still applies.
     }
   }
-  for (const store of [profileStore, friendsStore, expensesStore, groupsStore, recurringStore, poolsStore, claimsStore, proofRefsStore, payerAliasesStore, remindersStore, autoSettleStore, stuckStore, stuckSeenStore, letterMeStore, feesStore])
+  for (const store of [profileStore, friendsStore, expensesStore, groupsStore, recurringStore, poolsStore, claimsStore, proofRefsStore, payerAliasesStore, remindersStore, autoSettleStore, stuckStore, stuckSeenStore, letterMeStore, feesStore, groupSyncStore])
     store.reload()
   clearSplitPrefill()
 }

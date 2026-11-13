@@ -30,6 +30,8 @@ export interface AiDescribeSheetProps {
   onClose: () => void
   /** `voice`: start listening as the sheet opens (Home's mic). */
   startWith?: 'voice'
+  /** The split is for this group (opened from the group's page). */
+  groupId?: string
 }
 
 /** The listening panel and the language picker load on the first tap of a mic. */
@@ -78,7 +80,7 @@ interface VoiceState {
  * reading once unlocked. Spoken numbers ("dhai hazaar") become digits on the phone before
  * anything is sent, and nothing is sent until "Read it".
  */
-export function AiDescribeSheet({ open, onClose, startWith }: AiDescribeSheetProps) {
+export function AiDescribeSheet({ open, onClose, startWith, groupId }: AiDescribeSheetProps) {
   const t = useT()
   const examples = sayExamples()
   const profile = useProfile()
@@ -213,7 +215,7 @@ export function AiDescribeSheet({ open, onClose, startWith }: AiDescribeSheetPro
     )
     haptic('tap')
     close()
-    navigate(`${NEW_SPLIT_PATH}?from=${spoken ? 'voice' : 'describe'}`)
+    navigate(`${NEW_SPLIT_PATH}?from=${spoken ? 'voice' : 'describe'}${groupId ? `&group=${encodeURIComponent(groupId)}` : ''}`)
   }
 
   const byHand = (): void => {

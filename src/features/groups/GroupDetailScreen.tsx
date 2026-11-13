@@ -1,5 +1,5 @@
 import { memo, useEffect, useId, useMemo, useState, type CSSProperties, type ReactNode } from 'react'
-import { Archive, ArchiveRestore, ArrowRight, Ellipsis, HandCoins, Pencil, Plus, Share2, Trash2, UserPen } from 'lucide-react'
+import { Archive, ArchiveRestore, ArrowRight, Camera, Ellipsis, HandCoins, Mic, Pencil, Plus, Share2, Trash2, UserPen } from 'lucide-react'
 import { goBack, navigate, useRoute, useSearchParams } from '../../app/router'
 import {
   AvatarStack,
@@ -48,6 +48,9 @@ import { GroupEmoji } from './GroupEmoji'
 import { GroupGone } from './GroupGone'
 import { GroupShareSheet } from './GroupShareSheet'
 import { GroupLive } from '../groupsync/GroupLive'
+import { AiDescribeSheet } from '../home/AiDescribeSheet'
+import { VOICE_ENABLED } from '../home/voice.enabled'
+import { openBill } from '../bill/launch'
 import { EditGroupSheet } from './GroupSheets'
 import { NextRoundCard } from './NextRoundCard'
 import { ROTATION_ENABLED } from './rotation.enabled'
@@ -85,7 +88,7 @@ function tabFrom(value: string | null): Tab {
   return value === 'balances' || value === 'totals' ? value : 'expenses'
 }
 
-type Sheet = 'menu' | 'details' | 'members' | 'share' | 'delete' | 'rotation'
+type Sheet = 'menu' | 'details' | 'members' | 'share' | 'delete' | 'rotation' | 'say'
 
 /**
  * `/app/groups/:id` — one group: who's in and where you stand, then its expenses and recorded
@@ -189,6 +192,19 @@ function GroupDetail({ group, onLeaving }: { group: Group; onLeaving: (group: Gr
 
       <GroupLive group={group} />
 
+      {!group.archived && (
+        <div className={styles.quickAdd} role="group" aria-label={t('groupsync.quick.aria')}>
+          {VOICE_ENABLED && (
+            <Button variant="tonal" size="md" iconStart={<Mic />} onClick={() => setSheet('say')}>
+              {t('groupsync.quick.say')}
+            </Button>
+          )}
+          <Button variant="tonal" size="md" iconStart={<Camera />} onClick={() => openBill(undefined, { groupId: group.id })}>
+            {t('groupsync.quick.scan')}
+          </Button>
+        </div>
+      )}
+
       <StandingCard group={group} standing={standing} onShare={() => setSheet('share')} />
 
       {ROTATION_ENABLED && <NextRoundCard group={group} expenses={expenses} onPlan={() => setSheet('rotation')} />}
@@ -214,6 +230,7 @@ function GroupDetail({ group, onLeaving }: { group: Group; onLeaving: (group: Gr
       />
       <EditGroupSheet group={group} open={sheet === 'details' || sheet === 'members'} section={sheet === 'members' ? 'members' : 'details'} onClose={() => setSheet(null)} />
       <GroupShareSheet group={group} open={sheet === 'share'} onClose={() => setSheet(null)} />
+      {VOICE_ENABLED && <AiDescribeSheet open={sheet === 'say'} onClose={() => setSheet(null)} startWith="voice" groupId={group.id} />}
       <DeleteSheet group={group} count={expenses.length} open={sheet === 'delete'} onClose={() => setSheet(null)} onConfirm={remove} />
       <PaymentSheet group={group} settlement={payment} friendsById={friendsById} onClose={() => setPayment(null)} />
       {ROTATION_ENABLED && <RotationSheet group={group} expenses={expenses} open={sheet === 'rotation'} onClose={() => setSheet(null)} />}

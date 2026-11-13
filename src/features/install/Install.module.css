@@ -111,3 +111,89 @@
   color: var(--text-muted, #4b5563);
   overflow-wrap: anywhere;
 }
+
+/* /get: Settle on your phone. */
+.get {
+  display: grid;
+  gap: var(--s-4);
+  justify-items: stretch;
+}
+
+.getIcon {
+  display: grid;
+  place-items: center;
+  justify-self: center;
+  width: calc(var(--s-10) + var(--s-5));
+  height: calc(var(--s-10) + var(--s-5));
+  border-radius: var(--radius-card);
+  background: var(--accent-soft);
+  color: var(--ink);
+}
+
+.getTitle {
+  margin: 0;
+  font-size: 1.75rem;
+  line-height: 1.15;
+  font-weight: 700;
+  color: var(--ink);
+  text-align: center;
+}
+
+.getLead,
+.getNote {
+  margin: 0;
+  color: var(--ink-2);
+  text-align: center;
+}
+
+.getLead {
+  font: var(--text-label);
+}
+
+.getNote {
+  font: var(--text-caption);
+}
+
+.getQr {
+  display: grid;
+  justify-items: center;
+  gap: var(--s-2);
+  padding: var(--s-4);
+  border-radius: var(--radius-card);
+  background: var(--surface-2);
+}
+
+.getPanel {
+  display: grid;
+  gap: var(--s-3);
+  padding: var(--s-4);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+}
+
+.getWarn {
+  margin: 0;
+  padding: var(--s-3);
+  border-radius: var(--r-md);
+  background: var(--warning-soft);
+  color: var(--warning-ink);
+  font: var(--text-caption);
+  font-weight: 600;
+}
+
+.getDone {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  margin: 0;
+  color: var(--positive);
+  font: var(--text-label);
+  font-weight: 650;
+}
+
+.getDone > svg {
+  width: var(--s-5);
+  height: var(--s-5);
+}

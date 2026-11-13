@@ -8,10 +8,12 @@ import { useT } from '../../i18n'
 import { haptic } from '../../lib/haptics'
 import { nameKey, normalizeName } from '../../lib/people'
 import { isValidUpiId, normalizeUpiId } from '../../lib/upi'
+import { ConnectUpi } from '../../kit/ConnectUpi'
 import { usePageMeta } from '../landing/pageMeta'
 import { PublicProblem, PublicShell } from '../pay/PublicShell'
 import { joinGroup, syncLocal } from './local'
-import { sharedById } from './store'
+import { groupsStore } from '../../data/stores'
+import { dropShared, sharedById } from './store'
 import { syncNow } from './sync'
 import { pull, readInvite, type Invite } from './transport'
 import { mergeWire, type WireGroup } from './wire'
@@ -43,7 +45,11 @@ export function JoinPage() {
         return
       }
       // Already on this phone: bring it up to date and open it.
-      const mine = sharedById(invite.wire.id)
+      let mine = sharedById(invite.wire.id)
+      if (mine && !groupsStore.get().some((g) => g.id === mine?.groupId)) {
+        dropShared(mine.groupId)
+        mine = null
+      }
       if (mine) {
         syncLocal(mine.groupId, invite.wire)
         void syncNow(mine.groupId)
@@ -176,6 +182,7 @@ function JoinForm({ invite }: { invite: Invite }) {
               onChange={(event) => setName(event.currentTarget.value)}
             />
           )}
+          <ConnectUpi onConnect={(qr) => setUpi(qr.vpa)} />
           <TextField
             label={t('groupsync.join.upi.label')}
             hint={t('groupsync.join.upi.hint')}

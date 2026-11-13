@@ -407,3 +407,10 @@
     transform: scaleX(0);
   }
 }
+
+/* Say it / snap a bill: an expense for this group without typing. */
+.quickAdd {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+  gap: var(--s-2);
+}

@@ -4,6 +4,7 @@ import { ME_ID } from '../domain/types'
 import { useT } from '../i18n'
 import { cx } from '../lib/cx'
 import { isPhoneUpiId, isValidUpiId, normalizeUpiId } from '../lib/upi'
+import { ConnectUpi } from './ConnectUpi'
 import styles from './UpiIdForm.module.css'
 
 export interface UpiIdFormProps {
@@ -54,6 +55,7 @@ export function UpiIdForm({
   return (
     <form className={cx(styles.form, className)} onSubmit={submit} noValidate>
       {lead != null && <p className={styles.lead}>{lead}</p>}
+      {mine && <ConnectUpi onConnect={(qr) => setText(qr.vpa)} />}
       <TextField
         label={mine ? t('kit.upiForm.label.mine') : t('kit.upiForm.label', { name: ownerName })}
         placeholder="name@okaxis" /* i18n-ignore: an example UPI ID */

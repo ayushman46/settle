@@ -82,8 +82,11 @@ export async function upiQrLink(page: Page): Promise<string> {
   return (await qr.getAttribute('data-qr-value')) ?? ''
 }
 
-/** Links that would start a UPI payment to a person (none may exist). */
-export const UPI_PAYMENT_LINKS = 'a[href^="upi:"], a[href^="intent:"], a[href*="://upi/pay"]'
+/**
+ * Links that would start a UPI payment to a person. The only one a pay page may have is the
+ * labelled try ("Or try the direct link to …"), on a phone: UPI apps refuse most of them.
+ */
+export const UPI_PAYMENT_LINKS = 'a[href^="upi:"]:not([data-direct]), a[href^="intent:"]:not([data-direct]), a[href*="://upi/pay"]:not([data-direct]), a[href*="://pay?"]:not([data-direct])'
 
 /** A `upi://pay?…` link, decoded. */
 export function readUpiLink(href: string): { scheme: string; target: string; params: Record<string, string> } {

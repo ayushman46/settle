@@ -49,6 +49,17 @@ export function PrivacyPage() {
           read. It stays on this phone and goes into your backup file with everything else.
         </p>
         <p>
+          <strong>Shared groups.</strong> A group stays on your phone only, until you invite someone to it. The invite
+          link then carries the group’s key (and, where the server keeps no copies, the group itself) in the part of
+          the link after “#”, which is never sent to any server: anyone you send the link to can join and see the
+          group. While a group is shared, each phone leaves an encrypted copy of it on our server so the others can
+          pick it up: the group’s name, its members’ names and UPI IDs, its expenses and recorded payments. The copy
+          is encrypted on your phone with the key from the invite link, so we cannot read it; the server sees only a
+          room name made from that key, how big the copy is, and your IP address for the moment of the request. A
+          copy nobody has touched for about a year is deleted. Nothing else of yours is part of it: not your other
+          groups, people or expenses.
+        </p>
+        <p>
           <strong>Auto-settle, Stuck money and Bank charges (the Android app).</strong> Only if you turn on notification
           access:
         </p>
@@ -130,7 +141,7 @@ export function PrivacyPage() {
 
       <LegalSection title={t('legal.privacy.section.server')}>
         <p>
-          Our server has no database. To stop abuse, it counts requests per IP address (and per Pro pass, for AI) in
+          Our server has no database of people or accounts; the only thing it keeps is the encrypted copies of shared groups described above. To stop abuse, it counts requests per IP address (and per Pro pass, for AI) in
           memory for up to a day; the counts disappear when the server restarts. It writes short technical logs —
           like “a bill was read in 7 seconds” — that never include what was on the bill or what you typed. Our
           hosting provider may keep standard access logs.

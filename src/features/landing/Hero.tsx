@@ -54,6 +54,9 @@ export function Hero() {
             <CtaLink to="/app" iconEnd={<ArrowRight strokeWidth={2.25} />}>
               Open {BRAND.name} — free
             </CtaLink>
+            <CtaLink to="/get" variant="secondary">
+              Get the app: Android &amp; iPhone
+            </CtaLink>
             <SectionLink to="how" className={ctaClassName({ variant: 'secondary' })}>
               See how it works
             </SectionLink>

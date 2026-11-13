@@ -8,7 +8,7 @@
 import type { Page } from '@playwright/test'
 import { expect, test } from './support/fixtures'
 import { friend, seed } from './support/seed'
-import type { Group } from '../src/domain/types'
+import type { Expense, Group } from '../src/domain/types'
 
 const RIYA = friend('riya', 'Riya')
 const SAM = friend('sam', 'Sam', { color: 3 })
@@ -111,5 +111,111 @@ test.describe('a trip on three phones', () => {
 
     // Ayush's phone shows her payment, and what he's still owed.
     await expect(page.getByText('₹3,000').first()).toBeVisible({ timeout: 30_000 })
+  })
+})
+
+test.describe('paying, saying it, getting the app', () => {
+  test.describe.configure({ timeout: 180_000 })
+  const PAYEE = friend('riya', 'Riya', { upiId: 'riya@ybl' })
+  const DINNER: Expense = {
+    id: 'dinner',
+    kind: 'split',
+    title: 'Dinner',
+    category: 'food',
+    currency: 'INR',
+    total: 90000,
+    date: '2026-11-10',
+    createdAt: 5,
+    updatedAt: 5,
+    payerId: 'riya',
+    mode: 'equal',
+    participants: [
+      { friendId: 'me', input: null },
+      { friendId: 'riya', input: null },
+      { friendId: 'sam', input: null },
+    ],
+    shares: { me: 30000, riya: 30000, sam: 30000 },
+    roundedToWhole: false,
+    note: null,
+    groupId: 'goa',
+    bill: null,
+    paidBack: {},
+    recurringId: null,
+    source: 'manual',
+  }
+
+  test('up to ₹2,000: “Pay ₹300 with PhonePe” hands the payee’s QR to the app, and the choice is remembered', async ({ page, shared }) => {
+    await seed(page, { friends: [PAYEE, SAM], groups: [GOA], expenses: [DINNER] })
+    await page.goto('/app/groups/goa/settle')
+    await page.getByRole('button', { name: /^Pay/ }).first().click()
+    const pay = page.getByRole('dialog')
+    await pay.getByRole('radio', { name: 'PhonePe' }).click()
+    await expect(pay.getByText('Opens PhonePe with Riya’s UPI ID and ₹300 filled in.')).toBeVisible()
+    const before = (await shared()).sheets.length
+    await pay.getByRole('button', { name: 'Pay ₹300 with PhonePe' }).click()
+    await expect(pay.getByText('Pick PhonePe in the list: it opens on the payment to Riya, all filled in.')).toBeVisible()
+    expect((await shared()).sheets.length).toBe(before + 1)
+    // The labelled try is the only payment link, and it goes to the chosen app.
+    await expect(pay.getByRole('link', { name: 'Or try the direct link to PhonePe' })).toHaveAttribute('href', /package=com\.phonepe\.app/)
+    await pay.getByRole('button', { name: /I’ve paid/ }).click()
+    await expect(page.getByText('Payment recorded')).toBeVisible()
+    // Next time, PhonePe is already picked.
+    await page.goto('/app/groups/goa')
+    expect(await page.evaluate(() => window.localStorage.getItem('settle.v8.pay-app'))).toBe('phonepe')
+  })
+
+  test('“Say it” on a group’s page puts the expense in that group', async ({ page }) => {
+    await seed(page, { friends: [RIYA, SAM], groups: [GOA] })
+    await page.goto('/app/groups/goa')
+    await page.getByRole('button', { name: 'Say it' }).click()
+    const sheet = page.getByRole('dialog')
+    await sheet.getByRole('textbox', { name: 'Describe the expense' }).fill('Cab 840 with Riya and Sam, Sam pays double')
+    await sheet.getByRole('button', { name: 'Read it' }).click()
+    await sheet.getByRole('button', { name: 'Looks right' }).click()
+    await expect(page).toHaveURL(/\/app\/split\/new\?from=describe&group=goa/)
+    await page.getByRole('button', { name: 'Save split' }).click()
+    await expect(page).toHaveURL(/\/app\/expense\//, { timeout: 15_000 })
+    await page.goto('/app/groups/goa')
+    await expect(page.getByText('Cab')).toBeVisible()
+    await expect(page.getByText('₹840 spent · 1 expense')).toBeVisible()
+  })
+
+  test('/get: how to install on Android and on iPhone, from the landing page', async ({ page }) => {
+    await page.goto('/')
+    await page.getByRole('link', { name: 'Get the app: Android & iPhone' }).first().click()
+    await expect(page).toHaveURL(/\/get$/)
+    await expect(page.getByRole('heading', { level: 1, name: 'Get Settle on your phone' })).toBeVisible()
+    await expect(page.getByText('Tap Install app')).toBeVisible()
+    await page.getByRole('radio', { name: 'iPhone' }).click()
+    await expect(page.getByText('Tap Add to Home Screen')).toBeVisible()
+    await page.getByRole('link', { name: 'Open Settle' }).click()
+    await expect(page).toHaveURL(/\/app/)
+  })
+
+  test('a late joiner gets everything from the first invite; a cut-off link says so', async ({ page, openPhone }) => {
+    await seed(page, { profile: { name: 'Ayush', upiId: 'ayush@okicici' }, friends: [RIYA, SAM], groups: [GOA] })
+    await page.goto('/app/groups/goa')
+    await page.getByRole('button', { name: 'Invite friends' }).click()
+    await page.getByRole('dialog', { name: 'Invite to Goa trip' }).getByRole('button', { name: 'Copy the link' }).click()
+    const link = await copied(page)
+    await page.keyboard.press('Escape')
+    // Two expenses after the link went out.
+    await addExpense(page, 'Scooters', '1500')
+    await page.goto('/app/groups/goa')
+    await addExpense(page, 'Ferry', '600')
+    await page.goto('/app/groups/goa')
+    await expect(page.getByRole('status').filter({ hasText: 'Live: everyone sees this group' })).toBeVisible({ timeout: 20_000 })
+
+    const sam = (await openPhone()).page
+    await join(sam, link, 'Sam', 'sam@oksbi')
+    await expect(sam.getByText('Scooters')).toBeVisible({ timeout: 30_000 })
+    await expect(sam.getByText('Ferry')).toBeVisible()
+    // Sam's UPI ID reaches Ayush.
+    await expect(page.getByText('2 of 3 joined')).toBeVisible({ timeout: 30_000 })
+    expect(await page.evaluate(() => window.localStorage.getItem('settle.v3.friends'))).toContain('sam@oksbi')
+
+    const stranger = (await openPhone()).page
+    await stranger.goto(local(link).slice(0, 40))
+    await expect(stranger.getByRole('heading', { name: 'This invite can’t be opened' })).toBeVisible()
   })
 })
