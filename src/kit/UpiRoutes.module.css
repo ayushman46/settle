@@ -288,3 +288,33 @@
     animation: none;
   }
 }
+
+/* One tap: the app you pay with, and the button that hands the payment to it. */
+.quick {
+  display: grid;
+  gap: var(--s-3);
+  padding: var(--s-4);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-xl);
+  background: var(--surface);
+}
+
+.quickApps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+.direct {
+  color: var(--ink);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.otherWays {
+  margin: var(--s-2) 0 0;
+  color: var(--ink-2);
+  font: var(--text-label);
+  font-weight: 600;
+}

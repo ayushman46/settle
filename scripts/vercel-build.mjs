@@ -80,7 +80,7 @@ const headers = readHeaders(join(ROOT, 'public', '_headers'))
 if (!headers['/*']?.['Content-Security-Policy'] || !headers['/assets/*']?.['Cache-Control']) fail('public/_headers is missing its "/*" or "/assets/*" block.')
 
 /** Same as server/web.ts APP_ROUTE. */
-const APP_ROUTE = '^/(?:app(?:/.*)?|pay|claim|pool|privacy|terms)?/?$'
+const APP_ROUTE = '^/(?:app(?:/.*)?|pay|claim|pool|join|get|privacy|terms)?/?$'
 const linkRoutes = [...preloads].map(([path, link]) => ({ src: `^${path}/?$`, dest: '/index.html', headers: { Link: link } }))
 
 const config = {

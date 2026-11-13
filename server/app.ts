@@ -24,6 +24,7 @@ import {
   type ScanResponse,
 } from '../shared/api'
 import { registerBilling } from './billing'
+import { registerSync, syncStoreFor, type SyncStore } from './sync'
 import { loadConfig, redactSecrets, type ServerConfig } from './config'
 import { describeSplit, parseDescribeRequest } from './describe'
 import { utcToday } from './describeText'
@@ -93,6 +94,8 @@ export interface AppOptions {
   now?: () => number
   /** How the server fetches the ECB's exchange rates (tests inject one). Defaults to `fetch`. */
   fetchImpl?: typeof fetch
+  /** Where live groups' copies are kept (tests inject one). Defaults to what the settings ask for. */
+  syncStore?: SyncStore | null
 }
 
 /** `GET /api/rates`: per client, a minute at a time. */
@@ -125,6 +128,7 @@ export function createApp(config: ServerConfig, options: AppOptions = {}): Hono 
   const now = options.now ?? Date.now
   const redact = (text: string) => redactSecrets(text, config.apiKey, config.billing.razorpay?.keySecret, config.proxySecret)
   const app = new Hono()
+  const syncStore = options.syncStore === undefined ? syncStoreFor(config, options.fetchImpl) : options.syncStore
 
   /** When NVIDIA last rejected the key; /api/health reports AI as off for a while after (until a call works again). */
   let keyRejectedAt: number | null = null
@@ -139,7 +143,7 @@ export function createApp(config: ServerConfig, options: AppOptions = {}): Hono 
   })
 
   app.get('/api/health', (c) => {
-    const body: HealthResponse = { ok: true, configured: aiAvailable(), models: config.models }
+    const body: HealthResponse = { ok: true, configured: aiAvailable(), models: config.models, sync: syncStore !== null }
     return c.json(body)
   })
 
@@ -397,6 +401,10 @@ export function createApp(config: ServerConfig, options: AppOptions = {}): Hono 
   /* ---------------------------------------------------------------- billing, licenses */
 
   registerBilling(app, { config, log, now, ownPageOnly: guard })
+
+  /* ---------------------------------------------------------------- live groups */
+
+  registerSync(app, { config, log, now, ownPageOnly: guard, store: syncStore })
 
   /* ---------------------------------------------------------------- everything else */
 

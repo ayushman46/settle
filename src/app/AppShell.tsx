@@ -8,6 +8,7 @@ import { onboardingDestination, welcomePath } from '../features/onboarding/desti
 import { usePaywall } from '../features/pro/paywall'
 import { inAndroidApp } from '../lib/nativeApp'
 import { prefetchHealth } from '../state/health'
+import { startGroupSync } from '../features/groupsync/sync'
 import { isChunkLoadError, retryFailedScreens } from './lazyScreen'
 import { HOME_PATH, matchAppRoute, PaywallHost, preloadCoreScreens, WELCOME_PATTERN, type TabKey } from './routes'
 import { navigate, Redirect, useLocation, useNavDirection } from './router'
@@ -154,6 +155,11 @@ export function AppShell({ preloadScreens = import.meta.env.PROD }: AppShellProp
 
   useEffect(() => {
     prefetchHealth()
+  }, [])
+
+  // Shared groups stay in step with the other phones while the app is open.
+  useEffect(() => {
+    startGroupSync()
   }, [])
 
   useEffect(() => {

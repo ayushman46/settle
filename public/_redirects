@@ -11,6 +11,10 @@
 /claim/     /  200
 /pool       /  200
 /pool/      /  200
+/join       /  200
+/join/      /  200
+/get        /  200
+/get/       /  200
 /privacy    /  200
 /privacy/   /  200
 /terms      /  200

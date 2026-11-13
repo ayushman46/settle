@@ -91,7 +91,7 @@ describe('GET /api/health', () => {
     const response = await makeApp().request('/api/health')
     expect(response.status).toBe(200)
     expect(response.headers.get('cache-control')).toBe('no-store')
-    expect((await response.json()) as HealthResponse).toEqual({ ok: true, configured: true, models: ['nvidia/nemotron-test-vl', 'google/gemma-test'] })
+    expect((await response.json()) as HealthResponse).toEqual({ ok: true, configured: true, models: ['nvidia/nemotron-test-vl', 'google/gemma-test'], sync: true })
   })
 
   it('reports configured: false without a key and never leaks the key', async () => {
@@ -99,6 +99,7 @@ describe('GET /api/health', () => {
       ok: true,
       configured: false,
       models: ['nvidia/nemotron-test-vl', 'google/gemma-test'],
+      sync: true,
     })
     expect(await (await makeApp().request('/api/health')).text()).not.toContain(TEST_KEY)
   })

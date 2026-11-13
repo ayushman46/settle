@@ -51,3 +51,72 @@ export function payPlatform(
 export function openAppHref(app: PayApp, platform: PayPlatform): string | null {
   return platform === 'ios' ? `${app.iosScheme}://` : null
 }
+
+/* ------------------------------------------------------------------ straight into the app */
+
+/** Each app's Android package. */
+export const ANDROID_PACKAGES: Readonly<Record<PayAppId, string>> = {
+  gpay: 'com.google.android.apps.nbu.paisa.user',
+  phonepe: 'com.phonepe.app',
+  paytm: 'net.one97.paytm',
+  bhim: 'in.org.npci.upiapp',
+}
+
+/** Each app's own iPhone link for a UPI payment (the payment gateways' scheme lists). */
+const IOS_PAY: Readonly<Record<PayAppId, string>> = {
+  gpay: 'gpay://upi/pay',
+  phonepe: 'phonepe://pay',
+  paytm: 'paytmmp://pay',
+  bhim: 'upi://pay',
+}
+
+/** The link that opens `app` (no payment in it): its scheme on iPhone, its launcher on Android; null elsewhere. */
+export function launchHref(app: PayApp, platform: PayPlatform): string | null {
+  if (platform === 'ios') return `${app.iosScheme}://`
+  if (platform === 'android') return `intent://#Intent;action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;package=${ANDROID_PACKAGES[app.id]};end`
+  return null
+}
+
+/**
+ * A link that opens `app` on the payment itself — payee, amount and note from `upiUri`
+ * (`upi://pay?…`). UPI apps are told to refuse a payment to a person that starts this way (NPCI
+ * OC 76A), and many do; some take small amounts. Offered as a try, never as the only way. Null
+ * where a page can't open an app.
+ */
+export function directPayHref(app: PayApp, platform: PayPlatform, upiUri: string): string | null {
+  const query = upiUri.split('?')[1] ?? ''
+  if (!query) return null
+  if (platform === 'ios') return `${IOS_PAY[app.id]}?${query}`
+  if (platform === 'android') return `intent://pay?${query}#Intent;scheme=upi;package=${ANDROID_PACKAGES[app.id]};end`
+  return null
+}
+
+/* ------------------------------------------------------------------ the app you pay with */
+
+const PAY_APP_KEY = 'settle.v8.pay-app'
+const listeners = new Set<() => void>()
+
+/** The UPI app this phone pays with (picked once, remembered), or null. Never throws. */
+export function getPayApp(): PayAppId | null {
+  try {
+    const raw = window.localStorage.getItem(PAY_APP_KEY)
+    return PAY_APPS.some((app) => app.id === raw) ? (raw as PayAppId) : null
+  } catch {
+    return null
+  }
+}
+
+export function setPayApp(id: PayAppId | null): void {
+  try {
+    if (id === null) window.localStorage.removeItem(PAY_APP_KEY)
+    else window.localStorage.setItem(PAY_APP_KEY, id)
+  } catch {
+    // Storage blocked: the choice lasts until the page closes.
+  }
+  for (const listener of [...listeners]) listener()
+}
+
+export function subscribePayApp(listener: () => void): () => void {
+  listeners.add(listener)
+  return () => listeners.delete(listener)
+}

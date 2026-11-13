@@ -47,6 +47,7 @@ import { formatMoney } from '../../lib/money'
 import { GroupEmoji } from './GroupEmoji'
 import { GroupGone } from './GroupGone'
 import { GroupShareSheet } from './GroupShareSheet'
+import { GroupLive } from '../groupsync/GroupLive'
 import { EditGroupSheet } from './GroupSheets'
 import { NextRoundCard } from './NextRoundCard'
 import { ROTATION_ENABLED } from './rotation.enabled'
@@ -185,6 +186,8 @@ function GroupDetail({ group, onLeaving }: { group: Group; onLeaving: (group: Gr
           {t('groups.detail.archived.body')}
         </Banner>
       )}
+
+      <GroupLive group={group} />
 
       <StandingCard group={group} standing={standing} onShare={() => setSheet('share')} />
 

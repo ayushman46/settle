@@ -63,6 +63,8 @@ export interface ServerConfig {
   /** AI requests handled at the same time; any more get an immediate 429. 0 = no limit. */
   maxConcurrentScans: number
   billing: BillingSettings
+  /** Where live groups' encrypted copies are kept: an Upstash Redis REST endpoint, this server's memory, or nowhere (off). */
+  sync: { kind: 'upstash'; url: string; token: string } | { kind: 'memory' } | null
   license: LicenseKeys
   /** Settings that were ignored or look wrong, for the startup log. Never contains secrets. */
   warnings: string[]
@@ -125,6 +127,7 @@ export function loadConfig(env: Env): ServerConfig {
         windowMs: DEFAULT_BILLING_RATE_LIMIT.windowMs,
       },
     },
+    sync: parseSync(env),
     license: license.keys,
     warnings,
   }
@@ -136,6 +139,21 @@ export function checkoutReady(config: ServerConfig): config is ServerConfig & {
   license: LicenseKeys & { privateKey: KeyObject }
 } {
   return config.billing.razorpay !== null && config.license.privateKey !== null
+}
+
+/**
+ * Live groups: Upstash Redis over REST when its URL and token are set (Vercel's KV names, or
+ * Upstash's own); `SYNC_STORE=memory` or — on a server that stays up (not Vercel's functions) —
+ * nothing set keeps copies in memory; `SYNC_STORE=off` turns it off.
+ */
+function parseSync(env: Env): ServerConfig['sync'] {
+  const mode = (env.SYNC_STORE ?? '').trim().toLowerCase()
+  if (mode === 'off') return null
+  const url = (env.KV_REST_API_URL ?? env.UPSTASH_REDIS_REST_URL ?? '').trim().replace(/[/]+$/, '')
+  const token = (env.KV_REST_API_TOKEN ?? env.UPSTASH_REDIS_REST_TOKEN ?? '').trim()
+  if (mode !== 'memory' && url.startsWith('https://') && !/\s/.test(url) && token.length >= 16) return { kind: 'upstash', url, token }
+  if (mode === 'memory') return { kind: 'memory' }
+  return env.VERCEL ? null : { kind: 'memory' }
 }
 
 function unquote(value: string): string {

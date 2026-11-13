@@ -447,7 +447,8 @@ describe('PayPage — a stranger’s device', () => {
     const { user } = await openLink(dinner())
     await user.click(await screen.findByRole('button', { name: /^S?Sam/ }))
     await user.click(screen.getByRole('button', { name: 'Copy UPI ID' }))
-    expect(getItem).not.toHaveBeenCalled()
+    // Only the UPI app this phone pays with is looked up (remembered once it's picked); nothing of the app's data.
+    expect(getItem.mock.calls.filter(([key]) => key !== 'settle.v8.pay-app')).toEqual([])
     expect(setItem).not.toHaveBeenCalled()
     expect(window.localStorage.length).toBe(0)
     expect(window.sessionStorage.length).toBe(0)

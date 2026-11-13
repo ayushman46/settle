@@ -48,6 +48,7 @@ export function testConfig(overrides: Partial<ServerConfig> = {}): ServerConfig 
     describeTimeoutMs: 5_000,
     rateLimit: { max: 0, windowMs: 60_000 },
     proAiPerDay: 0,
+    sync: { kind: 'memory' },
     trustProxy: 0,
     proxySecret: null,
     maxConcurrentScans: 0,

@@ -1,11 +1,25 @@
-import { useEffect, useId, useRef, useState } from 'react'
-import { Check, ChevronDown, Copy, ImageDown, QrCode as QrIcon, ShieldCheck } from 'lucide-react'
-import { Avatar, Button, QrCode, SegmentedControl } from '../components'
+import { useEffect, useId, useRef, useState, useSyncExternalStore } from 'react'
+import { ArrowUpRight, Check, ChevronDown, Copy, ImageDown, QrCode as QrIcon, ShieldCheck } from 'lucide-react'
+import { Avatar, Button, Chip, QrCode, SegmentedControl } from '../components'
 import { BRAND, type Minor } from '../domain/types'
 import { tx, useT } from '../i18n'
 import { haptic } from '../lib/haptics'
 import { formatMoney, toInputString } from '../lib/money'
-import { GALLERY_QR_MAX_PAISE, openAppHref, PAY_APPS, payPlatform, type PayApp, type PayPlatform } from '../lib/paymentApps'
+import { canPayInApp, openPayApp, sendQrToApp } from '../lib/nativeApp'
+import {
+  ANDROID_PACKAGES,
+  directPayHref,
+  GALLERY_QR_MAX_PAISE,
+  getPayApp,
+  launchHref,
+  openAppHref,
+  PAY_APPS,
+  payPlatform,
+  setPayApp,
+  subscribePayApp,
+  type PayApp,
+  type PayPlatform,
+} from '../lib/paymentApps'
 import { qrPicture } from '../lib/qrPicture'
 import { copyText } from '../lib/share'
 import { buildUpiLink } from '../lib/upi'
@@ -22,6 +36,8 @@ export const NOT_OPENED_MS = 2500
 
 type Route = 'gallery' | 'id'
 type Copied = 'id' | 'amount' | 'failed' | null
+/** Where the one-tap "Pay with …" got to: the QR handed to the app, the QR saved, or the UPI ID copied (and the app opened). */
+type Quick = 'idle' | 'working' | 'sent' | 'saved' | 'copied' | 'failed'
 
 export interface UpiRoutesProps {
   /** Who the money goes to (as their UPI app will show it, roughly: apps show the bank's name). */
@@ -45,8 +61,12 @@ export interface UpiRoutesProps {
 }
 
 /**
- * Paying one person by UPI, the ways UPI allows. NPCI has payer apps refuse payments to a person
- * that start from a link (OC 76C; Consolidated Circular 7.9), so there's no "Pay" link here:
+ * Paying one person by UPI. On a phone it leads with one tap, "Pay ₹400 with Google Pay" (the app
+ * is picked once and remembered): up to ₹2,000 the payee's QR is handed straight to the app, which
+ * opens on the payment with the UPI ID and amount filled in (UPI's "QR share & pay"); above that the
+ * UPI ID is copied and the app opened. A direct link is offered as a try: NPCI has payer apps
+ * refuse payments to a person that start from a link (OC 76A; Consolidated Circular 7.9), and many
+ * do. Under it, the other ways UPI allows:
  * - computer: the QR, to scan with any UPI app — amount and note fill in, any amount;
  * - phone, up to ₹2,000: save the QR, then Scan → Upload it in the UPI app (a QR picture pays a
  *   person up to ₹2,000), or the UPI ID;
@@ -66,6 +86,9 @@ export function UpiRoutes({ payeeName, vpa, amount, note, color, phone, platform
   const [asking, setAsking] = useState(false)
   const [helpOpen, setHelpOpen] = useState(false)
   const [notOpened, setNotOpened] = useState<string | null>(null)
+  const payAppId = useSyncExternalStore(subscribePayApp, getPayApp, () => null)
+  const app = PAY_APPS.find((a) => a.id === payAppId) ?? (PAY_APPS[0] as PayApp)
+  const [quick, setQuick] = useState<Quick>('idle')
   const left = useRef(false)
   const watch = useRef<number | undefined>(undefined)
   const uri = buildUpiLink({ vpa, payeeName, amountMinor: amount, note })
@@ -107,17 +130,70 @@ export function UpiRoutes({ payeeName, vpa, amount, note, color, phone, platform
     if (ok) started()
   }
 
-  const save = async (): Promise<void> => {
-    if (saved === 'saving') return
-    setSaved('saving')
-    const picture = await qrPicture(uri, [
+  const picture = (): Promise<Blob | null> =>
+    qrPicture(uri, [
       { text: t('kit.upiPay.picture.pay', { name: payeeName }), size: 34, bold: true },
       ...(hasAmount ? [{ text: money, size: 52, bold: true }] : []),
       ...(note ? [{ text: note, size: 26 }] : []),
       { text: t('kit.upiPay.picture.scan'), size: 24 },
     ])
-    const outcome = picture
-      ? await shareFile(picture, `${BRAND.name} QR ${payeeName} ${toInputString(amount, 'INR', { trimZeros: true })}.png`, undefined, {
+  const pictureName = `${BRAND.name} QR ${payeeName} ${toInputString(amount, 'INR', { trimZeros: true })}.png`
+
+  /**
+   * One tap: up to ₹2,000 the QR goes straight to the UPI app (in the Android app, to that app
+   * itself; in a browser, through the share sheet), which opens on the payment. Otherwise — or
+   * when the QR can't be handed over — the UPI ID is copied and the app opened.
+   */
+  const quickPay = async (): Promise<void> => {
+    if (quick === 'working') return
+    setPayApp(app.id)
+    setQuick('working')
+    const native = canPayInApp()
+    if (small) {
+      const qr = await picture()
+      if (qr && native && (await sendQrToApp(qr, pictureName, ANDROID_PACKAGES[app.id]))) {
+        haptic('success')
+        started()
+        setQuick('sent')
+        return
+      }
+      if (qr && !native) {
+        const outcome = await shareFile(qr, pictureName, undefined, { prefer: 'share' })
+        if (outcome === 'cancelled') {
+          setQuick('idle')
+          return
+        }
+        if (outcome !== 'failed') {
+          haptic('success')
+          started()
+          if (outcome === 'downloaded') setSaved('saved')
+          setQuick(outcome === 'shared' ? 'sent' : 'saved')
+          return
+        }
+      }
+    }
+    const ok = await copyText(vpa)
+    haptic(ok ? 'success' : 'error')
+    setQuick(ok ? 'copied' : 'failed')
+    if (!ok) return
+    started()
+    if (native) {
+      void openPayApp(ANDROID_PACKAGES[app.id])
+      return
+    }
+    const href = launchHref(app, platform)
+    if (href) {
+      openApp(app)
+      window.location.assign(href)
+    }
+  }
+
+  const save = async (): Promise<void> => {
+    if (saved === 'saving') return
+    setSaved('saving')
+    const qr = await picture()
+    const outcome = qr
+      ? await shareFile(qr, pictureName, undefined, {
           // iPhone: the share sheet's "Save Image" puts it in Photos; elsewhere a download lands in the gallery.
           prefer: platform === 'ios' ? 'share' : 'download',
         })
@@ -132,15 +208,33 @@ export function UpiRoutes({ payeeName, vpa, amount, note, color, phone, platform
     if (ok) started()
   }
 
-  const openApp = (app: PayApp): void => {
+  function openApp(opened: PayApp): void {
     haptic('tap')
     started()
     setNotOpened(null)
     window.clearTimeout(watch.current)
     watch.current = window.setTimeout(() => {
-      if (document.visibilityState === 'visible') setNotOpened(app.name)
+      if (document.visibilityState === 'visible') setNotOpened(opened.name)
     }, NOT_OPENED_MS)
   }
+
+  const direct = directPayHref(app, platform, uri)
+  const quickStatus =
+    quick === 'sent'
+      ? canPayInApp()
+        ? t('kit.upiPay.quick.sent.app', { app: app.name, name: payeeName })
+        : t('kit.upiPay.quick.sent', { app: app.name, name: payeeName })
+      : quick === 'saved'
+        ? t('kit.upiPay.quick.saved', { app: app.name })
+        : quick === 'copied'
+          ? hasAmount
+            ? t('kit.upiPay.quick.copied', { app: app.name, amount: money })
+            : t('kit.upiPay.quick.copied.noAmount', { app: app.name })
+          : quick === 'failed'
+            ? t('kit.upiPay.copyFailed')
+            : small
+              ? t('kit.upiPay.quick.lead.small', { app: app.name, name: payeeName, amount: money })
+              : t('kit.upiPay.quick.lead.large', { app: app.name, name: payeeName })
 
   const answer = (paid: boolean): void => {
     setAsking(false)
@@ -179,6 +273,31 @@ export function UpiRoutes({ payeeName, vpa, amount, note, color, phone, platform
         </div>
       ) : (
         <>
+          <div className={styles.quick}>
+            <div role="radiogroup" aria-label={t('kit.upiPay.quick.app.aria')} className={styles.quickApps}>
+              {PAY_APPS.map((a) => (
+                <Chip key={a.id} role="radio" selected={a.id === app.id} onClick={() => setPayApp(a.id)}>
+                  {a.name}
+                </Chip>
+              ))}
+            </div>
+            <Button block iconStart={quick === 'sent' || quick === 'copied' ? <Check /> : <ArrowUpRight />} loading={quick === 'working'} onClick={() => void quickPay()}>
+              {hasAmount ? t('kit.upiPay.quick.cta', { amount: money, app: app.name }) : t('kit.upiPay.quick.cta.noAmount', { app: app.name })}
+            </Button>
+            <p className={quick === 'failed' ? styles.problem : styles.lead} role="status">
+              {quickStatus}
+            </p>
+            {direct && (
+              <p className={styles.fine}>
+                <a className={styles.direct} href={direct} onClick={() => openApp(app)}>
+                  {t('kit.upiPay.quick.direct', { app: app.name })}
+                </a>{' '}
+                {t('kit.upiPay.quick.direct.note')}
+              </p>
+            )}
+          </div>
+          <p className={styles.otherWays}>{t('kit.upiPay.quick.other')}</p>
+
           {small && (
             <SegmentedControl
               ariaLabel={t('kit.upiPay.route.aria')}

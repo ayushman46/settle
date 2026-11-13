@@ -21,6 +21,7 @@ const PUBLIC_KEY_B64 = pair.publicKey.export({ type: 'spki', format: 'der' }).to
 describe('loadConfig', () => {
   it('uses sensible defaults for an empty environment', () => {
     expect(loadConfig({})).toEqual({
+      sync: { kind: 'memory' },
       apiKey: null,
       models: [...DEFAULT_MODELS],
       textModels: [...DEFAULT_TEXT_MODELS],

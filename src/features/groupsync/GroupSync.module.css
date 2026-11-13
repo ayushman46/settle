@@ -1,0 +1,263 @@
+/* Shared groups: the invite card and live bar on a group, the invite sheet, and the join page. */
+
+.card {
+  display: grid;
+  gap: var(--s-3);
+  justify-items: start;
+  padding: var(--s-4);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+}
+
+.cardText {
+  display: grid;
+  gap: var(--s-1);
+}
+
+.cardTitle {
+  margin: 0;
+  font: var(--text-label);
+  font-weight: 650;
+  color: var(--ink);
+}
+
+.cardBody {
+  margin: 0;
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
+.bar {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-2) var(--s-3);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+}
+
+.dot {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: var(--s-8);
+  height: var(--s-8);
+  border-radius: 50%;
+  background: var(--surface-2);
+  color: var(--ink-2);
+}
+
+.dot > svg {
+  width: var(--s-4);
+  height: var(--s-4);
+}
+
+.dotLive {
+  background: var(--positive-soft);
+  color: var(--positive);
+}
+
+.dotWaiting {
+  background: var(--warning-soft);
+  color: var(--warning-ink);
+}
+
+.barText {
+  display: grid;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.barLabel {
+  font: var(--text-label);
+  font-weight: 600;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.barNote {
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
+/* ------------------------------------------------------------------ invite sheet */
+
+.sheet {
+  display: grid;
+  gap: var(--s-3);
+}
+
+.sheetRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--s-2);
+}
+
+.qr {
+  display: grid;
+  justify-items: center;
+  gap: var(--s-2);
+  padding: var(--s-4);
+  border-radius: var(--radius-card);
+  background: var(--surface-2);
+}
+
+.qrNote,
+.fine {
+  margin: 0;
+  font: var(--text-caption);
+  color: var(--ink-2);
+  text-align: center;
+}
+
+.block {
+  display: grid;
+  gap: var(--s-3);
+}
+
+.blockTitle {
+  margin: 0;
+  font: var(--text-label);
+  font-weight: 650;
+  color: var(--ink);
+}
+
+.roster {
+  display: grid;
+  gap: var(--s-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rosterRow {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+}
+
+.personName {
+  flex: 1 1 auto;
+  min-width: 0;
+  font: var(--text-label);
+  font-weight: 600;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+  text-align: start;
+}
+
+.personNote {
+  flex: none;
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
+.joinedNote {
+  color: var(--positive);
+  font-weight: 600;
+}
+
+/* ------------------------------------------------------------------ join page */
+
+.loading {
+  display: grid;
+  justify-items: center;
+  gap: var(--s-3);
+  padding-block: var(--s-10);
+}
+
+.join {
+  display: grid;
+  gap: var(--s-5);
+}
+
+.joinHead {
+  display: grid;
+  justify-items: center;
+  gap: var(--s-1);
+  text-align: center;
+}
+
+.joinEmoji {
+  display: grid;
+  place-items: center;
+  width: calc(var(--s-10) + var(--s-5));
+  height: calc(var(--s-10) + var(--s-5));
+  border-radius: var(--radius-card);
+  background: var(--surface-2);
+  font-size: 2rem;
+}
+
+.eyebrow {
+  margin: var(--s-2) 0 0;
+  font: var(--text-caption);
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.joinTitle {
+  margin: 0;
+  font-size: 1.75rem;
+  line-height: 1.15;
+  font-weight: 700;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.joinSummary {
+  margin: 0;
+  font: var(--text-label);
+  color: var(--ink-2);
+}
+
+.people {
+  display: grid;
+  gap: var(--s-2);
+}
+
+.person {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  min-height: var(--tap);
+  padding: var(--s-2) var(--s-3);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.person[data-selected] {
+  border-color: var(--accent-edge);
+  background: var(--accent-soft);
+  box-shadow: inset 0 0 0 1px var(--accent-edge);
+}
+
+.person:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.error {
+  margin: 0;
+  font: var(--text-caption);
+  color: var(--negative);
+}
+
+.privacy {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  margin: 0;
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
+.privacy > svg {
+  flex: none;
+  width: var(--s-4);
+  height: var(--s-4);
+}

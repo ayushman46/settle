@@ -161,8 +161,23 @@ export const DESCRIBE_BUDGET_MS = 30_000
 /* ------------------------------------------------------------------ health */
 
 /** Response of `GET /api/health`. */
+/** `GET /api/sync/:room`: the room's encrypted copy (null: nothing there, or nothing newer than `have`). */
+export interface SyncGetResponse {
+  ok: true
+  v: string | null
+  data: string | null
+}
+
+/** `PUT /api/sync/:room`: kept; its version. */
+export interface SyncPutResponse {
+  ok: true
+  v: string
+}
+
 export interface HealthResponse {
   ok: true
+  /** True when shared groups can sync live through this server (it has somewhere to keep their encrypted copies). */
+  sync?: boolean
   /** True when an NVIDIA API key is configured on the server. */
   configured: boolean
   /** Model(s) the server will try, in order. */

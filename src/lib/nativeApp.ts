@@ -85,3 +85,46 @@ export function printPage(title?: string): void {
   }
   window.print()
 }
+
+/* ------------------------------------------------------------------ paying from the Android app */
+
+/** The app's payment plugin (android/…/SettlePayPlugin.java). */
+const PAY = 'SettlePay'
+
+/** The Android app can hand a payment to a UPI app itself. */
+export function canPayInApp(): boolean {
+  return hasPlugin(PAY)
+}
+
+/** The UPI apps installed on this phone (their ids), or null when this isn't the Android app. */
+export async function installedPayApps(): Promise<string[] | null> {
+  if (!hasPlugin(PAY)) return null
+  try {
+    const { apps } = await callPlugin<{ apps?: unknown }>(PAY, 'apps')
+    return Array.isArray(apps) ? apps.filter((a): a is string => typeof a === 'string') : []
+  } catch {
+    return null
+  }
+}
+
+/** Hands the QR picture straight to `pkg` (it opens on the payment, payee and amount filled in). False when it couldn't. */
+export async function sendQrToApp(blob: Blob, name: string, pkg: string): Promise<boolean> {
+  if (!hasPlugin(PAY)) return false
+  try {
+    await callPlugin(PAY, 'sendQr', { data: await base64Of(blob), name, package: pkg })
+    return true
+  } catch {
+    return false
+  }
+}
+
+/** Opens the app `pkg` on its home screen. False when it couldn't (not installed). */
+export async function openPayApp(pkg: string): Promise<boolean> {
+  if (!hasPlugin(PAY)) return false
+  try {
+    await callPlugin(PAY, 'open', { package: pkg })
+    return true
+  } catch {
+    return false
+  }
+}

@@ -52,7 +52,7 @@ export const CONTENT_SECURITY_POLICY = {
  * collection pages and the legal pages. Anything else that isn't a file still gets the app shell
  * (which shows the landing page), but with a 404 so search engines don't index made-up URLs.
  */
-export const APP_ROUTE = /^\/(?:app(?:\/.*)?|pay|claim|pool|privacy|terms)?\/?$/
+export const APP_ROUTE = /^\/(?:app(?:\/.*)?|pay|claim|pool|join|get|privacy|terms)?\/?$/
 
 /**
  * Where Android's share sheet posts (manifest `share_target`). The service worker answers it; this
@@ -67,6 +67,7 @@ export const LINK_PAGE_MODULES: Readonly<Record<string, string>> = {
   '/pay': 'src/features/pay/PayPage.tsx',
   '/claim': 'src/features/claim/ClaimPage.tsx',
   '/pool': 'src/features/pools/PoolPage.tsx',
+  '/join': 'src/features/groupsync/JoinPage.tsx',
 }
 
 interface ManifestChunk {
