@@ -212,7 +212,8 @@ test.describe('paying, saying it, getting the app', () => {
     await expect(sam.getByText('Ferry')).toBeVisible()
     // Sam's UPI ID reaches Ayush.
     await expect(page.getByText('2 of 3 joined')).toBeVisible({ timeout: 30_000 })
-    expect(await page.evaluate(() => window.localStorage.getItem('settle.v3.friends'))).toContain('sam@oksbi')
+    // (Saved a moment after it's applied.)
+    await expect.poll(() => page.evaluate(() => window.localStorage.getItem('settle.v3.friends')), { timeout: 15_000 }).toContain('sam@oksbi')
 
     const stranger = (await openPhone()).page
     await stranger.goto(local(link).slice(0, 40))

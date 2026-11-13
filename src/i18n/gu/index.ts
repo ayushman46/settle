@@ -45,6 +45,7 @@ import { stuck } from './stuck'
 import { stuckhelp } from './stuckhelp'
 import { stuckalerts } from './stuckalerts'
 import { fees } from './fees'
+import { groupsync } from './groupsync'
 
 export const GU: Messages = {
   ...common,
@@ -89,6 +90,7 @@ export const GU: Messages = {
   ...stuckhelp,
   ...stuckalerts,
   ...fees,
+  ...groupsync,
 }
 
 export default GU

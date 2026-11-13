@@ -48,6 +48,7 @@ import { stuck } from './stuck'
 import { stuckhelp } from './stuckhelp'
 import { stuckalerts } from './stuckalerts'
 import { fees } from './fees'
+import { groupsync } from './groupsync'
 
 export const MR: Messages = {
   ...common,
@@ -92,6 +93,7 @@ export const MR: Messages = {
   ...stuckhelp,
   ...stuckalerts,
   ...fees,
+  ...groupsync,
 }
 
 export default MR
