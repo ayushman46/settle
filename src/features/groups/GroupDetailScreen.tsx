@@ -71,21 +71,23 @@ import {
 } from './groupView'
 import { expensePath, GROUPS_PATH, newSplitPath, settleUpPath } from './paths'
 import { rememberedTimelineLimit, rememberTimelineLimit, TIMELINE_PAGE } from './timelineMemory'
+import { BoardTab } from '../play/BoardTab'
+import { GroupShortcuts } from '../play/GroupShortcuts'
 import styles from './GroupDetailScreen.module.css'
 
 const ROUTES = ['/app/groups/:id'] as const
 
-type Tab = 'expenses' | 'balances' | 'totals'
+type Tab = 'expenses' | 'balances' | 'totals' | 'board'
 
-const TAB_LABELS = { expenses: 'groups.detail.tab.expenses', balances: 'groups.detail.tab.balances', totals: 'groups.detail.tab.totals' } as const
+const TAB_LABELS = { expenses: 'groups.detail.tab.expenses', balances: 'groups.detail.tab.balances', totals: 'groups.detail.tab.totals', board: 'play.tab' } as const
 
-/** The three tabs, labelled in the current language. */
+/** The tabs, labelled in the current language. */
 function tabOptions(): ReadonlyArray<SegmentedOption<Tab>> {
-  return (['expenses', 'balances', 'totals'] as const).map((value) => ({ value, label: translate(TAB_LABELS[value]) }))
+  return (['expenses', 'balances', 'totals', 'board'] as const).map((value) => ({ value, label: translate(TAB_LABELS[value]) }))
 }
 
 function tabFrom(value: string | null): Tab {
-  return value === 'balances' || value === 'totals' ? value : 'expenses'
+  return value === 'balances' || value === 'totals' || value === 'board' ? value : 'expenses'
 }
 
 type Sheet = 'menu' | 'details' | 'members' | 'share' | 'delete' | 'rotation' | 'say'
@@ -215,6 +217,7 @@ function GroupDetail({ group, onLeaving }: { group: Group; onLeaving: (group: Gr
         {tab === 'expenses' && <ExpensesTab group={group} onAdd={addExpense} onPayment={setPayment} />}
         {tab === 'balances' && <BalancesTab group={group} standing={standing} />}
         {tab === 'totals' && <TotalsTab group={group} />}
+        {tab === 'board' && <BoardTab group={group} />}
       </div>
 
       {/* With no expenses yet, the list's own "Add the first expense" is the way in (the two would overlap). */}
@@ -324,6 +327,7 @@ function ExpensesTab({ group, onAdd, onPayment }: { group: Group; onAdd: () => v
   }
   return (
     <div className={styles.days}>
+      <GroupShortcuts group={group} />
       {shown.map((day) => (
         <section key={day.date} className={styles.day}>
           <h3 className={styles.dayTitle}>{relativeDateLabel(day.date)}</h3>

@@ -111,6 +111,19 @@ test.describe('a trip on three phones', () => {
 
     // Ayush's phone shows her payment, and what he's still owed.
     await expect(page.getByText('₹3,000').first()).toBeVisible({ timeout: 30_000 })
+
+    // The Board is worked out from the shared group, so both phones show the same leaderboard, each in its own words:
+    // Riya paid a bill, settled up within a day and owes nobody (10 + 20 + 10 + 25 + 5); Ayush paid a bill and owes nobody (35); Sam paid a bill (10).
+    await page.getByRole('radio', { name: 'Board' }).click()
+    const mine = page.getByRole('list').filter({ has: page.getByLabel('Rank 1') }).getByRole('listitem')
+    await expect(mine.nth(0)).toContainText(/Riya.*70 pts/s)
+    await expect(mine.nth(1)).toContainText(/You.*35 pts/s)
+    await expect(mine.nth(2)).toContainText(/Sam.*10 pts/s)
+    await riya.goto(riya.url().replace(/\/settle.*$/, '') + '?tab=board')
+    const hers = riya.getByRole('list').filter({ has: riya.getByLabel('Rank 1') }).getByRole('listitem')
+    await expect(hers.nth(0)).toContainText(/You.*70 pts/s)
+    await expect(hers.nth(1)).toContainText(/Ayush.*35 pts/s)
+    await expect(hers.nth(2)).toContainText(/Sam.*10 pts/s)
   })
 })
 

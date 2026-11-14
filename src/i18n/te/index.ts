@@ -50,6 +50,7 @@ import { stuckalerts } from './stuckalerts'
 import { fees } from './fees'
 import { counter } from './counter'
 import { groupsync } from './groupsync'
+import { play } from './play'
 
 export const TE: Messages = {
   ...common,
@@ -96,6 +97,7 @@ export const TE: Messages = {
   ...fees,
   ...counter,
   ...groupsync,
+  ...play,
 }
 
 export default TE

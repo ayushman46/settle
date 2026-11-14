@@ -1,5 +1,22 @@
 # Changelog
 
+## v8.3 — 14 Nov 2026
+
+**The Board: a group that runs itself, and rewards settling up.** A fourth tab on every group. Everything on it is worked out from the expenses and payments the group already shares, so every phone shows the same Board and nobody fills anything in.
+
+### New
+- **Leaderboard.** Points for paying a bill for the group (+10), for settling up (+20, and +10 more within a day of owing), for owing nobody (+25) and for debts cleared on time in a row (+5 each). Levels: Starter, Regular, Pro, Legend. The rules are on the screen.
+- **Titles, awarded by themselves.** The banker (fronted the most), Fastest to pay back, Always gets the bill, Biggest share, Most patient (owed the most), On the clock (has owed the longest).
+- **Streaks.** Debts in a row you cleared within two days; days the whole group has been all square.
+- **This week: square by Sunday.** How many of you owe nothing, days left, and a trophy for every week the group ends all square.
+- **Milestones.** First expense, 10 expenses, ₹10,000 and ₹50,000 together, everyone has paid a bill, three payments within a day, all square, a trophy week: ticked off as the group reaches them.
+- **Your move.** What to do next, with the points it earns: "Pay Riya ₹300: +30 points", or who has kept you waiting longest.
+- **Add again.** What the group buys again and again (chai, the cab) sits above the expenses: one tap adds today's, same people, same split, with Undo.
+- **Added twice?** Two people adding the same dinner is the commonest mess in a shared group. Same day, same amount, same name: Settle asks, and removes one in a tap (or remembers they are different).
+- **Budget and pace.** What is spent, the pace per day, and the day the budget runs out at this pace. The budget is kept on your phone.
+- **Today.** What the group spent today, your share, and whether you are better or worse off than this morning.
+- **The story so far.** The total, the pace, the biggest bill, where the money went, who fronted most and who pays back fastest: shared to the group chat in one tap with the leaderboard.
+
 ## v8.2 — 14 Nov 2026
 
 **Pay at the counter: nobody fronts the bill.** Until now one person paid the whole bill and then collected from everyone. Now everyone pays the shop their own exact share, so there is nothing to collect.

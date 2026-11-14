@@ -1,0 +1,137 @@
+/**
+ * English copy for a group's Board (src/features/play): the leaderboard, titles, streaks, the
+ * week's challenge, who pays next, repeats, bills added twice, the budget, today and the recap.
+ * Names arrive as people typed them; amounts pre-formatted.
+ */
+import type { Messages } from '../types'
+
+export const play = {
+  'play.tab': 'Board',
+
+  // Your move
+  'play.quest.title': 'Your move',
+  'play.quest.pay': 'Pay {name} {amount}',
+  'play.quest.pay.points': '+{points} points for settling up',
+  'play.quest.pay.points.fast': '+{points} points: {bonus} extra for paying within a day',
+  'play.quest.pay.cta': 'Pay now',
+  'play.quest.collect': '{name} owes you {amount}',
+  'play.quest.collect.days': '{count, plural, =0 {Since today} one {For # day} other {For # days}}',
+  'play.quest.collect.cta': 'Settle up',
+  'play.quest.square': 'You’re all square',
+  'play.quest.square.body': 'You owe nobody, and nobody owes you. +{points} points while it stays that way.',
+  'play.quest.start': 'Add the group’s first expense',
+  'play.quest.start.body': 'The Board fills itself in from what the group spends and pays back: nothing to set up.',
+
+  // Leaderboard
+  'play.board.title': 'Leaderboard',
+  'play.board.points': '{points} pts',
+  'play.board.rank.aria': 'Rank {rank}',
+  'play.board.you': 'You',
+  'play.board.detail': '{bills, plural, =0 {No bills paid} one {# bill paid} other {# bills paid}} · {payments, plural, =0 {no payments} one {# payment} other {# payments}}',
+  'play.board.streak': '{count} in a row on time',
+  'play.board.toNext': '{points} to {level}',
+  'play.level.starter': 'Starter',
+  'play.level.regular': 'Regular',
+  'play.level.pro': 'Pro',
+  'play.level.legend': 'Legend',
+  'play.rules.title': 'How points work',
+  'play.rules.bill': '+{points} for every bill you pay for the group',
+  'play.rules.payment': '+{points} for every payment you make to settle up',
+  'play.rules.fast': '+{points} more when you pay within a day of owing',
+  'play.rules.square': '+{points} while you owe nobody',
+  'play.rules.streak': '+{points} for each debt in a row you cleared within two days (up to {cap})',
+  'play.rules.note': 'Worked out from the group’s expenses and payments, so everyone sees the same Board.',
+
+  // Titles
+  'play.titles.title': 'Titles',
+  'play.title.banker': 'The banker',
+  'play.title.banker.body': '{name} has fronted {value} for the group',
+  'play.title.banker.you': 'You’ve fronted {value} for the group',
+  'play.title.flash': 'Fastest to pay back',
+  'play.title.flash.body': '{name} clears a debt in {value, plural, =0 {under a day} one {about # day} other {about # days}}',
+  'play.title.flash.you': 'You clear a debt in {value, plural, =0 {under a day} one {about # day} other {about # days}}',
+  'play.title.regular': 'Always gets the bill',
+  'play.title.regular.body': '{name} has paid {value} bills',
+  'play.title.regular.you': 'You’ve paid {value} bills',
+  'play.title.appetite': 'Biggest share',
+  'play.title.appetite.body': '{name}’s share of the spending is {value}',
+  'play.title.appetite.you': 'Your share of the spending is {value}',
+  'play.title.patient': 'Most patient',
+  'play.title.patient.body': '{name} is waiting for {value}',
+  'play.title.patient.you': 'You’re waiting for {value}',
+  'play.title.clock': 'On the clock',
+  'play.title.clock.body': '{name} has owed for {value, plural, one {# day} other {# days}}',
+  'play.title.clock.you': 'You’ve owed for {value, plural, one {# day} other {# days}}',
+
+  // The week
+  'play.week.title': 'This week: square by Sunday',
+  'play.week.progress': '{square} of {people} owe nothing',
+  'play.week.left': '{count, plural, =0 {Ends today} one {# day left} other {# days left}}',
+  'play.week.done': 'Everyone is square. Keep it till Sunday for the trophy.',
+  'play.week.trophies': '{count, plural, one {# trophy} other {# trophies}} so far',
+  'play.week.trophies.none': 'No trophies yet: end a week all square to win one.',
+  'play.square.days': '{count, plural, =0 {All square since today} one {All square for # day} other {All square for # days}}',
+
+  // Milestones
+  'play.miles.title': 'Milestones',
+  'play.miles.count': '{done} of {count} reached',
+  'play.miles.first': 'First expense together',
+  'play.miles.ten': '10 expenses together',
+  'play.miles.spent10k': '₹10,000 spent together',
+  'play.miles.spent50k': '₹50,000 spent together',
+  'play.miles.everyonePaid': 'Everyone has paid a bill',
+  'play.miles.fast3': '3 payments made within a day',
+  'play.miles.square': 'All square at least once',
+  'play.miles.trophy': 'A whole week ended all square',
+  'play.miles.progress': '{have} of {need}',
+  'play.miles.done.aria': 'Reached',
+
+  // Today
+  'play.today.title': 'Today',
+  'play.today.none': 'Nothing spent today.',
+  'play.today.spent': '{count, plural, one {# expense} other {# expenses}} · {total} · your share {share}',
+  'play.today.up': 'You’re {amount} better off than this morning.',
+  'play.today.down': 'You owe {amount} more than this morning.',
+
+  // Budget
+  'play.budget.title': 'Budget',
+  'play.budget.label': 'Budget for this group',
+  'play.budget.hint': 'Kept on this phone. Leave empty for none.',
+  'play.budget.save': 'Save',
+  'play.budget.saved': 'Budget saved',
+  'play.budget.spent': '{spent} spent over {days, plural, one {# day} other {# days}} · {perDay} a day',
+  'play.budget.left': '{left} left of {budget}',
+  'play.budget.over': '{over} over the {budget} budget',
+  'play.budget.reaches': 'At this pace it runs out on {date}.',
+  'play.budget.reaches.today': 'At this pace it runs out today.',
+  'play.budget.none': 'Set a budget to see how long it lasts at this pace.',
+
+  // Recap
+  'play.recap.title': 'The story so far',
+  'play.recap.total': '{total} across {count} expenses in {days, plural, one {# day} other {# days}}',
+  'play.recap.pace': '{perDay} a day · {perPerson} a person',
+  'play.recap.biggest': 'Biggest bill: {title}, {total} (paid by {name})',
+  'play.recap.category': 'Most went on {category}: {total}',
+  'play.recap.banker': '{name} fronted the most',
+  'play.recap.banker.you': 'You fronted the most',
+  'play.recap.flash': '{name} pays back fastest',
+  'play.recap.flash.you': 'You pay back fastest',
+  'play.recap.biggest.you': 'Biggest bill: {title}, {total} (you paid)',
+  'play.recap.share': 'Share the recap',
+  'play.recap.shared': 'Recap copied',
+  'play.recap.message.title': '{emoji} {group}: the story so far',
+  'play.recap.message.board': 'Leaderboard: {rows}',
+  'play.recap.message.row': '{rank}. {name} ({points})',
+
+  // On the expenses list
+  'play.again.title': 'Add again',
+  'play.again.aria': 'Add {title} again: {amount}',
+  'play.again.done': '{title} added: {amount}, split {count} ways',
+  'play.again.failed': 'Couldn’t add that one. Add it by hand.',
+  'play.dup.title': 'Added twice?',
+  'play.dup.body': '“{title}” for {amount} on {date} is here two times: once paid by {first}, once by {second}.',
+  'play.dup.body.same': '“{title}” for {amount} on {date} is here two times.',
+  'play.dup.remove': 'Remove one',
+  'play.dup.keep': 'They’re different',
+  'play.dup.removed': 'Removed the second “{title}”',
+} satisfies Messages

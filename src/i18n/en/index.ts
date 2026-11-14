@@ -46,6 +46,7 @@ import { stuckalerts } from './stuckalerts'
 import { fees } from './fees'
 import { counter } from './counter'
 import { groupsync } from './groupsync'
+import { play } from './play'
 
 export const EN = {
   ...common,
@@ -92,6 +93,7 @@ export const EN = {
   ...fees,
   ...counter,
   ...groupsync,
+  ...play,
 } as const
 
 /** Every message key the app may ask for. */

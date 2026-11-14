@@ -50,6 +50,7 @@ import { stuckalerts } from './stuckalerts'
 import { fees } from './fees'
 import { counter } from './counter'
 import { groupsync } from './groupsync'
+import { play } from './play'
 
 export const MR: Messages = {
   ...common,
@@ -96,6 +97,7 @@ export const MR: Messages = {
   ...fees,
   ...counter,
   ...groupsync,
+  ...play,
 }
 
 export default MR

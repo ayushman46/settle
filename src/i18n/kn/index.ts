@@ -47,6 +47,7 @@ import { stuckalerts } from './stuckalerts'
 import { fees } from './fees'
 import { counter } from './counter'
 import { groupsync } from './groupsync'
+import { play } from './play'
 
 export const KN: Messages = {
   ...common,
@@ -93,6 +94,7 @@ export const KN: Messages = {
   ...fees,
   ...counter,
   ...groupsync,
+  ...play,
 }
 
 export default KN
