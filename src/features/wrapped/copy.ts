@@ -2,10 +2,10 @@
  * What each slide says, in words: on screen, on the shared picture, and in the text recap. One
  * place, so all three always say the same thing.
  */
-import type { Group } from '../../domain/types'
+import { BRAND, type Group } from '../../domain/types'
 import { t } from '../../i18n'
 import { fullDateLabel } from '../../kit/dateLabel'
-import { formatMoney } from '../../lib/money'
+import { currencyDigits, formatMoney } from '../../lib/money'
 import { categoryLabel } from '../../share/categories'
 import type { CategoryShare, Slide, SlideKind } from './engine'
 
@@ -21,6 +21,17 @@ export interface CopyContext {
   nameOf: (id: string) => string
   /** The owner's name for the "you" slide ("You" in the app). */
   youLabel: string
+  /**
+   * For text that leaves the app: the site's address (`siteOrigin()`), so the shared text ends
+   * with "Made with Settle: <link>". Undefined in the app (no footer); '' names the app alone.
+   */
+  site?: string
+}
+
+/** `paise` to the nearest whole unit of the currency (₹1,491.25 → ₹1,491), for "about" figures. */
+function whole(minor: number, currency: string): number {
+  const unit = 10 ** currencyDigits(currency)
+  return Math.round(minor / unit) * unit
 }
 
 export function slideWords(slide: Slide, { group, nameOf, youLabel }: CopyContext): SlideWords {
@@ -39,13 +50,13 @@ export function slideWords(slide: Slide, { group, nameOf, youLabel }: CopyContex
         line:
           slide.perPersonPerDay === null
             ? t('wrapped.perDay.line.alone', { days: slide.days })
-            : t('wrapped.perDay.line.each', { amount: money(slide.perPersonPerDay), days: slide.days }),
+            : t('wrapped.perDay.line.each', { amount: money(whole(slide.perPersonPerDay, group.currency)), days: slide.days }),
       }
     case 'bigDay':
       return {
         eyebrow: t('wrapped.bigDay.eyebrow', { date: fullDateLabel(slide.date) }),
         big: money(slide.total),
-        line: t('wrapped.bigDay.line', { count: slide.count, titles: slide.titles.join(', ') }),
+        line: t(slide.all ? 'wrapped.bigDay.line' : 'wrapped.bigDay.line.some', { count: slide.count, titles: slide.titles.join(', ') }),
       }
     case 'bigBill':
       return {
@@ -98,7 +109,14 @@ export function categoryParts(shares: readonly CategoryShare[]): string[] {
 /** One slide as a line of text ("₹42,180: 5 days · 4 people · 23 bills"). */
 export function slideText(slide: Slide, ctx: CopyContext): string {
   const words = slideWords(slide, ctx)
-  return [words.eyebrow, t('wrapped.recap.line', { big: words.big, line: words.line })].join('\n')
+  return [words.eyebrow, t('wrapped.recap.line', { big: words.big, line: words.line }), ...footer(ctx)].join('\n')
+}
+
+/** "Made with Settle: https://…" under text that leaves the app, so a friend can find it. */
+function footer(ctx: CopyContext): string[] {
+  if (ctx.site === undefined) return []
+  const link = ctx.site.replace(/\/+$/, '')
+  return ['', link ? t('wrapped.recap.footer', { brand: BRAND.name, link }) : t('share.card.madeWith', { brand: BRAND.name })]
 }
 
 /** The whole story as one message for the group chat. */
@@ -109,7 +127,7 @@ export function storyText(slides: readonly Slide[], ctx: CopyContext): string {
     return `${words.eyebrow}: ${t('wrapped.recap.line', { big: words.big, line: words.line })}`
   })
   const head = slides[0]?.kind === 'headline' ? slideWords(slides[0], ctx) : null
-  return [title, head ? t('wrapped.recap.line', { big: head.big, line: head.line }) : null, '', ...lines].filter((x): x is string => x !== null).join('\n')
+  return [title, head ? t('wrapped.recap.line', { big: head.big, line: head.line }) : null, '', ...lines, ...footer(ctx)].filter((x): x is string => x !== null).join('\n')
 }
 
 /** Each slide's colours: a background, the ink on it, and a glow. Strong contrast for large and small text. */

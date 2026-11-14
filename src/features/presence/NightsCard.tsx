@@ -9,7 +9,7 @@ import { haptic } from '../../lib/haptics'
 import { formatMoney } from '../../lib/money'
 import { dayLabel, splitByNights } from './actions'
 import { nightsPlan } from './engine'
-import { useStays } from './store'
+import { useAnchors, useStays } from './store'
 import styles from './Presence.module.css'
 
 /**
@@ -23,13 +23,14 @@ export function NightsCard({ expense }: { expense: Expense }) {
   const group = useGroup(expense.groupId)
   const expenses = useExpenses({ groupId: expense.groupId ?? '' })
   const stays = useStays(expense.groupId)
-  const plan = useMemo(() => nightsPlan(expense, group, expenses, stays), [expense, group, expenses, stays])
+  const anchor = useAnchors()[expense.id]
+  const plan = useMemo(() => nightsPlan(expense, group, expenses, stays, anchor), [expense, group, expenses, stays, anchor])
   if (!plan) return null
   const money = (paise: number): string => formatMoney(paise, expense.currency, { trimZeros: true })
 
   const apply = (): void => {
     try {
-      const change = splitByNights(expense, plan.participants)
+      const change = splitByNights(expense, plan.participants, plan.range)
       haptic('success')
       toast(t('presence.nights.done'), {
         tone: 'success',
@@ -64,7 +65,8 @@ export function NightsCard({ expense }: { expense: Expense }) {
         {t('presence.nights.range', {
           from: dayLabel(plan.range.from),
           to: dayLabel(plan.range.to),
-        })}
+        })}{' '}
+        {t('presence.nights.kept')}
       </p>
       <Button size="md" block onClick={apply}>
         {t('presence.nights.cta')}

@@ -3,10 +3,10 @@ import type { Messages } from '../types'
 
 export const usual = {
   'usual.chip.title': 'Usual split: {label}',
-  'usual.chip.change': 'Change',
-  'usual.chip.change.aria': 'Change: split this one equally instead',
+  'usual.chip.change': 'Split this one equally',
   'usual.stop': 'Stop using it',
   'usual.stopped.toast': '{group}’s usual split is gone. New expenses start equal.',
+  'usual.stopped.body': 'This expense is still split {label}. New ones will start equal.',
   'usual.undo': 'Undo',
 
   'usual.part.percent': '{name} {value}%',
@@ -21,4 +21,6 @@ export const usual = {
   'usual.stale.title': 'The usual split was for different people',
   'usual.stale.body': 'The group has changed since {label} was set. Set it again for everyone in it now.',
   'usual.stale.again': 'Set it again',
+  'usual.stale.new.percent': '{names} {count, plural, one {is} other {are}} new: at 0% until you set a part.',
+  'usual.stale.new.shares': '{names} {count, plural, one {is} other {are}} new: on 1 share until you change it.',
 } satisfies Messages

@@ -68,7 +68,7 @@ describe('A group’s usual split', SCREEN, () => {
     expect(screen.getByText('Usual split: 2 : 1')).toBeInTheDocument()
     expect(screen.getByRole('radio', { name: 'Shares' })).toHaveAttribute('aria-checked', 'true')
 
-    await user.click(screen.getByRole('button', { name: 'Change: split this one equally instead' }))
+    await user.click(screen.getByRole('button', { name: 'Split this one equally' }))
     expect(screen.getByRole('radio', { name: 'Equally' })).toHaveAttribute('aria-checked', 'true')
     expect(getUsualSplit('home')).not.toBeNull()
 
@@ -87,6 +87,20 @@ describe('A group’s usual split', SCREEN, () => {
     expect(getUsualSplit('home')?.inputs).toEqual({ [ME_ID]: 6000, riya: 4000 })
   })
 
+  it('after Stop using it, says this expense is still split that way and new ones start equal', async () => {
+    setUsualSplit('home', { mode: 'percent', inputs: { [ME_ID]: 6000, riya: 4000 }, set: DAY })
+    const { user } = renderApp('/app/split/new?group=home')
+    await user.click(screen.getByRole('button', { name: 'Stop using it' }))
+    expect(screen.getByText('This expense is still split 60 / 40. New ones will start equal.')).toBeInTheDocument()
+    expect(screen.queryByText('New expenses here will start split this way. You can change any one of them.')).not.toBeInTheDocument()
+    // Changed by hand: no longer true, so no longer said.
+    await user.clear(percentFor('you'))
+    await user.type(percentFor('you'), '70')
+    await user.clear(percentFor('Riya'))
+    await user.type(percentFor('Riya'), '30')
+    expect(screen.queryByText(/This expense is still split/)).not.toBeInTheDocument()
+  })
+
   it('says so when the group has changed since, and sets it again for everyone now', async () => {
     setUsualSplit('home', { mode: 'percent', inputs: { [ME_ID]: 6000, riya: 4000 }, set: DAY })
     groupsStore.set(groupsStore.get().map((g) => (g.id === 'home' ? { ...g, memberIds: [ME_ID, 'riya', 'sam'] } : g)))
@@ -98,11 +112,13 @@ describe('A group’s usual split', SCREEN, () => {
     expect(screen.getByRole('radio', { name: 'Percentages' })).toHaveAttribute('aria-checked', 'true')
     expect(percentFor('you')).toHaveValue('60')
     expect(percentFor('Sam')).toHaveValue('')
+    expect(screen.getByText('Sam is new: at 0% until you set a part.')).toBeInTheDocument()
     await user.clear(percentFor('you'))
     await user.type(percentFor('you'), '40')
     await user.clear(percentFor('Riya'))
     await user.type(percentFor('Riya'), '30')
     await user.type(percentFor('Sam'), '30')
+    expect(screen.queryByText(/is new: at 0%/)).not.toBeInTheDocument()
     await user.click(offer()!)
     expect(getUsualSplit('home')?.inputs).toEqual({ [ME_ID]: 4000, riya: 3000, sam: 3000 })
   })

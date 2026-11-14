@@ -9,14 +9,16 @@ import { useT } from '../../i18n'
 import { relativeDateLabel } from '../../kit/dateLabel'
 import { friendLabel } from '../../kit/friendName'
 import { formatMoney } from '../../lib/money'
-import { askExamples, headline, understoodParts } from './askText'
-import { ask, type AskAnswer, type AskData } from './engine'
+import { answerLines, answerNotes, askExamples, headline, understoodParts } from './askText'
+import { ask, MAX_ROWS, NOT_ANSWERED, type AskAnswer, type AskData } from './engine'
 import styles from './Ask.module.css'
 
 interface Shown {
   answer: AskAnswer
   head: string
   parts: string[]
+  lines: string[]
+  notes: string[]
   examples: string[]
   today: string
 }
@@ -35,6 +37,7 @@ export function AskBox() {
   const profile = useProfile()
   const [text, setText] = useState('')
   const [shown, setShown] = useState<Shown | null>(null)
+  const [allRows, setAllRows] = useState(false)
 
   const friendsById = useMemo(() => new Map(friends.map((f) => [f.id, f])), [friends])
   const nameOf = useMemo(() => (id: string): string => friendLabel(id, friendsById.get(id)), [friendsById])
@@ -49,7 +52,16 @@ export function AskBox() {
     const today = todayIso()
     const now = { ...data, today }
     const answer = ask(trimmed, now)
-    setShown({ answer, head: headline(answer, today, nameOf), parts: understoodParts(answer, now, nameOf), examples: answer.intent === 'unknown' ? askExamples(now, 4) : [], today })
+    setAllRows(false)
+    setShown({
+      answer,
+      head: headline(answer, today, nameOf),
+      parts: understoodParts(answer, now, nameOf),
+      lines: answerLines(answer),
+      notes: answerNotes(answer),
+      examples: NOT_ANSWERED.has(answer.intent) ? askExamples(now, 4) : [],
+      today,
+    })
   }
 
   const submit = (event: FormEvent<HTMLFormElement>): void => {
@@ -86,7 +98,7 @@ export function AskBox() {
           enterKeyHint="search"
           maxLength={200}
           endAdornment={
-            <IconButton type="submit" label={t('ask.submit')} variant="primary" size="sm" disabled={!text.trim()}>
+            <IconButton type="submit" label={t('ask.submit')} variant="primary" disabled={!text.trim()}>
               <ArrowRight />
             </IconButton>
           }
@@ -96,7 +108,7 @@ export function AskBox() {
       {!shown && (
         <div className={styles.chips} role="group" aria-label={t('ask.examples.aria')}>
           {chips.map((q) => (
-            <Chip key={q} onClick={() => pick(q)}>
+            <Chip key={q} size="lg" onClick={() => pick(q)}>
               {q}
             </Chip>
           ))}
@@ -108,14 +120,19 @@ export function AskBox() {
           <Card className={styles.answer}>
             <div className={styles.answerHead}>
               <p className={styles.headline}>{shown.head}</p>
-              <IconButton label={t('ask.clear')} size="sm" onClick={clear}>
+              <IconButton label={t('ask.clear')} onClick={clear}>
                 <X />
               </IconButton>
             </div>
-            {shown.parts.length > 0 && <p className={styles.fine}>{t('ask.understood', { parts: shown.parts.join(' · ') })}</p>}
+            {shown.parts.length > 0 && <p className={styles.understood}>{t('ask.understood', { parts: shown.parts.join(' · ') })}</p>}
+            {shown.lines.map((line) => (
+              <p key={line} className={styles.line}>
+                {line}
+              </p>
+            ))}
             {shown.answer.rows.length > 0 && (
               <ul className={styles.rows} aria-label={t('ask.rows.aria')}>
-                {shown.answer.rows.map((row) => {
+                {(allRows ? shown.answer.rows : shown.answer.rows.slice(0, MAX_ROWS)).map((row) => {
                   const inner = (
                     <>
                       <span className={styles.rowText}>
@@ -141,11 +158,21 @@ export function AskBox() {
                 })}
               </ul>
             )}
+            {shown.answer.rows.length > MAX_ROWS && (
+              <button type="button" className={styles.more} aria-expanded={allRows} onClick={() => setAllRows((v) => !v)}>
+                {allRows ? t('ask.rows.fewer') : t('ask.rows.all', { count: shown.answer.rows.length })}
+              </button>
+            )}
+            {shown.notes.map((note) => (
+              <p key={note} className={styles.fine}>
+                {note}
+              </p>
+            ))}
             {shown.answer.leftOut.length > 0 && <p className={styles.fine}>{t('ask.leftOut', { currency: shown.answer.currency, codes: shown.answer.leftOut.join(', ') })}</p>}
             {shown.examples.length > 0 && (
               <div className={styles.chips} role="group" aria-label={t('ask.examples.aria')}>
                 {shown.examples.map((q) => (
-                  <Chip key={q} onClick={() => pick(q)}>
+                  <Chip key={q} size="lg" onClick={() => pick(q)}>
                     {q}
                   </Chip>
                 ))}

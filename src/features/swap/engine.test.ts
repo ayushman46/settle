@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { MIN_SWAP, swapKey, swapPlan, type SwapPerson } from './engine'
+import { MIN_SWAP, swapKey, swapOutcome, swapPlan, type SwapPerson } from './engine'
 
 const p = (id: string, net: number, name = id): SwapPerson => ({ id, name, net })
 
@@ -84,5 +84,22 @@ describe('swapPlan', () => {
 describe('swapKey', () => {
   it('is the pair and the amount', () => {
     expect(swapKey({ fromId: 'riya', toId: 'sam', amount: 50_000 })).toBe('riya>sam:50000')
+  })
+})
+
+describe('swapOutcome', () => {
+  const swap = { fromId: 'a', toId: 'b', amount: 80_000 }
+  it('equal: both cleared', () => {
+    expect(swapOutcome(swap, 80_000, 80_000)).toEqual({ cleared: 'both', fromLeft: 0, toLeft: 0 })
+  })
+  it('I owe more: the payer is cleared, I still owe the rest', () => {
+    expect(swapOutcome(swap, 80_000, 120_000)).toEqual({ cleared: 'from', fromLeft: 0, toLeft: 40_000 })
+  })
+  it('I am owed more: I am cleared with the payee, the payer still owes the rest', () => {
+    expect(swapOutcome({ ...swap, amount: 30_000 }, 80_000, 30_000)).toEqual({ cleared: 'to', fromLeft: 50_000, toLeft: 0 })
+  })
+  it('both open (a later suggestion in a plan), and never below zero', () => {
+    expect(swapOutcome({ ...swap, amount: 30_000 }, 80_000, 50_000)).toEqual({ cleared: 'neither', fromLeft: 50_000, toLeft: 20_000 })
+    expect(swapOutcome(swap, 10_000, 10_000)).toEqual({ cleared: 'both', fromLeft: 0, toLeft: 0 })
   })
 })

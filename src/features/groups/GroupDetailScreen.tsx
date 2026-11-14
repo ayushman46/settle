@@ -72,6 +72,7 @@ import {
 import { expensePath, GROUPS_PATH, newSplitPath, settleUpPath } from './paths'
 import { rememberedTimelineLimit, rememberTimelineLimit, TIMELINE_PAGE } from './timelineMemory'
 import { BoardTab } from '../play/BoardTab'
+import { useKittyHeld } from '../kitty/useKittyHeld'
 import { PresenceBanner } from '../presence/PresenceBanner'
 import { TripOverCard } from '../wrapped/TripOver'
 import { GroupTools } from './GroupTools'
@@ -253,6 +254,7 @@ function GroupDetail({ group, onLeaving }: { group: Group; onLeaving: (group: Gr
 function StandingCard({ group, standing, onShare }: { group: Group; standing: GroupStanding; onShare: () => void }) {
   const t = useT()
   const titleId = useId()
+  const kitty = useKittyHeld(group.id)
   const { mine, spent, expenseCount, settled, transfers } = standing
   const headline =
     mine > 0
@@ -278,6 +280,9 @@ function StandingCard({ group, standing, onShare }: { group: Group; standing: Gr
         {spentLine}
         {!settled && mine === 0 && ` · ${t('groups.standing.othersSettling')}`}
       </p>
+      {kitty !== null && kitty.held > 0 && kitty.holderId === ME_ID && (
+        <p className={styles.standingLine}>{t('groups.standing.kitty', { amount: formatMoney(kitty.held, group.currency, { trimZeros: true }) })}</p>
+      )}
       {(!settled || expenseCount > 0) && (
         <div className={styles.standingActions}>
           {!settled ? (

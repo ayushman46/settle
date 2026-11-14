@@ -4,13 +4,10 @@ import { goBack, navigate } from '../../app/router'
 import { Button, Card, EmptyState, IconButton, List, ListRow, PageTitle, Screen, SegmentedControl, TextField, TopBar, useToast } from '../../components'
 import { today } from '../../engine/dates'
 import { useT } from '../../i18n'
-import { relativeDateLabel } from '../../kit/dateLabel'
-import { shareFile } from '../../share'
-import { shagunCsvBlob, shagunCsvFilename } from './csv'
 import { functionTotals, searchFamilies, sortFamilies, type FamilySort, type FamilySummary } from './engine'
 import { FunctionSheet } from './FunctionSheet'
 import { GiveBox } from './GiveBox'
-import { rupees } from './labels'
+import { dateWithYear, rupees } from './labels'
 import { shagunAddPath, shagunFamilyPath, shagunFunctionPath } from './paths'
 import type { ShagunFunction } from './types'
 import { useShagun } from './useShagun'
@@ -45,6 +42,8 @@ export function ShagunScreen() {
   const exportCsv = async () => {
     if (busy) return
     setBusy(true)
+    // Loaded when asked for, so the book itself opens without waiting for the export code.
+    const [{ shareFile }, { shagunCsvBlob, shagunCsvFilename }] = await Promise.all([import('../../share/shareFile'), import('./csv')])
     const outcome = await shareFile(shagunCsvBlob(book.entries, book.functions), shagunCsvFilename(day), undefined, { title: t('shagun.title') })
     setBusy(false)
     if (outcome === 'shared' || outcome === 'downloaded') toast(t('shagun.export.done', { count: book.entries.length }), { tone: 'success' })
@@ -132,7 +131,6 @@ export function ShagunScreen() {
                 autoComplete="off"
               />
               <SegmentedControl
-                size="sm"
                 ariaLabel={t('shagun.sort.aria')}
                 value={sort}
                 onChange={setSort}
@@ -172,7 +170,7 @@ export function ShagunScreen() {
                   <ListRow
                     key={row.fn.id}
                     title={row.fn.name}
-                    subtitle={t('shagun.function.line', { date: relativeDateLabel(row.fn.date, day), count: row.families })}
+                    subtitle={t('shagun.function.line', { date: dateWithYear(row.fn.date, day), count: row.families })}
                     trailing={row.received + row.given > 0 ? rupees(row.fn.mine ? row.received : row.given || row.received) : undefined}
                     onClick={() => navigate(shagunFunctionPath(row.fn.id))}
                     chevron

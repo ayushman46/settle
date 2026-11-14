@@ -10,7 +10,7 @@ import { haptic } from '../../lib/haptics'
 import { formatMoney } from '../../lib/money'
 import { shareResult } from '../../lib/share'
 import { firstName } from '../../share/text'
-import { swapKey, type Swap } from './engine'
+import { swapKey, swapOutcome, type Swap } from './engine'
 import { swapMessage, swapPayLink, swapUpiId } from './message'
 import { recordSwap } from './settle'
 import { dismissSwap, restoreSwap } from './store'
@@ -67,17 +67,19 @@ function SwapItem({ swap, currency, divided = false }: { swap: Swap; currency: s
   const owed = summary.byFriend[swap.fromId] ?? 0
   const owe = -(summary.byFriend[swap.toId] ?? 0)
   const hasUpi = swapUpiId(swap.toId, friendsById, profile) !== null
+  const outcome = swapOutcome(swap, owed, owe)
+  const left = { from, to, amount, fromLeft: money(outcome.fromLeft), toLeft: money(outcome.toLeft) }
 
   const ask = async (): Promise<void> => {
     if (busy.current) return
     busy.current = true
     try {
       const link = await swapPayLink(swap, friendsById, profile, currency, today())
-      const text = swapMessage(swap, friendsById, profile, currency, link)
-      const outcome = await shareResult(text, { title: t('swap.message.title', { to }) })
-      if (outcome === 'shared' || outcome === 'copied') haptic('success')
-      if (outcome === 'copied') toast(t('swap.toast.copied', { from }), { tone: 'success' })
-      if (outcome === 'failed') {
+      const text = swapMessage(swap, friendsById, profile, currency, link, { owed, owe })
+      const shared = await shareResult(text, { title: t('swap.message.title', { to }) })
+      if (shared === 'shared' || shared === 'copied') haptic('success')
+      if (shared === 'copied') toast(t('swap.toast.copied', { from }), { tone: 'success' })
+      if (shared === 'failed') {
         haptic('error')
         toast(t('swap.toast.failed'), { tone: 'error' })
       }
@@ -87,9 +89,11 @@ function SwapItem({ swap, currency, divided = false }: { swap: Swap; currency: s
   }
 
   const paid = (): void => {
+    // Worded from the balances before the payment is recorded.
+    const message = t(`swap.toast.recorded.${outcome.cleared}`, left)
     const undo = recordSwap(swap, currency, { method: 'other', date: today() })
     haptic('success')
-    toast(t('swap.toast.recorded', { from, to, amount }), {
+    toast(message, {
       tone: 'success',
       action: { label: t('common.action.undo'), onAction: undo },
     })
@@ -123,11 +127,12 @@ function SwapItem({ swap, currency, divided = false }: { swap: Swap; currency: s
           <span className={styles.name}>{to}</span>
         </span>
       </div>
-      <p className={styles.body}>{t('swap.card.body', { from, to, amount })}</p>
+      <p className={styles.body}>{t(`swap.card.body.${outcome.cleared}`, left)}</p>
       {(owed !== swap.amount || owe !== swap.amount) && owed > 0 && owe > 0 && (
         <p className={styles.fine}>{t('swap.card.why', { from, to, owed: money(owed), owe: money(owe) })}</p>
       )}
       {!hasUpi && <p className={styles.fine}>{t('swap.card.noUpi', { from, to })}</p>}
+      <p className={styles.fine}>{t('swap.card.after', { from, to })}</p>
       <div className={styles.actions}>
         <Button size="sm" iconStart={<Share2 />} onClick={() => void ask()}>
           {t('swap.card.ask', { from })}

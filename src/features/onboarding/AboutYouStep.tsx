@@ -11,6 +11,7 @@ import { MAX_NAME_LENGTH, nameKey, normalizeName } from '../../lib/people'
 import { isPhoneUpiId, isValidUpiId, normalizeUpiId } from '../../lib/upi'
 import { CurrencySheet } from '../bill/CurrencySheet'
 import { ConnectUpi } from '../../kit/ConnectUpi'
+import { UpiGuess } from '../../kit/UpiGuess'
 import styles from './OnboardingScreen.module.css'
 
 export interface AboutYou {
@@ -124,6 +125,15 @@ export function AboutYouStep({ nameOnly = false, onBack, onDone, onSkip }: About
             <ConnectUpi
               onConnect={(qr) => {
                 setTypedUpi(qr.vpa)
+                setUpiChecked(false)
+              }}
+            />
+            {/* Someone who types their mobile number where the ID goes gets the apps to pick from, with the number filled in. */}
+            <UpiGuess
+              key={/^\d{10}$/.test(upi.trim()) ? upi.trim() : 'guess'}
+              phone={/^\d{10}$/.test(upi.trim()) ? upi.trim() : null}
+              onPick={(id) => {
+                setTypedUpi(id)
                 setUpiChecked(false)
               }}
             />

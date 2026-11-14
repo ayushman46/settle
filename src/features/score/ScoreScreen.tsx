@@ -2,14 +2,16 @@ import { Footprints, Gauge, Info, ShieldCheck, Share2 } from 'lucide-react'
 import { goBack, navigate } from '../../app/router'
 import { Button, Card, EmptyState, PageTitle, Screen, TopBar, useToast } from '../../components'
 import { useFriendsById, useGroups, useProfile } from '../../data'
+import { BRAND } from '../../domain/types'
 import { useT } from '../../i18n'
 import { friendLabel } from '../../kit/friendName'
 import { formatMoney } from '../../lib/money'
 import { shareResult } from '../../lib/share'
 import { friendPath, settleUpPath, YOU_PATH } from '../groups/paths'
-import { BAND_KEYS } from './bands'
+import { SETTLE_URL } from '../stuck/reminder'
+import { BAND_KEYS, bandBodyKey } from './bands'
 import { Dial } from './Dial'
-import { FULL_HISTORY, WEIGHTS, type Factor } from './engine'
+import { COUNTS_FROM, FULL_HISTORY, FULL_PEOPLE, READY_AT, SPLITS_A_DAY, WEIGHTS, type Factor } from './engine'
 import { useScore } from './useScore'
 import styles from './Score.module.css'
 
@@ -20,8 +22,6 @@ const FACTOR_KEYS = {
   fronted: 'score.factor.fronted',
   history: 'score.factor.history',
 } as const
-
-const BAND_BODY_KEYS = { warming: 'score.band.warming.body', getting: 'score.band.getting.body', solid: 'score.band.solid.body', gold: 'score.band.gold.body' } as const
 
 /**
  * `/app/score` — your Settle Score: the dial, what goes into it (each factor with a bar and one
@@ -36,6 +36,8 @@ export function ScoreScreen() {
   const friendsById = useFriendsById()
   const groups = useGroups()
   const header = <TopBar onBack={() => goBack(YOU_PATH)} />
+  const money = (amount: number, currency: string): string => formatMoney(amount, currency, { trimZeros: true })
+  const floor = money(COUNTS_FROM, profile.currency)
 
   const disclaimer = (
     <p className={styles.disclaimer}>
@@ -48,28 +50,31 @@ export function ScoreScreen() {
     return (
       <Screen header={header} contentClassName={styles.content}>
         <PageTitle title={t('score.title')} subtitle={t('score.subtitle')} />
-        <EmptyState icon={<Gauge />} title={t('score.empty.title')} text={t('score.empty.body')} />
+        <EmptyState icon={<Gauge />} title={t('score.empty.title')} text={t('score.empty.body', { needed: READY_AT, owed: result.owed, floor })} />
         {disclaimer}
       </Screen>
     )
   }
 
   const band = t(BAND_KEYS[result.band])
-  const money = (amount: number, currency: string): string => formatMoney(amount, currency, { trimZeros: true })
 
   const sentence = (f: Factor): string => {
     switch (f.id) {
       case 'speed':
-        return f.medianDays === null ? t('score.factor.speed.none') : t('score.factor.speed.body', { days: Math.round(f.medianDays) })
+        if (f.medianDays === null) return t('score.factor.speed.none', { floor })
+        if (f.paidBack === 0) return t('score.factor.speed.unpaid', { days: f.oldestOpenDays })
+        return t(f.open > 0 ? 'score.factor.speed.mixed' : 'score.factor.speed.body', { days: Math.round(f.medianDays) })
       case 'onTime':
         return f.counted === 0 ? t('score.factor.onTime.none') : t('score.factor.onTime.body', { onTime: f.onTime, counted: f.counted })
       case 'overdue':
         if (f.count === 0) return t('score.factor.overdue.none')
         return f.amount > 0 ? t('score.factor.overdue.body', { amount: money(f.amount, profile.currency), days: f.oldestDays }) : t('score.factor.overdue.count', { count: f.count, days: f.oldestDays })
       case 'fronted':
-        return t('score.factor.fronted.body', { count: f.bills })
+        return t('score.factor.fronted.body', { count: f.bills, floor })
       case 'history':
-        return f.splits >= FULL_HISTORY ? t('score.factor.history.full', { count: f.splits }) : t('score.factor.history.body', { count: f.splits, full: FULL_HISTORY })
+        return f.full
+          ? t('score.factor.history.full', { count: f.splits, people: f.people, floor })
+          : t('score.factor.history.body', { count: f.splits, people: f.people, floor, full: FULL_HISTORY, fullPeople: FULL_PEOPLE })
     }
   }
 
@@ -77,7 +82,7 @@ export function ScoreScreen() {
   const nextName = next?.kind === 'friend' ? friendLabel(next.friendId, friendsById[next.friendId]) : next?.kind === 'group' ? (groups.find((g) => g.id === next.groupId)?.name ?? '') : ''
 
   const share = async (): Promise<void> => {
-    const outcome = await shareResult(t('score.share.text', { score: result.score, band }), { title: t('score.title') })
+    const outcome = await shareResult(t('score.share.text', { score: result.score, band, brand: BRAND.name, url: SETTLE_URL }), { title: t('score.title') })
     if (outcome === 'copied') toast(t('score.share.copied'), { tone: 'success' })
   }
 
@@ -88,7 +93,7 @@ export function ScoreScreen() {
       <Card className={styles.hero}>
         <Dial score={result.score} band={result.band} />
         <p className={styles.range}>{t('score.dial.range')}</p>
-        <p className={styles.body}>{t(BAND_BODY_KEYS[result.band])}</p>
+        <p className={styles.body}>{t(bandBodyKey(result))}</p>
         <Button variant="secondary" iconStart={<Share2 />} onClick={() => void share()}>
           {t('score.share')}
         </Button>
@@ -147,8 +152,9 @@ export function ScoreScreen() {
           <Info aria-hidden="true" /> {t('score.how.title')}
         </h2>
         <p className={styles.fine}>{t('score.how.counts')}</p>
+        <p className={styles.fine}>{t('score.how.small', { floor, perDay: SPLITS_A_DAY })}</p>
         <p className={styles.fine}>{t('score.how.weights', { ...WEIGHTS })}</p>
-        <p className={styles.fine}>{t('score.how.history', { full: FULL_HISTORY })}</p>
+        <p className={styles.fine}>{t('score.how.history', { full: FULL_HISTORY, fullPeople: FULL_PEOPLE })}</p>
         <p className={styles.fine}>{t('score.how.promise')}</p>
       </Card>
     </Screen>

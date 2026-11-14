@@ -4,10 +4,9 @@ import { goBack, navigate, useRoute } from '../../app/router'
 import { Button, Card, IconButton, PageTitle, Screen, TextField, TopBar, useToast } from '../../components'
 import { today } from '../../engine/dates'
 import { useT } from '../../i18n'
-import { relativeDateLabel } from '../../kit/dateLabel'
 import { byTime, functionTotal, nameKey } from './engine'
 import { FunctionSheet } from './FunctionSheet'
-import { entryWhat, kindLabel, rupees } from './labels'
+import { dateWithYear, entryThing, entryWhat, kindLabel, rupees } from './labels'
 import { SHAGUN_FUNCTION_PATTERN, SHAGUN_PATH, shagunAddPath, shagunFamilyPath } from './paths'
 import { deleteEntry, deleteFunction, restoreEntries, restoreFunction } from './store'
 import { useShagun } from './useShagun'
@@ -44,7 +43,11 @@ export function ShagunFunctionScreen() {
 
   const totals = functionTotal(fn, entries)
   const q = nameKey(query)
-  const matching = q ? entries.filter((e) => nameKey(e.name).includes(q)) : entries
+  // By name, by gift ("saree") or by amount ("5101").
+  const asAmount = /^[₹,\s]*[0-9][0-9,\s]*$/.test(query) ? Number(query.replace(/[^0-9]/g, '')) * 100 : null
+  const matching = q
+    ? entries.filter((e) => nameKey(e.name).includes(q) || (e.gift !== null && nameKey(e.gift).includes(q)) || e.amount === asAmount)
+    : entries
   const page = matching.slice(0, shown)
 
   const removeFunction = () => {
@@ -61,13 +64,17 @@ export function ShagunFunctionScreen() {
   const removeEntry = (id: string) => {
     const removed = deleteEntry(id)
     if (!removed) return
-    toast(t('shagun.family.deleted', { what: `${removed.name}: ${entryWhat(removed)}` }), {
+    toast(t('shagun.family.deleted', { name: removed.name, what: entryThing(removed) }), {
       action: { label: t('common.action.undo'), onAction: () => restoreEntries([removed]) },
     })
   }
 
   const summary = [
-    totals.received > 0 || fn.mine ? t('shagun.fn.collected', { amount: rupees(totals.received), count: totals.families }) : null,
+    totals.received > 0 || fn.mine
+      ? totals.entries > totals.families
+        ? t('shagun.fn.collected.envelopes', { amount: rupees(totals.received), count: totals.families, envelopes: totals.entries })
+        : t('shagun.fn.collected', { amount: rupees(totals.received), count: totals.families })
+      : null,
     totals.given > 0 ? t('shagun.fn.gave', { amount: rupees(totals.given) }) : null,
   ]
     .filter(Boolean)
@@ -78,10 +85,10 @@ export function ShagunFunctionScreen() {
       <PageTitle
         eyebrow={`${kindLabel(fn.kind)} · ${fn.mine ? t('shagun.function.yours') : t('shagun.function.theirs')}`}
         title={fn.name}
-        subtitle={relativeDateLabel(fn.date, day)}
+        subtitle={dateWithYear(fn.date, day)}
       />
       <p className={styles.body} role="status">
-        {summary || t('shagun.fn.nothing')}
+        {summary || t(fn.mine ? 'shagun.fn.nothing' : 'shagun.fn.nothing.theirs')}
       </p>
       <div className={styles.actions}>
         <Button iconStart={<Plus />} onClick={() => navigate(shagunAddPath(fn.id))}>
@@ -114,7 +121,7 @@ export function ShagunFunctionScreen() {
             />
           )}
           {matching.length === 0 ? (
-            <p className={styles.fine}>{t('shagun.search.none', { query: query.trim() })}</p>
+            <p className={styles.fine}>{t('shagun.fn.search.none', { query: query.trim() })}</p>
           ) : (
             <Card padding="none">
               <ul className={styles.list}>

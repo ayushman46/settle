@@ -9,6 +9,12 @@
   flex: none;
 }
 
+.note {
+  margin: 0;
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
 .tools:empty {
   display: none;
 }

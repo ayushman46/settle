@@ -3,6 +3,7 @@ import {
   applyUsual,
   formFromStaleUsual,
   formFromUsual,
+  groupUsualSplit,
   isValidUsual,
   matchesUsual,
   samePeople,
@@ -127,5 +128,20 @@ describe('labels', () => {
     expect(isValidUsual({ mode: 'percent', inputs: { a: 5000 } })).toBe(false)
     expect(isValidUsual({ mode: 'shares', inputs: {} })).toBe(false)
     expect(isValidUsual({ mode: 'shares', inputs: { a: -1, b: 2 } })).toBe(false)
+  })
+})
+
+describe('groupUsualSplit (for other features’ sums)', () => {
+  it('is null with no usual split, or one made for other people', () => {
+    expect(groupUsualSplit(null, COUPLE)).toBeNull()
+    expect(groupUsualSplit(sixtyForty, FLAT)).toBeNull()
+  })
+
+  it('gives each member’s fraction and whether everyone’s part is the same', () => {
+    expect(groupUsualSplit(sixtyForty, COUPLE)).toEqual({ ...sixtyForty, fractions: { me: 0.6, riya: 0.4 }, equal: false })
+    expect(groupUsualSplit(rooms, FLAT)?.fractions).toEqual({ me: 0.5, riya: 0.25, sam: 0.25 })
+    expect(groupUsualSplit({ mode: 'percent', inputs: { me: 5000, riya: 5000 }, set: DAY }, COUPLE)?.equal).toBe(true)
+    expect(groupUsualSplit({ mode: 'shares', inputs: { me: 1, riya: 1, sam: 1 }, set: DAY }, FLAT)?.equal).toBe(true)
+    expect(groupUsualSplit({ mode: 'shares', inputs: { me: 1, riya: 1, sam: 0 }, set: DAY }, FLAT)).toMatchObject({ equal: false, fractions: { sam: 0 } })
   })
 })

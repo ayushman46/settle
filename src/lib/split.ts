@@ -142,6 +142,10 @@ export function computeSplit(input: SplitInput): SplitResult {
 
   const linesByPerson = new Map<string, SplitLine[]>(people.map((p) => [p.id, []]))
   const unassignedItemIds: string[] = []
+  // The paise each person has been given above an exact share so far. An item that doesn’t divide evenly
+  // gives its odd paise to whoever has had the fewest, so people who had the same things pay the same
+  // (to within a paisa) however many items there are.
+  const oddPaise = new Map<string, number>()
 
   items.forEach((item, index) => {
     const amount = amounts[index] ?? 0
@@ -152,8 +156,20 @@ export function computeSplit(input: SplitInput): SplitResult {
       sharers = people.map((person) => ({ person, weight: 1 }))
     }
     const weights = sharers.map((s) => s.weight)
-    const parts = allocate(amount, weights)
     const totalShares = weights.reduce((a, b) => a + b, 0)
+    const order = sharers.map((_, i) => i).sort((a, b) => (oddPaise.get(sharers[a]?.person.id ?? '') ?? 0) - (oddPaise.get(sharers[b]?.person.id ?? '') ?? 0) || a - b)
+    const dealt = allocate(amount, order.map((i) => weights[i] ?? 0))
+    const parts: Minor[] = new Array<Minor>(sharers.length).fill(0)
+    order.forEach((at, k) => {
+      parts[at] = dealt[k] ?? 0
+    })
+    if (totalShares > 0) {
+      sharers.forEach((s, i) => {
+        const exact = Math.trunc((amount * s.weight) / totalShares)
+        const odd = Math.abs((parts[i] ?? 0) - exact)
+        if (odd !== 0) oddPaise.set(s.person.id, (oddPaise.get(s.person.id) ?? 0) + odd)
+      })
+    }
     const even = weights.every((w) => w === weights[0])
     sharers.forEach((s, i) => {
       linesByPerson.get(s.person.id)?.push({

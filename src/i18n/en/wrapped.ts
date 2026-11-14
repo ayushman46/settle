@@ -23,6 +23,7 @@ export const wrapped = {
   'wrapped.none.cta': 'Back to the group',
   'wrapped.recap.title': '{emoji} {name}: the story',
   'wrapped.recap.line': '{big}: {line}',
+  'wrapped.recap.footer': 'Made with {brand}: {link}',
 
   // Slides
   'wrapped.headline.eyebrow': '{emoji} {name}',
@@ -33,11 +34,12 @@ export const wrapped = {
   'wrapped.perDay.line.alone': 'Every day, for {days} days',
   'wrapped.bigDay.eyebrow': 'The big day: {date}',
   'wrapped.bigDay.line': '{count, plural, other {# bills}}: {titles}',
+  'wrapped.bigDay.line.some': '{count, plural, other {# bills}}, including {titles}',
   'wrapped.bigBill.eyebrow': 'The biggest bill',
   'wrapped.bigBill.line': '{title}, paid by {name}',
   'wrapped.categories.eyebrow': 'Where the money went',
   'wrapped.categories.big': '{percent}% on {category}',
-  'wrapped.categories.rest': 'Everything else',
+  'wrapped.categories.rest': 'The rest together',
   'wrapped.categories.part': '{category} {percent}%',
   'wrapped.fronted.eyebrow': 'Fronted the most',
   'wrapped.fronted.line': 'Covered {amount} of other people’s shares',

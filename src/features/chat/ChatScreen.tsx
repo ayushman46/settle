@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react'
-import { ArrowRight, Check, FileText, Lock, MessagesSquare, TriangleAlert } from 'lucide-react'
+import { Check, FileText, Lock, MessagesSquare, TriangleAlert } from 'lucide-react'
 import { goBack, navigate, useSearchParams } from '../../app/router'
 import { ActionBar, Banner, Button, Chip, PageTitle, Screen, TextField, TopBar, useToast } from '../../components'
-import { useGroups, useProfile } from '../../data'
+import { useFriends, useGroups, useProfile } from '../../data'
 import { MAX_GROUP_NAME_LENGTH } from '../../data/schemas'
 import { today as todayIso } from '../../engine/dates'
 import { useT } from '../../i18n'
@@ -12,11 +12,11 @@ import { cx } from '../../lib/cx'
 import { haptic } from '../../lib/haptics'
 import { formatMoney } from '../../lib/money'
 import { groupPath } from '../groups/paths'
-import { applyChat, guessMe, undoChat } from './build'
+import { applyChat, defaultPeople, guessMe, matchPeople, undoChat } from './build'
 import { readChatFile, takeSharedChat, type ChatSource } from './files'
 import { parseChat } from './parse'
 import { readChat, type ChatReading, type ChatRow, type Doubt } from './read'
-import { groupForChat, seenIn } from './store'
+import { groupForChat, groupForRows, seenIn } from './store'
 import styles from './Chat.module.css'
 
 const DOUBT_KEYS: Record<Doubt, MessageKey> = {
@@ -26,6 +26,9 @@ const DOUBT_KEYS: Record<Doubt, MessageKey> = {
   each: 'chat.doubt.each',
   people: 'chat.doubt.people',
   untitled: 'chat.doubt.untitled',
+  asked: 'chat.doubt.asked',
+  repeat: 'chat.doubt.repeat',
+  who: 'chat.doubt.who',
 }
 
 type Stage = { kind: 'start'; problem: string | null } | { kind: 'reading' } | { kind: 'review'; reading: ChatReading; chatName: string | null }
@@ -55,6 +58,7 @@ export function ChatScreen() {
   const [groupName, setGroupName] = useState('')
   const [off, setOff] = useState<ReadonlySet<string>>(new Set())
   const [on, setOn] = useState<ReadonlySet<string>>(new Set())
+  const [picked, setPicked] = useState<Readonly<Record<string, string | null>>>({})
   const money = (paise: number): string => formatMoney(paise, profile.currency, { trimZeros: true })
 
   const open = (source: ChatSource): void => {
@@ -71,13 +75,15 @@ export function ChatScreen() {
       setStage({ kind: 'start', problem: t('chat.problem.noMoney', { count: reading.messages }) })
       return
     }
-    const remembered = forcedGroup?.id ?? groupForChat(chatName)
+    // The same chat under another file name (an iPhone calls every export "_chat.txt"), or pasted: known by its messages.
+    const remembered = forcedGroup?.id ?? groupForChat(chatName) ?? groupForRows(reading.rows.map((row) => row.key))
     const target = groups.find((g) => g.id === remembered && !g.archived) ?? null
     setGroupId(target?.id ?? null)
     setGroupName((chatName ?? '').slice(0, MAX_GROUP_NAME_LENGTH))
     setMe(guessMe(reading.members, profile.name))
     setOff(new Set())
     setOn(new Set())
+    setPicked({})
     haptic('success')
     setStage({ kind: 'review', reading, chatName })
   }
@@ -180,13 +186,14 @@ export function ChatScreen() {
         if (row.sure) setOff(from)
         else setOn(from)
       }}
-      tickAll={(rows) => setOn(new Set([...on, ...rows.map((r) => r.key)]))}
+      picked={picked}
+      pick={(name, id) => setPicked({ ...picked, [name]: id })}
       money={money}
       onBack={() => setStage({ kind: 'start', problem: null })}
-      onDone={(rows, shown) => {
+      onDone={(rows, shown, people) => {
         const target = groups.find((g) => g.id === groupId) ?? null
         try {
-          const result = applyChat({ chatName, groupId: target?.id ?? null, groupName: groupName.trim() || t('chat.group.fallback'), members: reading.members, me: me === NOBODY ? null : me, rows, shown })
+          const result = applyChat({ chatName, groupId: target?.id ?? null, groupName: groupName.trim() || t('chat.group.fallback'), members: reading.members, me: me === NOBODY ? null : me, rows, shown, people })
           haptic('success')
           const name = target?.name ?? (groupName.trim() || t('chat.group.fallback'))
           toast(t('chat.done.toast', { count: rows.length, group: name }), { tone: 'success', action: { label: t('common.action.undo'), onAction: () => undoneBack(result) } })
@@ -218,16 +225,24 @@ interface ReviewProps {
   off: ReadonlySet<string>
   on: ReadonlySet<string>
   toggle: (row: ChatRow, ticked: boolean) => void
-  tickAll: (rows: readonly ChatRow[]) => void
+  /** Who a chat name is, where you said so: a person’s id, or null for someone new. */
+  picked: Readonly<Record<string, string | null>>
+  pick: (name: string, id: string | null) => void
   money: (paise: number) => string
   onBack: () => void
-  onDone: (rows: ChatRow[], shown: string[]) => void
+  onDone: (rows: ChatRow[], shown: string[], people: Record<string, string | null>) => void
 }
 
-function Review({ reading, chatName, me, setMe, groupId, setGroupId, groupName, setGroupName, off, on, toggle, tickAll, money, onBack, onDone }: ReviewProps) {
+function Review({ reading, chatName, me, setMe, groupId, setGroupId, groupName, setGroupName, off, on, toggle, picked, pick, money, onBack, onDone }: ReviewProps) {
   const t = useT()
   const groups = useGroups()
+  const friends = useFriends()
   const today = todayIso()
+  // Who is who: the same name is that person; a first name that fits one person is taken as them (and shown); two are asked.
+  const matches = useMemo(() => matchPeople(reading.members, me === NOBODY ? null : me, friends), [reading, me, friends])
+  const people = useMemo(() => ({ ...defaultPeople(matches), ...Object.fromEntries(Object.entries(picked).filter(([name]) => matches.some((m) => m.name === name && !m.exact))) }), [matches, picked])
+  const asked = matches.filter((m) => !m.exact && m.options.length > 0)
+  const already = matches.filter((m) => m.exact || people[m.name]).length
   const target = groups.find((g) => g.id === groupId) ?? null
   const fresh = useMemo(() => {
     const seen = seenIn(groupId)
@@ -258,13 +273,7 @@ function Review({ reading, chatName, me, setMe, groupId, setGroupId, groupName, 
           <span className={styles.rowText}>
             <span className={styles.rowTop}>
               <span className={styles.rowTitle}>
-                {row.kind === 'payment' ? (
-                  <>
-                    {who(row.payer)} <ArrowRight className={styles.arrow} aria-label={t('chat.row.paid.aria')} /> {who(row.to ?? '')}
-                  </>
-                ) : (
-                  row.title || t('chat.row.untitled')
-                )}
+                {row.kind === 'payment' ? t('chat.row.pays', { from: who(row.payer), to: who(row.to ?? '') }) : row.title || t('chat.row.untitled')}
               </span>
               <span className={styles.rowAmount}>{money(row.amount)}</span>
             </span>
@@ -288,7 +297,7 @@ function Review({ reading, chatName, me, setMe, groupId, setGroupId, groupName, 
       footer={
         fresh.length > 0 ? (
           <ActionBar hint={!meChosen ? t('chat.hint.me') : !nameOk ? t('chat.hint.name') : chosen.length === 0 ? t('chat.hint.none') : t('chat.hint.total', { amount: money(total) })}>
-            <Button block disabled={!meChosen || !nameOk || chosen.length === 0} onClick={() => onDone(chosen, fresh.map((r) => r.key))}>
+            <Button block disabled={!meChosen || !nameOk || chosen.length === 0} onClick={() => onDone(chosen, fresh.map((r) => r.key), people)}>
               {target ? t('chat.add.existing', { count: chosen.length, group: target.name }) : t('chat.add.new', { count: chosen.length })}
             </Button>
           </ActionBar>
@@ -303,11 +312,11 @@ function Review({ reading, chatName, me, setMe, groupId, setGroupId, groupName, 
         </h2>
         <div className={styles.chips} role="radiogroup" aria-labelledby="chat-me">
           {reading.members.map((name) => (
-            <Chip key={name} role="radio" aria-checked={me === name} selected={me === name} onClick={() => setMe(name)}>
+            <Chip key={name} size="lg" role="radio" aria-checked={me === name} selected={me === name} onClick={() => setMe(name)}>
               {name}
             </Chip>
           ))}
-          <Chip role="radio" aria-checked={me === NOBODY} selected={me === NOBODY} onClick={() => setMe(NOBODY)}>
+          <Chip size="lg" role="radio" aria-checked={me === NOBODY} selected={me === NOBODY} onClick={() => setMe(NOBODY)}>
             {t('chat.me.none')}
           </Chip>
         </div>
@@ -328,7 +337,29 @@ function Review({ reading, chatName, me, setMe, groupId, setGroupId, groupName, 
             )}
           </>
         ) : (
-          <TextField label={t('chat.group.name')} value={groupName} maxLength={MAX_GROUP_NAME_LENGTH} onChange={(e) => setGroupName(e.currentTarget.value)} placeholder={t('chat.group.placeholder')} hint={t('chat.group.people', { count: everyone + (me === NOBODY ? 1 : 0) })} />
+          <TextField label={t('chat.group.name')} value={groupName} maxLength={MAX_GROUP_NAME_LENGTH} onChange={(e) => setGroupName(e.currentTarget.value)} placeholder={t('chat.group.placeholder')} error={groupName.trim() === '' ? t('chat.group.needed') : undefined} />
+        )}
+        <p className={styles.fine}>{t('chat.group.people', { count: everyone + (me === NOBODY ? 1 : 0), known: already, fresh: matches.length - already })}</p>
+        {asked.length > 0 && (
+          <ul className={styles.whoList}>
+            {asked.map((match) => (
+              <li key={match.name} className={styles.who}>
+                <span className={styles.whoName} id={`chat-who-${match.name}`}>
+                  {t(match.options.length > 1 ? 'chat.who.pick' : 'chat.who.is', { name: match.name })}
+                </span>
+                <div className={styles.chips} role="radiogroup" aria-labelledby={`chat-who-${match.name}`}>
+                  {match.options.map((friend) => (
+                    <Chip key={friend.id} size="lg" role="radio" aria-checked={people[match.name] === friend.id} selected={people[match.name] === friend.id} onClick={() => pick(match.name, friend.id)}>
+                      {friend.name}
+                    </Chip>
+                  ))}
+                  <Chip size="lg" role="radio" aria-checked={!people[match.name]} selected={!people[match.name]} onClick={() => pick(match.name, null)}>
+                    {t('chat.who.new')}
+                  </Chip>
+                </div>
+              </li>
+            ))}
+          </ul>
         )}
       </section>
 
@@ -352,11 +383,6 @@ function Review({ reading, chatName, me, setMe, groupId, setGroupId, groupName, 
                 <h2 id="chat-unsure" className={styles.heading}>
                   {t('chat.unsure.title', { count: unsure.length })}
                 </h2>
-                {unsure.some((r) => !on.has(r.key)) && (
-                  <Button variant="ghost" size="sm" onClick={() => tickAll(unsure)}>
-                    {t('chat.unsure.all')}
-                  </Button>
-                )}
               </div>
               <p className={styles.fine}>{t('chat.unsure.body')}</p>
               <ul className={styles.rows}>{unsure.map(rowOf)}</ul>

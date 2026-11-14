@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Expense, Group } from '../../domain/types'
-import { buildReport, claimableGroups, defaultScope, monthRange, reportCandidates, rupeesInWords, summarize, type ReportScope } from './engine'
+import { buildReport, claimableGroups, defaultScope, monthRange, reportCandidates, reportPeriod, rupeesInWords, summarize, type ReportScope } from './engine'
 import { reportCsv } from './reportCsv'
 
 const NAMES: Record<string, string> = { me: 'Ayush Kumar', riya: 'Riya', sam: 'Sam' }
@@ -133,9 +133,22 @@ describe('buildReport', () => {
     const fx = { amount: 125_000, currency: 'THB', rate: '2.410751226', rateDate: '2026-11-02', source: 'ecb' as const }
     const e = expense('Dinner in Bangkok', 301_344, '2026-11-02', 'me', ['me', 'riya'], { fx })
     const paid = buildReport({ expenses: [e], scope: PUNE, basis: 'paid', nameOf })
-    expect(paid.rows[0]?.original).toEqual({ amount: 125_000, currency: 'THB', rate: '2.410751226' })
+    expect(paid.rows[0]?.original).toEqual({ amount: 125_000, bill: 125_000, whole: true, currency: 'THB', rate: '2.410751226', rateShown: '2.4108' })
     const share = buildReport({ expenses: [e], scope: PUNE, basis: 'share', nameOf })
-    expect(share.rows[0]).toMatchObject({ amount: 150_672, currency: 'INR', original: { amount: 62_500, currency: 'THB' } })
+    // My share keeps the whole bill too, so the sheet never makes the receipt look smaller than it was.
+    expect(share.rows[0]).toMatchObject({ amount: 150_672, currency: 'INR', original: { amount: 62_500, bill: 125_000, whole: false, currency: 'THB' } })
+  })
+
+  it('the rate is shown with 4 decimals at most, like the expense page', () => {
+    const fx = { amount: 2_000, currency: 'USD', rate: '94.24312342', rateDate: '2026-11-02', source: 'ecb' as const }
+    const e = expense('Zoom', 188_486, '2026-11-02', 'me', ['me', 'riya', 'sam'], { fx })
+    expect(buildReport({ expenses: [e], scope: PUNE, basis: 'share', nameOf }).rows[0]?.original).toMatchObject({
+      amount: 667,
+      bill: 2_000,
+      whole: false,
+      rate: '94.24312342',
+      rateShown: '94.2431',
+    })
   })
 
   it('a group in dollars totals in dollars, rupees listed first, words only for rupees', () => {
@@ -164,6 +177,14 @@ describe('buildReport', () => {
     const sum = many.reduce((s, e) => s + (e.shares.me ?? 0), 0)
     expect(report.totals[0]?.amount).toBe(sum)
     expect(report.categories[0]?.amount).toBe(sum)
+  })
+})
+
+describe('reportPeriod', () => {
+  it('runs from the first to the last expense on the sheet, whatever the order', () => {
+    expect(reportPeriod([{ date: '2026-11-14' }, { date: '2026-11-12' }, { date: '2026-11-13' }])).toEqual({ from: '2026-11-12', to: '2026-11-14' })
+    expect(reportPeriod([{ date: '2026-11-12' }])).toEqual({ from: '2026-11-12', to: '2026-11-12' })
+    expect(reportPeriod([])).toBeNull()
   })
 })
 
@@ -210,11 +231,23 @@ describe('reportCsv', () => {
       nameOf,
     })
     expect(reportCsv(report).split('\r\n')).toEqual([
-      'Date,Title,Category,Paid by,Amount,Currency,Paid amount,Paid currency,Rate',
-      '2026-11-02,"Dinner, Bangkok",Food & drinks,Ayush Kumar,3012.50,INR,1250.00,THB,2.41',
-      "2026-11-03,'=SUM(A1),Food & drinks,Ayush Kumar,50.00,INR,,,",
-      ',Total,,,3062.50,INR,,,',
+      'Date,Title,Category,Paid by,Amount,Currency,Bill amount,Bill currency,Rate,Share of bill',
+      '2026-11-02,"Dinner, Bangkok",Food & drinks,Ayush Kumar,3012.50,INR,1250.00,THB,2.41,',
+      "2026-11-03,'=SUM(A1),Food & drinks,Ayush Kumar,50.00,INR,,,,",
+      ',Total,,,3062.50,INR,,,,',
       '',
     ])
+  })
+
+  it('my share of a bill abroad: the whole bill as on the receipt, the share in its own column, the rate to 4 decimals', () => {
+    const fx = { amount: 2_000, currency: 'USD', rate: '94.24312342', rateDate: '2026-11-02', source: 'ecb' as const }
+    const report = buildReport({ expenses: [expense('Zoom', 188_486, '2026-11-02', 'me', ['me', 'riya', 'sam'], { fx })], scope: PUNE, basis: 'share', nameOf })
+    expect(reportCsv(report).split('\r\n')[1]).toBe('2026-11-02,Zoom,Food & drinks,Ayush Kumar,628.30,INR,20.00,USD,94.2431,6.67')
+  })
+
+  it('a tiny rate keeps its digits in the spreadsheet', () => {
+    const fx = { amount: 10_000_000, currency: 'IDR', rate: '0.005316', rateDate: null, source: 'manual_rate' as const }
+    const report = buildReport({ expenses: [expense('Warung', 53_160, '2026-11-02', 'me', ['me'], { fx })], scope: PUNE, basis: 'paid', nameOf })
+    expect(reportCsv(report).split('\r\n')[1]).toContain(',IDR,0.005316,')
   })
 })

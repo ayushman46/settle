@@ -9,7 +9,9 @@ import { FriendAvatar, friendLabel } from '../../kit/index-a'
 import { useMediaQuery } from '../../kit/media'
 import { haptic } from '../../lib/haptics'
 import { formatMoney } from '../../lib/money'
-import { groupSpinSlices, spin, type SpinMode, type SpinSlice } from './engine'
+import { formFromUsual, usualLabel } from '../usual/engine'
+import { getUsualSplit } from '../usual/store'
+import { groupSpinSlices, percentText, spin, wheelLabels, type SpinMode, type SpinSlice } from './engine'
 import styles from './Spin.module.css'
 
 export interface SpinSheetProps {
@@ -22,9 +24,6 @@ export interface SpinSheetProps {
 export const SPIN_MS = 3200
 /** Whole turns before it settles. */
 const TURNS = 5
-/** Names are written on the wheel only while there's room. */
-const MAX_LABELLED = 12
-const MIN_LABEL_DEGREES = 22
 /** A banner title is at most 80 characters. */
 const MAX_BANNER_NAME = 50
 
@@ -91,7 +90,17 @@ export function SpinSheet({ group: given, open, onClose }: SpinSheetProps) {
 
   const money = (paise: number): string => formatMoney(paise, group.currency, { trimZeros: true })
   const anyBehind = everyone.some((s) => s.behind > 0)
-  const explain = mode === 'luck' ? t('spin.explain.luck') : slices.some((s) => s.behind > 0) ? t('spin.explain.fair', { group: group.name }) : t('spin.explain.fair.even', { group: group.name })
+  const inBehind = slices.some((s) => s.behind > 0)
+  // With fewer than two in, the only thing worth saying is that two are needed.
+  const explain =
+    slices.length < 2
+      ? null
+      : mode === 'luck'
+        ? t('spin.explain.luck')
+        : inBehind
+          ? t('spin.explain.fair', { group: group.name })
+          : t('spin.explain.fair.even', { group: group.name })
+  const explainAhead = slices.length >= 2 && mode === 'fair' && inBehind && slices.some((s) => s.behind === 0) ? t('spin.explain.ahead') : null
   const canSpin = slices.length >= 2 && phase !== 'spinning'
 
   const finish = (id: string): void => {
@@ -133,17 +142,20 @@ export function SpinSheet({ group: given, open, onClose }: SpinSheetProps) {
   const addBill = (id: string): void => {
     const name = nameOf(id)
     const short = name.length > MAX_BANNER_NAME ? `${name.slice(0, MAX_BANNER_NAME - 1)}…` : name
+    // Split the way every new expense in this group starts: its usual split, when it has one that fits.
+    const usual = getUsualSplit(group.id)
+    const usualForm = usual ? formFromUsual(usual, group.memberIds) : null
     setSplitPrefill({
       groupId: group.id,
       payerId: id,
-      mode: 'equal',
+      mode: usualForm ? usualForm.mode : 'equal',
       currency: group.currency,
-      participants: group.memberIds.map((friendId) => ({ friendId, input: null })),
+      participants: usualForm ? usualForm.participants : group.memberIds.map((friendId) => ({ friendId, input: null })),
       source: 'manual',
       banner: {
         icon: 'sparkles',
         title: id === ME_ID ? t('spin.banner.title.you') : t('spin.banner.title', { name: short }),
-        body: t('spin.banner.body'),
+        body: usual && usualForm ? t('spin.banner.body.usual', { label: usualLabel(usual, group.memberIds) }) : t('spin.banner.body'),
       },
     })
     haptic('tap')
@@ -151,7 +163,7 @@ export function SpinSheet({ group: given, open, onClose }: SpinSheetProps) {
     navigate(`/app/split/new?from=spin&group=${encodeURIComponent(group.id)}`)
   }
 
-  const labelled = slices.length <= MAX_LABELLED
+  const labels = wheelLabels(slices, nameOf, rotation)
   const status = phase === 'spinning' ? t('spin.spinning') : phase === 'done' && winner ? (winner === ME_ID ? t('spin.result.you') : t('spin.result', { name: nameOf(winner) })) : ''
   const wheelStyle: CSSProperties = { background: wheelGradient(slices, colorOf), transform: `rotate(${rotation}deg)` }
 
@@ -197,7 +209,8 @@ export function SpinSheet({ group: given, open, onClose }: SpinSheetProps) {
             ]}
           />
         )}
-        <p className={styles.fine}>{explain}</p>
+        {explain && <p className={styles.fine}>{explain}</p>}
+        {explainAhead && <p className={styles.fine}>{explainAhead}</p>}
 
         <div className={styles.stage}>
           <span className={styles.pointer} aria-hidden="true" />
@@ -206,22 +219,21 @@ export function SpinSheet({ group: given, open, onClose }: SpinSheetProps) {
             data-animate={canAnimate(reduced) || undefined}
             style={wheelStyle}
             role="img"
-            aria-label={t('spin.wheel.aria', { chances: slices.map((s) => t('spin.wheel.chance', { name: nameOf(s.id), percent: s.percent })).join(', ') })}
+            aria-label={t('spin.wheel.aria', { chances: slices.map((s) => t('spin.wheel.chance', { name: nameOf(s.id), percent: percentText(s.percent) })).join(', ') })}
           >
-            {labelled &&
-              slices.length > 1 &&
-              slices.map((s) =>
-                s.end - s.start >= MIN_LABEL_DEGREES ? (
-                  <span
-                    key={s.id}
-                    className={styles.label}
-                    style={{ transform: `rotate(${(s.start + s.end) / 2}deg)`, color: `var(--avatar-${colorOf(s.id)}-ink)` }}
-                    aria-hidden="true"
-                  >
-                    <span className={styles.labelText}>{nameOf(s.id)}</span>
-                  </span>
-                ) : null,
-              )}
+            {labels.map((label) => (
+              <span
+                key={label.id}
+                className={styles.label}
+                style={{ transform: `rotate(${label.angle - 90}deg)`, color: `var(--avatar-${colorOf(label.id)}-ink)` }}
+                aria-hidden="true"
+                data-testid="spin-label"
+              >
+                <span className={styles.labelText} data-flip={label.flip || undefined}>
+                  {label.text}
+                </span>
+              </span>
+            ))}
           </div>
         </div>
 
@@ -234,12 +246,13 @@ export function SpinSheet({ group: given, open, onClose }: SpinSheetProps) {
           <h3 id="spin-people" className={styles.heading}>
             {t('spin.people.title')}
           </h3>
+          {leftOut.size > 0 && <p className={styles.fine}>{t('spin.leftOut.note')}</p>}
           <ul className={styles.people} aria-label={t('spin.people.aria')}>
             {everyone.map((s) => {
               const out = leftOut.has(s.id)
               const slice = slices.find((x) => x.id === s.id)
               const name = nameOf(s.id)
-              const percent = slice?.percent ?? 0
+              const percent = percentText(slice?.percent ?? 0)
               return (
                 <li key={s.id}>
                   <button

@@ -3,7 +3,7 @@
  * Pure rules only (no screen, no storage): the rest of the shagun book builds on this.
  *
  * Rule: take what they gave you, grow it by 6% a year since then, and round up to an auspicious
- * amount that ends in 1 (₹11, ₹21, ₹51, ₹101, then ₹501, ₹1,101, ₹2,101, ₹5,101 …). The answer is
+ * amount that ends in 1 (₹11, ₹21, ₹51, ₹101, ₹201, ₹251, then ₹301, ₹501, ₹1,101, ₹2,101 …). The answer is
  * never below what they gave.
  */
 
@@ -13,13 +13,19 @@ export const SHAGUN_GROWTH_PER_YEAR = 0.06
 /** Small amounts use these; everything above uses "hundreds + 1". */
 const SMALL_AUSPICIOUS = [11, 21, 51, 101] as const
 
+/** Customary amounts between the hundreds that people put in envelopes too (₹251 for ₹250, not ₹301). */
+const CUSTOMARY = [251] as const
+
 /** The smallest auspicious amount (ends in 1, in rupees) that is at least `rupees`. */
 export function auspiciousAtLeast(rupees: number): number {
   if (!Number.isFinite(rupees) || rupees <= 0) return SMALL_AUSPICIOUS[0]
   const small = SMALL_AUSPICIOUS.find((candidate) => candidate >= rupees)
   if (small !== undefined) return small
   // The smallest "hundreds + 1" that is not below the amount: 1,101 for 1,100 and for 1,101 itself.
-  return Math.ceil((rupees - 1) / 100) * 100 + 1
+  const hundreds = Math.ceil((rupees - 1) / 100) * 100 + 1
+  // Or a customary amount in between, when it's nearer (still ends in 1, still not below).
+  const customary = CUSTOMARY.find((candidate) => candidate >= rupees && candidate < hundreds)
+  return customary ?? hundreds
 }
 
 /** Whole calendar years from `earlier` to `later` (UTC dates); never negative. */

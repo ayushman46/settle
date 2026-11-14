@@ -17,7 +17,7 @@ export const CATEGORY_META: Readonly<Record<CategoryId, CategoryMeta>> = {
     label: 'Food & drinks',
     emoji: '🍽️',
     keywords: [
-      'food', 'dinner', 'lunch', 'breakfast', 'brunch', 'meal', 'supper', 'restaurant', 'cafe',
+      'food', 'water bottle', 'mineral water', 'bisleri', 'dinner', 'lunch', 'breakfast', 'brunch', 'meal', 'supper', 'restaurant', 'cafe',
       'coffee', 'tea', 'chai', 'snack', 'pizza', 'burger', 'biryani', 'dosa', 'thali', 'momos',
       'dessert', 'ice cream', 'bakery', 'buffet', 'takeaway', 'drinks', 'beer', 'bar', 'pub',
       'swiggy', 'zomato', 'eatsure', 'eatfit', 'dominos', 'domino s', 'mcdonalds', 'mcdonald s',
@@ -66,7 +66,8 @@ export const CATEGORY_META: Readonly<Record<CategoryId, CategoryMeta>> = {
       'vistara', 'akasa', 'spicejet', 'makemytrip', 'make my trip', 'mmt', 'goibibo', 'cleartrip',
       'yatra', 'ixigo', 'easemytrip', 'hotel', 'hotels', 'oyo', 'airbnb', 'resort', 'hostel',
       'homestay', 'booking com', 'agoda', 'treebo', 'fabhotels', 'zostel', 'train', 'irctc',
-      'redbus', 'holiday', 'vacation', 'visa', 'tour', 'sightseeing', 'stay',
+      'redbus', 'holiday', 'vacation', 'visa', 'tour', 'sightseeing', 'stay', 'villa', 'guesthouse',
+      'guest house', 'lodge', 'cottage',
     ],
   },
   transport: {
@@ -75,7 +76,8 @@ export const CATEGORY_META: Readonly<Record<CategoryId, CategoryMeta>> = {
     keywords: [
       'uber', 'ola', 'rapido', 'namma yatri', 'blusmart', 'cab', 'taxi', 'auto', 'rickshaw',
       'metro', 'bus', 'local train', 'petrol', 'diesel', 'fuel', 'cng', 'ev charging', 'parking',
-      'toll', 'fastag', 'ride', 'commute',
+      'toll', 'fastag', 'ride', 'commute', 'scooter', 'scooters', 'scooty', 'bike rental', 'bike rent',
+      'ferry', 'jeep',
     ],
   },
   shopping: {

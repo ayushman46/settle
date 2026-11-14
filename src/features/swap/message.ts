@@ -9,7 +9,7 @@ import { isValidUpiId, normalizeUpiId } from '../../lib/upi'
 import { encodePayLink, payLinkFor, type PayLinkPayload } from '../../share/payLink'
 import { friendFallback } from '../../share/fallbacks'
 import { outsideName } from '../../share/names'
-import type { Swap } from './engine'
+import { swapOutcome, type Swap } from './engine'
 
 type FriendsById = Readonly<Record<string, Friend>>
 
@@ -60,19 +60,36 @@ export async function swapPayLink(
   return payload ? encodePayLink(payload, origin) : null
 }
 
-/** The message to the person who owes you. Names as others know them (never "You"). */
+/** What's open today with the swap's two people: `owed` they owe you, `owe` you owe the payee (both positive). */
+export interface SwapOpen {
+  owed: number
+  owe: number
+}
+
+/**
+ * The message to the person who owes you. Names as others know them (never "You"). With `open`
+ * it says exactly who is cleared and what's left; without it, only the ask (never a guess).
+ */
 export function swapMessage(
   swap: Swap,
   friendsById: FriendsById,
   profile: Pick<Profile, 'name' | 'upiId'>,
   currency: string,
   link: string | null,
+  open?: SwapOpen,
 ): string {
   const from = outsideName(swap.fromId, friendsById, profile, friendFallback())
   const to = outsideName(swap.toId, friendsById, profile, friendFallback())
-  const amount = formatMoney(swap.amount, currency, { trimZeros: true })
+  const money = (minor: number): string => formatMoney(minor, currency, { trimZeros: true })
+  const amount = money(swap.amount)
   const upi = swapUpiId(swap.toId, friendsById, profile)
-  const lines = [t('swap.message', { from, to, amount })]
+  let ask = t('swap.message', { from, to, amount })
+  if (open) {
+    const o = swapOutcome(swap, open.owed, open.owe)
+    const vars = { from, to, amount, owed: money(open.owed), owe: money(open.owe), fromLeft: money(o.fromLeft), toLeft: money(o.toLeft) }
+    ask = t(`swap.message.${o.cleared}`, vars)
+  }
+  const lines = [ask]
   if (upi) lines.push(t('swap.message.upi', { to, upi }))
   if (link) lines.push(t('swap.message.link', { to, link }))
   return lines.join('\n')

@@ -45,9 +45,49 @@ describe('Assign step — doesn’t drink, vegetarian', () => {
     expect(screen.getByText('Ben doesn’t drink: taken off 1 drink (₹900).')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'No alcohol for Ben' })).toHaveAttribute('aria-pressed', 'true')
 
-    await user.click(screen.getByRole('button', { name: 'Undo' }))
+    await user.click(screen.getByRole('button', { name: 'Put them back' }))
     expect(probe.current.assignments.beer).toEqual({ a: 1, b: 1, c: 1 })
     expect(screen.queryByText(/Ben doesn’t drink/)).not.toBeInTheDocument()
+    // Says what it did, not just "put back".
+    expect(await screen.findByText('Undone: Ben is back on 1 item.')).toBeInTheDocument()
+  })
+
+  it('keeps a hand-made choice when that person’s toggle goes off and on again', async () => {
+    setDiet('b', 'alcohol', true)
+    const WINE = { id: 'wine', name: 'Red Wine', quantity: 1, amount: 60_000 }
+    const base = sampleSession('assign', { people: [AISHA, BEN, CHEN] })
+    const withDrinks = { ...base, items: [...base.items, BEER, WINE] }
+    const start = { ...withDrinks, assignments: assignAll(withDrinks, { a: 1, b: 1, c: 1 }) }
+    const { user, probe } = renderScreen(<AssignScreen />, start)
+    expect(probe.current.assignments.beer).toEqual({ a: 1, c: 1 })
+    expect(probe.current.assignments.wine).toEqual({ a: 1, c: 1 })
+
+    // Ben did have some beer: put back by hand.
+    await user.click(screen.getByRole('button', { name: /^Kingfisher Pitcher/ }))
+    const dialog = screen.getByRole('dialog', { name: 'Kingfisher Pitcher' })
+    await user.click(within(dialog).getByRole('button', { name: /^Ben\b/ }))
+    await user.click(within(dialog).getByRole('button', { name: 'Close' }))
+    await historyIdle()
+    expect(probe.current.assignments.beer).toEqual({ a: 1, b: 1, c: 1 })
+
+    await user.click(screen.getByRole('button', { name: 'No alcohol for Ben' }))
+    expect(probe.current.assignments.wine).toEqual({ a: 1, b: 1, c: 1 })
+    await user.click(screen.getByRole('button', { name: 'No alcohol for Ben' }))
+    // The rule applies again to the wine, but the beer Ben was put back on by hand stays.
+    expect(probe.current.assignments.wine).toEqual({ a: 1, c: 1 })
+    expect(probe.current.assignments.beer).toEqual({ a: 1, b: 1, c: 1 })
+  })
+
+  it('says when remembered people come off, while nobody is on the items yet', () => {
+    setDiet('b', 'alcohol', true)
+    renderScreen(<AssignScreen />, session({}, false))
+    expect(screen.getByText('Nothing has come off yet. It happens as soon as people are put on the items.')).toBeInTheDocument()
+  })
+
+  it('says nothing of the kind once people are on the items', () => {
+    setDiet('b', 'alcohol', true)
+    renderScreen(<AssignScreen />, session())
+    expect(screen.queryByText(/Nothing has come off yet/)).not.toBeInTheDocument()
   })
 
   it('a toggle applies at once, is remembered, and switching it off puts them back', async () => {

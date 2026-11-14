@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import type { CategoryId, Expense, Group, Settlement } from '../../domain/types'
-import { buildStory, hasBurst, hasStory, looksDone, percents, weekdayOf, type Slide } from './engine'
+import { wholePercents } from '../../components/chartMath'
+import { groupTotals } from '../groups/groupView'
+import { buildStory, hasBurst, hasStory, looksDone, percents, repeatKey, weekdayOf, type Slide } from './engine'
 
 const NAMES: Record<string, string> = { me: 'Ayush', riya: 'Riya', sam: 'Sam', neha: 'Neha', zed: 'Aarav' }
 const nameOf = (id: string): string => NAMES[id] ?? id
@@ -66,7 +68,7 @@ describe('the story', () => {
     expect(find(slides, 'headline')).toEqual({ kind: 'headline', total, days: 4, people: 3, count: 9, from: '2026-11-01', to: '2026-11-04' })
     expect(find(slides, 'perDay')).toEqual({ kind: 'perDay', perDay: Math.round(total / 4), days: 4, people: 3, perPersonPerDay: Math.round(total / 4 / 3) })
     // 2 Nov: ₹9,000 scuba + ₹4,000 dinner + ₹90 chai beats 1 Nov's hotel.
-    expect(find(slides, 'bigDay')).toEqual({ kind: 'bigDay', date: '2026-11-02', total: 1_309_000, count: 3, titles: ['Scuba', 'Dinner', 'Chai'] })
+    expect(find(slides, 'bigDay')).toEqual({ kind: 'bigDay', date: '2026-11-02', total: 1_309_000, count: 3, titles: ['Scuba', 'Dinner', 'Chai'], all: true })
     expect(find(slides, 'bigBill')).toMatchObject({ title: 'Hotel', total: 1_200_000, payerId: 'riya', date: '2026-11-01' })
     expect(find(slides, 'fronted')).toEqual({ kind: 'fronted', id: 'riya', amount: 800_000 + 6_000 })
     expect(find(slides, 'repeat')).toEqual({ kind: 'repeat', title: 'Chai', count: 4, total: 36_000 })
@@ -81,6 +83,64 @@ describe('the story', () => {
     expect(shares.map((s) => s.id)).toEqual(['travel', 'entertainment', 'food', null])
     expect(shares.reduce((s, x) => s + x.percent, 0)).toBe(100)
     expect(shares.reduce((s, x) => s + x.total, 0)).toBe(find(story(goaTrip()), 'headline')!.total)
+  })
+
+  it('where the money went: the very percents the Totals tab shows, the rest as the sum of its parts', () => {
+    // The panel's Goa: ₹8,000 hotel is 33.5%, which the Totals tab shows as 34%.
+    const trip = [
+      expense('Hotel', 800_000, '2026-11-01', 'riya', ALL, cat('travel')),
+      expense('Food', 774_800, '2026-11-01', 'me', ALL),
+      expense('Shopping', 405_600, '2026-11-02', 'sam', ALL, cat('other')),
+      expense('Scooter', 214_700, '2026-11-02', 'me', ALL, cat('transport')),
+      expense('Gift', 190_900, '2026-11-03', 'me', ALL, cat('gift')),
+    ]
+    const totals = groupTotals(group(), trip)
+    expect(wholePercents(totals.byCategory.map((c) => c.amount))).toEqual([34, 32, 17, 9, 8])
+    const shares = find(story(trip), 'categories')!.shares
+    expect(shares.map((s) => [s.id, s.percent])).toEqual([['travel', 34], ['food', 32], ['other', 17], [null, 17]])
+    expect(shares.reduce((s, x) => s + x.total, 0)).toBe(totals.spent)
+  })
+
+  it('where the money went: a lone fourth by its own name, and no 0% rows', () => {
+    const trip = [
+      expense('Hotel', 1_000_000, '2026-11-01', 'riya', ALL, cat('travel')),
+      expense('Food', 300_000, '2026-11-01', 'me', ALL),
+      expense('Pen', 2_000, '2026-11-02', 'sam', ALL, cat('other')),
+      expense('Auto', 1_000, '2026-11-02', 'me', ALL, cat('transport')),
+    ]
+    expect(find(story(trip), 'categories')!.shares.map((s) => [s.id, s.percent])).toEqual([['travel', 77], ['food', 23]])
+    // Four categories, none lumped together.
+    const four = [...trip.slice(0, 2), expense('Shopping', 200_000, '2026-11-02', 'sam', ALL, cat('other')), expense('Cab', 100_000, '2026-11-02', 'me', ALL, cat('transport'))]
+    expect(find(story(four), 'categories')!.shares.map((s) => s.id)).toEqual(['travel', 'food', 'other', 'transport'])
+    // Nearly everything on one thing: nothing to compare, no slide.
+    const one = [expense('Hotel', 1_000_000, '2026-11-01', 'riya', ALL, cat('travel')), expense('Pen', 2_000, '2026-11-02', 'sam', ALL, cat('other')), expense('Gum', 1_000, '2026-11-02', 'me', ALL, cat('food'))]
+    expect(find(story(one), 'categories')).toBeUndefined()
+  })
+
+  it('on repeat: the same thing counts however it was written, and the sum is of what was counted', () => {
+    const slides = story([
+      expense('Chai at the airport', 6_000, '2026-11-01', 'me', ALL),
+      expense('Chai', 8_000, '2026-11-01', 'riya', ALL),
+      expense('chai', 10_000, '2026-11-02', 'sam', ALL),
+      expense('Chai', 12_000, '2026-11-03', 'me', ALL),
+      expense('Dinner', 90_000, '2026-11-03', 'me', ALL),
+    ])
+    expect(find(slides, 'repeat')).toEqual({ kind: 'repeat', title: 'Chai', count: 4, total: 36_000 })
+    expect(repeatKey('2 Samosas from Haldiram’s')).toEqual({ key: 'samosas', head: '2 Samosas' })
+    expect(repeatKey('The beer in Panjim')).toEqual({ key: 'beer', head: 'The beer' })
+    expect(repeatKey('At the beach')).toEqual({ key: 'at', head: 'At the beach' })
+    expect(repeatKey('  ')).toBeNull()
+  })
+
+  it('the big day says when it names only some of its bills', () => {
+    const slides = story([
+      expense('Hotel', 800_000, '2026-11-09', 'riya', ALL, cat('travel')),
+      expense('Lunch', 160_000, '2026-11-09', 'me', ALL),
+      expense('Scooter rental', 90_000, '2026-11-09', 'sam', ALL, cat('transport')),
+      expense('Chai', 8_000, '2026-11-09', 'me', ALL),
+      expense('Dinner', 100_000, '2026-11-10', 'me', ALL),
+    ])
+    expect(find(slides, 'bigDay')).toMatchObject({ count: 4, titles: ['Hotel', 'Lunch', 'Scooter rental'], all: false })
   })
 
   it('percents always add up to 100, even in thirds', () => {
@@ -166,7 +226,7 @@ describe('the story', () => {
 
   it('huge lists stay quick and exact', () => {
     const many: Expense[] = []
-    for (let i = 0; i < 3000; i++) many.push(expense(i % 3 === 0 ? 'Chai' : `Thing ${i}`, 1_000 + (i % 97), `2026-${String(1 + (i % 12)).padStart(2, '0')}-${String(1 + (i % 28)).padStart(2, '0')}`, ALL[i % 3]!, ALL))
+    for (let i = 0; i < 3000; i++) many.push(expense(i % 3 === 0 ? 'Chai' : `Thing${i}`, 1_000 + (i % 97), `2026-${String(1 + (i % 12)).padStart(2, '0')}-${String(1 + (i % 28)).padStart(2, '0')}`, ALL[i % 3]!, ALL))
     const slides = story(many)
     expect(find(slides, 'headline')!.total).toBe(many.reduce((s, e) => s + e.total, 0))
     expect(find(slides, 'repeat')).toMatchObject({ title: 'Chai', count: 1000 })
@@ -214,6 +274,13 @@ describe('looks done', () => {
     // Pay everything back.
     const sets = [paid('me', 'riya', 150_000, '2026-11-11'), paid('sam', 'riya', 210_000, '2026-11-11')]
     expect(looksDone({ ...g, settlements: sets }, e, TODAY, 'me')).toBeNull()
+  })
+
+  it('a group made under two days ago never looks done, however old its bills (made from an old chat)', () => {
+    const made = (y: number, m: number, d: number) => group({ createdAt: new Date(y, m - 1, d, 12).getTime() })
+    expect(looksDone(made(2026, 11, 14), burst('2026-11-05'), TODAY, 'me')).toBeNull()
+    expect(looksDone(made(2026, 11, 13), burst('2026-11-05'), TODAY, 'me')).toBeNull()
+    expect(looksDone(made(2026, 11, 12), burst('2026-11-05'), TODAY, 'me')).not.toBeNull()
   })
 
   it('archived groups never look done', () => {

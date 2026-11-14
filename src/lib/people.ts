@@ -4,7 +4,7 @@ import { AVATAR_COLORS, type Person } from '../types'
 export const MAX_PEOPLE = 20
 
 /** Longest name we keep, in user-perceived characters. */
-export const MAX_NAME_LENGTH = 24
+export const MAX_NAME_LENGTH = 40
 
 const segmenter: Intl.Segmenter | null =
   typeof Intl !== 'undefined' && typeof Intl.Segmenter === 'function'

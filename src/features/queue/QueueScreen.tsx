@@ -11,7 +11,7 @@ import { UpiPaySheet } from '../../kit/UpiPaySheet'
 import { haptic } from '../../lib/haptics'
 import { formatMoney } from '../../lib/money'
 import { firstName } from '../../share/text'
-import { friendBalance, settleWithFriend, singleSourceTitle, sourcesTitle } from '../friends/friendBalance'
+import { friendBalance, settleWithFriend, singleSourceTitle, type FriendSource } from '../friends/friendBalance'
 import { payQueue, queueTotal, type QueueEntry } from './engine'
 import styles from './Queue.module.css'
 
@@ -19,6 +19,20 @@ interface Done {
   friendId: string
   name: string
   amount: number
+  /** How it was cleared: through the UPI sheet, or marked paid in cash. */
+  method: 'upi' | 'cash'
+}
+
+/**
+ * What the money is for, worded so it can't be read as how to pay (a split called "Cash" reads
+ * as “For the split “Cash””, never “For Cash”). A group says it's updated too.
+ */
+function queueFor(sources: readonly FriendSource[], t: ReturnType<typeof useT>): string | null {
+  if (sources.length === 0) return null
+  const only = sources.length === 1 ? sources[0] : undefined
+  if (only?.kind === 'group') return t('queue.for.group', { group: only.group.name })
+  if (only?.kind === 'splits' && only.titles.length === 1) return t('queue.for.split', { title: only.titles[0] ?? '' })
+  return t('queue.for.several')
 }
 
 /**
@@ -59,7 +73,8 @@ export function QueueScreen() {
     const name = nameOf(entry)
     const undo = settleWithFriend(entry.friendId, sourcesFor(entry.friendId), { method, date: today() })
     haptic('success')
-    setDone((list) => [...list.filter((d) => d.friendId !== entry.friendId), { friendId: entry.friendId, name, amount: entry.amount }])
+    const how = method === 'cash' ? 'cash' : 'upi'
+    setDone((list) => [...list.filter((d) => d.friendId !== entry.friendId), { friendId: entry.friendId, name, amount: entry.amount, method: how }])
     const next = pending.find((e) => e.friendId !== entry.friendId) ?? null
     setBurst({ name, next: next ? nameOf(next) : null, key: Date.now() })
     toast(method === 'cash' ? t('queue.toast.cash', { name, amount: money(entry.amount) }) : t('queue.toast.paid', { name, amount: money(entry.amount) }), {
@@ -117,12 +132,20 @@ export function QueueScreen() {
     )
   }
 
+  const forLine = queueFor(currentSources, t)
   const total = done.length + queue.length
   const position = Math.min(total, done.length + passed.length + 1)
 
   return (
     <Screen header={header} contentClassName={styles.content}>
-      <PageTitle title={t('queue.title')} subtitle={t('queue.subtitle', { count: queue.length, amount: money(queueTotal(queue)) })} />
+      <PageTitle
+        title={t('queue.title')}
+        subtitle={
+          current
+            ? t('queue.subtitle', { count: queue.length, amount: money(queueTotal(queue)) })
+            : t('queue.subtitle.skipped', { count: passed.length, amount: money(queueTotal(passed)) })
+        }
+      />
       {current ? (
         <>
           <div className={styles.progress}>
@@ -137,7 +160,7 @@ export function QueueScreen() {
                 <FriendAvatar friendId={current.friendId} size="lg" />
                 <div className={styles.whoText}>
                   <h2 className={styles.name}>{nameOf(current)}</h2>
-                  <p className={styles.fine}>{t('queue.for', { what: sourcesTitle(currentSources) })}</p>
+                  {forLine && <p className={styles.fine}>{forLine}</p>}
                 </div>
               </div>
               <Money value={current.amount} currency={currency} size="xl" trimZeros className={styles.amount} />
@@ -189,7 +212,7 @@ export function QueueScreen() {
             <h2 className={styles.name}>{t('queue.skipped.title', { count: passed.length })}</h2>
             <p className={styles.fine}>{t('queue.skipped.body', { names: passed.map(nameOf).join(', '), amount: money(queueTotal(passed)) })}</p>
             <Button block onClick={() => setSkipped([])}>
-              {t('queue.skipped.again')}
+              {t('queue.skipped.again', { count: passed.length })}
             </Button>
           </div>
         </Card>
@@ -211,7 +234,10 @@ function DoneList({ done, currency }: { done: readonly Done[]; currency: string 
         {done.map((d) => (
           <li key={d.friendId} className={styles.item}>
             <CircleCheck className={styles.tick} aria-hidden="true" />
-            <span className={styles.itemName}>{d.name}</span>
+            <span className={styles.doneText}>
+              <span className={styles.itemName}>{d.name}</span>
+              <span className={styles.fine}>{d.method === 'cash' ? t('queue.done.cash') : t('queue.done.upi')}</span>
+            </span>
             <Money value={d.amount} currency={currency} trimZeros tone="positive" />
           </li>
         ))}

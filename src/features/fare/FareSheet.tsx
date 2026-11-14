@@ -1,6 +1,6 @@
 import { useId, useMemo, useState } from 'react'
 import { Check, ChevronDown, RotateCcw } from 'lucide-react'
-import { Avatar, BottomSheet, Button, Switch, TextField } from '../../components'
+import { Avatar, Banner, BottomSheet, Button, Switch, TextField } from '../../components'
 import { useT } from '../../i18n'
 import { formatMoney } from '../../lib/money'
 import { fairFare } from './engine'
@@ -58,14 +58,20 @@ export function FareSheet({ open, onClose, people, total, currency, onApply }: F
   const stopOf = (pid: string) => stops.findIndex((s) => s.includes(pid))
   const legCount = result.legs.length
   const totalKm = result.byKm ? result.legs.reduce((sum, leg) => sum + (leg.km ?? 0), 0) : 0
-  const someKm = km.some((v, i) => v !== null && i < legCount)
+  // Anything typed in a leg's box, a 0 included: then a leg left blank (or 0) must not go unnoticed.
+  const someKm = kmText.some((text, i) => i < legCount && text.trim() !== '')
+  const missingKm = result.legs.filter((leg) => leg.km === null).length
+  const kmIgnored = kmOpen && someKm && !result.byKm && legCount > 1
   const money = (minor: number) => formatMoney(minor, currency, { trimZeros: true })
   const list = new Intl.ListFormat(undefined, { type: 'conjunction' })
 
   const tap = (pid: string) => {
     const at = stopOf(pid)
     if (at >= 0) {
-      setStops((all) => all.map((s) => s.filter((x) => x !== pid)).filter((s) => s.length > 0))
+      const rest = stops.map((s) => s.filter((x) => x !== pid)).filter((s) => s.length > 0)
+      setStops(rest)
+      // Nobody tapped any more: the switch is hidden, so it starts off again.
+      if (rest.length === 0) setSame(false)
       return
     }
     setStops((all) => {
@@ -126,7 +132,14 @@ export function FareSheet({ open, onClose, people, total, currency, onApply }: F
             <Switch checked={same} onChange={setSame} label={t('fare.same.label')} description={t('fare.same.description')} />
           )}
           {stops.length > 0 && (
-            <Button variant="ghost" size="sm" iconStart={<RotateCcw />} onClick={() => setStops([])}>
+            <Button
+              variant="ghost"
+              iconStart={<RotateCcw />}
+              onClick={() => {
+                setStops([])
+                setSame(false)
+              }}
+            >
               {t('fare.reset')}
             </Button>
           )}
@@ -135,7 +148,6 @@ export function FareSheet({ open, onClose, people, total, currency, onApply }: F
         <div className={styles.km}>
           <Button
             variant="ghost"
-            size="sm"
             iconEnd={<ChevronDown className={kmOpen ? styles.flip : undefined} />}
             aria-expanded={kmOpen}
             aria-controls={`${id}-km`}
@@ -145,7 +157,7 @@ export function FareSheet({ open, onClose, people, total, currency, onApply }: F
           </Button>
           {kmOpen && (
             <div id={`${id}-km`} className={styles.kmFields}>
-              <p className={styles.hint}>{someKm && !result.byKm && legCount > 1 ? t('fare.km.partial') : t('fare.km.hint')}</p>
+              <p className={styles.hint}>{t('fare.km.hint')}</p>
               {result.legs.map((leg, i) => (
                 <TextField
                   key={i}
@@ -156,6 +168,7 @@ export function FareSheet({ open, onClose, people, total, currency, onApply }: F
                       : t('fare.km.leg', { n: i + 1, names: list.format(leg.offIds.map(nameOf)) })
                   }
                   value={kmText[i] ?? ''}
+                  error={kmIgnored && leg.km === null ? t('fare.km.missing') : undefined}
                   onChange={(e) => {
                     const value = e.target.value
                     setKmText((all) => {
@@ -173,6 +186,11 @@ export function FareSheet({ open, onClose, people, total, currency, onApply }: F
 
         <section className={styles.result} aria-label={t('fare.result.aria')}>
           {result.equal && <p className={styles.hint}>{t('fare.equal')}</p>}
+          {kmIgnored && (
+            <Banner tone="warning" title={t('fare.km.ignored.title')}>
+              {t('fare.km.ignored', { count: missingKm })}
+            </Banner>
+          )}
           <div role="status">
           <ul className={styles.amounts}>
             {people.map((p) => (

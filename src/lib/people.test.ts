@@ -57,9 +57,9 @@ describe('normalizeName', () => {
   })
 
   it('caps the length in characters', () => {
-    const long = 'A'.repeat(40)
+    const long = 'A'.repeat(70)
     expect(normalizeName(long)).toHaveLength(MAX_NAME_LENGTH)
-    expect(graphemes(normalizeName('😀'.repeat(30)))).toHaveLength(MAX_NAME_LENGTH)
+    expect(graphemes(normalizeName('😀'.repeat(60)))).toHaveLength(MAX_NAME_LENGTH)
   })
 })
 

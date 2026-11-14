@@ -1,7 +1,21 @@
 import { describe, expect, it } from 'vitest'
 import type { Expense, Group } from '../../domain/types'
 import { splitAmount } from '../../engine/split'
-import { fixUpKey, isStayExpense, nightsIn, nightsPlan, outsideStay, presenceFixUps, tripRange, usableStay, withoutPerson, type Stays } from './engine'
+import {
+  fixUpKey,
+  isSplitByNights,
+  isStayExpense,
+  nightsIn,
+  nightsPlan,
+  outsideStay,
+  presenceFixUps,
+  spreadsPart,
+  tripRange,
+  usableStay,
+  withoutPerson,
+  type Anchors,
+  type Stays,
+} from './engine'
 
 const NAMES: Record<string, string> = {
   me: 'Ayush',
@@ -53,14 +67,17 @@ const group = (more: Partial<Group> = {}): Group => ({
   archived: false,
   ...more,
 })
-const fix = (expenses: Expense[], stays: Stays, more: { group?: Group; declined?: string[] } = {}) =>
+const fix = (expenses: Expense[], stays: Stays, more: { group?: Group; declined?: string[]; anchors?: Anchors } = {}) =>
   presenceFixUps({
     group: more.group ?? group(),
     expenses,
     stays,
     declined: more.declined,
     nameOf,
+    anchors: more.anchors,
   })
+const sharesOf = (e: Expense, participants = e.participants) =>
+  splitAmount({ total: e.total, currency: e.currency, mode: e.mode === 'items' ? 'equal' : e.mode, participants, payerId: e.payerId }).shares
 const ALL = ['me', 'riya', 'sam']
 
 describe('stays', () => {
@@ -138,30 +155,74 @@ describe('came late, left early', () => {
     ])
   })
 
-  it('other splits and itemised bills are listed to fix by hand', () => {
-    const exact = expense('Shopping', 50_000, '2026-11-10', 'me', ALL, {
-      mode: 'exact',
-    })
-    const percent = expense('Fuel', 50_000, '2026-11-10', 'me', ALL, {
-      mode: 'percent',
-    })
-    const had = expense('Bar', 50_000, '2026-11-10', 'me', ALL, {
-      mode: 'had',
-    })
+  it('percent, exact and “had” splits are one tap too; itemised bills are listed to fix by hand', () => {
+    const typedIn = (inputs: number[]) => ({ participants: ALL.map((friendId, i) => ({ friendId, input: inputs[i] ?? 0 })) })
+    const exact = expense('Shopping', 50_000, '2026-11-10', 'me', ALL, { mode: 'exact', ...typedIn([20_000, 20_000, 10_000]) })
+    const percent = expense('Fuel', 50_000, '2026-11-10', 'me', ALL, { mode: 'percent', ...typedIn([4500, 4500, 1000]) })
+    const had = expense('Bar', 50_000, '2026-11-10', 'me', ALL, { mode: 'had', ...typedIn([20_000, 10_000, 15_000]) })
     const bill = expense('Thali place', 50_000, '2026-11-10', 'me', ALL, {
       kind: 'bill',
       mode: 'items',
     })
-    const out = fix([exact, percent, had, bill], {
+    // Sam was the only one who had anything: nobody to spread it over.
+    const onlySam = expense('Sam’s beer', 50_000, '2026-11-10', 'me', ALL, { mode: 'had', ...typedIn([0, 0, 50_000]) })
+    const out = fix([exact, percent, had, bill, onlySam], {
       sam: { from: '2026-11-12', to: null },
     })
-    expect(out[0]!.safe).toEqual([])
+    expect(out[0]!.safe.map((e) => e.title).sort()).toEqual(['Bar', 'Fuel', 'Shopping'])
+    expect(out[0]!.safe.every(spreadsPart)).toBe(true)
     expect(Object.fromEntries(out[0]!.byHand.map((h) => [h.expense.title, h.reason]))).toEqual({
-      Shopping: 'mode',
-      Fuel: 'mode',
-      Bar: 'mode',
       'Thali place': 'bill',
+      'Sam’s beer': 'last',
     })
+  })
+
+  it('taking someone off a percent split spreads their part in proportion, to the basis point and the paisa', () => {
+    const ids = ['me', 'riya', 'sam', 'neha']
+    const fireworks = expense('Fireworks', 100_001, '2026-11-11', 'me', ids, {
+      mode: 'percent',
+      participants: [
+        { friendId: 'me', input: 3000 },
+        { friendId: 'riya', input: 3000 },
+        { friendId: 'sam', input: 3000 },
+        { friendId: 'neha', input: 1000 },
+      ],
+    })
+    const left = withoutPerson(fireworks, 'neha')
+    expect(left.map((p) => p.input)).toEqual([3334, 3333, 3333])
+    const shares = sharesOf(fireworks, left)
+    expect(Object.values(shares).reduce((a, b) => a + b, 0)).toBe(100_001)
+    expect(shares.neha).toBeUndefined()
+    // Uneven parts keep their proportions.
+    const uneven = { ...fireworks, participants: fireworks.participants.map((p, i) => ({ ...p, input: [5000, 2500, 1500, 1000][i] ?? 0 })) }
+    expect(withoutPerson(uneven, 'neha').map((p) => p.input)).toEqual([5555, 2778, 1667])
+  })
+
+  it('taking someone off an exact split spreads their amount in proportion and still adds up to the total', () => {
+    const shopping = expense('Shopping', 10_001, '2026-11-10', 'me', ALL, {
+      mode: 'exact',
+      participants: [
+        { friendId: 'me', input: 5000 },
+        { friendId: 'riya', input: 2500 },
+        { friendId: 'sam', input: 2501 },
+      ],
+    })
+    const left = withoutPerson(shopping, 'sam')
+    expect(left.reduce((s, p) => s + (p.input ?? 0), 0)).toBe(10_001)
+    expect(left.map((p) => p.input)).toEqual([6667, 3334])
+    const had = expense('Bar', 10_000, '2026-11-10', 'me', ALL, {
+      mode: 'had',
+      participants: [
+        { friendId: 'me', input: 4000 },
+        { friendId: 'riya', input: 2000 },
+        { friendId: 'sam', input: 2000 },
+      ],
+    })
+    // "had": what the others had stays; the total is shared in proportion to it.
+    expect(withoutPerson(had, 'sam')).toEqual([
+      { friendId: 'me', input: 4000 },
+      { friendId: 'riya', input: 2000 },
+    ])
   })
 
   it('someone who already paid their part back is listed, not changed', () => {
@@ -194,6 +255,41 @@ describe('came late, left early', () => {
     expect(fix([kept], stays, { declined: [fixUpKey(kept.id, 'sam')] })).toEqual([])
     expect(fix([expense('X', 100, '2026-11-10', 'me', ['me', 'gone'])], stays)).toEqual([])
     expect(fix([], stays)).toEqual([])
+  })
+
+  it('never takes anyone off a stay: it is pointed to Split by nights, and not counted with the rest', () => {
+    // p10: the villa is dated on the first night; Sam came on the 12th and slept there 2 nights.
+    const villa = expense('Villa', 1_200_000, '2026-11-10', 'riya', ALL, { category: 'other' })
+    const breakfast = expense('Breakfast', 60_000, '2026-11-11', 'me', ALL)
+    const brunch = expense('Brunch', 30_000, '2026-11-14', 'me', ALL)
+    const out = fix([villa, breakfast, brunch], { sam: { from: '2026-11-12', to: null } })
+    expect(out[0]!.safe).toEqual([breakfast])
+    expect(out[0]!.byHand).toEqual([])
+    expect(out[0]!.nightly).toEqual([villa])
+    // Only the stay: still a banner, so it can be split by nights.
+    expect(fix([villa, brunch], { sam: { from: '2026-11-12', to: null } })[0]).toMatchObject({ safe: [], byHand: [], nightly: [villa] })
+    // “Leave them” covers it too.
+    expect(fix([villa, brunch], { sam: { from: '2026-11-12', to: null } }, { declined: [fixUpKey(villa.id, 'sam')] })).toEqual([])
+  })
+
+  it('a stay already split by nights is left alone and not counted, even after a later expense moves the trip’s last day', () => {
+    const stays: Stays = { sam: { from: '2026-11-12', to: null } }
+    const brunch = expense('Brunch', 30_000, '2026-11-14', 'me', ALL)
+    const villa = expense('Villa', 1_200_000, '2026-11-10', 'riya', ALL, { category: 'other' })
+    const plan = nightsPlan(villa, group(), [villa, brunch], stays)!
+    expect(plan.rows.map((r) => r.nights)).toEqual([4, 4, 2])
+    const split = { ...villa, mode: 'shares' as const, participants: plan.participants, shares: sharesOf({ ...villa, mode: 'shares' }, plan.participants) }
+    expect(fix([split, brunch], stays)).toEqual([])
+    // A shares bill split by nights that doesn't read as a stay is never re-split by Take off either.
+    const renamed = { ...split, title: 'Goa house', category: 'food' as const }
+    expect(isSplitByNights(renamed, group(), [renamed, brunch], stays)).toBe(true)
+    expect(fix([renamed, brunch], stays)).toEqual([])
+    // A dinner on the 15th moves the trip's last day; the range remembered when it was split keeps it split.
+    const late = expense('Dinner', 30_000, '2026-11-15', 'me', ALL)
+    const anchors = { [villa.id]: plan.range }
+    expect(nightsPlan(split, group(), [split, brunch, late], stays)).not.toBeNull()
+    expect(nightsPlan(split, group(), [split, brunch, late], stays, plan.range)).toBeNull()
+    expect(fix([split, brunch, late], stays, { anchors }).flatMap((p) => p.nightly)).toEqual([])
   })
 
   it('orders people by name, not id', () => {
@@ -234,6 +330,15 @@ describe('split by nights', () => {
       }),
     ).toEqual({ from: '2026-11-10', to: '2026-11-18' })
     expect(tripRange(group(), [], {})).toBeNull()
+  })
+
+  it('a remembered range stands in for the expenses, and the days people set still widen it', () => {
+    const anchor = { from: '2026-11-12', to: '2026-11-14' }
+    const later = [...trip(), expense('Dinner', 30_000, '2026-11-20', 'me', ALL)]
+    expect(tripRange(group(), later, stays, anchor)).toEqual(anchor)
+    expect(tripRange(group(), later, { ...stays, riya: { from: null, to: '2026-11-16' } }, anchor)).toEqual({ from: '2026-11-12', to: '2026-11-16' })
+    // The day someone leaves isn't a night: until 13 Nov from 10 Nov is 3 nights.
+    expect(nightsIn({ from: '2026-11-10', to: '2026-11-13' }, { from: '2026-11-10', to: '2026-11-14' })).toBe(3)
   })
 
   it('offers whole-number weights whose shares add up to the total', () => {

@@ -1,16 +1,16 @@
 import { describe, expect, it } from 'vitest'
 import type { Expense, Group } from '../../domain/types'
-import { FAIR_EQUAL_PART, groupSpinSlices, seededRandom, spin, spinSlices } from './engine'
+import { FAIR_EQUAL_PART, MIN_LABEL_DEGREES, groupSpinSlices, percentText, seededRandom, spin, spinSlices, wheelLabels, wheelNames } from './engine'
 
 const NAMES: Record<string, string> = { me: 'Ayush', riya: 'Riya', sam: 'Sam', neha: 'Neha' }
 const nameOf = (id: string): string => NAMES[id] ?? id
 const sum = (xs: number[]): number => xs.reduce((a, b) => a + b, 0)
 
 describe('spinSlices', () => {
-  it('pure luck: equal slices, percentages add up to 100, ordered by name', () => {
+  it('pure luck: equal slices, the same percentage each, ordered by name', () => {
     const s = spinSlices(['sam', 'me', 'riya'], { sam: -5000, me: 5000 }, 'luck', nameOf)
     expect(s.map((x) => x.id)).toEqual(['me', 'riya', 'sam'])
-    expect(s.map((x) => x.percent)).toEqual([34, 33, 33])
+    expect(s.map((x) => x.percent)).toEqual([33.3, 33.3, 33.3])
     expect(sum(s.map((x) => x.weight))).toBeCloseTo(1, 12)
     expect(s[0]!.start).toBe(0)
     expect(s[2]!.end).toBe(360)
@@ -27,9 +27,9 @@ describe('spinSlices', () => {
     expect(by.sam!.behind).toBe(60_000)
     expect(sum(s.map((x) => x.percent))).toBe(100)
     expect(s.map((x) => [x.id, x.percent])).toEqual([
-      ['me', 13],
+      ['me', 12.5],
       ['neha', 25],
-      ['riya', 12],
+      ['riya', 12.5],
       ['sam', 50],
     ])
   })
@@ -53,7 +53,7 @@ describe('spinSlices', () => {
     const balances = Object.fromEntries(ids.map((id, i) => [id, i % 2 === 0 ? -(i + 1) * 100 : (i + 1) * 100]))
     const many = spinSlices(ids, balances, 'fair', nameOf)
     expect(many).toHaveLength(100)
-    expect(sum(many.map((x) => x.percent))).toBe(100)
+    expect(Math.abs(sum(many.map((x) => x.percent)) - 100)).toBeLessThanOrEqual(0.05 * 100)
     expect(sum(many.map((x) => x.weight))).toBeCloseTo(1, 10)
     for (const x of many) expect(x.weight).toBeGreaterThanOrEqual(FAIR_EQUAL_PART / 100 - 1e-15)
     for (let i = 1; i < many.length; i++) expect(many[i]!.start).toBeCloseTo(many[i - 1]!.end, 9)
@@ -141,6 +141,59 @@ describe('groupSpinSlices', () => {
 
   it('other currencies don’t count', () => {
     const s = groupSpinSlices(group, [dinner('me', 'USD')], 'fair', new Set(), nameOf)
-    expect(s.map((x) => x.percent)).toEqual([34, 33, 33])
+    expect(s.map((x) => x.percent)).toEqual([33.3, 33.3, 33.3])
+  })
+})
+
+describe('chances people can trust', () => {
+  it('people with the same standing show the same chance, to one decimal', () => {
+    // Aman left out: Sana, Tej and Vikram are equal on a wheel where You are behind.
+    const names: Record<string, string> = { me: 'Ayush', sana: 'Sana', tej: 'Tej', vik: 'Vikram' }
+    const s = spinSlices(['me', 'sana', 'tej', 'vik'], { me: -98_000, sana: 10_000, tej: 10_000, vik: 10_000 }, 'fair', (id) => names[id] ?? id)
+    expect(s.map((x) => percentText(x.percent))).toEqual(['62.5', '12.5', '12.5', '12.5'])
+    const luck = spinSlices(['me', 'sana', 'tej', 'vik', 'riya', 'sam', 'neha', 'x'], {}, 'luck', nameOf)
+    expect(new Set(luck.map((x) => x.percent))).toEqual(new Set([12.5]))
+  })
+
+  it('reads whole chances without a decimal', () => {
+    expect(percentText(50)).toBe('50')
+    expect(percentText(12.5)).toBe('12.5')
+    expect(percentText(33.3)).toBe('33.3')
+  })
+})
+
+describe('the names on the wheel', () => {
+  it('writes first names, cut with an ellipsis, and an initial when first names clash', () => {
+    expect(wheelNames(['Priyanka Raghunathan', 'Riya', 'You', 'Venkataraghavan S'])).toEqual(['Priyanka', 'Riya', 'You', 'Venkatar…'])
+    expect(wheelNames(['Rahul Sharma', 'Rahul Verma', 'Rahul'])).toEqual(['Rahul S.', 'Rahul V.', 'Rahul'])
+    expect(wheelNames(['  ', 'Sam'])).toEqual(['', 'Sam'])
+  })
+
+  it('never draws a name upside down where the wheel stops, at any turn', () => {
+    const ids = Array.from({ length: 12 }, (_, i) => `p${i}`)
+    const s = spinSlices(ids, {}, 'luck', (id) => id)
+    for (const rotation of [0, 37, 180, 1890, 3605, -45]) {
+      const labels = wheelLabels(s, (id) => id, rotation)
+      expect(labels).toHaveLength(12)
+      for (const l of labels) {
+        const resting = (((l.angle + rotation) % 360) + 360) % 360
+        // Read from the centre out on the right half, turned round on the left half.
+        expect(l.flip).toBe(resting > 180)
+      }
+    }
+  })
+
+  it('labels every slice of an even wheel of 2 to 20, and skips slices too thin for a name', () => {
+    for (let n = 2; n <= 20; n++) {
+      const ids = Array.from({ length: n }, (_, i) => `p${String(i).padStart(2, '0')}`)
+      expect(wheelLabels(spinSlices(ids, {}, 'luck', (id) => id), (id) => id, 0)).toHaveLength(n)
+    }
+    // Twenty people, one far behind: the others' slices are thinner than a line of text.
+    const ids = Array.from({ length: 20 }, (_, i) => `p${String(i).padStart(2, '0')}`)
+    const s = spinSlices(ids, { p00: -1_000_000 }, 'fair', (id) => id)
+    const labels = wheelLabels(s, (id) => id, 0)
+    expect(labels.map((l) => l.id)).toEqual(['p00'])
+    for (const x of s.slice(1)) expect(x.end - x.start).toBeLessThan(MIN_LABEL_DEGREES)
+    expect(wheelLabels(spinSlices(['me'], {}, 'luck', nameOf), nameOf, 0)).toEqual([])
   })
 })

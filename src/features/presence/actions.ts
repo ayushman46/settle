@@ -4,8 +4,9 @@ import { daysBetween, isIsoDate, today as todayIso } from '../../engine/dates'
 import type { Expense, Group, Participant } from '../../domain/types'
 import { t } from '../../i18n'
 import { relativeDateLabel } from '../../kit/dateLabel'
-import { usableStay, withoutPerson, type Stay } from './engine'
-import { presenceStore } from './store'
+import { formatMoney } from '../../lib/money'
+import { usableStay, withoutPerson, type NightsRange, type Stay } from './engine'
+import { presenceStore, setAnchor } from './store'
 
 /**
  * Saves `e` with other people (and optionally another split), keeping everything else. Paid-back
@@ -19,6 +20,8 @@ function resave(e: Expense, participants: Participant[], mode: Expense['mode'] =
 export interface Change {
   /** How many expenses changed. */
   count: number
+  /** The expenses that changed, as they were before. */
+  changed: Expense[]
   /** Puts every changed expense back exactly as it was (paid-back ticks included). */
   undo: () => void
 }
@@ -34,13 +37,40 @@ export function takeOff(expenses: readonly Expense[], friendId: string): Change 
       // Left as it was: the banner keeps listing it.
     }
   }
-  return { count: before.length, undo: () => before.forEach(restoreExpense) }
+  return { count: before.length, changed: before, undo: () => before.forEach(restoreExpense) }
 }
 
-/** Re-splits `e` by these weights (`mode: 'shares'`). */
-export function splitByNights(e: Expense, participants: Participant[]): Change {
+/**
+ * Re-splits `e` by these weights (`mode: 'shares'`) and remembers the nights range they came from,
+ * so the stay keeps the same nights when a later expense moves the trip's last day.
+ */
+export function splitByNights(e: Expense, participants: Participant[], range?: NightsRange): Change {
+  const hadAnchor = presenceStore.get().anchors?.[e.id] ?? null
   resave(e, participants, 'shares')
-  return { count: 1, undo: () => restoreExpense(e) }
+  if (range) setAnchor(e.id, range)
+  return {
+    count: 1,
+    changed: [e],
+    undo: () => {
+      restoreExpense(e)
+      setAnchor(e.id, hadAnchor)
+    },
+  }
+}
+
+/** "Villa (₹12,000)": an expense by name and amount, for lists in the banner and its toast. */
+export function expenseItem(e: Pick<Expense, 'title' | 'total' | 'currency'>): string {
+  return t('presence.list.item', {
+    title: e.title.trim() || t('presence.list.untitled'),
+    amount: formatMoney(e.total, e.currency, { trimZeros: true }),
+  })
+}
+
+/** "A", "A and B", "A, B and C", or the first `max` and "and N more". */
+export function listText(items: readonly string[], max = 3): string {
+  if (items.length <= 1) return items[0] ?? ''
+  if (items.length > max) return t('presence.list.more', { list: items.slice(0, max).join(', '), count: items.length - max })
+  return t('presence.list.and', { list: items.slice(0, -1).join(', '), last: items[items.length - 1] ?? '' })
 }
 
 /** "12 Nov": a short date, never "Today" (it reads oddly in "joined on …"). */

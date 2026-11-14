@@ -80,7 +80,7 @@ function DoneCard({ group, expenses, done, today }: { group: Group; expenses: re
             {t('wrapped.done.story')}
           </Button>
         )}
-        <Button size="sm" variant="ghost" className={styles.doneLater} onClick={later}>
+        <Button size="md" variant="ghost" className={styles.doneLater} onClick={later}>
           {t('wrapped.done.later')}
         </Button>
       </div>

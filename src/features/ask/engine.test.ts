@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import type { Expense } from '../../domain/types'
-import { askExamples, headline, understoodParts } from './askText'
-import { ask, nameMatch, normalize, readQuestion, type AskIntent, type AskAnswer } from './engine'
-import { DATA, EXPENSES } from './fixture'
+import { answerLines, answerNotes, askExamples, headline, understoodParts } from './askText'
+import { ask, MAX_LIST, nameMatch, normalize, readQuestion, type AskIntent, type AskAnswer } from './engine'
+import { DATA, EXPENSES, TODAY } from './fixture'
 
 interface Case {
   q: string
@@ -69,7 +69,8 @@ const CASES: Case[] = [
   { q: 'maine kitna kharcha kiya', intent: 'spent', who: 'me', amount: 2_183_000 },
   { q: 'Goa mein kitna kharcha hua', intent: 'spent', who: 'we', group: 'goa', amount: 1_080_000 },
   { q: 'how much rent did I pay', intent: 'spent', category: 'rent', amount: 1_500_000 },
-  { q: 'how much did I spend on cabs', intent: 'spent', category: 'transport', amount: 95_000 },
+  // "cabs" is a word in a title (Cab to airport), so it’s that, not every transport expense (the scooter isn’t a cab)
+  { q: 'how much did I spend on cabs', intent: 'spent', category: null, amount: 75_000 },
   { q: 'how much did we spend in Manaali', intent: 'spent', group: 'manali', amount: 30_000 },
   { q: 'how much did I spend in may 2026', intent: 'spent', range: 'month', amount: 0, count: 0, head: 'Nothing spent that matches' },
   // the biggest
@@ -116,7 +117,7 @@ describe('Ask Settle reads a question and answers it', () => {
     if (c.leftOut !== undefined) expect(a.leftOut).toEqual(c.leftOut)
     if (c.rows !== undefined) expect(a.rows.map((r) => r.title)).toEqual(c.rows)
     if (c.head !== undefined) expect(headline(a, DATA.today, names)).toBe(c.head)
-    expect(a.rows.length).toBeLessThanOrEqual(5)
+    expect(a.rows.length).toBeLessThanOrEqual(MAX_LIST)
   })
 
   it('has a table of at least 40 questions', () => {
@@ -206,5 +207,224 @@ describe('example questions', () => {
   it('fall back to plain ones with nobody to name', () => {
     const examples = askExamples({ ...DATA, expenses: [], groups: [] })
     expect(examples).toEqual(['Who owes me?', 'What do I owe?', 'How much did I spend this month?', 'Biggest expense this month'])
+  })
+})
+
+/*
+ * What the customer panel asked, on a small book like theirs (worked out by hand):
+ * - Goa trip (me, Riya, Sam, Karan): Hotel ₹6,000 I paid, Drinks ₹500 Sam paid, Dinner ₹1,200 Riya paid, all split 4 ways;
+ *   Riya paid me ₹1,000. Balances: me +3,075, Riya +275, Sam −1,425, Karan −1,925.
+ *   Simplified: Karan pays me ₹1,925, Sam pays me ₹1,150, Sam pays Riya ₹275.
+ * - Outside groups: Movie ₹800 with Neha in October (Neha owes ₹400), Coffee ₹200 with Riya today (Riya owes ₹100).
+ */
+const base = EXPENSES[0]!
+let made = 0
+const bill = (id: string, title: string, total: number, date: string, payerId: string, shares: Record<string, number>, more: Partial<Expense> = {}): Expense => ({
+  ...base,
+  id,
+  title,
+  total,
+  date,
+  payerId,
+  shares,
+  participants: Object.keys(shares).map((friendId) => ({ friendId, input: null })),
+  groupId: null,
+  paidBack: {},
+  createdAt: ++made,
+  updatedAt: made,
+  ...more,
+})
+const four = (each: number): Record<string, number> => ({ me: each, riya: each, sam: each, karan: each })
+const PANEL_FRIENDS = [
+  { id: 'me', name: 'Anjali' },
+  { id: 'riya', name: 'Riya' },
+  { id: 'sam', name: 'Sam' },
+  { id: 'karan', name: 'Karan' },
+  { id: 'neha', name: 'Neha' },
+]
+const PANEL: typeof DATA = {
+  ...DATA,
+  friends: PANEL_FRIENDS,
+  groups: [{ ...DATA.groups[0]!, id: 'goa', name: 'Goa trip', memberIds: ['me', 'riya', 'sam', 'karan'], settlements: [{ id: 'p1', fromId: 'riya', toId: 'me', amount: 100_000, date: '2026-11-06', createdAt: 1, method: 'upi' }] }],
+  expenses: [
+    bill('h', 'Hotel', 600_000, '2026-11-05', 'me', four(150_000), { groupId: 'goa', category: 'travel' }),
+    bill('d', 'Drinks', 50_000, '2026-11-05', 'sam', four(12_500), { groupId: 'goa', category: 'food' }),
+    bill('n', 'Dinner', 120_000, '2026-11-06', 'riya', four(30_000), { groupId: 'goa', category: 'food' }),
+    bill('m', 'Movie', 80_000, '2026-10-12', 'me', { me: 40_000, neha: 40_000 }, { category: 'entertainment' }),
+    bill('c', 'Coffee', 20_000, TODAY, 'me', { me: 10_000, riya: 10_000 }, { category: 'food' }),
+  ],
+  nameOf: (id) => (id === 'me' ? 'You' : (PANEL_FRIENDS.find((f) => f.id === id)?.name ?? 'Someone')),
+}
+const panelNames = PANEL.nameOf!
+const say = (q: string): string => headline(ask(q, PANEL), TODAY, panelNames)
+const readAs = (q: string): string[] => understoodParts(ask(q, PANEL), PANEL, panelNames)
+
+describe('what the customer panel found', () => {
+  it('a group in an owing question scopes the answer to that group', () => {
+    const a = ask('who owes me in Goa', PANEL)
+    expect(a.intent).toBe('owedToMe')
+    expect(a.amount).toBe(307_500)
+    expect(a.rows.map((r) => [r.title, r.amount])).toEqual([
+      ['Karan', 192_500],
+      ['Sam', 115_000],
+    ])
+    expect(readAs('who owes me in Goa')).toEqual(['Owed to you', 'Goa trip'])
+    // without the group: everyone, Neha and the coffee too
+    expect(ask('who owes me', PANEL).amount).toBe(357_500)
+    expect(ask('how much does Riya owe me in Goa', PANEL).amount).toBe(0)
+    expect(ask('how much does Riya owe me', PANEL).amount).toBe(10_000)
+    expect(readAs('how much does Sam owe me in goa trip')).toEqual(['Between you and Sam', 'Goa trip'])
+  })
+
+  it('an unknown name is said to be unknown, never swapped for a similar one', () => {
+    const a = ask('how much does Priya owe me', PANEL)
+    expect(a.intent).toBe('unknownPerson')
+    expect(a.amount).toBeNull()
+    expect(say('how much does Priya owe me')).toBe('I don’t know anyone called Priya')
+    expect(say('Priya ne kitna dena hai')).toBe('I don’t know anyone called Priya')
+    // a slip of one letter still finds the person
+    expect(ask('how much does Rya owe me', PANEL).filters.friendId).toBe('riya')
+    expect(ask('Karran owes me?', PANEL).filters.friendId).toBe('karan')
+    expect(ask('how much does Samm owe me', PANEL).filters.friendId).toBe('sam')
+    // and a group nobody has is said too
+    expect(ask('who owes me in Gao', PANEL).intent).toBe('unknownGroup')
+    expect(say('who owes me in Gao')).toBe('I don’t know a group called Gao')
+  })
+
+  it('a slip of typing is a match; a different name is not', () => {
+    expect(nameMatch('priya', 'riya')).toBe(0)
+    expect(nameMatch('riyaz', 'riya')).toBe(0)
+    expect(nameMatch('kiran', 'karan')).toBe(0)
+    expect(nameMatch('sneha', 'neha')).toBe(0)
+    expect(nameMatch('rya', 'riya')).toBe(1)
+    expect(nameMatch('samm', 'sam')).toBe(1)
+    expect(nameMatch('sami', 'sam')).toBe(0)
+    expect(nameMatch('karran', 'karan')).toBe(1)
+    expect(nameMatch('riua', 'riya')).toBe(1)
+  })
+
+  it('“how much did Sam pay” is what Sam paid, with settle-up payments apart', () => {
+    const sam = ask('how much did Sam pay in Goa', PANEL)
+    expect(sam.intent).toBe('friendPaid')
+    expect(sam.amount).toBe(50_000)
+    expect(say('how much did Sam pay in Goa')).toBe('Sam paid ₹500 for 1 expense')
+    expect(readAs('how much did Sam pay in Goa')).toEqual(['What Sam paid', 'Goa trip'])
+    const riya = ask('Riya ne kitna diya', PANEL)
+    expect(riya.intent).toBe('friendPaid')
+    expect(riya.amount).toBe(120_000)
+    expect(riya.payments).toBe(100_000)
+    expect(answerLines(riya)).toEqual(['Plus ₹1,000 paid to settle up, not counted above'])
+    expect(say('how much did Karan pay')).toBe('Karan hasn’t paid for any expense that matches')
+    expect(ask('how much did Sam spend in goa', PANEL)).toMatchObject({ intent: 'friendShare', amount: 192_500 })
+  })
+
+  it('who gives whom: “Samm kitna dega” is Sam owing me; two other people are not guessed at', () => {
+    const a = ask('Samm kitna dega', PANEL)
+    expect(a.intent).toBe('friendOwesMe')
+    expect(a.amount).toBe(115_000)
+    expect(ask('Sam ko kitna dena hai', PANEL).intent).toBe('iOweFriend')
+    const pair = ask('how much does Karan owe Riya', PANEL)
+    expect(pair.intent).toBe('otherPair')
+    expect(pair.amount).toBeNull()
+    expect(say('how much does Karan owe Riya')).toBe('I only know what people owe you, not what Karan owes Riya')
+    expect(ask('how much do Sam and Karan owe me', PANEL).intent).toBe('onePerson')
+  })
+
+  it('spending by category, group or month is a breakdown, and long lists carry every row', () => {
+    const cat = ask('spending by category', PANEL)
+    expect(cat.intent).toBe('breakdown')
+    expect(cat.amount).toBe(242_500)
+    expect(cat.rows.map((r) => [r.title, r.amount])).toEqual([
+      ['Travel & stays', 150_000],
+      ['Food & drinks', 52_500],
+      ['Entertainment', 40_000],
+    ])
+    expect(cat.rows.reduce((s, r) => s + r.amount, 0)).toBe(cat.amount)
+    expect(say('spending by category')).toBe('Your share by category: ₹2,425 in all')
+    expect(readAs('spending by category')).toEqual(['Your share of spending', 'by category'])
+    expect(ask('spending by group', PANEL).rows.map((r) => [r.title, r.amount])).toEqual([
+      ['Goa trip', 192_500],
+      ['Not in a group', 50_000],
+    ])
+    expect(ask('spending by month', PANEL).rows.map((r) => [r.title, r.amount])).toEqual([
+      ['November 2026', 202_500],
+      ['October 2026', 40_000],
+    ])
+    const many = { ...PANEL, expenses: Array.from({ length: 12 }, (_, i) => bill(`x${i}`, `Chai ${i}`, 1_000 + i, TODAY, 'me', { me: 500 + i, riya: 500 })) }
+    expect(ask('how much did I spend', many).rows).toHaveLength(12)
+  })
+
+  it('commands get “I didn’t follow” with where it’s done, never a number', () => {
+    for (const [q, kind] of [
+      ['delete all expenses', 'change'],
+      ['split 500 with Riya', 'add'],
+      ['please add 300 for chai', 'add'],
+      ['remind Sam to pay', 'settle'],
+    ] as const) {
+      const a = ask(q, PANEL)
+      expect(a.intent, q).toBe('command')
+      expect(a.command, q).toBe(kind)
+      expect(a.amount, q).toBeNull()
+    }
+    expect(say('delete all expenses')).toBe('I didn’t follow that one. I only answer questions about your money.')
+    expect(answerNotes(ask('delete all expenses', PANEL))).toEqual(['To change or delete an expense, open it from your list.'])
+    expect(answerNotes(ask('split 500 with Riya', PANEL))).toEqual(['To add or split an expense, use Just say it at the top of Home.'])
+    // “add up” is a question
+    expect(ask('add up my spending', PANEL).intent).not.toBe('command')
+  })
+
+  it('“last expense” is the last expense', () => {
+    const a = ask('last expense', PANEL)
+    expect(a.intent).toBe('lastExpense')
+    expect(a.title).toBe('Coffee')
+    expect(say('last expense')).toBe('The last expense was Coffee: ₹200, Today')
+    expect(answerLines(a)).toEqual(['Your share: ₹100'])
+    expect(ask('last expense in goa', PANEL).title).toBe('Dinner')
+  })
+
+  it('“hotel kitna tha” is the whole bill, with my share under it', () => {
+    const a = ask('hotel kitna tha', PANEL)
+    expect(a.intent).toBe('spent')
+    expect(a.filters.title).toBe('hotel')
+    expect(a.amount).toBe(600_000)
+    expect(answerLines(a)).toEqual(['Your share: ₹1,500'])
+    expect(readAs('hotel kitna tha')).toEqual(['Spending in all', 'called “hotel”'])
+    // and “we” in a group shows my part too
+    expect(answerLines(ask('how much did we spend in goa', PANEL))).toEqual(['Your share: ₹1,925'])
+  })
+
+  it('a word in a title is matched before the whole category, and a broader answer says so', () => {
+    const drinks = ask('what did I spend on drinks', PANEL)
+    expect(drinks.filters.title).toBe('drinks')
+    expect(drinks.amount).toBe(12_500)
+    expect(answerNotes(drinks)).toEqual([])
+    const snacks = ask('what did I spend on snacks', PANEL)
+    expect(snacks.filters.category).toBe('food')
+    expect(snacks.amount).toBe(52_500)
+    expect(answerNotes(snacks)).toEqual(['No expense is called “snacks”, so this is all of Food & drinks.'])
+  })
+
+  it('a month that a balance can’t honour is said, not dropped', () => {
+    const a = ask('how much did Neha owe me in October', PANEL)
+    expect(a.intent).toBe('friendOwesMe')
+    expect(a.amount).toBe(40_000)
+    expect(answerNotes(a)).toEqual(['Balances are as they stand today, not for October 2026.'])
+  })
+
+  it('balances that come through a simplified group say so in one line', () => {
+    expect(answerNotes(ask('how much do I owe Riya', PANEL))).toContain('Group balances are simplified, so who pays whom can differ from who paid for what.')
+    expect(answerNotes(ask('kisko kitna dena hai', PANEL))).toContain('Group balances are simplified, so who pays whom can differ from who paid for what.')
+    expect(ask('kisko kitna dena hai', PANEL).intent).toBe('iOwe')
+    // Neha is in no group with me: nothing is simplified
+    expect(answerNotes(ask('how much does Neha owe me', PANEL))).toEqual([])
+  })
+})
+
+describe('what the panel liked still works', () => {
+  it('Hinglish, typos and clean refusals', () => {
+    expect(ask('kitna dena hai', PANEL).intent).toBe('iOwe')
+    expect(ask('is mahine kitna kharch kiya', PANEL)).toMatchObject({ intent: 'spent', amount: 202_500 })
+    expect(ask('Goa mein sabse bada kharcha', PANEL)).toMatchObject({ intent: 'biggest', title: 'Hotel' })
+    for (const q of ['what’s the weather like', 'book a cab to the airport', 'who is the president']) expect(ask(q, PANEL).intent, q).toBe('unknown')
   })
 })

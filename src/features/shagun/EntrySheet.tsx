@@ -5,7 +5,7 @@ import { useT } from '../../i18n'
 import { DateField } from '../../kit/DateField'
 import { haptic } from '../../lib/haptics'
 import { parseMoneyInput, toInputString } from '../../lib/money'
-import { addEntry, updateEntry } from './store'
+import { addEntry, shagunStore, updateEntry } from './store'
 import { MAX_SHAGUN_GIFT, MAX_SHAGUN_NAME, MAX_SHAGUN_NOTE, type ShagunDirection, type ShagunEntry, type ShagunFunction } from './types'
 import styles from './Shagun.module.css'
 
@@ -50,7 +50,7 @@ export function EntrySheet({ open, onClose, entry = null, name: initialName = ''
     const input = { name, direction, amount: paise, gift: gift || null, functionId, date, note: note || null }
     if (entry) {
       if (!updateEntry(entry.id, input)) return setError('amount')
-      onSaved?.(null)
+      onSaved?.(shagunStore.get().entries.find((e) => e.id === entry.id) ?? null)
     } else {
       const saved = addEntry(input)
       if (!saved) return setError('amount')
@@ -128,11 +128,11 @@ export function EntrySheet({ open, onClose, entry = null, name: initialName = ''
               {t('shagun.esheet.function')}
             </p>
             <div className={styles.chips} role="radiogroup" aria-label={t('shagun.esheet.function')}>
-              <Chip role="radio" selected={functionId === null} onClick={() => pickFunction(null)}>
+              <Chip role="radio" size="lg" selected={functionId === null} onClick={() => pickFunction(null)}>
                 {t('shagun.esheet.noFunction')}
               </Chip>
               {functions.map((f) => (
-                <Chip key={f.id} role="radio" selected={functionId === f.id} onClick={() => pickFunction(f.id)}>
+                <Chip key={f.id} role="radio" size="lg" selected={functionId === f.id} onClick={() => pickFunction(f.id)}>
                   {f.name}
                 </Chip>
               ))}

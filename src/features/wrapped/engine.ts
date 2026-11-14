@@ -10,7 +10,9 @@
  */
 import type { CategoryId, Expense, Group, Minor } from '../../domain/types'
 import { groupBalances, simplifyDebts } from '../../engine/balances'
-import { daysBetween, isIsoDate } from '../../engine/dates'
+import { daysBetween, isIsoDate, toIsoDate } from '../../engine/dates'
+import { wholePercents } from '../../components/chartMath'
+import { groupTotals } from '../groups/groupView'
 import { playBoard } from '../play/engine'
 
 /* ------------------------------------------------------------------ the story's rules */
@@ -28,17 +30,20 @@ export const REPEAT_MIN = 3
 /* ------------------------------------------------------------------ slides */
 
 export interface CategoryShare {
-  /** Null: everything outside the top three, together. */
+  /** Null: everything outside the top three, together ("The rest"). */
   id: CategoryId | null
   total: Minor
-  /** Whole percent; the shares on a slide add up to exactly 100. */
+  /**
+   * Whole percent: the very figure the group's Totals tab shows (for the rest, the sum of its
+   * categories' figures there), so the two screens never disagree. They add up to exactly 100.
+   */
   percent: number
 }
 
 export type Slide =
   | { kind: 'headline'; total: Minor; days: number; people: number; count: number; from: string; to: string }
   | { kind: 'perDay'; perDay: Minor; days: number; people: number; perPersonPerDay: Minor | null }
-  | { kind: 'bigDay'; date: string; total: Minor; count: number; titles: string[] }
+  | { kind: 'bigDay'; date: string; total: Minor; count: number; titles: string[]; /** Every bill of the day is named in `titles`. */ all: boolean }
   | { kind: 'bigBill'; title: string; total: Minor; payerId: string; date: string }
   | { kind: 'categories'; shares: CategoryShare[] }
   | { kind: 'fronted'; id: string; amount: Minor }
@@ -62,6 +67,28 @@ export interface StoryInput {
 
 const cleanTitle = (title: string): string => title.trim().replace(/\s+/g, ' ')
 const titleKey = (title: string): string => cleanTitle(title).toLowerCase()
+
+/** Words that start a trailing place or source ("Chai at the airport", "Samosa from Haldiram’s"). */
+const TRAILING = new Set(['at', 'in', 'from', 'near', 'on', '@'])
+/** Words that don't say what was bought. */
+const FILLER = new Set(['a', 'an', 'the', 'some', 'our', 'my', 'more', 'another', 'and'])
+
+/**
+ * What a title is about, for "On repeat": its head (the words before a trailing "at/in/from …")
+ * and, as the key, the head's first meaningful word in lower case ("Chai at the airport" → "chai").
+ * Null when the title says nothing.
+ */
+export function repeatKey(title: string): { key: string; head: string } | null {
+  const words = cleanTitle(title).split(' ').filter(Boolean)
+  const cut = words.findIndex((w, i) => i > 0 && TRAILING.has(w.toLowerCase()))
+  const headWords = cut > 0 ? words.slice(0, cut) : words
+  for (const word of headWords) {
+    const plain = word.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '')
+    if (!plain || FILLER.has(plain) || /^\d+$/.test(plain)) continue
+    return { key: plain, head: headWords.join(' ') }
+  }
+  return null
+}
 
 /** The group's spending: own currency, not loans, a real date. */
 export function storyExpenses(group: Group, expenses: readonly Expense[]): Expense[] {
@@ -149,7 +176,9 @@ export function buildStory({ group, expenses: all, nameOf, me }: StoryInput): Sl
         if (title && !titles.some((x) => x.toLowerCase() === title.toLowerCase())) titles.push(title)
         if (titles.length === 3) break
       }
-      slides.push({ kind: 'bigDay', date, total: dayTotal, count: list.length, titles })
+      const named = new Set(titles.map((x) => x.toLowerCase()))
+      const all = list.every((e) => named.has(cleanTitle(e.title).toLowerCase()))
+      slides.push({ kind: 'bigDay', date, total: dayTotal, count: list.length, titles, all })
     }
   }
 
@@ -162,18 +191,17 @@ export function buildStory({ group, expenses: all, nameOf, me }: StoryInput): Sl
   }
 
   /* ---- where the money went ---- */
-  const byCategory = new Map<CategoryId, Minor>()
-  for (const e of spending) byCategory.set(e.category, (byCategory.get(e.category) ?? 0) + e.total)
-  if (byCategory.size >= 2) {
-    const ranked = [...byCategory.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
-    const top = ranked.slice(0, 3)
-    const rest = ranked.slice(3).reduce((s, [, v]) => s + v, 0)
-    const parts = [...top.map(([, v]) => v), ...(rest > 0 ? [rest] : [])]
-    const pct = percents(parts)
-    const shares: CategoryShare[] = top.map(([id, v], i) => ({ id, total: v, percent: pct[i] ?? 0 }))
-    if (rest > 0) shares.push({ id: null, total: rest, percent: pct[top.length] ?? 0 })
-    slides.push({ kind: 'categories', shares })
+  // The Totals tab's own categories and percents: the top three by name and the rest together (a
+  // lone fourth by its own name). A row at 0% says nothing and is left out.
+  const ranked = groupTotals(group, all).byCategory
+  const pct = wholePercents(ranked.map((c) => c.amount))
+  const named = ranked.length <= 4 ? ranked.length : 3
+  const shares: CategoryShare[] = ranked.slice(0, named).map((c, i) => ({ id: c.category, total: c.amount, percent: pct[i] ?? 0 }))
+  if (ranked.length > named) {
+    shares.push({ id: null, total: ranked.slice(named).reduce((s, c) => s + c.amount, 0), percent: pct.slice(named).reduce((s, p) => s + p, 0) })
   }
+  const shown = shares.filter((x) => x.percent > 0)
+  if (shown.length >= 2) slides.push({ kind: 'categories', shares: shown })
 
   /* ---- people: who fronted, who paid back fastest ---- */
   if (crowd >= 2) {
@@ -185,15 +213,22 @@ export function buildStory({ group, expenses: all, nameOf, me }: StoryInput): Sl
   }
 
   /* ---- the thing bought again and again ---- */
-  const repeats = new Map<string, { title: string; count: number; total: Minor }>()
+  // "Chai", "chai" and "Chai at the airport" are the same thing. It's named the way it was written
+  // most often (then the shortest, then A to Z), and its sum is of every bill counted.
+  const repeats = new Map<string, { heads: Map<string, { head: string; count: number }>; count: number; total: Minor }>()
   for (const e of spending) {
-    const key = titleKey(e.title)
-    if (!key) continue
-    const had = repeats.get(key)
-    repeats.set(key, { title: had?.title ?? cleanTitle(e.title), count: (had?.count ?? 0) + 1, total: (had?.total ?? 0) + e.total })
+    const found = repeatKey(e.title)
+    if (!found) continue
+    const had = repeats.get(found.key) ?? { heads: new Map<string, { head: string; count: number }>(), count: 0, total: 0 }
+    const headKey = found.head.toLowerCase()
+    had.heads.set(headKey, { head: had.heads.get(headKey)?.head ?? found.head, count: (had.heads.get(headKey)?.count ?? 0) + 1 })
+    repeats.set(found.key, { heads: had.heads, count: had.count + 1, total: had.total + e.total })
   }
   const repeat = [...repeats.entries()].sort((a, b) => b[1].count - a[1].count || a[0].localeCompare(b[0]))[0]?.[1]
-  if (repeat && repeat.count >= REPEAT_MIN) slides.push({ kind: 'repeat', ...repeat })
+  if (repeat && repeat.count >= REPEAT_MIN) {
+    const title = [...repeat.heads.values()].sort((a, b) => b.count - a.count || a.head.length - b.head.length || a.head.localeCompare(b.head))[0]?.head ?? ''
+    slides.push({ kind: 'repeat', title, count: repeat.count, total: repeat.total })
+  }
 
   /* ---- a weekday, only when it's real ---- */
   if (spending.length >= PATTERN_MIN && days >= PATTERN_SPAN) {
@@ -232,6 +267,8 @@ export function buildStory({ group, expenses: all, nameOf, me }: StoryInput): Sl
 export const DONE_FROM = 2
 /** …until this many (after that it's old news, not a trip that just ended). */
 export const DONE_UNTIL = 21
+/** A group made fewer days ago than this never looks done (one just made from a week-old chat isn't over). */
+export const NEW_GROUP_DAYS = 2
 /** A burst: at least this many expenses within any window of this many days. */
 export const BURST_COUNT = 3
 export const BURST_DAYS = 5
@@ -266,11 +303,14 @@ export function hasBurst(dates: readonly string[]): boolean {
 
 /**
  * Does the group look like a trip that's over with money still owed? Null when not: under three
- * expenses, the last one too recent (under two days) or too old (over 21), no burst of spending
- * before it, archived, all square, or put away with no new burst since.
+ * expenses, the last one too recent (under two days) or too old (over 21), the group itself made
+ * under two days ago, no burst of spending before it, archived, all square, or put away with no
+ * new burst since.
  */
 export function looksDone(group: Group, expenses: readonly Expense[], today: string, me: string, putAway: PutAway | null = null): LooksDone | null {
   if (group.archived || !isIsoDate(today)) return null
+  // The day the group was made (from its stored time, not the clock): too new to be over.
+  if (Number.isFinite(group.createdAt) && group.createdAt > 0 && daysBetween(toIsoDate(new Date(group.createdAt)), today) < NEW_GROUP_DAYS) return null
   const own = expenses.filter((e) => e.groupId === group.id && e.kind !== 'loan' && isIsoDate(e.date) && e.date <= today)
   if (own.length < BURST_COUNT) return null
   const dates = own.map((e) => e.date)

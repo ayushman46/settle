@@ -177,6 +177,34 @@ export function adviseFamily(
   return { kind: 'amount', amount, gave, date: latest.date, years, fn: latest.functionId ? (functionsById[latest.functionId] ?? null) : null }
 }
 
+export interface GivenNote {
+  /** Paise you gave them at that occasion, in all (0 when it was only a gift). */
+  amount: number
+  /** The gift, when there was no money. */
+  gift: string | null
+  date: string
+  fn: ShagunFunction | null
+}
+
+/**
+ * The last time you gave them something: everything you gave at that same function (or that same
+ * day, when it isn't tied to one). Null when the book has nothing you gave them.
+ */
+export function lastGivenTo(
+  family: Pick<FamilySummary, 'entries'>,
+  functionsById: Readonly<Record<string, ShagunFunction>>,
+): GivenNote | null {
+  const given = family.entries.filter((e) => e.direction === 'given')
+  const latest = given.reduce<ShagunEntry | null>((best, e) => (best === null || byTime(best, e) < 0 ? e : best), null)
+  if (latest === null) return null
+  const same = given.filter((e) =>
+    latest.functionId !== null ? e.functionId === latest.functionId : e.functionId === null && e.date === latest.date,
+  )
+  const amount = same.reduce((sum, e) => sum + e.amount, 0)
+  const gift = amount > 0 ? null : (same.find((e) => e.gift)?.gift ?? null)
+  return { amount, gift, date: latest.date, fn: latest.functionId ? (functionsById[latest.functionId] ?? null) : null }
+}
+
 /* ------------------------------------------------------------------ the whole book */
 
 export interface BookTotals {

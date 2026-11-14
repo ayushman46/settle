@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Expense, Group, Settlement } from '../../domain/types'
-import { kittyView, roundUpTopUp, suggestedHolder, type KittyConfig } from './engine'
+import { kittyHeld, kittyView, roundUpTopUp, suggestedHolder, type KittyConfig } from './engine'
 
 const NAMES: Record<string, string> = { me: 'Ayush', riya: 'Riya', sam: 'Sam', neha: 'Neha' }
 const nameOf = (id: string): string => NAMES[id] ?? id
@@ -219,5 +219,92 @@ describe('suggestedHolder', () => {
     expect(suggestedHolder(group(), [expense(50_000, TODAY, 'sam', ALL), expense(50_000, TODAY, 'riya', ALL)], nameOf)).toBe('riya')
     // Other currencies and loans don't count.
     expect(suggestedHolder(group(), [expense(900_000, TODAY, 'sam', ALL, { currency: 'USD' }), expense(900_000, TODAY, 'neha', ['neha', 'me'], { kind: 'loan' })], nameOf)).toBe('me')
+  })
+})
+
+describe('kittyView from the moment it started', () => {
+  // 14 Nov, 2:10 pm on this phone's clock (any number works: only the order matters).
+  const AT = 1_000_000
+
+  it('a bill the holder added earlier on the start day is not kitty spending', () => {
+    const petrol = expense(50_000, TODAY, 'me', ['me', 'riya', 'sam'], { createdAt: AT - 60_000 })
+    const v = kittyView(group([], ['me', 'riya', 'sam']), [petrol], config({ holderId: 'me', startedOn: TODAY, startedAt: AT }), TODAY)!
+    expect(v).toMatchObject({ spent: 0, othersSpent: 0, left: 0, over: 0, runsOutOn: null, daysLeft: null, topUp: null })
+    for (const m of v.members) expect([m.spentOn, m.part]).toEqual([0, 0])
+  })
+
+  it('counts bills added after the start that day, and bills dated later days whenever they were added', () => {
+    const before = expense(30_000, TODAY, 'me', ['me', 'riya', 'sam'], { createdAt: AT - 1 })
+    const after = expense(30_000, TODAY, 'me', ['me', 'riya', 'sam'], { createdAt: AT })
+    const later = expense(60_000, '2026-11-15', 'me', ['me', 'riya', 'sam'], { createdAt: AT - 5 })
+    const v = kittyView(group([], ['me', 'riya', 'sam']), [before, after], config({ holderId: 'me', startedOn: TODAY, startedAt: AT }), TODAY)!
+    expect(v.spent).toBe(30_000)
+    const w = kittyView(group([], ['me', 'riya', 'sam']), [before, later], config({ holderId: 'me', startedOn: TODAY, startedAt: AT }), '2026-11-15')!
+    expect(w.spent).toBe(60_000)
+  })
+
+  it('a payment to the holder earlier on the start day is not money put in', () => {
+    const s = [{ ...paid('riya', 'me', 100_000, TODAY), createdAt: AT - 1 }, { ...paid('sam', 'me', 200_000, TODAY), createdAt: AT + 1 }]
+    const v = kittyView(group(s, ['me', 'riya', 'sam']), [], config({ holderId: 'me', startedOn: TODAY, startedAt: AT }), TODAY)!
+    expect(v.members.map((m) => [m.id, m.putIn])).toEqual([
+      ['me', 0],
+      ['riya', 0],
+      ['sam', 200_000],
+    ])
+  })
+
+  it('a kitty saved without the moment counts the whole start day, as before', () => {
+    const petrol = expense(30_000, TODAY, 'me', ['me', 'riya', 'sam'], { createdAt: 1 })
+    const v = kittyView(group([], ['me', 'riya', 'sam']), [petrol], config({ holderId: 'me', startedOn: TODAY }), TODAY)!
+    expect(v.spent).toBe(30_000)
+  })
+
+  it('a start in the future (wrong clock) counts the whole of today', () => {
+    const e = expense(30_000, TODAY, 'me', ['me', 'riya', 'sam'], { createdAt: 1 })
+    const v = kittyView(group([], ['me', 'riya', 'sam']), [e], config({ holderId: 'me', startedOn: '2027-01-01', startedAt: AT }), TODAY)!
+    expect(v.spent).toBe(30_000)
+  })
+})
+
+describe('kittyView numbers that read true together', () => {
+  it('Put in − Spent (the others’ shares) = Left, the holder’s share apart', () => {
+    // Three others put in ₹2,000 each; the holder pays ₹7,200 for all four (₹1,800 each).
+    const s = ['me', 'sam', 'neha'].map((id) => paid(id, 'riya', 200_000, '2026-11-12'))
+    const e = [expense(300_000, '2026-11-12', 'riya', ALL), expense(240_000, '2026-11-13', 'riya', ALL), expense(180_000, TODAY, 'riya', ALL)]
+    const v = kittyView(group(s), e, config(), TODAY)!
+    expect(v).toMatchObject({ fromOthers: 600_000, spent: 720_000, othersSpent: 540_000, holderSpent: 180_000, left: 60_000, over: 0 })
+    expect(v.fromOthers - v.othersSpent).toBe(v.left)
+  })
+
+  it('when the others have spent more than they put in: Left is 0 and the gap is `over`', () => {
+    const s = [paid('sam', 'riya', 50_000, '2026-11-12')]
+    const v = kittyView(group(s), [expense(400_000, '2026-11-13', 'riya', ALL)], config(), TODAY)!
+    expect(v).toMatchObject({ fromOthers: 50_000, othersSpent: 300_000, left: 0, over: 250_000 })
+  })
+
+  it('the day it runs out follows from the pace shown (the others’ money per day)', () => {
+    // p08: started today, ₹2,000 each from two friends, ₹600 breakfast for three: ₹400 a day of theirs, ₹3,600 left → 9 days.
+    const s = [paid('riya', 'me', 200_000, TODAY), paid('sam', 'me', 200_000, TODAY)]
+    const v = kittyView(group(s, ['me', 'riya', 'sam']), [expense(60_000, TODAY, 'me', ['me', 'riya', 'sam'])], config({ holderId: 'me', startedOn: TODAY }), TODAY)!
+    expect(v.othersSpent).toBe(40_000)
+    expect(v.left).toBe(360_000)
+    expect(v.othersPerDay).toBe(40_000)
+    expect(v.runsOutOn).toBe('2026-11-23')
+    expect(v.daysLeft).toBe(Math.floor(v.left / v.othersPerDay))
+  })
+})
+
+describe('kittyHeld', () => {
+  it('is null with no kitty, an archived group or a group of one', () => {
+    expect(kittyHeld(group(), [], null, TODAY)).toBeNull()
+    expect(kittyHeld(group([], ALL, { archived: true }), [], config(), TODAY)).toBeNull()
+    expect(kittyHeld(group([], ['riya']), [], config(), TODAY)).toBeNull()
+    expect(kittyHeld(group([], ['me', 'sam']), [], config(), TODAY)).toBeNull()
+  })
+
+  it('is what the holder holds of the others’ money: the sheet’s Left, never negative', () => {
+    const s = ['me', 'sam', 'neha'].map((id) => paid(id, 'riya', 200_000, '2026-11-12'))
+    expect(kittyHeld(group(s), [expense(240_000, '2026-11-13', 'riya', ALL)], config(), TODAY)).toEqual({ holderId: 'riya', held: 420_000 })
+    expect(kittyHeld(group(), [expense(240_000, '2026-11-13', 'riya', ALL)], config(), TODAY)).toEqual({ holderId: 'riya', held: 0 })
   })
 })

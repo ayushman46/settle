@@ -8,6 +8,7 @@ export const diet = {
   'diet.strip.title.nonveg': 'Anyone vegetarian?',
   'diet.strip.body': 'They come off those items by themselves, and it’s remembered for next time.',
   'diet.strip.summary': '{count, plural, =0 {Tap to choose} one {# person remembered} other {# people remembered}}',
+  'diet.strip.pending': 'Nothing has come off yet. It happens as soon as people are put on the items.',
   'diet.strip.people.aria': 'Who doesn’t drink, and who is vegetarian',
   'diet.strip.alcohol': 'No alcohol',
   'diet.strip.nonveg': 'Veg',
@@ -22,7 +23,8 @@ export const diet = {
   'diet.banner.kept': 'Nobody else is on {item}, so it stays with {names}.',
   'diet.banner.keptMore': '{count, plural, one {# more item stays} other {# more items stay}} as it is, for the same reason.',
   'diet.banner.undo': 'Undo',
-  'diet.banner.undone': 'Put back on the items',
+  'diet.banner.putBack': 'Put them back',
+  'diet.banner.undone': 'Undone: {names} {count, plural, one {is} other {are}} back on {items, plural, one {# item} other {# items}}.',
 
   // While picking who had an item
   'diet.toast.alcohol': 'Taken off {item}: {names} (no alcohol)',

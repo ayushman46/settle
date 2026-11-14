@@ -1,26 +1,31 @@
 import { ChevronRight, Gauge } from 'lucide-react'
 import { navigate } from '../../app/router'
 import { Card } from '../../components'
+import { useProfile } from '../../data'
 import { useT } from '../../i18n'
+import { formatMoney } from '../../lib/money'
 import { BAND_KEYS } from './bands'
 import { Dial } from './Dial'
+import { COUNTS_FROM, READY_AT } from './engine'
 import { SCORE_PATH } from './paths'
 import { useScore } from './useScore'
 import styles from './Score.module.css'
 
 /**
  * Your Settle Score on the You screen: a small dial with the number and its band, opening the
- * Score screen. A short line until there's enough history; nothing at all before the first split.
+ * Score screen. No number until there's enough history (a line saying exactly what it needs);
+ * nothing at all before the first split.
  */
 export function ScoreCard() {
   const t = useT()
   const result = useScore()
-  if (result.splits === 0) return null
+  const profile = useProfile()
+  if (result.anySplits === 0) return null
   if (!result.ready) {
     return (
       <p className={styles.pending}>
         <Gauge aria-hidden="true" />
-        {t('score.card.pending')}
+        {t('score.card.pending', { needed: READY_AT, owed: result.owed, floor: formatMoney(COUNTS_FROM, profile.currency, { trimZeros: true }) })}
       </p>
     )
   }

@@ -156,3 +156,27 @@ export function applyUsual<F extends ApplicableForm>(form: F, usual: UsualSplit 
   const participants = order.map((friendId) => next.participants.find((p) => p.friendId === friendId) ?? { friendId, input: null })
   return { ...form, mode: next.mode, participants } as F
 }
+
+/** A group's usual split as other features read it (see `groupUsualSplit`). */
+export interface GroupUsualSplit extends UsualSplit {
+  /** Each member's part of every new expense as a fraction, all adding up to 1 (0 for someone on 0% or no shares). */
+  fractions: Record<string, number>
+  /** True only when everyone's part is exactly the same (50 / 50, 1 : 1 : 1). */
+  equal: boolean
+}
+
+/**
+ * The usual split new expenses in a group really start from: null when it has none, or when the
+ * one it has was made for different people (new expenses then start equal, see `applyUsual`).
+ */
+export function groupUsualSplit(usual: UsualSplit | null, memberIds: readonly string[]): GroupUsualSplit | null {
+  if (!usual || !isValidUsual(usual) || !usualFits(usual, memberIds)) return null
+  const values = memberIds.map((id) => usual.inputs[id] ?? 0)
+  const sum = values.reduce((s, v) => s + v, 0)
+  if (sum <= 0) return null
+  const fractions: Record<string, number> = {}
+  memberIds.forEach((id, i) => {
+    fractions[id] = (values[i] ?? 0) / sum
+  })
+  return { mode: usual.mode, inputs: { ...usual.inputs }, set: usual.set, fractions, equal: values.every((v) => v === values[0]) }
+}

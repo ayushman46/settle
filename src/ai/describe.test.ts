@@ -219,7 +219,7 @@ describe('describeRequest', () => {
       people: ['  Riya  ', 'riya', 'RIYA', '', '   ', 'José', 'jose', 'x'.repeat(60), ...Array.from({ length: 80 }, (_, i) => `P${i}`)],
       today: '2026-10-21',
     })
-    expect(body.people?.slice(0, 3)).toEqual(['Riya', 'José', 'x'.repeat(24)])
+    expect(body.people?.slice(0, 3)).toEqual(['Riya', 'José', 'x'.repeat(40)])
     expect(body.people).toHaveLength(DESCRIBE_LIMITS.maxPeople)
   })
 

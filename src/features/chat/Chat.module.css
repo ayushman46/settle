@@ -277,3 +277,23 @@
   height: 18px;
   color: var(--ink-2);
 }
+
+/* Who a name in the chat is, among the people already here. */
+.whoList {
+  display: grid;
+  gap: var(--s-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.who {
+  display: grid;
+  gap: var(--s-2);
+}
+
+.whoName {
+  font: var(--text-label, var(--text-body));
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}

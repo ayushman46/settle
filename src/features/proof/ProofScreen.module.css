@@ -7,7 +7,7 @@
 .note {
   margin: 0;
   font-size: 0.8125rem;
-  color: var(--text-muted, #4b5563);
+  color: var(--ink-2);
 }
 
 .drop,
@@ -32,7 +32,7 @@
 .hint {
   margin: 0;
   font-size: 0.875rem;
-  color: var(--text-muted, #4b5563);
+  color: var(--ink-2);
   overflow-wrap: anywhere;
 }
 

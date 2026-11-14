@@ -3,6 +3,7 @@ import { BottomSheet, Button, TextField, useToast } from '../../components'
 import { updateProfile, useProfile } from '../../data'
 import { useT } from '../../i18n'
 import { MAX_NAME_LENGTH, normalizeName } from '../../lib/people'
+import { UpiGuess } from '../../kit/UpiGuess'
 import { isPhoneUpiId, isValidUpiId, normalizeUpiId } from '../../lib/upi'
 import styles from './EditProfileSheet.module.css'
 
@@ -91,6 +92,14 @@ export function EditProfileSheet({ open, onClose, focus }: EditProfileSheetProps
           onChange={(event) => {
             setName(event.target.value)
             if (errors.name) setErrors((e) => ({ ...e, name: undefined }))
+          }}
+        />
+        <UpiGuess
+          key={/^\d{10}$/.test(upi) ? upi : 'guess'}
+          phone={/^\d{10}$/.test(upi) ? upi : null}
+          onPick={(id) => {
+            setUpi(id)
+            setErrors((e) => ({ ...e, upi: undefined }))
           }}
         />
         <TextField

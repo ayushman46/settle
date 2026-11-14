@@ -10,7 +10,7 @@ import { friendLabel } from '../../kit/friendName'
 import { formatMoney } from '../../lib/money'
 import { printPage } from '../../lib/nativeApp'
 import { shareFile } from '../../share'
-import { claimableGroups, defaultScope, indianDate, monthRange, reportCandidates, summarize, type ReportBasis, type ReportScope } from './engine'
+import { claimableGroups, defaultScope, indianDate, monthRange, reportCandidates, reportPeriod, summarize, type ReportBasis, type ReportScope } from './engine'
 import { ReportDoc } from './ReportDoc'
 import { reportCsvBlob, reportCsvFilename } from './reportCsv'
 import { REPORT_LIMITS, saveReportDetails, useReportDetails } from './store'
@@ -56,10 +56,18 @@ export function ReportScreen() {
   const money = (minor: number, currency: string) => formatMoney(minor, currency, { trimZeros: true })
 
   const group = scope.kind === 'group' ? groups.find((g) => g.id === scope.groupId) : undefined
-  const period =
+  // A group's claim covers its first to last expense on the sheet; a claim by dates, the dates picked.
+  const range =
     scope.kind === 'group'
-      ? (group?.name ?? '')
-      : t('report.dates.period', { from: indianDate(scope.from <= scope.to ? scope.from : scope.to), to: indianDate(scope.from <= scope.to ? scope.to : scope.from) })
+      ? reportPeriod(report.rows)
+      : scope.from <= scope.to
+        ? { from: scope.from, to: scope.to }
+        : { from: scope.to, to: scope.from }
+  const period = !range
+    ? ''
+    : range.from === range.to
+      ? indianDate(range.from)
+      : t('report.dates.period', { from: indianDate(range.from), to: indianDate(range.to) })
 
   if (expenses.every((e) => e.kind === 'loan')) {
     return (
@@ -116,7 +124,6 @@ export function ReportScreen() {
               <span className={styles.label}>{t('report.from.label')}</span>
               <SegmentedControl
                 ariaLabel={t('report.from.label')}
-                size="sm"
                 value={scope.kind}
                 onChange={pickKind}
                 options={[
@@ -164,7 +171,6 @@ export function ReportScreen() {
             <span className={styles.label}>{t('report.basis.label')}</span>
             <SegmentedControl
               ariaLabel={t('report.basis.label')}
-              size="sm"
               value={basis}
               onChange={setBasis}
               options={[
@@ -201,11 +207,12 @@ export function ReportScreen() {
               <span className={styles.hint}>{t('report.list.count', { ticked, count: candidates.length })}</span>
             </div>
             <div className={styles.chips}>
-              <Chip selected={false} onClick={() => setSkipped(ticked === candidates.length ? new Set(candidates.map((r) => r.id)) : NO_SKIPS)}>
+              <Chip size="lg" selected={false} onClick={() => setSkipped(ticked === candidates.length ? new Set(candidates.map((r) => r.id)) : NO_SKIPS)}>
                 {ticked === candidates.length ? t('report.list.none') : t('report.list.all')}
               </Chip>
               {showBillsFilter && (
                 <Chip
+                  size="lg"
                   selected={billsOnly}
                   aria-pressed={billsOnly}
                   onClick={() => setSkipped(billsOnly ? NO_SKIPS : new Set(candidates.filter((r) => !r.hasBill).map((r) => r.id)))}
@@ -234,7 +241,12 @@ export function ReportScreen() {
                             {t('report.row.meta', { date: indianDate(r.date), category: r.categoryLabel, name: r.paidBy })}
                           </span>
                           {r.original && (
-                            <span className={styles.itemMeta}>{t('report.row.fx', { amount: money(r.original.amount, r.original.currency), rate: r.original.rate })}</span>
+                            <span className={styles.itemMeta}>
+                              {t(r.original.whole ? 'report.row.fx' : 'report.row.fx.share', {
+                                amount: money(r.original.bill, r.original.currency),
+                                rate: r.original.rateShown,
+                              })}
+                            </span>
                           )}
                         </span>
                         <span className={styles.itemAmount}>{amount}</span>
@@ -306,7 +318,7 @@ export function ReportScreen() {
               </h2>
               <p className={styles.hint}>{t('report.preview.hint')}</p>
               <div className={styles.printArea}>
-                <ReportDoc report={report} name={claimant} employee={details.employee.trim()} purpose={details.purpose.trim()} period={period} basis={basis} />
+                <ReportDoc report={report} name={claimant} employee={details.employee.trim()} purpose={details.purpose.trim()} period={period} group={group?.name} basis={basis} />
               </div>
             </section>
           )}

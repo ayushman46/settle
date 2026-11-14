@@ -12,8 +12,11 @@ vi.setConfig({ testTimeout: 30_000 })
 let riya: string
 let sam: string
 
-function trip(name: string, emoji: string, dates: string[]): Group {
+/** A trip group made on `made` (1 Nov unless said), with a bill on each of `dates`. */
+function trip(name: string, emoji: string, dates: string[], made = new Date(2026, 10, 1, 12)): Group {
+  vi.setSystemTime(made)
   const group = createGroup({ name, emoji, kind: 'trip', currency: 'INR', memberIds: [ME_ID, riya, sam] })
+  vi.setSystemTime(new Date(2026, 10, 14, 12))
   dates.forEach((date, i) => saveExpense(draft({ title: `Bill ${i}`, total: 90_000, date, payerId: i === 0 ? riya : ME_ID, groupId: group.id, participants: everyone(ME_ID, riya, sam) })))
   return group
 }
@@ -82,6 +85,17 @@ describe('TripOverHome', () => {
     renderAt('/app', <TripOverHome />)
     expect(screen.getByRole('region', { name: 'Pondy looks done' })).toBeInTheDocument()
     expect(screen.queryByRole('region', { name: 'Goa looks done' })).not.toBeInTheDocument()
+  })
+
+  it('a group just made from an old chat does not look done, on Home or on the group', () => {
+    const lonavala = trip('Lonavala', '⛰️', ['2026-11-05', '2026-11-06', '2026-11-07'], new Date(2026, 10, 14, 9))
+    const { container } = renderAt('/app', (
+      <>
+        <TripOverHome />
+        <TripOverCard group={fresh(lonavala.id)} />
+      </>
+    ))
+    expect(container).toBeEmptyDOMElement()
   })
 
   it('is empty when no group looks done', () => {

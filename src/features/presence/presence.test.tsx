@@ -5,6 +5,8 @@ import { draft, everyone } from '../../data/testKit'
 import { ME_ID, type Expense, type Group } from '../../domain/types'
 import { ToastProvider } from '../../components'
 import { renderAt, resetProScreens } from '../pro/testing'
+import { splitByNights } from './actions'
+import { nightsPlan } from './engine'
 import { NightsCard } from './NightsCard'
 import { PresenceBanner } from './PresenceBanner'
 import { PresenceSheet } from './PresenceSheet'
@@ -79,9 +81,9 @@ describe('PresenceBanner', () => {
 
     const { user } = renderAt('/app/groups/x', <PresenceBanner group={liveGroup()} />)
     expect(screen.getByText(/Sam joined on 12 Nov but is on 3 expenses from before\./)).toBeInTheDocument()
-    expect(screen.getByText(/Take Sam off them\?/)).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /Shopping/ })).toHaveAttribute('href', `/app/expense/${shopping.id}`)
-    expect(screen.getByText('(split another way)')).toBeInTheDocument()
+    // Names what it will change before the tap.
+    expect(screen.getByText('Take Sam off Shopping (₹300), Cab (₹600.01) and Dinner (₹900)? The people who were there share them instead.')).toBeInTheDocument()
+    expect(screen.getByText(/On Shopping, that part is spread over the others/)).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Take Sam off' }))
     const d = find(dinner.id)
@@ -92,16 +94,87 @@ describe('PresenceBanner', () => {
     expect(Object.values(c.shares).reduce((a, b) => a + b, 0)).toBe(60_001)
     expect(c.shares[sam]).toBeUndefined()
     expect(find(lunch.id).participants).toHaveLength(3)
-    expect(find(shopping.id).participants).toHaveLength(3)
-    // Only the by-hand one is left.
+    // The exact split: Sam's ₹100 spread over the others in proportion, still ₹300 in all.
+    expect(find(shopping.id).participants).toEqual([
+      { friendId: ME_ID, input: 15_000 },
+      { friendId: riya, input: 15_000 },
+    ])
+    expect(find(shopping.id).shares).toEqual({ [ME_ID]: 15_000, [riya]: 15_000 })
     expect(screen.queryByRole('button', { name: 'Take Sam off' })).not.toBeInTheDocument()
-    expect(screen.getByText(/Sam joined on 12 Nov but is on 1 expense from before\./)).toBeInTheDocument()
 
-    expect(await screen.findByText('Took Sam off 2 expenses')).toBeInTheDocument()
+    expect(await screen.findByText('Took Sam off Shopping (₹300), Cab (₹600.01) and Dinner (₹900)')).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: /^Undo/ }))
     expect(find(dinner.id)).toEqual(before.dinner)
     expect(find(cab.id)).toEqual(before.cab)
     expect(find(dinner.id).paidBack).toEqual({ [riya]: 123 })
+  })
+
+  it('never takes anyone off a stay: points to Split by nights instead, and leaves a stay split by nights alone', async () => {
+    // p10: the villa is dated on the first night; Sam came on the 12th and slept there 2 nights.
+    const villa = add('Villa', 1_200_000, '2026-11-10', { category: 'other', payerId: riya })
+    const breakfast = add('Breakfast', 60_000, '2026-11-11')
+    add('Brunch', 30_000, '2026-11-14')
+    setStay(group.id, sam, { from: '2026-11-12', to: null })
+    const { user } = renderAt('/app/groups/x', <PresenceBanner group={liveGroup()} />)
+    expect(screen.getByText(/Sam joined on 12 Nov but is on 1 expense from before\./)).toBeInTheDocument()
+    expect(screen.getByText(/^Take Sam off Breakfast \(₹600\)\?/)).toBeInTheDocument()
+    expect(screen.getByText(/Split this stay by nights instead, so Sam pays only for the nights they were there/)).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Villa (₹12,000)' })).toHaveAttribute('href', `/app/expense/${villa.id}`)
+
+    await user.click(screen.getByRole('button', { name: 'Take Sam off' }))
+    expect(find(villa.id).participants).toHaveLength(3)
+    expect(find(villa.id).mode).toBe('equal')
+    expect(find(breakfast.id).participants).toHaveLength(2)
+    // Only the stay is left, under its own words.
+    expect(screen.getByText('Sam wasn’t there every night.')).toBeInTheDocument()
+
+    // Split by nights: then Take off has nothing to change and the banner goes.
+    const plan = nightsPlan(find(villa.id), liveGroup(), expensesStore.get(), presenceStore.get().stays[group.id] ?? {})!
+    act(() => {
+      splitByNights(find(villa.id), plan.participants, plan.range)
+    })
+    expect(find(villa.id).participants.map((p) => p.input)).toEqual([2, 2, 1])
+    expect(screen.queryByText('Sam wasn’t there every night.')).not.toBeInTheDocument()
+    // A later expense doesn't bring it back or move its nights.
+    act(() => {
+      add('Dinner', 30_000, '2026-11-16')
+    })
+    expect(screen.queryByText(/Villa/)).not.toBeInTheDocument()
+    expect(find(villa.id).shares[sam]).toBe(240_000)
+  })
+
+  it('a percent split is one tap too: their part spread over the others in proportion, adding up to the paisa', async () => {
+    const fireworks = add('Fireworks', 100_000, '2026-11-11', {
+      mode: 'percent',
+      participants: [
+        { friendId: ME_ID, input: 4500 },
+        { friendId: riya, input: 4500 },
+        { friendId: sam, input: 1000 },
+      ],
+    })
+    setStay(group.id, sam, { from: '2026-11-12', to: null })
+    const { user } = renderAt('/app/groups/x', <PresenceBanner group={liveGroup()} />)
+    expect(screen.getByText('On Fireworks, that part is spread over the others in proportion to what they already pay.')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Take Sam off' }))
+    const f = find(fireworks.id)
+    expect(f.mode).toBe('percent')
+    expect(f.participants).toEqual([
+      { friendId: ME_ID, input: 5000 },
+      { friendId: riya, input: 5000 },
+    ])
+    expect(f.shares).toEqual({ [ME_ID]: 50_000, [riya]: 50_000 })
+    await user.click(await screen.findByRole('button', { name: /^Undo/ }))
+    expect(find(fireworks.id).shares[sam]).toBe(10_000)
+  })
+
+  it('what needs a person says what to do, and its button says it leaves them as they are', () => {
+    const dinner = add('Dinner', 90_000, '2026-11-10')
+    expensesStore.set(expensesStore.get().map((e) => (e.id === dinner.id ? { ...e, paidBack: { [sam]: 5 } } : e)))
+    setStay(group.id, sam, { from: '2026-11-12', to: null })
+    renderAt('/app/groups/x', <PresenceBanner group={liveGroup()} />)
+    expect(screen.getByText('(already paid back, so open it and change who’s on it)')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Leave them as they are' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Take Sam off' })).not.toBeInTheDocument()
   })
 
   it('“Leave them” is remembered, and Undo brings the banner back', async () => {
@@ -154,6 +227,17 @@ describe('PresenceSheet', () => {
     await user.click(within(sheet).getByRole('button', { name: 'Done' }))
     expect(onClose).toHaveBeenCalled()
   })
+
+  it('speaks to you in your own grammar, says how nights count, and shows a set stay’s nights', async () => {
+    add('Dinner', 90_000, '2026-11-10')
+    setStay(group.id, riya, { from: '2026-11-10', to: '2026-11-13' })
+    renderAt('/app/groups/x', <PresenceSheet group={liveGroup()} open onClose={() => {}} />)
+    const sheet = await screen.findByRole('dialog', { name: 'Who was there when' })
+    expect(within(sheet).getByRole('button', { name: 'You were there the whole trip' })).toBeInTheDocument()
+    expect(within(sheet).queryByRole('button', { name: /You was there/ })).not.toBeInTheDocument()
+    expect(within(sheet).getByText('10 Nov to 13 Nov, 3 nights')).toBeInTheDocument()
+    expect(within(sheet).getByText(/the day they leave isn’t one: from 10 Nov until 13 Nov is 3 nights/)).toBeInTheDocument()
+  })
 })
 
 describe('NightsCard', () => {
@@ -173,8 +257,11 @@ describe('NightsCard', () => {
     expect(screen.getByText('Riya: 3 nights, ₹428.57')).toBeInTheDocument()
     expect(screen.getByText('Sam: 1 night, ₹142.86')).toBeInTheDocument()
     expect(screen.getByText(/Nights counted from 10 Nov to 13 Nov/)).toBeInTheDocument()
+    expect(screen.getByText(/The last day isn’t a night/)).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Split by nights' }))
+    // The range is remembered, so a later expense can't move these nights.
+    expect(presenceStore.get().anchors).toEqual({ [villa.id]: { from: '2026-11-10', to: '2026-11-13' } })
     const saved = find(villa.id)
     expect(saved.mode).toBe('shares')
     expect(saved.participants.map((p) => p.input)).toEqual([3, 3, 1])
@@ -190,6 +277,7 @@ describe('NightsCard', () => {
 
     await user.click(await screen.findByRole('button', { name: /^Undo/ }))
     expect(find(villa.id)).toEqual(before)
+    expect(presenceStore.get().anchors).toBeUndefined()
   })
 
   it('shows nothing for a meal, without stays, or outside a group', () => {

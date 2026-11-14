@@ -50,7 +50,7 @@ describe('FareSheet', () => {
     const { user, onApply } = setup({ total: 30_000 })
     await user.click(screen.getByRole('button', { name: 'Riya: Got off first' }))
     await user.click(screen.getByRole('switch', { name: /Got off at the same stop/ }))
-    await user.click(screen.getByRole('button', { name: 'Sam: Same stop' }))
+    await user.click(screen.getByRole('button', { name: 'Sam: Tap if same stop' }))
     // Leg 1 ₹150 by 3 = ₹50 each; Ayush alone for leg 2: ₹150.
     await user.click(screen.getByRole('button', { name: 'Use this split' }))
     expect(onApply).toHaveBeenLastCalledWith({ me: 20_000, riya: 5_000, sam: 5_000 })
@@ -63,12 +63,49 @@ describe('FareSheet', () => {
     const { user, onApply } = setup({ total: 60_000, people: PEOPLE.slice(0, 2) })
     await user.click(screen.getByRole('button', { name: 'Riya: Got off first' }))
     await user.click(screen.getByRole('button', { name: 'Add distances (km)' }))
-    await user.type(screen.getByLabelText('Leg 1, till Riya got off (km)'), '4')
-    expect(screen.getByText('Fill in every leg to split by distance.')).toBeInTheDocument()
-    await user.type(screen.getByLabelText('Leg 2, to the end (km)'), '8')
+    expect(screen.getByText(/the km of that leg only, not the meter reading so far/)).toBeInTheDocument()
+    await user.type(screen.getByLabelText('Leg 1 only, till Riya got off (km)'), '4')
+    // A leg left blank is said next to the result, not just in small print.
+    expect(result().getByText('Not split by distance yet')).toBeInTheDocument()
+    expect(result().getByText(/1 leg has no km \(or 0\), so every leg counts the same for now/)).toBeInTheDocument()
+    await user.type(screen.getByLabelText('Leg 2 only, to the end (km)'), '8')
     expect(result().getByText('Rode 4 of 12 km')).toBeInTheDocument()
+    expect(screen.queryByText('Not split by distance yet')).not.toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Use this split' }))
     expect(onApply).toHaveBeenCalledWith({ riya: 10_000, me: 50_000 })
+  })
+
+  it('a 0 km leg is not silently ignored', async () => {
+    const { user } = setup({ total: 60_000, people: PEOPLE.slice(0, 2) })
+    await user.click(screen.getByRole('button', { name: 'Riya: Got off first' }))
+    await user.click(screen.getByRole('button', { name: 'Add distances (km)' }))
+    await user.type(screen.getByLabelText('Leg 1 only, till Riya got off (km)'), '0')
+    expect(result().getByText(/2 legs have no km \(or 0\)/)).toBeInTheDocument()
+    expect(result().getByText('Rode 1 of 2 legs')).toBeInTheDocument()
+  })
+
+  it('Start over turns the same-stop switch off, and an untapped rider is never labelled “Same stop”', async () => {
+    const { user, onApply } = setup({ total: 30_000 })
+    await user.click(screen.getByRole('button', { name: 'Ayush: Got off first' }))
+    await user.click(screen.getByRole('switch', { name: /Got off at the same stop/ }))
+    expect(screen.queryByText('Same stop')).not.toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Start over' }))
+    await user.click(screen.getByRole('button', { name: 'Riya: Got off first' }))
+    expect(screen.getByRole('switch', { name: /Got off at the same stop/ })).not.toBeChecked()
+    await user.click(screen.getByRole('button', { name: 'Sam: Got off next' }))
+    expect(screen.getByRole('button', { name: 'Sam got off at stop 2. Tap to put them back.' })).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Use this split' }))
+    // Three legs, not two: Riya ₹33.33, Sam ₹83.33, Ayush ₹183.34.
+    expect(onApply).toHaveBeenLastCalledWith({ riya: 3_333, sam: 8_333, me: 18_334 })
+  })
+
+  it('untapping everyone turns the switch off too', async () => {
+    const { user } = setup()
+    await user.click(screen.getByRole('button', { name: 'Riya: Got off first' }))
+    await user.click(screen.getByRole('switch', { name: /Got off at the same stop/ }))
+    await user.click(screen.getByRole('button', { name: 'Riya got off at stop 1. Tap to put them back.' }))
+    await user.click(screen.getByRole('button', { name: 'Riya: Got off first' }))
+    expect(screen.getByRole('switch', { name: /Got off at the same stop/ })).not.toBeChecked()
   })
 
   it('shows nothing with fewer than two people or no amount', () => {

@@ -12,6 +12,7 @@ const DOC = {
   employee: 'Employee ID / Department',
   purpose: 'Purpose',
   period: 'Period',
+  group: 'Group',
   basisPaid: 'Expenses paid by the claimant',
   basisShare: 'Claimant’s share of shared expenses',
   date: 'Date',
@@ -20,6 +21,8 @@ const DOC = {
   paidBy: 'Paid by',
   amount: 'Amount',
   paidAbroad: 'paid',
+  shareOf: 'share of',
+  billPaid: 'bill paid',
   rate: 'at',
   byCategory: 'By category',
   total: 'Total',
@@ -36,15 +39,17 @@ export interface ReportDocProps {
   name: string
   employee: string
   purpose: string
-  /** "Goa offsite" or "1/11/2026 to 30/11/2026". */
+  /** The dates covered: "12/11/2026 to 14/11/2026". */
   period: string
+  /** The group the claim is from, on its own line (none for a claim by dates). */
+  group?: string
   basis: 'paid' | 'share'
 }
 
 const money = (minor: number, currency: string) => formatMoney(minor, currency)
 
 /** One A4 claim sheet: who, what for, the table, totals by category, the grand total in words and a place to sign. */
-export function ReportDoc({ report, name, employee, purpose, period, basis }: ReportDocProps) {
+export function ReportDoc({ report, name, employee, purpose, period, group, basis }: ReportDocProps) {
   const multi = report.totals.length > 1
   return (
     <article className={styles.sheet} aria-label={DOC.title}>
@@ -68,6 +73,12 @@ export function ReportDoc({ report, name, employee, purpose, period, basis }: Re
           <div>
             <dt>{DOC.purpose}</dt>
             <dd>{purpose}</dd>
+          </div>
+        )}
+        {group && (
+          <div>
+            <dt>{DOC.group}</dt>
+            <dd>{group}</dd>
           </div>
         )}
         <div>
@@ -96,7 +107,9 @@ export function ReportDoc({ report, name, employee, purpose, period, basis }: Re
                 {r.title}
                 {r.original && (
                   <span className={styles.sheetFx}>
-                    {DOC.paidAbroad} {money(r.original.amount, r.original.currency)} {DOC.rate} {r.original.rate}
+                    {r.original.whole
+                      ? `${DOC.paidAbroad} ${money(r.original.bill, r.original.currency)} ${DOC.rate} ${r.original.rateShown}`
+                      : `${DOC.shareOf} ${money(r.original.bill, r.original.currency)} ${DOC.billPaid}, ${DOC.rate} ${r.original.rateShown}`}
                   </span>
                 )}
               </td>

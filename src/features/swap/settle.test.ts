@@ -102,4 +102,18 @@ describe('the message', () => {
     expect(text).not.toContain('UPI ID')
     expect(text).not.toContain('http')
   })
+
+  it('without today’s balances it never claims anyone is cleared', () => {
+    const text = swapMessage({ fromId: riya, toId: sam, amount: 50_000 }, friendsById(), { name: 'Ayush', upiId: null }, 'INR', null)
+    expect(text).toBe('Hi Riya, instead of paying me ₹500, please pay Sam ₹500 directly.')
+  })
+
+  it('says what is left on each side when both stay open', () => {
+    const text = swapMessage({ fromId: riya, toId: sam, amount: 30_000 }, friendsById(), { name: 'Ayush', upiId: null }, 'INR', null, {
+      owed: 80_000,
+      owe: 50_000,
+    })
+    // Sam is owed ₹500 but only ₹300 goes this way (the rest goes to someone else's swap): Riya still owes ₹500.
+    expect(text).toBe('Hi Riya, you owe me ₹800. Please pay Sam ₹300 of it directly. You’ll then owe me ₹500.')
+  })
 })

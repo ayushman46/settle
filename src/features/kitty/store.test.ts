@@ -57,3 +57,26 @@ describe('the kitty store', () => {
     expect(ids[0]).toBe(`g${MAX_KITTIES + 4}`)
   })
 })
+
+describe('the kitty store and the moment a kitty started', () => {
+  it('keeps the start moment, and reads older kitties that lack it or carry junk in it', () => {
+    setKitty('goa', { holderId: 'riya', perHead: 200_000, startedOn: '2026-11-14', startedAt: 1_763_109_000_000 })
+    expect(kittyConfigFor('goa')?.startedAt).toBe(1_763_109_000_000)
+    window.localStorage.setItem(
+      STORAGE_KEYS.kitty,
+      JSON.stringify({
+        v: 1,
+        data: {
+          byGroup: {
+            old: { holderId: 'riya', perHead: 200_000, startedOn: '2026-11-12' },
+            odd: { holderId: 'sam', perHead: 100_000, startedOn: '2026-11-13', startedAt: 'noon' },
+          },
+        },
+      }),
+    )
+    kittyStore.reload()
+    expect(kittyConfigFor('old')).toEqual({ holderId: 'riya', perHead: 200_000, startedOn: '2026-11-12' })
+    expect(kittyConfigFor('odd')).toEqual({ holderId: 'sam', perHead: 100_000, startedOn: '2026-11-13' })
+    expect(kittyConfigFor('odd')?.startedAt).toBeUndefined()
+  })
+})

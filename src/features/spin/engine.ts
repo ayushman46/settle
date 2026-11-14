@@ -9,7 +9,6 @@
  */
 import type { Expense, Group, Minor } from '../../domain/types'
 import { groupBalances } from '../../engine/balances'
-import { allocate } from '../../lib/money'
 
 export type SpinMode = 'fair' | 'luck'
 
@@ -20,7 +19,10 @@ export interface SpinSlice {
   id: string
   /** Exact weight; all slices sum to 1. */
   weight: number
-  /** Whole-number chance; all slices sum to 100. */
+  /**
+   * Chance in percent, to one decimal (12.5). Each is rounded on its own, so people with the same
+   * standing always show the same number; together they may come to 99.9 or 100.1.
+   */
   percent: number
   /** Where the slice starts and ends on the wheel, in degrees clockwise from the top. */
   start: number
@@ -34,8 +36,7 @@ export type Random = () => number
 
 /**
  * The wheel's slices for `ids` (already without anyone left out of this spin), ordered by name
- * so every phone draws the same wheel. Percentages are rounded by largest remainder, ties to the
- * name first, so they always add up to 100.
+ * so every phone draws the same wheel. Percentages are rounded to one decimal each (see `percent`).
  */
 export function spinSlices(ids: readonly string[], balances: Readonly<Record<string, Minor>>, mode: SpinMode, nameOf: (id: string) => string): SpinSlice[] {
   const people = [...new Set(ids)].sort((a, b) => nameOf(a).localeCompare(nameOf(b)) || (a < b ? -1 : a > b ? 1 : 0))
@@ -50,13 +51,12 @@ export function spinSlices(ids: readonly string[], balances: Readonly<Record<str
     mode === 'luck' || totalBehind === 0
       ? people.map(() => 1 / n)
       : behind.map((v) => FAIR_EQUAL_PART / n + ((1 - FAIR_EQUAL_PART) * v) / totalBehind)
-  const percents = allocate(100, weights)
   let at = 0
   return people.map((id, i) => {
     const weight = weights[i] ?? 0
     const start = at
     at = i === n - 1 ? 360 : at + weight * 360
-    return { id, weight, percent: percents[i] ?? 0, start, end: at, behind: behind[i] ?? 0 }
+    return { id, weight, percent: Math.round(weight * 1000) / 10, start, end: at, behind: behind[i] ?? 0 }
   })
 }
 
@@ -105,4 +105,61 @@ export function seededRandom(seed: number): Random {
     t ^= t + Math.imul(t ^ (t >>> 7), t | 61)
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296
   }
+}
+
+/** A chance as people read it: 50 → "50", 12.5 → "12.5". */
+export function percentText(percent: number): string {
+  return Number.isInteger(percent) ? String(percent) : percent.toFixed(1)
+}
+
+/** The longest name written on the wheel (the full name is in the list under it). */
+export const WHEEL_NAME_MAX = 9
+/** A slice thinner than this has no name on the wheel: there's no room for a line of text. */
+export const MIN_LABEL_DEGREES = 11
+
+function cut(text: string, max: number): string {
+  const chars = [...text]
+  return chars.length > max ? `${chars.slice(0, max - 1).join('')}…` : text
+}
+
+/**
+ * The short names written on the wheel: first names, cut with "…" past `WHEEL_NAME_MAX`. Two people
+ * with the same first name get their surname's initial ("Rahul S."). Same order as `names`.
+ */
+export function wheelNames(names: readonly string[]): string[] {
+  const words = names.map((name) => name.trim().split(/\s+/).filter(Boolean))
+  const first = words.map((w) => cut(w[0] ?? '', WHEEL_NAME_MAX))
+  return first.map((short, i) => {
+    const clash = first.some((other, j) => j !== i && other.toLocaleLowerCase() === short.toLocaleLowerCase())
+    const initial = [...(words[i]?.[1] ?? '')][0]
+    return clash && initial ? `${cut(words[i]?.[0] ?? '', WHEEL_NAME_MAX - 3)} ${initial.toLocaleUpperCase()}.` : short
+  })
+}
+
+export interface WheelLabel {
+  id: string
+  text: string
+  /** The direction of the slice's middle, degrees clockwise from the top (on the wheel, before it turns). */
+  angle: number
+  /** Turn the text half round, so it isn't upside down where the wheel comes to rest. */
+  flip: boolean
+}
+
+/**
+ * What is written on each slice: its short name along the slice's middle, read from the centre out
+ * on the right-hand side of the wheel and from the edge in on the left, so no name is upside down
+ * once the wheel (turned by `rotation` degrees) stops. Slices too thin for a line of text get no
+ * label: the list under the wheel names everyone. Nothing for a wheel of one.
+ */
+export function wheelLabels(slices: readonly SpinSlice[], nameOf: (id: string) => string, rotation: number): WheelLabel[] {
+  if (slices.length < 2) return []
+  const short = wheelNames(slices.map((s) => nameOf(s.id)))
+  const out: WheelLabel[] = []
+  slices.forEach((s, i) => {
+    if (s.end - s.start < MIN_LABEL_DEGREES) return
+    const angle = (s.start + s.end) / 2
+    const resting = (((angle + rotation) % 360) + 360) % 360
+    out.push({ id: s.id, text: short[i] ?? '', angle, flip: resting > 180 })
+  })
+  return out
 }

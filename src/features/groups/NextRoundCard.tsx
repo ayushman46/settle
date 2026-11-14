@@ -3,8 +3,11 @@ import { ArrowRight, RotateCw } from 'lucide-react'
 import { navigate } from '../../app/router'
 import { Button } from '../../components'
 import type { Expense, Group } from '../../domain/types'
+import { addDays, today as todayIso } from '../../engine/dates'
 import { useT } from '../../i18n'
 import { FriendAvatar } from '../../kit/index-a'
+import { useKittyHeld } from '../kitty/useKittyHeld'
+import { useGroupUsualSplit } from '../usual'
 import { settleUpPath } from './paths'
 import { logNextRound, nextRoundCardView, useNameOf } from './rotationView'
 import styles from './NextRoundCard.module.css'
@@ -27,7 +30,16 @@ export function NextRoundCard({ group, expenses, onPlan }: NextRoundCardProps) {
   const titleId = useId()
   const nameOf = useNameOf()
   const view = useMemo(() => nextRoundCardView(group, expenses, nameOf), [group, expenses, nameOf])
-  if (!view) return null
+  // The sums here are for a group that takes turns and splits equally. A kitty holder is not "behind"; a 60/40
+  // couple is not squared by an equal round; and nobody buys the next round on a trip that ended days ago.
+  const kitty = useKittyHeld(group.id)
+  const usual = useGroupUsualSplit(group)
+  const quiet = useMemo(() => {
+    if (group.kind !== 'trip') return false
+    const since = addDays(todayIso(), -2)
+    return !expenses.some((e) => e.groupId === group.id && e.date >= since)
+  }, [group, expenses])
+  if (!view || kitty !== null || (usual !== null && !usual.equal) || quiet) return null
 
   if (view.kind === 'left') {
     return (

@@ -1,6 +1,6 @@
 import { screen, waitFor, within } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { addFriend, expensesStore, groupsStore, saveExpense, updateFriend, updateProfile } from '../../data'
+import { addFriend, createGroup, expensesStore, groupsStore, saveExpense, updateFriend, updateProfile } from '../../data'
 import { draft, everyone } from '../../data/testKit'
 import { ME_ID } from '../../domain/types'
 import { overallSummary } from '../../engine/balances'
@@ -58,6 +58,8 @@ describe('QueueScreen', () => {
     expect(screen.getByText('You owe 3 people ₹2,340')).toBeInTheDocument()
     expect(within(now()).getByRole('heading', { name: 'Riya' })).toBeInTheDocument()
     expect(within(now()).getByText('Pays to riya@okicici')).toBeInTheDocument()
+    // The split's title is quoted, so it can't be read as how to pay.
+    expect(within(now()).getByText('For the split “Hotel”')).toBeInTheDocument()
     expect(screen.getByText('1 of 3')).toBeInTheDocument()
 
     await user.click(within(now()).getByRole('button', { name: 'Pay ₹1,200' }))
@@ -73,6 +75,7 @@ describe('QueueScreen', () => {
     expect(within(now()).getByText('No UPI ID saved for Sam. You can add it when you pay.')).toBeInTheDocument()
     expect(screen.getByText('2 of 3')).toBeInTheDocument()
     expect(within(screen.getByRole('region', { name: 'Paid so far' })).getByText('Riya')).toBeInTheDocument()
+    expect(within(screen.getByRole('region', { name: 'Paid so far' })).getByText('Paid by UPI')).toBeInTheDocument()
 
     // Skip moves on without recording.
     await user.click(screen.getByRole('button', { name: 'Skip Sam for now' }))
@@ -85,9 +88,14 @@ describe('QueueScreen', () => {
     expect(nets()[asha]).toBeUndefined()
     await burstGone()
 
-    // Only the skipped one is left.
-    expect(screen.getByText('You skipped 1 person')).toBeInTheDocument()
-    await user.click(screen.getByRole('button', { name: 'Go through them again' }))
+    // Only the skipped one is left, and the screen says so.
+    expect(screen.getByText('That’s everyone, apart from 1 person you skipped')).toBeInTheDocument()
+    expect(screen.getByText('Only the person you skipped is left: ₹800')).toBeInTheDocument()
+    expect(screen.queryByText('You owe 1 person ₹800')).not.toBeInTheDocument()
+    const doneList = within(screen.getByRole('region', { name: 'Paid so far' }))
+    expect(doneList.getByText('Asha').parentElement).toHaveTextContent('Paid in cash')
+    expect(doneList.getByText('Riya').parentElement).toHaveTextContent('Paid by UPI')
+    await user.click(screen.getByRole('button', { name: 'Pay the one you skipped' }))
     expect(within(now()).getByRole('heading', { name: 'Sam' })).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Mark ₹800 to Sam as paid in cash' }))
     await burstGone()
@@ -95,6 +103,26 @@ describe('QueueScreen', () => {
     expect(screen.getByRole('heading', { name: 'You owe nobody' })).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Back to Home' }))
     expect(currentUrl()).toBe('/app')
+  })
+
+  it('a split called “Cash” is quoted, and a group says it is updated too', () => {
+    resetProScreens()
+    updateProfile({ name: 'Ayush', currency: 'INR' })
+    const dev = addFriend({ name: 'Dev' }).id
+    saveExpense(draft({ title: 'Cash', total: 100_000, payerId: dev, participants: everyone(ME_ID, dev) }))
+    renderAt('/app/pay-all', <QueueScreen />)
+    expect(within(now()).getByText('For the split “Cash”')).toBeInTheDocument()
+    expect(screen.queryByText('For Cash')).not.toBeInTheDocument()
+  })
+
+  it('a debt in a group names the group and says paying updates it', () => {
+    resetProScreens()
+    updateProfile({ name: 'Ayush', currency: 'INR' })
+    const gita = addFriend({ name: 'Gita' }).id
+    const flat = createGroup({ name: 'Flat 4B', emoji: '🏠', kind: 'home', currency: 'INR', memberIds: [ME_ID, gita] })
+    saveExpense(draft({ title: 'Rent', total: 100_000, payerId: gita, groupId: flat.id, participants: everyone(ME_ID, gita) }))
+    renderAt('/app/pay-all', <QueueScreen />)
+    expect(within(now()).getByText('In the group Flat 4B. Paying here updates the group too.')).toBeInTheDocument()
   })
 
   it('Undo brings the person back to the queue', async () => {

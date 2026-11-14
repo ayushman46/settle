@@ -82,7 +82,9 @@ describe('ReportScreen', () => {
     // The name on the claim, and as who paid each of the two bills.
     expect(within(sheet).getAllByText('Ayush')).toHaveLength(3)
     expect(within(sheet).getByText('Client visit')).toBeInTheDocument()
-    expect(within(sheet).getByText('Pune visit')).toBeInTheDocument()
+    // The group on its own line; the period is the dates covered, first to last expense.
+    expect(within(sheet).getByText('Group').nextElementSibling).toHaveTextContent('Pune visit')
+    expect(within(sheet).getByText('Period').nextElementSibling).toHaveTextContent('02/11/2026 to 03/11/2026')
     expect(within(sheet).getAllByRole('row').length).toBeGreaterThan(2)
     expect(sheet).toHaveTextContent('Six thousand nine hundred rupees')
     expect(sheet).toHaveTextContent('Made with Settle')
@@ -98,12 +100,30 @@ describe('ReportScreen', () => {
     expect(shared.blobs[0]?.name).toBe('settle-expense-claim-2026-11-14.csv')
     const text = await blobText(shared.blobs[0]!.blob)
     expect(text.replace(CSV_BOM, '').split('\r\n')).toEqual([
-      'Date,Title,Category,Paid by,Amount,Currency,Paid amount,Paid currency,Rate',
-      '2026-11-02,Cab,Transport,Ayush,900.00,INR,,,',
-      ',Total,,,900.00,INR,,,',
+      'Date,Title,Category,Paid by,Amount,Currency,Bill amount,Bill currency,Rate,Share of bill',
+      '2026-11-02,Cab,Transport,Ayush,900.00,INR,,,,',
+      ',Total,,,900.00,INR,,,,',
       '',
     ])
     expect(await screen.findByText('Saved the claim as a spreadsheet')).toBeInTheDocument()
+  })
+
+  it('my share of a bill paid in dollars says it is a share of the whole bill, with the rate to 4 decimals', async () => {
+    const zoom = draft({ title: 'Zoom', total: 188_486, date: '2026-11-05', groupId: pune, participants: everyone(ME_ID, riya) })
+    saveExpense({ ...zoom, fx: { amount: 2_000, currency: 'USD', rate: '94.24312342', rateDate: '2026-11-05', source: 'ecb' } })
+    const { user } = renderAt(`/app/report?group=${pune}`, <ReportScreen />)
+    await user.click(screen.getByRole('radio', { name: 'My share' }))
+    expect(screen.getByText('Your share of $20, at 94.2431')).toBeInTheDocument()
+    expect(screen.queryByText(/94\.243123/)).not.toBeInTheDocument()
+    const sheet = screen.getByRole('article', { name: 'Expense claim' })
+    expect(sheet).toHaveTextContent('share of $20.00 bill paid, at 94.2431')
+    expect(sheet).not.toHaveTextContent('$10.00')
+  })
+
+  it('the choices and chips are full-size tap targets', () => {
+    renderAt('/app/report', <ReportScreen />)
+    expect(screen.getByRole('radiogroup', { name: 'What to claim' }).className).not.toMatch(/sm/)
+    expect(screen.getByRole('button', { name: 'Untick all' }).className).toMatch(/lg/)
   })
 
   it('says so when there is nothing to claim, and offers my share', async () => {

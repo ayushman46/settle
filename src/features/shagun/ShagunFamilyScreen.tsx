@@ -1,15 +1,15 @@
 import { useState } from 'react'
 import { Pencil, Plus, Trash2 } from 'lucide-react'
-import { goBack, useRoute } from '../../app/router'
+import { goBack, navigate, useRoute } from '../../app/router'
 import { Button, Card, EmptyState, IconButton, PageTitle, Screen, TopBar, useToast } from '../../components'
 import { today } from '../../engine/dates'
 import { useT } from '../../i18n'
 import { EntrySheet } from './EntrySheet'
-import { findFamily, tidyName } from './engine'
+import { findFamily, nameKey, tidyName } from './engine'
 import { GiveBox } from './GiveBox'
-import { entryWhat, entryWhen, rupees } from './labels'
-import { SHAGUN_FAMILY_PATTERN, SHAGUN_PATH } from './paths'
-import { deleteEntry, restoreEntries } from './store'
+import { entryThing, entryWhat, entryWhen, rupees } from './labels'
+import { SHAGUN_FAMILY_PATTERN, SHAGUN_PATH, shagunFamilyPath } from './paths'
+import { deleteEntry, restoreEntries, shagunStore } from './store'
 import type { ShagunEntry } from './types'
 import { useShagun } from './useShagun'
 import styles from './Shagun.module.css'
@@ -35,9 +35,17 @@ export function ShagunFamilyScreen() {
   const remove = (entry: ShagunEntry) => {
     const removed = deleteEntry(entry.id)
     if (!removed) return
-    toast(t('shagun.family.deleted', { what: entryWhat(removed) }), {
+    toast(t('shagun.family.deleted', { name: removed.name, what: entryThing(removed) }), {
       action: { label: t('common.action.undo'), onAction: () => restoreEntries([removed]) },
     })
+  }
+
+  // An entry written under another name ("Sharmaa ji" fixed to "Sharma ji"): when nothing is left
+  // under this name, follow it to its family instead of saying there's no history.
+  const follow = (saved: ShagunEntry | null) => {
+    if (!saved || nameKey(saved.name) === nameKey(name)) return
+    const left = shagunStore.get().entries.some((e) => nameKey(e.name) === nameKey(name))
+    if (!left) navigate(shagunFamilyPath(saved.name), { replace: true })
   }
 
   const header = <TopBar onBack={() => goBack(SHAGUN_PATH)} />
@@ -49,6 +57,7 @@ export function ShagunFamilyScreen() {
       entry={sheet.entry}
       name={name}
       functions={book.functions}
+      onSaved={follow}
     />
   )
   const add = () => setSheet({ entry: null, opened: Date.now(), open: true })

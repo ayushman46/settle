@@ -82,3 +82,25 @@ export function swapPlan(people: readonly SwapPerson[], min: Minor = MIN_SWAP): 
 export function swapKey(swap: Swap): string {
   return `${swap.fromId}>${swap.toId}:${swap.amount}`
 }
+
+/** What a swap leaves open: who is cleared with you, and what's still owed either way. */
+export interface SwapOutcome {
+  /** both: everyone cleared; from: the one who owes you is cleared (you still owe `toLeft`);
+   *  to: you're cleared with the one you owe (`fromLeft` still owed to you); neither: both still open. */
+  cleared: 'both' | 'from' | 'to' | 'neither'
+  /** What the one who owes you will still owe you. */
+  fromLeft: Minor
+  /** What you will still owe the one you owe. */
+  toLeft: Minor
+}
+
+/**
+ * After `swap`, from today's balances: `owed` is what its payer owes you now, `owe` what you owe
+ * its payee now (both positive). Pure, so every sentence about a swap says the same thing.
+ */
+export function swapOutcome(swap: Swap, owed: Minor, owe: Minor): SwapOutcome {
+  const fromLeft = Math.max(0, owed - swap.amount)
+  const toLeft = Math.max(0, owe - swap.amount)
+  const cleared = fromLeft === 0 && toLeft === 0 ? 'both' : fromLeft === 0 ? 'from' : toLeft === 0 ? 'to' : 'neither'
+  return { cleared, fromLeft, toLeft }
+}

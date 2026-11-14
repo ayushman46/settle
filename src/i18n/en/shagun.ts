@@ -33,6 +33,7 @@ export const shagun = {
   'shagun.give.placeholder': 'Type a family name',
   'shagun.give.pick.aria': 'Families in your book',
   'shagun.give.none': 'No history with them yet.',
+  'shagun.give.noneBack': 'Nothing they gave you is written down, so there’s nothing to match.',
   'shagun.give.none.hint': 'Nothing from {name} is written down, so there’s nothing to match. Give what feels right.',
   'shagun.give.record': 'I gave {amount}',
   'shagun.give.recorded': 'Written down: you gave {name} {amount} today',
@@ -45,6 +46,8 @@ export const shagun = {
   'shagun.advice.gift': 'They gave you {gift} in {year}, not money. Give something of about that worth.',
   'shagun.advice.gift.at': 'They gave you {gift} {at} in {year}, not money. Give something of about that worth.',
   'shagun.advice.gift.unnamed': 'a gift',
+  'shagun.advice.yougave': 'You gave them {what} in {year}.',
+  'shagun.advice.yougave.at': 'You gave them {what} {at} in {year}.',
   'shagun.at.mine': '{kind, select, wedding {at your wedding} engagement {at your engagement} housewarming {at your housewarming} naming {at your baby’s naming} birthday {at your birthday} festival {at your festival} other {at your function}}',
   'shagun.at.theirs': 'at {name}',
 
@@ -99,14 +102,17 @@ export const shagun = {
   'shagun.fn.gone.title': 'This function isn’t in the book',
   'shagun.fn.gone.body': 'It may have been deleted on this phone.',
   'shagun.fn.collected': 'Collected {amount} from {count, plural, one {# family} other {# families}}',
+  'shagun.fn.collected.envelopes': 'Collected {amount} from {count, plural, one {# family} other {# families}}, {envelopes, plural, one {# envelope} other {# envelopes}}',
   'shagun.fn.gave': 'You gave {amount}',
   'shagun.fn.nothing': 'Nothing written down yet. Add the envelopes while they’re in hand.',
+  'shagun.fn.nothing.theirs': 'Nothing written down yet. Write down what you gave at this function.',
   'shagun.fn.rename': 'Change',
   'shagun.fn.delete': 'Delete',
   'shagun.fn.deleted': 'Deleted “{name}”',
   'shagun.fn.deleted.entries': 'Deleted “{name}” and its {count, plural, one {# entry} other {# entries}}',
   'shagun.fn.entries': 'Envelopes',
-  'shagun.fn.search': 'Search this function',
+  'shagun.fn.search': 'Search by name, amount or gift',
+  'shagun.fn.search.none': 'Nothing at this function matches “{query}”.',
 
   // Fast entry
   'shagun.entry.title': 'Add envelopes',
@@ -124,6 +130,9 @@ export const shagun = {
   'shagun.entry.save': 'Save & next',
   'shagun.entry.done': 'Done',
   'shagun.entry.count': '{count, plural, =0 {Nothing added yet} one {# envelope · {total}} other {# envelopes · {total}}}',
+  'shagun.entry.count.fn': '{count, plural, =0 {Nothing at this function yet} one {# envelope at this function · {total}} other {# envelopes at this function · {total}}}',
+  'shagun.entry.saved': 'Saved {name} {amount}',
+  'shagun.entry.saved.both': 'Saved {name} {amount} as a second envelope',
   'shagun.entry.needName': 'Write whose envelope it is.',
   'shagun.entry.needAmount': 'Add an amount or a gift.',
   'shagun.entry.full': 'The book is full: it holds 10,000 entries.',
@@ -131,7 +140,7 @@ export const shagun = {
   'shagun.entry.recent.merged': 'added to the earlier one',
   'shagun.entry.undo.aria': 'Undo {name} {amount}',
   'shagun.entry.undone': 'Taken out: {name}',
-  'shagun.dup.text': '{name} is already down for {amount} at this function. Add to the earlier {amount} or keep both?',
+  'shagun.dup.text': '{name} was already down for {earlier} at this function, so this {amount} is saved as a second envelope. Add it to the earlier {earlier} instead?',
   'shagun.dup.add': 'Add to it ({total})',
   'shagun.dup.both': 'Keep both',
 
@@ -149,7 +158,7 @@ export const shagun = {
   'shagun.family.givenGift': 'You gave {gift}',
   'shagun.family.edit.aria': 'Change {what}',
   'shagun.family.delete.aria': 'Delete {what}',
-  'shagun.family.deleted': 'Deleted: {what}',
+  'shagun.family.deleted': 'Deleted {name} ({what})',
 
   // Entry sheet
   'shagun.esheet.add': 'Add an entry',

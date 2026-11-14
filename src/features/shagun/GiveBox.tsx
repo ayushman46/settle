@@ -4,8 +4,8 @@ import { Button, Card, Chip, TextField, useToast } from '../../components'
 import { today } from '../../engine/dates'
 import { useT } from '../../i18n'
 import { haptic } from '../../lib/haptics'
-import { adviseFamily, findFamily, matchNames } from './engine'
-import { adviceText, rupees } from './labels'
+import { adviseFamily, findFamily, lastGivenTo, matchNames } from './engine'
+import { adviceText, givenText, rupees } from './labels'
 import { addEntry, deleteEntry } from './store'
 import { useShagun } from './useShagun'
 import styles from './Shagun.module.css'
@@ -47,6 +47,8 @@ export function GiveBox({ name: initial = '', fixed = false }: GiveBoxProps) {
 
   const typed = query.trim()
   const reason = advice ? adviceText(advice) : null
+  // What you already gave them, when the book has it ("You gave them ₹1,101 at Neha’s wedding").
+  const gaveThem = family ? givenText(lastGivenTo(family, functionsById)) : null
 
   return (
     <Card className={styles.give}>
@@ -69,7 +71,7 @@ export function GiveBox({ name: initial = '', fixed = false }: GiveBoxProps) {
         <ul className={styles.picks} aria-label={t('shagun.give.pick.aria')}>
           {picks.map((pick) => (
             <li key={pick}>
-              <Chip onClick={() => setQuery(pick)}>{pick}</Chip>
+              <Chip size="lg" onClick={() => setQuery(pick)}>{pick}</Chip>
             </li>
           ))}
         </ul>
@@ -79,6 +81,7 @@ export function GiveBox({ name: initial = '', fixed = false }: GiveBoxProps) {
           <>
             <p className={styles.amount}>{rupees(advice.amount)}</p>
             <p className={styles.body}>{reason}</p>
+            {gaveThem && <p className={styles.fine}>{gaveThem}</p>}
           </>
         )}
         {family && advice?.kind === 'gift' && <p className={styles.body}>{reason}</p>}
@@ -88,7 +91,15 @@ export function GiveBox({ name: initial = '', fixed = false }: GiveBoxProps) {
             <p className={styles.fine}>{t('shagun.give.none.hint', { name: typed })}</p>
           </>
         )}
-        {family && advice?.kind === 'none' && <p className={styles.body}>{t('shagun.give.none')}</p>}
+        {family && advice?.kind === 'none' &&
+          (gaveThem ? (
+            <>
+              <p className={styles.body}>{t('shagun.give.noneBack')}</p>
+              <p className={styles.fine}>{gaveThem}</p>
+            </>
+          ) : (
+            <p className={styles.body}>{t('shagun.give.none')}</p>
+          ))}
       </div>
       {family && advice?.kind === 'amount' && (
         <Button variant="primary" block iconStart={<HandCoins />} onClick={() => record(advice.amount, family.name)}>

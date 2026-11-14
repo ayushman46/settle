@@ -10,6 +10,7 @@
 .field {
   display: grid;
   gap: var(--s-2);
+  min-width: 0;
 }
 
 .section {
@@ -94,10 +95,11 @@
   cursor: pointer;
 }
 
+/* The whole row is the label, so the tap target is the row (56px tall); the box itself is a little bigger too. */
 .check {
   flex: none;
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
   margin: 0;
   accent-color: var(--accent);
 }
@@ -158,15 +160,19 @@
 
 /* ---------- The sheet: paper on screen, the only thing on the page when printed ---------- */
 
+/* On a phone the sheet keeps a paper-like width and scrolls sideways inside this box (never the page). */
 .printArea {
   display: grid;
+  min-width: 0;
+  max-width: 100%;
   overflow-x: auto;
+  overscroll-behavior-x: contain;
 }
 
 .sheet {
   display: grid;
   gap: 12px;
-  min-width: 0;
+  min-width: 600px;
   padding: 18px 20px;
   border: 1px solid #c9ced6;
   border-radius: 10px;
@@ -192,6 +198,10 @@
   font-weight: 750;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+}
+
+.sheetBasis {
+  text-align: end;
 }
 
 .sheetBasis,
@@ -237,10 +247,13 @@
   border-bottom: 1px solid #e3e6eb;
   text-align: start;
   vertical-align: top;
-  overflow-wrap: anywhere;
+  /* Break inside a word only when that one word can't fit its column (never "Transp / ort"). */
+  overflow-wrap: break-word;
+  hyphens: manual;
 }
 
 .sheetTable thead th {
+  white-space: nowrap;
   font-size: 10px;
   color: #4a525e;
   text-transform: uppercase;
@@ -327,11 +340,17 @@
     position: absolute;
     inset: 0 0 auto;
     display: block;
+    max-width: none;
     overflow: visible;
   }
 
+  /* The page margin is the only margin; a hair of padding keeps the first letter of the title and the
+     right-hand subtitle clear of the printable edge. */
   .sheet {
-    padding: 0;
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    padding: 0 1mm;
     border: none;
     border-radius: 0;
   }

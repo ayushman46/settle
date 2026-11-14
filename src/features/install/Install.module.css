@@ -35,7 +35,7 @@
 .cardText {
   margin: 2px 0 8px;
   font-size: 0.875rem;
-  color: var(--text-muted, #4b5563);
+  color: var(--ink-2);
   overflow-wrap: anywhere;
 }
 
@@ -71,7 +71,7 @@
 
 .rowSub {
   font-size: 0.8125rem;
-  color: var(--text-muted, #4b5563);
+  color: var(--ink-2);
 }
 
 .steps {
@@ -108,7 +108,7 @@
 .stepBody {
   display: block;
   font-size: 0.875rem;
-  color: var(--text-muted, #4b5563);
+  color: var(--ink-2);
   overflow-wrap: anywhere;
 }
 

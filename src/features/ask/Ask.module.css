@@ -28,6 +28,8 @@
 
 .chips > button {
   max-width: 100%;
+  height: auto;
+  min-height: var(--tap);
 }
 
 .chips > button span {
@@ -60,6 +62,41 @@
   letter-spacing: var(--tracking-tight);
   color: var(--ink);
   overflow-wrap: anywhere;
+}
+
+.understood,
+.line {
+  margin: 0;
+  font: var(--text-body);
+  overflow-wrap: anywhere;
+}
+
+/* How the question was read: the only way to catch a misread, so as big as the body text. */
+.understood {
+  color: var(--ink-2);
+}
+
+.line {
+  color: var(--ink);
+}
+
+.more {
+  justify-self: start;
+  min-height: var(--tap);
+  padding: 0 var(--s-2);
+  border: 0;
+  border-radius: var(--r-pill);
+  background: none;
+  color: var(--accent-ink, var(--ink));
+  font: var(--text-body);
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.more:focus-visible {
+  outline: 2px solid var(--accent-edge, var(--accent));
+  outline-offset: 1px;
 }
 
 .fine,

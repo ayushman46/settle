@@ -22,8 +22,20 @@ export function lastsLabel(iso: string, today: string): string {
   return relativeDateLabel(iso)
 }
 
-/** The day the kitty started, to read inside a sentence: "since today", "since yesterday", "since 12 Nov". */
-export function sinceLabel(iso: string, today: string): string {
+/**
+ * When the kitty started, to read inside a sentence: the time when it started today ("2:10 pm"),
+ * else "today", "yesterday" or "12 Nov".
+ */
+export function sinceLabel(iso: string, today: string, startedAt?: number): string {
+  if (iso === today && typeof startedAt === 'number' && Number.isFinite(startedAt)) {
+    try {
+      const lang = getLanguage()
+      const time = new Intl.DateTimeFormat(lang === 'en' ? 'en-IN' : intlLocale(lang), { hour: 'numeric', minute: '2-digit' }).format(new Date(startedAt))
+      return lang === 'en' ? time.toLowerCase() : time
+    } catch {
+      // Fall through to the day.
+    }
+  }
   const label = relativeDateLabel(iso)
   return daysBetween(iso, today) <= 1 ? label.toLowerCase() : label
 }

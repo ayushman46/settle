@@ -37,6 +37,7 @@ export const report = {
   'report.list.aria': 'Expenses to claim. Untick anything the office won’t pay for.',
   'report.row.meta': '{date} · {category} · paid by {name}',
   'report.row.fx': 'Paid {amount} at {rate}',
+  'report.row.fx.share': 'Your share of {amount}, at {rate}',
   'report.row.tick.aria': 'Claim {title}, {amount}',
 
   'report.total': '{amount} · {count, plural, one {# expense} other {# expenses}}',

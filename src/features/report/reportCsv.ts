@@ -3,7 +3,16 @@ import { CSV_BOM, csvField } from '../../data/csv'
 import { toInputString } from '../../lib/money'
 import type { Report } from './engine'
 
-const HEADER = ['Date', 'Title', 'Category', 'Paid by', 'Amount', 'Currency', 'Paid amount', 'Paid currency', 'Rate'] as const
+/**
+ * Paid abroad: the bill as on the receipt (never just a share of it), its currency, the rate and,
+ * when only a share is claimed, that share in the bill's currency.
+ */
+const HEADER = ['Date', 'Title', 'Category', 'Paid by', 'Amount', 'Currency', 'Bill amount', 'Bill currency', 'Rate', 'Share of bill'] as const
+
+/** 4 decimals like everywhere else; a tiny rate keeps its full digits (4 decimals would lose it). */
+function csvRate(original: NonNullable<Report['rows'][number]['original']>): string {
+  return /^\d+(\.\d+)?$/.test(original.rateShown) ? original.rateShown : original.rate
+}
 
 /** The CSV text (no BOM). */
 export function reportCsv(report: Report): string {
@@ -16,13 +25,14 @@ export function reportCsv(report: Report): string {
       r.paidBy,
       toInputString(r.amount, r.currency),
       r.currency,
-      r.original ? toInputString(r.original.amount, r.original.currency) : '',
+      r.original ? toInputString(r.original.bill, r.original.currency) : '',
       r.original?.currency ?? '',
-      r.original?.rate ?? '',
+      r.original ? csvRate(r.original) : '',
+      r.original && !r.original.whole ? toInputString(r.original.amount, r.original.currency) : '',
     ])
   }
   for (const total of report.totals) {
-    lines.push(['', 'Total', '', '', toInputString(total.amount, total.currency), total.currency, '', '', ''])
+    lines.push(['', 'Total', '', '', toInputString(total.amount, total.currency), total.currency, '', '', '', ''])
   }
   return lines.map((row) => row.map(csvField).join(',')).join('\r\n') + '\r\n'
 }

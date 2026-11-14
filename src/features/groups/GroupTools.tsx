@@ -35,36 +35,37 @@ export function GroupTools({ group }: { group: Group }) {
     <>
       <div className={styles.tools} role="group" aria-label={t('groups.tools.aria')}>
         {live && several && (
-          <Chip leading={<PiggyBank />} onClick={() => setOpen('kitty')}>
+          <Chip size="lg" leading={<PiggyBank />} onClick={() => setOpen('kitty')}>
             {t('groups.tools.kitty')}
           </Chip>
         )}
         {live && several && (
-          <Chip leading={<Dices />} onClick={() => setOpen('spin')}>
+          <Chip size="lg" leading={<Dices />} onClick={() => setOpen('spin')}>
             {t('groups.tools.spin')}
           </Chip>
         )}
         {live && several && (
-          <Chip leading={<CalendarRange />} onClick={() => setOpen('dates')}>
+          <Chip size="lg" leading={<CalendarRange />} onClick={() => setOpen('dates')}>
             {t('groups.tools.dates')}
           </Chip>
         )}
         {story && (
-          <Chip leading={<BookOpenText />} onClick={() => navigate(wrappedPath(group.id))}>
+          <Chip size="lg" leading={<BookOpenText />} onClick={() => navigate(wrappedPath(group.id))}>
             {t('groups.tools.story')}
           </Chip>
         )}
         {live && (
-          <Chip leading={<MessagesSquare />} onClick={() => navigate(chatPath(group.id))}>
+          <Chip size="lg" leading={<MessagesSquare />} onClick={() => navigate(chatPath(group.id))}>
             {t('groups.tools.chat')}
           </Chip>
         )}
         {expenses.length > 0 && (
-          <Chip leading={<ReceiptText />} onClick={() => navigate(reportPath(group.id))}>
+          <Chip size="lg" leading={<ReceiptText />} onClick={() => navigate(reportPath(group.id))}>
             {t('groups.tools.report')}
           </Chip>
         )}
       </div>
+      {live && !story && expenses.length > 0 && expenses.length < 3 && <p className={styles.note}>{t('groups.tools.story.soon', { count: 3 - expenses.length })}</p>}
       <KittyCard group={group} onOpen={() => setOpen('kitty')} />
       <KittySheet group={group} open={open === 'kitty'} onClose={close} />
       <SpinSheet group={group} open={open === 'spin'} onClose={close} />

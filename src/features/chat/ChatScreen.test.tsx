@@ -51,7 +51,7 @@ describe('applying a chat', () => {
     )
     expect(expenses.find((e) => e.title === 'Cab')?.note).toBe('“paid 1200 for the cab”')
     expect(expenses.find((e) => e.title === 'Cab')?.category).toBe('transport')
-    expect(group?.settlements).toMatchObject([{ fromId: idOf('Riya'), toId: idOf('Sam'), amount: 50000, date: '2026-11-13', method: 'upi' }])
+    expect(group?.settlements).toMatchObject([{ fromId: idOf('Riya'), toId: idOf('Sam'), amount: 50000, date: '2026-11-13', method: 'other' }])
     // ₹6,600 spent, ₹2,200 each: you paid 3,000 (+800), Riya 1,200 and sent 500 (−500), Sam 2,400 and got 500 (−300).
     const balances = groupBalances(group!, expensesStore.get())
     expect(balances[ME_ID]).toBe(80000)
@@ -128,7 +128,7 @@ describe('ChatScreen', () => {
     expect(screen.getByText('6 messages read on this phone · 5 about money')).toBeInTheDocument()
     expect(screen.getByRole('radio', { name: 'Ayush' })).toHaveAttribute('aria-checked', 'true')
     expect(screen.getByLabelText('Group name')).toHaveValue('Goa trip')
-    const found = screen.getByRole('heading', { level: 2, name: 'Found 4 payments' }).closest('section') as HTMLElement
+    const found = screen.getByRole('heading', { level: 2, name: 'Found 4 entries' }).closest('section') as HTMLElement
     const rows = within(found).getAllByRole('checkbox')
     expect(rows).toHaveLength(4)
     expect(rows[0]).toHaveTextContent('Cab')
@@ -172,7 +172,7 @@ describe('ChatScreen', () => {
     renderAt('/app/chat', <ChatScreen />)
     await pick(`${GOA}\n14/11/2026, 08:00 - Sam: paid 450 for breakfast`)
     expect(screen.getByText('Adding to ✈️ Goa trip')).toBeInTheDocument()
-    expect(screen.getByText('5 already added from this chat · 1 new')).toBeInTheDocument()
+    expect(screen.getByText('5 from this chat already gone through · 1 new')).toBeInTheDocument()
     expect(screen.getAllByRole('checkbox')).toHaveLength(1)
     await user.click(screen.getByRole('button', { name: 'Add 1 to Goa trip' }))
     await waitFor(() => expect(expensesStore.get()).toHaveLength(4))
@@ -205,7 +205,7 @@ describe('ChatScreen', () => {
     await user.click(screen.getByLabelText('Messages copied from the chat'))
     await user.paste('[9:41 pm, 12/11/2026] Riya: paid 1200 for the cab\n[9:45 pm, 12/11/2026] Ayush: paid 300 for chai')
     await user.click(screen.getByRole('button', { name: 'Read these' }))
-    expect(await screen.findByRole('heading', { level: 2, name: 'Found 2 payments' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { level: 2, name: 'Found 2 entries' })).toBeInTheDocument()
     expect(screen.getByLabelText('Group name')).toHaveValue('')
     expect(screen.getByText('Give the group a name')).toBeInTheDocument()
   })

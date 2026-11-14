@@ -9,6 +9,7 @@
 import { ME_ID, type CategoryId, type Expense, type Group, type Minor } from '../../domain/types'
 import { CATEGORY_META } from '../../engine/categories'
 import { daysInMonth } from '../../engine/dates'
+import { formatRate } from '../../engine/fx'
 import { indianNumberWords } from '../../kit/amountWords'
 import { allocate } from '../../lib/money'
 
@@ -28,10 +29,24 @@ export interface ReportRow {
   /** What is claimed, in the expense's currency. */
   amount: Minor
   currency: string
-  /** Paid abroad: what this row is in the currency actually paid, and the rate used. */
-  original: { amount: Minor; currency: string; rate: string } | null
+  /** Paid abroad: the bill in the currency actually paid, this row's part of it, and the rate used. */
+  original: ReportOriginal | null
   /** An itemized bill or a scanned one: there is a bill to attach. */
   hasBill: boolean
+}
+
+export interface ReportOriginal {
+  /** This row's part of the foreign bill (all of it when `whole`). */
+  amount: Minor
+  /** The whole foreign bill, as on the receipt. */
+  bill: Minor
+  /** The row claims the whole bill (false: only a share of it). */
+  whole: boolean
+  currency: string
+  /** The stored rate, at full precision. */
+  rate: string
+  /** The rate as people read it: 4 decimals at most ("94.2431"), like the expense page. */
+  rateShown: string
 }
 
 export interface CategoryTotal {
@@ -111,8 +126,16 @@ function toRow(e: Expense, amount: Minor, nameOf: (id: string) => string): Repor
   let original: ReportRow['original'] = null
   if (e.fx && e.fx.currency !== e.currency && e.total > 0) {
     // My share abroad, in what was paid: the same part of the foreign amount.
-    const foreign = amount === e.total ? e.fx.amount : (allocate(e.fx.amount, [amount, e.total - amount])[0] ?? 0)
-    original = { amount: foreign, currency: e.fx.currency, rate: e.fx.rate }
+    const whole = amount === e.total
+    const foreign = whole ? e.fx.amount : (allocate(e.fx.amount, [amount, e.total - amount])[0] ?? 0)
+    original = {
+      amount: foreign,
+      bill: e.fx.amount,
+      whole,
+      currency: e.fx.currency,
+      rate: e.fx.rate,
+      rateShown: formatRate(e.fx.rate, e.fx.currency, e.currency),
+    }
   }
   return {
     id: e.id,
@@ -139,6 +162,20 @@ export function reportCandidates(input: Omit<ReportInput, 'skipped'>): ReportRow
     if (amount > 0) rows.push(toRow(e, amount, input.nameOf))
   }
   return rows.sort(compareRows)
+}
+
+/**
+ * The dates the sheet covers: its first and last expense (`to` equals `from` for one day), or null
+ * with nothing on it.
+ */
+export function reportPeriod(rows: readonly { date: string }[]): { from: string; to: string } | null {
+  let from: string | null = null
+  let to: string | null = null
+  for (const r of rows) {
+    if (from === null || r.date < from) from = r.date
+    if (to === null || r.date > to) to = r.date
+  }
+  return from !== null && to !== null ? { from, to } : null
 }
 
 /** Rupees in words, the way claim forms want them: 240050 → "Two thousand four hundred rupees and fifty paise". */

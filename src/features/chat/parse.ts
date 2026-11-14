@@ -124,6 +124,7 @@ export function parseChat(input: string, fileName?: string | null): ChatFile {
   const senders: string[] = []
   const seen = new Set<string>()
   let named: string | null = null
+  const numbers = new Map<string, string>()
   for (const { raw, body } of starts.slice(-MAX_CHAT_MESSAGES)) {
     const date = yearFirst ? isoDate(raw.a, raw.b, raw.c) : monthFirst ? isoDate(raw.c, raw.a, raw.b) : isoDate(raw.c, raw.b, raw.a)
     const minutes = minutesOf(raw)
@@ -136,11 +137,18 @@ export function parseChat(input: string, fileName?: string | null): ChatFile {
       if (group?.[1]) named = group[1].trim()
       continue
     }
-    const sender = first
+    let sender = first
       .slice(0, colon < 0 ? first.length - 1 : colon)
       .replace(/^~\s*/, '')
       .trim()
     if (!sender || sender.length > MAX_SENDER_LENGTH) continue
+    // An unsaved number is one person however it is written ("+91 98765 43210", "+919876543210").
+    if (/^\+?[\d\s()-]{7,}$/.test(sender)) {
+      const digits = sender.replace(/\D/g, '').slice(-10)
+      const known = numbers.get(digits)
+      if (known) sender = known
+      else numbers.set(digits, sender)
+    }
     const said = [colon < 0 ? '' : first.slice(colon + 2), ...body.slice(1)].join('\n').replace(EDITED, '').trim()
     if (!seen.has(sender)) {
       seen.add(sender)

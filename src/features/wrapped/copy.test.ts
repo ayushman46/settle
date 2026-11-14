@@ -22,7 +22,7 @@ const slides: Slide[] = [
 describe('slide words', () => {
   it('says each slide plainly, with amounts formatted and names as given', () => {
     expect(slideWords(slides[0]!, app)).toEqual({ eyebrow: '🏖️ Goa', big: '₹42,180', line: '5 days · 4 people · 23 bills' })
-    expect(slideWords(slides[1]!, app)).toMatchObject({ big: '50% on Food & drinks', line: 'Travel & stays 33% · Everything else 17%' })
+    expect(slideWords(slides[1]!, app)).toMatchObject({ big: '50% on Food & drinks', line: 'Travel & stays 33% · The rest together 17%' })
     expect(slideWords(slides[2]!, app).line).toBe('Hotel, paid by You')
     expect(slideWords(slides[2]!, out).line).toBe('Hotel, paid by Ayush')
     expect(slideWords(slides[3]!, app).big).toBe('Chai × 9')
@@ -38,6 +38,24 @@ describe('slide words', () => {
     expect(text).toContain('On repeat: Chai × 9')
     expect(text).toContain('To settle it: 3 payments')
     expect(slideText(slides[3]!, out)).toBe('On repeat\nChai × 9: ₹810 on it in all')
+  })
+
+  it('text that leaves the app ends with the app’s name and link', () => {
+    const shared: CopyContext = { ...out, site: 'https://settle.example/' }
+    expect(slideText(slides[3]!, shared)).toBe('On repeat\nChai × 9: ₹810 on it in all\n\nMade with Settle: https://settle.example')
+    expect(storyText(slides, shared).split('\n').at(-1)).toBe('Made with Settle: https://settle.example')
+    expect(slideText(slides[3]!, { ...out, site: '' }).split('\n').at(-1)).toBe('Made with Settle')
+  })
+
+  it('an “about” figure is in whole rupees', () => {
+    const words = slideWords({ kind: 'perDay', perDay: 596_500, days: 4, people: 4, perPersonPerDay: 149_125 }, out)
+    expect(words).toMatchObject({ big: '₹5,965 a day', line: 'About ₹1,491 each, every day, for 4 days' })
+  })
+
+  it('the big day says when it names only some of its bills', () => {
+    const day = { kind: 'bigDay', date: '2026-11-09', total: 1_058_000, count: 4, titles: ['Hotel', 'Lunch', 'Scooter rental'] } as const
+    expect(slideWords({ ...day, titles: [...day.titles], all: false }, app).line).toBe('4 bills, including Hotel, Lunch, Scooter rental')
+    expect(slideWords({ ...day, count: 3, titles: [...day.titles], all: true }, app).line).toBe('3 bills: Hotel, Lunch, Scooter rental')
   })
 })
 

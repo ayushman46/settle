@@ -72,7 +72,7 @@ describe('peopleSearch', () => {
     expect(newPersonName('   ')).toBeNull()
     expect(newPersonName('Me')).toBeNull()
     expect(newPersonName('you')).toBeNull()
-    expect(newPersonName('A'.repeat(40))).toBe('A'.repeat(24))
+    expect(newPersonName('A'.repeat(60))).toBe('A'.repeat(40))
   })
 })
 

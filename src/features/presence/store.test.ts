@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { resetDataForTests } from '../../data'
 import { STORAGE_KEYS } from '../../data/stores'
-import { cleanPresence, decline, presenceStore, setStay, undecline } from './store'
+import { cleanPresence, decline, presenceStore, setAnchor, setStay, undecline } from './store'
 
 beforeEach(() => resetDataForTests())
 
@@ -77,5 +77,17 @@ describe('the presence store', () => {
     )
     expect(presenceStore.get().declined.goa).toHaveLength(300)
     expect(presenceStore.get().declined.goa!.at(-1)).toBe('e399|sam')
+  })
+
+  it('remembers the nights range a stay was split by, drops junk, and forgets it on undo', () => {
+    expect(
+      cleanPresence({ anchors: { v1: { from: '2026-11-10', to: '2026-11-14' }, v2: { from: '2026-11-14', to: '2026-11-10' }, v3: 'x' } }),
+    ).toEqual({ stays: {}, declined: {}, anchors: { v1: { from: '2026-11-10', to: '2026-11-14' } } })
+    setAnchor('v1', { from: '2026-11-10', to: '2026-11-14' })
+    expect(presenceStore.get().anchors).toEqual({ v1: { from: '2026-11-10', to: '2026-11-14' } })
+    setStay('goa', 'sam', { from: '2026-11-12', to: null })
+    expect(presenceStore.get().anchors?.v1).toBeDefined()
+    setAnchor('v1', null)
+    expect(presenceStore.get().anchors).toBeUndefined()
   })
 })

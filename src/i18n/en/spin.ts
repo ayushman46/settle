@@ -9,7 +9,8 @@ export const spin = {
   'spin.mode.fair': 'Fair',
   'spin.mode.luck': 'Pure luck',
   'spin.explain.fair': 'Half the wheel is shared equally, and the other half goes to whoever has paid less than their share in {group}, more the further behind they are.',
-  'spin.explain.fair.even': 'Nobody here is behind in {group}, so everyone has the same chance.',
+  'spin.explain.fair.even': 'Nobody in this spin is behind in {group}, so everyone has the same chance.',
+  'spin.explain.ahead': 'Anyone who has paid their share or more keeps only the equal part.',
   'spin.explain.luck': 'Everyone has the same chance.',
 
   'spin.wheel.aria': 'The wheel: {chances}',
@@ -22,6 +23,7 @@ export const spin = {
   'spin.person.aria': '{name}, {percent}% chance. Tap to leave out.',
   'spin.person.aria.out': '{name}, left out of this spin. Tap to bring back.',
   'spin.few': 'Leave at least two people in to spin.',
+  'spin.leftOut.note': 'Anyone left out still shares the bill. They just can’t be picked.',
 
   'spin.cta': 'Spin',
   'spin.again': 'Spin again',
@@ -33,4 +35,5 @@ export const spin = {
   'spin.banner.title': 'The wheel picked {name}',
   'spin.banner.title.you': 'The wheel picked you',
   'spin.banner.body': 'Enter the amount and save: everyone in the group shares it equally, unless you change it.',
+  'spin.banner.body.usual': 'Enter the amount and save: it’s split the group’s usual way ({label}), unless you change it.',
 } satisfies Messages

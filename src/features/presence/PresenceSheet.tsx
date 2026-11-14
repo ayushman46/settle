@@ -1,8 +1,8 @@
 import { useMemo } from 'react'
 import { BottomSheet, Button, Chip } from '../../components'
 import { useExpenses, useFriendsById } from '../../data'
-import type { Group } from '../../domain/types'
-import { isIsoDate, today } from '../../engine/dates'
+import { ME_ID, type Group } from '../../domain/types'
+import { daysBetween, isIsoDate, today } from '../../engine/dates'
 import { useT } from '../../i18n'
 import { DateField } from '../../kit/DateField'
 import { FriendAvatar } from '../../kit/FriendAvatar'
@@ -64,12 +64,17 @@ export function PresenceSheet({ group, open, onClose }: { group: Group; open: bo
                 <FriendAvatar friendId={id} size="sm" />
                 <span className={styles.personText}>
                   <span className={styles.name}>{name}</span>
-                  <span className={styles.fine}>{stayText(stay)}</span>
+                  <span className={styles.fine}>
+                    {from !== null && to !== null
+                      ? t('presence.sheet.stayNights', { stay: stayText(stay), count: daysBetween(from, to) })
+                      : stayText(stay)}
+                  </span>
                 </span>
                 <Chip
+                  size="lg"
                   selected={stay === null}
                   onClick={() => setStay(group.id, id, { from: null, to: null })}
-                  aria-label={t('presence.sheet.whole.aria', { name })}
+                  aria-label={id === ME_ID ? t('presence.sheet.whole.aria.you') : t('presence.sheet.whole.aria', { name })}
                 >
                   {t('presence.sheet.whole')}
                 </Chip>

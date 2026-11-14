@@ -2,7 +2,8 @@
  * "Anyone not drinking, or vegetarian?" at the top of the Assign step: two toggles a person,
  * remembered by friend, and the drinks and meat dishes on the bill taken off whoever doesn't have
  * them. It applies by itself when the step opens with remembered people, whenever a toggle
- * changes, and as items get their people; anyone put back by hand stays put.
+ * changes, and as items get their people; anyone put back by hand stays put, even when their toggle
+ * is turned off and on again.
  */
 import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { ChevronDown, Leaf, WineOff } from 'lucide-react'
@@ -102,14 +103,15 @@ export function DietStrip({ sheetOpen = false }: DietStripProps) {
   const toggle = (personId: string, kind: DietKind, on: boolean) => {
     const itemIds = [...kinds].filter(([, k]) => k === kind).map(([id]) => id)
     const pairs = new Set(itemIds.map((itemId) => pairKey(itemId, personId)))
-    if (on) {
-      // Asked again: their items of this kind are looked at afresh, hand-picked ones too.
-      updateDietBill(session.id, (b) => ({ ...b, handled: b.handled.filter((k) => !pairs.has(k)) }))
-    } else {
-      // Not any more: back on the items the app took them off.
+    if (!on) {
+      // Not any more: back on the items the app took them off. Items they are on right now (put back
+      // by hand, or left with them because nobody else had it) stay handled, so turning the toggle on
+      // again takes them off only what the app had taken them off, never a hand-made choice.
+      const current = live.current.session.assignments
+      const onNow = new Set(itemIds.filter((itemId) => Object.hasOwn(current[itemId] ?? {}, personId)).map((itemId) => pairKey(itemId, personId)))
       const mine = (live.current.bill?.taken ?? []).filter((e) => e.person === personId && pairs.has(pairKey(e.item, e.person)))
       undo(mine)
-      updateDietBill(session.id, (b) => ({ ...b, handled: b.handled.filter((k) => !pairs.has(k)) }))
+      updateDietBill(session.id, (b) => ({ ...b, handled: b.handled.filter((k) => !pairs.has(k) || onNow.has(k)) }))
     }
     setDiet(personId, kind, on)
   }
@@ -123,6 +125,20 @@ export function DietStrip({ sheetOpen = false }: DietStripProps) {
   })
   const money = (minor: number) => formatMoney(minor, currency, { trimZeros: true })
   const remembered = people.filter((p) => (hasAlcohol && prefs[p.id]?.noAlcohol) || (hasNonVeg && prefs[p.id]?.veg)).length
+  // Remembered people, but nobody is on a drink or meat dish yet: nothing has come off, and say when it will.
+  const pending = remembered > 0 && lines.length === 0 && [...kinds.keys()].every((itemId) => peopleIds.every((id) => !Object.hasOwn(assignments[itemId] ?? {}, id)))
+
+  const undoAll = () => {
+    const current = live.current.session
+    // Only what still stands: someone already back on an item by hand isn't "put back" again.
+    const standing = (live.current.bill?.taken ?? []).filter((e) => !Object.hasOwn(current.assignments[e.item] ?? {}, e.person))
+    const who = [...new Set(standing.map((e) => e.person))]
+    const itemCount = new Set(standing.map((e) => e.item)).size
+    undo(live.current.bill?.taken ?? [])
+    if (who.length === 0) return
+    const names = who.map((id) => current.people.find((p) => p.id === id)?.name ?? '')
+    toast(t('diet.banner.undone', { names: describePeople(names, 3), count: who.length, items: itemCount }), { tone: 'info' })
+  }
   const title = t(hasAlcohol && hasNonVeg ? 'diet.strip.title.both' : hasAlcohol ? 'diet.strip.title.alcohol' : 'diet.strip.title.nonveg')
 
   return (
@@ -135,6 +151,7 @@ export function DietStrip({ sheetOpen = false }: DietStripProps) {
           </span>
           <ChevronDown aria-hidden="true" className={cx(styles.chevron, open && styles.chevronOpen)} />
         </button>
+        {pending && <p className={styles.fine}>{t('diet.strip.pending')}</p>}
         <div id={bodyId} hidden={!open} className={styles.body}>
           <p className={styles.fine}>{t('diet.strip.body')}</p>
           <ul className={styles.people} aria-label={t('diet.strip.people.aria')}>
@@ -144,6 +161,7 @@ export function DietStrip({ sheetOpen = false }: DietStripProps) {
                 <span className={styles.chips}>
                   {hasAlcohol && (
                     <Chip
+                      size="lg"
                       selected={prefs[person.id]?.noAlcohol === true}
                       leading={<WineOff />}
                       aria-label={t('diet.strip.alcohol.aria', { name: person.name })}
@@ -154,6 +172,7 @@ export function DietStrip({ sheetOpen = false }: DietStripProps) {
                   )}
                   {hasNonVeg && (
                     <Chip
+                      size="lg"
                       selected={prefs[person.id]?.veg === true}
                       leading={<Leaf />}
                       aria-label={t('diet.strip.nonveg.aria', { name: person.name })}
@@ -176,11 +195,8 @@ export function DietStrip({ sheetOpen = false }: DietStripProps) {
           action={
             lines.length > 0
               ? {
-                  label: t('diet.banner.undo'),
-                  onAction: () => {
-                    undo(live.current.bill?.taken ?? [])
-                    toast(t('diet.banner.undone'), { tone: 'info' })
-                  },
+                  label: t('diet.banner.putBack'),
+                  onAction: undoAll,
                 }
               : undefined
           }

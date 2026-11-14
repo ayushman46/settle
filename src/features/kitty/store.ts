@@ -1,6 +1,6 @@
 /**
  * The little the kitty keeps on this phone: per group, who holds it, what each person puts in and
- * the day it started. Everything else (who has put in, what's left) is worked out from the group's
+ * when it started (the day, and the moment). Everything else (who has put in, what's left) is worked out from the group's
  * own payments and bills, so it never goes stale.
  */
 import * as z from 'zod/mini'
@@ -22,6 +22,8 @@ const configSchema = z.object({
   holderId: z.string().check(z.minLength(1), z.maxLength(80)),
   perHead: z.int().check(z.gt(0), z.lte(MAX_MINOR)),
   startedOn: z.string().check(z.refine(isIsoDate)),
+  /** The moment it started; older kitties don't have it (they count the whole start day). */
+  startedAt: z.catch(z.optional(z.int().check(z.gte(0))), undefined),
 })
 
 /** Reads each group's kitty on its own: one unreadable entry is dropped, never the rest. */

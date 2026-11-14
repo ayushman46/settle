@@ -102,6 +102,11 @@
   min-height: 44px;
 }
 
+.doneText {
+  display: grid;
+  min-width: 0;
+}
+
 .itemName {
   font: var(--text-body);
   color: var(--ink);

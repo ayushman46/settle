@@ -41,6 +41,26 @@ export function groupForChat(name: string | null): string | null {
   return chatStore.get().byChat[chatKey(name)] ?? null
 }
 
+/**
+ * The group these messages were already added to, whatever the file is called this time (an
+ * iPhone names every export "_chat.txt"; pasted messages have no name at all).
+ */
+export function groupForRows(keys: readonly string[]): string | null {
+  if (keys.length === 0) return null
+  const mine = new Set(keys)
+  let best: string | null = null
+  let most = 0
+  for (const [groupId, seen] of Object.entries(chatStore.get().seen)) {
+    let hits = 0
+    for (const key of seen) if (mine.has(key)) hits++
+    if (hits > most) {
+      most = hits
+      best = groupId
+    }
+  }
+  return most >= Math.min(3, keys.length) ? best : null
+}
+
 export function seenIn(groupId: string | null): ReadonlySet<string> {
   return new Set(groupId ? (chatStore.get().seen[groupId] ?? []) : [])
 }

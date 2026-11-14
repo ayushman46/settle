@@ -89,6 +89,21 @@ describe('WrappedScreen', () => {
     expect(mocks.shareResult).not.toHaveBeenCalled()
   })
 
+  it('Share tapped before the picture is drawn waits for it, and the words end with the app’s link', async () => {
+    let draw: (blob: Blob) => void = () => {}
+    mocks.renderSlidePicture.mockImplementationOnce(() => new Promise<Blob>((resolve) => (draw = resolve)))
+    const { user } = renderAt(`/app/groups/${groupId}/wrapped`, <WrappedScreen />)
+    await waitFor(() => expect(mocks.renderSlidePicture).toHaveBeenCalled())
+    await user.click(screen.getByRole('button', { name: 'Share this slide' }))
+    expect(mocks.shareFile).not.toHaveBeenCalled()
+    expect(mocks.shareResult).not.toHaveBeenCalled()
+    draw(new Blob(['png'], { type: 'image/png' }))
+    await waitFor(() => expect(mocks.shareFile).toHaveBeenCalledTimes(1))
+    expect(mocks.shareResult).not.toHaveBeenCalled()
+    const text = (mocks.shareFile.mock.calls[0] as unknown as [Blob, string, string])[2]
+    expect(text.split('\n').at(-1)).toBe(`Made with Settle: ${window.location.origin}`)
+  })
+
   it('when the picture can’t be drawn, Share sends the words; Share the story sends the whole recap', async () => {
     mocks.renderSlidePicture.mockRejectedValue(new Error('no canvas'))
     const { user } = renderAt(`/app/groups/${groupId}/wrapped`, <WrappedScreen />)
@@ -105,6 +120,7 @@ describe('WrappedScreen', () => {
     expect(text).toMatch(/^🏖️ Goa: the story/)
     expect(text).toContain('On repeat: Chai × 3')
     expect(text).toContain('To settle it: 2 payments')
+    expect(text.split('\n').at(-1)).toBe(`Made with Settle: ${window.location.origin}`)
     mocks.renderSlidePicture.mockResolvedValue(new Blob(['png'], { type: 'image/png' }))
   })
 

@@ -28,6 +28,8 @@ export const groups = {
 
   // How a payment was made.
   'groups.method.cash': 'Cash',
+  'groups.tools.story.soon': '{count, plural, one {One more expense and this group gets its Story.} other {# more expenses and this group gets its Story.}}',
+  'groups.standing.kitty': '{amount} of this is the group’s kitty you’re holding. It is spent on the trip, not paid back now.',
   'groups.method.other': 'Other',
 
   // A recorded payment. {name} / {from} / {to} are people ("you" is never a name here).

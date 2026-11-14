@@ -1,24 +1,28 @@
 /**
  * What this phone remembers about who was there when: per group, each person's first and last day
- * (both optional), and the fix-ups you said to leave alone (so the banner doesn't ask again).
+ * (both optional), the fix-ups you said to leave alone (so the banner doesn't ask again), and the
+ * nights range each stay was split by (so a meal added later doesn't change a stay already split).
  * Everything else is worked out from the group's expenses.
  */
 import * as z from 'zod/mini'
 import { createStore, useStore } from '../../data/store'
 import { STORAGE_KEYS } from '../../data/stores'
 import { isIsoDate } from '../../engine/dates'
-import type { Stay } from './engine'
+import type { Anchors, NightsRange, Stay } from './engine'
 
 export interface PresenceState {
   /** Group → friend → stay. */
   stays: Record<string, Record<string, Stay>>
   /** Group → `fixUpKey`s said to be left alone. */
   declined: Record<string, string[]>
+  /** Expense → the nights range it was split by. Absent when there are none. */
+  anchors?: Record<string, NightsRange>
 }
 
 const MAX_GROUPS = 100
 const MAX_PEOPLE = 100
 const MAX_DECLINED = 300
+const MAX_ANCHORS = 300
 const MAX_ID = 80
 
 const isObject = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v)
@@ -55,6 +59,14 @@ export function cleanPresence(raw: unknown): PresenceState {
       if (kept.length > 0) out.declined[groupId] = kept
     }
   }
+  if (isObject(raw.anchors)) {
+    const kept: Record<string, NightsRange> = {}
+    for (const [expenseId, range] of Object.entries(raw.anchors).slice(-MAX_ANCHORS)) {
+      if (!isId(expenseId) || !isObject(range) || !isIsoDate(range.from) || !isIsoDate(range.to) || range.from >= range.to) continue
+      kept[expenseId] = { from: range.from, to: range.to }
+    }
+    if (Object.keys(kept).length > 0) out.anchors = kept
+  }
   return out
 }
 
@@ -69,6 +81,25 @@ export const presenceStore = createStore<PresenceState>({
 
 const NO_STAYS: Readonly<Record<string, Stay>> = {}
 const NONE: readonly string[] = []
+const NO_ANCHORS: Anchors = {}
+
+/** The nights range each stay was split by (expense → range). */
+export function useAnchors(): Anchors {
+  return useStore(presenceStore, (state) => state.anchors ?? NO_ANCHORS)
+}
+
+/** Remembers the range a stay was split by nights over; null forgets it (Undo). */
+export function setAnchor(expenseId: string, range: NightsRange | null): void {
+  if (!isId(expenseId)) return
+  const state = presenceStore.get()
+  const anchors = { ...state.anchors }
+  delete anchors[expenseId]
+  if (range && isIsoDate(range.from) && isIsoDate(range.to) && range.from < range.to) anchors[expenseId] = { from: range.from, to: range.to }
+  const ids = Object.keys(anchors)
+  for (const id of ids.slice(0, Math.max(0, ids.length - MAX_ANCHORS))) delete anchors[id]
+  const { anchors: _old, ...rest } = state
+  presenceStore.set(Object.keys(anchors).length > 0 ? { ...rest, anchors } : rest)
+}
 
 /** One group's stays (friend → stay). */
 export function useStays(groupId: string | null | undefined): Readonly<Record<string, Stay>> {

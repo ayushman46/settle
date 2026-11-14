@@ -3,9 +3,10 @@
  * to one person (the holder), who pays for the group from it. In Settle's books that is nothing
  * new: each hand-over is a recorded payment (member → holder) and each kitty spend is an ordinary
  * group expense paid by the holder. So the kitty is a small ledger over the group's payments and
- * bills from the day it started (inclusive), plus the little this phone keeps (`store.ts`): who
- * holds it, how much each, and since when. Anything before that day (old bills, old debts) is
- * not the kitty's and is left to the group's usual balances.
+ * bills from the moment it started, plus the little this phone keeps (`store.ts`): who holds it,
+ * how much each, and since when. Anything from before (old bills, old debts, a bill added that
+ * morning) is not the kitty's and is left to the group's usual balances. Bills and payments dated
+ * a later day always count; ones dated the start day count when they were added after the start.
  *
  * Pure: `today` comes in, nothing reads the clock. Every sum is exact to the paisa.
  */
@@ -17,8 +18,14 @@ export interface KittyConfig {
   holderId: string
   /** What each person puts in (minor units). */
   perHead: Minor
-  /** YYYY-MM-DD: payments and bills from this day on belong to the kitty. */
+  /** YYYY-MM-DD: the day it started. Payments and bills dated after this day belong to the kitty. */
   startedOn: string
+  /**
+   * The moment it started (ms since 1970). On `startedOn` itself, only payments and bills added
+   * from then on belong to the kitty. Kitties saved before this was kept lack it: they count the
+   * whole start day.
+   */
+  startedAt?: number
 }
 
 export interface KittyMember {
@@ -54,7 +61,7 @@ export interface KittyView {
   fromOthers: Minor
   /** What the holder has paid for the group since the start (bills in the group's currency; loans aren't spending). */
   spent: Minor
-  /** The others' shares of `spent`: the part that comes out of their money. */
+  /** The others' shares of `spent`: the part that comes out of their money ("Spent" on the sheet). */
   othersSpent: Minor
   /** The holder's own share of `spent` (paid from their own money). */
   holderSpent: Minor
@@ -67,8 +74,13 @@ export interface KittyView {
   days: number
   /** Average the holder has spent for the group per day since the start. */
   perDay: Minor
-  /** The others' money spent per day: the pace `left` goes down at. */
+  /** The others' money spent per day: the pace `left` goes down at, and the one the sheet shows. */
   othersPerDay: Minor
+  /**
+   * What the others have spent beyond what they put in (`othersSpent − fromOthers` when that is
+   * positive), paid by the holder for now; else 0. `fromOthers − othersSpent` is `left` otherwise.
+   */
+  over: Minor
   /** The day `left` runs out at `othersPerDay`, or null when nothing is being spent. Today when it already has. */
   runsOutOn: string | null
   /** Whole days until it runs out (0 = today), or null. */
@@ -86,13 +98,25 @@ export const TOP_UP_DAYS = 2
 /** A top-up is rounded up to a multiple of this many whole currency units (₹100). */
 const TOP_UP_STEP_UNITS = 100
 
-function isKittySpend(e: Expense, group: Group, holderId: string, startedOn: string): boolean {
+/** When the kitty starts counting: its day, and (on that day) the moment, if known. */
+interface Start {
+  on: string
+  at: number | null
+}
+
+/** A bill or payment dated `date` and added at `createdAt` falls inside the kitty. */
+function inKitty(date: string, createdAt: number, start: Start): boolean {
+  if (date !== start.on) return date > start.on
+  return start.at === null || !Number.isFinite(createdAt) || createdAt >= start.at
+}
+
+function isKittySpend(e: Expense, group: Group, holderId: string, start: Start): boolean {
   return (
     e.groupId === group.id &&
     e.currency === group.currency &&
     e.kind !== 'loan' &&
     e.payerId === holderId &&
-    e.date >= startedOn &&
+    inKitty(e.date, e.createdAt, start) &&
     Number.isSafeInteger(e.total)
   )
 }
@@ -115,13 +139,16 @@ function add(map: Record<string, Minor>, id: string, amount: Minor): void {
 export function kittyView(group: Group, expenses: readonly Expense[], config: KittyConfig, today: string): KittyView | null {
   const { holderId, perHead } = config
   if (!group.memberIds.includes(holderId) || !Number.isSafeInteger(perHead) || perHead <= 0) return null
-  // A start date in the future (a phone with a wrong clock) counts from today.
-  const startedOn = config.startedOn > today ? today : config.startedOn
+  // A start date in the future (a phone with a wrong clock) counts from the start of today.
+  const future = config.startedOn > today
+  const startedOn = future ? today : config.startedOn
+  const at = config.startedAt
+  const start: Start = { on: startedOn, at: !future && typeof at === 'number' && Number.isFinite(at) ? at : null }
 
   // Money in (member → holder) and money handed back (holder → member), since the start.
   const net: Record<string, Minor> = {}
   for (const s of group.settlements) {
-    if (s.date < startedOn || !Number.isSafeInteger(s.amount) || s.amount <= 0 || s.fromId === s.toId) continue
+    if (!inKitty(s.date, s.createdAt, start) || !Number.isSafeInteger(s.amount) || s.amount <= 0 || s.fromId === s.toId) continue
     if (s.toId === holderId) add(net, s.fromId, s.amount)
     else if (s.fromId === holderId) add(net, s.toId, -s.amount)
   }
@@ -132,7 +159,7 @@ export function kittyView(group: Group, expenses: readonly Expense[], config: Ki
   let spent = 0
   let holderSpent = 0
   for (const e of expenses) {
-    if (!isKittySpend(e, group, holderId, startedOn)) continue
+    if (!isKittySpend(e, group, holderId, start)) continue
     spent += e.total
     for (const [id, raw] of Object.entries(e.shares)) {
       const share = typeof raw === 'number' && Number.isSafeInteger(raw) ? raw : 0
@@ -140,7 +167,6 @@ export function kittyView(group: Group, expenses: readonly Expense[], config: Ki
       else add(spentOn, id, share)
     }
   }
-  const othersSpent = spent - holderSpent
 
   const order = [holderId, ...group.memberIds.filter((id) => id !== holderId)]
   const members: KittyMember[] = order.map((id) => {
@@ -155,13 +181,14 @@ export function kittyView(group: Group, expenses: readonly Expense[], config: Ki
   const others = new Set<string>([...Object.keys(net), ...Object.keys(spentOn), ...order])
   others.delete(holderId)
   let fromOthers = 0
-  let parts = 0
+  let othersSpent = 0
   for (const id of others) {
-    const putIn = putInOf(id)
-    fromOthers += putIn
-    parts += putIn - (spentOn[id] ?? 0)
+    fromOthers += putInOf(id)
+    othersSpent += spentOn[id] ?? 0
   }
-  const left = Math.max(0, parts)
+  // Sums of the same numbers, so Put in − Spent = Left whenever the kitty hasn't run dry.
+  const left = Math.max(0, fromOthers - othersSpent)
+  const over = Math.max(0, othersSpent - fromOthers)
 
   const days = Math.max(1, daysBetween(startedOn, today) + 1)
   const perDay = Math.round(spent / days)
@@ -195,6 +222,7 @@ export function kittyView(group: Group, expenses: readonly Expense[], config: Ki
     days,
     perDay,
     othersPerDay,
+    over,
     runsOutOn,
     daysLeft,
     topUp,
@@ -221,4 +249,21 @@ export function suggestedHolder(group: Group, expenses: readonly Expense[], name
     if (best === null || amount > top || (amount === top && nameOf(id).localeCompare(nameOf(best)) < 0)) best = id
   }
   return best ?? (group.memberIds.includes(ME_ID) ? ME_ID : (group.memberIds[0] ?? ME_ID))
+}
+
+/** What a running kitty's holder is holding of other people's money right now. */
+export interface KittyHeld {
+  holderId: string
+  /** The others' money still in the kitty (the sheet's "Left"), in minor units; never negative. */
+  held: Minor
+}
+
+/**
+ * For a group's balance card: null when the group has no running kitty (or it can't be one),
+ * else who holds it and how much of the others' money they hold. Pure: `today` comes in.
+ */
+export function kittyHeld(group: Group, expenses: readonly Expense[], config: KittyConfig | null, today: string): KittyHeld | null {
+  if (!config || group.archived || group.memberIds.length < 2) return null
+  const view = kittyView(group, expenses, config, today)
+  return view ? { holderId: view.holderId, held: view.left } : null
 }

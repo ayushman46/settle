@@ -14,6 +14,7 @@ import { shareCardFilename } from '../../share/card/render'
 import { outsideName } from '../../share/names'
 import { shareFile } from '../../share/shareFile'
 import { GroupGone } from '../groups/GroupGone'
+import { siteOrigin } from '../landing/pageMeta'
 import { groupPath, settleUpPath } from '../groups/paths'
 import { categoryParts, SLIDE_COLORS, slideText, slideWords, storyText, type CopyContext } from './copy'
 import { buildStory, type Slide } from './engine'
@@ -48,7 +49,7 @@ function Story({ group }: { group: Group }) {
   const app = useMemo<CopyContext>(() => ({ group, nameOf: appNames, youLabel: t('wrapped.you.eyebrow') }), [group, appNames, t])
   const out = useMemo<CopyContext>(() => {
     const nameOf = (id: string): string => outsideName(id, friendsById, profile, id === ME_ID ? translate('share.card.me') : translate('share.card.friend'))
-    return { group, nameOf, youLabel: nameOf(ME_ID) }
+    return { group, nameOf, youLabel: nameOf(ME_ID), site: siteOrigin() }
   }, [group, friendsById, profile])
 
   if (slides.length === 0) {
@@ -107,18 +108,21 @@ function StoryPlayer({ group, slides, app, out }: { group: Group; slides: Slide[
 
   // The slide's picture is drawn as soon as it shows, not on tap: a share sheet opened too long
   // after the tap is refused by the browser.
+  // A Share tapped before it's drawn waits for it (the first slide's picture also waits for the
+  // fonts), so the picture is never left off.
   const current = picture?.at === index && picture.key === pictureKey ? picture : null
+  const drawing = useRef<{ at: number; key: string; blob: Promise<Blob | null> } | null>(null)
   useEffect(() => {
     if (current) return
     let live = true
-    renderSlidePicture({ words: outWords, colors, groupLabel: `${group.emoji} ${group.name}`, position }, { watermark: !cleanCards, theme: 'light' }).then(
-      (blob) => {
-        if (live) setPicture({ at: index, key: pictureKey, blob })
-      },
-      () => {
-        if (live) setPicture({ at: index, key: pictureKey, blob: null })
-      },
+    const blob = renderSlidePicture({ words: outWords, colors, groupLabel: `${group.emoji} ${group.name}`, position }, { watermark: !cleanCards, theme: 'light' }).then(
+      (b): Blob | null => b,
+      () => null,
     )
+    drawing.current = { at: index, key: pictureKey, blob }
+    void blob.then((b) => {
+      if (live) setPicture({ at: index, key: pictureKey, blob: b })
+    })
     return () => {
       live = false
     }
@@ -137,7 +141,8 @@ function StoryPlayer({ group, slides, app, out }: { group: Group; slides: Slide[
     setSharing(true)
     try {
       const text = slideText(slide, out)
-      const blob = current?.blob ?? null
+      const pending = drawing.current
+      const blob = current ? current.blob : pending && pending.at === index && pending.key === pictureKey ? await pending.blob : null
       report(blob ? await shareFile(blob, shareCardFilename(`${group.name} story ${index + 1}`), text, { title: group.name }) : await shareResult(text, { title: group.name }))
     } finally {
       setSharing(false)

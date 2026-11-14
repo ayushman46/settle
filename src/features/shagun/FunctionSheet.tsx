@@ -84,7 +84,7 @@ export function FunctionSheet({ open, onClose, fn = null, onSaved }: FunctionShe
           </p>
           <div className={styles.chips} role="radiogroup" aria-label={t('shagun.fnsheet.kind')}>
             {SHAGUN_KINDS.map((k) => (
-              <Chip key={k} role="radio" selected={k === kind} onClick={() => setKind(k)}>
+              <Chip key={k} role="radio" size="lg" selected={k === kind} onClick={() => setKind(k)}>
                 {kindLabel(k)}
               </Chip>
             ))}

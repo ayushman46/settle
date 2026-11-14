@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { shagunCsv } from './csv'
 import {
   adviseFamily,
+  lastGivenTo,
   bookTotals,
   earlierInFunction,
   familySummaries,
@@ -13,7 +14,7 @@ import {
   sortFamilies,
   tidyName,
 } from './engine'
-import { adviceText } from './labels'
+import { adviceText, givenText } from './labels'
 import type { ShagunEntry, ShagunFunction } from './types'
 
 let seq = 0
@@ -193,5 +194,31 @@ describe('size', () => {
     expect(performance.now() - started).toBeLessThan(500)
     expect(fams).toHaveLength(500)
     expect(total.received + total.given).toBe(entries.reduce((s, e) => s + e.amount, 0))
+  })
+})
+
+describe('the panel’s fixes', () => {
+  it('₹250 given this year: give back ₹251 (the customary amount), not ₹301', () => {
+    const fam = familySummaries([entry({ name: 'Tandon ji', amount: 25_000, date: '2026-03-01' })])[0]!
+    const advice = adviseFamily(fam, byId, '2026-11-14')
+    expect(advice).toMatchObject({ kind: 'amount', amount: 25_100 })
+    expect(adviceText(advice)).toBe('They gave ₹250 in 2026. Give back ₹251.')
+  })
+
+  it('what you gave them last: everything at that function, or nothing when you never gave', () => {
+    const fam = familySummaries([
+      entry({ name: 'Sharma ji', amount: 50_100, functionId: 'w' }),
+      entry({ name: 'Sharma ji', direction: 'given', amount: 50_100, date: '2022-01-01' }),
+      entry({ name: 'Sharma ji', direction: 'given', amount: 110_100, functionId: 's', date: '2023-11-20' }),
+      entry({ name: 'Sharma ji', direction: 'given', amount: 10_000, functionId: 's', date: '2023-11-20' }),
+    ])[0]!
+    const given = lastGivenTo(fam, byId)
+    expect(given).toMatchObject({ amount: 120_100, date: '2023-11-20' })
+    expect(givenText(given)).toBe('You gave them ₹1,201 at Sharma ji’s daughter’s wedding in 2023.')
+    const onlyReceived = familySummaries([entry({ name: 'Verma' })])[0]!
+    expect(lastGivenTo(onlyReceived, byId)).toBeNull()
+    expect(givenText(null)).toBeNull()
+    const gift = familySummaries([entry({ name: 'Rao', direction: 'given', amount: 0, gift: 'Saree', date: '2025-01-05' })])[0]!
+    expect(givenText(lastGivenTo(gift, byId))).toBe('You gave them Saree in 2025.')
   })
 })

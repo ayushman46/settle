@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest'
 import type { Expense, Group, Settlement } from '../../domain/types'
 import { addDays } from '../../engine/dates'
 import { groupBalances, simplifyDebts } from '../../engine/balances'
-import { bandFor, FULL_HISTORY, NEUTRAL_SCORE, settleScore, type Factor, type FactorId, type SettleScore } from './engine'
+import { bandBodyKey } from './bands'
+import { bandFor, FULL_HISTORY, GOLD_FROM, NEUTRAL_SCORE, settleScore, type Factor, type FactorId, type SettleScore } from './engine'
 
 const TODAY = '2026-11-14'
 const noonOf = (iso: string): number => {
@@ -42,7 +43,12 @@ function expense(total: number, date: string, payerId: string, ids: string[], mo
 /** Someone else paid; I owe my half. Paid back `after` days later (or still open). */
 const owed = (date: string, after: number | null, payer = 'sam', total = 80_000): Expense =>
   expense(total, date, payer, [payer, 'me'], after === null ? {} : { paidBack: { me: noonOf(addDays(date, after)) } })
-const fronted = (date: string, total = 60_000): Expense => expense(total, date, 'me', ['me', 'riya'])
+const fronted = (date: string, total = 60_000, friend = 'riya'): Expense => expense(total, date, 'me', ['me', friend])
+const FRIENDS = ['sam', 'riya', 'neha', 'amit']
+const i2 = (iso: string): number => Number(iso.slice(8, 10))
+/** One a day from `start`, with friends in turn. */
+const daily = (count: number, start: string, make: (date: string, friend: string) => Expense): Expense[] =>
+  Array.from({ length: count }, (_, i) => make(addDays(start, i), FRIENDS[i % FRIENDS.length] as string))
 const paid = (fromId: string, toId: string, amount: number, date: string): Settlement => ({ id: `s${++n}`, fromId, toId, amount, date, createdAt: n, method: 'upi' })
 const group = (settlements: Settlement[] = [], id = 'goa'): Group => ({ id, name: id === 'goa' ? 'Goa' : 'Flat', emoji: '🏖️', kind: 'trip', currency: 'INR', memberIds: ['me', 'riya', 'sam'], settlements, createdAt: 1, updatedAt: 1, archived: false })
 
@@ -68,8 +74,19 @@ describe('a new user', () => {
     expect(s.score).toBeLessThan(700)
   })
 
+  it('isn’t ready (no number) until 3 times owed have counted: paid back, or unpaid for over 3 days', () => {
+    // Three splits I'm in, nothing paid back and all fresh: no verdict yet (the panel saw “609” here).
+    const fresh = score([owed('2026-11-12', null), owed('2026-11-13', null, 'riya'), fronted('2026-11-13')])
+    expect(fresh.splits).toBe(3)
+    expect(fresh.owed).toBe(0)
+    expect(fresh.ready).toBe(false)
+    const counted = score([owed('2026-11-01', 1), owed('2026-11-02', 2, 'riya'), owed('2026-11-05', null, 'neha')])
+    expect(counted.owed).toBe(3)
+    expect(counted.ready).toBe(true)
+  })
+
   it('a long, fast history reaches gold; a long, slow one is slow to settle', () => {
-    const fast = Array.from({ length: 14 }, (_, i) => owed(addDays('2026-09-01', i * 4), 0))
+    const fast = Array.from({ length: 14 }, (_, i) => owed(addDays('2026-09-01', i * 4), 0, FRIENDS[i % 3]))
     const fastScore = score([...fast, ...Array.from({ length: 10 }, (_, i) => fronted(addDays('2026-09-02', i * 4)))])
     expect(fastScore.ready).toBe(true)
     expect(fastScore.band).toBe('gold')
@@ -117,16 +134,20 @@ describe('the factors', () => {
 
   it('bills you paid for others help, capped', () => {
     expect(factor(score([fronted('2026-11-01')]), 'fronted')).toMatchObject({ bills: 1, sub: 10 })
-    expect(factor(score(Array.from({ length: 15 }, () => fronted('2026-11-01'))), 'fronted').sub).toBe(100)
-    // A ₹20 chai isn't a bill for the factor (it still counts as history).
+    expect(factor(score(daily(15, '2026-10-01', (d) => fronted(d))), 'fronted').sub).toBe(100)
+    // A ₹20 chai isn't a bill for the factor, nor history.
     const chai = score([fronted('2026-11-01', 2_000)])
     expect(factor(chai, 'fronted').bills).toBe(0)
-    expect(chai.splits).toBe(1)
+    expect(chai.splits).toBe(0)
+    expect(chai.anySplits).toBe(1)
   })
 
-  it('history grows to full at 12 splits', () => {
-    expect(factor(score(Array.from({ length: 6 }, () => fronted('2026-11-01'))), 'history').sub).toBe(50)
-    expect(factor(score(Array.from({ length: FULL_HISTORY + 3 }, () => fronted('2026-11-01'))), 'history').sub).toBe(100)
+  it('history grows to full at 12 splits with 3 different people', () => {
+    expect(factor(score(daily(6, '2026-10-01', (d, f) => fronted(d, 60_000, f))), 'history').sub).toBe(50)
+    const full = factor(score(daily(FULL_HISTORY + 3, '2026-10-01', (d, f) => fronted(d, 60_000, f))), 'history')
+    expect(full).toMatchObject({ sub: 100, people: 4, full: true })
+    // One friend alone can carry it only a third of the way.
+    expect(factor(score(daily(FULL_HISTORY + 3, '2026-10-01', (d) => fronted(d))), 'history')).toMatchObject({ sub: 33, people: 1, full: false })
   })
 })
 
@@ -172,6 +193,95 @@ describe('what counts', () => {
   it('is the same whatever order the data comes in', () => {
     const list = [owed('2026-10-01', 2), owed('2026-10-05', null), fronted('2026-10-06'), owed('2026-11-01', 9, 'riya')]
     expect(score([...list].reverse())).toEqual(score(list))
+  })
+})
+
+describe('tiny amounts can’t carry it', () => {
+  it('twelve ₹20 chais repaid the same day reach nothing (the panel got 840 “Gold standard”)', () => {
+    const loose = daily(12, '2026-11-01', (d) => owed(d, 0, 'riya', 2_000))
+    const s = score(loose)
+    expect(s.splits).toBe(0)
+    expect(s.owed).toBe(0)
+    expect(s.ready).toBe(false)
+    expect(s.score).toBe(NEUTRAL_SCORE)
+    // The same in a group, with ₹10 and ₹15 paid back the same day.
+    const chais = daily(12, '2026-11-01', (d) => expense(i2(d) % 2 ? 3_000 : 2_000, d, 'riya', ['riya', 'me'], { groupId: 'goa' }))
+    const pays = chais.map((e) => paid('me', 'riya', e.total / 2, e.date))
+    const g = score(chais, [group(pays)])
+    expect(g.owed).toBe(0)
+    expect(g.ready).toBe(false)
+    expect(g.band).not.toBe('gold')
+  })
+
+  it('₹2 splits don’t push history up', () => {
+    const twos = daily(7, '2026-11-01', (d) => fronted(d, 200))
+    const s = score(twos)
+    expect(s.splits).toBe(0)
+    expect(factor(s, 'history').sub).toBe(0)
+    expect(s.score).toBe(score([]).score)
+  })
+
+  it('owing someone less than ₹100 isn’t a debt for it, but still shows as a next step worth nothing', () => {
+    const s = score([owed('2026-10-01', null, 'sam', 15_000)])
+    expect(factor(s, 'overdue').count).toBe(0)
+    expect(s.next).toMatchObject({ kind: 'friend', friendId: 'sam', amount: 7_500, gain: 0 })
+  })
+
+  it('at most 2 splits a day count', () => {
+    const oneDay = Array.from({ length: 12 }, (_, i) => owed('2026-11-01', 0, FRIENDS[i % 4], 60_000))
+    expect(score(oneDay).splits).toBe(2)
+  })
+
+  it('one friend alone can’t lift it far, however many real bills', () => {
+    const s = score(daily(30, '2026-10-01', (d) => owed(d, 0, 'riya', 60_000)))
+    expect(s.ready).toBe(true)
+    expect(factor(s, 'history').people).toBe(1)
+    expect(s.score).toBeLessThanOrEqual(700)
+  })
+
+  it('the top band needs the full history: 11 perfect splits with 3 people stop at 799', () => {
+    const s = score(daily(11, '2026-10-01', (d, f) => owed(d, 0, f === 'amit' ? 'sam' : f)))
+    expect(factor(s, 'history').full).toBe(false)
+    expect(s.score).toBe(GOLD_FROM - 1)
+    expect(s.band).toBe('solid')
+  })
+
+  it('a group stretch counts by the most I owed in it', () => {
+    const small = expense(15_000, '2026-11-01', 'riya', ['riya', 'me'], { groupId: 'goa' })
+    expect(score([small], [group([paid('me', 'riya', 7_500, '2026-11-01')])]).owed).toBe(0)
+    const big = expense(40_000, '2026-11-01', 'riya', ['riya', 'me'], { groupId: 'goa' })
+    expect(score([big], [group([paid('me', 'riya', 20_000, '2026-11-01')])]).owed).toBe(1)
+  })
+})
+
+describe('the sentences only claim what the factors show', () => {
+  const fastOwed = (): Expense[] => daily(14, '2026-09-01', (d, f) => owed(d, 0, f === 'amit' ? 'sam' : f))
+
+  it('gold with no bill paid for anyone never says you pick up the bill', () => {
+    const s = score(fastOwed())
+    expect(s.band).toBe('gold')
+    expect(factor(s, 'fronted').bills).toBe(0)
+    expect(bandBodyKey(s)).toBe('score.band.gold.fast')
+    const withBills = score([...fastOwed(), ...daily(10, '2026-10-01', (d, f) => fronted(d, 60_000, f))])
+    expect(withBills.band).toBe('gold')
+    expect(bandBodyKey(withBills)).toBe('score.band.gold.fastBills')
+  })
+
+  it('warming without any old debt says paying back was slow, not that old debts hold it down', () => {
+    const slowPaid = score(daily(14, '2026-07-01', (d, f) => owed(d, 20, f)))
+    expect(slowPaid.band).toBe('warming')
+    expect(factor(slowPaid, 'overdue').count).toBe(0)
+    expect(bandBodyKey(slowPaid)).toBe('score.band.warming.slow')
+    const stillOwed = score(daily(14, '2026-08-01', (d, f) => owed(d, null, f)))
+    expect(stillOwed.band).toBe('warming')
+    expect(bandBodyKey(stillOwed)).toBe('score.band.warming.body')
+  })
+
+  it('speed knows when nothing has been paid back yet, and the oldest debt’s age', () => {
+    const s = score([owed('2026-11-10', null), owed('2026-11-12', null, 'riya')])
+    expect(factor(s, 'speed')).toMatchObject({ paidBack: 0, open: 2, oldestOpenDays: 4 })
+    const mixed = score([owed('2026-11-10', 1), owed('2026-11-12', null, 'riya')])
+    expect(factor(mixed, 'speed')).toMatchObject({ paidBack: 1, open: 1 })
   })
 })
 

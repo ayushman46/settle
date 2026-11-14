@@ -1,8 +1,9 @@
 /** The shagun book's words: the reason behind "What should I give?", kinds, default names. */
 import { t } from '../../i18n'
+import { daysBetween, isIsoDate } from '../../engine/dates'
 import { relativeDateLabel } from '../../kit/dateLabel'
 import { formatMoney } from '../../lib/money'
-import type { ShagunAdvice } from './engine'
+import type { GivenNote, ShagunAdvice } from './engine'
 import type { ShagunEntry, ShagunFunction, ShagunKind } from './types'
 
 export function rupees(paise: number): string {
@@ -36,6 +37,15 @@ export function adviceText(advice: ShagunAdvice): string | null {
   return `${first} ${t('shagun.advice.give', { years: advice.years, amount: rupees(advice.amount) })}`
 }
 
+/** "You gave them ₹1,101 at Neha’s wedding in 2026." Null when you haven't given them anything. */
+export function givenText(given: GivenNote | null): string | null {
+  if (!given) return null
+  const what = given.amount > 0 ? rupees(given.amount) : given.gift || t('shagun.advice.gift.unnamed')
+  const at = atPhrase(given.fn)
+  const year = given.date.slice(0, 4)
+  return at ? t('shagun.advice.yougave.at', { what, at, year }) : t('shagun.advice.yougave', { what, year })
+}
+
 let monthFormat: Intl.DateTimeFormat | null | undefined
 
 /** "Feb 2024" for `2024-02-12`. */
@@ -55,16 +65,39 @@ export function defaultFunctionName(kind: ShagunKind, mine: boolean, date: strin
   return t(mine ? 'shagun.default.mine' : 'shagun.default.theirs', { kind, month: monthLabel(date) })
 }
 
+/** "₹1,100 + silver coin", "₹501", "saree": what was in it, without who or which way. */
+export function entryThing(entry: ShagunEntry): string {
+  const money = entry.amount > 0 ? rupees(entry.amount) : ''
+  return money && entry.gift ? `${money} + ${entry.gift}` : money || entry.gift || ''
+}
+
 /** "Gave you ₹1,100 + silver coin", "You gave a saree". */
 export function entryWhat(entry: ShagunEntry): string {
-  const money = entry.amount > 0 ? rupees(entry.amount) : ''
-  const thing = money && entry.gift ? `${money} + ${entry.gift}` : money || entry.gift || ''
+  const thing = entryThing(entry)
   if (entry.amount > 0) return t(entry.direction === 'received' ? 'shagun.family.received' : 'shagun.family.given', { amount: thing })
   return t(entry.direction === 'received' ? 'shagun.family.receivedGift' : 'shagun.family.givenGift', { gift: thing })
 }
 
+let dayFormat: Intl.DateTimeFormat | null | undefined
+
+/**
+ * "12 Feb 2024", always with the year (a book spans years: "20 Jan" next to "18 Feb 2024" reads
+ * as if one had no year). Today and yesterday still say so.
+ */
+export function dateWithYear(iso: string, today: string): string {
+  if (!isIsoDate(iso) || (isIsoDate(today) && Math.abs(daysBetween(today, iso)) <= 1)) return relativeDateLabel(iso, today)
+  if (dayFormat === undefined) {
+    try {
+      dayFormat = new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' })
+    } catch {
+      dayFormat = null
+    }
+  }
+  return dayFormat ? dayFormat.format(new Date(`${iso}T00:00:00Z`)) : iso
+}
+
 /** "12 Feb 2024 · Our wedding, Feb 2024". */
 export function entryWhen(entry: ShagunEntry, fn: ShagunFunction | null, today: string): string {
-  const date = relativeDateLabel(entry.date, today)
+  const date = dateWithYear(entry.date, today)
   return fn ? `${date} · ${fn.name}` : date
 }
