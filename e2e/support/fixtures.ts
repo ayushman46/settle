@@ -19,6 +19,8 @@ export { expect }
 export interface Shared {
   clipboard: string[]
   sheets: Array<{ title?: string; text?: string; url?: string }>
+  /** Links that would have opened a UPI app (intent://…, upi://…, gpay://…): recorded, not followed. */
+  apps: string[]
 }
 
 interface PhoneSetup {
@@ -38,8 +40,18 @@ declare global {
  * and makes the share sheet "succeed" instantly (headless browsers have no share UI).
  */
 function recordSharing(): void {
-  const shared: Shared = { clipboard: [], sheets: [] }
+  const shared: Shared = { clipboard: [], sheets: [], apps: [] }
   window.__e2eShared = shared
+  // A phone hands these to the UPI app and the page stays; a test browser has no such app, and on Linux
+  // shows an "unknown address" page in its place. Record them and stay on the page, as a phone would.
+  const navigation = (window as unknown as { navigation?: EventTarget }).navigation
+  navigation?.addEventListener('navigate', (event) => {
+    const nav = event as Event & { destination?: { url?: string } }
+    const url = nav.destination?.url ?? ''
+    if (!/^(?:intent|upi|gpay|tez|phonepe|paytmmp|bhim):/i.test(url)) return
+    shared.apps.push(url)
+    if (event.cancelable) event.preventDefault()
+  })
   const clipboard = navigator.clipboard
   if (clipboard && typeof clipboard.writeText === 'function') {
     const write = clipboard.writeText.bind(clipboard)
@@ -113,7 +125,7 @@ export const test = base.extend<Fixtures>({
     await use(phone.blocked)
   },
   shared: async ({ page }, use) => {
-    await use(async (target = page) => (await target.evaluate(() => window.__e2eShared)) ?? { clipboard: [], sheets: [] })
+    await use(async (target = page) => (await target.evaluate(() => window.__e2eShared)) ?? { clipboard: [], sheets: [], apps: [] })
   },
   openPhone: async ({ browser, baseURL, contextOptions, viewport, colorScheme, locale, timezoneId, isMobile, hasTouch, deviceScaleFactor, userAgent }, use) => {
     const opened: Array<{ context: BrowserContext; setup: PhoneSetup }> = []

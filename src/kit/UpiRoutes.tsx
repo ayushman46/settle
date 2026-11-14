@@ -20,6 +20,7 @@ import {
   subscribePayApp,
   type PayApp,
   type PayPlatform,
+  inAppBrowser,
 } from '../lib/paymentApps'
 import { qrPicture } from '../lib/qrPicture'
 import { copyText } from '../lib/share'
@@ -181,7 +182,7 @@ export function UpiRoutes({ payeeName, vpa, amount, note, color, phone, platform
     setPayApp(app.id)
     const native = canPayInApp()
     // A shop: straight to the UPI app, on the payment, the shop and the amount filled in.
-    const shopHref = merchant && !native ? directPayHref(app, platform, uri) : null
+    const shopHref = merchant && !native && !inAppBrowser() ? directPayHref(app, platform, uri) : null
     if (shopHref) {
       openApp(app)
       setQuick('opened')
@@ -262,7 +263,7 @@ export function UpiRoutes({ payeeName, vpa, amount, note, color, phone, platform
   const quickStatus =
     quick === 'opened'
       ? t('kit.upiPay.quick.opened', { app: app.name })
-      : merchant && quick === 'idle' && direct && !canPayInApp()
+      : merchant && quick === 'idle' && direct && !canPayInApp() && !inAppBrowser()
         ? hasAmount
           ? t('kit.upiPay.quick.lead.shop', { app: app.name, name: payeeName, amount: money })
           : t('kit.upiPay.quick.lead.shop.noAmount', { app: app.name, name: payeeName })

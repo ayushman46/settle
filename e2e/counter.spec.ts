@@ -110,6 +110,11 @@ test.describe('pay at the counter', () => {
     // One tap: the UPI app is asked to open on the payment (no app in a test browser, so the page stays).
     await sam.getByRole('button', { name: 'Pay ₹300 with Google Pay' }).click()
     await expect(sam.getByText('Opening Google Pay… Pay there, then come back here.')).toBeVisible()
+    // The link his phone was handed: Google Pay, the shop's UPI ID and his ₹300, nothing to type.
+    const handed = (await sam.evaluate(() => window.__e2eShared?.apps ?? [])).at(-1) ?? ''
+    expect(handed).toContain('intent://pay?pa=q998877665%40ybl')
+    expect(handed).toContain('am=300.00')
+    expect(handed).toContain('package=com.google.android.apps.nbu.paisa.user')
     await awayAndBack(sam)
     await sam.getByRole('button', { name: 'Yes, I paid' }).click()
     await expect(sam.getByText('You’ve paid your share')).toBeVisible()

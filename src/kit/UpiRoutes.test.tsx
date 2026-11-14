@@ -144,3 +144,23 @@ describe('paying a shop (its own QR was scanned)', () => {
     vi.unstubAllGlobals()
   })
 })
+
+describe('a shop’s link inside another app’s browser (Instagram, Facebook…)', () => {
+  it('is not followed (it would replace the page with an error): the QR is handed over instead', async () => {
+    const { inAppBrowser } = await import('../lib/paymentApps')
+    expect(inAppBrowser('Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 Chrome/130.0 Mobile Safari/537.36')).toBe(false)
+    expect(inAppBrowser('Mozilla/5.0 (Linux; Android 14; Pixel 8 Build/UD1A; wv) AppleWebKit/537.36 Version/4.0 Chrome/130.0 Mobile Safari/537.36 Instagram 320.0')).toBe(true)
+    const agent = vi.spyOn(window.navigator, 'userAgent', 'get').mockReturnValue('Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148 Instagram 320.0')
+    const assign = vi.fn()
+    vi.stubGlobal('location', { ...window.location, assign })
+    const user = userEvent.setup()
+    shareFile.mockResolvedValue('shared')
+    render(<UpiRoutes payeeName="Fishermans Wharf" vpa="paytmqr2810@paytm" amount={48000} note="Dinner" color={2} phone platform="android" merchant mc="5812" onPaid={() => undefined} />)
+    expect(screen.queryByText(/Opens Google Pay on the payment to Fishermans Wharf/)).not.toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Pay ₹480 with Google Pay' }))
+    expect(assign).not.toHaveBeenCalled()
+    expect(shareFile).toHaveBeenCalledTimes(1)
+    agent.mockRestore()
+    vi.unstubAllGlobals()
+  })
+})

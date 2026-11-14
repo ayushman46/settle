@@ -78,6 +78,14 @@ export function launchHref(app: PayApp, platform: PayPlatform): string | null {
 }
 
 /**
+ * A browser inside another app (Instagram, Facebook, Snapchat, an Android WebView…). It can't hand a link
+ * to a UPI app: the page is replaced by an "unknown address" error instead, and the person loses their place.
+ */
+export function inAppBrowser(userAgent: string = typeof navigator === 'undefined' ? '' : navigator.userAgent): boolean {
+  return /\bFBAN|FBAV|FB_IAB|Instagram|Line\/|Snapchat|Twitter|LinkedInApp|; wv\)/i.test(userAgent)
+}
+
+/**
  * A link that opens `app` on the payment itself — payee, amount and note from `upiUri`
  * (`upi://pay?…`). UPI apps are told to refuse a payment to a person that starts this way (NPCI
  * OC 76A), and many do; some take small amounts. Offered as a try, never as the only way. Null
