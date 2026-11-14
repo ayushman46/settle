@@ -105,7 +105,7 @@ async function trim(cache, max) {
   const gone = []
   for (const key of keys) {
     if (over <= 0) break
-    let path = ''
+    let path
     try {
       path = new URL(key.url).pathname
     } catch {
