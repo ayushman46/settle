@@ -14,6 +14,7 @@ import { formatMoney } from '../../lib/money'
 import { settleWithFriend } from '../friends/friendBalance'
 import { friendPath } from '../groups/paths'
 import { AutoSettleCard } from '../autosettle/AutoSettleCard'
+import { SwapCard } from '../swap/SwapCard'
 import { WHOS_PAID_PATH } from '../whospaid/paths'
 import { toCollect, type CollectRow } from './toCollect'
 import styles from './Collect.module.css'
@@ -64,6 +65,7 @@ export function CollectScreen() {
         </Banner>
       )}
       <AutoSettleCard />
+      <SwapCard />
       <Card padding="none">
         <ul className={styles.list}>
           {rows.map((row) => (

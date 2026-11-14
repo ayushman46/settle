@@ -197,3 +197,39 @@
   width: var(--s-5);
   height: var(--s-5);
 }
+
+/* The Android app as a download. */
+.getApk {
+  display: grid;
+  gap: var(--s-2);
+  padding: var(--s-4);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+  text-align: start;
+}
+
+.getApkLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  min-height: 48px;
+  padding: 0 var(--s-4);
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--surface);
+  font: var(--text-label);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.getApkLink svg {
+  width: 18px;
+  height: 18px;
+}
+
+.getApkLink:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}

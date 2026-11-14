@@ -11,6 +11,8 @@ import { useMediaQuery } from '../../kit/media'
 import { haptic } from '../../lib/haptics'
 import { formatMoney } from '../../lib/money'
 import { readSharedPayload, type SharedPayload } from '../../lib/sharedPayload'
+import { CHAT_PATH, readChatFile, setSharedChat } from '../chat/files'
+import { looksLikeChat } from '../chat/parse'
 import { readUpiQr, type UpiQr } from '../../lib/upiQr'
 import { setSharedPhoto } from '../../state/sharedPhoto'
 import { openBill } from '../bill/launch'
@@ -333,6 +335,15 @@ async function takeShare(payload: SharedPayload, onManyPhotos: () => void): Prom
     }
     if (images.length > 1) onManyPhotos()
     scanPhoto(first)
+    return 'left'
+  }
+  // WhatsApp’s "Export chat": the whole group’s money, read by Chat to split.
+  for (const file of payload.files) {
+    if (file.type.startsWith('image/') || !/\.(?:txt|zip)$/i.test(file.name)) continue
+    const chat = await readChatFile(file)
+    if (!chat || !looksLikeChat(chat.text)) continue
+    setSharedChat(chat)
+    navigate(CHAT_PATH, { replace: true })
     return 'left'
   }
   let fileText = ''

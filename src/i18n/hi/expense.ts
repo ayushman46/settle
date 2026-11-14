@@ -71,6 +71,7 @@ export const expense = {
 
   'expense.added': '{date} को जोड़ा',
   'expense.added.changed': '{date} को बदला',
+  'expense.added.source.chat': 'चैट से',
   'expense.added.source.scan': 'स्कैन किए बिल से',
   'expense.added.source.describe': '“बस बोल दीजिए” से',
   'expense.added.source.sample': 'सैंपल बिल से',

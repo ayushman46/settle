@@ -239,6 +239,13 @@ export const kit = {
   'kit.split.status.hadMuchMoreHint': 'did someone miss an item?',
 
   // Adding a UPI ID in place.
+  'kit.guess.phone.label': 'Or your mobile number',
+  'kit.guess.phone.hint': 'Tap the field: your keyboard offers your number. Then pick the app you use on it.',
+  'kit.guess.apps.aria': 'The UPI app you use on this number',
+  'kit.guess.made': '{app} gives this number the ID {upi}. Save it only if you use {app} on this number. Friends see the name on the account before they pay.',
+  'kit.guess.gpay': 'Google Pay IDs come from your e-mail, not your number: for Google Pay, share your QR (above) or paste the ID.',
+  'kit.guess.paste': 'Paste the ID I copied',
+  'kit.guess.paste.none': 'Nothing copied looks like a UPI ID. Copy it in your UPI app (under your name or QR), then tap again.',
   'kit.upiForm.error': 'That doesn’t look like a UPI ID. It’s like name@bank.',
   'kit.upiForm.save.cta': 'Save UPI ID',
   'kit.upiForm.label.mine': 'Your UPI ID',

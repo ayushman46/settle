@@ -27,6 +27,7 @@ import { useFlow, useSession } from '../../state/store'
 import type { Shares } from '../../types'
 import { CLAIMS_ENABLED } from '../claim/enabled'
 import { claimBoardPath, claimRoundFromBill, claimStartError } from '../claim/startClaimRound'
+import { DietStrip } from '../diet/DietStrip'
 import { AssignSheet, type AssignDirection } from './AssignSheet'
 import { linkToFriends } from './billPeople'
 import { withOwnerAvatar, useOwnerAvatarName } from './ownerAvatar'
@@ -195,6 +196,8 @@ export function AssignScreen() {
         />
       ) : (
         <>
+          <DietStrip sheetOpen={open} />
+
           {CLAIMS_ENABLED && left > 0 && (
             <Card className={styles.claim}>
               <span className={styles.claimIcon} aria-hidden="true">

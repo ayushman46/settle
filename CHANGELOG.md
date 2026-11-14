@@ -1,5 +1,44 @@
 # Changelog
 
+## v9.0 — 14 Nov 2026
+
+**Chat to split, and nineteen more things the app now does for you.** The group chat already says who paid for what: Settle reads it and makes the group. Around it, twenty features that take typing and chasing off the user.
+
+### New: the headline
+- **Chat to split.** In WhatsApp, Export chat → Without media → Settle (or pick the file, or paste messages). Settle reads the chat **on the phone** (it is never uploaded), finds lines like "paid 1200 for the cab", "Dinner ₹2,400", "petrol ke 1500 diye", "Sam paid 800 for lunch", "sent Sam 500", and shows them to be checked. One tap makes the group: the people (matched by name to the ones you have), every expense split between whoever the message said ("for me and Riya", "except Sam"), and payments between two people recorded. Questions, plans, prices being discussed, times, dates, phone numbers and OTPs are left alone; a bare "Chai 60" or a "400 each" is offered un-ticked with the reason. The same chat again later adds only what is new. Android (.txt) and iPhone (.zip) exports and copied messages; English and everyday Hinglish.
+
+### New: in every group (a row of tools under the balance)
+- **Trip kitty.** Everyone puts the same amount with one person. Who has put in, what's left, the day it runs out at this pace, and a one-tap "ask ₹500 more each". Worked out from the group's own payments and bills.
+- **Who pays?** A wheel that picks who gets this bill: fair (whoever has paid less than their share gets a bigger slice, with the percentages shown) or pure luck. The bill opens with that person already paying.
+- **Came late, left early.** Set who was there from when to when; anyone on an expense from a day they weren't there is taken off it in one tap, with Undo.
+- **Split by nights.** A stay (hotel, villa, hostel) is split by the nights each person stayed.
+- **The story.** A tap-through story of the group: what you spent, the big day, the biggest bill, where the money went, who fronted the most, who paid back fastest. Every slide shares as a picture.
+- **"Looks like this trip is done."** A few days after the spending stops, a card (in the group and on Home) says how many payments settle it.
+- **A group's usual split.** A couple's 60/40 or a flat's shares, set once: every new expense in the group opens already split that way.
+
+### New: on Home
+- **Clear everything.** Owe three people? One screen, one person after another: pay, tick, next.
+- **One payment instead of two.** You owe Sam ₹500 and Riya owes you ₹500: Settle writes the message asking Riya to pay Sam directly (with a pay link when Sam's UPI ID is known) and one tap clears both.
+- **Ask Settle.** "Who owes me?", "what did I spend on food in Goa?", "kisne sabse zyada pay kiya?": answered at once, on the phone, with what it understood shown.
+- **Split this? (Android app).** A payment your phone's alert shows you made is kept for a few days as a one-tap split, with the amount, the name and the day filled in and the group you're spending with offered first.
+
+### New: you and your people
+- **Settle Score.** 300 to 900 for how good you are to share money with: how fast you pay back, what you've left for over a week, bills you picked up. A game, not a credit score; paying something off never lowers it.
+- **The shagun book.** Who gave what at whose wedding, housewarming or naming. A fast "envelopes in hand" entry screen, per-family history both ways, and "What should I give?" in one tap (never less than they gave you, grown 6% a year, rounded to an amount ending in 1). In backups; exports as CSV.
+- **"Doesn't drink" and "Vegetarian", remembered.** Set once on a person (or on the bill): on every itemised bill after that they are taken off the drinks or the non-veg dishes by themselves, with a banner and Undo. A menu lexicon of Indian dishes and brands, with the traps (ginger beer, virgin mojito, hara bhara kebab, eggless) kept out.
+- **Expense claim.** A work trip's expenses as an A4 sheet for the office (Print / Save as PDF) and a CSV: what you paid or your share, by category, total in words.
+- **Shared ride, split by where each got off.** Tap people in the order they got off; each pays only for the legs they rode.
+- **Your UPI ID with no typing.** Your mobile number (the keyboard offers it) and the app you use on it give the ID for PhonePe, BHIM and Amazon Pay; or paste the ID you copied. Google Pay IDs can't be worked out from a number: its QR is read instead, as before.
+- **People from your contacts (Android).** The phone's own picker: names and numbers, no typing; only the ones you choose.
+- **The Android app as a download.** `/get` now links the APK (built by GitHub Actions, kept as a release). iPhone stays Add to Home Screen: there is no App Store app.
+
+### Honest limits
+- Chat to split reads what people wrote. A chat where nobody wrote amounts has nothing to read, and a message can be misread: that is why everything is shown before it is added, and can be undone.
+- Reading a group's WhatsApp for "paid …" messages is not new as an idea (a connected-WhatsApp splitter exists). What is different here: nothing is connected and nothing leaves the phone, it works from the export any member can make, and it adds payments between people too.
+- A UPI ID made from a number is right only if that app is set up on that number. The app says so.
+- "Split this?" and contacts need Android. Nothing in this release has been tried on a physical phone.
+- New screens are in English; other languages fall back to it.
+
 ## v8.4 — 14 Nov 2026
 
 **What 20 customers found in "Pay at the counter" and the Board.** A panel of 20 personas drove both on phone-sized browsers (all 20 finished; no ticks were lost, even with four people paying in the same half-second).

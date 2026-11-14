@@ -23,6 +23,7 @@ import { cx } from '../../lib/cx'
 import { formatMoney } from '../../lib/money'
 import { nameKey } from '../../lib/people'
 import { FRIENDS_PATH, friendPath, YOU_PATH } from '../groups/paths'
+import { ContactsButton } from './ContactsButton'
 import { FriendSheet } from './FriendSheet'
 import styles from './FriendsScreen.module.css'
 
@@ -54,6 +55,7 @@ export function FriendsScreen() {
   return (
     <Screen header={<TopBar onBack={() => goBack(YOU_PATH)} />} contentClassName={styles.content}>
       <PageTitle title={t('friends.list.title')} subtitle={t('friends.list.subtitle')} />
+      {people.length > 0 && <ContactsButton block />}
 
       {people.length === 0 ? (
         <EmptyState
@@ -61,9 +63,12 @@ export function FriendsScreen() {
           title={t('friends.list.empty.title')}
           text={t('friends.list.empty.body')}
           action={
-            <Button size="md" iconStart={<UserPlus />} onClick={() => setAdding({ name: '' })}>
-              {t('friends.list.empty.cta')}
-            </Button>
+            <>
+              <Button size="md" iconStart={<UserPlus />} onClick={() => setAdding({ name: '' })}>
+                {t('friends.list.empty.cta')}
+              </Button>
+              <ContactsButton />
+            </>
           }
         />
       ) : (

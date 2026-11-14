@@ -120,4 +120,10 @@ export const friends = {
   'friends.blocked.recurring': '{name} is in your recurring {count, plural, one {split} other {splits}} {titles}.',
   'friends.blocked.settleFirst': 'Settle up first, then they can go.',
   'friends.blocked.takeOut': 'Take them out of it first, then they can go.',
+
+  // People from the phone’s contacts
+  'friends.contacts.cta': 'Add from contacts',
+  'friends.contacts.toast': '{count, plural, one {Added # person} other {Added # people}}',
+  'friends.contacts.known': 'You already have them all.',
+  'friends.contacts.full': 'That’s the most people Settle keeps. The rest weren’t added.',
 } as const satisfies Messages

@@ -54,7 +54,7 @@ export const MAX_PARTICIPANTS = 100
 export const MAX_GROUP_MEMBERS = 100
 
 export const GROUP_KINDS: readonly GroupKind[] = ['trip', 'home', 'couple', 'event', 'other']
-export const EXPENSE_SOURCES: readonly ExpenseSource[] = ['manual', 'scan', 'describe', 'sample', 'recurring', 'sms', 'voice']
+export const EXPENSE_SOURCES: readonly ExpenseSource[] = ['manual', 'scan', 'describe', 'sample', 'recurring', 'sms', 'voice', 'chat']
 export const EXPENSE_KINDS: readonly ExpenseKind[] = ['split', 'bill', 'loan']
 export const FEE_SPLITS: readonly FeeSplit[] = ['proportional', 'equal']
 export const DEFAULT_GROUP_EMOJI = '👥'

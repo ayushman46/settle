@@ -48,6 +48,26 @@ export const STORAGE_KEYS = {
   counter: 'settle.v8.counter',
   /** The Board: a group's budget and bills said not to be duplicates, on this phone (src/features/play/store.ts). */
   play: 'settle.v8.play',
+  /** Chat to split: which messages of a chat are already in a group, so adding the chat again adds only what is new (src/features/chat/store.ts). */
+  chat: 'settle.v9.chat',
+  /** Who was on a trip from when to when, on this phone (src/features/presence/store.ts). */
+  presence: 'settle.v9.presence',
+  /** A group’s kitty: who holds it and what each person puts in (src/features/kitty/store.ts). */
+  kitty: 'settle.v9.kitty',
+  /** A group’s story: the "looks done" cards put away (src/features/wrapped/store.ts). */
+  wrapped: 'settle.v9.wrapped',
+  /** Pay it forward: suggestions put away (src/features/swap/store.ts). */
+  swap: 'settle.v9.swap',
+  /** Expense reports: the name and purpose last used (src/features/report/store.ts). */
+  report: 'settle.v9.report',
+  /** Who is vegetarian and who doesn’t drink (src/features/diet/store.ts). */
+  diet: 'settle.v9.diet',
+  /** A group’s usual split (src/features/usual/store.ts). */
+  usual: 'settle.v9.usual',
+  /** The shagun book: gifts given and received (src/features/shagun/store.ts). */
+  shagun: 'settle.v9.shagun',
+  /** Split this?: payments this phone saw leave, waiting to be split (src/features/spent/store.ts). */
+  spent: 'settle.v9.spent',
 } as const
 
 /** Accepts a bare, un-enveloped value (e.g. hand-edited storage) when the schema can read it. */

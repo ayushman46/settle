@@ -1,0 +1,285 @@
+/* Settle Score: the dial, the factors, the next step. */
+.content {
+  display: grid;
+  gap: var(--s-5);
+}
+
+.heading,
+.cardHeading,
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin: 0 0 var(--s-2);
+  font: var(--text-label);
+  color: var(--ink-2);
+}
+
+.cardHeading {
+  margin: 0;
+  color: var(--ink);
+}
+
+.cardHeading svg,
+.eyebrow svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+}
+
+.block {
+  display: grid;
+  gap: var(--s-2);
+}
+
+.block .eyebrow {
+  margin: 0;
+}
+
+.big {
+  margin: 0;
+  font: var(--text-title);
+  letter-spacing: var(--tracking-tight);
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.body {
+  margin: 0;
+  font: var(--text-body);
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.fine,
+.good {
+  margin: 0;
+  font: var(--text-caption);
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
+}
+
+.good {
+  color: var(--positive);
+  font-weight: 600;
+}
+
+/* ------------------------------------------------------------------ the dial */
+
+.hero {
+  display: grid;
+  justify-items: center;
+  gap: var(--s-2);
+  text-align: center;
+}
+
+.dial {
+  --band: var(--accent);
+  position: relative;
+  width: min(240px, 70vw);
+  aspect-ratio: 200 / 172;
+}
+
+.dial[data-band='warming'] {
+  --band: var(--warning);
+}
+
+.dial[data-band='getting'] {
+  --band: var(--accent);
+}
+
+.dial[data-band='solid'],
+.dial[data-band='gold'] {
+  --band: var(--positive);
+}
+
+.dialSm {
+  width: 76px;
+  flex: none;
+}
+
+.dial svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.track,
+.fill {
+  fill: none;
+  stroke-width: 14;
+  stroke-linecap: round;
+}
+
+.track {
+  stroke: var(--surface-3, var(--line));
+}
+
+.fill {
+  stroke: var(--band);
+}
+
+.dialSm .track,
+.dialSm .fill {
+  stroke-width: 18;
+}
+
+.dialText {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  padding-top: 8%;
+}
+
+.number {
+  font: var(--text-display-lg);
+  letter-spacing: var(--tracking-display);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+
+.dialSm .number {
+  font: var(--text-label);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.band {
+  font: var(--text-label);
+  color: var(--ink-2);
+}
+
+.range {
+  margin: calc(-1 * var(--s-3)) 0 0;
+  font: var(--text-micro);
+  color: var(--ink-3);
+}
+
+.disclaimer,
+.pending {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-2);
+  margin: 0;
+  font: var(--text-caption);
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
+}
+
+.disclaimer svg,
+.pending svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  margin-top: 2px;
+}
+
+/* ------------------------------------------------------------------ the card on You */
+
+.card {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  width: 100%;
+  min-height: 44px;
+  padding: var(--s-3) var(--s-4);
+  border: 0;
+  border-radius: inherit;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.card:focus-visible {
+  outline: 2px solid var(--accent-edge, var(--accent));
+  outline-offset: 2px;
+}
+
+.cardText {
+  display: grid;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.cardTitle {
+  font: var(--text-label);
+  color: var(--ink);
+}
+
+.cardBand {
+  font: var(--text-body);
+  font-weight: 700;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.chevron {
+  width: 20px;
+  height: 20px;
+  flex: none;
+  color: var(--ink-3);
+}
+
+/* ------------------------------------------------------------------ factors */
+
+.factors {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.factor {
+  display: grid;
+  gap: var(--s-2);
+  padding: var(--s-3) var(--s-4);
+}
+
+.factor + .factor {
+  border-top: 1px solid var(--line);
+}
+
+.factorHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-1) var(--s-3);
+}
+
+.factorTitle {
+  font: var(--text-body);
+  font-weight: 600;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.bar {
+  display: block;
+  height: 8px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-3, var(--line));
+  overflow: hidden;
+}
+
+.barFill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--positive);
+  transition: width 400ms ease-out;
+}
+
+.barFill[data-low] {
+  background: var(--warning);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .barFill {
+    transition: none;
+  }
+}

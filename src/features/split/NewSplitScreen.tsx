@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
-import { CircleCheck, Copy, Info, MessageSquareText, Mic, Plane, Repeat, RotateCw, ScanLine, Sparkles, UsersRound, Wallet } from 'lucide-react'
+import { CarTaxiFront, CircleCheck, Copy, Info, MessageSquareText, Mic, Plane, Repeat, RotateCw, ScanLine, Sparkles, UsersRound, Wallet } from 'lucide-react'
 import { goBack, navigate, useBackClose, useLocation, useRoute, useSearchParams } from '../../app/router'
 import {
   ActionBar,
@@ -49,6 +49,9 @@ import { openBill } from '../bill/launch'
 import { ConversionPanel } from '../trip/ConversionPanel'
 import { TRIP_ENABLED } from '../trip/enabled'
 import { RateSheet } from '../trip/RateSheet'
+import { withUsualSplit } from '../usual/applyUsual'
+import { FareSheet } from '../fare/FareSheet'
+import { UsualSplitBar } from '../usual/UsualSplitBar'
 import { NoteField } from './NoteField'
 import {
   blankForm,
@@ -142,6 +145,9 @@ const HAND_OFF_ORIGINS: Partial<Record<ExpenseSource, SplitOrigin>> = {
 }
 
 /** `from=…` in the address, for hand-offs that don't say where they came from. */
+/** Titles that are a shared ride. */
+const RIDE = /\b(?:cab|taxi|auto|uber|ola|rapido|ride|rickshaw|blusmart|indrive|namma yatri)\b/i
+
 const FROM_ORIGINS: Readonly<Record<string, SplitOrigin>> = {
   describe: 'describe',
   scan: 'scan',
@@ -192,7 +198,8 @@ function startFrom(editing: Expense | null, query: URLSearchParams, ctx: StartCo
       return { form: withPrefill(form, prefill, { ...ctx, trip }), prefilled: true, origin, copyOf: null, banner: prefill.banner ?? null }
     }
   }
-  return { form, prefilled: false, origin: 'new', copyOf: null, banner: null }
+  // A plain new expense in a group starts from the group's usual split, when it has one that still fits.
+  return { form: withUsualSplit(form, group), prefilled: false, origin: 'new', copyOf: null, banner: null }
 }
 
 /** Serialized for "has anything changed?". */
@@ -233,6 +240,7 @@ function SplitScreen({ editing, url }: SplitScreenProps) {
 
   const [form, setForm] = useState<SplitForm>(initial.form)
   const [currencyOpen, setCurrencyOpen] = useState(false)
+  const [fareOpen, setFareOpen] = useState(false)
   const [rateOpen, setRateOpen] = useState(false)
   /** The discard confirm, and what happens after Discard (null: go back). */
   const [confirm, setConfirm] = useState<{ open: boolean; then: (() => void) | null }>({ open: false, then: null })
@@ -335,7 +343,11 @@ function SplitScreen({ editing, url }: SplitScreenProps) {
   }
 
   const pickGroup = (groupId: string | null): void => {
-    setForm((current) => withGroup(current, groups.find((g) => g.id === groupId) ?? null, trip))
+    const picked = groups.find((g) => g.id === groupId) ?? null
+    setForm((current) => {
+      const next = withGroup(current, picked, trip)
+      return isNew && picked && picked.id !== current.groupId ? withUsualSplit(next, picked) : next
+    })
   }
 
   const save = (): void => {
@@ -390,6 +402,8 @@ function SplitScreen({ editing, url }: SplitScreenProps) {
   const groupCurrencyNote = group && !itemized && group.currency !== form.currency && !converting ? group : null
   const sharesTotal = converting ? (conversion.status === 'ok' ? conversion.total : null) : form.total
   const sharesCurrency = converting ? settle : form.currency
+  // A shared ride (by its category or its name) with a total: offered a split by where each person got off.
+  const fareFits = !itemized && form.participants.length >= 2 && (sharesTotal ?? 0) > 0 && (form.category === 'transport' || RIDE.test(form.title))
   const hide = (what: 'origin' | 'rent' | 'trip') => setHidden((current) => new Set(current).add(what))
   const title = t(isNew ? 'split.screen.new.title' : 'split.screen.edit.title')
 
@@ -566,6 +580,12 @@ function SplitScreen({ editing, url }: SplitScreenProps) {
               onRoundToWholeChange={(roundToWhole) => change({ roundToWhole })}
               onTotalChange={converting ? undefined : (total) => change({ total })}
             />
+            <UsualSplitBar form={form} group={group} isNew={isNew} onChange={change} />
+            {fareFits && (
+              <Button type="button" variant="ghost" size="sm" iconStart={<CarTaxiFront />} onClick={() => setFareOpen(true)}>
+                {t('fare.open')}
+              </Button>
+            )}
           </section>
         </>
       )}
@@ -573,6 +593,19 @@ function SplitScreen({ editing, url }: SplitScreenProps) {
       <NoteField value={form.note} onChange={(note) => change({ note })} maxLength={MAX_NOTE_LENGTH} />
 
       <CurrencySheet open={currencyOpen} currency={form.currency} onClose={() => setCurrencyOpen(false)} onSelect={pickCurrency} />
+      {fareFits && (
+        <FareSheet
+          open={fareOpen}
+          onClose={() => setFareOpen(false)}
+          people={form.participants.map((p) => ({ id: p.friendId, name: nameOf(p.friendId), color: friendsById[p.friendId]?.color ?? 0 }))}
+          total={sharesTotal ?? 0}
+          currency={sharesCurrency}
+          onApply={(amounts) => {
+            change({ mode: 'exact', participants: form.participants.map((p) => ({ ...p, input: amounts[p.friendId] ?? 0 })) })
+            setFareOpen(false)
+          }}
+        />
+      )}
 
       {TRIP_ENABLED && (
         <RateSheet

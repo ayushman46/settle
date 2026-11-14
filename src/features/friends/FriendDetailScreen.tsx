@@ -44,6 +44,7 @@ import {
   type FriendBalance,
   type RemovalBlockers,
 } from './friendBalance'
+import { DietToggles } from '../diet/DietToggles'
 import { FriendSettleSheet } from './FriendSettleSheet'
 import { FriendSheet } from './FriendSheet'
 import styles from './FriendDetailScreen.module.css'
@@ -276,6 +277,15 @@ function FriendDetail({ friend, onLeaving }: { friend: Friend; onLeaving: (frien
               </li>
             ))}
           </ul>
+        </section>
+      )}
+
+      {friend.id !== ME_ID && (
+        <section className={styles.section} aria-labelledby="friend-diet">
+          <SectionHeader id="friend-diet" title={t('diet.toggles.aria')} />
+          <Card>
+            <DietToggles friendId={friend.id} />
+          </Card>
         </section>
       )}
 

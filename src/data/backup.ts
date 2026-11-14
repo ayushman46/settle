@@ -50,6 +50,16 @@ import { emptyFees, feesSchema, feesStore, type FeesState } from '../features/fe
 import { groupSyncSchema, groupSyncStore, type GroupSyncState } from '../features/groupsync/store'
 import { counterStore } from '../features/counter/store'
 import { playStore } from '../features/play/store'
+import { chatStore } from '../features/chat/store'
+import { spentStore } from '../features/spent/spent'
+import { swapStore } from '../features/swap/store'
+import { kittyStore } from '../features/kitty/store'
+import { presenceStore } from '../features/presence/store'
+import { wrappedStore } from '../features/wrapped/store'
+import { reportStore } from '../features/report/store'
+import { dietStore } from '../features/diet/store'
+import { usualStore } from '../features/usual/store'
+import { shagunSchema, shagunStore, type ShagunState } from '../features/shagun/store'
 
 export const BACKUP_VERSION = 4
 
@@ -79,6 +89,8 @@ export interface BackupFile {
   fees: FeesState
   /** Which groups are shared, and as whom: a restored phone carries on in them. */
   groupSync: GroupSyncState
+  /** The shagun book: functions and what was given and received. Absent in older files. */
+  shagun: ShagunState
 }
 
 const backupSchema = z.object({
@@ -99,6 +111,7 @@ const backupSchema = z.object({
   stuck: z.catch(z.optional(stuckSchema), []),
   fees: z.catch(z.optional(feesSchema), undefined),
   groupSync: z.catch(z.optional(groupSyncSchema), undefined),
+  shagun: z.catch(z.optional(shagunSchema), undefined),
 })
 
 export function exportBackup(): BackupFile {
@@ -119,6 +132,7 @@ export function exportBackup(): BackupFile {
     stuck: stuckStore.get(),
     fees: feesStore.get(),
     groupSync: groupSyncStore.get(),
+    shagun: shagunStore.get(),
   }
 }
 
@@ -152,6 +166,7 @@ export function parseBackup(json: unknown): BackupFile | null {
     stuck: data.stuck ?? [],
     fees: data.fees ?? emptyFees(),
     groupSync: data.groupSync ?? {},
+    shagun: data.shagun ?? { functions: [], entries: [] },
   }
 }
 
@@ -273,6 +288,7 @@ export function importBackup(file: BackupFile, mode: 'merge' | 'replace'): { add
     stuckStore.set([...file.stuck])
     feesStore.set({ ...file.fees })
     groupSyncStore.set({ ...file.groupSync })
+    shagunStore.set({ functions: [...file.shagun.functions], entries: [...file.shagun.entries] })
     clearSplitPrefill()
     flushAllStores()
     const added =
@@ -406,6 +422,13 @@ export function importBackup(file: BackupFile, mode: 'merge' | 'replace'): { add
     late: [...fees.late, ...file.fees.late.filter((l) => !fees.late.some((m) => m.date === l.date && m.amount === l.amount && m.backOn === l.backOn))].slice(-200),
   })
 
+  // The shagun book: functions and entries by id; what's already here is kept as it is.
+  const book = shagunStore.get()
+  const functions = mergeById(book.functions, file.shagun.functions, () => null)
+  const entries = mergeById(book.entries, file.shagun.entries, () => null)
+  if (functions.added + entries.added > 0) shagunStore.set({ functions: functions.list, entries: entries.list })
+  added += entries.added
+
   flushAllStores()
   return {
     added: added + expenses.added + groups.added + recurring.added + pools.added + claims.added + stuck.added,
@@ -428,7 +451,7 @@ export function clearAllData(): void {
       // Blocked storage — the in-memory reset below still applies.
     }
   }
-  for (const store of [profileStore, friendsStore, expensesStore, groupsStore, recurringStore, poolsStore, claimsStore, proofRefsStore, payerAliasesStore, remindersStore, autoSettleStore, stuckStore, stuckSeenStore, letterMeStore, feesStore, groupSyncStore, counterStore, playStore])
+  for (const store of [profileStore, friendsStore, expensesStore, groupsStore, recurringStore, poolsStore, claimsStore, proofRefsStore, payerAliasesStore, remindersStore, autoSettleStore, stuckStore, stuckSeenStore, letterMeStore, feesStore, groupSyncStore, counterStore, playStore, chatStore, spentStore, swapStore, kittyStore, presenceStore, wrappedStore, reportStore, shagunStore, dietStore, usualStore])
     store.reload()
   clearSplitPrefill()
 }

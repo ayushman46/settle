@@ -1,0 +1,50 @@
+/* A group's usual split: the quiet chip under the split editor, the switch, the way back to it. */
+.chip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-3);
+  min-width: 0;
+}
+
+.icon {
+  width: 20px;
+  height: 20px;
+  flex: none;
+  color: var(--ink-2);
+}
+
+.text {
+  display: grid;
+  gap: var(--s-1);
+  flex: 1 1 10rem;
+  min-width: 0;
+}
+
+.title {
+  margin: 0;
+  font: var(--text-label);
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.fine {
+  margin: 0;
+  font: var(--text-caption);
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+.offer {
+  min-width: 0;
+}
+
+.use {
+  align-self: flex-start;
+}

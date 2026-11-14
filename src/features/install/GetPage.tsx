@@ -12,6 +12,9 @@ import styles from './Install.module.css'
 
 type Phone = 'android' | 'ios'
 
+/** The Android app, built by GitHub Actions (.github/workflows/android.yml) and kept as a release download. */
+export const ANDROID_APK_URL = 'https://github.com/ayushman46/settle/releases/download/android-latest/settle-android.apk'
+
 /** A browser inside another app (WhatsApp, Instagram, Facebook…): it can't install anything. */
 function inAppBrowser(userAgent: string): boolean {
   return /\bFBAN|FBAV|FB_IAB|Instagram|WhatsApp|Line\/|Snapchat|Twitter|LinkedInApp|; wv\)/i.test(userAgent)
@@ -98,6 +101,14 @@ export function GetPage() {
                   {step(<EllipsisVertical strokeWidth={2.25} />, t('install.get.android.step1.title'), t('install.get.android.step1.body'))}
                   {step(<Download strokeWidth={2.25} />, t('install.get.android.step2.title'), t('install.get.android.step2.body', { brand }))}
                 </ol>
+                <div className={styles.getApk}>
+                  <strong className={styles.stepTitle}>{t('install.get.apk.title', { brand })}</strong>
+                  <span className={styles.stepBody}>{t('install.get.apk.body', { brand })}</span>
+                  <a className={styles.getApkLink} href={ANDROID_APK_URL} download rel="noopener">
+                    <Download aria-hidden="true" /> {t('install.get.apk.cta')}
+                  </a>
+                  <span className={styles.stepBody}>{t('install.get.apk.note')}</span>
+                </div>
               </div>
             ) : (
               <div className={styles.getPanel}>
@@ -105,6 +116,7 @@ export function GetPage() {
                   {step(<Share strokeWidth={2.25} />, t('install.sheet.step1.title'), t('install.get.ios.step1.body'))}
                   {step(<Plus strokeWidth={2.25} />, t('install.sheet.step2.title'), t('install.sheet.step2.body'))}
                 </ol>
+                <p className={styles.getNote}>{t('install.get.ios.note', { brand })}</p>
               </div>
             )}
             <p className={styles.getNote}>{t('install.get.why', { brand })}</p>

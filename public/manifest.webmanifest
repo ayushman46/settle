@@ -25,6 +25,12 @@
       "url": "/app/bill"
     },
     {
+      "name": "From a WhatsApp chat",
+      "short_name": "From a chat",
+      "description": "Turn a group chat into a split: who paid for what, read on your phone",
+      "url": "/app/chat"
+    },
+    {
       "name": "Split an amount",
       "short_name": "Split amount",
       "description": "Split rent, a cab, a subscription — anything",
@@ -39,7 +45,7 @@
       "title": "title",
       "text": "text",
       "url": "url",
-      "files": [{ "name": "media", "accept": ["image/jpeg", "image/png", "image/webp", "image/heic", "image/*", "text/plain", ".txt", "text/csv", ".csv", "application/vnd.ms-excel", ".xls", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", ".xlsx"] }]
+      "files": [{ "name": "media", "accept": ["image/jpeg", "image/png", "image/webp", "image/heic", "image/*", "text/plain", ".txt", "application/zip", "application/x-zip-compressed", ".zip", "text/csv", ".csv", "application/vnd.ms-excel", ".xls", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", ".xlsx"] }]
     }
   }
 }

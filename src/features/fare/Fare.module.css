@@ -1,0 +1,123 @@
+/* Fair fare: riders in drop order, optional distances, and what each person pays. */
+.body {
+  display: grid;
+  gap: var(--s-4);
+}
+
+.riders,
+.amounts {
+  display: grid;
+  gap: var(--s-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rider {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  width: 100%;
+  min-height: 52px;
+  padding: var(--s-2) var(--s-3);
+  border: 1px solid var(--hairline, rgb(127 127 127 / 0.2));
+  border-radius: var(--radius-md, 12px);
+  background: var(--surface);
+  color: var(--ink);
+  font: var(--text-body);
+  text-align: start;
+  cursor: pointer;
+  transition: background-color 160ms ease, border-color 160ms ease;
+}
+
+.rider:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.rider[data-off] {
+  border-color: color-mix(in srgb, var(--accent, #c8f169) 70%, transparent);
+  background: color-mix(in srgb, var(--accent, #c8f169) 14%, var(--surface));
+}
+
+.riderName {
+  flex: 1;
+  min-width: 0;
+  font: var(--text-body);
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.tap,
+.stop {
+  flex: none;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font: var(--text-caption);
+  font-weight: 600;
+}
+
+.tap {
+  color: var(--ink-2);
+  border: 1px dashed var(--hairline, rgb(127 127 127 / 0.4));
+}
+
+.stop {
+  color: var(--ink);
+  background: color-mix(in srgb, var(--accent, #c8f169) 45%, transparent);
+}
+
+.controls,
+.km,
+.kmFields,
+.result {
+  display: grid;
+  gap: var(--s-3);
+}
+
+.km > button {
+  justify-self: start;
+}
+
+.flip {
+  transform: rotate(180deg);
+}
+
+.hint {
+  margin: 0;
+  font: var(--text-caption);
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
+}
+
+.amountRow {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  min-height: 48px;
+  padding: var(--s-2) 0;
+}
+
+.amountRow + .amountRow {
+  border-top: 1px solid var(--hairline, rgb(127 127 127 / 0.16));
+}
+
+.amountWho {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+  gap: 2px;
+}
+
+.amount {
+  flex: none;
+  font: var(--text-label);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rider {
+    transition: none;
+  }
+}

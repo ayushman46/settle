@@ -17,6 +17,7 @@ import { collectProgress } from '../../engine/balances'
 import { useT } from '../../i18n'
 import { friendLabel } from '../../kit/index-a'
 import { CounterCard } from '../counter/CounterCard'
+import { NightsCard } from '../presence/NightsCard'
 import { CollectCard, NudgeSheet, ShareList, ShareSheet, upiPaymentForShare, UpiPaySheet, usePayLink } from '../../kit/index-b'
 import { haptic } from '../../lib/haptics'
 import { formatMoney } from '../../lib/money'
@@ -228,6 +229,7 @@ function ExpenseDetail({ expense, onDeleting }: ExpenseDetailProps) {
       <CollectCard expense={expense} />
 
       <CounterCard expense={expense} />
+      <NightsCard expense={expense} />
 
       <section className={styles.section} aria-labelledby="expense-shares">
         <SectionHeader

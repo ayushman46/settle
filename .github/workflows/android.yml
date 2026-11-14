@@ -20,7 +20,8 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  contents: read
+  # Publishing the APK as a release download.
+  contents: write
 
 jobs:
   apk:
@@ -55,3 +56,17 @@ jobs:
           path: android/app/build/outputs/apk/debug/app-debug.apk
           retention-days: 30
           if-no-files-found: error
+      # The download on /get. The app is a shell around the live site and updates itself, so the file
+      # is published once and kept (each build is signed with a fresh debug key, and Android will
+      # not install one over another): run this workflow by hand to replace it.
+      - name: Publish the APK as a download
+        if: github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp android/app/build/outputs/apk/debug/app-debug.apk settle-android.apk
+          if ! gh release view android-latest >/dev/null 2>&1; then
+            gh release create android-latest settle-android.apk --title "Settle for Android" --notes "The Android app: Settle with payment alerts (Auto-settle, Split this?). Debug build, not on the Play Store. Install: download settle-android.apk on your phone and open it." --latest=false
+          elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            gh release upload android-latest settle-android.apk --clobber
+          fi

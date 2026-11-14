@@ -212,6 +212,13 @@ export const kit = {
   'kit.split.status.hadMuchMore': 'सबके खाए से {amount} ज़्यादा',
   'kit.split.status.hadMuchMoreHint': 'कहीं कोई चीज़ छूट तो नहीं गई?',
 
+  'kit.guess.phone.label': 'या आपका मोबाइल नंबर',
+  'kit.guess.phone.hint': 'फ़ील्ड पर टैप करें: कीबोर्ड आपका नंबर सुझाता है। फिर वह ऐप चुनें जो इस नंबर पर चलती है।',
+  'kit.guess.apps.aria': 'इस नंबर पर चलने वाली UPI ऐप',
+  'kit.guess.made': '{app} इस नंबर को {upi} ID देती है। तभी सेव करें जब आप इस नंबर पर {app} चलाते हों। पे करने से पहले दोस्तों को खाते का नाम दिखता है।',
+  'kit.guess.gpay': '“Google Pay” की ID आपके ई-मेल से बनती है, नंबर से नहीं: उसके लिए अपना QR शेयर करें (ऊपर) या ID पेस्ट करें।',
+  'kit.guess.paste': 'कॉपी की हुई ID पेस्ट करें',
+  'kit.guess.paste.none': 'कॉपी में UPI ID जैसा कुछ नहीं है। अपनी UPI ऐप में (नाम या QR के नीचे) कॉपी करें, फिर टैप करें।',
   'kit.upiForm.error': 'यह UPI ID नहीं लगती। यह name@bank जैसी होती है।',
   'kit.upiForm.save.cta': 'UPI ID सेव करें',
   'kit.upiForm.label.mine': 'आपकी UPI ID',

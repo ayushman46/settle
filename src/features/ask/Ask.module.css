@@ -1,0 +1,162 @@
+/* Ask Settle: the question line, example chips and the answer card. */
+.box {
+  display: grid;
+  gap: var(--s-3);
+}
+
+.form {
+  margin: 0;
+}
+
+.title {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.title svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+.chips > button {
+  max-width: 100%;
+}
+
+.chips > button span {
+  overflow-wrap: anywhere;
+  white-space: normal;
+  text-align: start;
+}
+
+.live:empty {
+  display: none;
+}
+
+.answer {
+  display: grid;
+  gap: var(--s-2);
+}
+
+.answerHead {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-2);
+}
+
+.headline {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  padding-top: var(--s-1);
+  font: var(--text-title);
+  letter-spacing: var(--tracking-tight);
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.fine,
+.private {
+  margin: 0;
+  font: var(--text-caption);
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
+}
+
+.private {
+  display: flex;
+  align-items: center;
+  gap: var(--s-1);
+  color: var(--ink-3);
+}
+
+.private svg {
+  width: 14px;
+  height: 14px;
+  flex: none;
+}
+
+.rows {
+  margin: 0 calc(-1 * var(--s-2));
+  padding: 0;
+  list-style: none;
+}
+
+.rows li + li {
+  border-top: 1px solid var(--line);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  width: 100%;
+  min-height: 48px;
+  padding: var(--s-2);
+  border: 0;
+  border-radius: var(--radius-tile);
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+}
+
+button.row {
+  cursor: pointer;
+}
+
+button.row:hover {
+  background: var(--surface-2);
+}
+
+button.row:focus-visible {
+  outline: 2px solid var(--accent-edge, var(--accent));
+  outline-offset: 1px;
+}
+
+.rowText {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+}
+
+.rowTitle {
+  font: var(--text-body);
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.rowAmount {
+  flex: none;
+  font: var(--text-body);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+
+.chevron {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  color: var(--ink-3);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .answer {
+    animation: ask-in 180ms ease-out;
+  }
+}
+
+@keyframes ask-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}

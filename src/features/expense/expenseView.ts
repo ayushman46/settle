@@ -112,6 +112,7 @@ const SOURCE_KEYS: Readonly<Record<ExpenseSource, MessageKey | null>> = {
   recurring: 'expense.added.source.recurring',
   sms: 'expense.added.source.sms',
   voice: 'expense.added.source.voice',
+  chat: 'expense.added.source.chat',
 }
 
 const formatters = new Map<string, Intl.DateTimeFormat | null>()

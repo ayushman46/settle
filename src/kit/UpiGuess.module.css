@@ -1,0 +1,24 @@
+/* Your UPI ID from your number and your app, or pasted. */
+.guess {
+  display: grid;
+  gap: var(--s-2);
+}
+
+.apps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+.said,
+.problem {
+  margin: 0;
+  font: var(--text-caption);
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
+}
+
+.problem {
+  color: var(--negative);
+  font-weight: 600;
+}

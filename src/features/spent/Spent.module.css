@@ -1,0 +1,55 @@
+/* Split this?: a payment the phone saw, one tap from a split. */
+.card {
+  display: grid;
+  gap: var(--s-2);
+}
+
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin: 0;
+  font: var(--text-label);
+  color: var(--ink-2);
+}
+
+.eyebrow svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+}
+
+.list {
+  display: grid;
+  gap: var(--s-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item {
+  display: grid;
+  gap: var(--s-1);
+}
+
+.title {
+  margin: 0;
+  font: var(--text-body);
+  font-weight: 600;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.fine {
+  margin: 0;
+  font: var(--text-caption);
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  margin-top: var(--s-2);
+}

@@ -84,6 +84,7 @@ export const expense = {
   'expense.added.source.recurring': 'from a recurring split',
   'expense.added.source.sms': 'from a bank SMS',
   'expense.added.source.voice': 'by voice',
+  'expense.added.source.chat': 'from a chat',
 
   // The bill as printed.
   'expense.bill.title': 'The bill',

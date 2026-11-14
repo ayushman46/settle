@@ -1,0 +1,279 @@
+/* Chat to split: pick a chat, check what was read, make the group. */
+.content {
+  display: grid;
+  gap: var(--s-4);
+  align-content: start;
+}
+
+.hero,
+.card {
+  display: grid;
+  gap: var(--s-3);
+  padding: var(--s-4);
+  border-radius: var(--radius-sheet);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+}
+
+.heroIcon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 16px;
+  background: var(--accent);
+  color: var(--on-accent, var(--ink));
+}
+
+.heroIcon svg {
+  width: 24px;
+  height: 24px;
+}
+
+.steps {
+  display: grid;
+  gap: var(--s-2);
+  margin: 0;
+  padding-inline-start: 1.25em;
+  font: var(--text-body);
+  color: var(--ink);
+}
+
+.private,
+.fine {
+  margin: 0;
+  font: var(--text-caption);
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
+}
+
+.private {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.private svg {
+  width: 14px;
+  height: 14px;
+  flex: none;
+}
+
+.paste {
+  display: grid;
+  gap: var(--s-2);
+}
+
+.label,
+.heading {
+  margin: 0;
+  font: var(--text-label);
+  color: var(--ink-2);
+}
+
+.area {
+  width: 100%;
+  min-height: 132px;
+  padding: var(--s-3);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface);
+  color: var(--ink);
+  font: var(--text-body);
+  resize: vertical;
+}
+
+.area:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+.body {
+  margin: 0;
+  font: var(--text-body);
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+.headRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2);
+}
+
+.rows {
+  display: grid;
+  gap: var(--s-2);
+  margin: var(--s-2) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-3);
+  width: 100%;
+  min-height: 56px;
+  padding: var(--s-3);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.row:not(.rowOn) .rowTitle,
+.row:not(.rowOn) .rowAmount {
+  color: var(--ink-2);
+}
+
+.rowOn {
+  border-color: var(--ink);
+}
+
+.row:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+.box {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 24px;
+  height: 24px;
+  margin-top: 2px;
+  border: 2px solid var(--ink-2);
+  border-radius: 8px;
+}
+
+.rowOn .box {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--surface);
+}
+
+.box svg {
+  width: 16px;
+  height: 16px;
+}
+
+.rowText {
+  display: grid;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.rowTop {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-3);
+}
+
+.rowTitle {
+  font: var(--text-body);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.arrow {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  vertical-align: -2px;
+}
+
+.rowAmount {
+  flex: none;
+  font: var(--text-body);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.rowMeta,
+.quote,
+.doubt {
+  font: var(--text-caption);
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
+}
+
+.quote {
+  font-style: italic;
+}
+
+.doubt {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/* The way in, on the Groups screen. */
+.start {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  width: 100%;
+  min-height: 64px;
+  padding: var(--s-3) var(--s-4);
+  border: 0;
+  border-radius: var(--radius-sheet);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+  color: var(--ink);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.start:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+.startIcon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 14px;
+  background: var(--accent);
+  color: var(--on-accent, var(--ink));
+}
+
+.startIcon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.startText {
+  display: grid;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.startTitle {
+  font: var(--text-body);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.startChevron {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  color: var(--ink-2);
+}

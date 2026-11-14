@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { BadgeIndianRupee, BanknoteArrowDown, Building2, Landmark, ChartPie, CircleCheck, ClipboardPaste, Coins, FileText, HandCoins, KeyRound, Languages, Repeat, ShieldCheck, Users } from 'lucide-react'
+import { BadgeIndianRupee, BanknoteArrowDown, Building2, Landmark, ChartPie, CircleCheck, ClipboardPaste, Coins, FileText, HandCoins, KeyRound, Languages, Repeat, ShieldCheck, Users, ReceiptText } from 'lucide-react'
 import { navigate } from '../../app/router'
 import { Badge, Card, List, ListRow, Screen, SuccessBurst, Switch, useToast } from '../../components'
 import { updateProfile, useDueRecurring, useFriends, usePools, useProfile, useRecurring, useStore, useSummary } from '../../data'
@@ -16,6 +16,9 @@ import { FEES_PATH } from '../fees/paths'
 import { PastePaidReplySheet } from '../expense/PastePaidReplySheet'
 import { POOLS_ENABLED } from '../pools/enabled'
 import { InstallRow } from '../install'
+import { REPORT_PATH } from '../report/paths'
+import { ScoreCard } from '../score/ScoreCard'
+import { ShagunHomeRow } from '../shagun/ShagunHomeRow'
 import { PROOF_ENABLED, PROOF_PATH } from '../proof/enabled'
 import { RENT_ENABLED, RENT_PATH } from '../rent/enabled'
 import { STUCK_PATH } from '../stuck/paths'
@@ -49,6 +52,7 @@ export function YouScreen() {
   return (
     <Screen contentClassName={styles.content}>
       <ProfileCard />
+      <ScoreCard />
       <ProCard />
       <Shortcuts />
       <Preferences />
@@ -174,6 +178,18 @@ function Shortcuts() {
                 chevron
               />
             )}
+            <ShagunHomeRow />
+            <ListRow
+              leading={
+                <SettingIcon>
+                  <ReceiptText />
+                </SettingIcon>
+              }
+              title={t('report.title')}
+              subtitle={t('report.you.subtitle')}
+              onClick={() => navigate(REPORT_PATH)}
+              chevron
+            />
             <ListRow
               leading={
                 <SettingIcon>

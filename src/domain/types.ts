@@ -75,7 +75,7 @@ export interface BillSnapshot {
   feeSplit?: FeeSplit
 }
 
-export type ExpenseSource = 'manual' | 'scan' | 'describe' | 'sample' | 'recurring' | 'sms' | 'voice'
+export type ExpenseSource = 'manual' | 'scan' | 'describe' | 'sample' | 'recurring' | 'sms' | 'voice' | 'chat'
 
 /**
  * - split: an amount divided between people.

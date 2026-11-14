@@ -1,0 +1,126 @@
+/* "Anyone not drinking, or vegetarian?": the strip on the Assign step and the toggles on a person's page. */
+.strip {
+  display: grid;
+  gap: var(--s-3);
+  min-width: 0;
+}
+
+.card {
+  display: grid;
+  gap: var(--s-3);
+  min-width: 0;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  width: 100%;
+  min-height: 44px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.head:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+  border-radius: var(--r-sm);
+}
+
+.headText {
+  display: grid;
+  gap: var(--s-1);
+  flex: 1;
+  min-width: 0;
+}
+
+.title {
+  font: var(--text-label);
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.chevron {
+  width: 20px;
+  height: 20px;
+  flex: none;
+  color: var(--ink-2);
+  transition: transform var(--dur-2) var(--ease-out);
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+}
+
+.body {
+  display: grid;
+  gap: var(--s-3);
+}
+
+.body[hidden] {
+  display: none;
+}
+
+.fine {
+  margin: 0;
+  font: var(--text-caption);
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
+}
+
+.people {
+  display: grid;
+  gap: var(--s-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.person {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2);
+  min-width: 0;
+}
+
+.name {
+  flex: 1 1 6rem;
+  min-width: 0;
+  font: var(--text-body);
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+.line {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.line + .line {
+  margin-top: var(--s-1);
+}
+
+.toggles {
+  display: grid;
+  gap: var(--s-2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chevron {
+    transition: none;
+  }
+}

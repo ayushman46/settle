@@ -14,7 +14,7 @@ const u16 = (b: Uint8Array, at: number) => (b[at] ?? 0) | ((b[at + 1] ?? 0) << 8
 const u32 = (b: Uint8Array, at: number) => (u16(b, at) | (u16(b, at + 2) << 16)) >>> 0
 
 /** The ZIP's files: name → bytes (inflated). Null when it isn't a ZIP this can read. */
-function unzip(bytes: Uint8Array, wanted: (name: string) => boolean): Map<string, Uint8Array> | null {
+export function unzip(bytes: Uint8Array, wanted: (name: string) => boolean): Map<string, Uint8Array> | null {
   let end = -1
   for (let i = bytes.length - 22; i >= Math.max(0, bytes.length - 65_557); i--) {
     if (u32(bytes, i) === 0x06054b50) {

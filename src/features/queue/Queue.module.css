@@ -1,0 +1,160 @@
+/* Clear everything: one person at a time, what's next, what's done, and Home's card. */
+.content {
+  gap: var(--s-5);
+}
+
+.progress {
+  display: grid;
+  gap: var(--s-1);
+}
+
+.step {
+  margin: 0;
+  font: var(--text-caption);
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.now,
+.card {
+  display: grid;
+  gap: var(--s-3);
+}
+
+.nowInner {
+  display: grid;
+  gap: var(--s-3);
+}
+
+.who {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  min-width: 0;
+}
+
+.whoText {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.name {
+  margin: 0;
+  font: var(--text-title);
+  letter-spacing: var(--tracking-tight);
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.amount {
+  justify-self: start;
+}
+
+.fine {
+  margin: 0;
+  font: var(--text-caption);
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
+}
+
+.actions {
+  display: grid;
+  gap: var(--s-2);
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+.row > button {
+  flex: 1 1 auto;
+  min-height: 44px;
+  white-space: nowrap;
+}
+
+.block {
+  display: grid;
+  gap: var(--s-2);
+}
+
+.heading {
+  margin: 0;
+  font: var(--text-label);
+  color: var(--ink-2);
+}
+
+.list {
+  display: grid;
+  gap: var(--s-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--s-3);
+  min-height: 44px;
+}
+
+.itemName {
+  font: var(--text-body);
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.tick {
+  width: var(--s-6);
+  height: var(--s-6);
+  color: var(--positive);
+}
+
+.cardHead {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-3);
+}
+
+.cardText {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.cardTitle {
+  margin: 0;
+  font: var(--text-label);
+  font-weight: 650;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.icon {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: var(--s-10);
+  height: var(--s-10);
+  border-radius: var(--r-pill);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.icon > svg {
+  width: var(--s-5);
+  height: var(--s-5);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .now,
+  .card {
+    transition: none;
+    animation: none;
+  }
+}

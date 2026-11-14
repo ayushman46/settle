@@ -20,6 +20,11 @@ import { HomeExtras } from './HomeExtras'
 import { FirstRunCard } from './FirstRunCard'
 import { HomeHeader } from './HomeHeader'
 import { allowanceLabel, FRIENDS_PATH } from './homeLinks'
+import { AskBox } from '../ask/AskBox'
+import { QueueCard } from '../queue/QueueCard'
+import { SpentCard } from '../spent/SpentCard'
+import { SwapCard } from '../swap/SwapCard'
+import { TripOverHome } from '../wrapped/TripOver'
 import { HomeQuickActions } from './HomeQuickActions'
 import { InstallCard } from '../install'
 import { MicButton } from './MicButton'
@@ -86,6 +91,10 @@ export function HomeScreen() {
 
       {feesTop && <FeesCard compact />}
 
+      <SpentCard />
+
+      <TripOverHome />
+
       {hasData ? (
         // Only owed money: the way forward is getting it back (everyone who owes you, each with a reminder).
         onlyOwed ? (
@@ -96,6 +105,12 @@ export function HomeScreen() {
       ) : (
         <FirstRunCard />
       )}
+
+      <AskBox />
+
+      <QueueCard />
+
+      <SwapCard />
 
       <DueSplits />
 

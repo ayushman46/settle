@@ -24,6 +24,7 @@ import { backInPart, backParts, compensationDue, daysLate, stillOwed } from '../
 import { alertSignals, trackStuckSignals, type TrackResult } from '../stuck/track'
 import { undoMatches } from '../whospaid/sources'
 import { paymentsSeen } from '../../lib/payWatch'
+import { noteSpends } from '../spent/spent'
 import { alertToPaidOut, readRawAlerts } from './alerts'
 import { settleAlerts, type AutoSettleResult } from './autoSettle'
 
@@ -149,7 +150,13 @@ export function useAutoSettle(): void {
         const { alerts } = await callPlugin<{ alerts?: unknown }>(PAYMENT_ALERTS, 'drain')
         const raw = readRawAlerts(alerts)
         // A pay sheet waiting to hear its payment went through: told first, so it records itself.
-        paymentsSeen(raw.map(alertToPaidOut).filter((o): o is NonNullable<typeof o> => o !== null))
+        const claimed = paymentsSeen(raw.map(alertToPaidOut).filter((o): o is NonNullable<typeof o> => o !== null))
+        // The rest of what you paid: kept a few days as a one-tap split (Home’s "Split this?").
+        try {
+          noteSpends(raw, claimed, friendsStore.get())
+        } catch {
+          // An alert it couldn’t read: the others still count.
+        }
         let ticked = false
         try {
           ticked = tellTicked(settleAlerts(raw))

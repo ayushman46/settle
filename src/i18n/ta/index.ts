@@ -51,6 +51,20 @@ import { fees } from './fees'
 import { counter } from './counter'
 import { groupsync } from './groupsync'
 import { play } from './play'
+import { spent } from './spent'
+import { usual } from './usual'
+import { diet } from './diet'
+import { fare } from './fare'
+import { report } from './report'
+import { ask } from './ask'
+import { score } from './score'
+import { queue } from './queue'
+import { swap } from './swap'
+import { wrapped } from './wrapped'
+import { spin } from './spin'
+import { kitty } from './kitty'
+import { presence } from './presence'
+import { chat } from './chat'
 
 export const TA: Messages = {
   ...common,
@@ -98,6 +112,20 @@ export const TA: Messages = {
   ...counter,
   ...groupsync,
   ...play,
+  ...spent,
+  ...usual,
+  ...diet,
+  ...fare,
+  ...report,
+  ...ask,
+  ...score,
+  ...queue,
+  ...swap,
+  ...wrapped,
+  ...spin,
+  ...kitty,
+  ...presence,
+  ...chat,
 }
 
 export default TA

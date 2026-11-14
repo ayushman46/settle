@@ -72,6 +72,9 @@ import {
 import { expensePath, GROUPS_PATH, newSplitPath, settleUpPath } from './paths'
 import { rememberedTimelineLimit, rememberTimelineLimit, TIMELINE_PAGE } from './timelineMemory'
 import { BoardTab } from '../play/BoardTab'
+import { PresenceBanner } from '../presence/PresenceBanner'
+import { TripOverCard } from '../wrapped/TripOver'
+import { GroupTools } from './GroupTools'
 import { GroupShortcuts } from '../play/GroupShortcuts'
 import styles from './GroupDetailScreen.module.css'
 
@@ -211,6 +214,10 @@ function GroupDetail({ group, onLeaving }: { group: Group; onLeaving: (group: Gr
 
       {ROTATION_ENABLED && <NextRoundCard group={group} expenses={expenses} onPlan={() => setSheet('rotation')} />}
 
+      <TripOverCard group={group} />
+
+      <GroupTools group={group} />
+
       <SegmentedControl options={tabOptions()} value={tab} onChange={setTab} ariaLabel={t('groups.detail.tabs.aria')} className={styles.tabs} />
 
       <div className={styles.panel} role="region" aria-label={t(TAB_LABELS[tab])}>
@@ -327,6 +334,7 @@ function ExpensesTab({ group, onAdd, onPayment }: { group: Group; onAdd: () => v
   }
   return (
     <div className={styles.days}>
+      <PresenceBanner group={group} />
       <GroupShortcuts group={group} />
       {shown.map((day) => (
         <section key={day.date} className={styles.day}>

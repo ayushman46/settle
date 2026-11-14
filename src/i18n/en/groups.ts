@@ -263,4 +263,13 @@ export const groups = {
   'groups.edit.members.saved.toast': 'Members updated',
   'groups.edit.members.kept.toast': '{count, plural, one {{names} stays in until they’re settled up} other {{names} stay in until they’re settled up}}',
   'groups.edit.error': 'Couldn’t save that. The group may have been deleted.',
+
+  // A group’s tools
+  'groups.tools.aria': 'Group tools',
+  'groups.tools.kitty': 'Kitty',
+  'groups.tools.spin': 'Who pays?',
+  'groups.tools.dates': 'Who was there',
+  'groups.tools.story': 'Story',
+  'groups.tools.chat': 'Add from a chat',
+  'groups.tools.report': 'Expense claim',
 } as const satisfies Messages

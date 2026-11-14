@@ -1,0 +1,14 @@
+/* A group's tools: every one in view (they wrap). */
+.tools {
+  display: flex;
+  gap: var(--s-2);
+  flex-wrap: wrap;
+}
+
+.tools > * {
+  flex: none;
+}
+
+.tools:empty {
+  display: none;
+}

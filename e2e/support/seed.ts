@@ -28,6 +28,16 @@ const KEYS = {
   groupSync: 'settle.v8.group-sync',
   counter: 'settle.v8.counter',
   play: 'settle.v8.play',
+  chat: 'settle.v9.chat',
+  presence: 'settle.v9.presence',
+  kitty: 'settle.v9.kitty',
+  wrapped: 'settle.v9.wrapped',
+  swap: 'settle.v9.swap',
+  report: 'settle.v9.report',
+  diet: 'settle.v9.diet',
+  usual: 'settle.v9.usual',
+  shagun: 'settle.v9.shagun',
+  spent: 'settle.v9.spent',
 } as const satisfies typeof STORAGE_KEYS
 const STORAGE_VERSION = 1 satisfies typeof STORE_VERSION
 

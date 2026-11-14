@@ -42,8 +42,8 @@ export function expectPayment(amount: number, onSeen: () => void, since: number 
   }
 }
 
-/** What the phone's alerts said went out: each waiting payment it matches is told, once. */
-export function paymentsSeen(out: readonly PaidOut[]): void {
+/** What the phone's alerts said went out: each waiting payment it matches is told, once. Returns the ones a pay sheet was waiting for. */
+export function paymentsSeen(out: readonly PaidOut[]): PaidOut[] {
   const used = new Set<PaidOut>()
   for (const entry of [...waiting]) {
     const hit = out.find((o) => !used.has(o) && o.amount === entry.amount && o.at >= entry.since - SLACK_MS && o.at <= entry.since + PAY_WATCH_MS)
@@ -56,6 +56,7 @@ export function paymentsSeen(out: readonly PaidOut[]): void {
       // The sheet is gone: nothing to tell.
     }
   }
+  return [...used]
 }
 
 /** Tests only. */

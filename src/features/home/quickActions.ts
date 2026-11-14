@@ -5,7 +5,7 @@
  * actions and templates that didn't fit) — always two rows of four. When there are more than
  * seven, the spare ones make room first.
  */
-import { ArrowLeftRight, BanknoteArrowDown, Bike, Droplets, HandCoins, Landmark, LayoutGrid, MessageSquareText, ScanLine, Split, UsersRound, type LucideIcon } from 'lucide-react'
+import { ArrowLeftRight, BanknoteArrowDown, Bike, BookHeart, Droplets, HandCoins, Landmark, LayoutGrid, MessageSquareText, MessagesSquare, ScanLine, Split, UsersRound, type LucideIcon } from 'lucide-react'
 import { navigate } from '../../app/router'
 import { CATEGORY_ICONS, type QuickActionTone } from '../../components'
 import { poolsStore } from '../../data/stores'
@@ -14,6 +14,8 @@ import { t } from '../../i18n'
 import type { MessageKey } from '../../i18n'
 import { DELIVERY_ENABLED } from '../bill/delivery.enabled'
 import { openBill } from '../bill/launch'
+import { CHAT_PATH } from '../chat/files'
+import { SHAGUN_PATH } from '../shagun/paths'
 import { LEND_ENABLED } from '../lend/enabled'
 import { POOLS_ENABLED } from '../pools/enabled'
 import { SMS_ENABLED } from '../sharein/enabled'
@@ -21,7 +23,7 @@ import { FEES_PATH } from '../fees/paths'
 import { STUCK_PATH } from '../stuck/paths'
 import { NEW_GROUP_PATH, NEW_SPLIT_PATH, templatePath } from './homeLinks'
 
-export type QuickActionId = 'scan' | 'split' | 'lend' | 'collect' | 'sms' | 'food' | 'stuck' | 'fees' | 'group' | 'more'
+export type QuickActionId = 'scan' | 'split' | 'chat' | 'shagun' | 'lend' | 'collect' | 'sms' | 'food' | 'stuck' | 'fees' | 'group' | 'more'
 
 export interface QuickActionDef {
   /** A `QuickActionId`, or `template:<category>` for a template tile. */
@@ -55,6 +57,8 @@ export function quickActionDefs({ stuckCard = false }: GridOptions = {}): QuickA
   return [
     { id: 'scan', label: t('home.quick.scan'), icon: ScanLine, tone: 'ink', run: () => openBill(), enabled: always },
     { id: 'split', label: t('home.quick.split'), icon: Split, tone: 'accent', run: () => navigate(NEW_SPLIT_PATH), enabled: always },
+    // Chat to split: the group chat already says who paid for what.
+    { id: 'chat', label: t('chat.tile'), icon: MessagesSquare, tone: 'accent', run: () => navigate(CHAT_PATH), enabled: always },
     { id: 'lend', label: t('home.quick.lend'), icon: ArrowLeftRight, tone: 'accent', run: () => navigate('/app/lend'), enabled: () => LEND_ENABLED },
     // Group collections (gifts, parties): the first to move to More when the grid is full.
     { id: 'collect', label: t('home.quick.collect'), icon: HandCoins, tone: 'gift', run: openPools, enabled: () => POOLS_ENABLED, spare: true },
@@ -66,7 +70,10 @@ export function quickActionDefs({ stuckCard = false }: GridOptions = {}): QuickA
     { id: 'fees', label: t('fees.tile'), icon: Landmark, tone: 'accent', run: () => navigate(FEES_PATH), enabled: always },
     // Pasting an SMS to split it: the second to move to More when the grid is full (sharing an SMS in still works).
     { id: 'sms', label: t('home.quick.sms'), icon: MessageSquareText, tone: 'utilities', run: () => navigate('/app/share'), enabled: () => SMS_ENABLED, spare: true },
-    { id: 'food', label: t('home.quick.food'), icon: Bike, tone: 'food', run: () => openBill({ kind: 'delivery' }), enabled: () => DELIVERY_ENABLED },
+    // A delivery order: steps aside for New group when the grid is full (More has it).
+    { id: 'food', label: t('home.quick.food'), icon: Bike, tone: 'food', run: () => openBill({ kind: 'delivery' }), enabled: () => DELIVERY_ENABLED, spare: true },
+    // The shagun book (who gave what at whose function): in More, a tap away.
+    { id: 'shagun', label: t('shagun.title'), icon: BookHeart, tone: 'gift', run: () => navigate(SHAGUN_PATH), enabled: always, spare: true },
     { id: 'group', label: t('home.quick.group'), icon: UsersRound, tone: 'entertainment', run: () => navigate(NEW_GROUP_PATH), enabled: always },
   ]
 }

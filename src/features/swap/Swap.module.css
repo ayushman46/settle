@@ -1,0 +1,135 @@
+/* Pay it forward: one calm card, three avatars and an arrow that skips you. */
+.card {
+  display: grid;
+}
+
+.section {
+  display: grid;
+  gap: var(--s-3);
+}
+
+.eyebrow {
+  margin: 0;
+  font: var(--text-label);
+  color: var(--ink-2);
+}
+
+.item {
+  display: grid;
+  gap: var(--s-3);
+}
+
+.divided {
+  padding-top: var(--s-3);
+  border-top: 1px solid var(--line);
+}
+
+.diagram {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.person {
+  display: grid;
+  justify-items: center;
+  gap: var(--s-1);
+  min-width: 0;
+}
+
+.name {
+  max-width: 100%;
+  font: var(--text-caption);
+  font-weight: 600;
+  color: var(--ink);
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.route {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  min-width: 0;
+}
+
+.amount {
+  font: var(--text-label);
+  font-weight: 650;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.line {
+  display: inline-flex;
+  align-items: center;
+  width: 88px;
+  height: var(--s-5);
+  color: var(--accent);
+  background: linear-gradient(var(--accent), var(--accent)) left center / calc(100% - 10px) 2px no-repeat;
+}
+
+.line > svg {
+  width: var(--s-5);
+  height: var(--s-5);
+  margin-left: auto;
+}
+
+.skip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
+.me {
+  opacity: 0.55;
+}
+
+.body {
+  margin: 0;
+  font: var(--text-body);
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.fine {
+  margin: 0;
+  font: var(--text-caption);
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+.actions > button,
+.foot > button {
+  min-height: 44px;
+}
+
+.foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2);
+}
+
+@media (max-width: 380px) {
+  .line {
+    width: 56px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card * {
+    transition: none;
+    animation: none;
+  }
+}

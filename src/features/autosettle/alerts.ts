@@ -114,9 +114,9 @@ export function alertToCredit(alert: RawAlert): AlertCredit | null {
 }
 
 /** Money that went out of your account and got there: "You paid ₹400 to Riya", "Payment successful", a bank's "debited". */
-const PAID_OUT = /\b(?:you paid|you sent|you have paid|paid to|sent to|payment to|payment (?:was |is )?successful|paid successfully|sent successfully|transaction successful|debited)\b/i
+const PAID_OUT = /\b(?:you paid|you sent|you have paid|paid to|sent to|(?:paid|sent) (?:₹|rs\.?|inr) ?[\d,.]+ to|payment to|payment (?:was |is )?successful|paid successfully|sent successfully|transaction successful|debited)\b/i
 /** …unless it didn't get there, is still on its way, or is something else altogether. */
-const NOT_PAID_OUT = /\b(?:failed|failure|declined|unsuccessful|pending|processing|request|requested|requesting|refund|refunded|reversed|reversal|cashback|cash back|otp|paid you|sent you|received)\b/i
+const NOT_PAID_OUT = /\b(?:failed|failure|declined|unsuccessful|pending|processing|request|requested|requesting|refund|refunded|reversed|reversal|cashback|cash back|otp|paid you|sent you|to you|received)\b/i
 
 /**
  * A payment you made that went through, as an alert tells it (a UPI app's "You paid ₹400 to Riya",

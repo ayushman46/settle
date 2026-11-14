@@ -44,40 +44,40 @@ afterEach(() => {
 })
 
 describe('homeGridActions', () => {
-  it('with every feature off: scan, split, stuck money, bank charges, group, two templates, More', () => {
-    expect(ids()).toEqual(['scan', 'split', 'stuck', 'fees', 'group', 'template:rent', 'template:travel', 'more'])
-    expect(homeGridActions(() => {}).map((a) => a.label)).toEqual(['Scan bill', 'Split amount', 'Stuck money', 'Bank charges', 'New group', 'Rent', 'Trip', 'More'])
+  it('with every feature off: scan, split, from a chat, stuck money, bank charges, the shagun book, group, More', () => {
+    expect(ids()).toEqual(['scan', 'split', 'chat', 'stuck', 'fees', 'shagun', 'group', 'more'])
+    expect(homeGridActions(() => {}).map((a) => a.label)).toEqual(['Scan bill', 'Split amount', 'From a chat', 'Stuck money', 'Bank charges', 'Shagun book', 'New group', 'More'])
     expect(overflowActions()).toEqual([])
   })
 
-  it('with every feature on and nothing stuck: Stuck money and Bank charges in the places of Group collection and From SMS, which move to the More sheet', () => {
+  it('with every feature on and nothing stuck: Group collection, From SMS, Food order and the shagun book move to the More sheet', () => {
     Object.assign(flags, { lend: true, pools: true, sms: true, delivery: true })
-    expect(ids()).toEqual(['scan', 'split', 'lend', 'stuck', 'fees', 'food', 'group', 'more'])
-    expect(overflowActions().map((a) => a.id)).toEqual(['collect', 'sms'])
+    expect(ids()).toEqual(['scan', 'split', 'chat', 'lend', 'stuck', 'fees', 'group', 'more'])
+    expect(overflowActions().map((a) => a.id)).toEqual(['collect', 'sms', 'food', 'shagun'])
   })
 
-  it('with every feature on and Home showing the Stuck card: Group collection back in its place, From SMS in More', () => {
+  it('with every feature on and Home showing the Stuck card: Group collection back in its place', () => {
     Object.assign(flags, { lend: true, pools: true, sms: true, delivery: true })
-    expect(ids(true)).toEqual(['scan', 'split', 'lend', 'collect', 'fees', 'food', 'group', 'more'])
-    expect(overflowActions({ stuckCard: true }).map((a) => a.id)).toEqual(['sms'])
+    expect(ids(true)).toEqual(['scan', 'split', 'chat', 'lend', 'collect', 'fees', 'group', 'more'])
+    expect(overflowActions({ stuckCard: true }).map((a) => a.id)).toEqual(['sms', 'food', 'shagun'])
     expect(homeGridActions(() => {}, { stuckCard: true }).map((a) => a.label)).toEqual([
       'Scan bill',
       'Split amount',
+      'From a chat',
       'Lend / borrow',
       'Group collection',
       'Bank charges',
-      'Food order',
       'New group',
       'More',
     ])
   })
 
-  it('back-fills with templates when only some are on', () => {
+  it('makes room in order when only some are on', () => {
     Object.assign(flags, { lend: true, pools: true })
-    expect(ids()).toEqual(['scan', 'split', 'lend', 'collect', 'stuck', 'fees', 'group', 'more'])
+    expect(ids()).toEqual(['scan', 'split', 'chat', 'lend', 'stuck', 'fees', 'group', 'more'])
     Object.assign(flags, { lend: false, pools: false, delivery: true })
-    expect(ids()).toEqual(['scan', 'split', 'stuck', 'fees', 'food', 'group', 'template:rent', 'more'])
-    expect(ids(true)).toEqual(['scan', 'split', 'fees', 'food', 'group', 'template:rent', 'template:travel', 'more'])
+    expect(ids()).toEqual(['scan', 'split', 'chat', 'stuck', 'fees', 'food', 'group', 'more'])
+    expect(ids(true)).toEqual(['scan', 'split', 'chat', 'fees', 'food', 'shagun', 'group', 'more'])
   })
 
   it('offers Stuck money on the grid until Home has its card, and always keeps New group', () => {

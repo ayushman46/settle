@@ -229,6 +229,51 @@ const PaidReplyScreen = lazyScreen(
   () => import('../features/expense/PaidReplyScreen'),
   (m) => m.PaidReplyScreen,
 )
+const QueueScreen = lazyScreen(
+  'QueueScreen',
+  () => import('../features/queue/QueueScreen'),
+  (m) => m.QueueScreen,
+)
+const WrappedScreen = lazyScreen(
+  'WrappedScreen',
+  () => import('../features/wrapped/WrappedScreen'),
+  (m) => m.WrappedScreen,
+)
+const ReportScreen = lazyScreen(
+  'ReportScreen',
+  () => import('../features/report/ReportScreen'),
+  (m) => m.ReportScreen,
+)
+const ShagunScreen = lazyScreen(
+  'ShagunScreen',
+  () => import('../features/shagun/ShagunScreen'),
+  (m) => m.ShagunScreen,
+)
+const ShagunEntryScreen = lazyScreen(
+  'ShagunEntryScreen',
+  () => import('../features/shagun/ShagunEntryScreen'),
+  (m) => m.ShagunEntryScreen,
+)
+const ShagunFamilyScreen = lazyScreen(
+  'ShagunFamilyScreen',
+  () => import('../features/shagun/ShagunFamilyScreen'),
+  (m) => m.ShagunFamilyScreen,
+)
+const ShagunFunctionScreen = lazyScreen(
+  'ShagunFunctionScreen',
+  () => import('../features/shagun/ShagunFunctionScreen'),
+  (m) => m.ShagunFunctionScreen,
+)
+const ScoreScreen = lazyScreen(
+  'ScoreScreen',
+  () => import('../features/score/ScoreScreen'),
+  (m) => m.ScoreScreen,
+)
+const ChatScreen = lazyScreen(
+  'ChatScreen',
+  () => import('../features/chat/ChatScreen'),
+  (m) => m.ChatScreen,
+)
 const CounterScreen = lazyScreen(
   'CounterScreen',
   () => import('../features/counter/CounterScreen'),
@@ -288,6 +333,7 @@ export const APP_ROUTES: readonly AppRoute[] = [
   { pattern: '/app/groups', screen: GroupsScreen, title: 'Groups', tab: 'groups' },
   { pattern: '/app/groups/:id', screen: GroupDetailScreen, title: 'Group', tab: null },
   { pattern: '/app/groups/:id/settle', screen: SettleUpScreen, title: 'Settle up', tab: null },
+  { pattern: '/app/groups/:id/wrapped', screen: WrappedScreen, title: 'Story', tab: null },
   { pattern: '/app/activity', screen: ActivityScreen, title: 'Activity', tab: 'activity' },
   { pattern: '/app/you', screen: YouScreen, title: 'You', tab: 'you' },
   { pattern: '/app/split/new', screen: NewSplitScreen, title: 'New split', tab: null },
@@ -298,6 +344,14 @@ export const APP_ROUTES: readonly AppRoute[] = [
   { pattern: '/app/lend/:id/edit', screen: LendScreen, title: 'Edit udhaar', tab: null },
   { pattern: '/app/expense/:id', screen: ExpenseDetailScreen, title: 'Expense', tab: null },
   { pattern: '/app/counter/:id', screen: CounterScreen, title: 'Pay at the counter', tab: null },
+  { pattern: '/app/chat', screen: ChatScreen, title: 'Chat to split', tab: null },
+  { pattern: '/app/score', screen: ScoreScreen, title: 'Settle Score', tab: null },
+  { pattern: '/app/pay-all', screen: QueueScreen, title: 'Clear everything', tab: null },
+  { pattern: '/app/report', screen: ReportScreen, title: 'Expense claim', tab: null },
+  { pattern: '/app/shagun', screen: ShagunScreen, title: 'Shagun book', tab: null },
+  { pattern: '/app/shagun/add', screen: ShagunEntryScreen, title: 'Add envelopes', tab: null },
+  { pattern: '/app/shagun/family/:name', screen: ShagunFamilyScreen, title: 'Shagun book', tab: null },
+  { pattern: '/app/shagun/function/:id', screen: ShagunFunctionScreen, title: 'Shagun book', tab: null },
   { pattern: '/app/paid', screen: PaidReplyScreen, title: 'Payment', tab: null },
   { pattern: '/app/bill', screen: BillFlow, title: null, tab: null },
   { pattern: '/app/claims/in', screen: ClaimReplyScreen, title: 'Claims', tab: null },

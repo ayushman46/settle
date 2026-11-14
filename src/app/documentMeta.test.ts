@@ -106,9 +106,10 @@ describe('web manifest', () => {
     expect(manifest.theme_color).toBe(THEME_COLORS.light)
   })
 
-  it('offers Scan bill and Split amount shortcuts to real app pages', () => {
+  it('offers Scan bill, From a chat and Split amount shortcuts to real app pages', () => {
     expect(manifest.shortcuts.map((s) => [s.short_name, s.url])).toEqual([
       ['Scan bill', '/app/bill'],
+      ['From a chat', '/app/chat'],
       ['Split amount', '/app/split/new'],
     ])
     for (const shortcut of manifest.shortcuts) expect(matchAppRoute(shortcut.url)).not.toBeNull()
