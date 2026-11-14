@@ -156,10 +156,10 @@ test.describe('Home', () => {
 test.describe('You, people and splits', () => {
   test('the Settle Score and the shagun book have their own pages', async ({ page }) => {
     await seed(page, { friends: [RIYA, SAM], groups: [GOA], expenses: TRIP })
-    await page.goto('/app/you')
-    await page.getByRole('button', { name: /^Settle Score \d+/ }).click()
+    // Nobody here has owed anyone yet, so there is no number to show: the page says what it takes.
+    await page.goto('/app/score')
     await expect(page.getByRole('heading', { level: 1, name: 'Settle Score' })).toBeVisible()
-    await expect(page.getByText('A game to help you pay back fast, not a credit score.', { exact: false })).toBeVisible()
+    await expect(page.getByText('Not enough history yet').first()).toBeVisible()
 
     await page.goto('/app/shagun')
     await expect(page.getByRole('heading', { level: 1, name: 'Shagun book' })).toBeVisible()

@@ -52,6 +52,7 @@ function expense(extra: Partial<Expense>): Expense {
 const ENABLED = [
   'Scan bill',
   'Split amount',
+  'From a chat',
   ...(LEND_ENABLED ? ['Lend / borrow'] : []),
   ...(POOLS_ENABLED ? ['Group collection'] : []),
   'Stuck money',
@@ -60,7 +61,7 @@ const ENABLED = [
   ...(DELIVERY_ENABLED ? ['Food order'] : []),
   'New group',
 ]
-const SPARE = ['From SMS', 'Group collection'].filter((label) => ENABLED.includes(label))
+const SPARE = ['Food order', 'From SMS', 'Group collection'].filter((label) => ENABLED.includes(label))
 const ASIDE = SPARE.slice(0, Math.max(0, ENABLED.length - 7))
 const ACTIONS = ENABLED.filter((label) => !ASIDE.includes(label))
 const GRID = [...ACTIONS, ...['Rent', 'Trip', 'Subscription', 'Utilities', 'Cab']].slice(0, 7).concat('More')

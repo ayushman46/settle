@@ -1,5 +1,29 @@
 # Changelog
 
+## v9.1 — 15 Nov 2026
+
+**What twenty customers found in v9.0, fixed.** Twenty people (an organiser, a Hinglish flat, an office of twelve, a first-timer, a low-tech uncle, a sceptic who tried to cheat the score…) drove v9.0 on phone-sized screens and checked every number by hand. Average "would use": 3.45 of 5. The arithmetic was right throughout; what was wrong was the reading of some messages and a few untrue sentences.
+
+### Chat to split
+- Hinglish payments: "Sid ne 400 diye mujhe", "Neha ne mujhe 800 bheje" and "Neha 3k transfer kiya tujhe" are payments between two people, not shared expenses. "udhaar diya Neha ko 700" is money that moved.
+- Never ticked by itself any more: a question ("paid? 300", "…de diye the maine?? ya Rohit ne"), a payment that failed, a bank’s "Transaction successful".
+- The right number: the amount the verb points at ("paid 600") wins over a pin code, a cricket score or a flight number; "32000 total, 8000 each" is 32,000; "2 chai 40 each" is two chais; "USD 20" is not rupees; "on 12/11" is not a head count.
+- Who shares it: "Rohit ke saath", "sirf Neha aur Aman", "3 log baant lena Aman Neha", "split 3 (Aman, Neha, Sid)", and a split said in the very next message.
+- The same money said twice the same day is only offered, with the reason. Two people with one first name are never guessed.
+- "le aaya", "laaye", "mangaya" are bought. Titles drop the chatter ("Electrician", not "Electrician ko de diye fan theek karne").
+- People: one phone number written two ways is one person. Names in the chat are matched to people you already have ("Riya Sharma" is your "Riya") and shown, with a choice; two possible people are asked, not guessed.
+- The same chat again under another file name (an iPhone calls every export `_chat.txt`) or pasted is recognised by its messages, so nothing is added twice. Undo puts an existing group back exactly as it was.
+
+### Everything else
+- **Kitty** counts from the moment it starts (a bill from that morning is not kitty spending); Put in − Spent = Left reads true; top-ups name each person’s own amount.
+- **Came late:** a stay is never taken off a late joiner (it goes to Split by nights), a nights split is never overwritten, the banner names the expenses, percent splits are fixed in one tap.
+- **Ask** honours "in Goa", refuses names it doesn’t know and commands, answers "how much did Sam pay" and breakdowns by category, group and month.
+- **Settle Score** can’t be farmed with ₹20 chais, shows no number without history, and its sentences only claim what the factors show.
+- **Shagun book:** Done never loses a typed envelope; a repeated family is kept, never dropped.
+- **Story** percentages match the Totals tab; **one payment instead of two** says who is cleared and what is left; the **expense claim** shows the whole bill for a share, the period as dates, and reads on a phone; the **wheel** names every slice and never draws a name upside down.
+- Odd paise on an itemised bill go round the table, so people who had the same things pay the same.
+- Names up to 40 characters. Your UPI ID from your number is now in onboarding and your profile. /get is readable in dark mode. Group tools are 44 px.
+
 ## v9.0 — 14 Nov 2026
 
 **Chat to split, and nineteen more things the app now does for you.** The group chat already says who paid for what: Settle reads it and makes the group. Around it, twenty features that take typing and chasing off the user.

@@ -79,6 +79,11 @@ import { GroupTools } from './GroupTools'
 import { GroupShortcuts } from '../play/GroupShortcuts'
 import styles from './GroupDetailScreen.module.css'
 
+// The cards under the balance only depend on the group: scrolling a long list must not re-run them.
+const Tools = memo(GroupTools)
+const TripOver = memo(TripOverCard)
+const LateJoiners = memo(PresenceBanner)
+
 const ROUTES = ['/app/groups/:id'] as const
 
 type Tab = 'expenses' | 'balances' | 'totals' | 'board'
@@ -215,9 +220,9 @@ function GroupDetail({ group, onLeaving }: { group: Group; onLeaving: (group: Gr
 
       {ROTATION_ENABLED && <NextRoundCard group={group} expenses={expenses} onPlan={() => setSheet('rotation')} />}
 
-      <TripOverCard group={group} />
+      <TripOver group={group} />
 
-      <GroupTools group={group} />
+      <Tools group={group} />
 
       <SegmentedControl options={tabOptions()} value={tab} onChange={setTab} ariaLabel={t('groups.detail.tabs.aria')} className={styles.tabs} />
 
@@ -339,7 +344,7 @@ function ExpensesTab({ group, onAdd, onPayment }: { group: Group; onAdd: () => v
   }
   return (
     <div className={styles.days}>
-      <PresenceBanner group={group} />
+      <LateJoiners group={group} />
       <GroupShortcuts group={group} />
       {shown.map((day) => (
         <section key={day.date} className={styles.day}>

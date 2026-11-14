@@ -38,7 +38,14 @@ async function screenshotFile(page: Page): Promise<{ name: string; mimeType: str
 /** Home → Food order → upload → review with the order's items and fees. */
 async function scanOrder(page: Page): Promise<void> {
   await page.goto('/app', { timeout: 90_000 })
-  await page.getByRole('list', { name: 'Quick actions' }).getByRole('button', { name: 'Food order' }).click()
+  // On the grid, or in More when the grid is full (it makes room for From a chat).
+  const grid = page.getByRole('list', { name: 'Quick actions' })
+  await expect(grid.getByRole('button', { name: 'More', exact: true })).toBeVisible()
+  if ((await grid.getByRole('button', { name: 'Food order' }).count()) > 0) await grid.getByRole('button', { name: 'Food order' }).click()
+  else {
+    await grid.getByRole('button', { name: 'More', exact: true }).click()
+    await page.getByRole('dialog', { name: 'More' }).getByRole('button', { name: 'Food order' }).click()
+  }
   await expect(page).toHaveURL(/\/app\/bill/)
   await expect(page.getByRole('heading', { level: 1, name: 'Split a food order' })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Choose screenshot' })).toBeVisible()
