@@ -51,6 +51,44 @@ import { fees } from './fees'
 import { counter } from './counter'
 import { groupsync } from './groupsync'
 import { play } from './play'
+import { today } from './today'
+import { tools } from './tools'
+import { credit } from './credit'
+import { twice } from './twice'
+import { health } from './health'
+import { scanfriend } from './scanfriend'
+import { lock } from './lock'
+import { estimate } from './estimate'
+import { functionCopy } from './function'
+import { vendor } from './vendor'
+import { tab } from './tab'
+import { regulars } from './regulars'
+import { seats } from './seats'
+import { pot } from './pot'
+import { moveout } from './moveout'
+import { things } from './things'
+import { deposit } from './deposit'
+import { fairrent } from './fairrent'
+import { committee } from './committee'
+import { help } from './help'
+import { carpool } from './carpool'
+import { tally } from './tally'
+import { byaaj } from './byaaj'
+import { limit } from './limit'
+import { passbook } from './passbook'
+import { units } from './units'
+import { notes } from './notes'
+import { abroad } from './abroad'
+import { kind } from './kind'
+import { hold } from './hold'
+import { refund } from './refund'
+import { chhutta } from './chhutta'
+import { payday } from './payday'
+import { promise } from './promise'
+import { kist } from './kist'
+import { checkout } from './checkout'
+import { settleday } from './settleday'
+import { why } from './why'
 import { spent } from './spent'
 import { usual } from './usual'
 import { diet } from './diet'
@@ -112,6 +150,44 @@ export const MR: Messages = {
   ...counter,
   ...groupsync,
   ...play,
+  ...today,
+  ...tools,
+  ...credit,
+  ...twice,
+  ...health,
+  ...scanfriend,
+  ...lock,
+  ...estimate,
+  ...functionCopy,
+  ...vendor,
+  ...tab,
+  ...regulars,
+  ...seats,
+  ...pot,
+  ...moveout,
+  ...things,
+  ...deposit,
+  ...fairrent,
+  ...committee,
+  ...help,
+  ...carpool,
+  ...tally,
+  ...byaaj,
+  ...limit,
+  ...passbook,
+  ...units,
+  ...notes,
+  ...abroad,
+  ...kind,
+  ...hold,
+  ...refund,
+  ...chhutta,
+  ...payday,
+  ...promise,
+  ...kist,
+  ...checkout,
+  ...settleday,
+  ...why,
   ...spent,
   ...usual,
   ...diet,

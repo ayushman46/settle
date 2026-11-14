@@ -48,6 +48,78 @@ export const STORAGE_KEYS = {
   counter: 'settle.v8.counter',
   /** The Board: a group's budget and bills said not to be duplicates, on this phone (src/features/play/store.ts). */
   play: 'settle.v8.play',
+  /** v10: Why this payment? (src/features/why): Settle up explains each line; pay only who you actually owe. */
+  why: 'settle.v10.why',
+  /** v10: Settle Day (src/features/settleday): a group’s day of the month to clear everything. */
+  settleday: 'settle.v10.settleday',
+  /** v10: Settle before you leave (src/features/checkout): a trip’s last-day checklist. */
+  checkout: 'settle.v10.checkout',
+  /** v10: Pay in parts (src/features/kist): an instalment plan on a due. */
+  kist: 'settle.v10.kist',
+  /** v10: Promise to pay (src/features/promise): a date on a due. */
+  promise: 'settle.v10.promise',
+  /** v10: Payday-aware (src/features/payday): your payday and your friends’. */
+  payday: 'settle.v10.payday',
+  /** v10: Small change rule (src/features/chhutta): tiny dues called even. */
+  chhutta: 'settle.v10.chhutta',
+  /** v10: Refund splitter (src/features/refund): a refund goes back in the same proportions. */
+  refund: 'settle.v10.refund',
+  /** v10: On hold (src/features/hold): a disputed expense kept out of the balances. */
+  hold: 'settle.v10.hold',
+  /** v10: Paid in kind (src/features/kind): a due settled with something that isn’t money. */
+  kind: 'settle.v10.kind',
+  /** v10: Friend abroad (src/features/abroad): a due in their currency, their PayPal or Wise handle. */
+  abroad: 'settle.v10.abroad',
+  /** v10: Cash, exact notes (src/features/notes): which notes, what change. */
+  notes: 'settle.v10.notes',
+  /** v10: Families and couples pay as one (src/features/units): households inside a group. */
+  units: 'settle.v10.units',
+  /** v10: Statement (src/features/passbook): a passbook between you and a friend. */
+  passbook: 'settle.v10.passbook',
+  /** v10: Udhaar limit (src/features/limit): a ceiling per friend. */
+  limit: 'settle.v10.limit',
+  /** v10: Interest on a loan (src/features/byaaj): simple interest between friends and family. */
+  byaaj: 'settle.v10.byaaj',
+  /** v10: Tally (src/features/tally): doodh, tiffin, paper, dhobi, chai counted by the day. */
+  tally: 'settle.v10.tally',
+  /** v10: Carpool (src/features/carpool): who rode, month-end by rides. */
+  carpool: 'settle.v10.carpool',
+  /** v10: House help’s salary (src/features/help): salary, days off, advances, bonus. */
+  help: 'settle.v10.help',
+  /** v10: Committee (src/features/committee): a rotating savings group among friends. */
+  committee: 'settle.v10.committee',
+  /** v10: Fair rent (src/features/fairrent): rent by room and what it has. */
+  fairrent: 'settle.v10.fairrent',
+  /** v10: Deposit ledger (src/features/deposit): who put in what, who gets back what. */
+  deposit: 'settle.v10.deposit',
+  /** v10: Shared things (src/features/things): things bought together and their buy-out. */
+  things: 'settle.v10.things',
+  /** v10: Move-out settlement (src/features/moveout): a flatmate’s final number. */
+  moveout: 'settle.v10.moveout',
+  /** v10: Family pot (src/features/pot): monthly pledges for a shared cause. */
+  pot: 'settle.v10.pot',
+  /** v10: Subscription seats (src/features/seats): family plans shared by seat. */
+  seats: 'settle.v10.seats',
+  /** v10: Regulars (src/features/regulars): a regular game or night, split among those who came. */
+  regulars: 'settle.v10.regulars',
+  /** v10: Running tab (src/features/tab): a night out, round by round. */
+  tab: 'settle.v10.tab',
+  /** v10: Advance and balance (src/features/vendor): a vendor paid in parts. */
+  vendor: 'settle.v10.vendor',
+  /** v10: Function budget (src/features/function): a wedding or function’s money. */
+  functionBudget: 'settle.v10.function',
+  /** v10: Trip estimate (src/features/estimate): what a trip should cost each. */
+  estimate: 'settle.v10.estimate',
+  /** v10: App lock and hidden amounts (src/features/lock). */
+  lock: 'settle.v10.lock',
+  /** v10: Scan a friend’s QR (src/features/scanfriend): their UPI ID with no typing. */
+  scanfriend: 'settle.v10.scanfriend',
+  /** v10: Group health (src/features/health): how a group’s money stands. */
+  health: 'settle.v10.health',
+  /** v10: Paid twice? (src/features/twice): one bill paid by two people. */
+  twice: 'settle.v10.twice',
+  /** v10: Paid too much (src/features/credit): an overpayment kept as credit. */
+  credit: 'settle.v10.credit',
   /** Chat to split: which messages of a chat are already in a group, so adding the chat again adds only what is new (src/features/chat/store.ts). */
   chat: 'settle.v9.chat',
   /** Who was on a trip from when to when, on this phone (src/features/presence/store.ts). */
