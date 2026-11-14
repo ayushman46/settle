@@ -67,7 +67,10 @@ export type PulledMarks = { kind: 'off' } | { kind: 'failed' } | { kind: 'same';
 export async function pullMarks(key: string, have: string | null, signal?: AbortSignal): Promise<PulledMarks> {
   try {
     const response = await fetch(`/api/sync/${roomOf(key)}${have ? `?have=${encodeURIComponent(have)}` : ''}`, { headers: { Accept: 'application/json' }, signal })
-    if (response.status === 503) return { kind: 'off' }
+    if (response.status === 503) {
+      const told = (await response.json().catch(() => null)) as { error?: { code?: string } } | null
+      return told?.error?.code === 'not_configured' ? { kind: 'off' } : { kind: 'failed' }
+    }
     if (!response.ok) return { kind: 'failed' }
     const body = (await response.json()) as SyncGetResponse
     if (body.data === null || !body.v) return { kind: 'same', v: body.v ?? null }
@@ -140,7 +143,10 @@ export function useCounterMarks(key: string | null, mine: Marks): CounterLive {
           setState('off')
           return
         }
-        if (pulled.kind === 'failed') return
+        if (pulled.kind === 'failed') {
+          setState('connecting')
+          return
+        }
         if (pulled.kind === 'marks') {
           known = pulled.marks
           version = pulled.v
@@ -149,10 +155,12 @@ export function useCounterMarks(key: string | null, mine: Marks): CounterLive {
         if (!sameMarks(merged, known)) {
           const pushed = await pushMarks(key, merged, controller.signal)
           if (!live) return
-          if (pushed) {
-            known = merged
-            version = pushed
+          if (!pushed) {
+            setState('connecting')
+            return
           }
+          known = merged
+          version = pushed
         }
         setState('live')
         setRemote((had) => (sameMarks(had, known) ? had : known))

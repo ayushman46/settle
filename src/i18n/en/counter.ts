@@ -78,6 +78,7 @@ export const counter = {
   'counter.pay.collected': '{collected} of {owed} paid to the shop',
   'counter.pay.done.title': 'You’ve paid your share',
   'counter.pay.done.body': '{name} sees it on their phone. Show this at the counter if they ask.',
+  'counter.pay.done.pending': 'Marked as paid. {name}’s list shows it as soon as this phone is online.',
   'counter.pay.cash': 'I paid the shop in cash',
   'counter.pay.live': 'When you’ve paid, a tick appears on {name}’s list by itself.',
   'counter.pay.again.title': 'This share is already marked as paid',

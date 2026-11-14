@@ -53,8 +53,10 @@ export function PayPanel({ payload, person, onChangePerson, headingRef, live, on
   const words = lang === 'en' ? amountInWords(person.amount, payload.c) : null
   const showPayment = !person.paid || reveal
   const tellRef = useRef<HTMLParagraphElement>(null)
-  // At the counter with the live list up: paying ticks you off there, nothing to send.
-  const ticks = payload.by !== undefined && live === 'live' && onMark !== undefined
+  // At the counter: saying you've paid is kept here and ticks you off on the live list as soon as it can be
+  // reached (a patchy connection on the way back from the UPI app must not lose it). Only where there is
+  // no live list at all does the "I've paid" message take over.
+  const ticks = payload.by !== undefined && live !== undefined && live !== 'off' && onMark !== undefined
   const organiser = payload.by ? firstName(payload.by.n) : ''
 
   return (
@@ -89,7 +91,7 @@ export function PayPanel({ payload, person, onChangePerson, headingRef, live, on
           <SuccessCheck size="md" />
           <div>
             <p className={styles.paidTitle}>{payload.by ? t('counter.pay.done.title') : t('pay.panel.paid.title')}</p>
-            <p className={styles.paidText}>{payload.by ? t('counter.pay.done.body', { name: organiser }) : t('pay.panel.paid.body', { name: payload.to.n })}</p>
+            <p className={styles.paidText}>{payload.by ? (live === 'live' ? t('counter.pay.done.body', { name: organiser }) : t('counter.pay.done.pending', { name: organiser })) : t('pay.panel.paid.body', { name: payload.to.n })}</p>
           </div>
           {option.kind === 'upi' && (
             <Button variant="ghost" size="md" onClick={() => setReveal(true)} className={styles.reveal}>

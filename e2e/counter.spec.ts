@@ -143,6 +143,35 @@ test.describe('pay at the counter', () => {
       .toEqual(['riya', 'sam'])
   })
 
+  test('a patchy connection on the way back from the UPI app loses nothing', async ({ page, openPhone }) => {
+    await seed(page, { friends: [RIYA, SAM], expenses: [LUNCH] })
+    await page.goto('/app/counter/lunch')
+    await page.evaluate(() => {
+      window.localStorage.setItem('settle.v8.counter', JSON.stringify({ v: 1, data: { byExpense: {}, shops: [{ vpa: 'q998877665@ybl', name: 'Wharf Cafe', mc: '5812', merchant: true, at: 1 }] } }))
+    })
+    await page.reload()
+    await page.getByRole('button', { name: 'Wharf Cafe' }).click()
+    await expect(page.getByText('Live: a tick appears when someone pays on their phone.')).toBeVisible({ timeout: 15_000 })
+    await page.getByRole('button', { name: 'Copy link' }).click()
+    const link = await copied(page)
+
+    const sam = (await openPhone()).page
+    await sam.goto(local(link))
+    await sam.getByRole('button', { name: /Sam/ }).click()
+    await expect(sam.getByText('When you’ve paid, a tick appears on Ayush’s list by itself.')).toBeVisible({ timeout: 15_000 })
+    // The network goes as Sam leaves for his UPI app, and is still gone when he says he has paid.
+    await sam.route('**/api/sync/**', (route) => route.fulfill({ status: 503, contentType: 'text/plain', body: 'offline' }))
+    await sam.getByRole('button', { name: 'Pay ₹300 with Google Pay' }).click()
+    await awayAndBack(sam)
+    await sam.getByRole('button', { name: 'Yes, I paid' }).click()
+    await expect(sam.getByText('You’ve paid your share')).toBeVisible()
+    await expect(page.getByText('0 of 3 paid')).toBeVisible()
+    // Back online: the tick arrives by itself.
+    await sam.unroute('**/api/sync/**')
+    await expect(page.getByText('1 of 3 paid')).toBeVisible({ timeout: 25_000 })
+    await expect(sam.getByText('Ayush sees it on their phone. Show this at the counter if they ask.')).toBeVisible({ timeout: 15_000 })
+  })
+
   test('a shop paid before needs no scan next time', async ({ page }) => {
     await seed(page, { friends: [RIYA, SAM], expenses: [LUNCH] })
     await page.goto('/app/counter/lunch')
