@@ -99,6 +99,11 @@ export function PayPanel({ payload, person, onChangePerson, headingRef, live, on
         </div>
       )}
 
+      {person.paid && reveal && option.kind === 'upi' && (
+        <Banner tone="warning" title={t('counter.pay.again.title')}>
+          {t('counter.pay.again.body')}
+        </Banner>
+      )}
       {showPayment && option.kind === 'upi' && (
         <UpiPay
           payload={payload}

@@ -13,9 +13,11 @@ import { addDays, daysBetween } from '../../engine/dates'
 
 /* ------------------------------------------------------------------ the rules (shown to people as they are) */
 
-/** Points for paying a bill for the group. */
+/** Points for paying a bill for the group: one of at least `BILL_MIN`, shared with someone, up to `BILLS_A_DAY` a day. */
 export const POINTS_BILL = 10
-/** Points for a payment that settles up. */
+export const BILL_MIN: Minor = 5000
+export const BILLS_A_DAY = 5
+/** Points for a payment that pays off what you owe (a part payment earns them when the rest is paid). */
 export const POINTS_PAYMENT = 20
 /** Extra when that payment comes within a day of owing. */
 export const POINTS_FAST = 10
@@ -218,6 +220,7 @@ export function playBoard({ group, expenses: all, today, me, nameOf, budget = nu
   const episodes: Record<string, Episode[]> = Object.fromEntries(members.map((id) => [id, []]))
   const fastPayments: Record<string, number> = Object.fromEntries(members.map((id) => [id, 0]))
   const payments: Record<string, number> = Object.fromEntries(members.map((id) => [id, 0]))
+  const cleared: Record<string, number> = Object.fromEntries(members.map((id) => [id, 0]))
   const tookPart = new Set<string>()
   /** Was everyone square at the end of each day there was something on? */
   const squareAfter: Array<{ date: string; square: boolean }> = []
@@ -261,9 +264,13 @@ export function playBoard({ group, expenses: all, today, me, nameOf, budget = nu
     for (const s of settlementsOn.get(date) ?? []) {
       payments[s.fromId] = (payments[s.fromId] ?? 0) + 1
       const since = owingSince[s.fromId] ?? null
-      if (since !== null && daysBetween(since, date) <= FAST_DAYS) fastPayments[s.fromId] = (fastPayments[s.fromId] ?? 0) + 1
+      const owed = (balance[s.fromId] ?? 0) < 0
       balance[s.fromId] = (balance[s.fromId] ?? 0) + s.amount
       balance[s.toId] = (balance[s.toId] ?? 0) - s.amount
+      // Points go to the payment that pays off what was owed: sending a rupee at a time earns nothing extra.
+      if (!owed || (balance[s.fromId] ?? 0) < 0) continue
+      cleared[s.fromId] = (cleared[s.fromId] ?? 0) + 1
+      if (since !== null && daysBetween(since, date) <= FAST_DAYS) fastPayments[s.fromId] = (fastPayments[s.fromId] ?? 0) + 1
     }
     settle(date)
     squareAfter.push({ date, square: members.every((id) => (balance[id] ?? 0) === 0) })
@@ -286,8 +293,15 @@ export function playBoard({ group, expenses: all, today, me, nameOf, budget = nu
   const billsBy: Record<string, number> = {}
   const fronted: Record<string, Minor> = {}
   const shareOf: Record<string, Minor> = {}
+  const billsOn = new Map<string, number>()
   for (const e of expenses) {
-    billsBy[e.payerId] = (billsBy[e.payerId] ?? 0) + 1
+    // A bill for the group: a real amount, shared with someone else, and only so many a day.
+    const shared = Object.entries(e.shares).some(([id, amount]) => id !== e.payerId && amount > 0)
+    const slot = `${e.payerId}|${e.date}`
+    if (e.total >= BILL_MIN && shared && (billsOn.get(slot) ?? 0) < BILLS_A_DAY) {
+      billsOn.set(slot, (billsOn.get(slot) ?? 0) + 1)
+      billsBy[e.payerId] = (billsBy[e.payerId] ?? 0) + 1
+    }
     fronted[e.payerId] = (fronted[e.payerId] ?? 0) + (e.total - (e.shares[e.payerId] ?? 0))
     for (const [id, amount] of Object.entries(e.shares)) shareOf[id] = (shareOf[id] ?? 0) + amount
   }
@@ -298,7 +312,7 @@ export function playBoard({ group, expenses: all, today, me, nameOf, budget = nu
       const square = tookPart.has(id) && (balance[id] ?? 0) >= 0 && expenses.length > 0
       const points =
         (billsBy[id] ?? 0) * POINTS_BILL +
-        (payments[id] ?? 0) * POINTS_PAYMENT +
+        (cleared[id] ?? 0) * POINTS_PAYMENT +
         (fastPayments[id] ?? 0) * POINTS_FAST +
         (square ? POINTS_SQUARE : 0) +
         Math.min(streak, STREAK_CAP) * POINTS_STREAK
@@ -313,14 +327,20 @@ export function playBoard({ group, expenses: all, today, me, nameOf, budget = nu
   })
 
   /* ---- titles ---- */
-  const best = (score: (id: string) => number | null, most = true): { id: string; value: number } | null => {
+  /** Whoever scores most (or least). `alone`: nobody when two people tie for it. */
+  const best = (score: (id: string) => number | null, most = true, alone = false): { id: string; value: number } | null => {
     let found: { id: string; value: number } | null = null
+    let tied = false
     for (const id of [...members].sort(byName)) {
       const value = score(id)
       if (value === null) continue
-      if (found === null || (most ? value > found.value : value < found.value)) found = { id, value }
+      if (found !== null && value === found.value) tied = true
+      if (found === null || (most ? value > found.value : value < found.value)) {
+        found = { id, value }
+        tied = false
+      }
     }
-    return found
+    return alone && tied ? null : found
   }
   const titles: Title[] = []
   const award = (id: TitleId, winner: { id: string; value: number } | null): void => {
@@ -337,7 +357,7 @@ export function playBoard({ group, expenses: all, today, me, nameOf, budget = nu
     }, false),
   )
   award('regular', best((id) => ((billsBy[id] ?? 0) >= 2 ? (billsBy[id] ?? 0) : null)))
-  if (members.length >= 3) award('appetite', best((id) => ((shareOf[id] ?? 0) > 0 ? (shareOf[id] ?? 0) : null)))
+  if (members.length >= 3) award('appetite', best((id) => ((shareOf[id] ?? 0) > 0 ? (shareOf[id] ?? 0) : null), true, true))
   award('patient', best((id) => ((balance[id] ?? 0) > 0 ? (balance[id] ?? 0) : null)))
   award(
     'clock',
@@ -425,8 +445,7 @@ export function playBoard({ group, expenses: all, today, me, nameOf, budget = nu
       const ta = titleKey(a.title)
       const tb = titleKey(b.title)
       const sameTitle = ta === tb || (ta.length >= 3 && tb.length >= 3 && (ta.includes(tb) || tb.includes(ta)))
-      const samePeople = a.payerId === b.payerId && Object.keys(a.shares).sort().join() === Object.keys(b.shares).sort().join()
-      if (!sameTitle && !samePeople) continue
+      if (!sameTitle) continue
       const key = [a.id, b.id].sort().join('|')
       if (notDuplicates?.has(key)) continue
       duplicates.push({ key, keep: a, drop: b })
@@ -449,7 +468,8 @@ export function playBoard({ group, expenses: all, today, me, nameOf, budget = nu
     budget: cap,
     left,
     over: left !== null && left < 0,
-    reachesOn: left !== null && left >= 0 && perDay > 0 ? addDays(today, Math.floor(left / perDay)) : null,
+    // One day of spending isn't a pace yet (a hotel booked on day one would "run out tomorrow").
+    reachesOn: left !== null && left >= 0 && perDay > 0 && days >= 2 ? addDays(today, Math.floor(left / perDay)) : null,
   }
 
   const todays = expenses.filter((e) => e.date === today)

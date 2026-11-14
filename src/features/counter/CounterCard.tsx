@@ -26,7 +26,11 @@ export function CounterCard({ expense }: { expense: Expense }) {
         <p className={styles.entryTitle}>
           <Store aria-hidden="true" className={styles.inlineIcon} /> {t('counter.entry.title')}
         </p>
-        <p className={styles.fine}>{entry ? t('counter.live.count', { paid, count: people.length }) : t('counter.entry.body')}</p>
+        <p className={styles.fine}>
+          {entry
+            ? t(expense.groupId ? 'counter.entry.open.group' : 'counter.entry.open.body', { count: t('counter.live.count', { paid, count: people.length }), shop: entry.name })
+            : t('counter.entry.body')}
+        </p>
       </div>
       <Button size="md" variant={entry ? 'secondary' : 'primary'} block onClick={() => navigate(counterPath(expense.id))}>
         {entry ? t('counter.entry.open') : t('counter.entry.cta')}

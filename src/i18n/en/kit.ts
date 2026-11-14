@@ -303,7 +303,7 @@ export const kit = {
   'kit.upiPay.quick.app.aria': 'Your UPI app',
   'kit.upiPay.quick.cta': 'Pay {amount} with {app}',
   'kit.upiPay.quick.cta.noAmount': 'Pay with {app}',
-  'kit.upiPay.quick.lead.small': 'Opens {app} with {name}’s UPI ID and {amount} filled in.',
+  'kit.upiPay.quick.lead.small': 'Sends {name}’s QR to {app}: it opens with their UPI ID and {amount} filled in.',
   'kit.upiPay.quick.lead.large': 'Copies {name}’s UPI ID and opens {app}. Above ₹2,000, UPI apps only take a UPI ID you paste.',
   'kit.upiPay.quick.sent': 'Pick {app} in the list: it opens on the payment to {name}, all filled in.',
   'kit.upiPay.quick.sent.app': '{app} is opening on the payment to {name}, all filled in.',

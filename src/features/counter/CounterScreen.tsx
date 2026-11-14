@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Check, Copy, MessageCircle, Share2, Store, Undo2 } from 'lucide-react'
+import { Check, Copy, MessageCircle, Share2, Undo2 } from 'lucide-react'
 import { goBack, useRoute } from '../../app/router'
 import { Avatar, Banner, BottomSheet, Button, Chip, Money, PageTitle, ProgressRing, QrCode, Screen, SuccessCheck, TopBar, useToast } from '../../components'
 import { useExpense, useFriendsById, useProfile } from '../../data'
@@ -215,9 +215,7 @@ function Live({ expense, entry }: { expense: Expense; entry: CounterEntry }) {
             {t('counter.live.count', { paid: paid.size, count: people.length })}
           </p>
           <p className={styles.fine}>{t('counter.live.collected', { collected: money(collected), total: money(total), shop: entry.name })}</p>
-          <p className={styles.fine}>
-            <Store aria-hidden="true" className={styles.inlineIcon} /> {entry.vpa}
-          </p>
+          <p className={styles.fine}>{t('counter.live.upi', { upi: entry.vpa })}</p>
         </div>
       </section>
 
@@ -327,6 +325,17 @@ function Live({ expense, entry }: { expense: Expense; entry: CounterEntry }) {
             toast(t('counter.mine.done', { amount: money(myShare), shop: entry.name }), { tone: 'success' })
           }}
         />
+        <Button
+          variant="ghost"
+          block
+          onClick={() => {
+            tickAtCounter(expense.id, ME_ID, true, 'cash')
+            setPaying(false)
+            toast(t('counter.mine.done', { amount: money(myShare), shop: entry.name }), { tone: 'success' })
+          }}
+        >
+          {t('counter.mine.cash')}
+        </Button>
       </BottomSheet>
     </Screen>
   )

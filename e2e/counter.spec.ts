@@ -93,7 +93,7 @@ test.describe('pay at the counter', () => {
     await page.getByRole('button', { name: 'Use it anyway' }).click()
     await expect(page.getByRole('heading', { level: 1, name: 'Pay Wharf Cafe directly' })).toBeVisible()
     await expect(page.getByText('0 of 3 paid')).toBeVisible()
-    await expect(page.getByText('Live: ticks itself when someone pays on their phone.')).toBeVisible({ timeout: 15_000 })
+    await expect(page.getByText('Live: a tick appears when someone pays on their phone.')).toBeVisible({ timeout: 15_000 })
     if (process.env.TRIP_SHOTS) await page.screenshot({ path: `${process.env.TRIP_SHOTS}/counter-1-open.png`, fullPage: true })
     await page.getByRole('button', { name: 'Copy link' }).click()
     const link = await copied(page)
@@ -105,7 +105,7 @@ test.describe('pay at the counter', () => {
     await expect(sam.getByRole('heading', { level: 1 })).toContainText('Wharf Cafe')
     await sam.getByRole('button', { name: /Sam/ }).click()
     await expect(sam.getByText('Opens Google Pay on the payment to Wharf Cafe, with ₹300 filled in. You only enter your PIN.')).toBeVisible()
-    await expect(sam.getByText('When you’ve paid, Ayush’s list ticks you off by itself.')).toBeVisible({ timeout: 15_000 })
+    await expect(sam.getByText('When you’ve paid, a tick appears on Ayush’s list by itself.')).toBeVisible({ timeout: 15_000 })
     if (process.env.TRIP_SHOTS) await sam.screenshot({ path: `${process.env.TRIP_SHOTS}/counter-2-sam.png`, fullPage: true })
     // One tap: the UPI app is asked to open on the payment (no app in a test browser, so the page stays).
     await sam.getByRole('button', { name: 'Pay ₹300 with Google Pay' }).click()

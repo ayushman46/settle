@@ -60,7 +60,7 @@ export const GroupShortcuts = memo(function GroupShortcuts({ group }: { group: G
                   toast(t('play.dup.removed', { title: removed.title }), { action: { label: t('common.action.undo'), onAction: () => restoreExpense(removed) } })
                 }}
               >
-                {t('play.dup.remove')}
+                {t('play.dup.remove', { title: drop.title.trim() })}
               </Button>
               <Button size="sm" variant="ghost" onClick={() => markDifferent(group.id, key)}>
                 {t('play.dup.keep')}
@@ -68,9 +68,11 @@ export const GroupShortcuts = memo(function GroupShortcuts({ group }: { group: G
             </div>
           }
         >
-          {keep.payerId === drop.payerId
-            ? t('play.dup.body.same', { title: keep.title, amount: money(keep.total), date: relativeDateLabel(keep.date) })
-            : t('play.dup.body', { title: keep.title, amount: money(keep.total), date: relativeDateLabel(keep.date), first: nameOf(keep.payerId), second: nameOf(drop.payerId) })}
+          {keep.title.trim().toLowerCase() !== drop.title.trim().toLowerCase()
+            ? t('play.dup.body.names', { first: keep.title.trim(), second: drop.title.trim(), amount: money(keep.total), date: relativeDateLabel(keep.date).toLowerCase() })
+            : keep.payerId === drop.payerId
+              ? t('play.dup.body.same', { title: keep.title.trim(), amount: money(keep.total), date: relativeDateLabel(keep.date).toLowerCase() })
+              : t('play.dup.body', { title: keep.title.trim(), amount: money(keep.total), date: relativeDateLabel(keep.date).toLowerCase(), first: nameOf(keep.payerId), second: nameOf(drop.payerId) })}
         </Banner>
       ))}
       {board.again.length > 0 && (

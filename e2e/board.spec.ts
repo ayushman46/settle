@@ -72,6 +72,9 @@ const EXPENSES: Expense[] = [
   // The same dinner, added by two people.
   split('dinner1', 'Dinner at Toit', 240000, 0, 'me'),
   split('dinner2', 'Dinner', 240000, 0, 'riya'),
+  // Two different things for the same amount on the same day: not a repeat.
+  split('snacks', 'Snacks', 50000, 2, 'me'),
+  split('ferry', 'Ferry', 50000, 2, 'me'),
 ]
 
 test.describe('a group’s Board', () => {
@@ -80,11 +83,13 @@ test.describe('a group’s Board', () => {
   test('a bill added twice is caught; what the group buys again is one tap', async ({ page }) => {
     await seed(page, { friends: [RIYA, SAM], groups: [GOA], expenses: EXPENSES })
     await page.goto('/app/groups/goa')
-    await expect(page.getByText('Added twice?')).toBeVisible()
-    await expect(page.getByText(/“Dinner at Toit” for ₹2,400 on Today is here two times: once paid by You, once by Riya\./)).toBeVisible()
-    await page.getByRole('button', { name: 'Remove one' }).click()
+    await expect(page.getByText('Added twice?', { exact: true })).toBeVisible()
+    await expect(page.getByText('“Dinner at Toit” and “Dinner” are both ₹2,400 (today): the same bill added twice?')).toBeVisible()
+    // The button names the one it removes: the one added second.
+    await page.getByRole('button', { name: 'Remove “Dinner”' }).click()
     await expect(page.getByText('Removed the second “Dinner”')).toBeVisible()
-    await expect(page.getByText('Added twice?')).toHaveCount(0)
+    // Snacks and Ferry (both ₹500, the same day) were never asked about.
+    await expect(page.getByText('Added twice?', { exact: true })).toHaveCount(0)
 
     // "Cab" and "Chai" come round again and again.
     const again = page.getByRole('group', { name: 'Add again' })
@@ -96,7 +101,7 @@ test.describe('a group’s Board', () => {
   })
 
   test('the leaderboard, titles, the week, who pays next, the budget and the story so far', async ({ page }) => {
-    await seed(page, { friends: [RIYA, SAM], groups: [GOA], expenses: EXPENSES.filter((e) => e.id !== 'dinner2') })
+    await seed(page, { friends: [RIYA, SAM], groups: [GOA], expenses: EXPENSES.filter((e) => !['dinner2', 'snacks', 'ferry'].includes(e.id)) })
     await page.goto('/app/groups/goa?tab=board')
 
     // My move: Sam owes me the most, since the hotel.
@@ -109,11 +114,12 @@ test.describe('a group’s Board', () => {
     await expect(rows.nth(0)).toContainText('pts')
     await expect(rows.filter({ hasText: 'Sam' })).toContainText('0 pts')
     await page.getByText('How points work').click()
-    await expect(page.getByText('+20 for every payment you make to settle up')).toBeVisible()
+    await expect(page.getByText('+20 each time you pay off what you owe (part payments count once the rest is paid)')).toBeVisible()
+    await expect(page.getByText('+10 for every bill of ₹50 or more you pay for the group (up to 5 a day)')).toBeVisible()
 
     // Titles.
     await expect(page.getByText('The banker')).toBeVisible()
-    await expect(page.getByText(/^You’ve fronted ₹[\d,.]+ for the group$/)).toBeVisible()
+    await expect(page.getByText(/^You’ve paid ₹[\d,.]+ of other people’s shares$/)).toBeVisible()
     await expect(page.getByText(/^Riya clears a debt in/)).toBeVisible()
     await expect(page.getByText('On the clock')).toBeVisible()
     await expect(page.getByText('Sam has owed for 4 days')).toBeVisible()
@@ -130,6 +136,10 @@ test.describe('a group’s Board', () => {
     await expect(page.getByText('Budget saved')).toBeVisible()
     await expect(page.getByText(/left of ₹20,000/)).toBeVisible()
     await expect(page.getByText(/At this pace it runs out/)).toBeVisible()
+    // A slip of the thumb is not a ₹12 budget.
+    await page.getByRole('textbox', { name: 'Budget for this group' }).fill('12abc')
+    await expect(page.getByText('Use digits only, like 20000.')).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Save' })).toBeDisabled()
 
     // The story so far, shared as a message.
     await expect(page.getByText('The story so far')).toBeVisible()

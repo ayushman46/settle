@@ -15,7 +15,7 @@ import { categoryLabel } from '../../share/categories'
 import { friendFallback } from '../../share/fallbacks'
 import { outsideName } from '../../share/names'
 import { settleUpPath } from '../groups/paths'
-import { POINTS_BILL, POINTS_FAST, POINTS_PAYMENT, POINTS_SQUARE, POINTS_STREAK, STREAK_CAP, type TitleId } from './engine'
+import { BILL_MIN, BILLS_A_DAY, POINTS_BILL, POINTS_FAST, POINTS_PAYMENT, POINTS_SQUARE, POINTS_STREAK, STREAK_CAP, type TitleId } from './engine'
 import { setBudget } from './store'
 import { useBoard } from './useBoard'
 import styles from './Play.module.css'
@@ -89,7 +89,7 @@ export function BoardTab({ group }: { group: Group }) {
         {quest.kind === 'pay' && (
           <>
             <p className={styles.big}>{t('play.quest.pay', { name: quest.to, amount: money(quest.amount) })}</p>
-            <p className={styles.fine}>{quest.fast ? t('play.quest.pay.points.fast', { points: quest.points, bonus: POINTS_FAST }) : t('play.quest.pay.points', { points: quest.points })}</p>
+            <p className={styles.fine}>{quest.fast ? t('play.quest.pay.points.fast', { points: quest.points, bonus: POINTS_FAST, square: POINTS_SQUARE }) : t('play.quest.pay.points', { points: quest.points, square: POINTS_SQUARE })}</p>
             <Button block onClick={() => navigate(settleUpPath(group.id))}>
               {t('play.quest.pay.cta')}
             </Button>
@@ -159,7 +159,7 @@ export function BoardTab({ group }: { group: Group }) {
         <details className={styles.rules}>
           <summary>{t('play.rules.title')}</summary>
           <ul>
-            <li>{t('play.rules.bill', { points: POINTS_BILL })}</li>
+            <li>{t('play.rules.bill', { points: POINTS_BILL, min: money(BILL_MIN), cap: BILLS_A_DAY })}</li>
             <li>{t('play.rules.payment', { points: POINTS_PAYMENT })}</li>
             <li>{t('play.rules.fast', { points: POINTS_FAST })}</li>
             <li>{t('play.rules.square', { points: POINTS_SQUARE })}</li>
@@ -269,7 +269,8 @@ export function BoardTab({ group }: { group: Group }) {
               </div>
               <p className={budget.over ? styles.bad : styles.fine}>
                 {budget.over ? t('play.budget.over', { over: money(budget.left), budget: money(budget.budget) }) : t('play.budget.left', { left: money(budget.left), budget: money(budget.budget) })}
-                {budget.reachesOn && <> · {budget.reachesOn === todayIso() ? t('play.budget.reaches.today') : t('play.budget.reaches', { date: relativeDateLabel(budget.reachesOn) })}</>}
+                {budget.reachesOn && <> · {budget.reachesOn === todayIso() ? t('play.budget.reaches.today') : t('play.budget.reaches', { date: relativeDateLabel(budget.reachesOn).toLowerCase() })}</>}
+                {!budget.over && !budget.reachesOn && budget.days < 2 && <> · {t('play.budget.early')}</>}
               </p>
             </>
           )}
@@ -311,8 +312,12 @@ function BudgetField({ groupId, currency, budget }: { groupId: string; currency:
   const t = useT()
   const toast = useToast()
   const [text, setText] = useState(budget !== null ? toInputString(budget, currency, { trimZeros: true }) : '')
-  const parsed = text.trim() === '' ? null : parseMoneyInput(text, currency)
-  const changed = (parsed ?? null) !== (budget ?? null)
+  // Digits (with commas or a ₹) only: "12abc" is a slip of the thumb, not a ₹12 budget.
+  const clean = text.trim().replace(/^₹\s*/, '')
+  const wellFormed = clean === '' || /^\d[\d,]*(\.\d{1,2})?$/.test(clean)
+  const parsed = clean === '' || !wellFormed ? null : parseMoneyInput(clean, currency)
+  const bad = clean !== '' && (parsed === null || parsed <= 0)
+  const changed = !bad && (parsed ?? null) !== (budget ?? null)
   return (
     <form
       className={styles.budgetForm}
@@ -323,8 +328,8 @@ function BudgetField({ groupId, currency, budget }: { groupId: string; currency:
         toast(t('play.budget.saved'), { tone: 'success' })
       }}
     >
-      <TextField label={t('play.budget.label')} hint={budget === null ? t('play.budget.none') : t('play.budget.hint')} inputMode="decimal" autoComplete="off" enterKeyHint="done" value={text} onChange={(event) => setText(event.target.value)} />
-      <Button type="submit" size="md" variant="secondary" disabled={!changed || (text.trim() !== '' && parsed === null)}>
+      <TextField label={t('play.budget.label')} hint={t('play.budget.hint')} error={bad ? t('play.budget.error') : undefined} placeholder={t('play.budget.placeholder')} inputMode="decimal" autoComplete="off" enterKeyHint="done" value={text} onChange={(event) => setText(event.target.value)} />
+      <Button type="submit" size="md" variant="secondary" disabled={!changed}>
         {t('play.budget.save')}
       </Button>
     </form>

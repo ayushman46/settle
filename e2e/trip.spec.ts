@@ -163,7 +163,7 @@ test.describe('paying, saying it, getting the app', () => {
     await page.getByRole('button', { name: /^Pay/ }).first().click()
     const pay = page.getByRole('dialog')
     await pay.getByRole('radio', { name: 'PhonePe' }).click()
-    await expect(pay.getByText('Opens PhonePe with Riya’s UPI ID and ₹300 filled in.')).toBeVisible()
+    await expect(pay.getByText('Sends Riya’s QR to PhonePe: it opens with their UPI ID and ₹300 filled in.')).toBeVisible()
     const before = (await shared()).sheets.length
     await pay.getByRole('button', { name: 'Pay ₹300 with PhonePe' }).click()
     await expect(pay.getByText('Pick PhonePe in the list: it opens on the payment to Riya, all filled in.')).toBeVisible()

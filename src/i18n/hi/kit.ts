@@ -274,7 +274,7 @@ export const kit = {
   'kit.upiPay.quick.app.aria': 'आपका UPI ऐप',
   'kit.upiPay.quick.cta': '{app} से {amount} चुकाएँ',
   'kit.upiPay.quick.cta.noAmount': '{app} से चुकाएँ',
-  'kit.upiPay.quick.lead.small': '{app} खुलेगा, {name} की UPI ID और {amount} पहले से भरे होंगे।',
+  'kit.upiPay.quick.lead.small': '{name} का QR {app} को भेजा जाएगा: वह उनकी UPI ID और {amount} भरकर खुलेगा।',
   'kit.upiPay.quick.lead.large': '{name} की UPI ID कॉपी होगी और {app} खुलेगा। ₹2,000 से ऊपर UPI ऐप सिर्फ़ पेस्ट की गई UPI ID लेते हैं।',
   'kit.upiPay.quick.sent': 'सूची में {app} चुनें: {name} को पेमेंट का पेज खुलेगा, सब कुछ भरा हुआ।',
   'kit.upiPay.quick.sent.app': '{app} खुल रहा है, {name} को पेमेंट का पेज, सब कुछ भरा हुआ।',

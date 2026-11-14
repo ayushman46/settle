@@ -106,6 +106,12 @@ export function UpiRoutes({ payeeName, vpa, amount, note, color, phone, platform
   }, [onPaid])
   useEffect(() => () => stopWatch.current?.(), [])
   const watch = useRef<number | undefined>(undefined)
+  // Back from the UPI app: "Did you pay?" comes into view (on a small phone it sat far below the Pay button).
+  const askRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const el = asking ? askRef.current : null
+    if (el && typeof el.scrollIntoView === 'function') el.scrollIntoView({ block: 'center', behavior: 'smooth' })
+  }, [asking])
   const uri = buildUpiLink({ vpa, payeeName, amountMinor: amount, note, mc: merchant ? mc : null })
   const money = formatMoney(amount, 'INR', { trimZeros: true })
   const hasAmount = amount > 0
@@ -361,7 +367,7 @@ export function UpiRoutes({ payeeName, vpa, amount, note, color, phone, platform
               {saved === 'failed' && <p className={styles.problem}>{t('kit.upiPay.saveFailed')}</p>}
               <p className={styles.lead}>{t('kit.upiPay.gallery.lead', { amount: money })}</p>
               {steps([t('kit.upiPay.gallery.step1'), t('kit.upiPay.gallery.step2'), t('kit.upiPay.gallery.step3', { amount: money }), t('kit.upiPay.step.check')])}
-              <p className={styles.fine}>{t('kit.upiPay.gallery.cap')}</p>
+              {!merchant && <p className={styles.fine}>{t('kit.upiPay.gallery.cap')}</p>}
             </div>
           ) : (
             <div className={styles.card}>
@@ -448,7 +454,7 @@ export function UpiRoutes({ payeeName, vpa, amount, note, color, phone, platform
         </p>
       )}
       {asking && (
-        <div className={styles.ask} role="group" aria-labelledby={`${helpId}-ask`}>
+        <div ref={askRef} className={styles.ask} role="group" aria-labelledby={`${helpId}-ask`}>
           <p id={`${helpId}-ask`} className={styles.askTitle}>
             {hasAmount ? t('kit.upiPay.ask.title', { name: payeeName, amount: money }) : t('kit.upiPay.ask.title.noAmount', { name: payeeName })}
           </p>

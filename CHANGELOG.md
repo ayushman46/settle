@@ -1,5 +1,22 @@
 # Changelog
 
+## v8.4 — 14 Nov 2026
+
+**What 20 customers found in "Pay at the counter" and the Board.** A panel of 20 personas drove both on phone-sized browsers (all 20 finished; no ticks were lost, even with four people paying in the same half-second).
+
+### Fixed
+- **Added twice? no longer cries wolf.** Two different expenses for the same amount on the same day (a ₹500 cab and ₹500 of snacks) were flagged, and "Remove one" removed the other. Now only the same name counts, the banner names both, and the button says which one it removes.
+- **Points can't be farmed.** Sending a rupee at a time earned +30 each. Points now go to the payment that pays off what you owe; bills count from ₹50, shared with someone, up to five a day. "Biggest share" is not handed out when shares are level. The rules on the screen say exactly this.
+- **"Did you pay?" comes into view.** Back from the UPI app on a small phone, the question sat far below the Pay button; the page now brings it to you.
+- **The bill page explains itself.** With a counter open, the card says each person pays the shop and that "paid you back" there means they paid the shop; the card no longer says "nothing to collect" beside a list of people who owe.
+- **A budget of "12abc" is refused** instead of being saved as ₹12; the field says it is only on your phone before you save; one day of spending is no longer called a pace.
+- **Plainer words.** "Nobody has to pay the whole bill first" for "nobody fronts the bill"; the QR on the organiser's screen says it opens a Settle page, not the payment; the shop's UPI ID is labelled; paying a person says the QR is sent to the app (not that the app "opens"); a shop is not told a person's ₹2,000 limit.
+- **Your own share in cash**, and a warning before paying a share already marked paid.
+
+### Known, not changed
+- Anyone in a group can record a payment between two others (as before), so the Board trusts the group's own records.
+- The expense rows of a bill paid at the counter still read "paid you back"; the card above them explains it.
+
 ## v8.3 — 14 Nov 2026
 
 **The Board: a group that runs itself, and rewards settling up.** A fourth tab on every group. Everything on it is worked out from the expenses and payments the group already shares, so every phone shows the same Board and nobody fills anything in.

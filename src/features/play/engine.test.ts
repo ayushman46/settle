@@ -83,6 +83,28 @@ describe('the leaderboard', () => {
   })
 })
 
+describe('points can’t be farmed', () => {
+  it('a rupee at a time earns nothing: the points go to the payment that pays off what you owe', () => {
+    const bills = [expense('Dinner', 60_000, '2026-11-13', 'riya', ['riya', 'me'])]
+    const drip = board(bills, [paid('me', 'riya', 100, '2026-11-13'), paid('me', 'riya', 100, '2026-11-13'), paid('me', 'riya', 100, '2026-11-13')])
+    expect(drip.rows.find((r) => r.id === 'me')).toMatchObject({ points: 0, payments: 3, fastPayments: 0, balance: -29_700 })
+    const paidOff = board(bills, [paid('me', 'riya', 100, '2026-11-13'), paid('me', 'riya', 29_900, '2026-11-14')])
+    expect(paidOff.rows.find((r) => r.id === 'me')).toMatchObject({ points: POINTS_PAYMENT + POINTS_FAST + POINTS_SQUARE + POINTS_STREAK, payments: 2, fastPayments: 1 })
+  })
+
+  it('a payment when you owe nothing earns nothing', () => {
+    const b = board([expense('Dinner', 60_000, '2026-11-13', 'me', ['me', 'riya'])], [paid('me', 'riya', 5_000, '2026-11-13')])
+    expect(b.rows.find((r) => r.id === 'me')?.points).toBe(POINTS_BILL + POINTS_SQUARE)
+  })
+
+  it('tiny bills, bills for yourself alone, and more than five a day don’t count', () => {
+    const tiny = board([expense('Gum', 100, '2026-11-13', 'me', ['me', 'riya']), expense('Mine', 90_000, '2026-11-13', 'me', ['me'])])
+    expect(tiny.rows.find((r) => r.id === 'me')?.bills).toBe(0)
+    const many = board(Array.from({ length: 8 }, (_, i) => expense(`Round ${i}`, 20_000, '2026-11-13', 'me', ['me', 'riya'])))
+    expect(many.rows.find((r) => r.id === 'me')).toMatchObject({ bills: 5, points: 5 * POINTS_BILL + POINTS_SQUARE })
+  })
+})
+
 describe('titles', () => {
   it('names the banker, the fastest to pay back, who is owed, and who is on the clock', () => {
     const b = board(
@@ -94,7 +116,8 @@ describe('titles', () => {
     expect(title('regular')).toMatchObject({ name: 'Ayush', value: 2 })
     expect(title('patient')?.name).toBe('Ayush')
     expect(title('clock')).toMatchObject({ name: 'Sam', value: 12 })
-    expect(title('appetite')).toBeDefined()
+    // Everyone's share is level here: nobody is handed "Biggest share".
+    expect(title('appetite')).toBeUndefined()
   })
 })
 
@@ -157,8 +180,15 @@ describe('added twice?', () => {
     expect(board([first, second, other], [], '2026-11-14', { notDuplicates: new Set([b.duplicates[0]!.key]) }).duplicates).toEqual([])
   })
 
-  it('two different things for the same amount on the same day are left alone', () => {
+  it('two different things for the same amount on the same day are left alone, whoever paid', () => {
     expect(board([expense('Lunch', 50_000, '2026-11-13', 'me', ['me', 'riya']), expense('Cab', 50_000, '2026-11-13', 'riya', ['me', 'riya'])]).duplicates).toEqual([])
+    expect(board([expense('Cab', 50_000, '2026-11-13', 'me', ['me', 'riya']), expense('Snacks', 50_000, '2026-11-13', 'me', ['me', 'riya'])]).duplicates).toEqual([])
+    expect(board([expense('Item1', 100, '2026-11-13', 'me', ['me', 'riya']), expense('Item3', 100, '2026-11-13', 'me', ['me', 'riya'])]).duplicates).toEqual([])
+  })
+
+  it('“Biggest share” isn’t handed out when shares are level', () => {
+    const level = board([expense('Dinner', 90_000, '2026-11-13', 'me', ['me', 'riya', 'sam'])])
+    expect(level.titles.find((x) => x.id === 'appetite')).toBeUndefined()
   })
 })
 
@@ -172,6 +202,8 @@ describe('budget, today and the recap', () => {
   it('says what is spent, the pace, and the day the budget runs out at this pace', () => {
     const b = board(trip, [], '2026-11-14', { budget: 1_500_000 })
     expect(b.budget).toEqual({ spent: 900_000, days: 4, perDay: 225_000, budget: 1_500_000, left: 600_000, over: false, reachesOn: '2026-11-16' })
+    // One day of spending isn't a pace.
+    expect(board([trip[2]!], [], '2026-11-14', { budget: 1_500_000 }).budget).toMatchObject({ days: 1, reachesOn: null })
     expect(board(trip, [], '2026-11-14', { budget: 500_000 }).budget).toMatchObject({ over: true, left: -400_000, reachesOn: null })
     expect(board(trip).budget).toMatchObject({ budget: null, left: null, reachesOn: null })
   })

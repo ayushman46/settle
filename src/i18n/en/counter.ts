@@ -7,7 +7,9 @@ import type { Messages } from '../types'
 
 export const counter = {
   'counter.entry.title': 'Pay at the counter',
-  'counter.entry.body': 'Nobody fronts the bill: each of you pays the shop your own share. Nothing to collect afterwards.',
+  'counter.entry.body': 'Bill not paid yet? Each of you can pay the shop your own share instead, so nobody has to pay it all first and collect.',
+  'counter.entry.open.body': '{count}. Each person pays {shop} their own share. On this page “paid you back” means they paid the shop.',
+  'counter.entry.open.group': '{count}. Each person pays {shop} their own share. In the group, a share paid to the shop is recorded as a payment, so the balances come out even.',
   'counter.entry.cta': 'Everyone pays the shop',
   'counter.entry.open': 'Open the counter: who’s paid',
 
@@ -15,7 +17,7 @@ export const counter = {
   'counter.gone.body': 'It needs a bill you saved, in rupees, that still exists on this phone.',
 
   'counter.setup.title': 'Everyone pays the shop',
-  'counter.setup.body': 'Scan the shop’s QR once. Each of you then pays your own share straight to the shop, from your own phone. Nobody fronts the bill, and nobody owes anybody.',
+  'counter.setup.body': 'Scan the shop’s payment QR once. Each of you then pays your own share straight to the shop, from your own phone. Nobody has to pay the whole bill first, and nobody owes anyone afterwards.',
   'counter.people.aria': 'Each person’s share',
   'counter.before.title': 'Paid here before? No scan needed',
 
@@ -35,19 +37,20 @@ export const counter = {
   'counter.fixed.use': 'Use it anyway',
 
   'counter.live.title': 'Pay {shop} directly',
-  'counter.live.body': 'Everyone pays their own share to the shop. This list ticks itself as each of you pays.',
+  'counter.live.body': 'Each person pays their own share to the shop. A tick appears here as each of you pays.',
+  'counter.live.upi': 'Shop’s UPI ID: {upi}',
   'counter.live.done.title': 'All paid: {amount} to {shop}',
   'counter.live.done.body': 'Show this screen at the counter. Nobody owes anybody for this bill.',
   'counter.live.progress.aria': 'Paid so far',
   'counter.live.count': '{paid} of {count} paid',
   'counter.live.collected': '{collected} of {total} paid to {shop}',
   'counter.live.ticked': '{name} paid {amount}',
-  'counter.live.on': 'Live: ticks itself when someone pays on their phone.',
+  'counter.live.on': 'Live: a tick appears when someone pays on their phone.',
   'counter.live.off': 'Live ticking isn’t available right now: friends send you an “I’ve paid” message, or tick them here yourself.',
 
   'counter.share.title': 'Get everyone to pay their share',
   'counter.share.qr.aria': 'QR code that opens each person’s share to pay {shop}',
-  'counter.share.body': 'Friends at the table scan this with their camera, or send them the link. They pick their name and pay the shop.',
+  'counter.share.body': 'This code opens a Settle page, not the payment itself. Friends at the table scan it with their camera (or open the link you send), pick their name and pay the shop.',
   'counter.share.more': 'Share',
   'counter.share.copy': 'Copy link',
   'counter.share.copied': 'Link copied',
@@ -64,6 +67,7 @@ export const counter = {
   'counter.mine.title': 'Pay {shop}',
   'counter.mine.body': 'Your share: {amount}',
   'counter.mine.done': 'You paid {amount} to {shop}',
+  'counter.mine.cash': 'I paid my share in cash',
 
   'counter.stop.cta': 'Stop paying at the counter',
   'counter.stop.done': 'Back to a normal split: whoever is ticked stays ticked.',
@@ -75,7 +79,9 @@ export const counter = {
   'counter.pay.done.title': 'You’ve paid your share',
   'counter.pay.done.body': '{name} sees it on their phone. Show this at the counter if they ask.',
   'counter.pay.cash': 'I paid the shop in cash',
-  'counter.pay.live': 'When you’ve paid, {name}’s list ticks you off by itself.',
+  'counter.pay.live': 'When you’ve paid, a tick appears on {name}’s list by itself.',
+  'counter.pay.again.title': 'This share is already marked as paid',
+  'counter.pay.again.body': 'Pay again only if that was a mistake: money sent twice has to be asked back.',
   'counter.pay.tell.message': 'Hi {name}! Paid {amount} to {shop} for {title} ✓',
   'counter.pay.tell.message.cash': 'Hi {name}! Paid {amount} in cash to {shop} for {title} ✓',
 } satisfies Messages
