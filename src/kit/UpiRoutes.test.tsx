@@ -114,3 +114,33 @@ describe('Settle finds out the payment went through (Android app, payment alerts
     expect(onPaid).not.toHaveBeenCalled()
   })
 })
+
+describe('paying a shop (its own QR was scanned)', () => {
+  it('one tap opens the UPI app on the payment itself, any amount, with the shop’s category code', async () => {
+    const assign = vi.fn()
+    vi.stubGlobal('location', { ...window.location, assign })
+    const user = userEvent.setup()
+    render(<UpiRoutes payeeName="Fishermans Wharf" vpa="paytmqr2810@paytm" amount={480000} note="Dinner" color={2} phone platform="android" merchant mc="5812" onPaid={() => undefined} />)
+    expect(screen.getByText('Opens Google Pay on the payment to Fishermans Wharf, with ₹4,800 filled in. You only enter your PIN.')).toBeInTheDocument()
+    // No "may be refused" small print: a business takes a payment that starts from a link.
+    expect(screen.queryByRole('link', { name: /direct link/ })).not.toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Pay ₹4,800 with Google Pay' }))
+    expect(assign).toHaveBeenCalledWith('intent://pay?pa=paytmqr2810%40paytm&pn=Fishermans%20Wharf&mc=5812&am=4800.00&cu=INR&tn=Dinner#Intent;scheme=upi;package=com.google.android.apps.nbu.paisa.user;end')
+    expect(await screen.findByText('Opening Google Pay… Pay there, then come back here.')).toBeInTheDocument()
+    expect(shareFile).not.toHaveBeenCalled()
+    expect(copyText).not.toHaveBeenCalled()
+    vi.unstubAllGlobals()
+  })
+
+  it('a person is still paid the ways a person can be: nothing changes for them', async () => {
+    const assign = vi.fn()
+    vi.stubGlobal('location', { ...window.location, assign })
+    const user = userEvent.setup()
+    shareFile.mockResolvedValue('shared')
+    show(40000)
+    await user.click(screen.getByRole('button', { name: 'Pay ₹400 with Google Pay' }))
+    expect(assign).not.toHaveBeenCalled()
+    expect(shareFile).toHaveBeenCalledTimes(1)
+    vi.unstubAllGlobals()
+  })
+})

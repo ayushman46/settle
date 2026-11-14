@@ -54,8 +54,12 @@ const EXTRAS = [
   '/icon-512.png',
   '/icon-maskable-512.png',
 ]
-/** Old builds' assets are trimmed beyond this many entries (oldest first): room for a whole code-split build and then some. */
-const MAX_ASSETS = 160
+/**
+ * Old builds' assets are trimmed beyond this many entries (oldest first): room for a whole code-split
+ * build (some 450 files) and then some. The files the kept app shell loads are never trimmed, however
+ * old: without them the app opens to a blank page offline.
+ */
+const MAX_ASSETS = 700
 /** On a crawling connection, show the cached shell after this long instead of waiting. */
 const NAVIGATION_TIMEOUT_MS = 4000
 /** Paths that name a file ("/icon.svg") rather than an app route; mirrors server/web.ts. */
@@ -88,7 +92,30 @@ async function cached(cacheName, request) {
 
 async function trim(cache, max) {
   const keys = await cache.keys()
-  await Promise.all(keys.slice(0, Math.max(0, keys.length - max)).map((key) => cache.delete(key)))
+  let over = keys.length - max
+  if (over <= 0) return
+  // What the kept shell loads stays, whatever its age.
+  const needed = new Set()
+  try {
+    const shell = await cached(SHELL_CACHE, SHELL_KEY)
+    if (shell) for (const url of shellAssets(await shell.text())) needed.add(url)
+  } catch {
+    // No shell to protect.
+  }
+  const gone = []
+  for (const key of keys) {
+    if (over <= 0) break
+    let path = ''
+    try {
+      path = new URL(key.url).pathname
+    } catch {
+      path = ''
+    }
+    if (needed.has(path)) continue
+    gone.push(cache.delete(key))
+    over--
+  }
+  await Promise.all(gone)
 }
 
 /** Runs cache work in the background: it keeps the worker alive and never fails the request. */

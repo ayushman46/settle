@@ -122,8 +122,9 @@ export function paidMessage(payload: PayLinkPayload, person: Pick<PayPerson, 'am
   const amount = formatMoney(person.amount, payload.c, { trimZeros: true })
   const named = payload.to.n !== PAYEE_FALLBACK
   const vars = { name: firstName(payload.to.n), amount, title: payload.t }
-  const lines =
-    opts.how === 'cash'
+  const lines = payload.by
+    ? [t(opts.how === 'cash' ? 'counter.pay.tell.message.cash' : 'counter.pay.tell.message', { name: firstName(payload.by.n), shop: payload.to.n, amount, title: payload.t })]
+    : opts.how === 'cash'
       ? [named ? t('pay.tell.message.cash', vars) : t('pay.tell.message.cash.noName', vars)]
       : [named ? t('pay.tell.message', vars) : t('pay.tell.message.noName', vars)]
   if (opts.how !== 'cash' && opts.utr) lines.push(t('pay.tell.message.ref', { ref: formatUtr(opts.utr) }))

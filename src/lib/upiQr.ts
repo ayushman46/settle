@@ -101,24 +101,40 @@ async function readFromPixels(bitmap: ImageBitmap): Promise<string[]> {
   return []
 }
 
-/** Reads a UPI QR from a picture. Never throws. */
-export async function readUpiQr(picture: Blob): Promise<UpiQrResult> {
-  if (!canReadQr() || typeof createImageBitmap !== 'function') return { kind: 'unsupported' }
+/** What the QR codes in a picture say (none: an empty list), or null when this browser can't read pictures. Never throws. */
+export async function readQrTexts(picture: Blob): Promise<string[] | null> {
+  if (!canReadQr() || typeof createImageBitmap !== 'function') return null
   try {
     const bitmap = await createImageBitmap(picture)
     try {
-      let found = await readWithBrowser(bitmap)
-      if (found.length === 0) found = await readFromPixels(bitmap)
-      if (found.length === 0) return { kind: 'none' }
-      for (const text of found) {
-        const qr = parseUpiQr(text)
-        if (qr) return { kind: 'ok', qr }
-      }
-      return { kind: 'other' }
+      const found = await readWithBrowser(bitmap)
+      return found.length > 0 ? found : await readFromPixels(bitmap)
     } finally {
       bitmap.close()
     }
   } catch {
-    return { kind: 'none' }
+    return []
+  }
+}
+
+/** Reads a UPI QR from a picture. Never throws. */
+export async function readUpiQr(picture: Blob): Promise<UpiQrResult> {
+  const found = await readQrTexts(picture)
+  if (found === null) return { kind: 'unsupported' }
+  if (found.length === 0) return { kind: 'none' }
+  for (const text of found) {
+    const qr = parseUpiQr(text)
+    if (qr) return { kind: 'ok', qr }
+  }
+  return { kind: 'other' }
+}
+
+/** A frame of the camera, read for a QR (the live scanner): what it says, or null. Never throws. */
+export async function readQrFrame(image: ImageData): Promise<string | null> {
+  try {
+    const { default: jsQR } = await import('jsqr')
+    return jsQR(image.data, image.width, image.height, { inversionAttempts: 'dontInvert' })?.data || null
+  } catch {
+    return null
   }
 }

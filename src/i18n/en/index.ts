@@ -44,6 +44,7 @@ import { stuck } from './stuck'
 import { stuckhelp } from './stuckhelp'
 import { stuckalerts } from './stuckalerts'
 import { fees } from './fees'
+import { counter } from './counter'
 import { groupsync } from './groupsync'
 
 export const EN = {
@@ -89,6 +90,7 @@ export const EN = {
   ...stuckhelp,
   ...stuckalerts,
   ...fees,
+  ...counter,
   ...groupsync,
 } as const
 

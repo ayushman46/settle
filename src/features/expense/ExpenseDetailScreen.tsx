@@ -16,6 +16,7 @@ import { BRAND, ME_ID, type Expense } from '../../domain/types'
 import { collectProgress } from '../../engine/balances'
 import { useT } from '../../i18n'
 import { friendLabel } from '../../kit/index-a'
+import { CounterCard } from '../counter/CounterCard'
 import { CollectCard, NudgeSheet, ShareList, ShareSheet, upiPaymentForShare, UpiPaySheet, usePayLink } from '../../kit/index-b'
 import { haptic } from '../../lib/haptics'
 import { formatMoney } from '../../lib/money'
@@ -225,6 +226,8 @@ function ExpenseDetail({ expense, onDeleting }: ExpenseDetailProps) {
       <ExpenseExtensions expense={expense} />
 
       <CollectCard expense={expense} />
+
+      <CounterCard expense={expense} />
 
       <section className={styles.section} aria-labelledby="expense-shares">
         <SectionHeader

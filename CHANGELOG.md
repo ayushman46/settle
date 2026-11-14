@@ -1,5 +1,21 @@
 # Changelog
 
+## v8.2 — 14 Nov 2026
+
+**Pay at the counter: nobody fronts the bill.** Until now one person paid the whole bill and then collected from everyone. Now everyone pays the shop their own exact share, so there is nothing to collect.
+
+### New
+- **Everyone pays the shop.** On a bill you saved: "Pay at the counter" → scan the shop's UPI QR once (camera, or a photo of it; the standee on the counter or the QR printed on the bill). Each person's share, to the paisa, now goes straight to the shop.
+- **One link, or the QR on your screen.** Friends at the table scan your screen (or open the link from WhatsApp) on their own phone, with no app and no sign-up, pick their name and tap Pay.
+- **One tap into the UPI app, any amount.** A payment to a business may start from a link (it is a payment to a person that UPI apps refuse), so "Pay ₹600 with Google Pay" opens the app on the payment itself, with the shop and the amount filled in: only the PIN is left. A stall that uses a personal QR is paid the ways a person can be.
+- **The list ticks itself.** Your screen shows "2 of 4 paid · ₹1,200 of ₹2,400" and ticks each friend off as they pay on their phone: the screen to show the cashier. It runs on the same encrypted relay as shared groups (the secret travels only in the link); where the relay is off, friends send the usual "I've paid" message, or you tick them. Cash at the counter is one tap.
+- **Nobody owes anybody.** A friend who paid the shop is settled for that bill: marked paid back on a bill of its own, a payment of their share recorded in a group. Undo takes it back.
+- **Shops you've paid before need no scan.** The next bill at the same place is one tap.
+- **A QR made for one payment is called out.** If the QR carries a fixed amount (the whole bill), Settle says so and asks for the shop's own QR, since a till may expect a single payment.
+
+### Not yet tried on a physical phone
+- Whether each UPI app opens on the payment from the link for every kind of shop QR, and the camera scanner on real cameras. The journey is tested end to end in a browser (two phones, a real QR picture).
+
 ## v8.0 — 14 Nov 2026
 
 **Live groups, and paying through your UPI app.** A group is now the same on every friend's phone, and "Pay" hands the payment to Google Pay, PhonePe, Paytm or BHIM.

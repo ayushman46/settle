@@ -26,6 +26,7 @@ const KEYS = {
   letterMe: 'settle.v7.letter-me',
   fees: 'settle.v7.fees',
   groupSync: 'settle.v8.group-sync',
+  counter: 'settle.v8.counter',
 } as const satisfies typeof STORAGE_KEYS
 const STORAGE_VERSION = 1 satisfies typeof STORE_VERSION
 

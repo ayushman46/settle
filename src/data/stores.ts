@@ -44,6 +44,8 @@ export const STORAGE_KEYS = {
   fees: 'settle.v7.fees',
   /** Shared groups: which groups this phone shares, as whom, and with which of your people (src/features/groupsync/store.ts). */
   groupSync: 'settle.v8.group-sync',
+  /** Bills paid at the counter: the shop, the live list's secret, shops paid before (src/features/counter/store.ts). */
+  counter: 'settle.v8.counter',
 } as const
 
 /** Accepts a bare, un-enveloped value (e.g. hand-edited storage) when the schema can read it. */

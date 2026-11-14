@@ -27,14 +27,15 @@ export function RequestCard({ payload }: { payload: PayLinkPayload }) {
       </div>
       <h1 id="pay-request-title" className={styles.title}>
         {tx(
-          'pay.request.title',
-          { name: payload.to.n, title: payload.t },
+          payload.by ? 'counter.pay.request' : 'pay.request.title',
+          payload.by ? { shop: payload.to.n } : { name: payload.to.n, title: payload.t },
           {
             by: (chunk) => <span className={styles.by}>{chunk}</span>,
             what: (chunk) => <span className={styles.what}>{chunk}</span>,
           },
         )}
       </h1>
+      {payload.by && <p className={styles.meta}>{t('counter.pay.request.by', { title: payload.t, name: payload.by.n })}</p>}
       <p className={styles.meta}>{meta}</p>
       {payload.note && <p className={styles.note}>“{payload.note}”</p>}
       {progress.peopleCount > 1 && (
@@ -42,7 +43,7 @@ export function RequestCard({ payload }: { payload: PayLinkPayload }) {
           <ProgressRing value={owed > 0 ? progress.collected / owed : 0} size={40} stroke={5} />
           <p className={styles.progressText}>
             <span className={styles.collected}>
-              {t('pay.request.collected', { collected: money(progress.collected), owed: money(owed) })}
+              {t(payload.by ? 'counter.pay.collected' : 'pay.request.collected', { collected: money(progress.collected), owed: money(owed) })}
             </span>
             <span className={styles.count}>
               {t('pay.request.paidCount', { paid: progress.paidCount, count: progress.peopleCount })}

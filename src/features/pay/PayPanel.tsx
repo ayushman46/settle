@@ -22,6 +22,7 @@ import { cleanUtr, encodePaidReply, paidReplyFor, type PaidHow } from '../../sha
 import type { PayLinkPayload, PayLinkUpiRequest } from '../../share/payLink'
 import { firstName } from '../../share/text'
 import { extrasLabel, itemBreakdown, paidMessage, payeeColor, payOption, type PayPerson } from './payView'
+import type { CounterLiveState } from '../counter/live'
 import { UpiPayBlock } from './UpiPayBlock'
 import styles from './PayPanel.module.css'
 
@@ -32,13 +33,16 @@ export interface PayPanelProps {
   onChangePerson?: () => void
   /** The panel's heading (focused when the panel opens). */
   headingRef?: Ref<HTMLHeadingElement>
+  /** Paying a shop at the counter: is its live list reachable, and the way to say "I've paid" on it. */
+  live?: CounterLiveState
+  onMark?: (how: 'upi' | 'cash') => void
 }
 
 /**
  * One person's view of the request: their share, big; how to pay it (a UPI app on this phone,
  * a QR code from a computer, or the payee's UPI ID); who the money goes to; and what's in it.
  */
-export function PayPanel({ payload, person, onChangePerson, headingRef }: PayPanelProps) {
+export function PayPanel({ payload, person, onChangePerson, headingRef, live, onMark }: PayPanelProps) {
   const t = useT()
   const lang = useLang()
   const headingId = useId()
@@ -49,6 +53,9 @@ export function PayPanel({ payload, person, onChangePerson, headingRef }: PayPan
   const words = lang === 'en' ? amountInWords(person.amount, payload.c) : null
   const showPayment = !person.paid || reveal
   const tellRef = useRef<HTMLParagraphElement>(null)
+  // At the counter with the live list up: paying ticks you off there, nothing to send.
+  const ticks = payload.by !== undefined && live === 'live' && onMark !== undefined
+  const organiser = payload.by ? firstName(payload.by.n) : ''
 
   return (
     <section className={styles.panel} aria-labelledby={headingId}>
@@ -81,8 +88,8 @@ export function PayPanel({ payload, person, onChangePerson, headingRef }: PayPan
         <div className={styles.paid}>
           <SuccessCheck size="md" />
           <div>
-            <p className={styles.paidTitle}>{t('pay.panel.paid.title')}</p>
-            <p className={styles.paidText}>{t('pay.panel.paid.body', { name: payload.to.n })}</p>
+            <p className={styles.paidTitle}>{payload.by ? t('counter.pay.done.title') : t('pay.panel.paid.title')}</p>
+            <p className={styles.paidText}>{payload.by ? t('counter.pay.done.body', { name: organiser }) : t('pay.panel.paid.body', { name: payload.to.n })}</p>
           </div>
           {option.kind === 'upi' && (
             <Button variant="ghost" size="md" onClick={() => setReveal(true)} className={styles.reveal}>
@@ -97,6 +104,11 @@ export function PayPanel({ payload, person, onChangePerson, headingRef }: PayPan
           payload={payload}
           request={option.request}
           onPaid={() => {
+            if (ticks) {
+              haptic('success')
+              onMark('upi')
+              return
+            }
             // "Yes, I paid": on to telling them.
             const title = tellRef.current
             if (title && typeof title.scrollIntoView === 'function') title.scrollIntoView({ block: 'center' })
@@ -120,7 +132,15 @@ export function PayPanel({ payload, person, onChangePerson, headingRef }: PayPan
         </Banner>
       )}
 
-      {!person.paid && option.kind !== 'nothing' && <TellThem payload={payload} person={person} titleRef={tellRef} />}
+      {ticks && !person.paid && option.kind !== 'nothing' && (
+        <div className={styles.tell}>
+          <p className={styles.tellStatus}>{t('counter.pay.live', { name: organiser })}</p>
+          <Button variant="ghost" size="md" block onClick={() => onMark('cash')}>
+            {t('counter.pay.cash')}
+          </Button>
+        </div>
+      )}
+      {!ticks && !person.paid && option.kind !== 'nothing' && <TellThem payload={payload} person={person} titleRef={tellRef} />}
 
       {breakdown && (
         <section className={styles.breakdown} aria-labelledby={`${headingId}-items`}>
@@ -171,6 +191,8 @@ function UpiPay({ payload, request, onPaid }: { payload: PayLinkPayload; request
       currency={payload.c}
       color={payeeColor(payload)}
       onPaid={onPaid}
+      merchant={payload.to.m === 1}
+      mc={payload.to.mc}
     />
   )
 }
@@ -210,8 +232,9 @@ function TellThem({ payload, person, titleRef }: { payload: PayLinkPayload; pers
   const reply = useReplyLink(payload, person.index, how, utr)
   // Links without an expense id (older ones) still get the plain message.
   const ready = reply.key === '' || reply.link !== null
-  const name = firstName(payload.to.n)
-  const phone = payload.to.ph ?? null
+  // At the counter the money went to the shop: the message goes to whoever set it up.
+  const name = firstName((payload.by ?? payload.to).n)
+  const phone = (payload.by ? payload.by.ph : payload.to.ph) ?? null
 
   const send = async () => {
     const message = paidMessage(payload, person, { how, utr, link: reply.link })

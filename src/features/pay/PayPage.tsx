@@ -1,10 +1,11 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useBackClose, useLocation } from '../../app/router'
 import { Skeleton } from '../../components'
 import { BRAND } from '../../domain/types'
 import { useT } from '../../i18n'
 import { LanguageSwitcher } from '../../i18n/ui/LanguageSwitcher'
 import type { PayLinkPayload } from '../../share/payLink'
+import { useCounterMarks, withMarks, type Marks } from '../counter/live'
 import { usePageMeta } from '../landing/pageMeta'
 import { PayPanel } from './PayPanel'
 import { payPeople } from './payView'
@@ -27,7 +28,11 @@ function prefersReducedMotion(): boolean {
  * returns to the names. With just one person on the link, or a personal link (`f`), their share
  * opens straight away.
  */
-function PayRequest({ payload }: { payload: PayLinkPayload }) {
+function PayRequest({ payload: linked }: { payload: PayLinkPayload }) {
+  // Paying a shop at the counter: the live list says who has paid, and hears it when this person does.
+  const [mine, setMine] = useState<Marks>({})
+  const live = useCounterMarks(linked.k ?? null, mine)
+  const payload = useMemo(() => withMarks(linked, live.marks), [linked, live.marks])
   const people = payPeople(payload)
   const only = people.length === 1 ? (people[0] ?? null) : null
   const forIndex = payload.f !== undefined && people.some((p) => p.index === payload.f) ? payload.f : null
@@ -71,6 +76,8 @@ function PayRequest({ payload }: { payload: PayLinkPayload }) {
           person={person}
           headingRef={headingRef}
           onChangePerson={only ? undefined : () => setPicked(null)}
+          live={linked.k ? live.state : undefined}
+          onMark={linked.k ? (how) => setMine((had) => ({ ...had, [String(person.index)]: { t: Date.now(), h: how } })) : undefined}
         />
       ) : (
         <div ref={listRef}>

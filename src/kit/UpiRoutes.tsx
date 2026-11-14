@@ -38,7 +38,7 @@ export const NOT_OPENED_MS = 2500
 type Route = 'gallery' | 'id'
 type Copied = 'id' | 'amount' | 'failed' | null
 /** Where the one-tap "Pay with …" got to: the QR handed to the app, the QR saved, or the UPI ID copied (and the app opened). */
-type Quick = 'idle' | 'working' | 'sent' | 'saved' | 'copied' | 'failed'
+type Quick = 'idle' | 'working' | 'sent' | 'saved' | 'copied' | 'failed' | 'opened'
 
 export interface UpiRoutesProps {
   /** Who the money goes to (as their UPI app will show it, roughly: apps show the bank's name). */
@@ -59,6 +59,13 @@ export interface UpiRoutesProps {
   onStarted?: () => void
   /** "Yes, I paid" when they come back from their UPI app. Without it, no question is asked. */
   onPaid?: () => void
+  /**
+   * The payee is a business (its own QR was scanned): UPI apps take a payment to a business that
+   * starts from a link, whatever the amount, so "Pay" opens the app on the payment itself.
+   */
+  merchant?: boolean
+  /** The business's category code from its QR. */
+  mc?: string | null
 }
 
 /**
@@ -75,10 +82,10 @@ export interface UpiRoutesProps {
  * Then the payee (their UPI ID with Copy, and a name check), a "Did you pay?" when they come back,
  * and what to do when a payment doesn't go through.
  */
-export function UpiRoutes({ payeeName, vpa, amount, note, color, phone, platform = payPlatform(), onStarted, onPaid }: UpiRoutesProps) {
+export function UpiRoutes({ payeeName, vpa, amount, note, color, phone, platform = payPlatform(), onStarted, onPaid, merchant = false, mc = null }: UpiRoutesProps) {
   const t = useT()
   const helpId = useId()
-  const small = amount > 0 && amount <= GALLERY_QR_MAX_PAISE
+  const small = amount > 0 && (merchant || amount <= GALLERY_QR_MAX_PAISE)
   const [picked, setPicked] = useState<Route | null>(null)
   const route: Route = small ? (picked ?? 'gallery') : 'id'
   const [screenQr, setScreenQr] = useState(false)
@@ -99,7 +106,7 @@ export function UpiRoutes({ payeeName, vpa, amount, note, color, phone, platform
   }, [onPaid])
   useEffect(() => () => stopWatch.current?.(), [])
   const watch = useRef<number | undefined>(undefined)
-  const uri = buildUpiLink({ vpa, payeeName, amountMinor: amount, note })
+  const uri = buildUpiLink({ vpa, payeeName, amountMinor: amount, note, mc: merchant ? mc : null })
   const money = formatMoney(amount, 'INR', { trimZeros: true })
   const hasAmount = amount > 0
   const qrLabel = hasAmount ? t('kit.upiPay.qr.aria', { amount: money, name: payeeName }) : t('kit.upiPay.qr.aria.noAmount', { name: payeeName })
@@ -166,8 +173,16 @@ export function UpiRoutes({ payeeName, vpa, amount, note, color, phone, platform
   const quickPay = async (): Promise<void> => {
     if (quick === 'working') return
     setPayApp(app.id)
-    setQuick('working')
     const native = canPayInApp()
+    // A shop: straight to the UPI app, on the payment, the shop and the amount filled in.
+    const shopHref = merchant && !native ? directPayHref(app, platform, uri) : null
+    if (shopHref) {
+      openApp(app)
+      setQuick('opened')
+      window.location.assign(shopHref)
+      return
+    }
+    setQuick('working')
     if (small) {
       const qr = await picture()
       if (qr && native && (await sendQrToApp(qr, pictureName, ANDROID_PACKAGES[app.id]))) {
@@ -239,7 +254,13 @@ export function UpiRoutes({ payeeName, vpa, amount, note, color, phone, platform
 
   const direct = directPayHref(app, platform, uri)
   const quickStatus =
-    quick === 'sent'
+    quick === 'opened'
+      ? t('kit.upiPay.quick.opened', { app: app.name })
+      : merchant && quick === 'idle' && direct && !canPayInApp()
+        ? hasAmount
+          ? t('kit.upiPay.quick.lead.shop', { app: app.name, name: payeeName, amount: money })
+          : t('kit.upiPay.quick.lead.shop.noAmount', { app: app.name, name: payeeName })
+        : quick === 'sent'
       ? canPayInApp()
         ? t('kit.upiPay.quick.sent.app', { app: app.name, name: payeeName })
         : t('kit.upiPay.quick.sent', { app: app.name, name: payeeName })
@@ -308,7 +329,7 @@ export function UpiRoutes({ payeeName, vpa, amount, note, color, phone, platform
             <p className={quick === 'failed' ? styles.problem : styles.lead} role="status">
               {quickStatus}
             </p>
-            {direct && (
+            {direct && !merchant && (
               <p className={styles.fine}>
                 <a className={styles.direct} data-direct="" href={direct} onClick={() => openApp(app)}>
                   {t('kit.upiPay.quick.direct', { app: app.name })}

@@ -53,7 +53,14 @@ export interface PayLinkPayload {
    * The payee — who paid and is collecting — their UPI ID, and their phone (international digits,
    * only when the link is their own) so "I've paid" goes straight to their chat.
    */
-  to: { n: string; u: string | null; ph?: string }
+  to: { n: string; u: string | null; ph?: string; m?: 1; mc?: string }
+  /**
+   * "Pay at the counter": `to` is a shop (`to.m`, with the category code from its QR in `to.mc`) and
+   * everyone pays it their own share. `by` is whoever set it up (their phone, only on their own link),
+   * and `k` the secret of the live list of who has paid.
+   */
+  by?: { n: string; ph?: string }
+  k?: string
   /** What was paid in total. */
   tot: Minor
   /** Everyone in the split, in the expense's order (the payee included when they took part). */
@@ -104,7 +111,11 @@ const payloadSchema = z.object({
     n: z.string().check(z.maxLength(L.name.units)),
     u: z.catch(z.nullable(z.string().check(z.maxLength(330))), null),
     ph: z.optional(z.catch(z.string().check(z.maxLength(20)), '')),
+    m: z.optional(z.literal(1)),
+    mc: z.optional(z.string().check(z.maxLength(8))),
   }),
+  by: z.optional(z.object({ n: z.string().check(z.maxLength(L.name.units)), ph: z.optional(z.catch(z.string().check(z.maxLength(20)), '')) })),
+  k: z.optional(z.string().check(z.maxLength(64))),
   tot: amount,
   p: z
     .array(
@@ -202,6 +213,17 @@ function normalizePayload(raw: PayLinkPayload): PayLinkPayload {
   }
   const phone = normalizePhone(raw.to.ph)
   if (phone) payload.to.ph = phone
+  if (raw.to.m === 1) {
+    payload.to.m = 1
+    if (raw.to.mc && /^\d{4}$/.test(raw.to.mc)) payload.to.mc = raw.to.mc
+  }
+  if (raw.by) {
+    const by: { n: string; ph?: string } = { n: cleanText(raw.by.n, L.name.graphemes, L.name.units) || friendFallback() }
+    const byPhone = normalizePhone(raw.by.ph)
+    if (byPhone) by.ph = byPhone
+    payload.by = by
+  }
+  if (raw.k && /^[A-Za-z0-9_-]{16,64}$/.test(raw.k)) payload.k = raw.k
   if (raw.id && /^[A-Za-z0-9_-]{1,64}$/.test(raw.id)) payload.id = raw.id
   if (raw.f !== undefined && Number.isInteger(raw.f) && raw.f >= 0 && raw.f < people.length && raw.f !== payload.pi) payload.f = raw.f
   const note = raw.note ? cleanText(raw.note, L.note.graphemes, L.note.units) : ''
@@ -215,8 +237,8 @@ function normalizePayload(raw: PayLinkPayload): PayLinkPayload {
 
 function serialize(payload: PayLinkPayload): string {
   // Explicit key order keeps links stable for the same payload.
-  const { v, id, t, cat, c, d, to, tot, p, pi, f, note, items } = payload
-  return JSON.stringify({ v, id, t, cat, c, d, to: { n: to.n, u: to.u, ph: to.ph }, tot, p, pi, f, note, items })
+  const { v, id, t, cat, c, d, to, by, k, tot, p, pi, f, note, items } = payload
+  return JSON.stringify({ v, id, t, cat, c, d, to: { n: to.n, u: to.u, ph: to.ph, m: to.m, mc: to.mc }, by, k, tot, p, pi, f, note, items })
 }
 
 /** The canonical JSON for a payload, shrunk (items, then the note) until it fits the size cap. */
@@ -478,5 +500,5 @@ export function payLinkUpiRequest(payload: PayLinkPayload, personIndex: number):
   const vpa = payload.to.u ? normalizeUpiId(payload.to.u) : ''
   if (!person || personIndex === payload.pi || person.a <= 0 || payload.c !== 'INR' || !isValidUpiId(vpa)) return null
   const amount = leftToPay(person)
-  return { uri: buildUpiLink({ vpa, payeeName: payload.to.n, amountMinor: amount, note: payload.t }), vpa, amount }
+  return { uri: buildUpiLink({ vpa, payeeName: payload.to.n, amountMinor: amount, note: payload.t, mc: payload.to.m === 1 ? payload.to.mc : null }), vpa, amount }
 }

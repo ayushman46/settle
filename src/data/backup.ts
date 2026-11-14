@@ -48,6 +48,7 @@ import { LEGACY_KEYS } from './legacy'
 import { letterMeStore } from '../features/stuck/letterMe'
 import { emptyFees, feesSchema, feesStore, type FeesState } from '../features/fees/store'
 import { groupSyncSchema, groupSyncStore, type GroupSyncState } from '../features/groupsync/store'
+import { counterStore } from '../features/counter/store'
 
 export const BACKUP_VERSION = 4
 
@@ -426,7 +427,7 @@ export function clearAllData(): void {
       // Blocked storage — the in-memory reset below still applies.
     }
   }
-  for (const store of [profileStore, friendsStore, expensesStore, groupsStore, recurringStore, poolsStore, claimsStore, proofRefsStore, payerAliasesStore, remindersStore, autoSettleStore, stuckStore, stuckSeenStore, letterMeStore, feesStore, groupSyncStore])
+  for (const store of [profileStore, friendsStore, expensesStore, groupsStore, recurringStore, poolsStore, claimsStore, proofRefsStore, payerAliasesStore, remindersStore, autoSettleStore, stuckStore, stuckSeenStore, letterMeStore, feesStore, groupSyncStore, counterStore])
     store.reload()
   clearSplitPrefill()
 }

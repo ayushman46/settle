@@ -167,7 +167,7 @@ afterEach(() => {
 const SHELL = 'settle-shell-v4'
 const ASSETS = 'settle-assets-v4'
 /** Asset cache size limit (mirrors MAX_ASSETS in sw.js). */
-const MAX_ASSETS = 160
+const MAX_ASSETS = 700
 
 /** The deployed build: its shell and every file the shell loads. */
 const BUILD = {
@@ -322,6 +322,23 @@ describe('service worker', () => {
     const keys = await assets.keys()
     expect(keys).toHaveLength(MAX_ASSETS)
     expect(keys[0]?.url).toBe(`${ORIGIN}/assets/chunk-5.js`)
+  })
+
+  it('never trims the files the kept app shell loads, however old they are', async () => {
+    const sw = boot()
+    await (await sw.caches.open(SHELL)).put('/', basic('<html><script type="module" src="/assets/entry.js"></script><link rel="stylesheet" href="/assets/entry.css"></html>', 'text/html'))
+    network = () => basic('x')
+    // The shell's own files are the oldest in the cache…
+    await sw.get('/assets/entry.js')
+    await sw.get('/assets/entry.css')
+    for (let i = 0; i < MAX_ASSETS + 5; i++) await sw.get(`/assets/chunk-${i}.js`)
+    const assets = await sw.caches.open(ASSETS)
+    const urls = (await assets.keys()).map((key) => new URL(key.url).pathname)
+    // …and still there: the oldest of the others went instead.
+    expect(urls).toHaveLength(MAX_ASSETS)
+    expect(urls).toContain('/assets/entry.js')
+    expect(urls).toContain('/assets/entry.css')
+    expect(urls).not.toContain('/assets/chunk-0.js')
   })
 
   it('falls back to the installed copy of other files when offline', async () => {

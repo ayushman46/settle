@@ -84,6 +84,20 @@ export async function seal(text: string, key: string): Promise<string> {
   return bytesToBase64Url(out)
 }
 
+/** The text inside what the server kept, or null when it wasn't made with this secret (or is damaged). */
+export async function unsealText(data: string, key: string): Promise<string | null> {
+  try {
+    const bytes = base64UrlToBytes(data)
+    if (!bytes || bytes.length < 30) return null
+    const iv = bytes.slice(1, 13)
+    const opened = new Uint8Array(await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, await aesKey(key), bytes.slice(13)))
+    const plain = bytes[0] === 1 ? await inflate(opened, MAX_COPY_BYTES) : opened
+    return plain ? new TextDecoder('utf-8', { fatal: true }).decode(plain) : null
+  } catch {
+    return null
+  }
+}
+
 /** The copy inside what the server kept, or null when it wasn't made with this secret (or is damaged). */
 export async function unseal(data: string, key: string): Promise<WireGroup | null> {
   try {

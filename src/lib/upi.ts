@@ -71,13 +71,16 @@ export interface UpiLinkInput {
   amountMinor: Minor
   /** Transaction note, e.g. the restaurant. Defaults to "Bill split". */
   note?: string | null
+  /** A shop's merchant category code from its own QR (four digits): tells the UPI app this is a payment to a business. */
+  mc?: string | null
 }
 
 /** `upi://pay?pa=…&pn=…&am=…&cu=INR&tn=…` with every parameter URL-encoded. */
-export function buildUpiLink({ vpa, payeeName, amountMinor, note }: UpiLinkInput): string {
+export function buildUpiLink({ vpa, payeeName, amountMinor, note, mc }: UpiLinkInput): string {
   const params: Array<[string, string]> = [['pa', normalizeUpiId(vpa)]]
   const name = cleanText(payeeName, MAX_NAME)
   if (name) params.push(['pn', name])
+  if (mc && /^\d{4}$/.test(mc)) params.push(['mc', mc])
   if (Number.isFinite(amountMinor) && amountMinor > 0) {
     params.push(['am', toInputString(Math.round(amountMinor), 'INR')])
   }

@@ -48,6 +48,7 @@ import { stuck } from './stuck'
 import { stuckhelp } from './stuckhelp'
 import { stuckalerts } from './stuckalerts'
 import { fees } from './fees'
+import { counter } from './counter'
 import { groupsync } from './groupsync'
 
 export const TE: Messages = {
@@ -93,6 +94,7 @@ export const TE: Messages = {
   ...stuckhelp,
   ...stuckalerts,
   ...fees,
+  ...counter,
   ...groupsync,
 }
 

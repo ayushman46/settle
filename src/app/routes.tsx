@@ -229,6 +229,11 @@ const PaidReplyScreen = lazyScreen(
   () => import('../features/expense/PaidReplyScreen'),
   (m) => m.PaidReplyScreen,
 )
+const CounterScreen = lazyScreen(
+  'CounterScreen',
+  () => import('../features/counter/CounterScreen'),
+  (m) => m.CounterScreen,
+)
 const StuckScreen = lazyScreen(
   'StuckScreen',
   () => import('../features/stuck/StuckScreen'),
@@ -292,6 +297,7 @@ export const APP_ROUTES: readonly AppRoute[] = [
   { pattern: '/app/proof', screen: ProofScreen, title: 'Paid? Drop the screenshot', tab: null },
   { pattern: '/app/lend/:id/edit', screen: LendScreen, title: 'Edit udhaar', tab: null },
   { pattern: '/app/expense/:id', screen: ExpenseDetailScreen, title: 'Expense', tab: null },
+  { pattern: '/app/counter/:id', screen: CounterScreen, title: 'Pay at the counter', tab: null },
   { pattern: '/app/paid', screen: PaidReplyScreen, title: 'Payment', tab: null },
   { pattern: '/app/bill', screen: BillFlow, title: null, tab: null },
   { pattern: '/app/claims/in', screen: ClaimReplyScreen, title: 'Claims', tab: null },
