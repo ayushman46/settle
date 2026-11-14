@@ -74,7 +74,17 @@ test.describe('collections', () => {
     // Paying by UPI ID: copy it, off to the UPI app, and back — it asks whether it went through.
     await other.getByRole('radio', { name: 'UPI ID' }).click()
     await other.getByRole('button', { name: 'Copy UPI ID' }).first().click()
-    await other.evaluate(() => document.dispatchEvent(new Event('visibilitychange')))
+    // The copy has gone through (that's what counts as setting off to pay)…
+    await expect(other.getByText('Copied').first()).toBeVisible()
+    // …then the page hides behind the UPI app and comes back, as on a phone.
+    await other.evaluate(() => {
+      const show = (state: 'hidden' | 'visible') => {
+        Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => state })
+        document.dispatchEvent(new Event('visibilitychange'))
+      }
+      show('hidden')
+      show('visible')
+    })
     await other.getByRole('button', { name: 'Yes, I have' }).click()
     await expect(other.getByRole('checkbox', { name: 'I’ve paid ₹500' })).toBeChecked()
 

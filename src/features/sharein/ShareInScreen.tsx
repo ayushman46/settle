@@ -2,7 +2,7 @@ import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 're
 import { ClipboardPaste, LockKeyhole, ScanText, Smartphone } from 'lucide-react'
 import { goBack, navigate, Redirect, useSearchParams } from '../../app/router'
 import { Banner, Button, PageTitle, Screen, Skeleton, TopBar, useToast } from '../../components'
-import { setSplitPrefill } from '../../data'
+import { setSplitPrefill, updateProfile } from '../../data'
 import { ME_ID } from '../../domain/types'
 import { today as todayIso } from '../../engine/dates'
 import { t as tOption, useT } from '../../i18n'
@@ -11,6 +11,7 @@ import { useMediaQuery } from '../../kit/media'
 import { haptic } from '../../lib/haptics'
 import { formatMoney } from '../../lib/money'
 import { readSharedPayload, type SharedPayload } from '../../lib/sharedPayload'
+import { readUpiQr, type UpiQr } from '../../lib/upiQr'
 import { setSharedPhoto } from '../../state/sharedPhoto'
 import { openBill } from '../bill/launch'
 import { readStuckMessage } from '../stuck/detect'
@@ -36,6 +37,8 @@ type Load =
   | { kind: 'loading' }
   /** The share couldn't be picked up (`?missed=1`, or the stored share is gone). */
   | { kind: 'missed' }
+  /** A shared picture that is a UPI QR: yours (connect it) or a bill's (scan it)? */
+  | { kind: 'qr'; qr: UpiQr; photo: File }
 
 /** `/app/share` — split from a bank SMS or UPI alert: pasted here, or shared in from another app. */
 export function ShareInScreen() {
@@ -93,6 +96,10 @@ function ShareIn() {
       }
       const handled = await takeShare(payload, () => toast(t('sharein.shared.firstPhoto.toast')))
       if (!live || handled === 'left') return
+      if (handled.kind === 'qr') {
+        setLoad(handled)
+        return
+      }
       setLoad({ kind: 'paste' })
       if (handled.kind === 'text') read(handled.text, { fromShare: true })
     })()
@@ -146,6 +153,29 @@ function ShareIn() {
             <Skeleton width="40%" />
           </div>
         </div>
+      </Screen>
+    )
+  }
+
+  if (load.kind === 'qr') {
+    const { qr, photo } = load
+    return (
+      <Screen header={<TopBar onBack={() => goBack('/app')} />} contentClassName={styles.content}>
+        <PageTitle title={t('kit.connect.shared.title')} subtitle={qr.name ? t('kit.connect.shared.body', { upi: qr.vpa, name: qr.name }) : t('kit.connect.shared.body.noName', { upi: qr.vpa })} />
+        <Button
+          block
+          onClick={() => {
+            updateProfile({ upiId: qr.vpa })
+            haptic('success')
+            toast(t('kit.connect.shared.done', { upi: qr.vpa }), { tone: 'success' })
+            navigate('/app', { replace: true })
+          }}
+        >
+          {t('kit.connect.shared.mine')}
+        </Button>
+        <Button block variant="secondary" onClick={() => scanPhoto(photo)}>
+          {t('kit.connect.shared.bill')}
+        </Button>
       </Screen>
     )
   }
@@ -285,15 +315,24 @@ function ShareIn() {
 }
 
 /** Photos go to the bill scan; a Settle link opens; text comes back to be read here. */
-async function takeShare(payload: SharedPayload, onManyPhotos: () => void): Promise<'left' | { kind: 'text'; text: string }> {
+/** A shared photo, off to the bill scan. Back from the scan returns Home, not to this in-between page. */
+function scanPhoto(photo: File): void {
+  setSharedPhoto(photo)
+  navigate('/app', { replace: true })
+  openBill({ kind: 'photo' })
+}
+
+async function takeShare(payload: SharedPayload, onManyPhotos: () => void): Promise<'left' | { kind: 'text'; text: string } | { kind: 'qr'; qr: UpiQr; photo: File }> {
   const images = payload.files.filter((f) => f.type.startsWith('image/'))
   const first = images[0]
   if (first) {
-    setSharedPhoto(first)
+    // Your own QR, shared from your UPI app (Connect Google Pay with no screenshot)? A bill can carry a shop's QR too, so it's asked, never assumed.
+    if (images.length === 1) {
+      const read = await readUpiQr(first)
+      if (read.kind === 'ok') return { kind: 'qr', qr: read.qr, photo: first }
+    }
     if (images.length > 1) onManyPhotos()
-    // Back from the scan returns Home, not to this in-between page.
-    navigate('/app', { replace: true })
-    openBill({ kind: 'photo' })
+    scanPhoto(first)
     return 'left'
   }
   let fileText = ''

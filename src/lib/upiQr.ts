@@ -3,7 +3,7 @@
  * `upi://pay?pa=<your UPI ID>&pn=<the name on your bank account>` link. Reading a picture of it
  * (a screenshot, or the image the app shares) gives the ID exactly as the bank has it — no typos —
  * and the name to check it against. Read on the phone with the browser's own barcode reader
- * (Chrome and the Android app have one; where there's none, the ID is typed as before). Nothing
+ * (Chrome and the Android app have one) or, where there is none (Safari on iPhone), with a reader built into Settle. Nothing
  * is uploaded.
  */
 import { isValidUpiId, normalizeUpiId } from './upi'
@@ -44,9 +44,14 @@ function detectorClass(): DetectorClass | null {
   return typeof found === 'function' ? found : null
 }
 
+/** The picture can be opened and its pixels read (every current phone browser, iPhone included). */
+function canReadPixels(): boolean {
+  return typeof createImageBitmap === 'function' && typeof document !== 'undefined'
+}
+
 /** This browser can read a QR from a picture. */
 export function canReadQr(): boolean {
-  return detectorClass() !== null
+  return detectorClass() !== null || canReadPixels()
 }
 
 export type UpiQrResult =
@@ -58,17 +63,55 @@ export type UpiQrResult =
   /** This browser can't read pictures of QR codes. */
   | { kind: 'unsupported' }
 
+/** The longest side a picture is read at: a phone screenshot fits, a 12 MP photo is shrunk. */
+const MAX_SIDE = 2000
+
+/** The browser's own reader, where there is one (Chrome on Android, the Android app). */
+async function readWithBrowser(bitmap: ImageBitmap): Promise<string[]> {
+  const Reader = detectorClass()
+  if (!Reader) return []
+  try {
+    const found = await new Reader({ formats: ['qr_code'] }).detect(bitmap)
+    return found.map((code) => code.rawValue ?? '').filter(Boolean)
+  } catch {
+    return []
+  }
+}
+
+/** Our own reader, on the phone, for browsers without one (Safari on iPhone, Firefox). */
+async function readFromPixels(bitmap: ImageBitmap): Promise<string[]> {
+  if (typeof document === 'undefined') return []
+  const { default: jsQR } = await import('jsqr')
+  const longest = Math.max(bitmap.width, bitmap.height) || 1
+  // Full size first; a second, smaller pass picks up QRs that fill a very large picture.
+  for (const scale of [Math.min(1, MAX_SIDE / longest), Math.min(1, 800 / longest)]) {
+    const width = Math.max(1, Math.round(bitmap.width * scale))
+    const height = Math.max(1, Math.round(bitmap.height * scale))
+    const canvas = document.createElement('canvas')
+    canvas.width = width
+    canvas.height = height
+    const context = canvas.getContext('2d', { willReadFrequently: true })
+    if (!context) return []
+    context.drawImage(bitmap, 0, 0, width, height)
+    const image = context.getImageData(0, 0, width, height)
+    const code = jsQR(image.data, image.width, image.height, { inversionAttempts: 'attemptBoth' })
+    if (code?.data) return [code.data]
+    if (scale === 1 && longest <= 800) break
+  }
+  return []
+}
+
 /** Reads a UPI QR from a picture. Never throws. */
 export async function readUpiQr(picture: Blob): Promise<UpiQrResult> {
-  const Reader = detectorClass()
-  if (!Reader) return { kind: 'unsupported' }
+  if (!canReadQr() || typeof createImageBitmap !== 'function') return { kind: 'unsupported' }
   try {
     const bitmap = await createImageBitmap(picture)
     try {
-      const found = await new Reader({ formats: ['qr_code'] }).detect(bitmap)
+      let found = await readWithBrowser(bitmap)
+      if (found.length === 0) found = await readFromPixels(bitmap)
       if (found.length === 0) return { kind: 'none' }
-      for (const code of found) {
-        const qr = parseUpiQr(code.rawValue ?? '')
+      for (const text of found) {
+        const qr = parseUpiQr(text)
         if (qr) return { kind: 'ok', qr }
       }
       return { kind: 'other' }

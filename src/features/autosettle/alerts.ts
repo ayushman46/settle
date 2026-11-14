@@ -113,6 +113,35 @@ export function alertToCredit(alert: RawAlert): AlertCredit | null {
   }
 }
 
+/** Money that went out of your account and got there: "You paid ₹400 to Riya", "Payment successful", a bank's "debited". */
+const PAID_OUT = /\b(?:you paid|you sent|you have paid|paid to|sent to|payment to|payment (?:was |is )?successful|paid successfully|sent successfully|transaction successful|debited)\b/i
+/** …unless it didn't get there, is still on its way, or is something else altogether. */
+const NOT_PAID_OUT = /\b(?:failed|failure|declined|unsuccessful|pending|processing|request|requested|requesting|refund|refunded|reversed|reversal|cashback|cash back|otp|paid you|sent you|received)\b/i
+
+/**
+ * A payment you made that went through, as an alert tells it (a UPI app's "You paid ₹400 to Riya",
+ * or the bank's debit SMS), or null. For a pay sheet waiting to hear that its payment was made
+ * (src/lib/payWatch.ts): the amount and when, nothing else.
+ */
+export function alertToPaidOut(alert: RawAlert): { amount: number; at: number } | null {
+  try {
+    if (alert.app in MERCHANT_APPS) return null
+    const text = `${alert.title}\n${alert.text}`
+    if (NOT_PAID_OUT.test(text)) return null
+    if (alert.app in UPI_APPS) {
+      if (!PAID_OUT.test(text)) return null
+      const amountMatch = AMOUNT.exec(text)
+      const amount = amountMatch?.[1] ? paise(amountMatch[1]) : null
+      return amount === null ? null : { amount, at: alert.postedAt }
+    }
+    const parsed = parseSms(alert.text, { today: dayOf(alert.postedAt) })
+    if (parsed.kind !== 'txn' || parsed.dir !== 'debit' || parsed.refund) return null
+    return { amount: parsed.amount, at: alert.postedAt }
+  } catch {
+    return null
+  }
+}
+
 /** The phone's alerts, checked field by field (anything odd is dropped). */
 export function readRawAlerts(value: unknown): RawAlert[] {
   if (!Array.isArray(value)) return []

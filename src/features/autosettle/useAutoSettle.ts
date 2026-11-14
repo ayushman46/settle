@@ -23,7 +23,8 @@ import { merchantById } from '../stuck/merchants'
 import { backInPart, backParts, compensationDue, daysLate, stillOwed } from '../stuck/rules'
 import { alertSignals, trackStuckSignals, type TrackResult } from '../stuck/track'
 import { undoMatches } from '../whospaid/sources'
-import { readRawAlerts } from './alerts'
+import { paymentsSeen } from '../../lib/payWatch'
+import { alertToPaidOut, readRawAlerts } from './alerts'
 import { settleAlerts, type AutoSettleResult } from './autoSettle'
 
 /** The native plugin (android/…/PaymentAlertsPlugin.java). */
@@ -147,6 +148,8 @@ export function useAutoSettle(): void {
       try {
         const { alerts } = await callPlugin<{ alerts?: unknown }>(PAYMENT_ALERTS, 'drain')
         const raw = readRawAlerts(alerts)
+        // A pay sheet waiting to hear its payment went through: told first, so it records itself.
+        paymentsSeen(raw.map(alertToPaidOut).filter((o): o is NonNullable<typeof o> => o !== null))
         let ticked = false
         try {
           ticked = tellTicked(settleAlerts(raw))

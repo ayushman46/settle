@@ -6,7 +6,8 @@
  */
 import { callApi, isRecord } from '../../api/http'
 import { HISTORY_CUES, PAYMENT_STATUSES, type HistoryRow } from '../../../shared/api'
-import { recordPartPayment, recordSettlement, deleteSettlement, setPaidBack } from '../../data'
+import { deleteSettlement, friendsStore, recordPartPayment, recordSettlement, setPaidBack, updateFriend } from '../../data'
+import { isValidUpiId, normalizeUpiId } from '../../lib/upi'
 import { payerAliasesStore, type PayerAlias } from '../../data/stores'
 import { ME_ID, type Expense, type Friend, type Group, type Minor } from '../../domain/types'
 import { groupBalances, isSettledInGroup, simplifyDebts, stillOwed } from '../../engine/balances'
@@ -189,6 +190,7 @@ export function applyMatches(chosen: readonly { credit: Credit; option: MatchOpt
       rememberReference({ utr: credit.utr, friendId: option.friendId, amount: credit.amount, at: now })
       applied.refs.push(credit.utr)
     }
+    learnUpiId(option.friendId, credit.vpa, applied)
     const name = option.learnName ? nameKey(option.learnName) : ''
     if (name !== '' && !known.has(name)) {
       known.add(name)
@@ -197,6 +199,29 @@ export function applyMatches(chosen: readonly { credit: Credit; option: MatchOpt
   }
   if (applied.aliases.length > 0) payerAliasesStore.set([...payerAliasesStore.get(), ...applied.aliases])
   return applied
+}
+
+/**
+ * The UPI ID a friend just paid you from is theirs: kept on them when they have none, so paying them
+ * back later needs nothing typed by anyone (in a shared group it reaches every phone). Only a whole,
+ * valid ID from a payment matched to that friend; one they already have is never replaced.
+ */
+function learnUpiId(friendId: string, vpa: string | null | undefined, applied: Applied): void {
+  if (!vpa || vpa.includes('*') || !isValidUpiId(vpa)) return
+  const friend = friendsStore.get().find((f) => f.id === friendId)
+  if (!friend || friend.upiId) return
+  try {
+    updateFriend(friendId, { upiId: normalizeUpiId(vpa) })
+    applied.undo.push(() => {
+      try {
+        updateFriend(friendId, { upiId: null })
+      } catch {
+        // Gone meanwhile.
+      }
+    })
+  } catch {
+    // Not a friend any more: nothing to keep.
+  }
 }
 
 /** Puts back what `applyMatches` changed. */

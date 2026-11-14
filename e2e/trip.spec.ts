@@ -219,4 +219,33 @@ test.describe('paying, saying it, getting the app', () => {
     await stranger.goto(local(link).slice(0, 40))
     await expect(stranger.getByRole('heading', { name: 'This invite can’t be opened' })).toBeVisible()
   })
+
+  test('your UPI ID is read from a picture of a UPI QR, in a browser with no QR reader of its own', async ({ page, openPhone }) => {
+    // A real UPI QR: the one Settle draws for paying Riya, as a picture.
+    await seed(page, { friends: [PAYEE, SAM], groups: [GOA], expenses: [DINNER] })
+    await page.goto('/app/groups/goa/settle')
+    await page.getByRole('button', { name: /^Pay/ }).first().click()
+    const pay = page.getByRole('dialog')
+    const show = pay.getByRole('button', { name: 'Show QR for another phone' })
+    if (await show.isVisible()) await show.click()
+    const qr = pay.locator('[data-qr-value^="upi://pay"]').first()
+    await expect(qr).toBeVisible()
+    const value = (await qr.getAttribute('data-qr-value')) ?? ''
+    const upi = new URLSearchParams(value.slice(value.indexOf('?') + 1)).get('pa') ?? ''
+    expect(upi).toContain('@')
+    const picture = await qr.screenshot()
+
+    // A new phone, setting up: the picture is picked, nothing is typed.
+    const phone = await openPhone()
+    const other = phone.page
+    expect(await other.evaluate(() => 'BarcodeDetector' in window)).toBe(false)
+    await other.goto('/app')
+    await other.getByRole('button', { name: 'Continue' }).click()
+    await other.getByRole('button', { name: 'Skip' }).click()
+    const input = other.locator('input[type="file"][aria-label="Connect Google Pay: no typing"]').first()
+    await expect(input).toBeAttached({ timeout: 30_000 })
+    await input.setInputFiles({ name: 'my-qr.png', mimeType: 'image/png', buffer: picture })
+    await expect(other.getByText(new RegExp('^Connected ' + upi.replace('.', '[.]')))).toBeVisible()
+    await expect(other.getByRole('textbox', { name: /UPI ID/ })).toHaveValue(upi)
+  })
 })

@@ -6,6 +6,7 @@ import { tx, useT } from '../i18n'
 import { haptic } from '../lib/haptics'
 import { formatMoney, toInputString } from '../lib/money'
 import { canPayInApp, openPayApp, sendQrToApp } from '../lib/nativeApp'
+import { canWatchPayments, expectPayment } from '../lib/payWatch'
 import {
   ANDROID_PACKAGES,
   directPayHref,
@@ -90,6 +91,13 @@ export function UpiRoutes({ payeeName, vpa, amount, note, color, phone, platform
   const app = PAY_APPS.find((a) => a.id === payAppId) ?? (PAY_APPS[0] as PayApp)
   const [quick, setQuick] = useState<Quick>('idle')
   const left = useRef(false)
+  const [auto, setAuto] = useState(false)
+  const stopWatch = useRef<(() => void) | null>(null)
+  const paid = useRef(onPaid)
+  useEffect(() => {
+    paid.current = onPaid
+  }, [onPaid])
+  useEffect(() => () => stopWatch.current?.(), [])
   const watch = useRef<number | undefined>(undefined)
   const uri = buildUpiLink({ vpa, payeeName, amountMinor: amount, note })
   const money = formatMoney(amount, 'INR', { trimZeros: true })
@@ -121,6 +129,17 @@ export function UpiRoutes({ payeeName, vpa, amount, note, color, phone, platform
   const started = (): void => {
     left.current = true
     onStarted?.()
+    // In the Android app the phone's own payment alert says when this went through: recorded with no tap.
+    if (!paid.current || amount <= 0 || !canWatchPayments()) return
+    stopWatch.current?.()
+    stopWatch.current = expectPayment(amount, () => {
+      stopWatch.current = null
+      left.current = false
+      setAsking(false)
+      setAuto(true)
+      haptic('success')
+      paid.current?.()
+    })
   }
 
   const copy = async (what: 'id' | 'amount'): Promise<void> => {
@@ -238,6 +257,8 @@ export function UpiRoutes({ payeeName, vpa, amount, note, color, phone, platform
 
   const answer = (paid: boolean): void => {
     setAsking(false)
+    stopWatch.current?.()
+    stopWatch.current = null
     if (paid) {
       haptic('success')
       onPaid?.()
@@ -400,6 +421,11 @@ export function UpiRoutes({ payeeName, vpa, amount, note, color, phone, platform
         </p>
       </div>
 
+      {auto && (
+        <p className={styles.askTitle} role="status">
+          {t('kit.upiPay.auto.paid', { amount: money, name: payeeName })}
+        </p>
+      )}
       {asking && (
         <div className={styles.ask} role="group" aria-labelledby={`${helpId}-ask`}>
           <p id={`${helpId}-ask`} className={styles.askTitle}>

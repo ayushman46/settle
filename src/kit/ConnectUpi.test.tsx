@@ -4,6 +4,26 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { canReadQr, parseUpiQr, readUpiQr } from '../lib/upiQr'
 import { ConnectUpi } from './ConnectUpi'
 
+// Settle's own reader (for browsers without one): "reads" the text the canvas was given.
+vi.mock('jsqr', () => ({
+  default: (data: unknown) => {
+    const text = String((data as { text?: string }).text ?? '')
+    return text ? { data: text } : null
+  },
+}))
+
+/** A picture can be opened and drawn, as in any phone browser (jsdom has no canvas of its own). */
+function installPixels(): void {
+  vi.stubGlobal('createImageBitmap', async (blob: Blob) => ({ text: await blob.text(), width: 1080, height: 2400, close: () => undefined }))
+  let drawn = ''
+  vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation((() => ({
+    drawImage: (image: { text: string }) => {
+      drawn = image.text
+    },
+    getImageData: (_x: number, _y: number, width: number, height: number) => ({ data: { text: drawn }, width, height }),
+  })) as never)
+}
+
 /** A stand-in for the browser's QR reader: "reads" whatever text the picture file holds. */
 function installReader(read: (text: string) => string[]): void {
   class FakeDetector {
@@ -11,13 +31,16 @@ function installReader(read: (text: string) => string[]): void {
       return read(String((image as { text?: string }).text ?? '')).map((rawValue) => ({ rawValue }))
     }
   }
+  installPixels()
   vi.stubGlobal('BarcodeDetector', FakeDetector)
-  vi.stubGlobal('createImageBitmap', async (blob: Blob) => ({ text: await blob.text(), close: () => undefined }))
 }
 
 const picture = (text: string): File => new File([text], 'qr.png', { type: 'image/png' })
 
-afterEach(() => vi.unstubAllGlobals())
+afterEach(() => {
+  vi.unstubAllGlobals()
+  vi.restoreAllMocks()
+})
 
 describe('a UPI QR', () => {
   it('gives the UPI ID and the bank’s name; anything else is not one', () => {
@@ -37,10 +60,18 @@ describe('a UPI QR', () => {
     expect(await readUpiQr(picture(''))).toEqual({ kind: 'none' })
     expect(await readUpiQr(picture('https://settleupi.vercel.app'))).toEqual({ kind: 'other' })
   })
+
+  it('is read by Settle’s own reader where the browser has none (Safari on iPhone)', async () => {
+    installPixels()
+    expect(canReadQr()).toBe(true)
+    expect(await readUpiQr(picture('upi://pay?pa=sam@oksbi&pn=Sam%20K'))).toEqual({ kind: 'ok', qr: { vpa: 'sam@oksbi', name: 'Sam K' } })
+    expect(await readUpiQr(picture(''))).toEqual({ kind: 'none' })
+    expect(await readUpiQr(picture('WIFI:S:Home;;'))).toEqual({ kind: 'other' })
+  })
 })
 
 describe('Connect Google Pay', () => {
-  it('isn’t offered where the browser can’t read a QR (the typed field is the way)', () => {
+  it('isn’t offered where the browser can’t open a picture at all (the typed field is the way)', () => {
     const { container } = render(<ConnectUpi onConnect={() => undefined} />)
     expect(container).toBeEmptyDOMElement()
   })
@@ -67,5 +98,15 @@ describe('Connect Google Pay', () => {
     await user.upload(input, picture('https://example.com'))
     expect(await screen.findByText(/That QR isn’t a UPI one/)).toBeInTheDocument()
     expect(onConnect).not.toHaveBeenCalled()
+  })
+
+  it('works on an iPhone too: no browser reader, same button', async () => {
+    installPixels()
+    const onConnect = vi.fn()
+    const user = userEvent.setup()
+    render(<ConnectUpi onConnect={onConnect} />)
+    await user.upload(screen.getByLabelText('Connect Google Pay: no typing', { selector: 'input' }), picture('upi://pay?pa=neha@ybl&pn=NEHA'))
+    expect(await screen.findByText('Connected neha@ybl: the name on it is NEHA. Check that’s you.')).toBeInTheDocument()
+    expect(onConnect).toHaveBeenCalledWith({ vpa: 'neha@ybl', name: 'NEHA' })
   })
 })

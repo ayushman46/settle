@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { act, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type * as Share from '../lib/share'
@@ -75,5 +75,42 @@ describe('one tap into the UPI app', () => {
   it('on iPhone the direct link is the app’s own', () => {
     show(40000, 'ios')
     expect(screen.getByRole('link', { name: 'Or try the direct link to Google Pay' }).getAttribute('href')).toMatch(/^gpay:\/\/upi\/pay\?pa=riya%40okaxis/)
+  })
+})
+
+describe('Settle finds out the payment went through (Android app, payment alerts on)', () => {
+  it('records it with no tap when the phone’s alert says the same amount left the account', async () => {
+    const { paymentsSeen, resetPayWatchForTests } = await import('../lib/payWatch')
+    resetPayWatchForTests()
+    vi.stubGlobal('Capacitor', { isNativePlatform: () => true, getPlatform: () => 'android', PluginHeaders: [{ name: 'PaymentAlerts' }] })
+    const onPaid = vi.fn()
+    const user = userEvent.setup()
+    shareFile.mockResolvedValue('shared')
+    render(<UpiRoutes payeeName="Riya Sharma" vpa="riya@okaxis" amount={40000} note="Goa" color={2} phone platform="android" onPaid={onPaid} />)
+    await user.click(screen.getByRole('button', { name: 'Pay ₹400 with Google Pay' }))
+    await screen.findByText(/Pick Google Pay in the list/)
+    // Some other payment goes out: not this one.
+    act(() => paymentsSeen([{ amount: 9900, at: Date.now() }]))
+    expect(onPaid).not.toHaveBeenCalled()
+    act(() => paymentsSeen([{ amount: 40000, at: Date.now() }]))
+    expect(onPaid).toHaveBeenCalledTimes(1)
+    expect(screen.getByText('Your phone’s payment alert says ₹400 went through. Recorded: nothing to tap.')).toBeInTheDocument()
+    // Told again (the bank's SMS after the app's alert): still once.
+    act(() => paymentsSeen([{ amount: 40000, at: Date.now() }]))
+    expect(onPaid).toHaveBeenCalledTimes(1)
+    vi.unstubAllGlobals()
+  })
+
+  it('in a browser nothing is watched: the one-tap question on coming back is the way', async () => {
+    const { paymentsSeen, resetPayWatchForTests } = await import('../lib/payWatch')
+    resetPayWatchForTests()
+    const onPaid = vi.fn()
+    const user = userEvent.setup()
+    shareFile.mockResolvedValue('shared')
+    render(<UpiRoutes payeeName="Riya Sharma" vpa="riya@okaxis" amount={40000} note="Goa" color={2} phone platform="android" onPaid={onPaid} />)
+    await user.click(screen.getByRole('button', { name: 'Pay ₹400 with Google Pay' }))
+    await screen.findByText(/Pick Google Pay in the list/)
+    act(() => paymentsSeen([{ amount: 40000, at: Date.now() }]))
+    expect(onPaid).not.toHaveBeenCalled()
   })
 })
