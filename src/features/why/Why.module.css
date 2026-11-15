@@ -1,0 +1,92 @@
+/* Why this payment? The small "Why?" under a Settle up line, and the sheet that explains it. */
+.line {
+  display: flex;
+  min-width: 0;
+  padding: 0 var(--s-2) var(--s-2);
+  /* Tucks up under the payment's buttons: one row, not two. */
+  margin-top: calc(var(--s-2) * -1);
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-5);
+  min-width: 0;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  min-width: 0;
+}
+
+.heading {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-width: 0;
+  margin: 0;
+  font: var(--text-label);
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
+}
+
+.heading > span {
+  min-width: 0;
+}
+
+.text {
+  margin: 0;
+  font: var(--text-body);
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.bills {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.bill {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-3);
+  min-width: 0;
+  padding-block: var(--s-2);
+  font: var(--text-body);
+  color: var(--ink);
+}
+
+.bill + .bill,
+.bill + .more {
+  border-top: 1px solid var(--line);
+}
+
+.billTitle {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.billAmount {
+  flex: none;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.more {
+  padding-block: var(--s-2);
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
+.note {
+  margin: 0;
+  font: var(--text-caption);
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
+}

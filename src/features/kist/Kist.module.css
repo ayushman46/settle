@@ -1,0 +1,263 @@
+/* Pay in parts: the list, one plan's page, and the sheet that starts a plan. */
+.content {
+  gap: var(--s-5);
+}
+
+.sheet {
+  display: grid;
+  gap: var(--s-4);
+}
+
+.block {
+  display: grid;
+  gap: var(--s-2);
+}
+
+.heading,
+.label {
+  margin: 0;
+  font: var(--text-label);
+  color: var(--ink-2);
+}
+
+.body,
+.fine {
+  margin: 0;
+  font: var(--text-body);
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.fine {
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+.fieldRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  min-height: 44px;
+}
+
+/* ------------------------------------------------------------------ progress */
+
+.hero {
+  display: grid;
+  gap: var(--s-2);
+}
+
+.big {
+  margin: 0;
+  font: var(--text-title);
+  letter-spacing: var(--tracking-tight);
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.meter {
+  display: block;
+  overflow: hidden;
+  height: 8px;
+  border-radius: var(--r-pill);
+  background: color-mix(in srgb, var(--ink) 10%, transparent);
+}
+
+.meter span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--positive);
+  transition: width 300ms ease;
+}
+
+/* ------------------------------------------------------------------ the part to pay next */
+
+.next {
+  display: grid;
+  gap: var(--s-3);
+}
+
+.nextHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--s-3);
+}
+
+.nextText {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.nextTitle {
+  margin: 0;
+  font: var(--text-label);
+  font-weight: 650;
+  color: var(--ink);
+}
+
+.late {
+  margin: 0;
+  font: var(--text-caption);
+  font-weight: 600;
+  color: var(--negative);
+  overflow-wrap: anywhere;
+}
+
+.actions {
+  display: grid;
+  gap: var(--s-2);
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+.row > button {
+  flex: 1 1 auto;
+  min-height: 44px;
+}
+
+/* ------------------------------------------------------------------ the schedule */
+
+.parts {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.part {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--s-3);
+  min-height: 56px;
+  padding: var(--s-2) var(--s-4);
+}
+
+.part + .part {
+  border-top: 1px solid var(--line);
+}
+
+.mark {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: var(--s-8);
+  height: var(--s-8);
+  border-radius: var(--r-pill);
+  background: var(--surface-2);
+  color: var(--ink-2);
+  font: var(--text-caption);
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+
+.part[data-state='paid'] .mark,
+.part[data-state='counted'] .mark {
+  background: var(--positive-soft);
+  color: var(--positive);
+}
+
+.part[data-state='late'] .mark {
+  background: var(--negative-soft);
+  color: var(--negative);
+}
+
+.mark > svg {
+  width: 16px;
+  height: 16px;
+}
+
+.partText {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.partName {
+  font: var(--text-body);
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.partLine {
+  font: var(--text-caption);
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
+}
+
+.part[data-state='late'] .partLine {
+  color: var(--negative);
+  font-weight: 600;
+}
+
+.part[data-state='dropped'] .partName,
+.part[data-state='dropped'] .partAmount {
+  color: var(--ink-2);
+  text-decoration: line-through;
+}
+
+.partAmount {
+  font: var(--text-body);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+/* The schedule shown before saving. */
+.preview {
+  display: grid;
+  gap: var(--s-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.previewRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-3);
+  font: var(--text-body);
+  color: var(--ink);
+}
+
+.previewRow span:first-child {
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
+}
+
+.previewRow span:last-child {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.end {
+  display: grid;
+  justify-items: start;
+  gap: var(--s-1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .meter span {
+    transition: none;
+  }
+}

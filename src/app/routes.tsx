@@ -269,6 +269,61 @@ const ScoreScreen = lazyScreen(
   () => import('../features/score/ScoreScreen'),
   (m) => m.ScoreScreen,
 )
+const SettleDayScreen = lazyScreen(
+  'SettleDayScreen',
+  () => import('../features/settleday/SettleDayScreen'),
+  (m) => m.SettleDayScreen,
+)
+const CheckoutScreen = lazyScreen(
+  'CheckoutScreen',
+  () => import('../features/checkout/CheckoutScreen'),
+  (m) => m.CheckoutScreen,
+)
+const PaydayScreen = lazyScreen(
+  'PaydayScreen',
+  () => import('../features/payday/PaydayScreen'),
+  (m) => m.PaydayScreen,
+)
+const KistScreen = lazyScreen(
+  'KistScreen',
+  () => import('../features/kist/KistScreen'),
+  (m) => m.KistScreen,
+)
+const KistPlanScreen = lazyScreen(
+  'KistPlanScreen',
+  () => import('../features/kist/KistPlanScreen'),
+  (m) => m.KistPlanScreen,
+)
+const PromisesScreen = lazyScreen(
+  'PromisesScreen',
+  () => import('../features/promise/PromisesScreen'),
+  (m) => m.PromisesScreen,
+)
+const HouseholdsScreen = lazyScreen(
+  'HouseholdsScreen',
+  () => import('../features/units/HouseholdsScreen'),
+  (m) => m.HouseholdsScreen,
+)
+const PassbookScreen = lazyScreen(
+  'PassbookScreen',
+  () => import('../features/passbook/PassbookScreen'),
+  (m) => m.PassbookScreen,
+)
+const LimitScreen = lazyScreen(
+  'LimitScreen',
+  () => import('../features/limit/LimitScreen'),
+  (m) => m.LimitScreen,
+)
+const ByaajScreen = lazyScreen(
+  'ByaajScreen',
+  () => import('../features/byaaj/ByaajScreen'),
+  (m) => m.ByaajScreen,
+)
+const ByaajDetailScreen = lazyScreen(
+  'ByaajDetailScreen',
+  () => import('../features/byaaj/ByaajDetailScreen'),
+  (m) => m.ByaajDetailScreen,
+)
 const ChatScreen = lazyScreen(
   'ChatScreen',
   () => import('../features/chat/ChatScreen'),
@@ -345,6 +400,17 @@ export const APP_ROUTES: readonly AppRoute[] = [
   { pattern: '/app/expense/:id', screen: ExpenseDetailScreen, title: 'Expense', tab: null },
   { pattern: '/app/counter/:id', screen: CounterScreen, title: 'Pay at the counter', tab: null },
   { pattern: '/app/chat', screen: ChatScreen, title: 'Chat to split', tab: null },
+  { pattern: '/app/groups/:id/settle-day', screen: SettleDayScreen, title: 'Settle day', tab: null },
+  { pattern: '/app/groups/:id/checkout', screen: CheckoutScreen, title: 'Settle before you leave', tab: null },
+  { pattern: '/app/payday', screen: PaydayScreen, title: 'Payday', tab: null },
+  { pattern: '/app/people/:id/statement', screen: PassbookScreen, title: 'Statement', tab: null },
+  { pattern: '/app/limit', screen: LimitScreen, title: 'Udhaar limit', tab: null },
+  { pattern: '/app/byaaj', screen: ByaajScreen, title: 'Interest on a loan', tab: null },
+  { pattern: '/app/byaaj/:id', screen: ByaajDetailScreen, title: 'Interest on a loan', tab: null },
+  { pattern: '/app/kist', screen: KistScreen, title: 'Pay in parts', tab: null },
+  { pattern: '/app/kist/:id', screen: KistPlanScreen, title: 'Pay in parts', tab: null },
+  { pattern: '/app/promises', screen: PromisesScreen, title: 'Promises', tab: null },
+  { pattern: '/app/groups/:id/households', screen: HouseholdsScreen, title: 'Households', tab: null },
   { pattern: '/app/score', screen: ScoreScreen, title: 'Settle Score', tab: null },
   { pattern: '/app/pay-all', screen: QueueScreen, title: 'Clear everything', tab: null },
   { pattern: '/app/report', screen: ReportScreen, title: 'Expense claim', tab: null },

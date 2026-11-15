@@ -6,6 +6,7 @@
 import { CLAIMS_ENABLED } from '../claim/enabled'
 import { ClaimStatusCard } from '../claim/ClaimStatusCard'
 import { LEND_ENABLED } from '../lend/enabled'
+import { ByaajRow } from '../byaaj/ByaajRow'
 import { LoanCard } from '../lend/LoanCard'
 import { ConvertCard } from '../trip/ConvertCard'
 import { TRIP_ENABLED } from '../trip/enabled'
@@ -22,6 +23,7 @@ export function ExpenseExtensions({ expense }: ExpenseExtensionsProps) {
     <>
       {CLAIMS_ENABLED && <ClaimStatusCard expense={expense} />}
       {LEND_ENABLED && <LoanCard expense={expense} />}
+      {LEND_ENABLED && <ByaajRow expenseId={expense.id} />}
       {TRIP_ENABLED && <FxNote expense={expense} />}
       {TRIP_ENABLED && <ConvertCard expense={expense} />}
     </>

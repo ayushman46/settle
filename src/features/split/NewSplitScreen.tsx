@@ -49,6 +49,9 @@ import { openBill } from '../bill/launch'
 import { ConversionPanel } from '../trip/ConversionPanel'
 import { TRIP_ENABLED } from '../trip/enabled'
 import { RateSheet } from '../trip/RateSheet'
+import { LimitNote } from '../limit/LimitNote'
+import { withUnitsSplit } from '../units/applyUnits'
+import { UnitsSplitBar } from '../units/UnitsSplitBar'
 import { withUsualSplit } from '../usual/applyUsual'
 import { FareSheet } from '../fare/FareSheet'
 import { UsualSplitBar } from '../usual/UsualSplitBar'
@@ -199,7 +202,7 @@ function startFrom(editing: Expense | null, query: URLSearchParams, ctx: StartCo
     }
   }
   // A plain new expense in a group starts from the group's usual split, when it has one that still fits.
-  return { form: withUsualSplit(form, group), prefilled: false, origin: 'new', copyOf: null, banner: null }
+  return { form: withUnitsSplit(withUsualSplit(form, group), group), prefilled: false, origin: 'new', copyOf: null, banner: null }
 }
 
 /** Serialized for "has anything changed?". */
@@ -346,7 +349,7 @@ function SplitScreen({ editing, url }: SplitScreenProps) {
     const picked = groups.find((g) => g.id === groupId) ?? null
     setForm((current) => {
       const next = withGroup(current, picked, trip)
-      return isNew && picked && picked.id !== current.groupId ? withUsualSplit(next, picked) : next
+      return isNew && picked && picked.id !== current.groupId ? withUnitsSplit(withUsualSplit(next, picked), picked) : next
     })
   }
 
@@ -581,6 +584,11 @@ function SplitScreen({ editing, url }: SplitScreenProps) {
               onTotalChange={converting ? undefined : (total) => change({ total })}
             />
             <UsualSplitBar form={form} group={group} isNew={isNew} onChange={change} />
+            <UnitsSplitBar form={form} total={sharesTotal} currency={sharesCurrency} group={group} isNew={isNew} onChange={change} />
+            {/* A limit you set on someone: said before the split takes them over it (never a block). */}
+            {shares !== null && form.payerId === ME_ID && (
+              <LimitNote friendIds={form.participants.map((p) => p.friendId)} amounts={shares} currency={sharesCurrency} groupId={form.groupId} expenseId={isNew ? null : (editing?.id ?? null)} />
+            )}
             {fareFits && (
               <Button type="button" variant="ghost" size="sm" iconStart={<CarTaxiFront />} onClick={() => setFareOpen(true)}>
                 {t('fare.open')}

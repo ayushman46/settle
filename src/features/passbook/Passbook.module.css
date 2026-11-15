@@ -1,0 +1,320 @@
+/* Statement: the dates, a ledger per currency (opening, lines, closing), the actions, and the sheet for paper. */
+
+.content {
+  gap: var(--s-5);
+  padding-bottom: var(--s-6);
+}
+
+.block {
+  display: grid;
+  gap: var(--s-2);
+  min-width: 0;
+}
+
+.heading {
+  margin: 0;
+  font: var(--text-section);
+  color: var(--ink);
+}
+
+.fine {
+  margin: 0;
+  font: var(--text-caption);
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
+}
+
+.none {
+  margin: 0;
+  padding: var(--s-4);
+  font: var(--text-body);
+  color: var(--ink-2);
+}
+
+/* Opening and closing balance */
+.edge {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-1) var(--s-3);
+  min-height: 56px;
+  padding: var(--s-3) var(--s-4);
+  background: var(--surface-2);
+}
+
+.edge:first-child {
+  border-radius: var(--radius-card) var(--radius-card) 0 0;
+}
+
+.edge[data-closing] {
+  border-radius: 0 0 var(--radius-card) var(--radius-card);
+}
+
+.edgeText {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.edgeLabel {
+  font: var(--text-label);
+  color: var(--ink);
+}
+
+.edgeAmount {
+  font: var(--text-label);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+  text-align: end;
+}
+
+.edge[data-closing] .edgeAmount {
+  font: var(--text-section);
+}
+
+.plus {
+  color: var(--positive);
+}
+
+.minus {
+  color: var(--negative);
+}
+
+/* The lines */
+.rows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--s-3);
+  min-height: 56px;
+  padding: var(--s-3) var(--s-4);
+  border-top: 1px solid var(--line);
+}
+
+.what {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.date {
+  font: var(--text-micro);
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.title {
+  font: var(--text-body);
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.figures {
+  display: grid;
+  gap: 2px;
+  flex: none;
+  max-width: 46%;
+  text-align: end;
+}
+
+.amount {
+  font: var(--text-label);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+
+.actions {
+  display: grid;
+  gap: var(--s-2);
+}
+
+/* The row on a person's page */
+.linkIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--s-10);
+  height: var(--s-10);
+  border-radius: var(--radius-pill);
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+}
+
+.linkIcon svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* ---------- The sheet: not shown on screen, the only thing on the page when printed ---------- */
+
+.printArea {
+  display: none;
+}
+
+/* Paper is white with dark ink whatever the app's theme, as on the expense claim. */
+.sheet {
+  display: grid;
+  gap: 12px;
+  padding: 18px 20px;
+  background: #ffffff;
+  color: #111418;
+  font-family: var(--font-sans, system-ui, sans-serif);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.sheetHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #dde1e7;
+}
+
+.sheetTitle {
+  font-size: 16px;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.sheetSub,
+.sheetFine,
+.sheetNote {
+  font-size: 11px;
+  color: #4a525e;
+}
+
+.sheetFine {
+  display: block;
+}
+
+.sheetNote {
+  margin: 0;
+}
+
+.sheetLabel {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #4a525e;
+}
+
+.sheetMeta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 6px 20px;
+  margin: 0;
+}
+
+.sheetMeta dt {
+  font-size: 10px;
+  color: #4a525e;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.sheetMeta dd {
+  margin: 0;
+  font-weight: 650;
+  overflow-wrap: anywhere;
+}
+
+.sheetLedger {
+  display: grid;
+  gap: 6px;
+}
+
+.sheetTable {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.sheetTable th,
+.sheetTable td {
+  padding: 5px 6px;
+  border-bottom: 1px solid #e3e6eb;
+  text-align: start;
+  vertical-align: top;
+  overflow-wrap: break-word;
+  hyphens: manual;
+}
+
+.sheetTable thead th {
+  white-space: nowrap;
+  font-size: 10px;
+  color: #4a525e;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom-color: #111418;
+}
+
+.sheetTable tfoot th,
+.sheetTable tfoot td {
+  font-weight: 750;
+  border-top: 1px solid #111418;
+  border-bottom: none;
+}
+
+.num {
+  text-align: end !important;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.nowrap {
+  white-space: nowrap;
+}
+
+.sheetMade {
+  margin: 4px 0 0;
+  font-size: 9px;
+  color: #6b7380;
+  text-align: end;
+}
+
+@media print {
+  @page {
+    size: A4;
+    margin: 14mm;
+  }
+
+  :global(body) * {
+    visibility: hidden;
+  }
+
+  .printArea,
+  .printArea * {
+    visibility: visible;
+  }
+
+  .printArea {
+    position: absolute;
+    inset: 0 0 auto;
+    display: block;
+  }
+
+  .sheet {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 0 1mm;
+  }
+
+  .sheetTable tr {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}

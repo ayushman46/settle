@@ -1,0 +1,208 @@
+/* Payday: the screen, the picker sheet, the friend-page row, the To collect hint and Home's cards. */
+.content {
+  gap: var(--s-5);
+}
+
+.block {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--s-2);
+}
+
+.card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--s-3);
+}
+
+.heading {
+  margin: 0;
+  font: var(--text-label);
+  font-weight: 650;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.fine {
+  margin: 0;
+  font: var(--text-caption);
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
+}
+
+/* The quick picks: 1st, 5th, 7th, 10th, Last day, Other, Don't know. */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+/* The friend page's row. */
+.friendRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--s-2);
+}
+
+/* The hint under a To collect row: phrasing content, so it can sit inside the row's button. */
+.hint {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: var(--s-1);
+  font: var(--text-caption);
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
+  text-align: start;
+}
+
+.hint > svg {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  margin-top: 2px;
+}
+
+.hintNow {
+  color: var(--positive);
+}
+
+/* Home's cards. */
+.cardHead {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-3);
+}
+
+.cardText {
+  display: grid;
+  flex: 1 1 auto;
+  gap: 2px;
+  min-width: 0;
+}
+
+.icon {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: var(--s-10);
+  height: var(--s-10);
+  border-radius: var(--r-pill);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.icon > svg {
+  width: var(--s-5);
+  height: var(--s-5);
+}
+
+.dismiss {
+  flex: none;
+  margin: calc(var(--s-2) * -1) calc(var(--s-2) * -1) 0 0;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+.actions > button {
+  flex: 1 1 auto;
+  min-height: var(--tap);
+}
+
+/* The picker sheet: a calendar-like grid of 31 days, then the two month-end choices. */
+.sheet {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--s-3);
+  padding-bottom: var(--s-2);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: var(--s-2);
+}
+
+.day {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  min-width: var(--tap);
+  min-height: var(--tap);
+  border-radius: 50%;
+  background: var(--surface-2);
+  color: var(--ink);
+  font: var(--text-label);
+  font-variant-numeric: tabular-nums;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background-color var(--dur-2) var(--ease-out),
+    color var(--dur-2) var(--ease-out),
+    transform var(--dur-2) var(--ease-spring);
+}
+
+.day:active {
+  transform: scale(0.92);
+  transition-duration: var(--dur-1);
+}
+
+@media (hover: hover) {
+  .day:not(.checked):hover {
+    background: var(--surface-3);
+  }
+}
+
+.checked {
+  background: var(--primary);
+  color: var(--on-primary);
+  font-weight: 650;
+}
+
+/* The ask list and the friends list. */
+.rowText {
+  overflow-wrap: anywhere;
+}
+
+.now {
+  color: var(--positive);
+  font-weight: 650;
+}
+
+.more {
+  justify-self: start;
+  min-height: var(--tap);
+}
+
+/* 360px and under: the 7 columns shrink to fit (each day stays well above the 24px minimum). */
+@media (max-width: 360px) {
+  .grid {
+    gap: 2px;
+  }
+
+  .day {
+    min-width: 0;
+    min-height: 0;
+  }
+}
+
+@media (forced-colors: active) {
+  .checked {
+    outline: 2px solid Highlight;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .day,
+  .card {
+    transition: none;
+    animation: none;
+  }
+
+  .day:active {
+    transform: none;
+  }
+}

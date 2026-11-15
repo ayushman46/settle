@@ -1,0 +1,144 @@
+/* Friend abroad: what is owed in two currencies, one way to pay, and a short set-up. */
+.body {
+  display: grid;
+  gap: var(--s-4);
+}
+
+.owed {
+  display: grid;
+  gap: var(--s-1);
+}
+
+.big {
+  margin: 0;
+  font: var(--text-headline);
+  letter-spacing: var(--tracking-tight);
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.theirs {
+  margin: 0;
+  font: var(--text-section);
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.fine {
+  margin: 0;
+  font: var(--text-caption);
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
+}
+
+.field {
+  display: grid;
+  gap: var(--s-2);
+}
+
+.label {
+  margin: 0;
+  font: var(--text-label);
+  color: var(--ink-2);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+.how {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2);
+  padding: var(--s-3);
+  border-radius: var(--radius-field);
+  background: var(--surface-2);
+}
+
+.how > button {
+  min-height: 44px;
+}
+
+.howText {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  flex: 1 1 160px;
+}
+
+.value {
+  font: var(--text-body);
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.actions {
+  display: grid;
+  gap: var(--s-2);
+}
+
+.actions > button {
+  min-height: 44px;
+}
+
+.link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  min-height: 56px;
+  padding: var(--s-2) var(--s-5);
+  border-radius: var(--radius-pill);
+  background: var(--accent);
+  color: var(--on-accent);
+  font: var(--text-label);
+  font-weight: 650;
+  text-align: center;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+
+.link:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.link > svg {
+  flex: none;
+  width: 18px;
+  height: 18px;
+}
+
+.footer {
+  display: grid;
+  gap: var(--s-2);
+}
+
+.rowIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-field);
+  background: var(--surface-2);
+  color: var(--ink);
+}
+
+.rowIcon > svg {
+  width: 20px;
+  height: 20px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .body *,
+  .link {
+    transition: none;
+    animation: none;
+  }
+}

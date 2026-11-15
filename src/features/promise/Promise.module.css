@@ -1,0 +1,154 @@
+/* Promise to pay: the sheet, the line on a person's row, and the promises page. */
+.content {
+  gap: var(--s-5);
+}
+
+.sheet {
+  display: grid;
+  gap: var(--s-4);
+}
+
+.block {
+  display: grid;
+  gap: var(--s-2);
+}
+
+.heading,
+.label {
+  margin: 0;
+  font: var(--text-label);
+  color: var(--ink-2);
+}
+
+.fine {
+  margin: 0;
+  font: var(--text-caption);
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.message {
+  margin: 0;
+  font: var(--text-body);
+  color: var(--ink);
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.actions {
+  display: grid;
+  gap: var(--s-2);
+}
+
+.end {
+  display: grid;
+  justify-items: start;
+}
+
+/* ------------------------------------------------------------------ the line on a row */
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+  max-width: 100%;
+  font: var(--text-caption);
+  font-weight: 600;
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
+}
+
+.chip > svg {
+  flex: none;
+  width: 14px;
+  height: 14px;
+}
+
+.chip[data-tone='today'] {
+  color: var(--warning-ink);
+}
+
+.chip[data-tone='late'] {
+  color: var(--negative);
+}
+
+/* ------------------------------------------------------------------ the page */
+
+.rows {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.row {
+  display: grid;
+  gap: var(--s-2);
+  padding: var(--s-3) var(--s-4);
+}
+
+.row + .row {
+  border-top: 1px solid var(--line);
+}
+
+.person {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--s-3);
+  min-height: 44px;
+}
+
+.text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.name {
+  font: var(--text-label);
+  font-weight: 650;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.meta {
+  font: var(--text-caption);
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
+}
+
+.row[data-state='kept'] .state {
+  color: var(--positive);
+  font-weight: 600;
+}
+
+.row[data-state='broken'] .state {
+  color: var(--negative);
+  font-weight: 600;
+}
+
+.rowActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+.rowActions > button {
+  min-height: 44px;
+}
+
+.stat {
+  font: var(--text-body);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  white-space: nowrap;
+}

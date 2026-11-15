@@ -1,0 +1,138 @@
+/* Refund splitter: the sheet on the expense page, and the list of expenses refunded in full. */
+.sheet {
+  display: grid;
+  gap: var(--s-4);
+}
+
+.block {
+  display: grid;
+  gap: var(--s-2);
+}
+
+.label {
+  margin: 0;
+  font: var(--text-label);
+  color: var(--ink-2);
+}
+
+.body,
+.fine {
+  margin: 0;
+  font: var(--text-body);
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.fine {
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+.chipName {
+  max-width: 14em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.share {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-3);
+  min-height: 44px;
+  padding: var(--s-2) var(--s-4);
+}
+
+.share + .share,
+.row + .row {
+  border-top: 1px solid var(--hairline, rgb(127 127 127 / 0.16));
+}
+
+.name {
+  min-width: 0;
+  font: var(--text-body);
+  font-weight: 600;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.value {
+  flex: none;
+  max-width: 60%;
+  font: var(--text-caption);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-2);
+  text-align: end;
+}
+
+.past {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2);
+}
+
+/* ------------------------------------------------------------------ refunded in full */
+
+.card {
+  display: grid;
+  gap: var(--s-2);
+  margin: 0 0 var(--s-4);
+}
+
+.heading {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin: 0;
+  font: var(--text-label);
+  color: var(--ink);
+}
+
+.heading svg {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  color: var(--ink-2);
+}
+
+.row {
+  display: grid;
+  gap: var(--s-2);
+  padding: var(--s-3) var(--s-4);
+}
+
+.top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-3);
+}
+
+.amount {
+  flex: none;
+  font: var(--text-body);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}

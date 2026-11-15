@@ -45,6 +45,9 @@ import {
   type RemovalBlockers,
 } from './friendBalance'
 import { DietToggles } from '../diet/DietToggles'
+import { LimitRow } from '../limit/LimitRow'
+import { FriendPaydayRow } from '../payday/FriendPaydayRow'
+import { FriendTools } from './FriendTools'
 import { FriendSettleSheet } from './FriendSettleSheet'
 import { FriendSheet } from './FriendSheet'
 import styles from './FriendDetailScreen.module.css'
@@ -221,6 +224,8 @@ function FriendDetail({ friend, onLeaving }: { friend: Friend; onLeaving: (frien
         rest={rest}
       />
 
+      {friend.id !== ME_ID && <FriendTools friendId={friend.id} />}
+
       {PROOF_ENABLED && (
         <Button variant="ghost" block iconStart={<CircleCheck />} onClick={() => navigate(PROOF_PATH)}>
           {t('proof.entry.cta')}
@@ -286,6 +291,14 @@ function FriendDetail({ friend, onLeaving }: { friend: Friend; onLeaving: (frien
           <Card>
             <DietToggles friendId={friend.id} />
           </Card>
+        </section>
+      )}
+
+      {friend.id !== ME_ID && (
+        <section className={styles.section} aria-labelledby="friend-money">
+          <SectionHeader id="friend-money" title={t('friends.money.title')} />
+          <FriendPaydayRow friendId={friend.id} />
+          <LimitRow friendId={friend.id} />
         </section>
       )}
 

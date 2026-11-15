@@ -1,0 +1,75 @@
+/* Paid in kind: one short form in a sheet, and a quiet line beside a payment. */
+.form {
+  display: grid;
+  gap: var(--s-4);
+}
+
+.field {
+  display: grid;
+  gap: var(--s-2);
+}
+
+.label {
+  margin: 0;
+  font: var(--text-label);
+  color: var(--ink-2);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+.chips > button {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2);
+  min-height: 44px;
+}
+
+.error {
+  margin: 0;
+  font: var(--text-caption);
+  font-weight: 600;
+  color: var(--negative);
+}
+
+.fine,
+.note {
+  margin: 0;
+  font: var(--text-caption);
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
+}
+
+.note {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-1);
+}
+
+.note > svg {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  margin-top: 2px;
+}
+
+.button {
+  min-height: 44px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .form * {
+    transition: none;
+    animation: none;
+  }
+}

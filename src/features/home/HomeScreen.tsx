@@ -21,6 +21,11 @@ import { FirstRunCard } from './FirstRunCard'
 import { HomeHeader } from './HomeHeader'
 import { allowanceLabel, FRIENDS_PATH } from './homeLinks'
 import { AskBox } from '../ask/AskBox'
+import { HoldHome } from '../hold/HoldCard'
+import { PaydayCard } from '../payday/PaydayCard'
+import { RefundedHome } from '../refund/RefundedCard'
+import { PaydayGuessCard } from '../payday/PaydayGuessCard'
+import { usePaydayDue } from '../payday/usePaydayDue'
 import { QueueCard } from '../queue/QueueCard'
 import { SpentCard } from '../spent/SpentCard'
 import { SwapCard } from '../swap/SwapCard'
@@ -47,6 +52,7 @@ export function HomeScreen() {
   // Money your bank owes you, with something to do about it: near the top, like Stuck money's.
   const feesTop = useFeesLine()?.act === true
   const summary = useSummary()
+  const paydayDue = usePaydayDue()
   const onlyOwed = summary.owedToMe > 0 && summary.iOwe === 0
   const quota = useAiQuota()
   const health = useHealth()
@@ -93,6 +99,8 @@ export function HomeScreen() {
 
       <SpentCard />
 
+      <PaydayGuessCard />
+
       <TripOverHome />
 
       {hasData ? (
@@ -108,9 +116,16 @@ export function HomeScreen() {
 
       <AskBox />
 
-      <QueueCard />
+      <PaydayCard />
+
+      {/* On payday the card above already offers to clear everything. */}
+      {!paydayDue && <QueueCard />}
 
       <SwapCard />
+
+      <HoldHome />
+
+      <RefundedHome />
 
       <DueSplits />
 

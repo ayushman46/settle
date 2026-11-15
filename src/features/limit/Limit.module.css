@@ -1,0 +1,63 @@
+/* Udhaar limit: the picker (chips and "Other"), a person's row, the note's lines, the limits screen. */
+
+.content {
+  gap: var(--s-5);
+  padding-bottom: var(--s-6);
+}
+
+.block,
+.row,
+.picker {
+  display: grid;
+  gap: var(--s-3);
+  min-width: 0;
+}
+
+.row {
+  gap: var(--s-2);
+}
+
+.heading {
+  margin: 0;
+  font: var(--text-section);
+  color: var(--ink);
+}
+
+.title {
+  margin: 0;
+  font: var(--text-label);
+  color: var(--ink);
+}
+
+.fine,
+.over {
+  margin: 0;
+  font: var(--text-caption);
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
+}
+
+.over {
+  color: var(--negative);
+  font-weight: 600;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+.other {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: var(--s-2);
+}
+
+/* The note on the new-expense screen: one short line per person. */
+.noteLines {
+  display: grid;
+  gap: var(--s-1);
+  overflow-wrap: anywhere;
+}

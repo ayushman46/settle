@@ -1,0 +1,104 @@
+/* On hold: the sheet on the expense page, and the cards listing what is held. */
+.sheet {
+  display: grid;
+  gap: var(--s-4);
+}
+
+.block {
+  display: grid;
+  gap: var(--s-2);
+}
+
+.label {
+  margin: 0;
+  font: var(--text-label);
+  color: var(--ink-2);
+}
+
+.body,
+.fine {
+  margin: 0;
+  font: var(--text-body);
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.fine {
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+/* ------------------------------------------------------------------ the cards */
+
+.card {
+  display: grid;
+  gap: var(--s-2);
+  margin: 0 0 var(--s-4);
+}
+
+.heading {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin: 0;
+  font: var(--text-label);
+  color: var(--ink);
+}
+
+.heading svg {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  color: var(--ink-2);
+}
+
+.rows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.row {
+  display: grid;
+  gap: var(--s-2);
+  padding: var(--s-3) var(--s-4);
+}
+
+.row + .row {
+  border-top: 1px solid var(--hairline, rgb(127 127 127 / 0.16));
+}
+
+.top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-3);
+}
+
+.name {
+  min-width: 0;
+  font: var(--text-body);
+  font-weight: 600;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.amount {
+  flex: none;
+  font: var(--text-body);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}

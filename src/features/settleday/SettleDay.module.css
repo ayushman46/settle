@@ -1,0 +1,279 @@
+/* Settle Day: the card on a group's page, the day picker, and the settle-day page. */
+.content {
+  gap: var(--s-5);
+}
+
+.fine {
+  margin: 0;
+  font: var(--text-caption);
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
+}
+
+/* ------------------------------------------------------------------ picking the day */
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+.sheet {
+  display: grid;
+  gap: var(--s-4);
+}
+
+.days {
+  display: grid;
+  /* Six across keeps every day at least 44 px wide on a 360 px phone. */
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: var(--s-1);
+}
+
+.dayButton {
+  min-width: 0;
+  min-height: 44px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-tile);
+  background: var(--surface);
+  color: var(--ink);
+  font: var(--text-body);
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+
+.dayButton[data-selected] {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: var(--on-primary);
+  font-weight: 600;
+}
+
+.dayButton:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.lastChip {
+  justify-self: start;
+}
+
+/* ------------------------------------------------------------------ the card on the group page */
+
+.pick,
+.due {
+  display: grid;
+  gap: var(--s-2);
+  margin: 0 0 var(--s-4);
+  padding: var(--s-3) var(--s-4);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+}
+
+.pickTitle {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin: 0;
+  font: var(--text-label);
+  color: var(--ink);
+}
+
+.pickTitle svg {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  color: var(--ink-2);
+}
+
+.card {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  width: 100%;
+  min-height: 44px;
+  margin: 0 0 var(--s-4);
+  padding: var(--s-3) var(--s-4);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.card:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.cardIcon,
+.chevron,
+.dueIcon {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  color: var(--ink-2);
+}
+
+.chevron {
+  width: 18px;
+  height: 18px;
+}
+
+.cardText {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+  gap: 2px;
+}
+
+.cardTitle {
+  font: var(--text-label);
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.due {
+  gap: var(--s-3);
+  border-color: var(--accent-edge);
+  background: var(--accent-soft);
+}
+
+.dueHead {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-3);
+  min-width: 0;
+}
+
+.dueIcon {
+  margin-top: 2px;
+  color: var(--accent-ink);
+}
+
+.dueTitle {
+  margin: 0;
+  font: var(--text-title);
+  letter-spacing: var(--tracking-tight);
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.dueBody {
+  margin: 0;
+  font: var(--text-body);
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+/* ------------------------------------------------------------------ the page */
+
+.block {
+  display: grid;
+  gap: var(--s-3);
+}
+
+.rows,
+.doneList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.row {
+  display: grid;
+  gap: var(--s-3);
+  padding: var(--s-4);
+}
+
+.row + .row {
+  border-top: 1px solid var(--line);
+}
+
+.rowHead,
+.doneItem {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  min-width: 0;
+}
+
+.rowText {
+  flex: 1;
+  min-width: 0;
+  font: var(--text-body);
+  font-weight: 600;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.rowActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+.rowActions > button {
+  flex: 1 1 auto;
+  min-height: 44px;
+  white-space: nowrap;
+}
+
+.doneList {
+  display: grid;
+  gap: var(--s-2);
+}
+
+.doneItem {
+  min-height: 44px;
+}
+
+.doneItem .rowText {
+  font-weight: 400;
+}
+
+.tick {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  color: var(--positive);
+}
+
+.square {
+  display: grid;
+  justify-items: center;
+  gap: var(--s-2);
+  padding: var(--s-6) var(--s-4);
+  text-align: center;
+}
+
+.squareTitle {
+  margin: 0;
+  font: var(--text-title);
+  letter-spacing: var(--tracking-tight);
+  color: var(--ink);
+}
+
+.tell {
+  display: grid;
+  gap: var(--s-3);
+}
+
+.message {
+  margin: 0;
+  padding: var(--s-3);
+  border-radius: var(--radius-tile);
+  background: var(--surface-2);
+  font: var(--text-body);
+  color: var(--ink);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.remove {
+  justify-self: start;
+}

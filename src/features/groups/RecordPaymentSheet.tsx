@@ -9,6 +9,7 @@ import { t as translate, useT } from '../../i18n'
 import { AmountHero, DateField, FriendAvatar, friendLabel, friendObjectLabel } from '../../kit/index-a'
 import { cx } from '../../lib/cx'
 import { formatMoney } from '../../lib/money'
+import { NotesButton } from '../notes/NotesButton'
 import { METHOD_LABELS, paymentWithAmount } from './groupView'
 import styles from './RecordPaymentSheet.module.css'
 
@@ -132,6 +133,7 @@ export function RecordPaymentSheet({ transfer, currency, onClose, onRecord }: Re
             className={styles.methods}
           />
         </div>
+        {form.method === 'cash' && <NotesButton amount={form.amount ?? 0} currency={currency} payerName={friendLabel(t.fromId, from)} receiverName={friendLabel(t.toId, to)} />}
         <div className={styles.row}>
           <span className={styles.rowLabel}>{tr('groups.record.when')}</span>
           <DateField label={tr('groups.record.date.label')} value={form.date} onChange={(date) => setForm((f) => ({ ...f, date }))} />

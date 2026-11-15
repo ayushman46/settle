@@ -1,0 +1,313 @@
+/* Interest on a loan: the list, one loan (status, rules, statement, settings), the payment sheet, and the loan note for paper. */
+
+.content {
+  gap: var(--s-5);
+  padding-bottom: var(--s-6);
+}
+
+.block,
+.picker,
+.settings,
+.sheet,
+.status {
+  display: grid;
+  gap: var(--s-3);
+  min-width: 0;
+}
+
+.status {
+  gap: var(--s-2);
+}
+
+.heading {
+  margin: 0;
+  font: var(--text-section);
+  color: var(--ink);
+}
+
+.label {
+  font: var(--text-label);
+  color: var(--ink);
+}
+
+.body {
+  margin: 0;
+  font: var(--text-body);
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.fine,
+.bad,
+.split {
+  margin: 0;
+  font: var(--text-caption);
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
+}
+
+.bad {
+  color: var(--negative);
+  font-weight: 600;
+}
+
+.split {
+  font: var(--text-body);
+  color: var(--ink);
+}
+
+.actions,
+.footer {
+  display: grid;
+  gap: var(--s-2);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+.other {
+  display: grid;
+  gap: var(--s-3);
+}
+
+.dateRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2) var(--s-3);
+  min-height: 44px;
+}
+
+.rules {
+  display: grid;
+  gap: var(--s-1);
+  margin: 0;
+  padding-inline-start: var(--s-5);
+  font: var(--text-caption);
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
+}
+
+/* The statement */
+.lines {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.line {
+  display: grid;
+  gap: 2px;
+  padding: var(--s-3) var(--s-4);
+}
+
+.line + .line {
+  border-top: 1px solid var(--line);
+}
+
+.lineDate {
+  font: var(--text-micro);
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.lineTitle {
+  font: var(--text-label);
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+/* The row on a loan's page */
+.rowIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--s-10);
+  height: var(--s-10);
+  border-radius: var(--radius-pill);
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+}
+
+.rowIcon svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* ---------- The loan note: not shown on screen, the only thing on the page when printed ---------- */
+
+.printArea {
+  display: none;
+}
+
+/* Paper is white with dark ink whatever the app's theme, as on the expense claim. */
+.note {
+  display: grid;
+  gap: 14px;
+  padding: 18px 20px;
+  background: #ffffff;
+  color: #111418;
+  font-family: var(--font-sans, system-ui, sans-serif);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.noteHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #dde1e7;
+}
+
+.noteTitle {
+  font-size: 16px;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.noteSub {
+  font-size: 11px;
+  color: #4a525e;
+}
+
+.noteMeta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 8px 20px;
+  margin: 0;
+}
+
+.noteMeta dt,
+.noteLabel {
+  margin: 0;
+  font-size: 10px;
+  font-weight: 650;
+  color: #4a525e;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.noteMeta dd {
+  margin: 0;
+  font-weight: 650;
+  overflow-wrap: anywhere;
+}
+
+.noteBlock {
+  display: grid;
+  gap: 6px;
+}
+
+.noteTerms {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding-inline-start: 18px;
+}
+
+.noteTable {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.noteTable th,
+.noteTable td {
+  padding: 5px 6px;
+  border-bottom: 1px solid #e3e6eb;
+  text-align: start;
+  vertical-align: top;
+  overflow-wrap: break-word;
+  hyphens: manual;
+}
+
+.noteTable thead th {
+  font-size: 10px;
+  color: #4a525e;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom-color: #111418;
+}
+
+.num {
+  text-align: end !important;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.nowrap {
+  white-space: nowrap;
+}
+
+.noteSign {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 28px;
+}
+
+.signature {
+  display: grid;
+  gap: 4px;
+  font-size: 11px;
+}
+
+.signatureLine {
+  width: 150px;
+  height: 32px;
+  border-bottom: 1px solid #111418;
+}
+
+.noteFoot {
+  margin: 8px 0 0;
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.noteMade {
+  margin: 0;
+  font-size: 9px;
+  color: #6b7380;
+  text-align: end;
+}
+
+@media print {
+  @page {
+    size: A4;
+    margin: 14mm;
+  }
+
+  :global(body) * {
+    visibility: hidden;
+  }
+
+  .printArea,
+  .printArea * {
+    visibility: visible;
+  }
+
+  .printArea {
+    position: absolute;
+    inset: 0 0 auto;
+    display: block;
+  }
+
+  .note {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 0 1mm;
+  }
+
+  .noteTable tr,
+  .noteSign {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}

@@ -19,7 +19,7 @@ import {
   recurringListSchema,
   withMe,
 } from './schemas'
-import { flushAllStores, localStore, unreadableKey } from './store'
+import { flushAllStores, localStore, reloadStores, unreadableKey } from './store'
 import {
   claimsStore,
   expensesStore,
@@ -91,6 +91,56 @@ export interface BackupFile {
   groupSync: GroupSyncState
   /** The shagun book: functions and what was given and received. Absent in older files. */
   shagun: ShagunState
+  /**
+   * The ledgers added in v10 (pay in parts, promises, held and refunded expenses, households,
+   * committees, tallies…), each as it is stored on the phone, by storage key. They are read
+   * straight from storage so a ledger is in the backup whether or not its screen was opened
+   * this session, and checked by its own store when it is next read. Absent in older files.
+   */
+  ledgers: Record<string, unknown>
+}
+
+const LEDGER_PREFIX = 'settle.v10.'
+const LEDGER_KEYS: readonly string[] = Object.values(STORAGE_KEYS).filter((key) => key.startsWith(LEDGER_PREFIX))
+/** A ledger bigger than this (as text) is left out of a backup rather than breaking it. */
+const MAX_LEDGER_CHARS = 2_000_000
+
+function readLedgers(): Record<string, unknown> {
+  const storage = localStore()
+  const out: Record<string, unknown> = {}
+  if (!storage) return out
+  for (const key of LEDGER_KEYS) {
+    try {
+      const raw = storage.getItem(key)
+      if (raw === null || raw.length > MAX_LEDGER_CHARS) continue
+      out[key] = JSON.parse(raw) as unknown
+    } catch {
+      // Unreadable: left out.
+    }
+  }
+  return out
+}
+
+/** Puts ledgers from a backup into storage. `keep`: leave alone any ledger this phone already has. */
+function writeLedgers(ledgers: Record<string, unknown>, keep: boolean): number {
+  const storage = localStore()
+  if (!storage) return 0
+  let written = 0
+  for (const key of LEDGER_KEYS) {
+    const value = ledgers[key]
+    if (value === undefined || value === null || typeof value !== 'object') continue
+    try {
+      if (keep && storage.getItem(key) !== null) continue
+      const text = JSON.stringify(value)
+      if (text.length > MAX_LEDGER_CHARS) continue
+      storage.setItem(key, text)
+      written++
+    } catch {
+      // Storage full or blocked: this ledger stays as it was.
+    }
+  }
+  reloadStores(LEDGER_PREFIX)
+  return written
 }
 
 const backupSchema = z.object({
@@ -112,6 +162,7 @@ const backupSchema = z.object({
   fees: z.catch(z.optional(feesSchema), undefined),
   groupSync: z.catch(z.optional(groupSyncSchema), undefined),
   shagun: z.catch(z.optional(shagunSchema), undefined),
+  ledgers: z.catch(z.optional(z.record(z.string(), z.unknown())), undefined),
 })
 
 export function exportBackup(): BackupFile {
@@ -133,6 +184,7 @@ export function exportBackup(): BackupFile {
     fees: feesStore.get(),
     groupSync: groupSyncStore.get(),
     shagun: shagunStore.get(),
+    ledgers: (flushAllStores(), readLedgers()),
   }
 }
 
@@ -167,6 +219,7 @@ export function parseBackup(json: unknown): BackupFile | null {
     fees: data.fees ?? emptyFees(),
     groupSync: data.groupSync ?? {},
     shagun: data.shagun ?? { functions: [], entries: [] },
+    ledgers: data.ledgers ?? {},
   }
 }
 
@@ -291,6 +344,16 @@ export function importBackup(file: BackupFile, mode: 'merge' | 'replace'): { add
     shagunStore.set({ functions: [...file.shagun.functions], entries: [...file.shagun.entries] })
     clearSplitPrefill()
     flushAllStores()
+    // The v10 ledgers: this phone’s are replaced by the file’s (a ledger the file doesn’t have is emptied).
+    const storage = localStore()
+    for (const key of LEDGER_KEYS) {
+      try {
+        storage?.removeItem(key)
+      } catch {
+        // Blocked storage.
+      }
+    }
+    writeLedgers(file.ledgers, false)
     const added =
       file.friends.filter((f) => f.id !== ME_ID).length +
       file.expenses.length +
@@ -430,6 +493,8 @@ export function importBackup(file: BackupFile, mode: 'merge' | 'replace'): { add
   added += entries.added
 
   flushAllStores()
+  // The v10 ledgers: one this phone doesn’t have yet comes in whole; one it has is left as it is.
+  writeLedgers(file.ledgers, true)
   return {
     added: added + expenses.added + groups.added + recurring.added + pools.added + claims.added + stuck.added,
     updated: updated + expenses.updated + groups.updated + recurring.updated + pools.updated + claims.updated + stuck.updated,
@@ -453,5 +518,6 @@ export function clearAllData(): void {
   }
   for (const store of [profileStore, friendsStore, expensesStore, groupsStore, recurringStore, poolsStore, claimsStore, proofRefsStore, payerAliasesStore, remindersStore, autoSettleStore, stuckStore, stuckSeenStore, letterMeStore, feesStore, groupSyncStore, counterStore, playStore, chatStore, spentStore, swapStore, kittyStore, presenceStore, wrappedStore, reportStore, shagunStore, dietStore, usualStore])
     store.reload()
+  reloadStores(LEDGER_PREFIX)
   clearSplitPrefill()
 }

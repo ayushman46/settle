@@ -9,6 +9,9 @@ import { today } from '../../engine/dates'
 import { useT } from '../../i18n'
 import { FriendAvatar, friendLabel } from '../../kit/index-a'
 import { NudgeSheet } from '../../kit/index-b'
+import { LimitBadge } from '../limit/LimitBadge'
+import { PaydayHint } from '../payday/PaydayHint'
+import { PromiseChip } from '../promise/PromiseChip'
 import { haptic } from '../../lib/haptics'
 import { formatMoney } from '../../lib/money'
 import { settleWithFriend } from '../friends/friendBalance'
@@ -127,6 +130,9 @@ function Person({ row, now, onRemind, onPaid }: { row: CollectRow; now: number; 
             {asked}
             {next && ` · ${next}`}
           </span>
+          <LimitBadge friendId={row.friend.id} />
+          <PromiseChip friendId={row.friend.id} />
+          <PaydayHint friendId={row.friend.id} />
         </span>
         <Money value={row.amount} currency={row.sources[0]?.currency ?? 'INR'} strong trimZeros className={styles.amount} />
       </button>

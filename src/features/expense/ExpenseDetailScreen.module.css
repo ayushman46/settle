@@ -56,3 +56,14 @@
 .gone {
   align-self: flex-start;
 }
+
+/* Refund and On hold, under the shares. */
+.afterActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+.afterActions:empty {
+  display: none;
+}

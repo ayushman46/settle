@@ -1,0 +1,49 @@
+/* Small change: the offer above a group's expenses, the setting, the friend button, the log. */
+.offers {
+  display: grid;
+  gap: var(--s-2);
+  margin: 0 0 var(--s-4);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+.fine {
+  margin: 0;
+  font: var(--text-caption);
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
+}
+
+.setting {
+  display: grid;
+  gap: var(--s-2);
+}
+
+.title {
+  margin: 0;
+  font: var(--text-label);
+  color: var(--ink);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+.friend {
+  display: grid;
+  justify-items: start;
+  gap: var(--s-2);
+}
+
+.line {
+  margin: 0;
+  font: var(--text-body);
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}

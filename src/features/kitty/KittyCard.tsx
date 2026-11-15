@@ -7,6 +7,7 @@ import { useT } from '../../i18n'
 import { friendLabel } from '../../kit/index-a'
 import { formatMoney } from '../../lib/money'
 import { kittyView } from './engine'
+import { withoutFamilyPayments } from './family'
 import { lastsLabel } from './kittyText'
 import { useKittyConfig } from './store'
 import styles from './Kitty.module.css'
@@ -23,7 +24,7 @@ export const KittyCard = memo(function KittyCard({ group: given, onOpen }: { gro
   const expenses = useExpenses({ groupId: group.id })
   const friendsById = useFriendsById()
   const day = todayIso()
-  const view = useMemo(() => (config ? kittyView(group, expenses, config, day) : null), [config, group, expenses, day])
+  const view = useMemo(() => (config ? kittyView(withoutFamilyPayments(group), expenses, config, day) : null), [config, group, expenses, day])
   if (!view || group.archived || group.memberIds.length < 2) return null
 
   const money = (paise: number): string => formatMoney(paise, group.currency, { trimZeros: true })

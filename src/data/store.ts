@@ -106,6 +106,11 @@ export function flushAllStores(): void {
   for (const store of registry) store.flush()
 }
 
+/** The stores in use right now whose key starts with `prefix`: told to re-read storage (after a restore or an erase). */
+export function reloadStores(prefix: string): void {
+  for (const store of registry) if (store.key.startsWith(prefix)) store.reload()
+}
+
 /** Every store re-reads storage on next access, pending writes are dropped and subscribers told. Tests only. */
 export function reloadAllStores(): void {
   for (const store of registry) store.reload()

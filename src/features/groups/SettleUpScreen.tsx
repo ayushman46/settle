@@ -10,6 +10,7 @@ import { useT } from '../../i18n'
 import { friendLabel, friendObjectLabel } from '../../kit/index-a'
 import { NudgeSheet, TransferRow, UpiPaySheet, upiPaymentForTransfer } from '../../kit/index-b'
 import { PROOF_ENABLED, PROOF_PATH } from '../proof/enabled'
+import { DirectSwitch, useSettlePlan, WhyLine } from '../why'
 import { haptic } from '../../lib/haptics'
 import { GroupGone } from './GroupGone'
 import { GroupShareSheet } from './GroupShareSheet'
@@ -24,6 +25,8 @@ const ROUTES = ['/app/groups/:id/settle'] as const
  * `/app/groups/:id/settle` — the fewest payments that square everyone up. Yours to pay (by UPI,
  * straight from here), yours to collect (with a friendly reminder) and the ones between others;
  * each recorded once the money has moved, in full or in part. When nothing's left: a celebration.
+ * Every payment has a "Why?" under it, and a group can choose to pay only people they directly
+ * owe (src/features/why): the same money, listed pair by pair.
  */
 export function SettleUpScreen() {
   const { params } = useRoute(ROUTES)
@@ -44,6 +47,7 @@ function SettleUp({ group }: { group: Group }) {
   const friendsById = useFriendsById()
   const expenses = useExpenses({ groupId: group.id })
   const standing = useMemo(() => groupStanding(group, expenses), [group, expenses])
+  const { plan, mode } = useSettlePlan(group, expenses)
   const [recording, setRecording] = useState<Transfer | null>(null)
   // The last payment stays with its sheet while it slides away.
   const [paying, setPaying] = useState<OpenFor | null>(null)
@@ -52,7 +56,8 @@ function SettleUp({ group }: { group: Group }) {
   const [moment, setMoment] = useState<Moment | null>(null)
   const back = (): void => goBack(groupPath(group.id))
 
-  const { transfers } = standing
+  // The fewest payments, as always; or, when the group asked for it, only what each two people directly owe.
+  const transfers = mode === 'direct' ? plan.direct : standing.transfers
   const youPay = transfers.filter((t) => t.fromId === ME_ID)
   const youGet = transfers.filter((t) => t.toId === ME_ID)
   const between = transfers.filter((t) => t.fromId !== ME_ID && t.toId !== ME_ID)
@@ -84,14 +89,16 @@ function SettleUp({ group }: { group: Group }) {
     const mine = t.fromId === ME_ID
     const owedToMe = t.toId === ME_ID
     return (
-      <TransferRow
-        key={`${t.fromId}>${t.toId}`}
-        transfer={t}
-        currency={group.currency}
-        onPay={mine && upi ? () => setPaying({ transfer: t, open: true }) : undefined}
-        onRemind={owedToMe ? () => setReminding({ transfer: t, open: true }) : undefined}
-        onRecord={() => setRecording(t)}
-      />
+      <div key={`${t.fromId}>${t.toId}`} className={styles.row}>
+        <TransferRow
+          transfer={t}
+          currency={group.currency}
+          onPay={mine && upi ? () => setPaying({ transfer: t, open: true }) : undefined}
+          onRemind={owedToMe ? () => setReminding({ transfer: t, open: true }) : undefined}
+          onRecord={() => setRecording(t)}
+        />
+        <WhyLine plan={plan} transfer={t} mode={mode} currency={group.currency} groupName={group.name} />
+      </div>
     )
   }
 
@@ -113,7 +120,7 @@ function SettleUp({ group }: { group: Group }) {
       <PageTitle
         eyebrow={`${group.emoji} ${group.name}`}
         title={tr('groups.settle.title')}
-        subtitle={count > 0 ? tr('groups.settle.subtitle', { count }) : undefined}
+        subtitle={count > 0 ? tr(mode === 'direct' ? 'why.direct.subtitle' : 'groups.settle.subtitle', { count }) : undefined}
       />
 
       {PROOF_ENABLED && (
@@ -121,6 +128,8 @@ function SettleUp({ group }: { group: Group }) {
           {tr('proof.entry.cta')}
         </Button>
       )}
+
+      <DirectSwitch groupId={group.id} plan={plan} />
 
       {count === 0 ? (
         <div className={styles.square}>

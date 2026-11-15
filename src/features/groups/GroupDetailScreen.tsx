@@ -74,6 +74,12 @@ import { rememberedTimelineLimit, rememberTimelineLimit, TIMELINE_PAGE } from '.
 import { BoardTab } from '../play/BoardTab'
 import { useKittyHeld } from '../kitty/useKittyHeld'
 import { PresenceBanner } from '../presence/PresenceBanner'
+import { ChhuttaCard } from '../chhutta/ChhuttaCard'
+import { HoldCard } from '../hold/HoldCard'
+import { KindNoteLine } from '../kind/KindNoteLine'
+import { isWithinFamily } from '../units/store'
+import { RefundedCard } from '../refund/RefundedCard'
+import { SettleDayCard } from '../settleday/SettleDayCard'
 import { TripOverCard } from '../wrapped/TripOver'
 import { GroupTools } from './GroupTools'
 import { GroupShortcuts } from '../play/GroupShortcuts'
@@ -82,6 +88,10 @@ import styles from './GroupDetailScreen.module.css'
 // The cards under the balance only depend on the group: scrolling a long list must not re-run them.
 const Tools = memo(GroupTools)
 const TripOver = memo(TripOverCard)
+const SettleDay = memo(SettleDayCard)
+const SmallChange = memo(ChhuttaCard)
+const OnHold = memo(HoldCard)
+const Refunded = memo(RefundedCard)
 const LateJoiners = memo(PresenceBanner)
 
 const ROUTES = ['/app/groups/:id'] as const
@@ -221,6 +231,14 @@ function GroupDetail({ group, onLeaving }: { group: Group; onLeaving: (group: Gr
       {ROTATION_ENABLED && <NextRoundCard group={group} expenses={expenses} onPlan={() => setSheet('rotation')} />}
 
       <TripOver group={group} />
+
+      <SettleDay group={group} />
+
+      <SmallChange group={group} />
+
+      <OnHold group={group} />
+
+      <Refunded group={group} />
 
       <Tools group={group} />
 
@@ -667,6 +685,8 @@ function PaymentSheet({
             <dd>{group.name}</dd>
           </div>
         </dl>
+        <KindNoteLine id={s.id} />
+        {isWithinFamily(group.id, s.id) && <p className={styles.note}>{t('units.within.label')}</p>}
         <p className={styles.note}>{t('groups.payment.mistake')}</p>
       </div>
     </BottomSheet>

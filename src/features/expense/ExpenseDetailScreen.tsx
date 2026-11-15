@@ -17,7 +17,9 @@ import { collectProgress } from '../../engine/balances'
 import { useT } from '../../i18n'
 import { friendLabel } from '../../kit/index-a'
 import { CounterCard } from '../counter/CounterCard'
+import { HoldButton } from '../hold/HoldButton'
 import { NightsCard } from '../presence/NightsCard'
+import { RefundButton } from '../refund/RefundSheet'
 import { CollectCard, NudgeSheet, ShareList, ShareSheet, upiPaymentForShare, UpiPaySheet, usePayLink } from '../../kit/index-b'
 import { haptic } from '../../lib/haptics'
 import { formatMoney } from '../../lib/money'
@@ -230,6 +232,12 @@ function ExpenseDetail({ expense, onDeleting }: ExpenseDetailProps) {
 
       <CounterCard expense={expense} />
       <NightsCard expense={expense} />
+
+      {/* Money came back on it, or it is being argued about. */}
+      <div className={styles.afterActions}>
+        <RefundButton expenseId={expense.id} onRemoving={onDeleting} />
+        <HoldButton expenseId={expense.id} onHolding={onDeleting} />
+      </div>
 
       <section className={styles.section} aria-labelledby="expense-shares">
         <SectionHeader

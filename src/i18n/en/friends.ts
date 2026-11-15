@@ -2,6 +2,8 @@
 import type { Messages } from '../types'
 
 export const friends = {
+  'friends.tools.aria': 'More you can do with this person',
+  'friends.money.title': 'Payday and limit',
   // The people list (`/app/friends`).
   'friends.list.title': 'People',
   'friends.list.subtitle': 'Everyone you split with — they don’t need the app.',

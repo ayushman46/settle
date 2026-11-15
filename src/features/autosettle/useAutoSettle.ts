@@ -26,6 +26,7 @@ import { undoMatches } from '../whospaid/sources'
 import { paymentsSeen } from '../../lib/payWatch'
 import { noteSpends } from '../spent/spent'
 import { alertToPaidOut, readRawAlerts } from './alerts'
+import { noteSalaryAlerts } from '../payday/alerts'
 import { settleAlerts, type AutoSettleResult } from './autoSettle'
 
 /** The native plugin (android/…/PaymentAlertsPlugin.java). */
@@ -149,6 +150,8 @@ export function useAutoSettle(): void {
       try {
         const { alerts } = await callPlugin<{ alerts?: unknown }>(PAYMENT_ALERTS, 'drain')
         const raw = readRawAlerts(alerts)
+        // A salary arriving teaches the app your payday (offered on Home, never set by itself).
+        noteSalaryAlerts(raw)
         // A pay sheet waiting to hear its payment went through: told first, so it records itself.
         const claimed = paymentsSeen(raw.map(alertToPaidOut).filter((o): o is NonNullable<typeof o> => o !== null))
         // The rest of what you paid: kept a few days as a one-tap split (Home’s "Split this?").

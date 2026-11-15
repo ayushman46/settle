@@ -13,6 +13,7 @@ import { currencyDigits, formatMoney, parseMoneyInput, toInputString } from '../
 import { shareResult } from '../../lib/share'
 import { isValidUpiId, normalizeUpiId } from '../../lib/upi'
 import { kittyView, suggestedHolder, type KittyConfig, type KittyView } from './engine'
+import { withoutFamilyPayments } from './family'
 import { lastsLabel, sinceLabel } from './kittyText'
 import { endKitty, setKitty, useKittyConfig } from './store'
 import styles from './Kitty.module.css'
@@ -39,7 +40,7 @@ export function KittySheet({ group: given, open, onClose }: KittySheetProps) {
   const config = useKittyConfig(group.id)
   const expenses = useExpenses({ groupId: group.id })
   const day = todayIso()
-  const view = useMemo(() => (config ? kittyView(group, expenses, config, day) : null), [config, group, expenses, day])
+  const view = useMemo(() => (config ? kittyView(withoutFamilyPayments(group), expenses, config, day) : null), [config, group, expenses, day])
   // The kitty just ended here: say so on the start form until the sheet closes or a new one starts.
   const [ended, setEnded] = useState<Ended | null>(null)
   const [wasOpen, setWasOpen] = useState(open)

@@ -26,6 +26,13 @@
   animation-delay: 100ms;
 }
 
+/* One payment and the "Why?" under it. */
+.row {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
 .hint {
   font: var(--text-caption);
   color: var(--ink-2);

@@ -119,6 +119,19 @@ describe('SettleUpScreen — payments', () => {
   })
 })
 
+describe('SettleUpScreen — why', () => {
+  it('explains each payment, and offers no switch when everyone already pays who they owe', async () => {
+    iOweRiya()
+    const { user } = renderApp(path())
+    expect(screen.queryByRole('switch')).not.toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Why you pay Riya ₹600' }))
+    const sheet = await screen.findByRole('dialog', { name: 'Why you pay Riya ₹600' })
+    expect(within(sheet).getByText('In this group you’ve had ₹600 of things and haven’t paid any of the bills, so you’re ₹600 short.')).toBeInTheDocument()
+    expect(within(sheet).getByText('In this group Riya has paid ₹1,800 of bills and had ₹900 of things, so Riya is owed ₹900.')).toBeInTheDocument()
+    expect(within(sheet).getByText('Between just the two of you, you owe Riya ₹600. This payment is exactly that.')).toBeInTheDocument()
+  })
+})
+
 describe('SettleUpScreen — collecting', () => {
   it('reminds whoever owes me', async () => {
     saveExpense(draft({ title: 'Villa', total: 90000, groupId: goa.id, with: [riya, sam] }))

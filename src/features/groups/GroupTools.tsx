@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { BookOpenText, CalendarRange, Dices, MessagesSquare, PiggyBank, ReceiptText } from 'lucide-react'
+import { BookOpenText, CalendarRange, Dices, House, MessagesSquare, PiggyBank, ReceiptText } from 'lucide-react'
 import { navigate } from '../../app/router'
 import { Chip } from '../../components'
 import { useExpenses } from '../../data'
@@ -11,11 +11,14 @@ import { KittySheet } from '../kitty/KittySheet'
 import { PresenceSheet } from '../presence/PresenceSheet'
 import { reportPath } from '../report/paths'
 import { SpinSheet } from '../spin/SpinSheet'
+import { CheckoutLink } from '../checkout/CheckoutLink'
+import { UnitsCard } from '../units/UnitsCard'
+import { UnitsSheet } from '../units/UnitsSheet'
 import { hasStory } from '../wrapped/engine'
 import { wrappedPath } from '../wrapped/paths'
 import styles from './GroupTools.module.css'
 
-type Tool = 'kitty' | 'spin' | 'dates'
+type Tool = 'kitty' | 'spin' | 'dates' | 'units'
 
 /**
  * A group's tools, all in view: the kitty, the "who pays?" wheel, who was there when,
@@ -49,6 +52,11 @@ export function GroupTools({ group }: { group: Group }) {
             {t('groups.tools.dates')}
           </Chip>
         )}
+        {live && several && (
+          <Chip size="lg" leading={<House />} onClick={() => setOpen('units')}>
+            {t('units.sheet.title')}
+          </Chip>
+        )}
         {story && (
           <Chip size="lg" leading={<BookOpenText />} onClick={() => navigate(wrappedPath(group.id))}>
             {t('groups.tools.story')}
@@ -59,6 +67,7 @@ export function GroupTools({ group }: { group: Group }) {
             {t('groups.tools.chat')}
           </Chip>
         )}
+        {live && <CheckoutLink group={group} variant="chip" />}
         {expenses.length > 0 && (
           <Chip size="lg" leading={<ReceiptText />} onClick={() => navigate(reportPath(group.id))}>
             {t('groups.tools.report')}
@@ -67,7 +76,9 @@ export function GroupTools({ group }: { group: Group }) {
       </div>
       {live && !story && expenses.length > 0 && expenses.length < 3 && <p className={styles.note}>{t('groups.tools.story.soon', { count: 3 - expenses.length })}</p>}
       <KittyCard group={group} onOpen={() => setOpen('kitty')} />
+      <UnitsCard group={group} />
       <KittySheet group={group} open={open === 'kitty'} onClose={close} />
+      <UnitsSheet group={group} open={open === 'units'} onClose={close} />
       <SpinSheet group={group} open={open === 'spin'} onClose={close} />
       <PresenceSheet group={group} open={open === 'dates'} onClose={close} />
     </>

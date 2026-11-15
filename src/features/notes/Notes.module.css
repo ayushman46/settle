@@ -1,0 +1,82 @@
+/* Cash, exact notes: two short steps, each a row of note tiles. */
+.body {
+  display: grid;
+  gap: var(--s-4);
+}
+
+.plan {
+  display: grid;
+  gap: var(--s-4);
+}
+
+.step {
+  display: grid;
+  gap: var(--s-2);
+}
+
+.stepTitle {
+  margin: 0;
+  font: var(--text-section);
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.piles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pile {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+  min-height: 44px;
+  padding: var(--s-2) var(--s-3);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-field);
+  background: var(--surface-2);
+  color: var(--ink);
+  font: var(--text-label);
+  font-variant-numeric: tabular-nums;
+}
+
+.coin {
+  border-radius: var(--radius-pill);
+}
+
+.count {
+  font: var(--text-caption);
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.fine,
+.round {
+  margin: 0;
+  font: var(--text-caption);
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
+}
+
+.round {
+  padding: var(--s-3);
+  border-radius: var(--radius-field);
+  background: var(--surface-2);
+  font: var(--text-body);
+  color: var(--ink);
+}
+
+.button {
+  min-height: 44px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .body * {
+    transition: none;
+    animation: none;
+  }
+}
