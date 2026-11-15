@@ -1,0 +1,204 @@
+/* Committee (kitty / BC): the list, the set-up, the month, the people and the schedule. */
+.content {
+  display: grid;
+  gap: var(--s-5);
+}
+
+.section {
+  display: grid;
+  gap: var(--s-3);
+}
+
+.heading {
+  margin: 0;
+  font: var(--text-label);
+  color: var(--ink-2);
+}
+
+.fine {
+  margin: 0;
+  font: var(--text-caption);
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
+}
+
+.body {
+  margin: 0;
+  font: var(--text-body);
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.problem {
+  margin: 0;
+  font: var(--text-label);
+  color: var(--negative);
+  overflow-wrap: anywhere;
+}
+
+/* ------------------------------------------------------------------ set-up */
+
+.form {
+  display: grid;
+  gap: var(--s-4);
+}
+
+.field {
+  display: grid;
+  gap: var(--s-2);
+  min-width: 0;
+}
+
+.fieldLabel {
+  margin: 0;
+  font: var(--text-label);
+  color: var(--ink-2);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chips > li {
+  max-width: 100%;
+}
+
+.seats {
+  display: grid;
+  gap: var(--s-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.seat {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-height: 44px;
+}
+
+.seatName {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  font: var(--text-body);
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+/* ------------------------------------------------------------------ the month */
+
+.pot {
+  display: grid;
+  gap: var(--s-2);
+}
+
+.potTitle {
+  margin: 0;
+  font: var(--text-label);
+  color: var(--ink-2);
+}
+
+.potLine {
+  margin: 0;
+  font: var(--text-title);
+  letter-spacing: var(--tracking-tight);
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.hands {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.hand {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-height: 56px;
+  padding: var(--s-2) var(--s-3);
+}
+
+.hand + .hand {
+  border-top: 1px solid var(--hairline);
+}
+
+.who {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: var(--s-1);
+}
+
+.name {
+  margin: 0;
+  font: var(--text-body);
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.late {
+  margin: 0;
+  font: var(--text-caption);
+  color: var(--negative);
+  overflow-wrap: anywhere;
+}
+
+.actions {
+  display: grid;
+  gap: var(--s-2);
+}
+
+/* ------------------------------------------------------------------ the draw */
+
+.hat {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chit {
+  max-width: 100%;
+  padding: var(--s-2) var(--s-3);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-pill);
+  font: var(--text-label);
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.chitPicked {
+  border-color: var(--positive);
+  background: var(--positive-soft);
+}
+
+.result {
+  display: grid;
+  gap: var(--s-1);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .result,
+  .chitPicked {
+    animation: rise 220ms ease-out;
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}

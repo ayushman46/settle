@@ -1,5 +1,5 @@
 import { useId, type ReactNode } from 'react'
-import { BadgeIndianRupee, BanknoteArrowDown, Building2, CircleCheck, ListChecks, Zap, Landmark } from 'lucide-react'
+import { BadgeIndianRupee, BanknoteArrowDown, Building2, ChevronRight, CircleCheck, LayoutGrid, ListChecks, Zap, Landmark } from 'lucide-react'
 import { navigate } from '../../app/router'
 import { BottomSheet, QuickAction, QuickActionGrid } from '../../components'
 import { useT } from '../../i18n'
@@ -34,6 +34,14 @@ export function MoreActionsSheet({ open, onClose, stuckCard = false }: MoreActio
   return (
     <BottomSheet open={open} onClose={onClose} title={t('home.more.title')} description={t('home.more.subtitle')}>
       <div className={styles.more}>
+        <button type="button" className={styles.allTools} onClick={go('/app/tools')}>
+          <LayoutGrid aria-hidden="true" />
+          <span className={styles.allToolsText}>
+            <span className={styles.allToolsTitle}>{t('tools.entry')}</span>
+            <span className={styles.allToolsBody}>{t('tools.entry.body')}</span>
+          </span>
+          <ChevronRight aria-hidden="true" />
+        </button>
         <MoreGroup title={t('home.more.back')}>
           <QuickAction key="collect" icon={<BadgeIndianRupee />} label={t('collect.title')} tone="accent" onClick={go(COLLECT_PATH)} />
           <QuickAction key="whospaid" icon={<ListChecks />} label={t('whospaid.more.title')} tone="accent" onClick={go(WHOS_PAID_PATH)} />

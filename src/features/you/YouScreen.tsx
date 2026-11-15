@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { BadgeIndianRupee, BanknoteArrowDown, Building2, Landmark, ChartPie, CircleCheck, ClipboardPaste, Coins, FileText, HandCoins, KeyRound, Languages, Repeat, ShieldCheck, Users, ReceiptText } from 'lucide-react'
+import { BadgeIndianRupee, BanknoteArrowDown, Building2, Landmark, ChartPie, CircleCheck, ClipboardPaste, Coins, FileText, HandCoins, KeyRound, Languages, LayoutGrid, Repeat, ShieldCheck, Users, ReceiptText } from 'lucide-react'
 import { navigate } from '../../app/router'
 import { Badge, Card, List, ListRow, Screen, SuccessBurst, Switch, useToast } from '../../components'
 import { updateProfile, useDueRecurring, useFriends, usePools, useProfile, useRecurring, useStore, useSummary } from '../../data'
@@ -178,6 +178,17 @@ function Shortcuts() {
                 chevron
               />
             )}
+            <ListRow
+              leading={
+                <SettingIcon>
+                  <LayoutGrid />
+                </SettingIcon>
+              }
+              title={t('tools.you.title')}
+              subtitle={t('tools.you.subtitle')}
+              onClick={() => navigate('/app/tools')}
+              chevron
+            />
             <ShagunHomeRow />
             <ListRow
               leading={

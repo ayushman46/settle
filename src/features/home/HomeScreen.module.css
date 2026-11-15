@@ -382,3 +382,41 @@
   height: 16px;
   color: var(--positive);
 }
+
+/* More sheet: the way to every tool. */
+.allTools {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  width: 100%;
+  min-height: 56px;
+  padding: var(--s-3) var(--s-4);
+  border: 0;
+  border-radius: var(--radius-card, 16px);
+  background: var(--surface-2);
+  color: var(--ink);
+  text-align: start;
+  cursor: pointer;
+}
+
+.allTools svg {
+  width: 20px;
+  height: 20px;
+  flex: none;
+}
+
+.allToolsText {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+}
+
+.allToolsTitle {
+  font: var(--text-label, var(--text-body));
+}
+
+.allToolsBody {
+  font: var(--text-caption);
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
+}

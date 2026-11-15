@@ -1,0 +1,24 @@
+/* Home's Today list. */
+.section {
+  display: grid;
+  gap: var(--s-2);
+}
+
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.more {
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  padding: var(--s-2) var(--s-4);
+  border: 0;
+  background: none;
+  font: var(--text-label, var(--text-body));
+  color: var(--ink);
+  text-align: start;
+  cursor: pointer;
+}

@@ -1,0 +1,46 @@
+/* The Tools hub: every tool, grouped, searchable. */
+.content {
+  display: grid;
+  gap: var(--s-4);
+  align-content: start;
+}
+
+.section {
+  display: grid;
+  gap: var(--s-2);
+}
+
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.icon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: var(--surface-2, var(--surface));
+  color: var(--ink);
+  flex: none;
+}
+
+.icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.place {
+  display: block;
+  margin-top: 2px;
+  font: var(--text-caption);
+  color: var(--ink-2);
+}
+
+.count {
+  margin: 0;
+  font: var(--text-caption);
+  color: var(--ink-2);
+}

@@ -324,6 +324,11 @@ const ByaajDetailScreen = lazyScreen(
   () => import('../features/byaaj/ByaajDetailScreen'),
   (m) => m.ByaajDetailScreen,
 )
+const ToolsScreen = lazyScreen(
+  'ToolsScreen',
+  () => import('../features/tools/ToolsScreen'),
+  (m) => m.ToolsScreen,
+)
 const ChatScreen = lazyScreen(
   'ChatScreen',
   () => import('../features/chat/ChatScreen'),
@@ -358,6 +363,41 @@ const UpgradeScreen = lazyScreen(
   'UpgradeScreen',
   () => import('../features/pro/UpgradeScreen'),
   (m) => m.UpgradeScreen,
+)
+const TallyScreen = lazyScreen(
+  'TallyScreen',
+  () => import('../features/tally/TallyScreen'),
+  (m) => m.TallyScreen,
+)
+const TallyDetailScreen = lazyScreen(
+  'TallyDetailScreen',
+  () => import('../features/tally/TallyDetailScreen'),
+  (m) => m.TallyDetailScreen,
+)
+const CommitteeScreen = lazyScreen(
+  'CommitteeScreen',
+  () => import('../features/committee/CommitteeScreen'),
+  (m) => m.CommitteeScreen,
+)
+const CommitteeDetailScreen = lazyScreen(
+  'CommitteeDetailScreen',
+  () => import('../features/committee/CommitteeDetailScreen'),
+  (m) => m.CommitteeDetailScreen,
+)
+const FairRentScreen = lazyScreen(
+  'FairRentScreen',
+  () => import('../features/fairrent/FairRentScreen'),
+  (m) => m.FairRentScreen,
+)
+const HelpScreen = lazyScreen(
+  'HelpScreen',
+  () => import('../features/help/HelpScreen'),
+  (m) => m.HelpScreen,
+)
+const HelpPersonScreen = lazyScreen(
+  'HelpPersonScreen',
+  () => import('../features/help/HelpPersonScreen'),
+  (m) => m.HelpPersonScreen,
 )
 
 /** The paywall sheet, loaded the first time any screen asks for it. */
@@ -402,6 +442,7 @@ export const APP_ROUTES: readonly AppRoute[] = [
   { pattern: '/app/chat', screen: ChatScreen, title: 'Chat to split', tab: null },
   { pattern: '/app/groups/:id/settle-day', screen: SettleDayScreen, title: 'Settle day', tab: null },
   { pattern: '/app/groups/:id/checkout', screen: CheckoutScreen, title: 'Settle before you leave', tab: null },
+  { pattern: '/app/tools', screen: ToolsScreen, title: 'Everything Settle does', tab: null },
   { pattern: '/app/payday', screen: PaydayScreen, title: 'Payday', tab: null },
   { pattern: '/app/people/:id/statement', screen: PassbookScreen, title: 'Statement', tab: null },
   { pattern: '/app/limit', screen: LimitScreen, title: 'Udhaar limit', tab: null },
@@ -447,6 +488,13 @@ export const APP_ROUTES: readonly AppRoute[] = [
   { pattern: '/app/stuck/:id', screen: StuckDetailScreen, title: 'Stuck money', tab: null },
   { pattern: '/app/stuck/:id/edit', screen: StuckAddScreen, title: 'Edit stuck money', tab: null },
   { pattern: '/app/fees', screen: FeesScreen, title: 'Bank charges', tab: null },
+  { pattern: '/app/tally', screen: TallyScreen, title: 'Daily tally', tab: null },
+  { pattern: '/app/tally/:id', screen: TallyDetailScreen, title: 'Tally', tab: null },
+  { pattern: '/app/committee', screen: CommitteeScreen, title: 'Committee', tab: null },
+  { pattern: '/app/committee/:id', screen: CommitteeDetailScreen, title: 'Committee', tab: null },
+  { pattern: '/app/fair-rent', screen: FairRentScreen, title: 'Fair rent', tab: null },
+  { pattern: '/app/help', screen: HelpScreen, title: 'House help', tab: null },
+  { pattern: '/app/help/:id', screen: HelpPersonScreen, title: 'House help', tab: null },
 ]
 
 /** The app route for `path`, or null for an unknown `/app/*` path. */
