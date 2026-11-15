@@ -21,6 +21,42 @@
   padding: calc(var(--safe-top) + var(--s-3)) var(--gutter) 0;
 }
 
+/* ---------- "Get the app" persistent web banner ---------- */
+
+.getAppBanner {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  padding: var(--s-2) var(--gutter);
+  padding-top: calc(var(--safe-top) + var(--s-2));
+  background: var(--accent);
+  color: #fff;
+  font-size: var(--text-xs);
+  line-height: 1.4;
+}
+
+.getAppIcon {
+  flex-shrink: 0;
+  opacity: 0.9;
+}
+
+.getAppText {
+  flex: 1 1 auto;
+  opacity: 0.92;
+}
+
+.getAppLink {
+  flex-shrink: 0;
+  font-weight: 600;
+  color: #fff;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.getAppLink:hover {
+  text-decoration: underline;
+}
+
 /* ---------- Loading a screen's code: a skeleton that only fades in if it takes a moment ---------- */
 
 .fallback {

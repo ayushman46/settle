@@ -1,5 +1,5 @@
 import { Component, lazy, Suspense, useEffect, useLayoutEffect, useState, type ReactNode } from 'react'
-import { CircleUserRound, House, ReceiptText, RefreshCw, RotateCcw, UsersRound, WifiOff } from 'lucide-react'
+import { CircleUserRound, Download, House, ReceiptText, RefreshCw, RotateCcw, UsersRound, WifiOff } from 'lucide-react'
 import { AppFrame, Banner, Button, EmptyState, ScreenTransition, Skeleton, TabBar, type NavDirection, type TabBarItem } from '../components'
 import { migrateLegacy, profileStore, useStorageWritable, useStore } from '../data'
 import { BRAND, type Profile } from '../domain/types'
@@ -11,7 +11,7 @@ import { prefetchHealth } from '../state/health'
 import { startGroupSync } from '../features/groupsync/sync'
 import { isChunkLoadError, retryFailedScreens } from './lazyScreen'
 import { HOME_PATH, matchAppRoute, PaywallHost, preloadCoreScreens, WELCOME_PATTERN, type TabKey } from './routes'
-import { navigate, Redirect, useLocation, useNavDirection } from './router'
+import { Link, navigate, Redirect, useLocation, useNavDirection } from './router'
 import styles from '../App.module.css'
 
 /** The bottom tabs, named in the UI language. */
@@ -202,11 +202,36 @@ export function AppShell({ preloadScreens = import.meta.env.PROD }: AppShellProp
 
   return (
     <AppFrame>
+      <GetAppBanner />
       <StorageNotice />
       {content}
       <PaywallMount />
       {onboarded && <AutoSettleMount />}
     </AppFrame>
+  )
+}
+
+/**
+ * A thin persistent banner at the top of the app shell on the web version: "Get the app →".
+ * Never shown in the native Android app or when already installed as a PWA (standalone).
+ */
+function GetAppBanner() {
+  const [show] = useState(() => {
+    if (typeof window === 'undefined') return false
+    if (inAndroidApp) return false
+    if (window.matchMedia('(display-mode: standalone)').matches) return false
+    if ((navigator as Navigator & { standalone?: boolean }).standalone) return false
+    return true
+  })
+  if (!show) return null
+  return (
+    <div className={styles.getAppBanner}>
+      <Download className={styles.getAppIcon} aria-hidden="true" size={14} strokeWidth={2.5} />
+      <span className={styles.getAppText}>Use Settle on your phone — no app store needed.</span>
+      <Link to="/get" className={styles.getAppLink}>
+        Get the app →
+      </Link>
+    </div>
   )
 }
 
