@@ -63,8 +63,8 @@ describe('PresenceBanner', () => {
   })
 
   it('takes someone off what happened before they came, in one tap, and Undo puts it all back exactly', async () => {
-    const dinner = add('Dinner', 90_000, '2026-11-10')
-    const cab = add('Cab', 60_001, '2026-11-11', { payerId: sam }) // Sam booked it, wasn't there: stays the payer
+    const dinner = add('Dinner', 90_000, '2026-11-09')
+    const cab = add('Cab', 60_001, '2026-11-10', { payerId: sam }) // Sam booked it, wasn't there: stays the payer
     const lunch = add('Lunch', 30_000, '2026-11-12')
     const shopping = add('Shopping', 30_000, '2026-11-11', {
       mode: 'exact',
@@ -168,7 +168,7 @@ describe('PresenceBanner', () => {
   })
 
   it('what needs a person says what to do, and its button says it leaves them as they are', () => {
-    const dinner = add('Dinner', 90_000, '2026-11-10')
+    const dinner = add('Dinner', 90_000, '2026-11-09')
     expensesStore.set(expensesStore.get().map((e) => (e.id === dinner.id ? { ...e, paidBack: { [sam]: 5 } } : e)))
     setStay(group.id, sam, { from: '2026-11-12', to: null })
     renderAt('/app/groups/x', <PresenceBanner group={liveGroup()} />)
@@ -281,7 +281,7 @@ describe('NightsCard', () => {
   })
 
   it('shows nothing for a meal, without stays, or outside a group', () => {
-    const dinner = add('Dinner', 90_000, '2026-11-10')
+    const dinner = add('Dinner', 90_000, '2026-11-09')
     const villa = add('Villa', 90_000, '2026-11-10', { category: 'travel' })
     add('Lunch', 30_000, '2026-11-13')
     const solo = saveExpense(

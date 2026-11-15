@@ -118,7 +118,7 @@ export function presenceFixUps(input: {
   const mine = expenses
     .filter((e) => e.groupId === group.id && e.kind !== 'loan' && isIsoDate(e.date))
     .slice()
-    .sort((a, b) => (a.date === b.date ? b.createdAt - a.createdAt : a.date < b.date ? 1 : -1))
+    .sort((a, b) => (a.date === b.date ? b.createdAt - a.createdAt || a.title.localeCompare(b.title) || (a.id < b.id ? -1 : 1) : a.date < b.date ? 1 : -1))
   const out: PersonFixUps[] = []
   for (const friendId of group.memberIds) {
     const stay = usableStay(stays[friendId])
