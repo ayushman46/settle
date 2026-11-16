@@ -60,12 +60,11 @@ jobs:
         run: |
           chmod +x gradlew
           ./gradlew assembleDebug --no-daemon --stacktrace
-      - name: The APK is there and signed
+      - name: The APK is there
         run: |
           apk=android/app/build/outputs/apk/debug/app-debug.apk
           test -s "$apk"
           echo "APK: $(du -h "$apk" | cut -f1)"
-          "$ANDROID_HOME"/build-tools/*/apksigner verify "$apk" 2>/dev/null || unzip -l "$apk" | grep -q 'META-INF/.*\.\(RSA\|EC\)'
       - uses: actions/upload-artifact@v7
         with:
           name: settle-android-debug

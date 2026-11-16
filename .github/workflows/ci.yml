@@ -175,7 +175,15 @@ jobs:
       - name: The function runs the same rules as the app
         run: cmp shared/cloud.ts supabase/functions/settle-api/cloud.ts
       - name: Type-check settle-api
-        run: deno check supabase/functions/settle-api/index.ts
+        run: |
+          set +e
+          deno check supabase/functions/settle-api/index.ts 2>&1 | tee check.log
+          status=${PIPESTATUS[0]}
+          # Each error line as an annotation, so the reason reads on the run's summary.
+          if [ "$status" -ne 0 ]; then
+            grep -E 'ERROR|error:|at file' check.log | head -30 | while IFS= read -r line; do echo "::error title=deno check::$line"; done
+          fi
+          exit "$status"
 
   e2e:
     name: E2E · Edge · phones · ${{ matrix.shard }}/4

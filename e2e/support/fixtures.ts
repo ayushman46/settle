@@ -105,7 +105,7 @@ async function preparePhone(context: BrowserContext, baseURL: string | undefined
       const reason: unknown = event.reason
       if (reason instanceof Error && (reason.message || reason.stack)) return
       const kind = reason === null ? 'null' : typeof reason === 'object' ? (reason as object).constructor?.name ?? 'object' : typeof reason
-      let detail = ''
+      let detail: string
       try {
         detail = JSON.stringify(reason) ?? ''
       } catch {
