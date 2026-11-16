@@ -952,7 +952,7 @@ async function pay(ctx: Ctx, session: Session, id: string) {
   const s = await loadSettlement(id, session.userId)
   if (s.sender_id !== session.userId) fail('forbidden')
   const methods = await paymentMethodsOf(s.receiver_id)
-  let method = methods.find((p) => p.is_default) ?? methods[0]
+  let method: (typeof methods)[number] | undefined = methods.find((p) => p.is_default) ?? methods[0]
   if (ctx.body.paymentMethodId !== undefined && ctx.body.paymentMethodId !== null) {
     method = methods.find((p) => p.id === uuid(ctx.body.paymentMethodId))
     if (!method) fail('destination_invalid')

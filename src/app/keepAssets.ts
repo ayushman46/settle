@@ -25,6 +25,13 @@ export function keepLoadedAssets(): void {
 const KEEP_AGAIN_MS = [3_000, 15_000]
 
 export function keepAssetsOnTakeover(): void {
+  // The browser lists only 250 loads by default; API calls (sync, account cards) can fill that
+  // before a screen's code loads, and anything past it would never be kept for offline.
+  try {
+    performance.setResourceTimingBufferSize(5_000)
+  } catch {
+    // Older browsers: the default list.
+  }
   const sw = navigator.serviceWorker
   if (sw.controller) return
   sw.addEventListener(
