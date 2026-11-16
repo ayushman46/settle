@@ -217,7 +217,7 @@ function GetAppBanner() {
   return (
     <div className={styles.getAppBanner}>
       <Download className={styles.getAppIcon} aria-hidden="true" size={14} strokeWidth={2.5} />
-      <span className={styles.getAppText}>Use Settle on your phone — no app store needed.</span>
+      <span className={styles.getAppText}>Install Settle: no app store needed.</span>
       <Link to="/get" className={styles.getAppLink}>
         Get the app →
       </Link>

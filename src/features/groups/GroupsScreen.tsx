@@ -28,6 +28,7 @@ import { CreateGroupSheet } from './GroupSheets'
 import { acrossGroups, groupStanding, kindMeta, membersLabel, standingLabel, type GroupStanding } from './groupView'
 import { FRIENDS_PATH, groupPath, GROUPS_PATH } from './paths'
 import styles from './GroupsScreen.module.css'
+import { AccountGroupsCard } from '../account/AccountGroupsCard'
 
 const QUICK_KINDS: readonly GroupKind[] = ['trip', 'home', 'couple', 'event']
 
@@ -78,6 +79,8 @@ export function GroupsScreen() {
       contentClassName={styles.content}
     >
       <PageTitle title={t('groups.list.title')} subtitle={t('groups.list.subtitle', { brand: BRAND.name })} />
+
+      <AccountGroupsCard />
 
       {groups.length === 0 ? (
         <EmptyGroups onCreate={startCreate} />

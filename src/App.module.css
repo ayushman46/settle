@@ -27,8 +27,8 @@
   display: flex;
   align-items: center;
   gap: var(--s-2);
-  padding: var(--s-2) var(--gutter);
-  padding-top: calc(var(--safe-top) + var(--s-2));
+  padding: var(--s-1) var(--gutter);
+  padding-top: calc(var(--safe-top) + var(--s-1));
   background: var(--accent);
   color: var(--on-accent);
   font-size: var(--text-caption);
@@ -42,7 +42,11 @@
 
 .getAppText {
   flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
   opacity: 0.92;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .getAppLink {

@@ -4,6 +4,7 @@
  * from what their own calls return.
  */
 import { useEffect, useSyncExternalStore } from 'react'
+import { profileStore } from '../../data'
 import { cloud, type Me } from './api'
 
 export type AccountStatus = 'unknown' | 'loading' | 'signedOut' | 'signedIn' | 'unavailable'
@@ -35,13 +36,20 @@ export function accountState(): AccountState {
 export async function refreshAccount(): Promise<void> {
   if (state.status === 'unknown') set({ ...state, status: 'loading' })
   const res = await cloud<{ me: Me }>('GET', '/me')
-  if (res.ok) set({ status: 'signedIn', me: res.data.me, message: null })
+  if (res.ok) setMe(res.data.me)
   else if (res.status === 401) set({ status: 'signedOut', me: null, message: null })
   else set({ status: state.me ? 'signedIn' : 'unavailable', me: state.me, message: res.message })
 }
 
 export function setMe(me: Me): void {
   set({ status: 'signedIn', me, message: null })
+  adoptUpiId(me)
+}
+
+/** The account's default UPI ID becomes the phone's own when it has none (pay links and requests use it). */
+function adoptUpiId(me: Me): void {
+  const upi = me.paymentMethods.find((p) => p.isDefault)?.upiId
+  if (upi && !profileStore.get().upiId) profileStore.update((p) => ({ ...p, upiId: upi }))
 }
 
 export function setSignedOut(): void {

@@ -9,7 +9,7 @@ import { isUpiShaped, normalizeIndianPhone, normalizeUpi } from '../../../shared
 import { cloud, type Me, type PaymentMethod } from './api'
 import { addPasskey, createAccount, passkeysSupported, signIn, withFreshAuth } from './passkey'
 import { accountRequired } from './gate'
-import { setMe, setSignedOut, useAccount } from './store'
+import { refreshAccount, setMe, setSignedOut, useAccount } from './store'
 import { useSyncStatus } from './sync/status'
 import styles from './Account.module.css'
 
@@ -67,7 +67,7 @@ function SignedOut({ next, gated, message }: { next: string | null; gated: boole
   const [name, setName] = useState(profile.name === 'Me' ? '' : profile.name)
   const [phone, setPhone] = useState('')
   const [busy, setBusy] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<{ code: string; message: string } | null>(null)
   const supported = passkeysSupported()
   const phoneOk = normalizeIndianPhone(phone) !== null
 
@@ -84,7 +84,7 @@ function SignedOut({ next, gated, message }: { next: string | null; gated: boole
     const res = await createAccount(phone, name.trim())
     setBusy(false)
     if (res.ok) done(res.data.me, t('account.create.done'))
-    else setError(res.message)
+    else setError({ code: res.code, message: res.message })
   }
 
   const login = async () => {
@@ -94,7 +94,7 @@ function SignedOut({ next, gated, message }: { next: string | null; gated: boole
     const res = await signIn(phone.trim() ? phone : undefined)
     setBusy(false)
     if (res.ok) done(res.data.me, t('account.signIn.done'))
-    else setError(res.message)
+    else setError({ code: res.code, message: res.message })
   }
 
   return (
@@ -150,7 +150,23 @@ function SignedOut({ next, gated, message }: { next: string | null; gated: boole
           onChange={(e) => setPhone(e.currentTarget.value)}
         />
         {error && (
-          <Banner tone="error">{error}</Banner>
+          <Banner
+            tone="error"
+            action={
+              error.code === 'phone_taken'
+                ? {
+                    // Often the account was made a moment ago (a slow first try): one tap signs in to it.
+                    label: t('account.create.signInInstead'),
+                    onAction: () => {
+                      setMode('signIn')
+                      void login()
+                    },
+                  }
+                : undefined
+            }
+          >
+            {error.code === 'phone_taken' ? t('account.create.taken') : error.message}
+          </Banner>
         )}
         {mode === 'create' ? (
           <Button type="submit" block loading={busy} disabled={!supported || !phoneOk || !name.trim()} iconStart={<KeyRound />}>
@@ -160,6 +176,11 @@ function SignedOut({ next, gated, message }: { next: string | null; gated: boole
           <Button type="submit" block loading={busy} disabled={!supported || (phone.trim() !== '' && !phoneOk)} iconStart={<Fingerprint />}>
             {t('account.signIn.cta')}
           </Button>
+        )}
+        {busy && (
+          <p className={styles.footnote} role="status">
+            {mode === 'create' ? t('account.create.busy') : t('account.signIn.busy')}
+          </p>
         )}
       </form>
       <p className={styles.footnote}>{t('account.footnote')}</p>
@@ -441,6 +462,13 @@ function AddUpiSheet({ open, onClose, existing }: { open: boolean; onClose: () =
     setBusy(true)
     const res = await withFreshAuth(() => cloud<{ me: Me }>('POST', '/payment-methods', { upiId: upi, displayName: label.trim() || null, source, confirmed: true }))
     setBusy(false)
+    if (!res.ok && res.code === 'upi_exists') {
+      // Saved already (a slow first tap went through): show it rather than an error.
+      await refreshAccount()
+      toast(t('account.upi.saved'), { tone: 'success' })
+      close()
+      return
+    }
     if (!res.ok) {
       setError(res.message)
       setConfirming(false)

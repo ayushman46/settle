@@ -23,6 +23,8 @@ const FUNC = join(OUTPUT, 'functions', 'api.func')
 const CLIENT = join(ROOT, 'dist', 'client')
 /** Longest a scan may take on the server (SCAN_BUDGET_MS is 80 s), with room to answer. */
 const MAX_DURATION_S = 90
+/** Where the API runs: Mumbai, beside the account database; US East put an ocean in every request. */
+const FUNCTION_REGION = 'bom1'
 
 function fail(message) {
   console.error(`[vercel-build] ${message}`)
@@ -53,7 +55,20 @@ await build({
 })
 writeFileSync(
   join(FUNC, '.vc-config.json'),
-  JSON.stringify({ runtime: 'nodejs22.x', handler: 'index.mjs', launcherType: 'Nodejs', shouldAddHelpers: false, supportsResponseStreaming: true, maxDuration: MAX_DURATION_S }, null, 2),
+  JSON.stringify(
+    {
+      runtime: 'nodejs22.x',
+      handler: 'index.mjs',
+      launcherType: 'Nodejs',
+      shouldAddHelpers: false,
+      supportsResponseStreaming: true,
+      maxDuration: MAX_DURATION_S,
+      // Mumbai: next to the people using it and to the account database (Supabase, ap-south-1).
+      regions: [FUNCTION_REGION],
+    },
+    null,
+    2,
+  ),
 )
 writeFileSync(join(FUNC, 'package.json'), JSON.stringify({ type: 'module' }))
 

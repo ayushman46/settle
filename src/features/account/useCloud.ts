@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { cloud } from './api'
 
 /** How often an open screen asks again, so a friend's payment or confirmation shows up by itself. */
@@ -22,13 +22,17 @@ interface Loaded<T> {
 export function useCloudGet<T>(path: string | null): CloudData<T> {
   const [loaded, setLoaded] = useState<Loaded<T>>({ path: null, data: null, error: null })
   const [nonce, setNonce] = useState(0)
+  // Requests overlap (the regular refresh, a reload after a change): only the newest one may land,
+  // or a slow, older answer puts back a screen from before the change.
+  const latest = useRef(0)
 
   useEffect(() => {
     if (path === null) return
     let live = true
     const load = async () => {
+      const ticket = ++latest.current
       const res = await cloud<T>('GET', path)
-      if (!live) return
+      if (!live || ticket !== latest.current) return
       setLoaded((prev) => {
         const kept = prev.path === path ? prev.data : null
         return res.ok ? { path, data: res.data, error: null } : { path, data: kept, error: { code: res.code, message: res.message } }

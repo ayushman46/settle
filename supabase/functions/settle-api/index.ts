@@ -30,6 +30,13 @@ const INVITE_DAYS = 7
 const MAX_PAYMENT_METHODS = 5
 const MAX_PASSKEYS = 10
 const MAX_BODY = 64 * 1024
+/**
+ * Per-address limits on signing up and in. Indian mobile networks put many people behind one address
+ * (carrier-grade NAT), and friends sign up together on one Wi-Fi, so these are generous; the
+ * per-number limit (5 sign-ups an hour) and passkeys themselves are what stop abuse.
+ */
+const IP_SIGNUPS_PER_HOUR = 60
+const IP_SIGNINS_PER_10_MIN = 150
 /** A sync push carries a batch of expenses (itemized bills included). */
 const MAX_SYNC_BODY = 1_500_000
 const SYNC_CAP = 500
@@ -349,7 +356,7 @@ async function verifyAssertion(challenge: { challenge: string; rp_id: string }, 
 /* ------------------------------------------------------------------ auth routes */
 
 async function registerOptions(ctx: Ctx) {
-  await limit(`ip:${ctx.ip}:register`, 10, 3600)
+  await limit(`ip:${ctx.ip}:register`, IP_SIGNUPS_PER_HOUR, 3600)
   const phone = normalizeIndianPhone(typeof ctx.body.phone === 'string' ? ctx.body.phone : '')
   if (!phone) fail('phone_invalid')
   const displayName = text(ctx.body.displayName, 1, 40, 'name_invalid')
@@ -365,7 +372,7 @@ async function registerOptions(ctx: Ctx) {
 }
 
 async function registerVerify(ctx: Ctx) {
-  await limit(`ip:${ctx.ip}:register-verify`, 20, 3600)
+  await limit(`ip:${ctx.ip}:register-verify`, IP_SIGNUPS_PER_HOUR * 2, 3600)
   const challenge = await takeChallenge(ctx.body.challengeId, 'register')
   const credential = await verifyRegistration(challenge, ctx.body.response)
   const { data: profile, error } = await db
@@ -389,7 +396,7 @@ async function registerVerify(ctx: Ctx) {
 }
 
 async function loginOptions(ctx: Ctx) {
-  await limit(`ip:${ctx.ip}:login`, 30, 600)
+  await limit(`ip:${ctx.ip}:login`, IP_SIGNINS_PER_10_MIN, 600)
   const phone = typeof ctx.body.phone === 'string' && ctx.body.phone.trim() ? normalizeIndianPhone(ctx.body.phone) : null
   let allow: Array<{ credential_id: string; transports: string[] }> = []
   if (phone) {
@@ -408,7 +415,7 @@ async function loginOptions(ctx: Ctx) {
 }
 
 async function loginVerify(ctx: Ctx) {
-  await limit(`ip:${ctx.ip}:login-verify`, 30, 600)
+  await limit(`ip:${ctx.ip}:login-verify`, IP_SIGNINS_PER_10_MIN, 600)
   const challenge = await takeChallenge(ctx.body.challengeId, 'login')
   const { userId } = await verifyAssertion(challenge, ctx.body.response)
   await newSession(ctx, userId)

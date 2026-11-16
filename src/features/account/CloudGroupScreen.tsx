@@ -131,7 +131,7 @@ function GroupView({ detail, reload, stale }: { detail: GroupDetail; reload: () 
             {iSend && ['pending', 'initiated', 'failed', 'disputed'].includes(s.status) && (
               <>
                 <Button size="sm" onClick={() => setPaying({ id: s.id, name: s.receiverName, amount: s.amountPaise })}>
-                  {t('account.cloud.pay.again')}
+                  {s.status === 'failed' || s.status === 'disputed' ? t('account.cloud.pay.again') : t('account.cloud.pay.continue')}
                 </Button>
                 <Button size="sm" variant="secondary" loading={busy === `sent:${s.id}`} onClick={() => void act(s, 'sent', t('account.cloud.pay.sent.done', { name: s.receiverName }))}>
                   {t('account.cloud.pay.outside')}
@@ -178,7 +178,17 @@ function GroupView({ detail, reload, stale }: { detail: GroupDetail; reload: () 
       <div className={styles.stack}>
         <PageTitle
           title={group.name}
-          subtitle={mine.net > 0 ? t('account.cloud.net.owed', { amount: inr(mine.net) }) : mine.net < 0 ? t('account.cloud.net.owe', { amount: inr(-mine.net) }) : t('account.cloud.net.square')}
+          subtitle={
+            mine.net > 0
+              ? mine.openIn > 0
+                ? t('account.cloud.net.owedComing', { amount: inr(mine.net), coming: inr(mine.openIn) })
+                : t('account.cloud.net.owed', { amount: inr(mine.net) })
+              : mine.net < 0
+                ? mine.openOut > 0
+                  ? t('account.cloud.net.oweSent', { amount: inr(-mine.net), sent: inr(mine.openOut) })
+                  : t('account.cloud.net.owe', { amount: inr(-mine.net) })
+                : t('account.cloud.net.square')
+          }
         />
         {stale && <Banner tone="warning">{stale}</Banner>}
 
@@ -190,11 +200,21 @@ function GroupView({ detail, reload, stale }: { detail: GroupDetail; reload: () 
             ) : (
               detail.transfers.map((tr) => {
                 const left = tr.from === me ? Math.min(tr.amountPaise, -mine.net - mine.openOut) : 0
+                // Paid and waiting for the receiver: say so to everyone, not only to the payer.
+                const underway = open.filter((s) => s.senderId === tr.from && s.receiverId === tr.to).reduce((sum, s) => sum + s.amountPaise, 0)
+                const waitingOn = underway >= tr.amountPaise
                 return (
                   <div key={`${tr.from}-${tr.to}`} className={styles.row}>
                     <span className={styles.rowText}>
                       <span className={styles.rowTitle}>{t('account.cloud.group.pays', { from: tr.from === me ? t('account.cloud.group.member.you', { name: nameOf(tr.from) }) : nameOf(tr.from), to: nameOf(tr.to) })}</span>
                       <Money value={tr.amountPaise} currency="INR" strong />
+                      {underway > 0 && (
+                        <span className={styles.rowSub}>
+                          {waitingOn
+                            ? t('account.cloud.group.waitingConfirm', { name: tr.to === me ? t('account.cloud.you') : nameOf(tr.to) })
+                            : t('account.cloud.group.partlyUnderway', { amount: inr(underway) })}
+                        </span>
+                      )}
                     </span>
                     {tr.from === me &&
                       (left > 0 ? (
