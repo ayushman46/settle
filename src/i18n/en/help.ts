@@ -24,38 +24,18 @@ export const help = {
 
   // Add / edit a helper.
   'help.setup.title': 'Add someone',
-  'help.setup.edit': 'Edit',
   'help.setup.name.label': 'Name',
   'help.setup.name.placeholder': 'Asha didi',
-  'help.setup.work.label': 'Work',
   'help.setup.salary.label': 'Monthly salary',
-  'help.setup.payday.label': 'Pay day',
-  'help.setup.payday.hint': 'Day of month, 1–31. Salary for the previous month is due on the 1st.',
-  'help.setup.leave.label': 'Paid leave per month',
-  'help.setup.leave.hint': 'Days off up to this many are not deducted from the salary.',
-  'help.setup.cutpay.label': 'Cut pay for extra days off',
-  'help.setup.cutpay.hint': 'Off by default. Many families don\'t cut pay for extra days off.',
   'help.setup.upi.label': 'UPI ID or mobile number',
   'help.setup.upi.placeholder': 'asha@upi or 98765 43210',
   'help.setup.upi.hint': 'Saved once so you can pay from here.',
   'help.setup.cta': 'Save',
-  'help.setup.done': 'Added',
 
   // Person page.
   'help.person.month': '{month}',
-  'help.person.month.paid': '{month} · Paid',
-  'help.person.salary': 'Salary: {amount}',
-  'help.person.equation': '{equation}',
-  'help.person.pay.cta': 'Pay {name}',
-  'help.person.pay.cash': 'Mark paid in cash',
-  'help.person.paid.on': 'Paid {date}',
   'help.person.entries.heading': 'This month',
-  'help.person.entries.none': 'Nothing noted this month yet.',
-  'help.person.year.heading': '{year}',
-  'help.person.raise.cta': 'Raise from a month',
-  'help.person.edit': 'Edit',
   'help.person.remove.cta': 'Remove',
-  'help.person.remove.confirm': 'Remove {name}? All history is deleted.',
   'help.person.removed': '{name} removed',
 
   // Entry kinds.
@@ -63,31 +43,13 @@ export const help = {
   'help.entry.dayOff': 'Day off',
   'help.entry.extra': 'Extra work',
   'help.entry.bonus': 'Bonus',
-  'help.entry.add': 'Add',
   'help.entry.advance.cta': 'Advance',
   'help.entry.dayOff.cta': 'Day off',
   'help.entry.extra.cta': 'Extra',
   'help.entry.bonus.cta': 'Bonus',
   'help.entry.amount.label': 'Amount',
-  'help.entry.date.label': 'Date',
-  'help.entry.note.label': 'Note',
-  'help.entry.note.placeholder': 'What for',
   'help.entry.save': 'Save',
   'help.entry.saved': 'Noted',
-  'help.entry.removed': 'Entry removed',
-
-  // Pay sheet.
-  'help.pay.title': 'Pay {name}',
-  'help.pay.month': '{month}',
-  'help.pay.equation': '{equation}',
-  'help.pay.flatmates': "Flatmates' shares",
-  'help.pay.flatmate.row': '{name}: {amount}',
-  'help.pay.upi.cta': 'Pay ₹{amount} by UPI',
-  'help.pay.cash.cta': 'Mark paid in cash',
-  'help.pay.add.expense': "Add to flat's expenses",
-  'help.pay.expense.added': 'Added to the group',
-  'help.pay.undo': 'Undo',
-  'help.pay.done': 'Paid',
 
   // Today list.
   'help.today.title': "{name}'s {month} salary",
@@ -96,4 +58,41 @@ export const help = {
   'help.today.advance': 'Advance of {cut} cut from the salary.',
   'help.today.advance.carry': 'Advance: {cut} cut, {left} still open.',
   'help.today.advance.open': 'Advance of {left} open — not all cut yet.',
+  // Pay day.
+  'help.payday.nth': 'the {day}',
+  'help.payday.last': 'the last day',
+
+  // The month as one sum.
+  'help.eq.salary': '{amount} salary',
+  'help.eq.leave': '− {amount} for {days, plural, one {# extra day off} other {# extra days off}}',
+  'help.eq.advance': '− {amount} advance',
+  'help.eq.extra': '+ {amount} extra work',
+  'help.eq.bonus': '+ {amount} bonus',
+  'help.eq.toPay': '= {amount} to pay',
+  'help.eq.paid': '= {amount} paid',
+
+  // Days off.
+  'help.daysOff.within': '{days, plural, one {# day off} other {# days off}}, all within paid leave.',
+  'help.daysOff.cut': '{days, plural, one {# day off} other {# days off}}: {paid} paid leave, {extra} extra. {amount} cut from the salary.',
+  'help.daysOff.noCut': '{days, plural, one {# day off} other {# days off}}: {paid} paid leave, {extra} extra. No pay cut for them.',
+
+  // Payslip.
+  'help.slip.title': 'Payslip: {name}',
+  'help.slip.subtitle': '{work} · {month}',
+  'help.slip.salary': 'Salary',
+  'help.slip.extra': 'Extra work',
+  'help.slip.bonus': 'Bonus',
+  'help.slip.daysOff': 'Days off',
+  'help.slip.daysOff.value': '{days} ({paid} paid leave)',
+  'help.slip.leaveCut': 'Cut for {days, plural, one {# extra day off} other {# extra days off}}',
+  'help.slip.advance': 'Advance cut',
+  'help.slip.toPay': 'To pay',
+  'help.slip.paid': 'Paid',
+  'help.slip.advanceLeft': 'Advance still open',
+  'help.slip.paidLine': '{name} paid on {date}{method, select, upi { by UPI} cash { in cash} other {}}.',
+  'help.slip.thanks': 'Thank you, {name}.',
+
+  // Expenses between flatmates.
+  'help.expense.salary': '{name}’s {month} salary',
+  'help.expense.advance': 'Advance to {name}',
 } satisfies Messages

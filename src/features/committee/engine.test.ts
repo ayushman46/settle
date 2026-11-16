@@ -6,12 +6,10 @@ import {
   dueAt,
   dueToday,
   eligibleHands,
-  emptyMonth,
   isFinished,
   markHanded,
   markPaid,
   monthCount,
-  monthView,
   periodAt,
   pickFair,
   positions,
@@ -27,7 +25,6 @@ import {
 
 const FRIEND_A = 'fa'
 const FRIEND_B = 'fb'
-const FRIEND_C = 'fc'
 
 function makeInput(overrides: Partial<SetupInput> = {}): SetupInput {
   return {

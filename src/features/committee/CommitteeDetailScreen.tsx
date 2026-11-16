@@ -44,6 +44,9 @@ import styles from './Committee.module.css'
 const ROUTES = [COMMITTEE_DETAIL_PATTERN] as const
 type Tab = 'month' | 'people' | 'schedule'
 
+/** The clock, read when a tap is handled (never during render). */
+const nowMs = (): number => Date.now()
+
 /**
  * `/app/committee/:id` — one committee. "Month" is the job: who takes the pot (or the draw), who
  * has paid in (a tick each, dated; Remind; the organiser's UPI or QR), late payers in red, "Pot
@@ -131,15 +134,15 @@ export function CommitteeDetailScreen() {
   const tick = (h: HandView, on: string = tickDate): void => {
     const name = handLabel(h)
     if (h.paid) save(markPaid(c, index, h.hand.id, null), t('committee.toast.unpaid', { name }), restore)
-    else save(markPaid(c, index, h.hand.id, { on, at: Date.now() }), t('committee.toast.paid', { name, month }), restore)
+    else save(markPaid(c, index, h.hand.id, { on, at: nowMs() }), t('committee.toast.paid', { name, month }), restore)
   }
-  const tickAll = (): void => save(markAllPaid(c, index, { on: tickDate, at: Date.now() }), t('committee.toast.all', { month }), restore)
-  const handOver = (on: string, how: HandoverHow): void => save(markHanded(c, index, { on, how, at: Date.now() }), t('committee.toast.handed'), restore)
+  const tickAll = (): void => save(markAllPaid(c, index, { on: tickDate, at: nowMs() }), t('committee.toast.all', { month }), restore)
+  const handOver = (on: string, how: HandoverHow): void => save(markHanded(c, index, { on, how, at: nowMs() }), t('committee.toast.handed'), restore)
   const notHanded = (): void => save(markHanded(c, index, null), t('committee.toast.notHanded'), restore)
 
   const hat = eligibleHands(c)
   const draw = (): void => {
-    const next = recordDraw(c, index, pickFair(hat.length, next32), Date.now())
+    const next = recordDraw(c, index, pickFair(hat.length, next32), nowMs())
     if (next === c) return
     replaceCommittee(next)
     haptic('success')

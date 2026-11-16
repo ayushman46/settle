@@ -4,11 +4,10 @@ import { goBack, navigate } from '../../app/router'
 import { Button, Card, EmptyState, IconButton, ListRow, Money, PageTitle, Screen, TopBar } from '../../components'
 import { useT } from '../../i18n'
 import { today as todayIso } from '../../engine/dates'
-import { formatMoney } from '../../lib/money'
 import { monthSheet, workingPeriod } from './engine'
 import { useHelpers } from './store'
 import { monthName, workLabel } from './text'
-import { HELP_PATH, helpPersonPath, HELP_NEW_PATH } from './paths'
+import { helpPersonPath } from './paths'
 import { HelpSetupSheet } from './HelpSetupSheet'
 
 /**
@@ -60,7 +59,7 @@ export function HelpScreen() {
         <ul>
           {helpers.map((helper) => {
             const period = workingPeriod(helper, today)
-            const sheet = monthSheet(helper, period, today)
+            const sheet = monthSheet(helper, period)
             const work = workLabel(helper.work)
             const month = monthName(period, today)
             return (
@@ -68,7 +67,7 @@ export function HelpScreen() {
                 <ListRow
                   title={helper.name}
                   subtitle={`${work} · ${month}`}
-                  trailing={<Money value={sheet.toPay} currency={helper.currency} strong />}
+                  trailing={sheet ? <Money value={sheet.toPay} currency={helper.currency} strong /> : undefined}
                   onClick={() => navigate(helpPersonPath(helper.id))}
                   chevron
                 />

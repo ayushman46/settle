@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { Plus, Trash2 } from 'lucide-react'
-import { goBack, navigate, useRoute } from '../../app/router'
+import { Trash2 } from 'lucide-react'
+import { navigate, useRoute } from '../../app/router'
 import {
   ActionBar,
   AmountInput,
@@ -17,13 +17,12 @@ import {
   TopBar,
   useToast,
 } from '../../components'
-import { useProfile } from '../../data'
 import { today as todayIso } from '../../engine/dates'
 import { useT } from '../../i18n'
 import { HELP_ENTRY_KINDS, monthSheet, workingPeriod, type HelpEntryKind } from './engine'
 import { addEntry, removeHelper, useHelper, type EntryInput } from './store'
-import { dayLabel, equation, entryLabel, monthName, workLabel } from './text'
-import { HELP_PATH, HELP_PERSON_PATTERN, helpPersonPath } from './paths'
+import { dayLabel, entryLabel, monthName, workLabel } from './text'
+import { HELP_PATH, HELP_PERSON_PATTERN } from './paths'
 
 const ROUTES = [HELP_PERSON_PATTERN] as const
 
@@ -43,7 +42,6 @@ export function HelpPersonScreen() {
   const { params } = useRoute(ROUTES)
   const id = params.id ?? ''
   const helper = useHelper(id)
-  const { currency } = useProfile()
   const today = todayIso()
   const [sheet, setSheet] = useState<EntrySheet | null>(null)
   const [busy, setBusy] = useState(false)
@@ -57,9 +55,8 @@ export function HelpPersonScreen() {
   }
 
   const period = workingPeriod(helper, today)
-  const ms = monthSheet(helper, period, today) ?? { toPay: 0, gross: 0, leaveCut: 0, extra: 0, bonus: 0, advanceCut: 0, advanceBefore: 0, advanceTaken: 0, advanceAfter: 0, daysOff: 0, paidLeave: 0, extraDaysOff: 0, entries: [], salary: 0, due: today, paid: null, period }
+  const ms = monthSheet(helper, period) ?? { toPay: 0, gross: 0, leaveCut: 0, extra: 0, bonus: 0, advanceCut: 0, advanceBefore: 0, advanceTaken: 0, advanceAfter: 0, daysOff: 0, paidLeave: 0, extraDaysOff: 0, entries: [], salary: 0, due: today, paid: null, period }
   const month = monthName(period, today)
-  const eq = equation(ms, helper.currency)
 
   const saveEntry = () => {
     if (!sheet || busy) return
@@ -95,7 +92,7 @@ export function HelpPersonScreen() {
         <TopBar
           onBack={() => navigate(HELP_PATH)}
           right={
-            <IconButton label={t('help.person.remove.cta')} onClick={remove} tone="destructive">
+            <IconButton label={t('help.person.remove.cta')} onClick={remove}>
               <Trash2 />
             </IconButton>
           }
@@ -106,12 +103,12 @@ export function HelpPersonScreen() {
 
       <SectionHeader title={t('help.person.month', { month })} />
       <Card>
-        <ListRow title={t('help.person.salary', { amount: '' })} trailing={<Money value={ms.salary} currency={helper.currency} />} />
-        {ms.leaveCut > 0 && <ListRow title={`Days off: ${ms.daysOff} (${ms.paidLeave} paid)`} trailing={<Money value={-ms.leaveCut} currency={helper.currency} />} />}
-        {ms.extra > 0 && <ListRow title="Extra work" trailing={<Money value={ms.extra} currency={helper.currency} />} />}
-        {ms.bonus > 0 && <ListRow title="Bonus" trailing={<Money value={ms.bonus} currency={helper.currency} />} />}
-        {ms.advanceCut > 0 && <ListRow title="Advance cut" trailing={<Money value={-ms.advanceCut} currency={helper.currency} />} />}
-        <ListRow title="To pay" trailing={<Money value={ms.toPay} currency={helper.currency} strong />} />
+        <ListRow title={t('help.slip.salary')} trailing={<Money value={ms.salary} currency={helper.currency} />} />
+        {ms.leaveCut > 0 && <ListRow title={t('help.slip.leaveCut', { days: ms.extraDaysOff })} trailing={<Money value={-ms.leaveCut} currency={helper.currency} />} />}
+        {ms.extra > 0 && <ListRow title={t('help.slip.extra')} trailing={<Money value={ms.extra} currency={helper.currency} />} />}
+        {ms.bonus > 0 && <ListRow title={t('help.slip.bonus')} trailing={<Money value={ms.bonus} currency={helper.currency} />} />}
+        {ms.advanceCut > 0 && <ListRow title={t('help.slip.advance')} trailing={<Money value={-ms.advanceCut} currency={helper.currency} />} />}
+        <ListRow title={t(ms.paid ? 'help.slip.paid' : 'help.slip.toPay')} trailing={<Money value={ms.toPay} currency={helper.currency} strong />} />
       </Card>
 
       {entryChips}
