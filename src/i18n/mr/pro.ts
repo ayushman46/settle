@@ -81,7 +81,6 @@ export const pro = {
   'pro.checkout.unconfirmed': 'हे पेमेंट आम्हाला खात्री करता आले नाही. पैसे कापले गेले असतील तर पेमेंट ID {paymentId} सह आम्हाला लिहा, आम्ही ते सोडवू.',
   'pro.trust.aria': 'पेमेंट कसे चालते',
   'pro.trust.once': 'एकवेळचे पेमेंट',
-  'pro.trust.noAccount': 'खात्याची गरज नाही',
   'pro.trust.methods': 'Razorpay द्वारे UPI किंवा कार्ड',
 
   // The pass on this phone.
@@ -119,7 +118,6 @@ export const pro = {
   'pro.redeem.kept.elsewhere': 'हा कोड दुसऱ्या फोनवर अजूनही चालतो.',
   'pro.redeem.same.title': 'हा कोड या फोनवर आधीच आहे',
   'pro.redeem.same.body': 'Pro चालू आहे — आणखी काही करायचे नाही.',
-  'pro.redeem.note': 'तुमचा पास याच फोनवर राहतो — खात्याची गरज नाही. कोड खाजगी ठेवा: तो ज्याच्याकडे असेल त्याला तुमचा Pro मिळेल.',
 
   // The paywall sheet.
   'pro.paywall.on.title': 'Pro चालू आहे',
@@ -133,7 +131,6 @@ export const pro = {
   'pro.upgrade.unlocked.title': 'तुम्ही काय उघडले आहे',
   'pro.upgrade.perks.title': 'Pro मधील सर्व काही',
   'pro.upgrade.have.title': 'आधीच Pro आहे?',
-  'pro.upgrade.have.body': 'तुमचा पास ज्या फोनवरून विकत घेतला होता, तिथेच राहतो — खाते नाही. फोन बदलत आहात? जुन्या फोनवर तुमचा Pro कोड कॉपी करा आणि इथे वापरा. प्रोमो कोडही याच पद्धतीने चालतात.',
   // <terms> and <privacy> become links.
   'pro.upgrade.legal': 'पेमेंट Razorpay कडून सुरक्षितपणे हाताळले जाते. पास विकत घेऊन तुम्ही <terms>अटी</terms> मान्य करता; तुमच्या डेटाशी आम्ही कसे वागतो ते <privacy>गोपनीयता धोरणात</privacy> पहा.',
   'pro.upgrade.expired.body': 'तुमच्या Pro पासची मुदत संपली आहे. Pro पुन्हा सुरू करण्यासाठी एक पास निवडा — तुमच्या नियमित वाटण्या आणि सेटिंग्ज अजून इथेच आहेत.',
@@ -144,7 +141,6 @@ export const pro = {
   'pro.lifetime.body': 'एकदा {price} द्या, आणि कधीही नूतनीकरण नाही. आजपासून हा तुमच्या सध्याच्या पासची जागा घेईल — पास एकत्र जोडले जात नाहीत, त्यामुळे या पासचे उरलेले दिवस पुढे नेले जाणार नाहीत.',
   'pro.lifetime.cta': 'आजीवन घ्या — {price}',
   'pro.move.title': 'नवीन फोनवर जात आहात?',
-  'pro.move.body': 'तुमचा पास याच फोनवर राहतो — खाते नाही, आणि बॅकअपमध्ये तो जात नाही. तुमचा Pro कोड कॉपी करा आणि नवीन फोनवर वापरा. कोड खाजगी ठेवा: तो ज्याच्याकडे असेल त्याला तुमचा Pro मिळेल.',
   'pro.move.copy.cta': 'तुमचा Pro कोड कॉपी करा',
   'pro.move.redeem.cta': 'दुसरा कोड वापरा',
   'pro.move.copied.toast': 'Pro कोड कॉपी झाला. नवीन फोनवर {brand} मध्ये वापरा.',

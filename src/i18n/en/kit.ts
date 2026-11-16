@@ -250,7 +250,7 @@ export const kit = {
   'kit.upiForm.save.cta': 'Save UPI ID',
   'kit.upiForm.label.mine': 'Your UPI ID',
   'kit.upiForm.label': 'UPI ID for {name}',
-  'kit.upiForm.hint.mine': 'Friends pay you here. It stays on this phone.',
+  'kit.upiForm.hint.mine': 'Friends pay you here. It’s saved to your account.',
   'kit.upiForm.hint.phone': 'This ID shows your phone number to everyone you send a link to. Your UPI app can give you one without it — look for “UPI ID” in its profile.',
   'kit.upiForm.hint.saved': 'Saved to {name} for next time.',
 

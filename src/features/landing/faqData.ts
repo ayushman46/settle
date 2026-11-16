@@ -45,14 +45,14 @@ export const FAQ: readonly FaqEntry[] = [
     question: `Does ${NAME} file complaints for me?`,
     answer: [
       `No — ${NAME} drafts, you send. Each letter has your name, the dates and the amount — and for a failed payment, the RBI rule and the compensation so far — ready to copy, share or email to your bank, the business, the RBI Ombudsman (cms.rbi.org.in), the National Consumer Helpline (1915 or WhatsApp), AirSewa or a consumer commission (e-Jagriti).`,
-      `${NAME} never contacts a bank, a business or anyone else for you. Your stuck payments stay on your phone; nothing leaves it unless you send it yourself.`,
+      `${NAME} never contacts a bank, a business or anyone else for you. Your stuck payments are saved to your account, which only you can open; nothing goes to a bank or business unless you send it yourself.`,
     ],
   },
   {
     id: 'privacy',
     question: 'Where is my data stored?',
     answer: [
-      `On your phone. There’s no account and no database — your splits, friends, groups and stuck payments are saved in your browser on this device, and you can back them up to a file whenever you like.`,
+      `In your own Settle account: a database in Mumbai, India, that only you can open, with a passkey (your fingerprint, face or phone PIN). A copy stays on your phone so it works offline, and you can back everything up to a file whenever you like.`,
       'A pay link carries its split inside the link itself, after the “#”. That part never reaches a server.',
     ],
   },
@@ -75,7 +75,7 @@ export const FAQ: readonly FaqEntry[] = [
     id: 'paid',
     question: `How does ${NAME} know who’s paid?`,
     answer: [
-      `In the ${NAME} Android app, turn on Auto-settle: when Google Pay, PhonePe, Paytm or BHIM (or, if you allow it, your bank’s SMS) says money arrived, ${NAME} ticks off whoever owed you that — with Undo. It reads only those alerts, on your phone; nothing is uploaded.`,
+      `In the ${NAME} Android app, turn on Auto-settle: when Google Pay, PhonePe, Paytm or BHIM (or, if you allow it, your bank’s SMS) says money arrived, ${NAME} ticks off whoever owed you that — with Undo. It reads only those alerts, on your phone; only the payments it matches are saved, to your account.`,
       'On iPhone or the web, drop your UPI app’s history screenshots, a bank statement or your bank SMS into Who’s paid? and everyone who paid is ticked off at once. Friends can also tap “I’ve paid” on their pay link.',
     ],
   },
@@ -113,7 +113,7 @@ export const FAQ: readonly FaqEntry[] = [
     id: 'license',
     question: 'What happens to Pro if I change phones?',
     answer: [
-      `Your pass is a signed code saved on your device — there’s no account to sign in to. On your new phone, open ${NAME}, choose “Redeem a code” and enter the same code.`,
+      `Your pass is saved to your ${NAME} account: sign in on your new phone and it’s there. You can also choose “Redeem a code” and enter the same code.`,
       `Lost the code? Email ${SUPPORT_EMAIL} with your payment ID and we’ll send it again.`,
     ],
   },

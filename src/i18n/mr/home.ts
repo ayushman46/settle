@@ -63,7 +63,6 @@ export const home = {
   'home.say.title': 'फक्त सांगा',
   'home.say.placeholder': 'फक्त सांगा…',
   'home.say.label': 'फक्त सांगा: AI ने वाटण्यासाठी एखाद्या खर्चाचे वर्णन करा',
-  'home.trust': 'गोपनीयतेसाठी बनवलेले — तुमच्या वाटण्या याच फोनवर राहतात. खाते नाही, जाहिराती नाहीत.',
   'home.people.add': 'जोडा',
   'home.describe.error.badRequest': 'काय होते आणि किती रक्कम ते सांगा — उदा. “{example}”.',
   'home.describe.error.notSplit': 'हे खर्चासारखे वाचता येत नाही — “{example}” वापरून पहा.',

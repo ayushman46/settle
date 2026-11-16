@@ -71,7 +71,7 @@ export function LandingPage() {
             <h2 id="final-title" className={styles.finalTitle}>
               Split your next bill in seconds
             </h2>
-            <p className={styles.finalText}>Free, no sign-up, and your friends don’t need the app.</p>
+            <p className={styles.finalText}>Free, no ads, and your friends don’t need the app.</p>
             <div className={styles.ctas}>
               <CtaLink to="/app" variant="accent" iconEnd={<ArrowRight strokeWidth={2.25} />}>
                 Open {BRAND.name} — free

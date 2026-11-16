@@ -101,6 +101,6 @@ describe('Hindi: privacy policy', () => {
     expect(await screen.findByRole('heading', { level: 1, name: 'प्राइवेसी नीति' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { level: 2, name: 'एक नज़र में' })).toBeInTheDocument()
     expect(screen.getByText('इस नीति का पूरा पाठ अभी अंग्रेज़ी में है।')).toBeInTheDocument()
-    expect(screen.getByRole('heading', { level: 2, name: 'आपके फ़ोन में क्या रहता है' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 2, name: 'Where your data is kept' })).toBeInTheDocument()
   })
 })

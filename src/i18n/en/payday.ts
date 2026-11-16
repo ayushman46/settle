@@ -37,7 +37,7 @@ export const payday = {
 
   // The picker sheet
   'payday.sheet.mine.title': 'When do you get paid?',
-  'payday.sheet.mine.description': 'Pick the day of the month. It stays on this phone.',
+  'payday.sheet.mine.description': 'Pick the day of the month. It’s saved to your account.',
   'payday.sheet.friend.title': 'When does {name} get paid?',
   'payday.sheet.friend.description': 'Pick the day of the month. Only you see it.',
   'payday.sheet.grid.aria': 'Day of the month',

@@ -9,6 +9,8 @@ import { usePaywall } from '../features/pro/paywall'
 import { inAndroidApp } from '../lib/nativeApp'
 import { prefetchHealth } from '../state/health'
 import { startGroupSync } from '../features/groupsync/sync'
+import { useAccountGate } from '../features/account/gate'
+import { useAccountPeek } from '../features/account/store'
 import { isChunkLoadError, retryFailedScreens } from './lazyScreen'
 import { HOME_PATH, matchAppRoute, PaywallHost, preloadCoreScreens, WELCOME_PATTERN, type TabKey } from './routes'
 import { Link, navigate, Redirect, useLocation, useNavDirection } from './router'
@@ -177,6 +179,9 @@ export function AppShell({ preloadScreens = import.meta.env.PROD }: AppShellProp
     if (title !== null) document.title = t('app.title.format', { page: pageTitle(title), brand: BRAND.name })
   }, [title, location.path, lang])
 
+  // Everything is saved to the person's account: past onboarding, they sign in before anything else.
+  const gate = useAccountGate(!onboarded || route === null || route.pattern === WELCOME_PATTERN || route.pattern === ACCOUNT_PATTERN)
+
   let content: ReactNode
   if (!onboarded && route?.pattern !== WELCOME_PATTERN) {
     content = <Redirect to={welcomePath(`${location.path}${location.search}${location.hash}`)} />
@@ -184,6 +189,10 @@ export function AppShell({ preloadScreens = import.meta.env.PROD }: AppShellProp
     content = <Redirect to={onboardingDestination(new URLSearchParams(location.search).get('next'))} />
   } else if (route === null) {
     content = <Redirect to={HOME_PATH} />
+  } else if (gate === 'signin') {
+    content = <Redirect to={`${ACCOUNT_PATTERN}?next=${encodeURIComponent(`${location.path}${location.search}${location.hash}`)}`} />
+  } else if (gate === 'wait') {
+    content = <RouteFallback />
   } else {
     const Screen = route.screen
     content = (
@@ -207,6 +216,7 @@ export function AppShell({ preloadScreens = import.meta.env.PROD }: AppShellProp
       {content}
       <PaywallMount />
       {onboarded && <AutoSettleMount />}
+      <CloudSyncMount />
     </AppFrame>
   )
 }
@@ -233,6 +243,26 @@ function GetAppBanner() {
       </Link>
     </div>
   )
+}
+
+const ACCOUNT_PATTERN = '/app/account'
+
+/** While someone is signed in, this phone and their account stay in step (loaded only then). */
+function CloudSyncMount() {
+  const account = useAccountPeek()
+  const userId = account.status === 'signedIn' ? (account.me?.id ?? null) : null
+  useEffect(() => {
+    if (userId === null) return
+    let live = true
+    void import('../features/account/sync/runner').then((m) => {
+      if (live) m.startCloudSync(userId)
+    })
+    return () => {
+      live = false
+      void import('../features/account/sync/runner').then((m) => m.stopCloudSync())
+    }
+  }, [userId])
+  return null
 }
 
 /** Auto-settle's watcher: the Android app only, so the website never loads it. */

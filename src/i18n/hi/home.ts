@@ -60,7 +60,6 @@ export const home = {
   'home.say.title': 'बस बोलिए',
   'home.say.placeholder': 'बस बोलिए…',
   'home.say.label': 'बस बोलिए: AI के लिए खर्च का ब्योरा लिखें',
-  'home.trust': 'आपकी प्राइवेसी पहले — आपके बँटवारे इसी फ़ोन पर रहते हैं। कोई अकाउंट नहीं, कोई विज्ञापन नहीं।',
   'home.people.add': 'जोड़ें',
   'home.describe.error.badRequest': 'बताएँ कि खर्च किस लिए था और कितना था — जैसे “{example}”।',
   'home.describe.error.notSplit': 'यह खर्च जैसा नहीं लग रहा — “{example}” जैसा लिखकर देखें।',

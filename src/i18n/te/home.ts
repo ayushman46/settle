@@ -58,7 +58,6 @@ export const home = {
   'home.say.title': 'చెప్పేయండి',
   'home.say.placeholder': 'చెప్పేయండి…',
   'home.say.label': 'చెప్పేయండి: AI పంచడానికి ఒక ఖర్చును వివరించండి',
-  'home.trust': 'డిజైన్‌తోనే ప్రైవేట్ — మీ స్ప్లిట్‌లు ఈ ఫోన్‌లోనే ఉంటాయి. ఖాతా లేదు, ప్రకటనలు లేవు.',
   'home.people.add': 'జోడించు',
   'home.describe.error.badRequest': 'అది దేనికోసమో, ఎంతో చెప్పండి — “{example}” లా.',
   'home.describe.error.notSplit': 'అది ఖర్చులా కనిపించడం లేదు — “{example}” ప్రయత్నించండి.',

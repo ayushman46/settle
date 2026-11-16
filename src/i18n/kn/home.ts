@@ -51,7 +51,6 @@ export const home = {
   'home.say.title': 'ಹೇಳಿಬಿಡಿ',
   'home.say.placeholder': 'ಹೇಳಿಬಿಡಿ…',
   'home.say.label': 'ಹೇಳಿಬಿಡಿ: AI ಹಂಚಲು ಖರ್ಚನ್ನು ವಿವರಿಸಿ',
-  'home.trust': 'ಖಾಸಗಿತನವೇ ಮೊದಲು — ನಿಮ್ಮ ಸ್ಪ್ಲಿಟ್‌ಗಳು ಈ ಫೋನ್‌ನಲ್ಲೇ ಇರುತ್ತವೆ. ಖಾತೆ ಇಲ್ಲ, ಜಾಹೀರಾತು ಇಲ್ಲ.',
   'home.people.add': 'ಸೇರಿಸಿ',
   'home.describe.error.badRequest': 'ಅದು ಏತಕ್ಕಾಗಿ ಮತ್ತು ಎಷ್ಟು ಎಂದು ಹೇಳಿ — “{example}” ರೀತಿಯಲ್ಲಿ.',
   'home.describe.error.notSplit': 'ಅದು ಖರ್ಚಿನಂತೆ ಕಾಣುತ್ತಿಲ್ಲ — “{example}” ಪ್ರಯತ್ನಿಸಿ.',

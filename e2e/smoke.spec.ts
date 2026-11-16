@@ -72,7 +72,7 @@ test.describe('smoke', () => {
     await expect(page.getByText('Dinner at Toit').first()).toBeVisible()
     await expect(page.getByText('₹800').first()).toBeVisible()
 
-    // Activity lists it, and it survives a reload (it lives on the phone).
+    // Activity lists it, and it survives a reload.
     await page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'Activity' }).click()
     await expect(page).toHaveURL(/\/app\/activity/)
     await expect(page.getByText('Dinner at Toit').first()).toBeVisible()

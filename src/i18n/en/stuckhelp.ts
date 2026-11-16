@@ -159,7 +159,7 @@ export const stuckhelp = {
 
   // Your details for letters: asked once, kept on this phone. The name and UPI ID go to your profile.
   'stuckhelp.me.heading': 'Your details',
-  'stuckhelp.me.hint': 'Settle puts these in the letter. They stay on this phone and aren’t sent anywhere.',
+  'stuckhelp.me.hint': 'Settle puts these in the letter. They’re saved to your account and only go out in a letter you send.',
   'stuckhelp.me.name': 'Your name',
   'stuckhelp.me.mobile': 'Mobile number',
   'stuckhelp.me.upi': 'Your UPI ID (optional)',

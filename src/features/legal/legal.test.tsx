@@ -44,12 +44,12 @@ describe('PrivacyPage', () => {
     expect(document.title).toBe(`Privacy policy · ${BRAND.name}`)
     const summary = screen.getByRole('region', { name: 'The short version' })
     expect(within(summary).getAllByRole('listitem')).toHaveLength(6)
-    expect(summary).toHaveTextContent('no accounts and no database')
-    expect(summary).toHaveTextContent('Stuck money keeps your references, complaint numbers and account’s last digits on this phone')
+    expect(summary).toHaveTextContent('is saved to your Settle account, in a database in Mumbai, India')
+    expect(summary).toHaveTextContent('Stuck money keeps your references, complaint numbers and account’s last digits in your account')
     for (const title of [
-      'What stays on your device',
+      'Where your data is kept',
       'What leaves your device, and why',
-      'What our server keeps',
+      'What our servers keep',
       'Cookies and tracking',
       'Your choices',
       'Changes and contact',
@@ -65,12 +65,13 @@ describe('PrivacyPage', () => {
     expect(leaves).toHaveTextContent('names in your people list')
     expect(leaves).toHaveTextContent('Razorpay')
     expect(leaves).toHaveTextContent('after the “#”')
-    expect(screen.getByRole('region', { name: 'Cookies and tracking' })).toHaveTextContent('no cookies, no analytics')
+    expect(screen.getByRole('region', { name: 'Cookies and tracking' })).toHaveTextContent('only to keep you signed in')
+    expect(screen.getByRole('region', { name: 'Cookies and tracking' })).toHaveTextContent('no analytics')
   })
 
   it('says what Stuck money keeps and what the Android app reads for it, and that letters leave only when you send them', () => {
     open('/privacy')
-    const device = screen.getByRole('region', { name: 'What stays on your device' })
+    const device = screen.getByRole('region', { name: 'Where your data is kept' })
     expect(device).toHaveTextContent('stuck payments')
     expect(device).toHaveTextContent('goes into your backup file')
     expect(device).toHaveTextContent('when a payment fails or is pending, when a payment goes through (only to clear a pending one it was tracking), and when money is reversed or refunded')

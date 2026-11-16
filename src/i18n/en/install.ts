@@ -22,7 +22,7 @@ export const install = {
 
   'install.get.meta': 'Get {brand} on Android and iPhone',
   'install.get.title': 'Get {brand} on your phone',
-  'install.get.lead': 'On Android and iPhone. It installs straight from your browser in about ten seconds: no store, no sign-up, and it works offline.',
+  'install.get.lead': 'On Android and iPhone. It installs straight from your browser in about ten seconds: no store, and it works offline.',
   'install.get.phone.aria': 'Your phone',
   'install.get.android.cta': 'Install {brand}',
   'install.get.android.steps': 'Install on Android',

@@ -61,7 +61,7 @@ export const home = {
   'home.say.title': 'Just say it',
   'home.say.placeholder': 'Just say it…',
   'home.say.label': 'Just say it: describe an expense for the AI to split',
-  'home.trust': 'Private by design — your splits stay on this phone. No account, no ads.',
+  'home.trust': 'Private by design: your splits are saved to your own account, which only you can open. No ads.',
   'home.people.add': 'Add',
   'home.describe.error.badRequest': 'Say what it was for and how much — like “{example}”.',
   'home.describe.error.notSplit': "That doesn't read like an expense — try “{example}”.",

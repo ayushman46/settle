@@ -216,7 +216,6 @@ export const kit = {
   'kit.upiForm.save.cta': 'UPI ID ಉಳಿಸಿ',
   'kit.upiForm.label.mine': 'ನಿಮ್ಮ UPI ID',
   'kit.upiForm.label': '{name} ಅವರ UPI ID',
-  'kit.upiForm.hint.mine': 'ಸ್ನೇಹಿತರು ಇಲ್ಲಿ ನಿಮಗೆ ಪಾವತಿಸುತ್ತಾರೆ. ಇದು ಈ ಫೋನ್‌ನಲ್ಲೇ ಉಳಿಯುತ್ತದೆ.',
   'kit.upiForm.hint.phone': 'ಈ ID ಯಿಂದ ನೀವು ಲಿಂಕ್ ಕಳುಹಿಸುವ ಎಲ್ಲರಿಗೂ ನಿಮ್ಮ ಫೋನ್ ಸಂಖ್ಯೆ ಕಾಣುತ್ತದೆ. ನಿಮ್ಮ UPI ಆ್ಯಪ್ ಸಂಖ್ಯೆ ಇಲ್ಲದ ID ಯನ್ನೂ ಕೊಡುತ್ತದೆ — ಅದರ ಪ್ರೊಫೈಲ್‌ನಲ್ಲಿ “UPI ID” ನೋಡಿ.',
   'kit.upiForm.hint.saved': 'ಮುಂದಿನ ಬಾರಿಗಾಗಿ {name} ಅವರಿಗೆ ಉಳಿಸಲಾಗಿದೆ.',
 

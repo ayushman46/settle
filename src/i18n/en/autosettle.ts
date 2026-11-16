@@ -17,7 +17,7 @@ export const autosettle = {
   'autosettle.sheet.description': 'Settle notices payments to you and ticks off whoever paid. It also notices payments that failed and refunds, and keeps track of them in Stuck money.',
   'autosettle.sheet.reads': 'It reads only payment alerts: from Google Pay, PhonePe, Paytm, BHIM, Amazon Pay, MobiKwik and CRED when money arrives, a payment fails, is pending or goes through, or money comes back — and refund alerts from a few shopping, food and travel apps.',
   'autosettle.sheet.does': 'A payment it’s sure of ticks that person off, with Undo. One it isn’t sure of waits for you to check.',
-  'autosettle.sheet.private': 'It all stays on this phone. Nothing is uploaded, and every other notification is ignored, never kept.',
+  'autosettle.sheet.private': 'It’s read on this phone. Only the payments it matches are saved, to your account; every other notification is ignored, never kept.',
   'autosettle.sheet.stop': 'Settle reads these through Android’s notification access, which you can turn off in Android’s settings any time.',
   'autosettle.sheet.sms.label': 'Bank SMS too',
   'autosettle.sheet.sms.description': 'Needed for most failed payments and money coming back: many banks only tell you by SMS. Only messages about money credited, failed payments and refunds are read — plus debits, to check a failed payment really took your money and to check a bank charge, and the bank’s low-balance warnings.',

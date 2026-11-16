@@ -45,5 +45,4 @@ export const onboarding = {
   'onboarding.about.currency.change': 'বদলান',
   'onboarding.about.currency.sheet.title': 'আপনার মুদ্রা',
   'onboarding.about.currency.sheet.body': 'নতুন ভাগ এই মুদ্রায় শুরু হবে। যেকোনো ভাগের জন্য অন্য মুদ্রা বেছে নিতে পারবেন।',
-  'onboarding.about.privacy': 'সাইন-আপ নেই, বিজ্ঞাপন নেই। আপনি যা যোগ করেন সবই এই ফোনে থাকে — {brand}-এর কোনো ডেটাবেস নেই।',
 } as const satisfies Messages

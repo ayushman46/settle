@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { ChevronRight, Fingerprint, KeyRound, LogOut, Plus, QrCode, UsersRound } from 'lucide-react'
+import { ChevronRight, CloudCheck, Fingerprint, KeyRound, LogOut, Plus, QrCode, RefreshCw, UsersRound } from 'lucide-react'
 import { goBack, navigate, useLocation } from '../../app/router'
 import { Badge, Banner, BottomSheet, Button, Card, ListRow, PageTitle, Screen, SectionHeader, SegmentedControl, Spinner, TextField, TopBar, useToast } from '../../components'
 import { useProfile } from '../../data'
@@ -8,7 +8,9 @@ import { readUpiQr } from '../../lib/upiQr'
 import { isUpiShaped, normalizeIndianPhone, normalizeUpi } from '../../../shared/cloud'
 import { cloud, type Me, type PaymentMethod } from './api'
 import { addPasskey, createAccount, passkeysSupported, signIn, withFreshAuth } from './passkey'
+import { accountRequired } from './gate'
 import { setMe, setSignedOut, useAccount } from './store'
+import { useSyncStatus } from './sync/status'
 import styles from './Account.module.css'
 
 const PHONE_DISPLAY = /^\+91(\d{5})(\d{5})$/
@@ -26,7 +28,7 @@ function shortDate(iso: string): string {
 /** Where to go after signing in: only a path inside the app. */
 function nextPath(search: string): string | null {
   const next = new URLSearchParams(search).get('next')
-  return next && next.startsWith('/app/') && !next.startsWith('//') ? next : null
+  return next && /^\/app(?:[/?#]|$)/.test(next) && !next.startsWith('/app/account') ? next : null
 }
 
 /**
@@ -38,13 +40,16 @@ export function AccountScreen() {
   const account = useAccount()
   const location = useLocation()
   const next = nextPath(location.search)
+  const [required] = useState(accountRequired)
+  // Before signing in there's nowhere to go back to: the app needs the account.
+  const gated = required && account.status !== 'signedIn'
 
   return (
-    <Screen header={<TopBar onBack={() => goBack('/app/you')} />}>
+    <Screen header={<TopBar onBack={gated ? undefined : () => goBack('/app/you')} />}>
       {account.status === 'signedIn' && account.me ? (
         <SignedIn me={account.me} />
       ) : account.status === 'signedOut' || account.status === 'unavailable' ? (
-        <SignedOut next={next} message={account.status === 'unavailable' ? account.message : null} />
+        <SignedOut next={next} gated={gated} message={account.status === 'unavailable' ? account.message : null} />
       ) : (
         <div className={styles.stack} role="status" aria-label={t('app.loading.aria')}>
           <Spinner />
@@ -54,7 +59,7 @@ export function AccountScreen() {
   )
 }
 
-function SignedOut({ next, message }: { next: string | null; message: string | null }) {
+function SignedOut({ next, gated, message }: { next: string | null; gated: boolean; message: string | null }) {
   const t = useT()
   const toast = useToast()
   const profile = useProfile()
@@ -94,7 +99,11 @@ function SignedOut({ next, message }: { next: string | null; message: string | n
 
   return (
     <div className={styles.stack}>
-      <PageTitle title={t('account.title.signedOut')} subtitle={next ? t('account.next.hint') : t('account.subtitle.signedOut')} leading={<Fingerprint />} />
+      <PageTitle
+        title={gated ? t('account.gate.title') : t('account.title.signedOut')}
+        subtitle={gated ? t('account.gate.subtitle') : next ? t('account.next.hint') : t('account.subtitle.signedOut')}
+        leading={<Fingerprint />}
+      />
       {message && <Banner tone="warning">{message}</Banner>}
       {!supported && (
         <Banner tone="warning" title={t('account.passkey.unsupported.title')}>
@@ -178,15 +187,37 @@ function SignedIn({ me }: { me: Me }) {
     }
   }
 
-  const signOut = async (everywhere: boolean) => {
+  const sync = useSyncStatus()
+  const [confirming, setConfirming] = useState<'out' | 'all' | null>(null)
+  const [unsaved, setUnsaved] = useState(false)
+
+  const syncNow = async () => {
+    const { syncNow: run } = await import('./sync/runner')
+    await run()
+  }
+
+  /** Saves what's left first; if that fails, says so and asks again before losing it. */
+  const signOut = async (everywhere: boolean, anyway: boolean) => {
     if (busy) return
     setBusy(everywhere ? 'all' : 'out')
+    const runner = await import('./sync/runner')
+    if (!anyway) {
+      await runner.syncNow()
+      const { syncStatus } = await import('./sync/status')
+      if (syncStatus().state === 'error') {
+        setBusy(null)
+        setUnsaved(true)
+        return
+      }
+    }
     const res = everywhere ? await withFreshAuth(() => cloud('POST', '/auth/logout-all', {})) : await cloud('POST', '/auth/logout', {})
     setBusy(null)
-    if (!res.ok) {
+    if (!res.ok && !anyway) {
       toast(res.message, { tone: 'error' })
       return
     }
+    setConfirming(null)
+    runner.forgetThisPhone()
     setSignedOut()
     toast(t('account.signedOut'), { tone: 'success' })
   }
@@ -272,17 +303,66 @@ function SignedIn({ me }: { me: Me }) {
         </Card>
       </section>
 
+      <section>
+        <SectionHeader title={t('account.sync.heading')} />
+        <Card padding="md">
+          <div className={styles.row}>
+            <span className={styles.rowText}>
+              <span className={styles.rowSub} role="status">
+                {sync.state === 'error'
+                  ? (sync.message ?? t('account.sync.error'))
+                  : sync.state === 'syncing'
+                    ? t('account.sync.syncing')
+                    : sync.lastSyncedAt
+                      ? t('account.sync.synced', { time: new Date(sync.lastSyncedAt).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }) })
+                      : t('account.sync.waiting')}
+              </span>
+            </span>
+            {sync.state === 'synced' ? <CloudCheck aria-hidden="true" /> : null}
+          </div>
+          <Button variant="secondary" size="sm" iconStart={<RefreshCw />} loading={sync.state === 'syncing'} onClick={() => void syncNow()}>
+            {t('account.sync.now')}
+          </Button>
+        </Card>
+      </section>
+
       <div className={styles.stack}>
-        <Button variant="secondary" block iconStart={<LogOut />} loading={busy === 'out'} onClick={() => void signOut(false)}>
+        <Button
+          variant="secondary"
+          block
+          iconStart={<LogOut />}
+          onClick={() => {
+            setUnsaved(false)
+            setConfirming('out')
+          }}
+        >
           {t('account.signOut')}
         </Button>
-        <Button variant="ghost" block loading={busy === 'all'} onClick={() => void signOut(true)}>
+        <Button
+          variant="ghost"
+          block
+          onClick={() => {
+            setUnsaved(false)
+            setConfirming('all')
+          }}
+        >
           {t('account.signOut.all')}
         </Button>
         <p className={styles.footnote}>{t('account.footnote')}</p>
       </div>
 
       <AddUpiSheet open={adding} onClose={() => setAdding(false)} existing={me.paymentMethods} />
+      <BottomSheet open={confirming !== null} onClose={() => setConfirming(null)} title={t('account.signOut.confirm.title')} description={t('account.signOut.confirm.body')}>
+        <div className={styles.stack}>
+          {unsaved && <Banner tone="warning">{t('account.signOut.confirm.unsaved')}</Banner>}
+          <Button block variant="danger" loading={busy === 'out' || busy === 'all'} onClick={() => void signOut(confirming === 'all', unsaved)}>
+            {unsaved ? t('account.signOut.confirm.anyway') : t('account.signOut.confirm.cta')}
+          </Button>
+          <Button block variant="ghost" onClick={() => setConfirming(null)}>
+            {t('account.signOut.confirm.cancel')}
+          </Button>
+        </div>
+      </BottomSheet>
       <BottomSheet open={managing !== null} onClose={() => setManaging(null)} title={managing?.upiId ?? ''}>
         {managing && (
           <div className={styles.stack}>

@@ -159,7 +159,6 @@ export const stuckhelp: Messages = {
 
   // Your details for letters: asked once, kept on this phone. The name and UPI ID go to your profile.
   'stuckhelp.me.heading': 'మీ వివరాలు',
-  'stuckhelp.me.hint': 'Settle వీటిని లేఖలో పెడుతుంది. ఇవి ఈ ఫోన్‌లోనే ఉంటాయి, ఎక్కడికీ పంపబడవు.',
   'stuckhelp.me.name': 'మీ పేరు',
   'stuckhelp.me.mobile': 'మొబైల్ నంబర్',
   'stuckhelp.me.upi': 'మీ UPI ID (ఐచ్ఛికం)',

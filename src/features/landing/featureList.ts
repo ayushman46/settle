@@ -77,7 +77,7 @@ export const FEATURES: readonly Feature[] = [
     id: 'collect',
     eyebrow: 'Auto-settle',
     title: 'Payments tick themselves off.',
-    text: 'In the Android app, when GPay, PhonePe, Paytm or BHIM says money arrived, whoever paid is ticked off — and now it catches failed payments and refunds for Stuck money too. Read on your phone, nothing uploaded. Whoever’s left gets a reminder, friendly first.',
+    text: 'In the Android app, when GPay, PhonePe, Paytm or BHIM says money arrived, whoever paid is ticked off — and now it catches failed payments and refunds for Stuck money too. Read on your phone; only the payments it matches are saved. Whoever’s left gets a reminder, friendly first.',
     size: 'regular',
   },
   {
@@ -104,8 +104,8 @@ export const FEATURES: readonly Feature[] = [
   {
     id: 'privacy',
     eyebrow: 'Private by default',
-    title: 'No sign-up. No ads. No tracking.',
-    text: 'Your splits live on your phone, not on our servers. Back them up to a file you own. Everything but the AI works offline.',
+    title: 'No ads. No tracking. No passwords.',
+    text: 'Everything you add is saved to your own account, which only you can open with a passkey: no password, no OTP. A copy stays on your phone, so everything but the AI works offline.',
     size: 'regular',
   },
   {

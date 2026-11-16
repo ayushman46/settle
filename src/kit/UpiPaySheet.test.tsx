@@ -135,7 +135,7 @@ describe('UpiPaySheet', () => {
     render(<Harness {...collecting} />)
     const sheet = screen.getByRole('dialog', { name: 'Collect from Sam' })
     expect(within(sheet).getByText('Add your UPI ID to get paid in a tap.')).toBeInTheDocument()
-    expect(within(sheet).getByText('Friends pay you here. It stays on this phone.')).toBeInTheDocument()
+    expect(within(sheet).getByText('Friends pay you here. It’s saved to your account.')).toBeInTheDocument()
     await user.type(within(sheet).getByRole('textbox', { name: 'Your UPI ID' }), 'ayush@oksbi')
     await user.click(within(sheet).getByRole('button', { name: 'Save UPI ID' }))
     expect(profileStore.get().upiId).toBe('ayush@oksbi')

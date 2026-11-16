@@ -346,8 +346,8 @@ function CardsVisual() {
 
 function PrivacyVisual() {
   const points = [
-    { icon: <Lock strokeWidth={2.25} />, text: 'No account to create' },
-    { icon: <Smartphone strokeWidth={2.25} />, text: 'Data stays on your phone' },
+    { icon: <Lock strokeWidth={2.25} />, text: 'Only you can open it' },
+    { icon: <Smartphone strokeWidth={2.25} />, text: 'On every phone you sign in on' },
     { icon: <WifiOff strokeWidth={2.25} />, text: 'Works offline' },
   ]
   return (

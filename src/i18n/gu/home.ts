@@ -51,7 +51,6 @@ export const home = {
   'home.say.title': 'બસ બોલી દો',
   'home.say.placeholder': 'બસ બોલી દો…',
   'home.say.label': 'બસ બોલી દો: AI વહેંચે તે માટે ખર્ચનું વર્ણન કરો',
-  'home.trust': 'ગોપનીયતા પહેલાં — તમારી સ્પ્લિટ આ ફોન પર જ રહે છે. કોઈ એકાઉન્ટ નહીં, કોઈ જાહેરાત નહીં.',
   'home.people.add': 'ઉમેરો',
   'home.describe.error.badRequest': 'ખર્ચ શા માટે હતો અને કેટલો હતો તે કહો — “{example}” જેવું.',
   'home.describe.error.notSplit': 'એ ખર્ચ જેવું વાંચાતું નથી — “{example}” અજમાવો.',

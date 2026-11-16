@@ -70,7 +70,7 @@ describe('AutoSettleCard', () => {
     await user.click(screen.getByRole('button', { name: 'Turn on Auto-settle' }))
     const sheet = await screen.findByRole('dialog', { name: 'Auto-settle' })
     expect(within(sheet).getByText(/reads only payment alerts: from Google Pay, PhonePe, Paytm, BHIM/)).toBeInTheDocument()
-    expect(within(sheet).getByText(/Nothing is uploaded/)).toBeInTheDocument()
+    expect(within(sheet).getByText(/Only the payments it matches are saved/)).toBeInTheDocument()
     // On to start: most failed payments and money coming back are only told by SMS.
     expect(within(sheet).getByRole('switch', { name: 'Bank SMS too' })).toHaveAttribute('aria-checked', 'true')
     await user.click(within(sheet).getByRole('button', { name: 'Allow in Android settings' }))

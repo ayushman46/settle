@@ -158,7 +158,6 @@ export const stuckhelp: Messages = {
 
   // Your details for letters: asked once, kept on this phone. The name and UPI ID go to your profile.
   'stuckhelp.me.heading': 'तुमचा तपशील',
-  'stuckhelp.me.hint': 'Settle हा तपशील पत्रात लिहिते. तो याच फोनवर राहतो आणि कुठेही पाठवला जात नाही.',
   'stuckhelp.me.name': 'तुमचे नाव',
   'stuckhelp.me.mobile': 'मोबाइल नंबर',
   'stuckhelp.me.upi': 'तुमचा UPI ID (ऐच्छिक)',

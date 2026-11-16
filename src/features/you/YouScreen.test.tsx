@@ -38,7 +38,7 @@ describe('YouScreen — profile', () => {
   it('leads with your name as the page heading', () => {
     renderYou()
     expect(screen.getByRole('heading', { level: 1, name: 'Ayush Kumar' })).toBeInTheDocument()
-    expect(screen.getByText('Your profile stays on this phone')).toBeInTheDocument()
+    expect(screen.getByText('Saved to your Settle account')).toBeInTheDocument()
   })
 
   it('asks for a UPI ID, checks it, and saves it', async () => {

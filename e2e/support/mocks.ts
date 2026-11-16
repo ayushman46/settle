@@ -202,6 +202,11 @@ export interface MockApi {
    * codes on). Set it to make checkout available and decide how the payment ends.
    */
   checkout: CheckoutOutcome | null
+  /**
+   * The Settle account (`/api/cloud/*`). 'signedIn' (default): a signed-in account whose database
+   * starts empty and takes every sync; 'signedOut': nobody signed in (the app asks for a passkey).
+   */
+  cloud: 'signedIn' | 'signedOut'
   /** What the app sent, oldest first. */
   readonly calls: {
     /** Each request body as sent (including `lang` and `source` when the app sends them). */
@@ -215,7 +220,21 @@ export interface MockApi {
     verify: VerifyRequest[]
     /** License header values sent with AI calls (null when none). */
     licenseHeaders: Array<string | null>
+    /** Each `POST /api/cloud/sync/push` body. */
+    cloudPush: Array<Record<string, unknown[]>>
   }
+}
+
+/** The signed-in account the mocked `/api/cloud/me` answers. */
+export const MOCK_ME = {
+  id: '00000000-0000-4000-8000-000000000001',
+  displayName: 'Ayush',
+  phoneNumber: '+919876543210',
+  phoneVerified: false,
+  createdAt: '2026-11-16T00:00:00Z',
+  passkeys: [{ id: '00000000-0000-4000-8000-000000000002', nickname: null, deviceType: 'multiDevice', backedUp: true, createdAt: '2026-11-16T00:00:00Z', lastUsedAt: null }],
+  paymentMethods: [],
+  freshUntil: '2026-11-16T00:05:00Z',
 }
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
@@ -272,8 +291,29 @@ export async function installMockApi(context: BrowserContext): Promise<MockApi> 
     history: { body: SAMPLE_HISTORY, delayMs: 300 },
     rates: 'fixture',
     checkout: null,
-    calls: { describe: [], scan: [], proof: [], history: [], rates: [], order: [], verify: [], licenseHeaders: [] },
+    cloud: 'signedIn',
+    calls: { describe: [], scan: [], proof: [], history: [], rates: [], order: [], verify: [], licenseHeaders: [], cloudPush: [] },
   }
+
+  // The account: never the real one from a test. Pulls answer empty; pushes are recorded.
+  await context.route((url) => url.pathname.startsWith('/api/cloud/'), async (route) => {
+    const path = new URL(route.request().url()).pathname.slice('/api/cloud'.length)
+    const method = route.request().method()
+    if (method === 'GET' && path === '/me') {
+      return api.cloud === 'signedIn'
+        ? fulfill(route, { body: { me: MOCK_ME } })
+        : fulfill(route, { status: 401, body: { error: { code: 'unauthenticated', message: 'Please sign in with your passkey.' } } })
+    }
+    if (method === 'GET' && path === '/sync/pull') return fulfill(route, { body: { friends: [], groups: [], expenses: [], stores: [], cursor: 0, more: false } })
+    if (method === 'POST' && path === '/sync/push') {
+      const body = bodyOf<Record<string, unknown[]>>(route)
+      api.calls.cloudPush.push(body)
+      const written = Object.values(body).reduce((n, list) => n + (Array.isArray(list) ? list.length : 0), 0)
+      return fulfill(route, { body: { written } })
+    }
+    if (method === 'POST' && path.startsWith('/auth/logout')) return fulfill(route, { body: { ok: true } })
+    return fulfill(route, { status: 404, body: { error: { code: 'not_found', message: 'Not mocked' } } })
+  })
 
   await context.route('**/api/health', async (route) => {
     if (api.health === null) return route.abort('connectionrefused')

@@ -30,6 +30,10 @@ const INVITE_DAYS = 7
 const MAX_PAYMENT_METHODS = 5
 const MAX_PASSKEYS = 10
 const MAX_BODY = 64 * 1024
+/** A sync push carries a batch of expenses (itemized bills included). */
+const MAX_SYNC_BODY = 1_500_000
+const SYNC_CAP = 500
+const SYNC_ITEMS = 2000
 
 const db: SupabaseClient = createClient(
   Deno.env.get('SUPABASE_URL')!,
@@ -92,7 +96,7 @@ function fail(code: string): never {
 function dbFail(error: { message?: string; code?: string } | null): never {
   const text = error?.message ?? ''
   if (text in MESSAGES) fail(text)
-  if (error?.code === '22P02') fail('bad_request')
+  if (error?.code === '22P02' || error?.code === '23502' || error?.code === '23514' || error?.code === '22003') fail('bad_request')
   console.error('[settle-api] db', error)
   fail('internal')
 }
@@ -982,6 +986,39 @@ async function transition(ctx: Ctx, session: Session, id: string, action: string
   return { status }
 }
 
+/* ------------------------------------------------------------------ the phone's own data */
+
+/** Everything that changed on the account after the `since` cursor, a page at a time. */
+async function syncPull(ctx: Ctx, session: Session) {
+  const since = Number(new URL(ctx.req.url).searchParams.get('since') ?? '0')
+  if (!Number.isSafeInteger(since) || since < 0) fail('bad_request')
+  const { data, error } = await db.rpc('sync_pull', { p_user: session.userId, p_since: since, p_cap: SYNC_CAP })
+  if (error) dbFail(error)
+  return data
+}
+
+/** What one phone changed. The database keeps whichever change is newer, row by row. */
+async function syncPush(ctx: Ctx, session: Session) {
+  const payload: Record<string, unknown[]> = {}
+  let total = 0
+  for (const kind of ['friends', 'groups', 'expenses', 'stores']) {
+    const list = ctx.body[kind]
+    if (list === undefined) continue
+    if (!Array.isArray(list) || list.length > SYNC_ITEMS) fail('bad_request')
+    for (const item of list) {
+      const row = item as Record<string, unknown> | null
+      const id = kind === 'stores' ? row?.key : row?.id
+      if (typeof row !== 'object' || row === null || typeof id !== 'string' || !Number.isSafeInteger(row.updatedAt)) fail('bad_request')
+    }
+    payload[kind] = list
+    total += list.length
+  }
+  if (total === 0) return { written: 0 }
+  const { data, error } = await db.rpc('sync_push', { p_user: session.userId, p_payload: payload })
+  if (error) dbFail(error)
+  return { written: data }
+}
+
 /* ------------------------------------------------------------------ router */
 
 type Handler = (ctx: Ctx, params: string[]) => Promise<unknown>
@@ -1007,6 +1044,8 @@ const ROUTES: Array<[string, string, Handler]> = [
   ['PATCH', '/payment-methods/:id', withSession((ctx, s, [id]) => updatePaymentMethod(ctx, s, uuid(id)))],
   ['DELETE', '/payment-methods/:id', withSession((ctx, s, [id]) => removePaymentMethod(ctx, s, uuid(id)))],
   ['GET', '/dashboard', withSession((_ctx, s) => dashboard(s))],
+  ['GET', '/sync/pull', withSession((ctx, s) => syncPull(ctx, s))],
+  ['POST', '/sync/push', withSession((ctx, s) => syncPush(ctx, s))],
   ['GET', '/groups', withSession(async (_ctx, s) => ({ groups: await listGroups(s) }))],
   ['POST', '/groups', withSession((ctx, s) => createGroup(ctx, s))],
   ['GET', '/groups/:id', withSession((_ctx, s, [id]) => groupDetail(s, uuid(id)))],
@@ -1065,7 +1104,7 @@ Deno.serve(async (req) => {
     await limit(`ip:${ip}`, 600, 60)
     if (req.method !== 'GET' && req.method !== 'DELETE') {
       const raw = await req.text()
-      if (raw.length > MAX_BODY) fail('bad_request')
+      if (raw.length > (path === '/sync/push' ? MAX_SYNC_BODY : MAX_BODY)) fail('bad_request')
       if (raw) {
         let parsed: unknown
         try {

@@ -227,9 +227,9 @@ describe('LandingPage', () => {
     renderLanding()
     const strip = screen.getByRole('list', { name: `Why people trust ${BRAND.name}` })
     expect(within(strip).getAllByRole('listitem').map((li) => li.textContent)).toEqual([
-      'No sign-up',
+      'No password, no OTP',
       'No ads',
-      'Your data stays on your phone',
+      'Only you can open your data',
       'Works with any UPI app',
     ])
   })

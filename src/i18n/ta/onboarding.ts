@@ -43,5 +43,4 @@ export const onboarding = {
   'onboarding.about.currency.change': 'மாற்று',
   'onboarding.about.currency.sheet.title': 'உங்கள் நாணயம்',
   'onboarding.about.currency.sheet.body': 'புதிய பிரிப்புகள் இந்த நாணயத்தில் தொடங்கும். எந்தப் பிரிப்புக்கும் வேறொன்றைத் தேர்ந்தெடுக்கலாம்.',
-  'onboarding.about.privacy': 'பதிவு இல்லை, விளம்பரங்கள் இல்லை. நீங்கள் சேர்ப்பது அனைத்தும் இந்த ஃபோனிலேயே இருக்கும். {brand} ஒரு தரவுத்தளத்தை வைத்திருப்பதில்லை.',
 } as const satisfies Messages

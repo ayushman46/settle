@@ -45,5 +45,4 @@ export const onboarding = {
   'onboarding.about.currency.change': 'बदला',
   'onboarding.about.currency.sheet.title': 'तुमचे चलन',
   'onboarding.about.currency.sheet.body': 'नवीन वाटण्या या चलनात सुरू होतील. कोणत्याही वाटणीसाठी दुसरे चलन निवडू शकता.',
-  'onboarding.about.privacy': 'साइन-अप नाही, जाहिराती नाहीत. तुम्ही जोडलेले सर्व काही या फोनवरच राहते — {brand}ला कोणताही डेटाबेस नाही.',
 } as const satisfies Messages

@@ -229,7 +229,6 @@ export const kit = {
   'kit.upiForm.save.cta': 'UPI ID சேமி',
   'kit.upiForm.label.mine': 'உங்கள் UPI ID',
   'kit.upiForm.label': '{name} அவர்களுக்கான UPI ID',
-  'kit.upiForm.hint.mine': 'நண்பர்கள் உங்களுக்கு இங்கே செலுத்துவார்கள். இது இந்த ஃபோனிலேயே இருக்கும்.',
   'kit.upiForm.hint.phone': 'இந்த ID-யால் நீங்கள் இணைப்பு அனுப்பும் அனைவருக்கும் உங்கள் போன் எண் தெரியும். உங்கள் UPI ஆப் எண் இல்லாத ID-யும் தரும் — அதன் சுயவிவரத்தில் “UPI ID” பாருங்கள்.',
   'kit.upiForm.hint.saved': 'அடுத்த முறைக்காக {name} அவர்களுக்குச் சேமிக்கப்பட்டது.',
   // A person chip's ✕.

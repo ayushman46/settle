@@ -81,7 +81,6 @@ export const pro = {
   'pro.checkout.unconfirmed': 'এই পেমেন্টটি নিশ্চিত করা যায়নি। টাকা কেটে থাকলে পেমেন্ট আইডি {paymentId} সহ আমাদের লিখুন, আমরা ঠিক করে দেব।',
   'pro.trust.aria': 'পেমেন্ট কীভাবে কাজ করে',
   'pro.trust.once': 'একবারের পেমেন্ট',
-  'pro.trust.noAccount': 'কোনো অ্যাকাউন্ট লাগে না',
   'pro.trust.methods': 'Razorpay-র মাধ্যমে UPI বা কার্ড',
 
   // The pass on this phone.
@@ -119,7 +118,6 @@ export const pro = {
   'pro.redeem.kept.elsewhere': 'কোডটি অন্য ফোনে এখনও কাজ করবে।',
   'pro.redeem.same.title': 'এই কোডটি এই ফোনে আগেই আছে',
   'pro.redeem.same.body': 'Pro চালু আছে — আর কিছু করার নেই।',
-  'pro.redeem.note': 'আপনার পাস এই ফোনেই থাকে — কোনো অ্যাকাউন্ট লাগে না। কোডটি গোপন রাখুন: যার কাছে এটি আছে সে আপনার Pro পেয়ে যাবে।',
 
   // The paywall sheet.
   'pro.paywall.on.title': 'Pro চালু আছে',
@@ -133,7 +131,6 @@ export const pro = {
   'pro.upgrade.unlocked.title': 'আপনি যা খুলেছেন',
   'pro.upgrade.perks.title': 'Pro-তে সবকিছু',
   'pro.upgrade.have.title': 'আগে থেকেই Pro আছে?',
-  'pro.upgrade.have.body': 'আপনার পাস যে ফোন থেকে কেনা হয়েছিল সেখানেই থাকে — কোনো অ্যাকাউন্ট নেই। ফোন বদলাচ্ছেন? পুরোনো ফোনে আপনার Pro কোডটি কপি করে এখানে ব্যবহার করুন। প্রোমো কোডও একইভাবে কাজ করে।',
   // <terms> and <privacy> become links.
   'pro.upgrade.legal': 'Razorpay নিরাপদে পেমেন্ট হ্যান্ডেল করে। পাস কিনে আপনি <terms>শর্তাবলি</terms>-তে সম্মত হচ্ছেন; আপনার ডেটা আমরা কীভাবে দেখি তা <privacy>গোপনীয়তা নীতি</privacy>-তে আছে।',
   'pro.upgrade.expired.body': 'আপনার Pro পাসের মেয়াদ শেষ হয়েছে। Pro আবার চালু করতে একটি পাস বেছে নিন — আপনার নিয়মিত ভাগ আর সেটিংস সবই এখনও আছে।',
@@ -144,7 +141,6 @@ export const pro = {
   'pro.lifetime.body': 'একবার {price} দিন, আর কখনও নবায়ন নয়। আজ থেকে এটি আপনার বর্তমান পাসের জায়গা নেবে — পাসগুলো যোগ হয় না, তাই এটির বাকি দিনগুলো নেওয়া হবে না।',
   'pro.lifetime.cta': 'আজীবন নিন — {price}',
   'pro.move.title': 'নতুন ফোনে যাচ্ছেন?',
-  'pro.move.body': 'আপনার পাস এই ফোনে থাকে — কোনো অ্যাকাউন্ট নেই, আর ব্যাকআপে তা যায় না। আপনার Pro কোডটি কপি করে নতুন ফোনে ব্যবহার করুন। কোডটি গোপন রাখুন: যার কাছে এটি আছে সে আপনার Pro পেয়ে যাবে।',
   'pro.move.copy.cta': 'আপনার Pro কোড কপি করুন',
   'pro.move.redeem.cta': 'আরেকটি কোড ব্যবহার করুন',
   'pro.move.copied.toast': 'Pro কোড কপি হয়েছে। নতুন ফোনে {brand}-এ ব্যবহার করুন।',

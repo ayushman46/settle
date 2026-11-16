@@ -83,7 +83,6 @@ export const pro = {
     'हम यह पेमेंट कन्फ़र्म नहीं कर पाए। अगर पैसे कटे हैं, तो पेमेंट ID {paymentId} के साथ हमें लिखें, हम ठीक कर देंगे।',
   'pro.trust.aria': 'पेमेंट कैसे होता है',
   'pro.trust.once': 'एक बार का पेमेंट',
-  'pro.trust.noAccount': 'अकाउंट की ज़रूरत नहीं',
   'pro.trust.methods': 'Razorpay से UPI या कार्ड',
 
   // The pass on this phone.
@@ -121,7 +120,6 @@ export const pro = {
   'pro.redeem.kept.elsewhere': 'यह कोड दूसरे फ़ोन पर अब भी चलेगा।',
   'pro.redeem.same.title': 'यह कोड इस फ़ोन पर पहले से है',
   'pro.redeem.same.body': 'Pro चालू है — और कुछ करने की ज़रूरत नहीं।',
-  'pro.redeem.note': 'आपका पास इसी फ़ोन पर रहता है — अकाउंट की ज़रूरत नहीं। कोड किसी को न बताएँ: जिसके पास यह कोड होगा, उसे आपका Pro मिल जाएगा।',
 
   // The paywall sheet.
   'pro.paywall.on.title': 'Pro चालू है',
@@ -135,8 +133,6 @@ export const pro = {
   'pro.upgrade.unlocked.title': 'आपके लिए खुला है',
   'pro.upgrade.perks.title': 'Pro में सब कुछ',
   'pro.upgrade.have.title': 'Pro पहले से है?',
-  'pro.upgrade.have.body':
-    'आपका पास उसी फ़ोन पर रहता है जिस पर खरीदा गया था — कोई अकाउंट नहीं है। फ़ोन बदल रहे हैं? पुराने फ़ोन पर अपना Pro कोड कॉपी करें और यहाँ रिडीम करें। प्रोमो कोड भी इसी तरह चलते हैं।',
   // <terms> and <privacy> become links.
   'pro.upgrade.legal':
     'पेमेंट Razorpay सुरक्षित तरीके से करता है। पास खरीदकर आप <terms>शर्तों</terms> से सहमत होते हैं; आपके डेटा का इस्तेमाल कैसे होता है, यह <privacy>प्राइवेसी नीति</privacy> में देखें।',
@@ -150,8 +146,6 @@ export const pro = {
     '{price} एक बार दें, फिर कभी रिन्यू न करें। यह आज से आपके मौजूदा पास की जगह लेगा — पास जुड़ते नहीं, इसलिए इसके बचे दिन आगे नहीं जाएँगे।',
   'pro.lifetime.cta': 'लाइफ़टाइम लें — {price}',
   'pro.move.title': 'नया फ़ोन ले रहे हैं?',
-  'pro.move.body':
-    'आपका पास इसी फ़ोन पर रहता है — कोई अकाउंट नहीं है, और बैकअप में यह शामिल नहीं होता। अपना Pro कोड कॉपी करें और नए फ़ोन पर रिडीम करें। इसे निजी रखें: जिसके पास कोड होगा, उसे आपका Pro मिल जाएगा।',
   'pro.move.copy.cta': 'अपना Pro कोड कॉपी करें',
   'pro.move.redeem.cta': 'दूसरा कोड रिडीम करें',
   'pro.move.copied.toast': 'Pro कोड कॉपी हो गया। नए फ़ोन पर {brand} में रिडीम करें।',

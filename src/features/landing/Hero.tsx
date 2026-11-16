@@ -16,9 +16,9 @@ function taglineParts(tagline: string): [string, string] {
 }
 
 const TRUST = [
-  { icon: UserRoundCheck, text: 'No sign-up' },
+  { icon: UserRoundCheck, text: 'No password, no OTP' },
   { icon: Ban, text: 'No ads' },
-  { icon: Smartphone, text: 'Your data stays on your phone' },
+  { icon: Smartphone, text: 'Only you can open your data' },
   { icon: BadgeCheck, text: 'Works with any UPI app' },
 ] as const
 

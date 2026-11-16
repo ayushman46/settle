@@ -333,7 +333,7 @@ describe('PaydaySheet', () => {
   it('sets your payday in one tap, shows it picked next time, and "Don’t know" forgets it', async () => {
     const { user } = renderAt('/app/payday', <Harness />)
     const sheet = await screen.findByRole('dialog', { name: 'When do you get paid?' })
-    expect(within(sheet).getByText('Pick the day of the month. It stays on this phone.')).toBeInTheDocument()
+    expect(within(sheet).getByText('Pick the day of the month. It’s saved to your account.')).toBeInTheDocument()
     await user.click(within(sheet).getByRole('button', { name: 'Last day of the month' }))
     expect(paydayStore.get().mine).toBe('last')
     expect(screen.getByText('Your payday: the last day of the month')).toBeInTheDocument()

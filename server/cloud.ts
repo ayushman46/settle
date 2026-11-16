@@ -18,6 +18,8 @@ export const CLOUD_CSRF_HEADER = 'x-settle-csrf'
 const COOKIE_PATH = '/api/cloud'
 const SESSION_SECONDS = 30 * 86_400
 const MAX_BODY_BYTES = 64 * 1024
+/** A sync push carries a batch of expenses, itemized bills included. */
+const MAX_SYNC_BYTES = 1_500_000
 const UPSTREAM_TIMEOUT_MS = 20_000
 const TOKEN = /^[A-Za-z0-9_-]{40,64}$/
 const METHODS = new Set(['GET', 'POST', 'PATCH', 'DELETE'])
@@ -65,7 +67,7 @@ export function registerCloud(app: Hono, { url, trust, log, fetchImpl = fetch }:
     if (method === 'POST' || method === 'PATCH') {
       if (!/^application\/json\b/i.test(c.req.header('content-type')?.trim() ?? '')) return problem(c, 415, 'bad_request', 'Please send JSON.')
       body = await c.req.text()
-      if (new TextEncoder().encode(body).length > MAX_BODY_BYTES) return problem(c, 413, 'bad_request', 'That request is too big.')
+      if (new TextEncoder().encode(body).length > (c.req.path === '/api/cloud/sync/push' ? MAX_SYNC_BYTES : MAX_BODY_BYTES)) return problem(c, 413, 'bad_request', 'That request is too big.')
     }
 
     const headers: Record<string, string> = {

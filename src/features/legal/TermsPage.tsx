@@ -52,8 +52,8 @@ export function TermsPage() {
             never renews by itself, so there’s nothing to cancel.
           </li>
           <li>
-            A “lifetime” pass lasts for as long as {NAME} is offered. A pass is a signed code saved on your device;
-            redeem the same code to use Pro on a new phone.
+            A “lifetime” pass lasts for as long as {NAME} is offered. A pass is a signed code saved to your account, so
+            it works on every phone you sign in on; you can also redeem the same code on a new phone.
           </li>
           <li>
             If you were charged twice, or paid and Pro didn’t unlock, write to us with your payment ID and we’ll fix it
@@ -66,9 +66,9 @@ export function TermsPage() {
 
       <LegalSection title={t('legal.terms.section.data')}>
         <p>
-          Your splits are stored on your device, not with us, so we can’t recover them if they’re deleted or the
-          device is lost. Keeping a backup file is your choice and your responsibility. See the privacy policy for
-          what is sent where.
+          Your splits are saved to your {NAME} account. Keep your passkey safe: we never send OTPs and can’t reset
+          one, so if every passkey on an account is lost, the account can’t be opened. You can also keep a backup file.
+          See the privacy policy for what is sent where.
         </p>
       </LegalSection>
 

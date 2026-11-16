@@ -48,7 +48,7 @@ Most split apps stop at *who owes whom* and leave the paying — and the chasing
 
 - **Money stuck with a bank or a shop? Get it back.** *New — Stuck money.* A UPI payment fails but the money leaves your account, or a refund is "initiated" and never lands — and chasing it is on you. By the RBI's rules (RBI/2019-20/67), a failed UPI payment to a person must be back by the next day, and one to a shop or an ATM within five days — after that, **the bank owes you ₹100 a day**, without being asked. Most never pay it. Settle counts the days and the money and hands you the complaint for each step: your bank, then after 30 days the RBI Ombudsman; for a refund, the business, the National Consumer Helpline, then a consumer commission (or AirSewa for a flight). The Android app spots failed payments and refunds in your alerts and ticks them off when the money's back; anywhere else, paste the bank SMS or add one in three taps. Settle drafts, you send — it never contacts anyone for you, and it isn't legal advice.
 
-- **Payments tick themselves off.** *New — Auto-settle, Android.* No split app knows when you've been paid: since UPI collect requests ended (Oct 2025), friends pay from whatever UPI app they like, and GPay, PhonePe and Paytm splits only see payments made inside their own app. In the Settle Android app, when Google Pay, PhonePe, Paytm, BHIM (or, if you allow it, your bank's SMS) tells you money arrived, Settle matches it to whoever owed you that amount and ticks them off — with Undo. A payment it isn't sure of waits for one tap. Nothing is uploaded: the alerts are read on your phone and every other notification is ignored. Friends still install nothing.
+- **Payments tick themselves off.** *New — Auto-settle, Android.* No split app knows when you've been paid: since UPI collect requests ended (Oct 2025), friends pay from whatever UPI app they like, and GPay, PhonePe and Paytm splits only see payments made inside their own app. In the Settle Android app, when Google Pay, PhonePe, Paytm, BHIM (or, if you allow it, your bank's SMS) tells you money arrived, Settle matches it to whoever owed you that amount and ticks them off — with Undo. A payment it isn't sure of waits for one tap. The alerts are read on your phone, only the payments it matches are saved to your account, and every other notification is ignored. Friends still install nothing.
 
 - **Friends don't install anything.** One link in the WhatsApp group, or a personal one each. Each friend taps their name, sees their exact share and pays it in their own UPI app — by your QR, a QR saved to their gallery, or your UPI ID, the ways UPI allows a payment to a person — then tells you **"I've paid"** in one tap.
 - **Know who's paid, on any phone.** *New.* On iPhone and the web, drop your UPI app's history screenshots, a bank statement or your bank SMS, and Settle ticks off everyone who paid you back in one go — names, UPI IDs and amounts matched, part payments recognised, nothing ticked that it isn't sure of. Statements and SMS never leave your phone. Then **To collect** lists whoever's left, longest wait first, with a reminder each that gets firmer only as it needs to.
@@ -57,7 +57,7 @@ Most split apps stop at *who owes whom* and leave the paying — and the chasing
 - **Rent, split right — with HRA receipts.** *New.* Each flatmate pays the landlord their own share directly from one rent link, so nobody fronts the whole rent and chases the others, and everyone has their own payment trail. Then Settle makes **HRA rent receipts for each flatmate's share** — monthly or quarterly, amount in words, the landlord's PAN when a share is over ₹1,00,000 a year, a revenue stamp for cash over ₹5,000 — ready for the landlord to sign and HR to file. We couldn't find another split app that does this.
 - **Built for India.** Eight languages, voice that understands "dhai hazaar ka dinner", ₹ with lakh grouping, rupees by default, UPI everywhere, and fast on budget phones and slow networks.
 - **AI that does the tedious part.** Snap a restaurant bill and every item, tax and discount is filled in; snap a Swiggy order and the delivery and platform fees are split fairly; drop a friend's payment screenshot and they're marked paid.
-- **Private by design.** No sign-up, no ads, no database: your splits live on your phone.
+- **Private by design.** No ads, no passwords, no OTP: everything is saved to your own account, which only you can open with a passkey.
 - **Fair pricing.** Free for everyday splitting. Pro is a one-time pass — no auto-renewing subscription.
 
 ## Features
@@ -183,7 +183,7 @@ src/
               bijli, whospaid, collect, stuck…
   kit/        feature components (people picker, split editor, share & UPI sheets…)
   components/ design system (buttons, sheets, charts, tab bar…)
-  data/       on-device stores, actions and hooks (localStorage, no database)
+  data/       on-device stores (the working copy, synced to the account), actions and hooks
   engine/     pure maths: split modes, balances, fewest payments, insights, recurring
   share/      pay links, share-card images, nudges
   pro/ ai/    Pro licenses, checkout, AI quota, "Just say it" client
@@ -215,7 +215,7 @@ Serve it over **HTTPS**: browsers only enable offline mode, the native share she
 
 ## Privacy
 
-- **No database and no accounts.** Nothing about you or your splits is stored on the server.
+- **Everything is saved to your own account** (Supabase, Mumbai), opened only with your passkey. The phone keeps a working copy so the app works offline; signing out removes it.
 - **Photos and "Just say it" text go to NVIDIA only to be read**, and the server keeps nothing.
 - **Pay links carry the split in the link itself** (after the `#`), which browsers never send to the server.
 - **Everything else stays in your browser** — people, expenses, groups, stuck payments and settings — with a backup file you can export and restore.

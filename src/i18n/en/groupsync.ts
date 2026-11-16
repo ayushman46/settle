@@ -54,7 +54,7 @@ export const groupsync = {
   'groupsync.join.upi.error': 'That doesn’t look like a UPI ID. It looks like name@bank.',
   'groupsync.join.pick.error': 'Pick your name, or “I’m not on the list”',
   'groupsync.join.cta': 'Join {name}',
-  'groupsync.join.privacy': 'The group is kept on your phone. No sign-up, no phone number.',
+  'groupsync.join.privacy': 'The group is saved to your Settle account, which only you can open.',
   'groupsync.join.loading': 'Opening the invite…',
   'groupsync.join.problem.title': 'This invite can’t be opened',
   'groupsync.join.problem.body': 'The link was cut off or changed on the way. Ask for it again, and open it straight from the message.',

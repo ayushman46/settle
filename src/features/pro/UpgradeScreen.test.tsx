@@ -303,7 +303,7 @@ describe('UpgradeScreen — with Pro', () => {
     expect(screen.getByRole('link', { name: /Insights/ })).toHaveAttribute('href', '/app/insights')
     expect(screen.getByRole('link', { name: /Recurring splits/ })).toHaveAttribute('href', '/app/recurring')
     expect(screen.getByRole('heading', { name: 'Moving to a new phone?' })).toBeInTheDocument()
-    expect(screen.getByText(/backups don't include it/)).toBeInTheDocument()
+    expect(screen.getByText(/sign in on the new phone and it's there/)).toBeInTheDocument()
     expect(screen.queryByRole('radio')).not.toBeInTheDocument()
   })
 

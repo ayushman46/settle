@@ -229,7 +229,6 @@ export const kit = {
   'kit.upiForm.save.cta': 'UPI ID సేవ్ చేయండి',
   'kit.upiForm.label.mine': 'మీ UPI ID',
   'kit.upiForm.label': '{name} కోసం UPI ID',
-  'kit.upiForm.hint.mine': 'స్నేహితులు ఇక్కడే మీకు చెల్లిస్తారు. ఇది ఈ ఫోన్‌లోనే ఉంటుంది.',
   'kit.upiForm.hint.phone': 'ఈ IDతో మీరు లింక్ పంపే అందరికీ మీ ఫోన్ నంబర్ కనిపిస్తుంది. మీ UPI యాప్ నంబర్ లేని ID కూడా ఇస్తుంది — దాని ప్రొఫైల్‌లో “UPI ID” చూడండి.',
   'kit.upiForm.hint.saved': 'తదుపరిసారి కోసం {name} కు సేవ్ చేయబడింది.',
   // A person chip's ✕.

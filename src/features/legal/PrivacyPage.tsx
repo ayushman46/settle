@@ -22,11 +22,14 @@ export function PrivacyPage() {
         <p>
           Everything you put into {NAME} — your name and UPI ID, the people you split with (their names, UPI IDs and
           phone numbers), expenses, groups, recurring splits, stuck payments, bank charges, settings and your Pro pass — is saved
-          in your browser’s storage on this device. It is not sent to us, and we can’t see it.
+          to your {NAME} account: a database run for us by Supabase in Mumbai, India. A copy stays on your phone so the
+          app works offline, and the two stay in step whenever you’re online. Only you can open your account, with your
+          passkey (your fingerprint, face or phone PIN); the passkey itself never leaves your phone. We don’t sell your
+          data, share it, or use it for ads.
         </p>
         <p>
-          Clearing this site’s data in your browser, or removing the app, deletes it. Keep a backup file (under
-          You → Backup) if you’d like to move to a new phone or be safe. A backup is a plain file: anyone who opens
+          Signing out removes the copy from your phone; your account keeps everything. You → Clear all data deletes it
+          from your account too. You can also keep a backup file (under You → Backup). A backup is a plain file: anyone who opens
           it can read what’s inside, including the account digits and complaint numbers of your stuck payments, so
           keep it somewhere private.
         </p>
@@ -34,14 +37,14 @@ export function PrivacyPage() {
           <strong>Stuck money.</strong> For each failed payment or refund you track, {NAME} keeps the amount, the
           dates, who it was paid to or who owes the refund, the reference or order number, your bank or UPI app and
           the account’s last digits as the message printed them, the complaints you’ve raised (the date and any
-          complaint number), the day your bank replied, and any note you add. It stays on this phone and goes into
+          complaint number), the day your bank replied, and any note you add. It’s saved to your account and goes into
           your backup file with everything else. A bank SMS you paste or share is read on your phone; only what it
           says about the payment is kept. The details you add for letters — your mobile number, city and address,
-          the email addresses you send complaints to, and whether you cancelled a mandate — stay on this phone too,
-          and aren’t put in backups.
+          the email addresses you send complaints to, and whether you cancelled a mandate — are saved to your account
+          too, and aren’t put in backups.
         </p>
         <p>
-          <strong>Bank charges.</strong> A bank statement you add is read on your phone and never uploaded. {NAME} keeps
+          <strong>Bank charges.</strong> A bank statement you add is read on your phone; the statement itself is never uploaded. {NAME} keeps
           only its charges — the date, the amount and GST, the narration as your bank printed it, the balance
           just before and after, and how many ATM withdrawals that month — plus the bank, the account’s last digits,
           the days the statement covered, your answers about the account and each charge, and the claims you make
@@ -141,16 +144,20 @@ export function PrivacyPage() {
 
       <LegalSection title={t('legal.privacy.section.server')}>
         <p>
-          Our server has no database of people or accounts; the only thing it keeps is the encrypted copies of shared groups described above. To stop abuse, it counts requests per IP address (and per Pro pass, for AI) in
-          memory for up to a day; the counts disappear when the server restarts. It writes short technical logs —
-          like “a bill was read in 7 seconds” — that never include what was on the bill or what you typed. Our
-          hosting provider may keep standard access logs.
+          Your account (above) is kept in our database at Supabase, in Mumbai. With it we keep your mobile number (not
+          verified: we never send an OTP), the public half of your passkeys, a record of sign-ins and account changes,
+          and, for account groups you join, what you add there, which the other members see. The database is locked so
+          only our own server can read it. Shared live groups are also kept as encrypted copies that our server can’t
+          read. To stop abuse, we count requests per IP address (and per Pro pass, for AI). Our server writes short
+          technical logs — like “a bill was read in 7 seconds” — that never include what was on the bill or what you
+          typed. Our hosting providers (Vercel and Supabase) may keep standard access logs.
         </p>
       </LegalSection>
 
       <LegalSection title={t('legal.privacy.section.cookies')}>
         <p>
-          {NAME} uses no cookies, no analytics and no advertising trackers. Its fonts and icons are served from our own
+          {NAME} sets one cookie, only to keep you signed in; page scripts can’t read it and it’s never used for
+          tracking. There are no analytics and no advertising trackers. Its fonts and icons are served from our own
           site, so opening it doesn’t tell anyone else you did.
         </p>
       </LegalSection>
@@ -158,8 +165,8 @@ export function PrivacyPage() {
       <LegalSection title={t('legal.privacy.section.choices')}>
         <ul>
           <li>Export a backup of everything, any time, under You → Backup.</li>
-          <li>Delete everything with You → Clear all data, or by clearing this site’s data in your browser.</li>
-          <li>Skip the AI features: then nothing you enter leaves your device unless you share it yourself.</li>
+          <li>Delete everything with You → Clear all data: it’s removed from this phone and from your account.</li>
+          <li>Skip the AI features: then what you enter goes only to your account.</li>
         </ul>
       </LegalSection>
 

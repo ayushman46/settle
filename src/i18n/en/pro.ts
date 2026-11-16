@@ -82,7 +82,7 @@ export const pro = {
   'pro.checkout.unconfirmed': "We couldn't confirm this payment. If you were charged, write to us with payment ID {paymentId} and we'll sort it out.",
   'pro.trust.aria': 'How paying works',
   'pro.trust.once': 'One-time payment',
-  'pro.trust.noAccount': 'No account needed',
+  'pro.trust.noAccount': 'On every phone you sign in on',
   'pro.trust.methods': 'UPI or card via Razorpay',
 
   // The pass on this phone.
@@ -120,7 +120,7 @@ export const pro = {
   'pro.redeem.kept.elsewhere': 'The code still works on another phone.',
   'pro.redeem.same.title': 'That code is already on this phone',
   'pro.redeem.same.body': "Pro is on — there's nothing else to do.",
-  'pro.redeem.note': 'Your pass lives on this phone — no account needed. Keep your code private: anyone with it gets your Pro.',
+  'pro.redeem.note': 'Your pass is saved to your Settle account. Keep your code private: anyone with it gets your Pro.',
 
   // The paywall sheet.
   'pro.paywall.on.title': 'Pro is on',
@@ -134,8 +134,7 @@ export const pro = {
   'pro.upgrade.unlocked.title': "What you've unlocked",
   'pro.upgrade.perks.title': 'Everything in Pro',
   'pro.upgrade.have.title': 'Already have Pro?',
-  'pro.upgrade.have.body':
-    "Your pass lives on the phone it was bought on — there's no account. Moving phones? Copy your Pro code on the old one and redeem it here. Promo codes work the same way.",
+  'pro.upgrade.have.body': "Your pass is saved to your Settle account, so it's on every phone you sign in on. You can also copy your Pro code and redeem it here. Promo codes work the same way.",
   // <terms> and <privacy> become links.
   'pro.upgrade.legal':
     'Payments are handled securely by Razorpay. By buying a pass you agree to the <terms>Terms</terms>; see how we treat your data in the <privacy>Privacy policy</privacy>.',
@@ -149,8 +148,7 @@ export const pro = {
     "Pay {price} once and never renew. It replaces your current pass from today — passes don't add up, so the days left on this one aren't carried over.",
   'pro.lifetime.cta': 'Go lifetime — {price}',
   'pro.move.title': 'Moving to a new phone?',
-  'pro.move.body':
-    "Your pass lives on this phone — there's no account, and backups don't include it. Copy your Pro code and redeem it on the new phone. Keep it private: anyone with the code gets your Pro.",
+  'pro.move.body': "Your pass is saved to your Settle account: sign in on the new phone and it's there. You can also copy your Pro code and redeem it there. Keep it private: anyone with the code gets your Pro.",
   'pro.move.copy.cta': 'Copy your Pro code',
   'pro.move.redeem.cta': 'Redeem another code',
   'pro.move.copied.toast': 'Pro code copied. Redeem it in {brand} on your new phone.',

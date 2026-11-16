@@ -63,7 +63,6 @@ export const home = {
   'home.say.title': 'শুধু বলুন',
   'home.say.placeholder': 'শুধু বলুন…',
   'home.say.label': 'শুধু বলুন: AI ভাগ করার জন্য একটি খরচের বর্ণনা দিন',
-  'home.trust': 'গোপনীয়তা মাথায় রেখে বানানো — আপনার ভাগগুলো এই ফোনেই থাকে। কোনো অ্যাকাউন্ট নেই, বিজ্ঞাপন নেই।',
   'home.people.add': 'যোগ করুন',
   'home.describe.error.badRequest': 'কী ছিল আর কত টাকা বলুন — যেমন “{example}”।',
   'home.describe.error.notSplit': 'এটি খরচের মতো পড়া যাচ্ছে না — চেষ্টা করুন “{example}”।',
