@@ -21,6 +21,32 @@ async function workerInControl(page: Page): Promise<void> {
   })
 }
 
+/**
+ * Waits until the worker has kept a copy of every code file this visit loaded (the app asks it to
+ * as soon as it takes over). Going offline before that is a race the test would lose on a busy
+ * machine, and the app already explains that case ("This screen needs a connection the first time").
+ */
+async function workerCaughtUp(page: Page): Promise<void> {
+  await expect
+    .poll(
+      () =>
+        page.evaluate(async () => {
+          const loaded = new Set(
+            performance
+              .getEntriesByType('resource')
+              .map((entry) => new URL(entry.name, location.href))
+              .filter((url) => url.origin === location.origin && url.pathname.startsWith('/assets/') && url.pathname.endsWith('.js'))
+              .map((url) => url.pathname),
+          )
+          const missing: string[] = []
+          for (const path of loaded) if (!(await caches.match(path))) missing.push(path)
+          return missing.sort()
+        }),
+      { timeout: 150_000, intervals: [500, 1000, 2000] },
+    )
+    .toEqual([])
+}
+
 /** Onboard, make one split online, share its pay link, and visit that link once (its page is cached). */
 async function firstVisit(page: Page, context: BrowserContext, shared: () => Promise<{ clipboard: string[] }>): Promise<string> {
   await onboard(page)
@@ -31,6 +57,7 @@ async function firstVisit(page: Page, context: BrowserContext, shared: () => Pro
   await page.getByRole('button', { name: 'Back', exact: true }).click()
   await expect(page).toHaveURL(/\/app$/)
   await workerInControl(page)
+  await workerCaughtUp(page)
 
   const pay = await context.newPage()
   await pay.goto(link)

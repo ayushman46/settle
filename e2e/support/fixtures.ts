@@ -90,7 +90,30 @@ async function preparePhone(context: BrowserContext, baseURL: string | undefined
   })
   const api = await installMockApi(context)
   await context.addInitScript(recordSharing)
-  context.on('weberror', (error) => pageErrors.push(error.error().stack ?? String(error.error())))
+  // An error thrown without a message (a promise rejected with a plain value) says nothing on its own:
+  // name what it was and which page it was on, so a CI failure can be read without a re-run.
+  context.on('weberror', (error) => {
+    const err = error.error()
+    const text = err.stack || [err.name, err.message].filter(Boolean).join(': ') || String(err)
+    pageErrors.push(text || `(an error with no message, on ${error.page()?.url() ?? 'a page'})`)
+  })
+  context.on('console', (message) => {
+    if (message.type() === 'error' && message.text().startsWith('[e2e] unhandled rejection')) pageErrors.push(message.text())
+  })
+  await context.addInitScript(() => {
+    window.addEventListener('unhandledrejection', (event) => {
+      const reason: unknown = event.reason
+      if (reason instanceof Error && (reason.message || reason.stack)) return
+      const kind = reason === null ? 'null' : typeof reason === 'object' ? (reason as object).constructor?.name ?? 'object' : typeof reason
+      let detail = ''
+      try {
+        detail = JSON.stringify(reason) ?? ''
+      } catch {
+        detail = String(reason)
+      }
+      console.error(`[e2e] unhandled rejection with a ${kind}: ${detail.slice(0, 300)} at ${location.pathname}`)
+    })
+  })
   return { api, blocked, pageErrors }
 }
 

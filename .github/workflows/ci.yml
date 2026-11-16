@@ -1,7 +1,13 @@
-# Every push to main and every pull request: typecheck, lint, the unit/server test suite, the
-# production build (served and probed exactly as Render runs it), the Cloudflare Pages build, and
-# the Playwright smoke journeys on Microsoft Edge as phones. Render deploys main only once these
-# pass (render.yaml: autoDeployTrigger: checksPass).
+# Every push to main, every pull request: everything Settle is made of, checked in parallel.
+#
+#   Checks      typecheck (app, server, Pages Function, E2E) and lint
+#   Unit        the unit and server suites, in three shards
+#   Build       the production build served and probed as it runs live, the Vercel and Cloudflare
+#               Pages builds, and the build the E2E journeys use (made once, shared with them)
+#   Database    every Supabase migration applied to a fresh Postgres, then the money and sync rules
+#   Function    the settle-api Edge Function type-checked by Deno, and its copy of shared/cloud.ts
+#   E2E         the Playwright journeys on Microsoft Edge as phones (360/390 px, light/dark), in four shards
+#   CI          one status that's green only when all of the above are: the one to require on main
 name: CI
 
 on:
@@ -11,7 +17,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: ci-${{ github.ref }}
+  group: ci-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
@@ -21,17 +27,19 @@ env:
   CI: "true"
   # Never call the real AI from CI, whatever the environment holds.
   NVIDIA_API_KEY: ""
+  # Nor the real Settle account service: the proxy is checked with accounts switched off.
+  CLOUD_API_URL: "off"
   # Run like an Indian phone: Node's Intl falls back to this locale (Indian digit grouping,
-  # "18 Oct 2026"), and dates roll over at Indian midnight. The suite assumes both.
+  # "18 Oct 2026"), and dates roll over at Indian midnight. The suites assume both.
   LANG: en_IN.UTF-8
   LC_ALL: en_IN.UTF-8
   TZ: Asia/Kolkata
 
 jobs:
-  check:
-    name: Typecheck · lint · tests · build
-    runs-on: ubuntu-latest
-    timeout-minutes: 25
+  checks:
+    name: Typecheck · lint
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -43,42 +51,136 @@ jobs:
         run: npm run typecheck
       - name: Lint
         run: npm run lint
-      - name: Unit and server tests
-        run: npx vitest run --maxWorkers=2
+
+  unit:
+    name: Unit and server tests · ${{ matrix.shard }}/3
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - name: Tests (shard ${{ matrix.shard }} of 3)
+        run: npx vitest run --shard=${{ matrix.shard }}/3 --maxWorkers=2 --reporter=default --reporter=github-actions
+
+  build:
+    name: Build · serve · probe
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+          cache: npm
+      - run: npm ci --no-audit --no-fund
       - name: Production build
         run: npm run build
+      - name: Vercel build (what production deploys)
+        run: node scripts/vercel-build.mjs
       - name: Cloudflare Pages build (404 page, headers, rewrites)
         run: node scripts/pages-build.mjs
-      - name: Serve the build like Render and probe it
+      - name: Serve the build and probe it
         run: |
           PORT=4130 node dist/server/index.js > server.log 2>&1 &
           server=$!
           for i in $(seq 1 30); do curl -fs http://127.0.0.1:4130/api/health > /dev/null && break; sleep 1; done
+          failed=0
           probe() { # path, expected status
             status=$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:4130$1")
-            echo "$1 -> $status"; test "$status" = "$2"
+            if [ "$status" = "$2" ]; then echo "ok   $1 -> $status"; else echo "::error::$1 answered $status, expected $2"; failed=1; fi
           }
           probe /api/health 200
           probe / 200
           probe /app 200
           probe /app/groups 200
+          probe /app/account 200
           probe /pay 200
+          probe /get 200
           probe /privacy 200
+          probe /terms 200
           probe /sw.js 200
           probe /manifest.webmanifest 200
           probe /assets/missing.js 404
           probe /no-such-page 404
-          curl -fsI http://127.0.0.1:4130/app | grep -i '^content-security-policy:'
-          curl -fs http://127.0.0.1:4130/api/health | grep -q '"ok":true'
+          probe /api/cloud/me 503
+          curl -fsI http://127.0.0.1:4130/app | grep -qi '^content-security-policy:' || { echo "::error::/app has no Content-Security-Policy"; failed=1; }
+          curl -fs http://127.0.0.1:4130/api/health | grep -q '"ok":true' || { echo "::error::/api/health is not ok"; failed=1; }
+          curl -fsI http://127.0.0.1:4130/api/cloud/me | grep -qi '^cache-control: no-store' || { echo "::error::/api/cloud answers can be cached"; failed=1; }
           kill "$server"
+          exit $failed
       - name: Server log
         if: ${{ !cancelled() }}
         run: cat server.log || true
+      - name: The build the journeys use
+        run: node e2e/support/serve.mjs --build-only
+      - uses: actions/upload-artifact@v7
+        with:
+          name: e2e-build
+          path: .e2e-build/
+          include-hidden-files: true
+          retention-days: 1
+          if-no-files-found: error
+
+  database:
+    name: Database · migrations and rules
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      PGHOST: 127.0.0.1
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      PGDATABASE: postgres
+    steps:
+      - uses: actions/checkout@v7
+      - name: The roles Supabase has
+        run: psql -v ON_ERROR_STOP=1 -c "create role anon nologin; create role authenticated nologin; create role service_role nologin bypassrls;"
+      - name: Apply every migration, in order
+        run: |
+          for file in supabase/migrations/*.sql; do
+            echo "::group::$file"
+            psql -v ON_ERROR_STOP=1 -f "$file"
+            echo "::endgroup::"
+          done
+      - name: The database's own rules
+        run: psql -v ON_ERROR_STOP=1 -f supabase/tests/settle.sql
+
+  function:
+    name: Edge Function · deno check
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: The function runs the same rules as the app
+        run: cmp shared/cloud.ts supabase/functions/settle-api/cloud.ts
+      - name: Type-check settle-api
+        run: deno check supabase/functions/settle-api/index.ts
 
   e2e:
-    # The whole suite (360 journeys on four phones) is too long for one runner: four in parallel.
-    name: E2E · Edge · phones (360/390, light/dark) · ${{ matrix.shard }}/4
-    runs-on: ubuntu-latest
+    name: E2E · Edge · phones · ${{ matrix.shard }}/4
+    needs: build
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     strategy:
       fail-fast: false
@@ -91,6 +193,10 @@ jobs:
           node-version-file: .node-version
           cache: npm
       - run: npm ci --no-audit --no-fund
+      - uses: actions/download-artifact@v7
+        with:
+          name: e2e-build
+          path: .e2e-build
       - name: Microsoft Edge
         run: |
           if command -v microsoft-edge-stable > /dev/null; then microsoft-edge-stable --version
@@ -98,7 +204,7 @@ jobs:
       - name: Journeys on the production build
         run: npx playwright test --shard=${{ matrix.shard }}/4
       - name: Playwright report
-        if: ${{ !cancelled() }}
+        if: ${{ failure() }}
         uses: actions/upload-artifact@v7
         with:
           name: playwright-report-${{ matrix.shard }}
@@ -107,3 +213,17 @@ jobs:
             test-results/
           retention-days: 14
           if-no-files-found: ignore
+
+  ci:
+    name: CI
+    if: ${{ always() }}
+    needs: [checks, unit, build, database, function, e2e]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    steps:
+      - name: Every job passed
+        env:
+          RESULTS: ${{ toJSON(needs) }}
+        run: |
+          echo "$RESULTS" | jq -r 'to_entries[] | "\(.key): \(.value.result)"'
+          echo "$RESULTS" | jq -e 'all(.[]; .result == "success")' > /dev/null

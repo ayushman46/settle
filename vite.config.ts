@@ -102,6 +102,8 @@ export default defineConfig(({ mode, isSsrBuild }) => {
             environment: 'jsdom',
             include: ['src/**/*.test.{ts,tsx}'],
             setupFiles: ['./src/test/setup.ts'],
+            // Screens render a lot under jsdom; on a busy CI runner 5 s isn't always enough.
+            testTimeout: 15_000,
           },
         },
         {

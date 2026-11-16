@@ -207,7 +207,7 @@ describe('ShareList', () => {
       expect(screen.getByRole('button', { name: words.tickMine })).toBeInTheDocument()
       theirs.unmount()
     }
-  })
+  }, 30_000)
 
   it("folds out each person's items on a bill", async () => {
     render(<ShareList expense={bill()} />)

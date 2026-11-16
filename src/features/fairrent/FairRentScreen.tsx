@@ -40,6 +40,10 @@ import styles from './FairRent.module.css'
  * lives there and a room each are filled in already; every change is kept as it is made, and the
  * answer is always on the page: each person's rent, why, and what an equal split would be.
  */
+
+/** When a change was made (called from event handlers, never while rendering). */
+const stamp = (): number => Date.now()
+
 export function FairRentScreen() {
   const group = useGroup(useSearchParams().get('group'))
   const key = group ? group.id : SOLO_KEY
@@ -80,7 +84,7 @@ function Editor({ planKey, group }: { planKey: string; group: Group | null }) {
   )
   const loose = unplaced(plan.people, plan.rooms)
 
-  const update = (patch: Partial<SavedPlan>): void => putPlan({ ...plan, ...patch, updatedAt: Date.now() })
+  const update = (patch: Partial<SavedPlan>): void => putPlan({ ...plan, ...patch, updatedAt: stamp() })
   const updateRoom = (roomId: string, patch: Partial<Room>): void => update({ rooms: plan.rooms.map((r) => (r.id === roomId ? { ...r, ...patch } : r)) })
 
   const setRent = (text: string): void => {

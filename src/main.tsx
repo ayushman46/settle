@@ -11,6 +11,7 @@ import { BRAND, type LanguageCode } from './domain/types'
 import { contextFor, resolveLanguage, startLanguage } from './i18n/language'
 import { setLanguage } from './i18n/runtime'
 import { trackKeyboardInset } from './lib/keyboardInset'
+import { keepAssetsOnTakeover } from './app/keepAssets'
 
 const container = document.getElementById('root')
 if (!container) throw new Error(`${BRAND.name}: #root element is missing from index.html.`)
@@ -58,6 +59,7 @@ else mount()
 
 // Offline support (production only — in dev a worker would cache Vite's modules and confuse HMR).
 if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  keepAssetsOnTakeover()
   const register = (): void => {
     navigator.serviceWorker.register('/sw.js').catch(() => {
       // No offline cache this time (e.g. private mode); the app works the same online.

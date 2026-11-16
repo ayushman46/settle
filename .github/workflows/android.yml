@@ -1,36 +1,46 @@
 # The Android app (android/): Settle in a Capacitor shell that loads the live site, plus
-# Auto-settle's payment-alerts listener. Every push that touches it builds a debug APK, kept as a
-# download on the run for 30 days (install it on a phone to try Auto-settle). Play Store builds
-# need a release key and are made by hand.
+# Auto-settle's payment-alerts listener. A push to main that touches it builds a debug APK, kept on
+# the run for 30 days; a pull request builds it too, to prove it still builds. Play Store builds need
+# a release key and are made by hand.
+#
+# The download on /get (the `android-latest` release) is published once and then only replaced when
+# this workflow is run by hand: the app is a shell around the live site and updates itself, and
+# each build is signed with a fresh debug key, which Android won't install over another.
 name: Android
 
 on:
   push:
     branches: [main]
-    paths:
+    paths: &android-paths
       - android/**
       - capacitor.config.json
       - native/**
       - package-lock.json
       - .github/workflows/android.yml
+  pull_request:
+    paths: *android-paths
   workflow_dispatch:
 
 concurrency:
-  group: android-${{ github.ref }}
+  group: android-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 permissions:
-  # Publishing the APK as a release download.
-  contents: write
+  contents: read
 
 jobs:
   apk:
     name: Debug APK
-    # 24.04 comes with the Android SDK (ubuntu-latest is moving to 26).
+    # 24.04 comes with the Android SDK.
     runs-on: ubuntu-24.04
     timeout-minutes: 30
+    permissions:
+      # Publishing the APK as a release download (main only).
+      contents: write
     steps:
       - uses: actions/checkout@v7
+      - name: The Gradle wrapper is the genuine one
+        uses: gradle/actions/wrapper-validation@v4
       - uses: actions/setup-node@v7
         with:
           node-version-file: .node-version
@@ -50,17 +60,20 @@ jobs:
         run: |
           chmod +x gradlew
           ./gradlew assembleDebug --no-daemon --stacktrace
+      - name: The APK is there and signed
+        run: |
+          apk=android/app/build/outputs/apk/debug/app-debug.apk
+          test -s "$apk"
+          echo "APK: $(du -h "$apk" | cut -f1)"
+          "$ANDROID_HOME"/build-tools/*/apksigner verify "$apk" 2>/dev/null || unzip -l "$apk" | grep -q 'META-INF/.*\.\(RSA\|EC\)'
       - uses: actions/upload-artifact@v7
         with:
           name: settle-android-debug
           path: android/app/build/outputs/apk/debug/app-debug.apk
           retention-days: 30
           if-no-files-found: error
-      # The download on /get. The app is a shell around the live site and updates itself, so the file
-      # is published once and kept (each build is signed with a fresh debug key, and Android will
-      # not install one over another): run this workflow by hand to replace it.
       - name: Publish the APK as a download
-        if: github.ref == 'refs/heads/main'
+        if: ${{ github.ref == 'refs/heads/main' && github.event_name != 'pull_request' }}
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -70,3 +83,10 @@ jobs:
           elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             gh release upload android-latest settle-android.apk --clobber
           fi
+      - name: The download on /get works
+        if: ${{ github.ref == 'refs/heads/main' && github.event_name != 'pull_request' }}
+        run: |
+          url="https://github.com/${{ github.repository }}/releases/download/android-latest/settle-android.apk"
+          status=$(curl -s -o /dev/null -L -w '%{http_code}' --retry 3 --retry-delay 5 "$url")
+          echo "$url -> $status"
+          test "$status" = "200"

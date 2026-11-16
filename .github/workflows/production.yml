@@ -1,0 +1,62 @@
+# Is the live Settle working? Every 30 minutes (GitHub runs schedules best-effort, so sometimes
+# later), after every successful CI run on main, and by hand. A failing check fails this workflow,
+# and GitHub emails whoever last changed it. Read-only: it never signs in or changes anything.
+#
+# Checks: the site and its pages, the API, the Settle account service on Supabase (directly and
+# through the site's own /api/cloud), and the Android download on /get.
+# Another domain: set the repository variable PRODUCTION_URL (Settings → Variables → Actions).
+name: Production
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    name: Live site
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      SITE: ${{ vars.PRODUCTION_URL || 'https://settleupi.vercel.app' }}
+      ACCOUNTS: https://izlhhnmisecqhmkbbbdk.supabase.co/functions/v1/settle-api
+      APK: https://github.com/${{ github.repository }}/releases/download/android-latest/settle-android.apk
+    steps:
+      - name: Probe
+        run: |
+          failed=0
+          probe() { # url, expected status, [what the body must contain]
+            body=$(mktemp)
+            status=$(curl -sS -L -o "$body" -w '%{http_code}' --retry 2 --retry-delay 10 --max-time 30 "$1" || echo 000)
+            if [ "$status" != "$2" ]; then
+              echo "::error title=Production::$1 answered $status, expected $2"; failed=1
+            elif [ -n "${3:-}" ] && ! grep -q "$3" "$body"; then
+              echo "::error title=Production::$1 answered $status but without \"$3\""; failed=1
+            else
+              echo "ok   $1 -> $status"
+            fi
+          }
+          probe "$SITE/" 200 '<div id="root">'
+          probe "$SITE/app" 200
+          probe "$SITE/get" 200
+          probe "$SITE/privacy" 200
+          probe "$SITE/sw.js" 200 'settle-assets'
+          probe "$SITE/manifest.webmanifest" 200 '"Settle'
+          probe "$SITE/api/health" 200 '"ok":true'
+          probe "$SITE/api/cloud/me" 401 'unauthenticated'
+          probe "$ACCOUNTS/health" 200 '"ok":true'
+          status=$(curl -sS -L -o /dev/null -I -w '%{http_code}' --max-time 30 "$APK" || echo 000)
+          if [ "$status" = "200" ]; then echo "ok   $APK -> $status"; else echo "::error title=Production::the Android download answered $status"; failed=1; fi
+          exit $failed
