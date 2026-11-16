@@ -177,7 +177,7 @@ jobs:
       - name: Type-check settle-api
         run: |
           set +e
-          NO_COLOR=1 deno check supabase/functions/settle-api/index.ts 2>&1 | tee check.log
+          NO_COLOR=1 deno check --node-modules-dir=none supabase/functions/settle-api/index.ts 2>&1 | tee check.log
           status=${PIPESTATUS[0]}
           # The output as annotations, so the reason reads on the run's summary.
           if [ "$status" -ne 0 ]; then
