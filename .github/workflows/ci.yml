@@ -177,11 +177,11 @@ jobs:
       - name: Type-check settle-api
         run: |
           set +e
-          deno check supabase/functions/settle-api/index.ts 2>&1 | tee check.log
+          NO_COLOR=1 deno check supabase/functions/settle-api/index.ts 2>&1 | tee check.log
           status=${PIPESTATUS[0]}
-          # Each error line as an annotation, so the reason reads on the run's summary.
+          # The output as annotations, so the reason reads on the run's summary.
           if [ "$status" -ne 0 ]; then
-            grep -E 'ERROR|error:|at file' check.log | head -30 | while IFS= read -r line; do echo "::error title=deno check::$line"; done
+            grep -v -e '^Download' -e '^[[:space:]]*$' check.log | head -40 | while IFS= read -r line; do echo "::error title=deno check::$line"; done
           fi
           exit "$status"
 
