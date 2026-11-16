@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { BadgeIndianRupee, BanknoteArrowDown, Building2, Landmark, ChartPie, CircleCheck, ClipboardPaste, Coins, FileText, HandCoins, KeyRound, Languages, LayoutGrid, Repeat, ShieldCheck, Users, ReceiptText } from 'lucide-react'
+import { BadgeIndianRupee, BanknoteArrowDown, Building2, Landmark, ChartPie, CircleCheck, ClipboardPaste, Coins, FileText, HandCoins, KeyRound, Languages, LayoutGrid, Repeat, ShieldCheck, Users, ReceiptText, Fingerprint } from 'lucide-react'
 import { navigate } from '../../app/router'
 import { Badge, Card, List, ListRow, Screen, SuccessBurst, Switch, useToast } from '../../components'
 import { updateProfile, useDueRecurring, useFriends, usePools, useProfile, useRecurring, useStore, useSummary } from '../../data'
@@ -16,6 +16,7 @@ import { FEES_PATH } from '../fees/paths'
 import { PastePaidReplySheet } from '../expense/PastePaidReplySheet'
 import { POOLS_ENABLED } from '../pools/enabled'
 import { InstallRow } from '../install'
+import { ACCOUNT_PATH, useAccountPeek } from '../account'
 import { REPORT_PATH } from '../report/paths'
 import { ScoreCard } from '../score/ScoreCard'
 import { ShagunHomeRow } from '../shagun/ShagunHomeRow'
@@ -85,6 +86,7 @@ function Shortcuts() {
   const insightsOn = useHasFeature('insights')
   const t = useT()
   const [pasting, setPasting] = useState(false)
+  const account = useAccountPeek()
 
   return (
     <>
@@ -125,6 +127,17 @@ function Shortcuts() {
               title={t('you.shortcuts.people.title')}
               subtitle={peopleLine(friends)}
               onClick={() => navigate('/app/friends')}
+              chevron
+            />
+            <ListRow
+              leading={
+                <SettingIcon>
+                  <Fingerprint />
+                </SettingIcon>
+              }
+              title={t('account.you.row.title')}
+              subtitle={account.status === 'signedIn' && account.me ? t('account.you.row.signedIn', { name: account.me.displayName }) : t('account.you.row.signedOut')}
+              onClick={() => navigate(ACCOUNT_PATH)}
               chevron
             />
             {POOLS_ENABLED && <CollectionsRow />}

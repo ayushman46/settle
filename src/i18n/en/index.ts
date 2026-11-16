@@ -65,6 +65,7 @@ import { moveout } from './moveout'
 import { things } from './things'
 import { deposit } from './deposit'
 import { fairrent } from './fairrent'
+import { account } from './account'
 import { committee } from './committee'
 import { help } from './help'
 import { carpool } from './carpool'
@@ -164,6 +165,7 @@ export const EN = {
   ...things,
   ...deposit,
   ...fairrent,
+  ...account,
   ...committee,
   ...help,
   ...carpool,

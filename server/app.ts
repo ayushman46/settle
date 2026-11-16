@@ -25,6 +25,7 @@ import {
 } from '../shared/api'
 import { registerBilling } from './billing'
 import { registerSync, syncStoreFor, type SyncStore } from './sync'
+import { registerCloud } from './cloud'
 import { loadConfig, redactSecrets, type ServerConfig } from './config'
 import { describeSplit, parseDescribeRequest } from './describe'
 import { utcToday } from './describeText'
@@ -405,6 +406,10 @@ export function createApp(config: ServerConfig, options: AppOptions = {}): Hono 
   /* ---------------------------------------------------------------- live groups */
 
   registerSync(app, { config, log, now, ownPageOnly: guard, store: syncStore })
+
+  /* ---------------------------------------------------------------- Settle accounts */
+
+  registerCloud(app, { url: config.cloudUrl, trust: { trustProxy: config.trustProxy, proxySecret: config.proxySecret }, log, fetchImpl: options.fetchImpl })
 
   /* ---------------------------------------------------------------- everything else */
 

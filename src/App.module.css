@@ -30,8 +30,8 @@
   padding: var(--s-2) var(--gutter);
   padding-top: calc(var(--safe-top) + var(--s-2));
   background: var(--accent);
-  color: #fff;
-  font-size: var(--text-xs);
+  color: var(--on-accent);
+  font-size: var(--text-caption);
   line-height: 1.4;
 }
 
@@ -48,7 +48,7 @@
 .getAppLink {
   flex-shrink: 0;
   font-weight: 600;
-  color: #fff;
+  color: var(--on-accent);
   text-decoration: none;
   white-space: nowrap;
 }

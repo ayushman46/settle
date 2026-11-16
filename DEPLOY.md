@@ -194,6 +194,22 @@ It prints a code anyone can redeem under **You → Redeem a code**.
 
 ---
 
+## Settle accounts (passkeys on Supabase)
+
+Optional accounts live in the Supabase project **settle** (Mumbai, free plan). Everything else in the app
+still works without one.
+
+- **Database:** `supabase/migrations/` — tables, constraints and the functions that decide balances,
+  shares and settlement states. Every table has Row Level Security on with no policies, so the public
+  keys reach nothing; only the Edge Function (service role) reads and writes.
+- **Edge Function:** `supabase/functions/settle-api/` — passkey sign-up and sign-in (WebAuthn), sessions,
+  UPI IDs, groups, expenses, settlements. Its `cloud.ts` must stay an exact copy of `shared/cloud.ts`
+  (a unit test checks). Deploy with JWT verification off: the function checks its own sessions.
+- **The app's side:** `/api/cloud/*` (`server/cloud.ts`) passes requests on and keeps the session in an
+  HttpOnly cookie. It points at the project's function by default; `CLOUD_API_URL=off` turns accounts off.
+- **Passkeys only work on the origins the function allows:** https://settleupi.vercel.app and localhost.
+  For another domain, set the function's `SETTLE_ORIGINS` secret (comma-separated) in the Supabase dashboard.
+
 ## The Android app (Auto-settle)
 
 Settle's Android app is the same site in a native shell (`android/`, made with Capacitor), plus one native part: **Auto-settle**, which reads the "money received" alerts of UPI apps (and, if the user allows it, bank SMS) on the phone and ticks off whoever paid. The shell loads `https://settleupi.vercel.app/app` (`capacitor.config.json`), so every web deploy updates the app too; only changes under `android/` need a new APK.

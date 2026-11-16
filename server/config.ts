@@ -66,11 +66,25 @@ export interface ServerConfig {
   /** Where live groups' encrypted copies are kept: an Upstash Redis REST endpoint, this server's memory, or nowhere (off). */
   sync: { kind: 'upstash'; url: string; token: string } | { kind: 'memory' } | null
   license: LicenseKeys
+  /** The `settle-api` Edge Function behind `/api/cloud/*` (Settle accounts), or null when turned off with `CLOUD_API_URL=off`. */
+  cloudUrl: string | null
   /** Settings that were ignored or look wrong, for the startup log. Never contains secrets. */
   warnings: string[]
 }
 
 export type Env = Record<string, string | undefined>
+
+/** Settle accounts: the project's own function (its URL is public, not a secret). */
+export const DEFAULT_CLOUD_URL = 'https://izlhhnmisecqhmkbbbdk.supabase.co/functions/v1/settle-api'
+
+function parseCloudUrl(value: string | undefined, warnings: string[]): string | null {
+  const v = (value ?? '').trim()
+  if (v.toLowerCase() === 'off') return null
+  if (!v) return DEFAULT_CLOUD_URL
+  if (/^https:\/\/\S+$/.test(v) || /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?\//.test(v)) return v.replace(/\/+$/, '')
+  warnings.push('CLOUD_API_URL is not an https URL; Settle accounts use the default.')
+  return DEFAULT_CLOUD_URL
+}
 
 export const DEFAULT_MODELS: readonly string[] = ['nvidia/nemotron-3.5-super-vl-120b-a12b', 'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning']
 export const DEFAULT_TEXT_MODELS: readonly string[] = ['nvidia/nemotron-3.5-lightning-30b-a3b', 'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning']
@@ -129,6 +143,7 @@ export function loadConfig(env: Env): ServerConfig {
     },
     sync: parseSync(env),
     license: license.keys,
+    cloudUrl: parseCloudUrl(env.CLOUD_API_URL, warnings),
     warnings,
   }
 }

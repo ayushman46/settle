@@ -399,6 +399,10 @@ const HelpPersonScreen = lazyScreen(
   () => import('../features/help/HelpPersonScreen'),
   (m) => m.HelpPersonScreen,
 )
+const AccountScreen = lazyScreen('AccountScreen', () => import('../features/account/AccountScreen'), (m) => m.AccountScreen)
+const CloudGroupsScreen = lazyScreen('CloudGroupsScreen', () => import('../features/account/CloudGroupsScreen'), (m) => m.CloudGroupsScreen)
+const CloudGroupScreen = lazyScreen('CloudGroupScreen', () => import('../features/account/CloudGroupScreen'), (m) => m.CloudGroupScreen)
+const CloudJoinScreen = lazyScreen('CloudJoinScreen', () => import('../features/account/CloudJoinScreen'), (m) => m.CloudJoinScreen)
 
 /** The paywall sheet, loaded the first time any screen asks for it. */
 export const PaywallHost = lazyScreen(
@@ -495,6 +499,10 @@ export const APP_ROUTES: readonly AppRoute[] = [
   { pattern: '/app/fair-rent', screen: FairRentScreen, title: 'Fair rent', tab: null },
   { pattern: '/app/help', screen: HelpScreen, title: 'House help', tab: null },
   { pattern: '/app/help/:id', screen: HelpPersonScreen, title: 'House help', tab: null },
+  { pattern: '/app/account', screen: AccountScreen, title: 'account.tool.title', tab: null },
+  { pattern: '/app/cloud', screen: CloudGroupsScreen, title: 'account.cloud.title', tab: null },
+  { pattern: '/app/cloud/join', screen: CloudJoinScreen, title: 'account.cloud.join.title', tab: null },
+  { pattern: '/app/cloud/:id', screen: CloudGroupScreen, title: 'account.cloud.title', tab: null },
 ]
 
 /** The app route for `path`, or null for an unknown `/app/*` path. */

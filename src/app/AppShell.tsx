@@ -218,8 +218,8 @@ export function AppShell({ preloadScreens = import.meta.env.PROD }: AppShellProp
 function GetAppBanner() {
   const [show] = useState(() => {
     if (typeof window === 'undefined') return false
-    if (inAndroidApp) return false
-    if (window.matchMedia('(display-mode: standalone)').matches) return false
+    if (inAndroidApp()) return false
+    if (typeof window.matchMedia === 'function' && window.matchMedia('(display-mode: standalone)').matches) return false
     if ((navigator as Navigator & { standalone?: boolean }).standalone) return false
     return true
   })

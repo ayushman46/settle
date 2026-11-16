@@ -17,6 +17,7 @@ import {
   ChartPie,
   CircleCheck,
   CircleHelp,
+  Fingerprint,
   CirclePause,
   Coins,
   Gauge,
@@ -106,6 +107,7 @@ export const TOOLS: readonly ToolEntry[] = [
   { id: 'report', section: 'out', icon: ReceiptText, title: 'tools.item.report.title', body: 'tools.item.report.body', path: '/app/report' },
 
   // You.
+  { id: 'account', section: 'you', icon: Fingerprint, title: 'account.tool.title', body: 'account.tool.body', path: '/app/account' },
   { id: 'score', section: 'you', icon: Gauge, title: 'tools.item.score.title', body: 'tools.item.score.body', path: '/app/score' },
   { id: 'insights', section: 'you', icon: ChartPie, title: 'tools.item.insights.title', body: 'tools.item.insights.body', path: '/app/insights' },
   { id: 'stuck', section: 'you', icon: BanknoteArrowDown, title: 'tools.item.stuck.title', body: 'tools.item.stuck.body', path: '/app/stuck' },

@@ -5,6 +5,7 @@ import { DESCRIBE_BUDGET_MS, SCAN_BUDGET_MS } from '../shared/api'
 import {
   checkoutReady,
   DEFAULT_BASE_URL,
+  DEFAULT_CLOUD_URL,
   DEFAULT_MODELS,
   DEFAULT_RAZORPAY_BASE_URL,
   DEFAULT_TEXT_MODELS,
@@ -40,6 +41,7 @@ describe('loadConfig', () => {
         rateLimit: { max: 30, windowMs: 600_000 },
       },
       license: { privateKey: null, publicKey: null, publicKeySpki: null },
+      cloudUrl: DEFAULT_CLOUD_URL,
       warnings: [],
     })
     expect(DEFAULT_MODELS).toEqual(['nvidia/nemotron-3.5-super-vl-120b-a12b', 'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning'])

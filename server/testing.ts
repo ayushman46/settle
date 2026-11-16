@@ -54,6 +54,7 @@ export function testConfig(overrides: Partial<ServerConfig> = {}): ServerConfig 
     maxConcurrentScans: 0,
     billing: testBilling(),
     license: TEST_LICENSE_KEYS,
+    cloudUrl: 'https://cloud.test/functions/v1/settle-api',
     warnings: [],
     ...overrides,
   }
