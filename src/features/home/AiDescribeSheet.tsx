@@ -2,10 +2,10 @@ import { lazy, Suspense, useEffect, useId, useLayoutEffect, useMemo, useRef, use
 import { ArrowRight, AudioLines, PenLine, RotateCcw, Sparkles } from 'lucide-react'
 import { DESCRIBE_LIMITS } from '../../../shared/api'
 import { DescribeError, describeSplit, type DescribeErrorCode } from '../../ai'
-import { describedToPrefill } from '../../ai/prefill'
+import { describedToPrefill, spreadToGroup } from '../../ai/prefill'
 import { navigate } from '../../app/router'
 import { Avatar, Badge, Banner, BottomSheet, Button, CategoryIcon, Chip, Money, SearchPill, Skeleton } from '../../components'
-import { addFriend, setSplitPrefill, useFriends, useProfile } from '../../data'
+import { addFriend, setSplitPrefill, useFriends, useGroup, useProfile } from '../../data'
 import { FREE_AI_PER_DAY, ME_ID, type DescribedSplit } from '../../domain/types'
 import { today } from '../../engine/dates'
 import { t, useT } from '../../i18n'
@@ -85,6 +85,7 @@ export function AiDescribeSheet({ open, onClose, startWith, groupId }: AiDescrib
   const examples = sayExamples()
   const profile = useProfile()
   const friends = useFriends()
+  const group = useGroup(groupId)
   const quota = useAiQuota()
   const health = useHealth()
   const inputRef = useRef<HTMLInputElement>(null)
@@ -170,10 +171,13 @@ export function AiDescribeSheet({ open, onClose, startWith, groupId }: AiDescrib
     request.current = controller
     setPhase({ kind: 'reading', text: clean })
     try {
-      const people = friends.filter((f) => f.id !== ME_ID).map((f) => f.name)
+      // From a group's page, its members come first: their names are the ones most likely said.
+      const groupNames = group ? group.memberIds.map((id) => (id === ME_ID ? 'Me' : (friends.find((f) => f.id === id)?.name ?? ''))).filter(Boolean) : []
+      const people = [...new Set([...groupNames.filter((n) => n !== 'Me'), ...friends.filter((f) => f.id !== ME_ID).map((f) => f.name)])]
       // Spoken: the server hears which language, and that it came from speech recognition.
       const spoken = voice.spoken ? { lang: voice.lang, source: 'voice' as const } : {}
-      const draft = await describeSplit(clean, { currency: profile.currency, people, today: today(), ...spoken }, controller.signal)
+      const read = await describeSplit(clean, { currency: group?.currency ?? profile.currency, people, today: today(), ...spoken }, controller.signal)
+      const draft = group ? spreadToGroup(read, clean, groupNames) : read
       if (controller.signal.aborted) return
       quota.consume()
       haptic('success')

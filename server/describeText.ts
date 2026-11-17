@@ -176,7 +176,8 @@ const PAYER_CUES: readonly RegExp[] = [
   /\b(?:my|his|her|their|\p{L}+['’]s)\s+(?:card|account|upi|gpay|phonepe|paytm|credit\s+card|debit\s+card)\b/iu,
   // Hinglish: "maine diya", "Riya ne pay kiya"
   /\b(?:maine|mainne|mene|meine)\b/i,
-  /\bne\s+(?:pay\s+kiya|diya|diye|bhara|bhare|kiya)\b/i,
+  // "Riya ne 900 diye", "Meera ne auto ke paise diye": a few words may sit between.
+  /\bne\s+(?:[\p{L}\p{N}₹.,]+\s+){0,4}?(?:pay\s+kiya|pay\s+kar\s+diya|diya|diye|di|bhara|bhare|bhari|kiya)\b/iu,
 ]
 
 /** Whether the text says who paid at all. Without that, a payer from the model is a guess. */
@@ -198,7 +199,7 @@ const SOMEONE_PAYS: readonly RegExp[] = [
   new RegExp(String.raw`(\p{L}[\p{L}.'-]*)\s+${PAID_VERB}`, 'giu'),
   /\b(?:paid|covered|bought|booked|picked\s+up)\s+by\s+(\p{L}[\p{L}.'-]*)/giu,
   /(\p{L}[\p{L}.-]*)['’]s\s+treat\b/giu,
-  /(\p{L}[\p{L}.-]*)\s+ne\s+(?:pay\s+kiya|diya|diye|bhara|bhare|kiya)\b/giu,
+  /(\p{L}[\p{L}.-]*)\s+ne\s+(?:[\p{L}\p{N}₹.,]+\s+){0,4}?(?:pay\s+kiya|pay\s+kar\s+diya|diya|diye|di|bhara|bhare|bhari|kiya)\b/giu,
 ]
 
 /**

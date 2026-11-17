@@ -249,3 +249,38 @@ export function describedToPrefill(d: DescribedSplit, ctx: DescribeContext): Spl
   }
   return prefill
 }
+
+/* ------------------------------------------------------------------ said inside a group */
+
+/** "everyone", "all of us", "the whole group", "sab mein", "sabke saath": the whole group. */
+const WHOLE_GROUP =
+  /\b(?:every\s?one|every\s?body|all\s+of\s+us|all\s+(?:\d+|two|three|four|five|six|seven|eight|nine|ten|twelve)\s+of\s+us|us\s+all|(?:the\s+)?whole\s+(?:group|gang)|(?:the\s+)?entire\s+(?:group|gang)|the\s+(?:group|gang)|sab(?:hi|ke|ka|ki|ko|me|mein|log)?|saare|sare|(?:poora|pura|poore|pure)\s+group)\b/i
+/** "everyone except me", "sab, mujhe chhod ke": the speaker stays out. */
+const NOT_ME = /\b(?:except|excluding|without|but|not|other\s+than)\s+(?:me|myself)\b|\bmujhe\s+chhod\s*(?:ke|kar)\b|\bmere\s+(?:bina|alawa|alava)\b/i
+
+/**
+ * Said from a group's page, "split between everyone" means the whole group, not just the people
+ * named ("Riya paid 1800 for the cab, split between everyone" → Riya and everyone else in it).
+ * The same when the sentence counts more people than it names ("all four of us"). Exact amounts
+ * and percentages are left as said: adding people to those would change what was meant.
+ */
+export function spreadToGroup(d: DescribedSplit, text: string, members: readonly string[]): DescribedSplit {
+  if (d.mode !== 'equal' && d.mode !== 'shares') return d
+  if (members.length === 0) return d
+  if (!WHOLE_GROUP.test(text) && missingPeople(d) === 0) return d
+  const leaveMeOut = NOT_ME.test(text)
+  const named = new Set(d.people.map((p) => looseKey(p.name)))
+  const people = d.mode === 'shares' ? d.people.map((p) => ({ ...p, value: p.value ?? 1 })) : [...d.people]
+  for (const name of members) {
+    const key = looseKey(name)
+    if (!key || named.has(key)) continue
+    if (key === 'me' && leaveMeOut) continue
+    // "Riya" said for "Riya Sharma" in the group.
+    if ([...named].some((n) => !n.includes(' ') && firstWord(key) === n)) continue
+    named.add(key)
+    people.push({ name, value: d.mode === 'shares' ? 1 : null })
+  }
+  const kept = leaveMeOut ? people.filter((p) => !SELF_WORDS.has(looseKey(p.name)) || d.payer === p.name) : people
+  const headcount = typeof d.headcount === 'number' && d.headcount > kept.length ? d.headcount : null
+  return { ...d, people: kept, headcount }
+}
