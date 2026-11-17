@@ -157,13 +157,14 @@ export function AiDescribeSheet({ open, onClose, startWith, groupId }: AiDescrib
     onClose()
   }
 
-  const read = async (value: string): Promise<void> => {
+  /** `saidIn`: the language it was just spoken in (this render's state doesn't know yet). */
+  const read = async (value: string, saidIn?: VoiceLang): Promise<void> => {
     const clean = value.trim()
     if (!clean || aiOff) return
     // Read fresh, not from this render: after unlocking Pro from the paywall this runs again.
     if (!quotaFor(aiUsedToday(), hasFeature('unlimited_ai')).canUse) {
       haptic('warning')
-      openPaywall('unlimited_ai', { onUnlock: () => void read(clean) })
+      openPaywall('unlimited_ai', { onUnlock: () => void read(clean, saidIn) })
       return
     }
     request.current?.abort()
@@ -175,7 +176,8 @@ export function AiDescribeSheet({ open, onClose, startWith, groupId }: AiDescrib
       const groupNames = group ? group.memberIds.map((id) => (id === ME_ID ? 'Me' : (friends.find((f) => f.id === id)?.name ?? ''))).filter(Boolean) : []
       const people = [...new Set([...groupNames.filter((n) => n !== 'Me'), ...friends.filter((f) => f.id !== ME_ID).map((f) => f.name)])]
       // Spoken: the server hears which language, and that it came from speech recognition.
-      const spoken = voice.spoken ? { lang: voice.lang, source: 'voice' as const } : {}
+      const lang = saidIn ?? (voice.spoken ? voice.lang : null)
+      const spoken = lang ? { lang, source: 'voice' as const } : {}
       const read = await describeSplit(clean, { currency: group?.currency ?? profile.currency, people, today: today(), ...spoken }, controller.signal)
       const draft = group ? spreadToGroup(read, clean, groupNames) : read
       if (controller.signal.aborted) return
@@ -260,6 +262,8 @@ export function AiDescribeSheet({ open, onClose, startWith, groupId }: AiDescrib
       error: null,
     }))
     focusRead.current = true
+    // Read straight away: speaking is the whole step. Cut short (too long), it waits for a look first.
+    if (!tooLong && said.trim()) void read(said.trim(), voice.lang)
   }
 
   const voiceFailed = (code: SpeechErrorCode): void => {

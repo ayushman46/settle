@@ -1,7 +1,7 @@
 /**
  * Speak to split (spec 03), in a real browser with a fake `webkitSpeechRecognition` (headless
  * browsers have no speech service): Home's mic → "dhai hazaar ka …" heard in Hindi → the field
- * says "2500 ka …" with a "heard" chip → Read it sends the digits as spoken Hindi → Looks right
+ * says "2500 ka …" with a "heard" chip → it's read straight away as spoken Hindi → Looks right
  * → the split is saved at ₹2,500. Also: a blocked mic, keyboard only (Tab, Enter, Escape), axe on
  * the open sheet.
  */
@@ -109,12 +109,11 @@ test.describe('speak to split', () => {
     const field = sheet.getByRole('textbox', { name: 'Describe the expense' })
     await expect(field).toHaveValue('2500 ka dinner Riya aur Sam ke saath maine diya')
     await expect(sheet.getByRole('list', { name: 'Numbers we heard' })).toHaveText('Heard “dhai hazaar” → ₹2,500')
-    await expect(sheet.getByRole('button', { name: 'Read it' })).toBeFocused()
     expect(await page.evaluate(() => (window as unknown as { __voiceLang?: string }).__voiceLang)).toBe('hi-IN')
-    expect(api.calls.describe).toHaveLength(0)
 
-    await sheet.getByRole('button', { name: 'Read it' }).click()
+    // Read by itself as soon as it's heard: no tap between speaking and the split.
     await expect(sheet.getByRole('article', { name: 'Dinner' })).toBeVisible()
+    expect(api.calls.describe).toHaveLength(1)
     expect(api.calls.describe.at(-1)).toMatchObject({
       text: '2500 ka dinner Riya aur Sam ke saath maine diya',
       lang: 'hi-IN',

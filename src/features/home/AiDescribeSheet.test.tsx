@@ -357,12 +357,10 @@ describe('AiDescribeSheet — speak to split', SLOW, () => {
     expect(within(opened.sheet).queryByRole('region', { name: 'Listening in Hindi' })).not.toBeInTheDocument()
     const chips = within(opened.sheet).getByRole('list', { name: 'Numbers we heard' })
     expect(within(chips).getAllByRole('listitem').map((li) => li.textContent)).toEqual(['Heard “ढाई हज़ार” → ₹2,500'])
-    expect(within(opened.sheet).getByRole('button', { name: 'Read it' })).toHaveFocus()
 
-    // Nothing is sent until "Read it".
-    expect(calls).toHaveLength(0)
-    await opened.user.click(within(opened.sheet).getByRole('button', { name: 'Read it' }))
+    // Read straight away: no tap needed after speaking, and only once.
     await within(opened.sheet).findByRole('article', { name: 'Dinner' })
+    expect(calls).toHaveLength(1)
     expect(calls[0]?.body).toMatchObject({ text: '2500 का डिनर रिया और सैम के साथ मैंने दिया', lang: 'hi-IN', source: 'voice' })
 
     await opened.user.click(within(opened.sheet).getByRole('button', { name: 'Looks right' }))
@@ -383,12 +381,16 @@ describe('AiDescribeSheet — speak to split', SLOW, () => {
       recognizer().stop()
     })
     await waitFor(() => expect(opened.field).toHaveValue('200'))
+    // What was said is read by itself, marked as spoken.
+    await waitFor(() => expect(calls).toHaveLength(1))
+    expect(calls[0]?.body).toMatchObject({ text: '200', source: 'voice' })
+    await within(opened.sheet).findByRole('article', { name: 'Dinner' })
     await opened.user.clear(opened.field)
     expect(within(opened.sheet).queryByRole('list', { name: 'Numbers we heard' })).not.toBeInTheDocument()
     await sayIn(opened, 'Dinner 2400 with Riya and Sam')
-    await within(opened.sheet).findByRole('article', { name: 'Dinner' })
-    expect(calls[0]?.body).not.toHaveProperty('source')
-    expect(calls[0]?.body).not.toHaveProperty('lang')
+    await waitFor(() => expect(calls).toHaveLength(2))
+    expect(calls[1]?.body).not.toHaveProperty('source')
+    expect(calls[1]?.body).not.toHaveProperty('lang')
   })
 
   it.each([
