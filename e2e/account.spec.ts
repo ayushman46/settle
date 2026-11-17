@@ -57,4 +57,67 @@ test.describe('the Settle account', () => {
     const left = await page.evaluate(() => Object.keys(localStorage).filter((k) => /^settle[.-]/.test(k) && !/install|rates|billing/.test(k)))
     expect(left.filter((k) => !k.startsWith('settle.v3.profile'))).toEqual([])
   })
+
+  test('passkeys: named after their password manager; add, rename and delete, never the last one', async ({ page, api }) => {
+    api.me.passkeys.push({ ...api.me.passkeys[0]!, id: '00000000-0000-4000-8000-000000000003', credentialId: 'mock-credential-0002', provider: 'Windows Hello', current: false, backedUp: false })
+    await onboard(page)
+    await page.goto('/app/account')
+    const list = page.getByRole('region').or(page.locator('section')).filter({ hasText: 'Passkeys' }).first()
+    await expect(list.getByRole('button', { name: /Google Password Manager.*Signed in here/ })).toBeVisible()
+
+    // Adding: three places a passkey can go.
+    await page.getByRole('button', { name: 'Add a passkey' }).first().click()
+    const add = page.getByRole('dialog', { name: 'Add a passkey' })
+    for (const where of ['This phone', 'Another phone or tablet', 'Security key']) await expect(add.getByRole('radio', { name: new RegExp(where) })).toBeVisible()
+    await expect(add.getByRole('radio', { name: /Another phone or tablet/ })).toBeChecked()
+    await page.keyboard.press('Escape')
+
+    // Rename the Windows one.
+    await list.getByRole('button', { name: /Windows Hello/ }).click()
+    const sheet = page.getByRole('dialog', { name: 'Windows Hello' })
+    await sheet.getByRole('textbox', { name: 'Name (optional)' }).fill('Work laptop')
+    await sheet.getByRole('button', { name: 'Save name' }).click()
+    await expect(page.getByText('Passkey renamed')).toBeVisible()
+    await expect(list.getByRole('button', { name: /Work laptop/ })).toBeVisible()
+
+    // Delete it: asks first.
+    await list.getByRole('button', { name: /Work laptop/ }).click()
+    await page.getByRole('dialog', { name: 'Work laptop' }).getByRole('button', { name: 'Delete passkey' }).click()
+    await expect(page.getByText('Delete this passkey?')).toBeVisible()
+    await page.getByRole('dialog', { name: 'Work laptop' }).getByRole('button', { name: 'Delete passkey' }).click()
+    await expect(page.getByText('Passkey deleted')).toBeVisible()
+    expect(api.calls.passkeyDelete).toEqual(['00000000-0000-4000-8000-000000000003'])
+
+    // The last one can't be deleted.
+    await list.getByRole('button', { name: /Google Password Manager/ }).click()
+    const last = page.getByRole('dialog', { name: 'Google Password Manager' })
+    await expect(last.getByText(/your only passkey, so it can’t be deleted/)).toBeVisible()
+    await expect(last.getByRole('button', { name: 'Delete passkey' })).toHaveCount(0)
+  })
+
+  test('deleting the account: blocked while money is owed, then a typed word, and the phone forgets everything', async ({ page, api }) => {
+    api.dashboard = { owe: 50000, owed: 0, net: -50000, groups: [{ id: '00000000-0000-4000-8000-0000000000a1', name: 'Flat', role: 'member', updatedAt: '2026-11-17T00:00:00Z', net: -50000, members: 3 }], open: [] }
+    await onboard(page)
+    await page.goto('/app/account')
+
+    await page.getByRole('button', { name: 'Delete account' }).click()
+    const sheet = page.getByRole('dialog', { name: 'Delete your Settle account?' })
+    await expect(sheet.getByText('Settle up first')).toBeVisible()
+    await expect(sheet.getByRole('button', { name: /Flat · ₹500.*you owe/ })).toBeVisible()
+    await expect(sheet.getByRole('button', { name: 'Delete my account' })).toHaveCount(0)
+    await sheet.getByRole('button', { name: 'Keep my account' }).click()
+
+    api.dashboard = { owe: 0, owed: 0, net: 0, groups: [], open: [] }
+    await page.getByRole('button', { name: 'Delete account' }).click()
+    const ready = page.getByRole('dialog', { name: 'Delete your Settle account?' })
+    const go = ready.getByRole('button', { name: 'Delete my account' })
+    await expect(go).toBeDisabled()
+    await ready.getByRole('textbox', { name: 'Type DELETE to confirm' }).fill('delete')
+    await go.click()
+    await expect(page.getByText('Your account is deleted')).toBeVisible()
+    expect(api.calls.cloudDelete).toEqual([{ confirm: 'DELETE' }])
+    await expect(page).toHaveURL(/\/app\/(account|welcome)/, { timeout: 15_000 })
+    const left = await page.evaluate(() => Object.keys(localStorage).filter((k) => /^settle[.-]/.test(k) && !/install|rates|billing/.test(k)))
+    expect(left.filter((k) => !k.startsWith('settle.v3.profile'))).toEqual([])
+  })
 })

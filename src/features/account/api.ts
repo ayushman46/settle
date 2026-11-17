@@ -9,7 +9,13 @@ import { t } from '../../i18n'
 
 export interface Passkey {
   id: string
+  /** The WebAuthn credential ID, to tell the phone's password manager when it's removed. */
+  credentialId: string
   nickname: string | null
+  /** The password manager that holds it ("Google Password Manager"), when it says. */
+  provider: string | null
+  /** The passkey this session signed in with. */
+  current: boolean
   deviceType: string | null
   backedUp: boolean
   createdAt: string

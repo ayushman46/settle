@@ -133,3 +133,42 @@
   padding: 0;
   border: 0;
 }
+
+.list {
+  margin: 0;
+  padding-inline-start: var(--s-5);
+  display: grid;
+  gap: var(--s-2);
+  font-size: var(--text-caption);
+}
+
+/* Where a new passkey goes: three choices, one picked. */
+.choice {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-3);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  cursor: pointer;
+}
+
+.choice + .choice {
+  margin-top: var(--s-2);
+}
+
+.choice input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.choice:has(input:focus-visible) {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.choiceOn {
+  border-color: var(--ink);
+  box-shadow: inset 0 0 0 1px var(--ink);
+}

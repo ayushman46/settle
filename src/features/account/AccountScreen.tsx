@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { ChevronRight, CloudCheck, Fingerprint, KeyRound, LogOut, Plus, QrCode, RefreshCw, UsersRound } from 'lucide-react'
+import { ChevronRight, CloudCheck, Fingerprint, KeyRound, LogOut, Plus, QrCode, RefreshCw, Trash2, UsersRound } from 'lucide-react'
 import { goBack, navigate, useLocation } from '../../app/router'
 import { Badge, Banner, BottomSheet, Button, Card, ListRow, PageTitle, Screen, SectionHeader, SegmentedControl, Spinner, TextField, TopBar, useToast } from '../../components'
 import { useProfile } from '../../data'
@@ -7,7 +7,9 @@ import { useT } from '../../i18n'
 import { readUpiQr } from '../../lib/upiQr'
 import { isUpiShaped, normalizeIndianPhone, normalizeUpi } from '../../../shared/cloud'
 import { cloud, type Me, type PaymentMethod } from './api'
-import { addPasskey, createAccount, passkeysSupported, signIn, withFreshAuth } from './passkey'
+import { createAccount, passkeysSupported, signIn, withFreshAuth } from './passkey'
+import { DeleteAccountSheet } from './DeleteAccountSheet'
+import { PasskeysSection } from './PasskeysSection'
 import { accountRequired } from './gate'
 import { refreshAccount, setMe, setSignedOut, useAccount } from './store'
 import { useSyncStatus } from './sync/status'
@@ -21,9 +23,6 @@ function showPhone(e164: string): string {
   return m ? `+91 ${m[1]} ${m[2]}` : e164
 }
 
-function shortDate(iso: string): string {
-  return new Date(iso).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })
-}
 
 /** Where to go after signing in: only a path inside the app. */
 function nextPath(search: string): string | null {
@@ -210,6 +209,7 @@ function SignedIn({ me }: { me: Me }) {
 
   const sync = useSyncStatus()
   const [confirming, setConfirming] = useState<'out' | 'all' | null>(null)
+  const [deleting, setDeleting] = useState(false)
   const [unsaved, setUnsaved] = useState(false)
 
   const syncNow = async () => {
@@ -296,33 +296,7 @@ function SignedIn({ me }: { me: Me }) {
         </Card>
       </section>
 
-      <section>
-        <SectionHeader title={t('account.passkeys.heading')} description={t('account.passkeys.description')} action={{ label: t('account.passkeys.add'), onClick: () => void run('passkey', () => withFreshAuth(() => addPasskey(null)), t('account.passkeys.added')) }} />
-        <Card padding="md">
-          {me.passkeys.map((pk) => (
-            <div key={pk.id} className={styles.row}>
-              <span className={styles.rowText}>
-                <span className={styles.rowTitle}>{pk.nickname ?? (pk.backedUp ? t('account.passkeys.synced') : t('account.passkeys.device'))}</span>
-                <span className={styles.rowSub}>
-                  {t('account.passkeys.created', { date: shortDate(pk.createdAt) })}
-                  {pk.lastUsedAt ? ` · ${t('account.passkeys.lastUsed', { date: shortDate(pk.lastUsedAt) })}` : ''}
-                </span>
-              </span>
-              {me.passkeys.length > 1 ? (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  loading={busy === pk.id}
-                  onClick={() => void run(pk.id, () => withFreshAuth(() => cloud<{ me: Me }>('DELETE', `/passkeys/${pk.id}`)), t('account.passkeys.removed'))}
-                >
-                  {t('account.passkeys.remove')}
-                </Button>
-              ) : null}
-            </div>
-          ))}
-          <p className={styles.footnote}>{me.passkeys.length > 1 ? t('account.passkeys.recovery') : t('account.passkeys.lastOne')}</p>
-        </Card>
-      </section>
+      <PasskeysSection me={me} />
 
       <section>
         <SectionHeader title={t('account.sync.heading')} />
@@ -370,8 +344,12 @@ function SignedIn({ me }: { me: Me }) {
           {t('account.signOut.all')}
         </Button>
         <p className={styles.footnote}>{t('account.footnote')}</p>
+        <Button variant="ghost" block iconStart={<Trash2 />} onClick={() => setDeleting(true)}>
+          {t('account.delete.open')}
+        </Button>
       </div>
 
+      <DeleteAccountSheet me={me} open={deleting} onClose={() => setDeleting(false)} />
       <AddUpiSheet open={adding} onClose={() => setAdding(false)} existing={me.paymentMethods} />
       <BottomSheet open={confirming !== null} onClose={() => setConfirming(null)} title={t('account.signOut.confirm.title')} description={t('account.signOut.confirm.body')}>
         <div className={styles.stack}>

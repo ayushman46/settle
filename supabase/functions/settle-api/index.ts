@@ -61,6 +61,7 @@ const MESSAGES: Record<string, [number, string]> = {
   unauthenticated: [401, 'Please sign in with your passkey.'],
   reauth_required: [401, 'Confirm it’s you with your passkey first.'],
   auth_failed: [401, 'That passkey didn’t work. Try again, or use another passkey on this account.'],
+  passkey_unknown: [401, 'This passkey isn’t on a Settle account any more. Use another one, or create an account.'],
   challenge_expired: [400, 'That took too long. Please try again.'],
   phone_invalid: [400, 'Enter a 10-digit Indian mobile number.'],
   phone_taken: [409, 'This number can’t be used for a new account. If you already have one, sign in with your passkey.'],
@@ -170,6 +171,8 @@ interface Session {
   id: string
   userId: string
   reauthAt: number
+  /** The passkey this session signed in with (null for older sessions, or once it's removed). */
+  passkeyId: string | null
 }
 
 async function limit(key: string, max: number, windowSeconds: number): Promise<void> {
@@ -185,10 +188,11 @@ async function audit(userId: string | null, action: string, ip: string, detail: 
 
 /* ------------------------------------------------------------------ sessions */
 
-async function newSession(ctx: Ctx, userId: string): Promise<void> {
+async function newSession(ctx: Ctx, userId: string, passkeyId: string | null): Promise<void> {
   const token = randomToken()
   const { error } = await db.from('sessions').insert({
     user_id: userId,
+    passkey_id: passkeyId,
     token_hash: await sha256(token),
     user_agent: (ctx.req.headers.get('user-agent') ?? '').slice(0, 200),
     expires_at: new Date(Date.now() + SESSION_DAYS * 86_400_000).toISOString(),
@@ -203,7 +207,7 @@ async function readSession(ctx: Ctx): Promise<Session | null> {
   if (!/^[A-Za-z0-9_-]{40,64}$/.test(token)) return null
   const { data, error } = await db
     .from('sessions')
-    .select('id, user_id, reauth_at, last_seen_at, expires_at, revoked_at')
+    .select('id, user_id, passkey_id, reauth_at, last_seen_at, expires_at, revoked_at')
     .eq('token_hash', await sha256(token))
     .maybeSingle()
   if (error) dbFail(error)
@@ -214,7 +218,7 @@ async function readSession(ctx: Ctx): Promise<Session | null> {
       .update({ last_seen_at: new Date().toISOString(), expires_at: new Date(Date.now() + SESSION_DAYS * 86_400_000).toISOString() })
       .eq('id', data.id)
   }
-  return { id: data.id, userId: data.user_id, reauthAt: Date.parse(data.reauth_at) }
+  return { id: data.id, userId: data.user_id, reauthAt: Date.parse(data.reauth_at), passkeyId: data.passkey_id ?? null }
 }
 
 async function requireSession(ctx: Ctx): Promise<Session> {
@@ -232,6 +236,49 @@ function requireFresh(session: Session): void {
 }
 
 /* ------------------------------------------------------------------ WebAuthn */
+
+/**
+ * The password manager that made a passkey, from its AAGUID (the community list of passkey
+ * providers). Apple and some others send zeros: then the phone's own description is used.
+ */
+const PROVIDERS: Record<string, string> = {
+  'ea9b8d66-4d01-1d21-3ce4-b6b48cb575d4': 'Google Password Manager',
+  'adce0002-35bc-c60a-648b-0b25f1f05503': 'Chrome on Mac',
+  '08987058-cadc-4b81-b6e1-30de50dcbe96': 'Windows Hello',
+  '9ddd1817-af5a-4672-a2b9-3e3dd95000a9': 'Windows Hello',
+  '6028b017-b1d4-4c02-b4b3-afcdafc96bb2': 'Windows Hello',
+  'fbfc3007-154e-4ecc-8c0b-6e020557d7bd': 'iCloud Keychain',
+  'dd4ec289-e01d-41c9-bb89-70fa845d4bf2': 'iCloud Keychain',
+  '53414d53-554e-4700-0000-000000000000': 'Samsung Pass',
+  'bada5566-a7aa-401f-bd96-45619a55120d': '1Password',
+  'd548826e-79b4-db40-a3d8-11116f7e8349': 'Bitwarden',
+  '531126d6-e717-415c-9320-3d9aa6981239': 'Dashlane',
+  'b84e4048-15dc-4dd0-8640-f4f60813c8af': 'NordPass',
+  '0ea242b4-43c4-4a1b-8b17-dd6d0b6baec6': 'Keeper',
+  'f3809540-7f14-49c1-a8b3-8f813b225541': 'Enpass',
+  '771b48fd-d3d4-4f74-9232-fc157ab0507a': 'Edge on Mac',
+  'cb69481e-8ff7-4039-93ec-0a2729a154a8': 'YubiKey 5',
+  'ee882879-721c-4913-9775-3dfcce97072a': 'YubiKey 5',
+  'fa2b99dc-9e39-4257-8f92-4a30d23c4118': 'YubiKey 5 NFC',
+  '2fc0579f-8113-47ea-b116-bb5a8db9202a': 'YubiKey 5 NFC',
+  'a4e9fc6d-4cbe-4758-b8ba-37598bb5bbaa': 'Security Key by Yubico',
+  'b92c3f9a-c014-4056-887f-140a2501163b': 'Security Key by Yubico',
+  'ed042a3a-4b22-4455-bb69-a267b652ae7e': 'Security Key NFC by Yubico',
+}
+
+function providerName(aaguid: string | null): string | null {
+  return aaguid ? (PROVIDERS[aaguid] ?? null) : null
+}
+
+/** What a phone said it is ("Chrome on Android"): letters, digits and plain punctuation, 40 at most. */
+function deviceLabel(value: unknown): string | null {
+  if (typeof value !== 'string') return null
+  const t = value.replace(/[^\p{L}\p{N} .,'()&+-]/gu, ' ').replace(/\s+/g, ' ').trim()
+  return t ? Array.from(t).slice(0, 40).join('') : null
+}
+
+type AuthenticatorKind = 'localDevice' | 'remoteDevice' | 'securityKey'
+const KINDS: Record<string, AuthenticatorKind> = { this: 'localDevice', other: 'remoteDevice', key: 'securityKey' }
 
 function rpFor(ctx: Ctx): string {
   const origin = ctx.origin && ALLOWED_ORIGINS.includes(ctx.origin) ? ctx.origin : ALLOWED_ORIGINS[0]!
@@ -273,7 +320,7 @@ async function takeChallenge(id: unknown, kind: string) {
 async function credentialsOf(userId: string) {
   const { data, error } = await db
     .from('passkey_credentials')
-    .select('id, credential_id, transports, nickname, device_type, backed_up, created_at, last_used_at')
+    .select('id, credential_id, transports, nickname, aaguid, device_type, backed_up, created_at, last_used_at')
     .eq('user_id', userId)
     .is('revoked_at', null)
     .order('created_at')
@@ -281,7 +328,13 @@ async function credentialsOf(userId: string) {
   return data
 }
 
-function registrationOptions(rpID: string, userName: string, displayName: string, exclude: Array<{ credential_id: string; transports: string[] }>) {
+function registrationOptions(
+  rpID: string,
+  userName: string,
+  displayName: string,
+  exclude: Array<{ credential_id: string; transports: string[] }>,
+  kind?: AuthenticatorKind,
+) {
   return generateRegistrationOptions({
     rpName: RP_NAME,
     rpID,
@@ -292,6 +345,8 @@ function registrationOptions(rpID: string, userName: string, displayName: string
     excludeCredentials: exclude.map((c) => ({ id: c.credential_id, transports: c.transports as never })),
     authenticatorSelection: { residentKey: 'required', userVerification: 'required' },
     supportedAlgorithmIDs: [-7, -257],
+    // "Another phone" shows the QR code, "Security key" asks for the key, "This phone" its own lock.
+    ...(kind ? { preferredAuthenticatorType: kind } : {}),
   })
 }
 
@@ -309,8 +364,10 @@ async function verifyRegistration(challenge: { challenge: string; rp_id: string 
     fail('auth_failed')
   }
   if (!result.verified || !result.registrationInfo) fail('auth_failed')
-  const { credential, credentialDeviceType, credentialBackedUp } = result.registrationInfo
+  const { credential, credentialDeviceType, credentialBackedUp, aaguid } = result.registrationInfo
+  const knownAaguid = typeof aaguid === 'string' && /^[0-9a-f-]{36}$/.test(aaguid) && !/^[0-]+$/.test(aaguid) ? aaguid : null
   return {
+    aaguid: knownAaguid,
     credential_id: credential.id,
     public_key: b64url(credential.publicKey),
     sign_count: credential.counter,
@@ -331,7 +388,8 @@ async function verifyAssertion(challenge: { challenge: string; rp_id: string }, 
     .is('revoked_at', null)
     .maybeSingle()
   if (error) dbFail(error)
-  if (!cred || (onlyUser && cred.user_id !== onlyUser)) fail('auth_failed')
+  if (!cred) fail('passkey_unknown')
+  if (onlyUser && cred.user_id !== onlyUser) fail('auth_failed')
   let result
   try {
     result = await verifyAuthenticationResponse({
@@ -384,15 +442,16 @@ async function registerVerify(ctx: Ctx) {
     if (error.code === '23505') fail('phone_taken')
     dbFail(error)
   }
-  const { error: credError } = await db.from('passkey_credentials').insert({ ...credential, user_id: profile.id })
+  const nickname = providerName(credential.aaguid) ?? deviceLabel(ctx.body.deviceLabel)
+  const { data: cred, error: credError } = await db.from('passkey_credentials').insert({ ...credential, nickname, user_id: profile.id }).select('id').single()
   if (credError) {
     await db.from('profiles').delete().eq('id', profile.id)
     if (credError.code === '23505') fail('auth_failed')
     dbFail(credError)
   }
-  await newSession(ctx, profile.id)
-  await audit(profile.id, 'account.create', ctx.ip, { device_type: credential.device_type, backed_up: credential.backed_up })
-  return { me: await me(profile.id, Date.now()) }
+  await newSession(ctx, profile.id, cred.id)
+  await audit(profile.id, 'account.create', ctx.ip, { device_type: credential.device_type, backed_up: credential.backed_up, aaguid: credential.aaguid })
+  return { me: await me(profile.id, Date.now(), cred.id) }
 }
 
 async function loginOptions(ctx: Ctx) {
@@ -417,10 +476,12 @@ async function loginOptions(ctx: Ctx) {
 async function loginVerify(ctx: Ctx) {
   await limit(`ip:${ctx.ip}:login-verify`, IP_SIGNINS_PER_10_MIN, 600)
   const challenge = await takeChallenge(ctx.body.challengeId, 'login')
-  const { userId } = await verifyAssertion(challenge, ctx.body.response)
-  await newSession(ctx, userId)
+  const { userId, credentialRow } = await verifyAssertion(challenge, ctx.body.response)
+  const { data: owner } = await db.from('profiles').select('deleted_at').eq('id', userId).maybeSingle()
+  if (!owner || owner.deleted_at) fail('auth_failed')
+  await newSession(ctx, userId, credentialRow)
   await audit(userId, 'session.create', ctx.ip)
-  return { me: await me(userId, Date.now()) }
+  return { me: await me(userId, Date.now(), credentialRow) }
 }
 
 async function reauthOptions(ctx: Ctx, session: Session) {
@@ -476,12 +537,15 @@ async function paymentMethodsOf(userId: string) {
   return data
 }
 
-async function me(userId: string, reauthAt: number) {
+async function me(userId: string, reauthAt: number, currentPasskey: string | null = null) {
   const { data: profile, error } = await db.from('profiles').select('id, display_name, phone_number, phone_verified, created_at').eq('id', userId).single()
   if (error) dbFail(error)
   const passkeys = (await credentialsOf(userId)).map((c) => ({
     id: c.id,
+    credentialId: c.credential_id,
     nickname: c.nickname,
+    provider: providerName(c.aaguid),
+    current: c.id === currentPasskey,
     deviceType: c.device_type,
     backedUp: c.backed_up,
     createdAt: c.created_at,
@@ -507,7 +571,7 @@ async function updateMe(ctx: Ctx, session: Session) {
   const displayName = text(ctx.body.displayName, 1, 40, 'name_invalid')
   const { error } = await db.from('profiles').update({ display_name: displayName, updated_at: new Date().toISOString() }).eq('id', session.userId)
   if (error) dbFail(error)
-  return { me: await me(session.userId, session.reauthAt) }
+  return { me: await me(session.userId, session.reauthAt, session.passkeyId) }
 }
 
 async function addPasskeyOptions(ctx: Ctx, session: Session) {
@@ -516,7 +580,8 @@ async function addPasskeyOptions(ctx: Ctx, session: Session) {
   if (creds.length >= MAX_PASSKEYS) fail('passkey_limit')
   const { data: profile } = await db.from('profiles').select('display_name, phone_number').eq('id', session.userId).single()
   const rpID = rpFor(ctx)
-  const options = await registrationOptions(rpID, profile!.phone_number, profile!.display_name, creds)
+  const kind = typeof ctx.body.kind === 'string' ? KINDS[ctx.body.kind] : undefined
+  const options = await registrationOptions(rpID, profile!.phone_number, profile!.display_name, creds, kind)
   const challengeId = await saveChallenge({ challenge: options.challenge, kind: 'add_passkey', user_id: session.userId, session_id: session.id, rp_id: rpID })
   return { challengeId, options }
 }
@@ -525,14 +590,15 @@ async function addPasskeyVerify(ctx: Ctx, session: Session) {
   const challenge = await takeChallenge(ctx.body.challengeId, 'add_passkey')
   if (challenge.session_id !== session.id) fail('auth_failed')
   const credential = await verifyRegistration(challenge, ctx.body.response)
-  const nickname = typeof ctx.body.nickname === 'string' && ctx.body.nickname.trim() ? text(ctx.body.nickname, 1, 40) : null
+  const typed = typeof ctx.body.nickname === 'string' && ctx.body.nickname.trim() ? text(ctx.body.nickname, 1, 40) : null
+  const nickname = typed ?? providerName(credential.aaguid) ?? deviceLabel(ctx.body.deviceLabel)
   const { error } = await db.from('passkey_credentials').insert({ ...credential, nickname, user_id: session.userId })
   if (error) {
     if (error.code === '23505') fail('auth_failed')
     dbFail(error)
   }
-  await audit(session.userId, 'passkey.add', ctx.ip, { device_type: credential.device_type })
-  return { me: await me(session.userId, session.reauthAt) }
+  await audit(session.userId, 'passkey.add', ctx.ip, { device_type: credential.device_type, aaguid: credential.aaguid })
+  return { me: await me(session.userId, session.reauthAt, session.passkeyId) }
 }
 
 async function revokePasskey(ctx: Ctx, session: Session, id: string) {
@@ -543,7 +609,28 @@ async function revokePasskey(ctx: Ctx, session: Session, id: string) {
   const { error } = await db.from('passkey_credentials').update({ revoked_at: new Date().toISOString() }).eq('id', id).eq('user_id', session.userId)
   if (error) dbFail(error)
   await audit(session.userId, 'passkey.revoke', ctx.ip, { credential: id })
-  return { me: await me(session.userId, session.reauthAt) }
+  return { me: await me(session.userId, session.reauthAt, session.passkeyId) }
+}
+
+async function renamePasskey(ctx: Ctx, session: Session, id: string) {
+  const creds = await credentialsOf(session.userId)
+  if (!creds.some((c) => c.id === id)) fail('not_found')
+  const nickname = typeof ctx.body.nickname === 'string' && ctx.body.nickname.trim() ? text(ctx.body.nickname, 1, 40, 'name_invalid') : null
+  const { error } = await db.from('passkey_credentials').update({ nickname }).eq('id', id).eq('user_id', session.userId)
+  if (error) dbFail(error)
+  return { me: await me(session.userId, session.reauthAt, session.passkeyId) }
+}
+
+/** Deletes the account (see the database's delete_account). Returns its passkeys, so the phone can forget them. */
+async function deleteAccount(ctx: Ctx, session: Session) {
+  requireFresh(session)
+  if (ctx.body.confirm !== 'DELETE') fail('bad_request')
+  const creds = await credentialsOf(session.userId)
+  const { error } = await db.rpc('delete_account', { p_user: session.userId })
+  if (error) dbFail(error)
+  await audit(session.userId, 'account.delete', ctx.ip)
+  ctx.setSession = 'clear'
+  return { ok: true, credentialIds: creds.map((c) => c.credential_id) }
 }
 
 async function addPaymentMethod(ctx: Ctx, session: Session) {
@@ -570,7 +657,7 @@ async function addPaymentMethod(ctx: Ctx, session: Session) {
     dbFail(error)
   }
   await audit(session.userId, 'payment_method.add', ctx.ip, { upi_id: upiId, source })
-  return { me: await me(session.userId, session.reauthAt) }
+  return { me: await me(session.userId, session.reauthAt, session.passkeyId) }
 }
 
 async function updatePaymentMethod(ctx: Ctx, session: Session, id: string) {
@@ -589,7 +676,7 @@ async function updatePaymentMethod(ctx: Ctx, session: Session, id: string) {
     const { error } = await db.from('payment_methods').update({ display_name: displayName, updated_at: new Date().toISOString() }).eq('id', id)
     if (error) dbFail(error)
   }
-  return { me: await me(session.userId, session.reauthAt) }
+  return { me: await me(session.userId, session.reauthAt, session.passkeyId) }
 }
 
 async function removePaymentMethod(ctx: Ctx, session: Session, id: string) {
@@ -605,7 +692,7 @@ async function removePaymentMethod(ctx: Ctx, session: Session, id: string) {
   const next = existing.find((p) => p.id !== id)
   if (target.is_default && next) await db.from('payment_methods').update({ is_default: true }).eq('id', next.id)
   await audit(session.userId, 'payment_method.disable', ctx.ip, { upi_id: target.upi_id })
-  return { me: await me(session.userId, session.reauthAt) }
+  return { me: await me(session.userId, session.reauthAt, session.passkeyId) }
 }
 
 /* ------------------------------------------------------------------ groups */
@@ -1042,10 +1129,12 @@ const ROUTES: Array<[string, string, Handler]> = [
   ['POST', '/auth/reauth/verify', withSession((ctx, s) => reauthVerify(ctx, s))],
   ['POST', '/auth/logout', (ctx) => logout(ctx)],
   ['POST', '/auth/logout-all', withSession((ctx, s) => logoutAll(ctx, s))],
-  ['GET', '/me', withSession(async (_ctx, s) => ({ me: await me(s.userId, s.reauthAt) }))],
+  ['GET', '/me', withSession(async (_ctx, s) => ({ me: await me(s.userId, s.reauthAt, s.passkeyId) }))],
   ['PATCH', '/me', withSession((ctx, s) => updateMe(ctx, s))],
   ['POST', '/passkeys/options', withSession((ctx, s) => addPasskeyOptions(ctx, s))],
   ['POST', '/passkeys/verify', withSession((ctx, s) => addPasskeyVerify(ctx, s))],
+  ['POST', '/me/delete', withSession((ctx, s) => deleteAccount(ctx, s))],
+  ['PATCH', '/passkeys/:id', withSession((ctx, s, [id]) => renamePasskey(ctx, s, uuid(id)))],
   ['DELETE', '/passkeys/:id', withSession((ctx, s, [id]) => revokePasskey(ctx, s, uuid(id)))],
   ['POST', '/payment-methods', withSession((ctx, s) => addPaymentMethod(ctx, s))],
   ['PATCH', '/payment-methods/:id', withSession((ctx, s, [id]) => updatePaymentMethod(ctx, s, uuid(id)))],

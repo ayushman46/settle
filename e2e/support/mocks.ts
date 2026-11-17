@@ -207,6 +207,10 @@ export interface MockApi {
    * starts empty and takes every sync; 'signedOut': nobody signed in (the app asks for a passkey).
    */
   cloud: 'signedIn' | 'signedOut'
+  /** The signed-in account `/api/cloud/me` answers; passkey changes and deletion change it. */
+  me: AccountMock
+  /** What `/api/cloud/dashboard` answers (account groups, and payments under way). */
+  dashboard: { owe: number; owed: number; net: number; groups: Array<Record<string, unknown>>; open: Array<Record<string, unknown>> }
   /** What the app sent, oldest first. */
   readonly calls: {
     /** Each request body as sent (including `lang` and `source` when the app sends them). */
@@ -222,8 +226,14 @@ export interface MockApi {
     licenseHeaders: Array<string | null>
     /** Each `POST /api/cloud/sync/push` body. */
     cloudPush: Array<Record<string, unknown[]>>
+    /** Each `POST /api/cloud/me/delete` body. */
+    cloudDelete: Array<Record<string, unknown>>
+    /** Each `DELETE /api/cloud/passkeys/:id`, by id. */
+    passkeyDelete: string[]
   }
 }
+
+export type AccountMock = typeof MOCK_ME
 
 /** The signed-in account the mocked `/api/cloud/me` answers. */
 export const MOCK_ME = {
@@ -232,7 +242,7 @@ export const MOCK_ME = {
   phoneNumber: '+919876543210',
   phoneVerified: false,
   createdAt: '2026-11-16T00:00:00Z',
-  passkeys: [{ id: '00000000-0000-4000-8000-000000000002', nickname: null, deviceType: 'multiDevice', backedUp: true, createdAt: '2026-11-16T00:00:00Z', lastUsedAt: null }],
+  passkeys: [{ id: '00000000-0000-4000-8000-000000000002', credentialId: 'mock-credential-0001', nickname: null as string | null, provider: 'Google Password Manager' as string | null, current: true, deviceType: 'multiDevice', backedUp: true, createdAt: '2026-11-16T00:00:00Z', lastUsedAt: null as string | null }],
   paymentMethods: [],
   freshUntil: '2026-11-16T00:05:00Z',
 }
@@ -292,7 +302,9 @@ export async function installMockApi(context: BrowserContext): Promise<MockApi> 
     rates: 'fixture',
     checkout: null,
     cloud: 'signedIn',
-    calls: { describe: [], scan: [], proof: [], history: [], rates: [], order: [], verify: [], licenseHeaders: [], cloudPush: [] },
+    me: structuredClone(MOCK_ME),
+    dashboard: { owe: 0, owed: 0, net: 0, groups: [], open: [] },
+    calls: { describe: [], scan: [], proof: [], history: [], rates: [], order: [], verify: [], licenseHeaders: [], cloudPush: [], cloudDelete: [], passkeyDelete: [] },
   }
 
   // The account: never the real one from a test. Pulls answer empty; pushes are recorded.
@@ -301,7 +313,7 @@ export async function installMockApi(context: BrowserContext): Promise<MockApi> 
     const method = route.request().method()
     if (method === 'GET' && path === '/me') {
       return api.cloud === 'signedIn'
-        ? fulfill(route, { body: { me: MOCK_ME } })
+        ? fulfill(route, { body: { me: api.me } })
         : fulfill(route, { status: 401, body: { error: { code: 'unauthenticated', message: 'Please sign in with your passkey.' } } })
     }
     if (method === 'GET' && path === '/sync/pull') return fulfill(route, { body: { friends: [], groups: [], expenses: [], stores: [], cursor: 0, more: false } })
@@ -312,6 +324,24 @@ export async function installMockApi(context: BrowserContext): Promise<MockApi> 
       return fulfill(route, { body: { written } })
     }
     if (method === 'POST' && path.startsWith('/auth/logout')) return fulfill(route, { body: { ok: true } })
+    if (method === 'GET' && path === '/dashboard') return fulfill(route, { body: api.dashboard })
+    const passkey = /^\/passkeys\/([^/]+)$/.exec(path)
+    if (passkey && method === 'PATCH') {
+      const nickname = bodyOf<{ nickname: string | null }>(route).nickname
+      api.me = { ...api.me, passkeys: api.me.passkeys.map((p) => (p.id === passkey[1] ? { ...p, nickname } : p)) }
+      return fulfill(route, { body: { me: api.me } })
+    }
+    if (passkey && method === 'DELETE') {
+      api.calls.passkeyDelete.push(passkey[1]!)
+      api.me = { ...api.me, passkeys: api.me.passkeys.filter((p) => p.id !== passkey[1]) }
+      return fulfill(route, { body: { me: api.me } })
+    }
+    if (method === 'POST' && path === '/me/delete') {
+      api.calls.cloudDelete.push(bodyOf<Record<string, unknown>>(route))
+      const credentialIds = api.me.passkeys.map((p) => p.credentialId)
+      api.cloud = 'signedOut'
+      return fulfill(route, { body: { ok: true, credentialIds } })
+    }
     return fulfill(route, { status: 404, body: { error: { code: 'not_found', message: 'Not mocked' } } })
   })
 

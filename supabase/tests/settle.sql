@@ -122,6 +122,64 @@ begin
 end $$;
 rollback;
 
+-- Deleting an account: refused while money is owed, then nothing personal is left.
+begin;
+do $$
+declare
+  a uuid; r uuid; g uuid; solo uuid; s uuid; failed boolean;
+begin
+  insert into public.profiles (display_name, phone_number) values ('Ayush', '+919800000011') returning id into a;
+  insert into public.profiles (display_name, phone_number) values ('Rahul', '+919800000012') returning id into r;
+  insert into public.groups (name, created_by) values ('Flat', a) returning id into g;
+  insert into public.groups (name, created_by) values ('Just me', a) returning id into solo;
+  insert into public.group_members (group_id, user_id, role) values (g, a, 'owner'), (g, r, 'member'), (solo, a, 'owner');
+  insert into public.passkey_credentials (user_id, credential_id, public_key) values (a, 'credential-id-for-ayush-01', 'pk');
+  insert into public.sessions (user_id, token_hash, expires_at) values (a, 'hash-ayush', now() + interval '1 day');
+  insert into public.payment_methods (user_id, upi_id, verification_status, is_default) values (a, 'ayush@oksbi', 'validated', true);
+  perform public.sync_push(a, '{"friends":[{"id":"f1","name":"Riya","updatedAt":1}]}'::jsonb);
+
+  perform public.create_expense(g, a, a, 100000, 'Rent', null, 'equal', jsonb_build_array(
+    jsonb_build_object('user_id', a, 'share_paise', 50000), jsonb_build_object('user_id', r, 'share_paise', 50000)));
+
+  failed := false;
+  begin
+    perform public.delete_account(a);
+  exception when others then failed := sqlerrm = 'balance_not_zero';
+  end;
+  assert failed, 'an account that is owed money cannot be deleted';
+
+  s := public.create_settlement(g, r, a, 50000, 'idem-del-1');
+  failed := false;
+  begin
+    perform public.delete_account(a);
+  exception when others then failed := sqlerrm = 'balance_not_zero';
+  end;
+  assert failed, 'nor while a payment to it is in flight';
+
+  perform public.settlement_transition(s, r, 'sent', '{}'::jsonb);
+  perform public.settlement_transition(s, a, 'confirm', '{}'::jsonb);
+  perform public.delete_account(a);
+
+  assert (select display_name = 'Deleted account' and phone_number is null and deleted_at is not null from public.profiles where id = a), 'the profile keeps no name or number';
+  assert not exists (select 1 from public.groups where id = solo), 'a group only they were in is gone';
+  assert (select role from public.group_members where group_id = g and user_id = r) = 'owner', 'ownership passes on';
+  assert (select left_at is not null from public.group_members where group_id = g and user_id = a), 'they left the shared group';
+  assert (select count(*) from public.expenses where group_id = g) = 1, 'shared history stays';
+  assert not exists (select 1 from public.passkey_credentials where user_id = a), 'passkeys are gone';
+  assert not exists (select 1 from public.sessions where user_id = a), 'sessions are gone';
+  assert not exists (select 1 from public.user_friends where user_id = a), 'personal data is gone';
+  assert not exists (select 1 from public.payment_methods where user_id = a and verification_status <> 'disabled'), 'no UPI ID can be paid';
+  insert into public.profiles (display_name, phone_number) values ('Ayush again', '+919800000011');
+
+  failed := false;
+  begin
+    perform public.delete_account(a);
+  exception when others then failed := sqlerrm = 'not_found';
+  end;
+  assert failed, 'an account is deleted once';
+end $$;
+rollback;
+
 -- Nobody but the server's own role can reach the data or run the functions.
 do $$
 declare t record;
@@ -135,6 +193,7 @@ begin
   end loop;
   assert not has_function_privilege('anon', 'public.sync_push(uuid, jsonb)', 'execute'), 'anon cannot run sync_push';
   assert not has_function_privilege('anon', 'public.create_settlement(uuid, uuid, uuid, bigint, text)', 'execute'), 'anon cannot run create_settlement';
+  assert not has_function_privilege('anon', 'public.delete_account(uuid)', 'execute'), 'anon cannot run delete_account';
 end $$;
 
 \echo 'Database rules: all good.'
