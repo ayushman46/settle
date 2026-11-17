@@ -76,7 +76,8 @@ export function Compare() {
           Why not Splitwise, or the split in your UPI app?
         </h2>
       </div>
-      <div className={styles.wrap}>
+      {/* Scrolls sideways on a narrow phone: focusable, so a keyboard can scroll it too. */}
+      <div className={styles.wrap} tabIndex={0} role="region" aria-label="Settle compared with Splitwise and UPI apps">
         <table className={styles.table}>
           <thead>
             <tr>
