@@ -61,6 +61,24 @@
   text-decoration: underline;
 }
 
+.getAppClose {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  margin: -6px -6px -6px 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--on-accent);
+  cursor: pointer;
+}
+
+.getAppClose:hover {
+  background: color-mix(in srgb, var(--on-accent) 16%, transparent);
+}
+
 /* ---------- Loading a screen's code: a skeleton that only fades in if it takes a moment ---------- */
 
 .fallback {

@@ -144,6 +144,7 @@
 
 /* Where a new passkey goes: three choices, one picked. */
 .choice {
+  position: relative;
   display: flex;
   align-items: center;
   gap: var(--s-3);

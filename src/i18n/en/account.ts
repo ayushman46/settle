@@ -38,7 +38,7 @@ export const account = {
   'account.mode.create': 'Create account',
   'account.mode.signIn': 'Sign in',
   'account.create.name': 'Your name',
-  'account.create.name.placeholder': 'Ayush',
+  'account.create.name.placeholder': 'Priya',
   'account.create.phone': 'Mobile number',
   'account.create.phone.placeholder': '98765 43210',
   'account.create.phone.hint': 'No OTP is sent, so this number stays unverified. Only you see it.',

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { createApp } from './app'
 import { loadConfig } from './config'
-import { memorySyncStore, syncVersion, upstashSyncStore } from './sync'
+import { cloudSyncStore, memorySyncStore, syncVersion, upstashSyncStore } from './sync'
 import { testConfig } from './testing'
 
 const ROOM = 'r'.repeat(32)
@@ -61,9 +61,35 @@ describe('live groups relay', () => {
 
   it('picks where copies are kept from the settings', () => {
     expect(loadConfig({}).sync).toEqual({ kind: 'memory' })
-    expect(loadConfig({ VERCEL: '1' }).sync).toBeNull()
+    expect(loadConfig({ VERCEL: '1', CLOUD_API_URL: 'off' }).sync).toBeNull()
     expect(loadConfig({ VERCEL: '1', KV_REST_API_URL: 'https://x.upstash.io/', KV_REST_API_TOKEN: 't'.repeat(20) }).sync).toEqual({ kind: 'upstash', url: 'https://x.upstash.io', token: 't'.repeat(20) })
     expect(loadConfig({ SYNC_STORE: 'off' }).sync).toBeNull()
     expect(loadConfig({ VERCEL: '1', SYNC_STORE: 'memory' }).sync).toEqual({ kind: 'memory' })
+  })
+
+  it('keeps copies in the accounts database through the settle-api function', async () => {
+    const rooms = new Map<string, string>()
+    const fetchImpl = vi.fn(async (url: unknown, init?: RequestInit) => {
+      const room = String(url).split('/relay/')[1]!
+      if (init?.method === 'POST') {
+        const { value } = JSON.parse(String(init.body)) as { value: string }
+        const had = rooms.get(room)
+        if (had && JSON.parse(had).w !== JSON.parse(value).w) return new Response('{}', { status: 403 })
+        rooms.set(room, value)
+        return new Response('{"ok":true}')
+      }
+      return new Response(JSON.stringify({ value: rooms.get(room) ?? null }))
+    })
+    const a = app(cloudSyncStore('https://cloud.test/functions/v1/settle-api', fetchImpl as unknown as typeof fetch))
+    const data = 'c'.repeat(40)
+    expect((await put(a, { data, write: 'w'.repeat(30) })).status).toBe(200)
+    expect(await (await a.request(`/api/sync/${ROOM}`)).json()).toEqual({ ok: true, v: syncVersion(data), data })
+    expect(String(fetchImpl.mock.calls[0]![0])).toBe(`https://cloud.test/functions/v1/settle-relay/relay/${ROOM}`)
+  })
+
+  it('uses the accounts database on Vercel when there is no Upstash', () => {
+    expect(loadConfig({ VERCEL: '1' }).sync).toEqual({ kind: 'cloud' })
+    expect(loadConfig({ VERCEL: '1', CLOUD_API_URL: 'off' }).sync).toBeNull()
+    expect(loadConfig({ VERCEL: '1', SYNC_STORE: 'off' }).sync).toBeNull()
   })
 })

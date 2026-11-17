@@ -3,6 +3,7 @@ import type { Messages } from '../types'
 
 export const onboarding = {
   // First step: the language (title is common.language.title).
+  'onboarding.signIn': 'I already have an account: sign in',
   'onboarding.language.subtitle': 'You can change it any time in You → Language.',
 
   // The three intro slides.
@@ -33,7 +34,7 @@ export const onboarding = {
   'onboarding.about.stuck.subtitle': 'It goes on the complaint letters Settle writes for you.',
   'onboarding.about.stuck.cta': 'Continue',
   'onboarding.about.name.label': 'Your name',
-  'onboarding.about.name.placeholder': 'e.g. Ayush',
+  'onboarding.about.name.placeholder': 'e.g. Priya',
   'onboarding.about.name.error': 'Add your name — friends see it on the requests you send.',
   'onboarding.about.upi.label': 'Your UPI ID (optional)',
   'onboarding.about.upi.placeholder': 'name@bank',

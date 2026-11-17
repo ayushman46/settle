@@ -99,6 +99,7 @@ export const pro = {
   // A locked Pro feature.
   'pro.lock.ended': 'Your Pro pass ended on {date}.',
   'pro.lock.renew.cta': 'Renew Pro',
+  'pro.lock.example': 'The faded rows are an example, not your data.',
   'pro.lock.from': 'Pro from {price} · one-time payment, nothing renews',
 
   // Redeem a code. {prefix} is how every code starts.

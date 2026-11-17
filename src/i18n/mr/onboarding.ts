@@ -33,7 +33,7 @@ export const onboarding = {
   'onboarding.about.stuck.subtitle': 'Settle तुमच्यासाठी ज्या तक्रारी लिहिते, त्यांवर हे नाव असते.',
   'onboarding.about.stuck.cta': 'पुढे चला',
   'onboarding.about.name.label': 'तुमचे नाव',
-  'onboarding.about.name.placeholder': 'उदा. Ayush',
+  'onboarding.about.name.placeholder': 'उदा. Priya',
   'onboarding.about.name.error': 'तुमचे नाव लिहा — तुम्ही पाठवलेल्या विनंत्यांवर मित्रांना ते दिसेल.',
   'onboarding.about.upi.label': 'तुमचा UPI ID (ऐच्छिक)',
   'onboarding.about.upi.placeholder': 'name@bank',

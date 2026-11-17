@@ -60,6 +60,7 @@ export function ProLock({ feature, preview, note, onUnlock, className }: ProLock
           {ended ? t('pro.lock.renew.cta') : pitch.unlock}
         </Button>
         {from && <p className={styles.price}>{t('pro.lock.from', { price: from })}</p>}
+        {preview != null && <p className={styles.note}>{t('pro.lock.example')}</p>}
       </section>
       <PaywallHost />
     </div>

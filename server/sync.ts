@@ -7,7 +7,8 @@
  * proves a writer has the secret (stored hashed), and an opaque blob. Phones merge copies
  * themselves, so the server keeps just the last one written; nothing here decides anything.
  *
- * Where it's kept: Upstash Redis over REST when its URL and token are set (Vercel's "KV"), else —
+ * Where it's kept: Upstash Redis over REST when its URL and token are set (Vercel's "KV"); on Vercel
+ * without it, the Settle accounts database (Supabase, through the settle-api function); else —
  * on a long-running server — in memory, which is enough for a relay (every phone has the whole
  * group and writes it again). On Vercel without a store, live groups are off and say so.
  */
@@ -87,9 +88,38 @@ export function upstashSyncStore(url: string, token: string, fetchImpl: typeof f
   }
 }
 
+/**
+ * The Settle accounts database, through the `settle-relay` Edge Function (beside `settle-api`). It keeps
+ * the same opaque `{ w, d }` value, and refuses a write whose token hash differs from the one it
+ * holds, so even a direct call to the function can't overwrite a group's copy.
+ */
+export function cloudSyncStore(cloudUrl: string, fetchImpl: typeof fetch = fetch): SyncStore {
+  // The relay is its own small function next to settle-api (supabase/functions/settle-relay).
+  const base = cloudUrl.replace(/settle-api$/, 'settle-relay')
+  const at = (key: string): string => `${base}/relay/${encodeURIComponent(key.replace(/^settle:sync:/, ''))}`
+  return {
+    get: async (key) => {
+      const response = await fetchImpl(at(key), { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(8000) })
+      if (!response.ok) throw new Error(`Store answered ${response.status}`)
+      const value = ((await response.json()) as { value?: unknown }).value
+      return typeof value === 'string' ? value : null
+    },
+    set: async (key, value, ttlSeconds) => {
+      const response = await fetchImpl(at(key), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ value, ttl: ttlSeconds }),
+        signal: AbortSignal.timeout(8000),
+      })
+      if (!response.ok) throw new Error(`Store answered ${response.status}`)
+    },
+  }
+}
+
 /** The store the settings ask for, or null when live groups are off. */
 export function syncStoreFor(config: ServerConfig, fetchImpl: typeof fetch = fetch): SyncStore | null {
   if (config.sync === null) return null
+  if (config.sync.kind === 'cloud') return config.cloudUrl === null ? null : cloudSyncStore(config.cloudUrl, fetchImpl)
   return config.sync.kind === 'memory' ? memorySyncStore() : upstashSyncStore(config.sync.url, config.sync.token, fetchImpl)
 }
 

@@ -1,8 +1,8 @@
-import { useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { CircleCheck, Share2 } from 'lucide-react'
 import { goBack, navigate, useRoute } from '../../app/router'
 import { Button, Card, Money, PageTitle, Screen, SectionHeader, SuccessBurst, SuccessCheck, TopBar, useToast } from '../../components'
-import { DataError, recordSettlement, useExpenses, useFriendsById, useGroup } from '../../data'
+import { DataError, recordSettlement, useExpenses, useFriendsById, useGroup, useProfile } from '../../data'
 import { BRAND, ME_ID, type Group, type Settlement } from '../../domain/types'
 import type { Transfer } from '../../engine/balances'
 import { today } from '../../engine/dates'
@@ -12,6 +12,7 @@ import { NudgeSheet, TransferRow, UpiPaySheet, upiPaymentForTransfer } from '../
 import { PROOF_ENABLED, PROOF_PATH } from '../proof/enabled'
 import { DirectSwitch, useSettlePlan, WhyLine } from '../why'
 import { haptic } from '../../lib/haptics'
+import { encodePayLink, payLinkFor } from '../../share/payLink'
 import { GroupGone } from './GroupGone'
 import { GroupShareSheet } from './GroupShareSheet'
 import { groupStanding, METHOD_LABELS, paymentSentence } from './groupView'
@@ -52,6 +53,7 @@ function SettleUp({ group }: { group: Group }) {
   // The last payment stays with its sheet while it slides away.
   const [paying, setPaying] = useState<OpenFor | null>(null)
   const [reminding, setReminding] = useState<OpenFor | null>(null)
+  const reminderLink = useReminderLink(reminding?.transfer ?? null, group.name, group.currency, friendsById)
   const [sharing, setSharing] = useState(false)
   const [moment, setMoment] = useState<Moment | null>(null)
   const back = (): void => goBack(groupPath(group.id))
@@ -173,7 +175,7 @@ function SettleUp({ group }: { group: Group }) {
           amount={reminding.transfer.amount}
           currency={group.currency}
           title={group.name}
-          link={null}
+          link={reminderLink}
         />
       )}
       <GroupShareSheet group={group} open={sharing} onClose={() => setSharing(false)} />
@@ -185,4 +187,42 @@ function SettleUp({ group }: { group: Group }) {
 interface OpenFor {
   transfer: Transfer
   open: boolean
+}
+
+/**
+ * A pay link for one reminder: their share of the group, payable to your UPI ID with the amount
+ * filled in (INR, and only once you've added a UPI ID). Null while it's being made, or when it can't be.
+ */
+function useReminderLink(transfer: Transfer | null, title: string, currency: string, friendsById: ReturnType<typeof useFriendsById>): string | null {
+  const profile = useProfile()
+  const [link, setLink] = useState<{ key: string; url: string } | null>(null)
+  const upi = profile.upiId
+  const name = transfer ? (friendsById[transfer.fromId]?.name ?? '') : ''
+  const key = transfer && upi && currency === 'INR' && transfer.toId === ME_ID ? `${transfer.fromId}|${transfer.amount}|${upi}|${title}` : null
+  useEffect(() => {
+    if (!key || !transfer || !upi) return
+    let live = true
+    void encodePayLink(
+      payLinkFor({
+        v: 1,
+        t: title,
+        cat: 'other',
+        c: 'INR',
+        d: today(),
+        to: { n: profile.name || BRAND.name, u: upi },
+        tot: transfer.amount,
+        p: [{ n: name || '?', a: transfer.amount }],
+        f: 0,
+      }),
+    )
+      .then((url) => {
+        if (live) setLink({ key, url })
+      })
+      .catch(() => undefined)
+    return () => {
+      live = false
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key])
+  return key && link?.key === key ? link.url : null
 }

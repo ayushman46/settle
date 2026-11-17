@@ -1,6 +1,6 @@
 import { act, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { addFriend, friendsStore, peekSplitPrefill, updateProfile } from '../../data'
+import { addFriend, expensesStore, friendsStore, peekSplitPrefill, updateProfile } from '../../data'
 import { ME_ID } from '../../domain/types'
 import { aiUsedToday, consumeAiQuota } from '../../pro/quota'
 import { paywallState } from '../pro/paywall'
@@ -101,6 +101,30 @@ describe('AiDescribeSheet — reading a split', SLOW, () => {
     expect(within(sheet).getByText('2 of 3 free typed AI splits left today', { exact: false })).toBeInTheDocument()
   })
 
+  it('saves in one tap with “Save split”, then opens the saved split with an Undo', async () => {
+    serveDescribe(
+      described({
+        title: 'Dinner',
+        category: 'food',
+        amount: 2400,
+        mode: 'equal',
+        payer: 'Me',
+        people: [{ name: 'Me', value: null }, { name: 'Riya', value: null }, { name: 'Sam', value: null }],
+      }),
+    )
+    const { sheet, user } = await say('Dinner 2400 with Riya and Sam')
+    await within(sheet).findByRole('article', { name: 'Dinner' })
+    await user.click(within(sheet).getByRole('button', { name: 'Save split' }))
+    const saved = expensesStore.get()
+    expect(saved).toHaveLength(1)
+    expect(saved[0]).toMatchObject({ title: 'Dinner', total: 240000, currency: 'INR', payerId: ME_ID, mode: 'equal', source: 'describe' })
+    expect(saved[0]?.shares[riya]).toBe(80000)
+    expect(currentUrl()).toBe(`/app/expense/${saved[0]?.id}`)
+    expect(await screen.findByText('“Dinner” saved')).toBeInTheDocument()
+    await user.click(await screen.findByRole('button', { name: /^Undo/ }))
+    expect(expensesStore.get()).toHaveLength(0)
+  })
+
   it('opens the split screen with the draft filled in, adding new people then', async () => {
     serveDescribe(
       described({
@@ -124,7 +148,7 @@ describe('AiDescribeSheet — reading a split', SLOW, () => {
     // Nobody is added just for looking.
     expect(friendsStore.get().some((f) => f.name === 'Neha')).toBe(false)
 
-    await user.click(within(sheet).getByRole('button', { name: 'Looks right' }))
+    await user.click(within(sheet).getByRole('button', { name: 'Edit details' }))
     const neha = friendsStore.get().find((f) => f.name === 'Neha')
     expect(neha).toBeDefined()
     expect(peekSplitPrefill()).toMatchObject({
@@ -160,7 +184,7 @@ describe('AiDescribeSheet — reading a split', SLOW, () => {
     await within(sheet).findByRole('article', { name: 'Dinner' })
     await user.type(field, ' and Neha')
     expect(within(sheet).queryByRole('article')).not.toBeInTheDocument()
-    expect(within(sheet).queryByRole('button', { name: 'Looks right' })).not.toBeInTheDocument()
+    expect(within(sheet).queryByRole('button', { name: 'Edit details' })).not.toBeInTheDocument()
   })
 
   it('shows double shares and people the text counted but didn’t name', async () => {
@@ -363,7 +387,7 @@ describe('AiDescribeSheet — speak to split', SLOW, () => {
     expect(calls).toHaveLength(1)
     expect(calls[0]?.body).toMatchObject({ text: '2500 का डिनर रिया और सैम के साथ मैंने दिया', lang: 'hi-IN', source: 'voice' })
 
-    await opened.user.click(within(opened.sheet).getByRole('button', { name: 'Looks right' }))
+    await opened.user.click(within(opened.sheet).getByRole('button', { name: 'Edit details' }))
     expect(currentUrl()).toBe('/app/split/new?from=voice')
     expect(peekSplitPrefill()).toMatchObject({
       source: 'voice',

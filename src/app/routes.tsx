@@ -4,11 +4,11 @@
  * screen is its own chunk, loaded on first visit — or earlier, while the person is idle on Home
  * (`preloadCoreScreens`), so moving around feels instant and works offline afterwards.
  */
-import type { ComponentType } from 'react'
+import { useEffect, type ComponentType } from 'react'
 import { HomeScreen } from '../features/home/HomeScreen'
 import { OnboardingScreen } from '../features/onboarding/OnboardingScreen'
 import { lazyScreen, type LazyScreen } from './lazyScreen'
-import { matchPath } from './router'
+import { matchPath, navigate } from './router'
 
 /* ------------------------------------------------------------------ public pages */
 
@@ -465,6 +465,8 @@ export const APP_ROUTES: readonly AppRoute[] = [
   { pattern: '/app/shagun/function/:id', screen: ShagunFunctionScreen, title: 'Shagun book', tab: null },
   { pattern: '/app/paid', screen: PaidReplyScreen, title: 'Payment', tab: null },
   { pattern: '/app/bill', screen: BillFlow, title: null, tab: null },
+  // Where people look for it by name.
+  { pattern: '/app/scan', screen: ToScanBill, title: 'Scan bill', tab: null },
   { pattern: '/app/claims/in', screen: ClaimReplyScreen, title: 'Claims', tab: null },
   { pattern: '/app/claims/:id', screen: ClaimRoundScreen, title: 'Claims', tab: null },
   { pattern: '/app/friends', screen: FriendsScreen, title: 'People', tab: null },
@@ -508,6 +510,12 @@ export const APP_ROUTES: readonly AppRoute[] = [
 /** The app route for `path`, or null for an unknown `/app/*` path. */
 export function matchAppRoute(path: string): AppRoute | null {
   return APP_ROUTES.find((route) => matchPath(route.pattern, path) !== null) ?? null
+}
+
+/** `/app/scan` (what people type) is the bill flow's own address, `/app/bill`. */
+function ToScanBill() {
+  useEffect(() => navigate('/app/bill', { replace: true }), [])
+  return null
 }
 
 /** The screens people reach from Home most (and the paywall), loaded ahead of time — also so they open offline. */

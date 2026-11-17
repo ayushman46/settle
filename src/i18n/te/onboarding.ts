@@ -31,7 +31,7 @@ export const onboarding = {
   'onboarding.about.stuck.subtitle': 'Settle మీ కోసం రాసే ఫిర్యాదు లేఖల్లో మీ పేరు ఉంటుంది.',
   'onboarding.about.stuck.cta': 'కొనసాగించండి',
   'onboarding.about.name.label': 'మీ పేరు',
-  'onboarding.about.name.placeholder': 'ఉదా. Ayush',
+  'onboarding.about.name.placeholder': 'ఉదా. Priya',
   'onboarding.about.name.error': 'మీ పేరు జోడించండి — మీరు పంపే అభ్యర్థనలపై స్నేహితులు దాన్ని చూస్తారు.',
   'onboarding.about.upi.label': 'మీ UPI ID (ఐచ్ఛికం)',
   'onboarding.about.upi.placeholder': 'name@bank',

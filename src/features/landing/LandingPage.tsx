@@ -3,6 +3,7 @@ import { Link } from '../../app/router'
 import { BRAND } from '../../domain/types'
 import { useBillingConfig } from '../../pro/config'
 import { BrandMark } from './BrandMark'
+import { Compare } from './Compare'
 import { CtaLink, SectionLink } from './CtaLink'
 import { Faq } from './Faq'
 import { Features } from './Features'
@@ -15,6 +16,7 @@ import { landingStructuredData, LANDING_DESCRIPTION } from './structuredData'
 import styles from './LandingPage.module.css'
 
 const SECTIONS = [
+  { id: 'compare', label: 'Why Settle' },
   { id: 'features', label: 'Features' },
   { id: 'how', label: 'How it works' },
   { id: 'pricing', label: 'Pricing' },
@@ -61,6 +63,7 @@ export function LandingPage() {
 
       <main id="main" className={styles.main}>
         <Hero />
+        <Compare />
         <Features />
         <HowItWorks />
         <Pricing />

@@ -119,7 +119,7 @@ test.describe('speak to split', () => {
       lang: 'hi-IN',
       source: 'voice',
     })
-    await sheet.getByRole('button', { name: 'Looks right' }).click()
+    await sheet.getByRole('button', { name: 'Edit details' }).click()
 
     await expect(page).toHaveURL(/\/app\/split\/new\?from=voice/)
     await expect(page.getByText('Filled in from what you said')).toBeVisible()

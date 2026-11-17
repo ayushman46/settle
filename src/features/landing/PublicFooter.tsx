@@ -39,7 +39,7 @@ export function PublicFooter() {
           </ul>
         </nav>
         <p className={styles.legal}>
-          © {year} {BRAND.name} · No ads, no tracking
+          © {year} {BRAND.name} · No ads, no tracking cookies
         </p>
       </div>
     </footer>

@@ -184,7 +184,7 @@ test.describe('paying, saying it, getting the app', () => {
     const sheet = page.getByRole('dialog')
     await sheet.getByRole('textbox', { name: 'Describe the expense' }).fill('Cab 840 with Riya and Sam, Sam pays double')
     await sheet.getByRole('button', { name: 'Read it' }).click()
-    await sheet.getByRole('button', { name: 'Looks right' }).click()
+    await sheet.getByRole('button', { name: 'Edit details' }).click()
     await expect(page).toHaveURL(/\/app\/split\/new\?from=describe&group=goa/)
     await page.getByRole('button', { name: 'Save split' }).click()
     await expect(page).toHaveURL(/\/app\/expense\//, { timeout: 15_000 })

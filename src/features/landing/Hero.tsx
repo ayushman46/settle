@@ -1,8 +1,6 @@
 import { ArrowRight, BadgeCheck, Ban, Smartphone, UserRoundCheck } from 'lucide-react'
-import { Link } from '../../app/router'
 import { QrCode } from '../../components'
 import { BRAND } from '../../domain/types'
-import { FEES_PATH } from '../fees/paths'
 import { ctaClassName } from './cta'
 import { CtaLink, SectionLink } from './CtaLink'
 import { HeroDemo } from './HeroDemo'
@@ -18,7 +16,7 @@ function taglineParts(tagline: string): [string, string] {
 const TRUST = [
   { icon: UserRoundCheck, text: 'No password, no OTP' },
   { icon: Ban, text: 'No ads' },
-  { icon: Smartphone, text: 'Only you can open your data' },
+  { icon: Smartphone, text: 'Stored in India, locked by your passkey' },
   { icon: BadgeCheck, text: 'Works with any UPI app' },
 ] as const
 
@@ -31,11 +29,10 @@ export function Hero() {
       <div className={styles.heroInner}>
         <div className={styles.heroCopy}>
           {/* One name, read in one go (pieces of text are read with pauses: "New, colon, Bank charges"). */}
-          <Link to={FEES_PATH} className={styles.announce} aria-label="New: Bank charges — get back what your bank shouldn’t have taken">
-            <span className={styles.announceTag}>New</span>{' '}
-            <span>Bank charges — get back what your bank shouldn’t have taken</span>
+          <SectionLink to="compare" className={styles.announce}>
+            <span className={styles.announceTag}>Why us</span> <span>Why not Splitwise? See the difference</span>
             <ArrowRight aria-hidden="true" strokeWidth={2.25} />
-          </Link>
+          </SectionLink>
           <h1 id="hero-title" className={styles.h1}>
             {lead}
             {rest && (
@@ -46,9 +43,9 @@ export function Hero() {
             )}
           </h1>
           <p className={styles.sub}>
-            Dinners, rent, trips, flatmates, subscriptions — {BRAND.name} works out who owes what, then sends one link
-            so everyone pays you back by UPI in a tap. A payment failed but the money left? It tracks the RBI’s
-            deadline, and what your bank owes you for the wait.
+            Say the bill — “Riya paid 1,800 for the cab, split between everyone” — in English or Hinglish, and{' '}
+            {BRAND.name} splits it. Friends open one link and pay you back with any UPI app: no download, no sign-up.
+            Free, with no daily limit on adding expenses.
           </p>
           <div className={styles.ctas}>
             <CtaLink to="/app" iconEnd={<ArrowRight strokeWidth={2.25} />}>

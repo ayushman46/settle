@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { navigate, useBackClose, useSearchParams } from '../../app/router'
+import { ACCOUNT_PATH } from '../account/paths'
 import { ScreenTransition, type NavDirection } from '../../components'
 import { completeOnboarding } from '../../data'
 import { STUCK_PATH } from '../stuck/paths'
@@ -47,10 +48,17 @@ export function OnboardingScreen() {
     if (destination !== HOME_PATH) navigate(destination)
   }
 
+  /** Coming back: no slides or name — the account brings everything with it once signed in. */
+  const signIn = (): void => {
+    completeOnboarding({ name: '' })
+    navigate(HOME_PATH, { replace: true })
+    navigate(`${ACCOUNT_PATH}?next=${encodeURIComponent(destination)}`)
+  }
+
   return (
     <ScreenTransition direction={direction}>
       {step === 'language' ? (
-        <LanguageStep key="language" onDone={() => go('intro')} onSkip={() => go('you')} />
+        <LanguageStep key="language" onDone={() => go('intro')} onSkip={() => go('you')} onSignIn={signIn} />
       ) : step === 'intro' ? (
         <IntroSlides key="intro" slides={stuck ? [STUCK_SLIDE] : undefined} onDone={() => go('you')} />
       ) : (

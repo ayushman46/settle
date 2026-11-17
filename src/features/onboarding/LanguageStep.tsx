@@ -13,6 +13,8 @@ export interface LanguageStepProps {
   onDone: () => void
   /** "Skip": straight to your details, in the language on show. */
   onSkip: () => void
+  /** "Sign in": someone coming back, straight to their account (their details come with it). */
+  onSignIn?: () => void
 }
 
 /**
@@ -20,7 +22,7 @@ export interface LanguageStepProps {
  * own scripts, the phone's language already picked. A tap switches the whole app straight away
  * (the language loads behind a spinner on its tile) and is saved; You → Language changes it later.
  */
-export function LanguageStep({ onDone, onSkip }: LanguageStepProps) {
+export function LanguageStep({ onDone, onSkip, onSignIn }: LanguageStepProps) {
   const t = useT()
   const lang = useLang()
   const toast = useToast()
@@ -52,6 +54,11 @@ export function LanguageStep({ onDone, onSkip }: LanguageStepProps) {
           <Button block onClick={onDone}>
             {t('common.action.continue')}
           </Button>
+          {onSignIn && (
+            <Button block variant="ghost" onClick={onSignIn}>
+              {t('onboarding.signIn')}
+            </Button>
+          )}
         </ActionBar>
       }
     >

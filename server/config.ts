@@ -64,7 +64,7 @@ export interface ServerConfig {
   maxConcurrentScans: number
   billing: BillingSettings
   /** Where live groups' encrypted copies are kept: an Upstash Redis REST endpoint, this server's memory, or nowhere (off). */
-  sync: { kind: 'upstash'; url: string; token: string } | { kind: 'memory' } | null
+  sync: { kind: 'upstash'; url: string; token: string } | { kind: 'memory' } | { kind: 'cloud' } | null
   license: LicenseKeys
   /** The `settle-api` Edge Function behind `/api/cloud/*` (Settle accounts), or null when turned off with `CLOUD_API_URL=off`. */
   cloudUrl: string | null
@@ -116,6 +116,7 @@ export function loadConfig(env: Env): ServerConfig {
   const license = loadLicenseKeys(env.LICENSE_PRIVATE_KEY, env.LICENSE_PUBLIC_KEY)
   warnings.push(...license.problems)
 
+  const cloudUrl = parseCloudUrl(env.CLOUD_API_URL, warnings)
   return {
     apiKey: parseApiKey(env.NVIDIA_API_KEY),
     models: parseModels(env.NVIDIA_MODEL, DEFAULT_MODELS),
@@ -141,9 +142,9 @@ export function loadConfig(env: Env): ServerConfig {
         windowMs: DEFAULT_BILLING_RATE_LIMIT.windowMs,
       },
     },
-    sync: parseSync(env),
+    sync: parseSync(env, cloudUrl),
     license: license.keys,
-    cloudUrl: parseCloudUrl(env.CLOUD_API_URL, warnings),
+    cloudUrl,
     warnings,
   }
 }
@@ -158,16 +159,19 @@ export function checkoutReady(config: ServerConfig): config is ServerConfig & {
 
 /**
  * Live groups: Upstash Redis over REST when its URL and token are set (Vercel's KV names, or
- * Upstash's own); `SYNC_STORE=memory` or — on a server that stays up (not Vercel's functions) —
+ * Upstash's own); on Vercel without them, the Settle accounts database through the `settle-api`
+ * Edge Function (`SYNC_STORE=cloud` asks for that anywhere); `SYNC_STORE=memory` or — on a server that stays up (not Vercel's functions) —
  * nothing set keeps copies in memory; `SYNC_STORE=off` turns it off.
  */
-function parseSync(env: Env): ServerConfig['sync'] {
+function parseSync(env: Env, cloudUrl: string | null): ServerConfig['sync'] {
   const mode = (env.SYNC_STORE ?? '').trim().toLowerCase()
   if (mode === 'off') return null
   const url = (env.KV_REST_API_URL ?? env.UPSTASH_REDIS_REST_URL ?? '').trim().replace(/[/]+$/, '')
   const token = (env.KV_REST_API_TOKEN ?? env.UPSTASH_REDIS_REST_TOKEN ?? '').trim()
   if (mode !== 'memory' && url.startsWith('https://') && !/\s/.test(url) && token.length >= 16) return { kind: 'upstash', url, token }
   if (mode === 'memory') return { kind: 'memory' }
+  // On Vercel (no memory between requests), the accounts database keeps the copies.
+  if (mode === 'cloud' || (env.VERCEL && cloudUrl !== null)) return cloudUrl === null ? null : { kind: 'cloud' }
   return env.VERCEL ? null : { kind: 'memory' }
 }
 

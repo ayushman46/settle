@@ -30,7 +30,10 @@ export const home = {
   'home.more.split': 'Start a split',
   // Short tile name for "Paid? Drop the screenshot".
   'home.more.proof': 'Paid screenshot',
-  'home.describe.looksRight': 'Looks right',
+  'home.describe.saveNow': 'Save split',
+  'home.describe.looksRight': 'Edit details',
+  'home.describe.saved': '“{title}” saved',
+  'home.describe.savedUntitled': 'Split',
   'home.describe.changeWords': 'Change what I said',
   'home.describe.off.title': 'The AI helper is off right now',
   'home.describe.off.body': 'You can still split anything by hand — it only takes a moment.',
@@ -112,8 +115,8 @@ export const home = {
   'home.draft.finish': 'Finish editing your bill',
   'home.draft.continue': 'Continue your bill',
   // Today's AI allowance beside "Just say it", the bill-in-progress card, and section headers.
-  'home.allowance.left': '{count, plural, one {# free split today} other {# free splits today}}',
-  'home.allowance.used': 'Free AI splits used today',
+  'home.allowance.left': '{count, plural, one {Voice unlimited · # typed left} other {Voice unlimited · # typed left}}',
+  'home.allowance.used': 'Voice unlimited · typed used today',
   'home.allowance.unlimited': 'Unlimited with Pro',
   'home.draft.saved': 'Saved bill',
   'home.draft.inProgress': 'Bill in progress',

@@ -33,7 +33,8 @@ export function PasskeysSection({ me }: { me: Me }) {
       <SectionHeader
         title={t('account.passkeys.heading')}
         description={t('account.passkeys.description')}
-        action={full ? undefined : { label: t('account.passkeys.add'), onClick: () => setAdding(true) }}
+        // With one passkey the card's own button asks for a second; one "Add" is enough.
+        action={full || me.passkeys.length === 1 ? undefined : { label: t('account.passkeys.add'), onClick: () => setAdding(true) }}
       />
       <Card padding="md">
         {me.passkeys.map((pk) => (

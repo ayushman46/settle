@@ -116,3 +116,12 @@ describe('categoryFromText', () => {
     expect(categoryFromText('!!!')).toBeNull()
   })
 })
+
+describe('rent and mess bills (investor panel, 17 Nov 2026)', () => {
+  it('reads a villa or hostel rent as rent, and a hostel mess as food', () => {
+    expect(categoryFromText('Villa rent')).toBe('rent')
+    expect(categoryFromText('Hostel mess')).toBe('food')
+    expect(categoryFromText('Mess bill November')).toBe('food')
+    expect(categoryFromText('Goa villa')).toBe('travel')
+  })
+})

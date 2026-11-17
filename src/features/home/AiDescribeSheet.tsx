@@ -1,11 +1,11 @@
 import { lazy, Suspense, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { ArrowRight, AudioLines, PenLine, RotateCcw, Sparkles } from 'lucide-react'
+import { ArrowRight, AudioLines, Check, PenLine, RotateCcw, Sparkles } from 'lucide-react'
 import { DESCRIBE_LIMITS } from '../../../shared/api'
 import { DescribeError, describeSplit, type DescribeErrorCode } from '../../ai'
 import { describedToPrefill, spreadToGroup } from '../../ai/prefill'
 import { navigate } from '../../app/router'
-import { Avatar, Badge, Banner, BottomSheet, Button, CategoryIcon, Chip, Money, SearchPill, Skeleton } from '../../components'
-import { addFriend, setSplitPrefill, useFriends, useGroup, useProfile } from '../../data'
+import { Avatar, Badge, Banner, BottomSheet, Button, CategoryIcon, Chip, Money, SearchPill, Skeleton, useToast } from '../../components'
+import { addFriend, deleteExpense, expenseDraftIssue, friendsStore, groupsStore, saveExpense, setSplitPrefill, useFriends, useGroup, useProfile, type SplitPrefill } from '../../data'
 import { FREE_AI_PER_DAY, ME_ID, type DescribedSplit } from '../../domain/types'
 import { today } from '../../engine/dates'
 import { t, useT } from '../../i18n'
@@ -18,7 +18,9 @@ import { hasFeature } from '../../pro/store'
 import { useHealth } from '../../state/health'
 import { openPaywall } from '../pro/paywall'
 import { describeView, heardChips, peopleSummary, sayExamples, type DescribeView } from './describeView'
-import { NEW_SPLIT_PATH } from './homeLinks'
+import { blankForm, formToDraft, isConverting, settleCurrency, withGroup, withPrefill } from '../split/splitForm'
+import { TRIP_ENABLED } from '../trip/enabled'
+import { expensePath, NEW_SPLIT_PATH } from './homeLinks'
 import { MicButton } from './MicButton'
 import { VOICE_ENABLED } from './voice.enabled'
 import type { VoiceHeard } from './VoiceInput'
@@ -75,7 +77,7 @@ interface VoiceState {
  * "Just say it": type an expense the way you'd text a friend ("Cab 840 with Riya and Sam, Sam
  * pays double") — or say it, in any of eight Indian languages — the AI turns it into a draft,
  * and a confirm card shows exactly how it would split — title, amount, who paid, everyone's share.
- * "Looks right" opens the split screen filled in (new names become people then, not before). Free
+ * "Save split" saves it as read, with an Undo; "Edit details" opens the split screen filled in (new names become people then, not before). Free
  * users get `FREE_AI_PER_DAY` a day; at zero the Pro paywall offers unlimited, and carries on
  * reading once unlocked. Spoken numbers ("dhai hazaar") become digits on the phone before
  * anything is sent, and nothing is sent until "Read it".
@@ -88,6 +90,7 @@ export function AiDescribeSheet({ open, onClose, startWith, groupId }: AiDescrib
   const group = useGroup(groupId)
   const quota = useAiQuota()
   const health = useHealth()
+  const toast = useToast()
   const inputRef = useRef<HTMLInputElement>(null)
   const micRef = useRef<HTMLButtonElement>(null)
   const request = useRef<AbortController | null>(null)
@@ -206,23 +209,61 @@ export function AiDescribeSheet({ open, onClose, startWith, groupId }: AiDescrib
     if (phase.kind === 'draft' || phase.kind === 'error') setPhase({ kind: 'idle' })
   }
 
-  const useDraft = (): void => {
-    if (phase.kind !== 'draft') return
+  /** What was read, as a hand-off to the split screen (new names become people now). */
+  const handOff = (): SplitPrefill | null => {
+    if (phase.kind !== 'draft') return null
     const prefill = describedToPrefill(phase.draft, {
       friends,
       meId: ME_ID,
       currency: profile.currency,
       addFriend: (name) => addFriend({ name }),
     })
-    const spoken = voice.spoken
-    setSplitPrefill(
-      spoken
-        ? { ...prefill, source: 'voice', banner: { icon: 'mic', title: t('voice.banner.title'), body: t('voice.banner.body') } }
-        : prefill,
-    )
+    return voice.spoken
+      ? { ...prefill, source: 'voice', banner: { icon: 'mic', title: t('voice.banner.title'), body: t('voice.banner.body') } }
+      : prefill
+  }
+
+  const openForm = (prefill: SplitPrefill): void => {
+    setSplitPrefill(prefill)
     haptic('tap')
     close()
-    navigate(`${NEW_SPLIT_PATH}?from=${spoken ? 'voice' : 'describe'}${groupId ? `&group=${encodeURIComponent(groupId)}` : ''}`)
+    navigate(`${NEW_SPLIT_PATH}?from=${voice.spoken ? 'voice' : 'describe'}${groupId ? `&group=${encodeURIComponent(groupId)}` : ''}`)
+  }
+
+  /** "Edit details": the full split screen, filled in. */
+  const useDraft = (): void => {
+    const prefill = handOff()
+    if (prefill) openForm(prefill)
+  }
+
+  /**
+   * "Save split": saved as read, in one tap, with an Undo. Anything the split screen would still
+   * need a decision on (a currency to convert, a split that doesn't add up) opens it instead.
+   */
+  const saveNow = (): void => {
+    const prefill = handOff()
+    if (!prefill) return
+    const day = today()
+    const groups = groupsStore.get()
+    const inGroup = groupId ? (groups.find((g) => g.id === groupId) ?? null) : null
+    const ctx = { currency: profile.currency, today: day, friendIds: new Set([ME_ID, ...friendsStore.get().map((f) => f.id)]), groups }
+    let form = blankForm(profile.currency, day)
+    if (inGroup) form = withGroup(form, inGroup, TRIP_ENABLED ? { settle: profile.currency, profileCurrency: profile.currency } : undefined)
+    form = withPrefill(form, { ...prefill, groupId: groupId ?? prefill.groupId ?? null }, ctx)
+    const settle = TRIP_ENABLED ? settleCurrency(form, inGroup, profile.currency) : form.currency
+    const draft = formToDraft(form)
+    if (form.currency !== settle || isConverting(form, settle) || expenseDraftIssue(draft) !== null) {
+      openForm(prefill)
+      return
+    }
+    const saved = saveExpense(draft)
+    haptic('success')
+    close()
+    toast(t('home.describe.saved', { title: saved.title || t('home.describe.savedUntitled') }), {
+      tone: 'success',
+      action: { label: t('split.undo.cta'), onAction: () => void deleteExpense(saved.id) },
+    })
+    navigate(expensePath(saved.id))
   }
 
   const byHand = (): void => {
@@ -296,7 +337,10 @@ export function AiDescribeSheet({ open, onClose, startWith, groupId }: AiDescrib
       footer={
         view ? (
           <div className={styles.actions}>
-            <Button block onClick={useDraft} iconEnd={<ArrowRight strokeWidth={2.5} />}>
+            <Button block onClick={saveNow} iconStart={<Check strokeWidth={2.5} />}>
+              {t('home.describe.saveNow')}
+            </Button>
+            <Button block variant="tonal" onClick={useDraft} iconEnd={<ArrowRight strokeWidth={2.5} />}>
               {t('home.describe.looksRight')}
             </Button>
             <Button block variant="ghost" onClick={rewrite} iconStart={<PenLine />}>

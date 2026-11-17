@@ -17,7 +17,7 @@ export const CATEGORY_META: Readonly<Record<CategoryId, CategoryMeta>> = {
     label: 'Food & drinks',
     emoji: '🍽️',
     keywords: [
-      'food', 'water bottle', 'mineral water', 'bisleri', 'dinner', 'lunch', 'breakfast', 'brunch', 'meal', 'supper', 'restaurant', 'cafe',
+      'food', 'mess', 'hostel mess', 'mess bill', 'mess fee', 'canteen', 'tiffin', 'water bottle', 'mineral water', 'bisleri', 'dinner', 'lunch', 'breakfast', 'brunch', 'meal', 'supper', 'restaurant', 'cafe',
       'coffee', 'tea', 'chai', 'snack', 'pizza', 'burger', 'biryani', 'dosa', 'thali', 'momos',
       'dessert', 'ice cream', 'bakery', 'buffet', 'takeaway', 'drinks', 'beer', 'bar', 'pub',
       'swiggy', 'zomato', 'eatsure', 'eatfit', 'dominos', 'domino s', 'mcdonalds', 'mcdonald s',
@@ -40,7 +40,7 @@ export const CATEGORY_META: Readonly<Record<CategoryId, CategoryMeta>> = {
     label: 'Rent',
     emoji: '🏠',
     keywords: [
-      'rent', 'house rent', 'flat rent', 'room rent', 'pg', 'paying guest', 'maintenance',
+      'rent', 'house rent', 'flat rent', 'room rent', 'villa rent', 'hostel rent', 'hostel fee', 'pg rent', 'pg', 'paying guest', 'maintenance',
       'society', 'society maintenance', 'deposit', 'security deposit', 'lease', 'landlord',
       'brokerage', 'kiraya', 'nobroker',
     ],

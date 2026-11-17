@@ -31,7 +31,7 @@ export const onboarding = {
   'onboarding.about.stuck.subtitle': 'Settle உங்களுக்காக எழுதும் புகார்க் கடிதங்களில் இது இடம்பெறும்.',
   'onboarding.about.stuck.cta': 'தொடர்',
   'onboarding.about.name.label': 'உங்கள் பெயர்',
-  'onboarding.about.name.placeholder': 'உதா. Ayush',
+  'onboarding.about.name.placeholder': 'உதா. Priya',
   'onboarding.about.name.error': 'உங்கள் பெயரைச் சேருங்கள் — நீங்கள் அனுப்பும் கோரிக்கைகளில் நண்பர்கள் அதைப் பார்ப்பார்கள்.',
   'onboarding.about.upi.label': 'உங்கள் UPI ID (விருப்பமானது)',
   'onboarding.about.upi.placeholder': 'name@bank',

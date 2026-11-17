@@ -1,5 +1,5 @@
 import { Component, lazy, Suspense, useEffect, useLayoutEffect, useState, type ReactNode } from 'react'
-import { CircleUserRound, Download, House, ReceiptText, RefreshCw, RotateCcw, UsersRound, WifiOff } from 'lucide-react'
+import { CircleUserRound, Download, House, ReceiptText, RefreshCw, RotateCcw, UsersRound, WifiOff, X } from 'lucide-react'
 import { AppFrame, Banner, Button, EmptyState, ScreenTransition, Skeleton, TabBar, type NavDirection, type TabBarItem } from '../components'
 import { migrateLegacy, profileStore, useStorageWritable, useStore } from '../data'
 import { BRAND, type Profile } from '../domain/types'
@@ -203,11 +203,18 @@ export function AppShell({ preloadScreens = import.meta.env.PROD }: AppShellProp
 
 /**
  * A thin persistent banner at the top of the app shell on the web version: "Get the app →".
- * Never shown in the native Android app or when already installed as a PWA (standalone).
+ * Never shown in the native Android app or when already installed as a PWA (standalone), nor once closed.
  */
+const GET_APP_DISMISSED = 'settle.getApp.dismissed'
+
 function GetAppBanner() {
-  const [show] = useState(() => {
+  const [show, setShow] = useState(() => {
     if (typeof window === 'undefined') return false
+    try {
+      if (window.localStorage.getItem(GET_APP_DISMISSED) === '1') return false
+    } catch {
+      // Storage blocked: show it, and let the close button hide it for this visit.
+    }
     if (inAndroidApp()) return false
     if (typeof window.matchMedia === 'function' && window.matchMedia('(display-mode: standalone)').matches) return false
     if ((navigator as Navigator & { standalone?: boolean }).standalone) return false
@@ -221,6 +228,21 @@ function GetAppBanner() {
       <Link to="/get" className={styles.getAppLink}>
         Get the app →
       </Link>
+      <button
+        type="button"
+        className={styles.getAppClose}
+        aria-label="Hide this"
+        onClick={() => {
+          setShow(false)
+          try {
+            window.localStorage.setItem(GET_APP_DISMISSED, '1')
+          } catch {
+            // Hidden for this visit only.
+          }
+        }}
+      >
+        <X aria-hidden="true" size={14} strokeWidth={2.5} />
+      </button>
     </div>
   )
 }

@@ -14,7 +14,7 @@ export const legal = {
   'legal.privacy.summary.1': 'Bill photos and “Just say it” text are sent to an AI model hosted by NVIDIA only to be read, and are not kept.',
   'legal.privacy.summary.2': 'A pay link carries its split inside the link itself — that part never reaches our server.',
   'legal.privacy.summary.3': 'Pro payments are handled by Razorpay. We never see your card details or UPI PIN.',
-  'legal.privacy.summary.4': 'No ads, no analytics, no tracking cookies. The only cookie keeps you signed in.',
+  'legal.privacy.summary.4': 'No ads and no tracking cookies. We count page views without cookies, with amounts and IDs stripped from the address. The only cookie keeps you signed in.',
   'legal.privacy.summary.5': 'Stuck money keeps your references, complaint numbers and account’s last digits in your account, and in your backups. The Android app reads payment and refund alerts for it only if you turn that on.',
   'legal.privacy.section.device': 'Where your data is kept',
   'legal.privacy.section.leaves': 'What leaves your device, and why',

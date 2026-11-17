@@ -1,0 +1,89 @@
+.wrap {
+  overflow-x: auto;
+  border-radius: var(--radius-sheet);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+}
+
+.table {
+  width: 100%;
+  min-width: 560px;
+  border-collapse: collapse;
+  font-size: 0.9375rem;
+}
+
+.table th,
+.table td {
+  padding: var(--s-3) var(--s-4);
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--line);
+}
+
+.table tbody tr:last-child th,
+.table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.table thead th {
+  font-weight: 700;
+  color: var(--ink-2);
+  font-size: 0.8125rem;
+}
+
+.table thead .us {
+  color: var(--accent-ink);
+}
+
+.corner {
+  width: 34%;
+}
+
+.feature {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.cell {
+  color: var(--ink-2);
+}
+
+.cell > span:first-child {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  margin-right: var(--s-2);
+  border-radius: 50%;
+  vertical-align: -5px;
+}
+
+.cell svg {
+  width: 14px;
+  height: 14px;
+}
+
+.yes {
+  background: var(--positive-soft);
+  color: var(--positive);
+}
+
+.no {
+  background: var(--surface-2);
+  color: var(--ink-3);
+}
+
+.part {
+  background: var(--warning-soft);
+  color: var(--warning-ink);
+}
+
+.note {
+  font-size: 0.875rem;
+}
+
+.footnote {
+  margin-top: var(--s-3);
+  font-size: 0.8125rem;
+  color: var(--ink-2);
+}

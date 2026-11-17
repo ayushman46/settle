@@ -5,6 +5,7 @@ import { resetNavForTests, useLocation } from '../../app/router'
 import { BRAND } from '../../domain/types'
 import { resetBillingConfigForTests, type BillingConfig } from '../../pro/config'
 import { SUPPORT_EMAIL } from '../legal/contact'
+import { COMPARE_CHECKED, COMPARE_ROWS } from './Compare'
 import { FAQ } from './faqData'
 import { FEATURES } from './featureList'
 import { LandingPage } from './LandingPage'
@@ -114,6 +115,7 @@ describe('LandingPage', () => {
     const nav = screen.getByRole('navigation', { name: 'Sections' })
     const links = within(nav).getAllByRole('link')
     expect(links.map((l) => [l.textContent, l.getAttribute('href')])).toEqual([
+      ['Why Settle', '#compare'],
       ['Features', '#features'],
       ['How it works', '#how'],
       ['Pricing', '#pricing'],
@@ -125,13 +127,17 @@ describe('LandingPage', () => {
     expect(screen.getByRole('heading', { level: 1 })).toHaveFocus()
   })
 
-  it('announces Bank charges above the tagline and opens it in the app, in place', async () => {
-    const { user } = renderLanding()
-    const link = screen.getByRole('link', { name: 'New: Bank charges — get back what your bank shouldn’t have taken' })
-    expect(link).toHaveAttribute('href', '/app/fees')
+  it('answers “why not Splitwise?” right under the tagline, with a dated comparison', () => {
+    renderLanding()
+    const link = screen.getByRole('link', { name: /Why not Splitwise\?/ })
+    expect(link).toHaveAttribute('href', '#compare')
     expect(link.compareDocumentPosition(screen.getByRole('heading', { level: 1 })) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
-    await user.click(link)
-    expect(path()).toBe('/app/fees')
+    const section = screen.getByRole('region', { name: 'Why not Splitwise, or the split in your UPI app?' })
+    const table = within(section).getByRole('table')
+    expect(within(table).getAllByRole('columnheader').map((h) => h.textContent)).toEqual(['What you get', BRAND.name, 'Splitwise (free)', 'GPay / PhonePe / Paytm split'])
+    expect(within(table).getAllByRole('row')).toHaveLength(COMPARE_ROWS.length + 1)
+    expect(section).toHaveTextContent(`checked ${COMPARE_CHECKED}`)
+    expect(within(table).getByRole('rowheader', { name: 'Say the bill out loud, in English or Hinglish' }).closest('tr')).toHaveTextContent('Yes: Free, no limit')
   })
 
   it('lets the Bank charges tile open Bank charges, with the real rules’ numbers in its mockup', async () => {
@@ -155,13 +161,14 @@ describe('LandingPage', () => {
     expect(path()).toBe('/app/stuck')
   })
 
-  it('shows every signature feature, Bank charges first and Stuck money next; new and Pro ones marked', () => {
+  it('shows every signature feature, splitting first and the money-back tools last; new and Pro ones marked', () => {
     renderLanding()
     const section = screen.getByRole('region', { name: 'One app for every split' })
     const titles = within(section).getAllByRole('heading', { level: 3 })
     expect(titles.map((t) => t.textContent)).toEqual(FEATURES.map((f) => f.title))
-    expect(FEATURES[0]).toMatchObject({ id: 'fees', isNew: true, size: 'full' })
-    expect(FEATURES[1]).toMatchObject({ id: 'stuck', isNew: true, size: 'full' })
+    expect(FEATURES[0]).toMatchObject({ id: 'describe' })
+    expect(FEATURES.at(-2)).toMatchObject({ id: 'fees', isNew: true, size: 'full' })
+    expect(FEATURES.at(-1)).toMatchObject({ id: 'stuck', isNew: true, size: 'full' })
     for (const feature of FEATURES) {
       const tile = screen.getByRole('heading', { name: feature.title }).closest('li') as HTMLElement
       expect(within(tile).queryByText('Pro') !== null).toBe(feature.pro === true)
@@ -229,7 +236,7 @@ describe('LandingPage', () => {
     expect(within(strip).getAllByRole('listitem').map((li) => li.textContent)).toEqual([
       'No password, no OTP',
       'No ads',
-      'Only you can open your data',
+      'Stored in India, locked by your passkey',
       'Works with any UPI app',
     ])
   })
