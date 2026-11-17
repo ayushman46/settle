@@ -157,8 +157,9 @@ export function PrivacyPage() {
       <LegalSection title={t('legal.privacy.section.cookies')}>
         <p>
           {NAME} sets one cookie, only to keep you signed in; page scripts can’t read it and it’s never used for
-          tracking. There are no analytics and no advertising trackers. Its fonts and icons are served from our own
-          site, so opening it doesn’t tell anyone else you did.
+          tracking. On the website we count page views with Vercel Web Analytics: it uses no cookies, can’t tell who you
+          are, and each address is stripped first (no links, IDs, UPI IDs or amounts), so all it sees is which page
+          was opened. There are no advertising trackers. Fonts and icons are served from our own site.
         </p>
       </LegalSection>
 

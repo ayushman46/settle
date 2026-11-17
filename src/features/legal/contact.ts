@@ -8,4 +8,4 @@
 export const SUPPORT_EMAIL = 'support@settle.example'
 
 /** Shown as "Last updated" on both policies (ISO date). Bump it whenever either text changes. */
-export const POLICIES_UPDATED = '2026-11-16'
+export const POLICIES_UPDATED = '2026-11-17'

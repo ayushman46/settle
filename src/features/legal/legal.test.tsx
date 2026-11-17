@@ -66,7 +66,7 @@ describe('PrivacyPage', () => {
     expect(leaves).toHaveTextContent('Razorpay')
     expect(leaves).toHaveTextContent('after the “#”')
     expect(screen.getByRole('region', { name: 'Cookies and tracking' })).toHaveTextContent('only to keep you signed in')
-    expect(screen.getByRole('region', { name: 'Cookies and tracking' })).toHaveTextContent('no analytics')
+    expect(screen.getByRole('region', { name: 'Cookies and tracking' })).toHaveTextContent('no advertising trackers')
   })
 
   it('says what Stuck money keeps and what the Android app reads for it, and that letters leave only when you send them', () => {
@@ -132,7 +132,8 @@ describe('TermsPage', () => {
 
   it('states the free AI allowance and that passes never auto-renew', () => {
     open('/terms')
-    expect(screen.getByRole('region', { name: 'AI features' })).toHaveTextContent(`${FREE_AI_PER_DAY} AI reads a day`)
+    expect(screen.getByRole('region', { name: 'AI features' })).toHaveTextContent(`${FREE_AI_PER_DAY} other AI reads a day`)
+    expect(screen.getByRole('region', { name: 'AI features' })).toHaveTextContent('Speaking a split has no daily limit')
     const pro = screen.getByRole('region', { name: `${BRAND.name} Pro` })
     expect(pro).toHaveTextContent('never renews by itself')
     expect(pro).toHaveTextContent('charged twice')

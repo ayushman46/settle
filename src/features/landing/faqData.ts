@@ -19,7 +19,7 @@ export const FAQ: readonly FaqEntry[] = [
     id: 'free',
     question: `Is ${NAME} really free?`,
     answer: [
-      `Yes. Splitting, groups, pay links, UPI QR codes, the collect tracker, nudges, Stuck money and backups are free for good, with no ads. You also get ${FREE_AI_PER_DAY} AI bill reads or “Just say it” splits a day.`,
+      `Yes. Splitting, groups, pay links, UPI QR codes, the collect tracker, nudges, Stuck money and backups are free for good, with no ads. Speaking a split is unlimited, and you get ${FREE_AI_PER_DAY} AI bill reads or typed “Just say it” splits a day.`,
       `${NAME} Pro adds unlimited AI and a few extras for people who split a lot.`,
     ],
   },

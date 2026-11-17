@@ -12,12 +12,16 @@ import { contextFor, resolveLanguage, startLanguage } from './i18n/language'
 import { setLanguage } from './i18n/runtime'
 import { trackKeyboardInset } from './lib/keyboardInset'
 import { keepAssetsOnTakeover } from './app/keepAssets'
+import { startAnalytics } from './app/analytics'
 
 const container = document.getElementById('root')
 if (!container) throw new Error(`${BRAND.name}: #root element is missing from index.html.`)
 
 // The saved theme and accent go on before the first paint: no flash of the wrong look.
 applyStoredAppearance()
+
+// Page views on the live site, addresses stripped of anything personal (see analytics.ts).
+startAnalytics()
 
 // iOS keeps sticky bottom actions under the on-screen keyboard; this lets them ride above it.
 trackKeyboardInset()

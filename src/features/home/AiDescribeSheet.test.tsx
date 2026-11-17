@@ -94,11 +94,11 @@ describe('AiDescribeSheet — reading a split', SLOW, () => {
     serveDescribe(described())
     const opened = await openSheet()
     const { sheet } = opened
-    expect(within(sheet).getByText('3 of 3 free AI splits left today')).toBeInTheDocument()
+    expect(within(sheet).getByText('3 of 3 free typed AI splits left today', { exact: false })).toBeInTheDocument()
     await sayIn(opened, 'Dinner 2400 with Riya and Sam')
     await within(sheet).findByRole('article', { name: 'Dinner' })
     expect(aiUsedToday()).toBe(1)
-    expect(within(sheet).getByText('2 of 3 free AI splits left today')).toBeInTheDocument()
+    expect(within(sheet).getByText('2 of 3 free typed AI splits left today', { exact: false })).toBeInTheDocument()
   })
 
   it('opens the split screen with the draft filled in, adding new people then', async () => {
@@ -233,7 +233,7 @@ describe('AiDescribeSheet — when it can’t read it', SLOW, () => {
     consumeAiQuota()
     const calls = serveDescribe(described())
     const opened = await openSheet()
-    expect(within(opened.sheet).getByText('You’ve used today’s 3 free AI splits')).toBeInTheDocument()
+    expect(within(opened.sheet).getByText('You’ve used today’s 3 free typed AI splits', { exact: false })).toBeInTheDocument()
     expect(within(opened.sheet).getByRole('button', { name: 'Get unlimited' })).toBeInTheDocument()
     await sayIn(opened, 'Dinner 2400 with Riya and Sam')
     expect(paywallState()).toMatchObject({ open: true, request: { feature: 'unlimited_ai' } })
@@ -370,6 +370,24 @@ describe('AiDescribeSheet — speak to split', SLOW, () => {
       total: 250000,
       banner: { icon: 'mic', title: 'Filled in from what you said', body: "Check the amount and who's in, then save." },
     })
+  })
+
+  it('speaking has no daily limit: read with today’s free typed splits used up, and nothing counted', async () => {
+    consumeAiQuota()
+    consumeAiQuota()
+    consumeAiQuota()
+    const calls = serveDescribe(described())
+    const opened = await openSheet()
+    expect(within(opened.sheet).getByText(/speaking is unlimited/)).toBeInTheDocument()
+    await listen(opened)
+    act(() => {
+      recognizer().say('dinner 2400 with Riya and Sam', true)
+      recognizer().stop()
+    })
+    expect(await within(opened.sheet).findByRole('article', { name: 'Dinner' })).toBeInTheDocument()
+    expect(calls).toHaveLength(1)
+    expect(paywallState().open).toBe(false)
+    expect(aiUsedToday()).toBe(3)
   })
 
   it('typed text is still sent as typed', async () => {

@@ -26,7 +26,7 @@ export const pro = {
   'pro.pitch.ai.title': 'Unlimited AI with Pro',
   // {free}: the free AI allowance a day; {count}: Pro's fair-use cap.
   'pro.pitch.ai.body':
-    'Free includes {free} AI scans or “Just say it” splits a day, and they reset at midnight. Pro lifts the limit — fair use, up to {count} a day.',
+    'Speaking a split is always unlimited. Free includes {free} AI scans or typed “Just say it” splits a day, and they reset at midnight. Pro lifts the limit — fair use, up to {count} a day.',
   'pro.pitch.ai.cta': 'Get unlimited AI',
   'pro.pitch.recurring.title': 'Recurring splits are part of Pro',
   'pro.pitch.recurring.body': 'Set up rent, Wi-Fi or Netflix once. Each month you get a reminder and split it in one tap.',

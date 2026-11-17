@@ -39,8 +39,8 @@ export function TermsPage() {
       <LegalSection title={t('legal.terms.section.ai')}>
         <p>
           Reading bills and “Just say it” use AI, which can make mistakes. {NAME} always shows you the result before
-          anything is saved — please check it. Free use includes {FREE_AI_PER_DAY} AI reads a day; Pro removes that
-          limit, subject to the fair-use allowance shown in the app. We may change the AI models we use or these
+          anything is saved — please check it. Speaking a split has no daily limit; free use includes {FREE_AI_PER_DAY} other AI reads a day (bills and
+          typed splits). Pro removes that limit, subject to the fair-use allowance shown in the app. We may change the AI models we use or these
           allowances to keep the service running well.
         </p>
       </LegalSection>

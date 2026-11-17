@@ -92,8 +92,9 @@ export const home = {
   'home.describe.note.addsUp': 'The amounts don’t add up to the total yet — you can fix that on the next screen.',
   'home.describe.note.newNames': 'New names are added to your people when you continue.',
   'home.describe.note.nothingSaved': 'Nothing is saved until you tap Save.',
-  'home.describe.quota.used': 'You’ve used today’s {limit} free AI splits',
-  'home.describe.quota.left': '{count} of {limit} free AI splits left today',
+  'home.describe.quota.used': 'You’ve used today’s {limit} free typed AI splits',
+  'home.describe.quota.left': '{count} of {limit} free typed AI splits left today',
+  'home.describe.quota.voiceFree': 'speaking is unlimited',
   // The small line above "Hi, {name}": a greeting for the time of day, never the same word as the heading's.
   'home.greet.morning': 'Good morning',
   'home.greet.afternoon': 'Good afternoon',

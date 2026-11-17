@@ -71,7 +71,8 @@ export const FREE_PERKS: readonly string[] = [
   'Unlimited splits, groups and friends',
   'Pay links, UPI QR codes and the collect tracker',
   'Nudges on WhatsApp and SMS',
-  `${FREE_AI_PER_DAY} AI bill reads or “Just say it” splits a day`,
+  'Unlimited voice splits',
+  `${FREE_AI_PER_DAY} AI bill reads or typed “Just say it” splits a day`,
   'Backup and restore, light and dark mode',
 ]
 

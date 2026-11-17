@@ -161,8 +161,10 @@ export function AiDescribeSheet({ open, onClose, startWith, groupId }: AiDescrib
   const read = async (value: string, saidIn?: VoiceLang): Promise<void> => {
     const clean = value.trim()
     if (!clean || aiOff) return
+    const lang = saidIn ?? (voice.spoken ? voice.lang : null)
+    // Speaking is free and unlimited; the daily allowance is for typed splits only.
     // Read fresh, not from this render: after unlocking Pro from the paywall this runs again.
-    if (!quotaFor(aiUsedToday(), hasFeature('unlimited_ai')).canUse) {
+    if (!lang && !quotaFor(aiUsedToday(), hasFeature('unlimited_ai')).canUse) {
       haptic('warning')
       openPaywall('unlimited_ai', { onUnlock: () => void read(clean, saidIn) })
       return
@@ -176,12 +178,11 @@ export function AiDescribeSheet({ open, onClose, startWith, groupId }: AiDescrib
       const groupNames = group ? group.memberIds.map((id) => (id === ME_ID ? 'Me' : (friends.find((f) => f.id === id)?.name ?? ''))).filter(Boolean) : []
       const people = [...new Set([...groupNames.filter((n) => n !== 'Me'), ...friends.filter((f) => f.id !== ME_ID).map((f) => f.name)])]
       // Spoken: the server hears which language, and that it came from speech recognition.
-      const lang = saidIn ?? (voice.spoken ? voice.lang : null)
       const spoken = lang ? { lang, source: 'voice' as const } : {}
       const read = await describeSplit(clean, { currency: group?.currency ?? profile.currency, people, today: today(), ...spoken }, controller.signal)
       const draft = group ? spreadToGroup(read, clean, groupNames) : read
       if (controller.signal.aborted) return
-      quota.consume()
+      if (!lang) quota.consume()
       haptic('success')
       setPhase({ kind: 'draft', text: clean, draft })
     } catch (error) {
@@ -378,7 +379,7 @@ export function AiDescribeSheet({ open, onClose, startWith, groupId }: AiDescrib
             {t('home.describe.off.body')}
           </Banner>
         ) : (
-          <QuotaLine limited={limited} remaining={quota.remaining} onUpgrade={() => openPaywall('unlimited_ai')} />
+          <QuotaLine limited={limited} remaining={quota.remaining} voice={voiceOn} onUpgrade={() => openPaywall('unlimited_ai')} />
         )}
 
         <p className="visually-hidden" aria-live="polite">
@@ -477,7 +478,7 @@ function announce(view: DescribeView): string {
     : t('home.describe.announce.nobody', vars)
 }
 
-function QuotaLine({ limited, remaining, onUpgrade }: { limited: boolean; remaining: number; onUpgrade: () => void }) {
+function QuotaLine({ limited, remaining, voice, onUpgrade }: { limited: boolean; remaining: number; voice: boolean; onUpgrade: () => void }) {
   const t = useT()
   if (!limited) {
     return (
@@ -488,8 +489,11 @@ function QuotaLine({ limited, remaining, onUpgrade }: { limited: boolean; remain
     )
   }
   return (
-    <p className={cx(styles.quota, remaining <= 0 && styles.quotaOut)}>
-      <span>{quotaLine(remaining)}</span>
+    <p className={cx(styles.quota, remaining <= 0 && !voice && styles.quotaOut)}>
+      <span>
+        {quotaLine(remaining)}
+        {voice ? ` · ${t('home.describe.quota.voiceFree')}` : ''}
+      </span>
       <button type="button" className={styles.quotaLink} onClick={onUpgrade}>
         {remaining <= 0 ? t('home.describe.getUnlimited') : t('home.describe.goUnlimited')}
       </button>
