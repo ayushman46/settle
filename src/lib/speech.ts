@@ -89,8 +89,15 @@ export function isSpeechSupported(): boolean {
   return recognitionClass() !== null
 }
 
-/** The longest one go of listening (the browser usually stops sooner, on silence). */
+/** The longest one go of listening (it usually ends sooner: on a pause, or Stop). */
 export const MAX_LISTEN_MS = 15_000
+
+/**
+ * Once something has been heard, this long with nothing new ends it. The browser's own
+ * end-of-speech cuts in at the first breath ("Rent 32000, … me, Aditya and Neha" came back as
+ * "rent 32000"), so we listen continuously and decide ourselves.
+ */
+export const END_SILENCE_MS = 1_600
 
 /** The browser's error names → ours (`aborted` is ours too: we stopped it, nothing to say). */
 export function speechErrorCode(error: string): SpeechErrorCode | null {
@@ -118,17 +125,73 @@ let active: SpeechRecognitionLike | null = null
 
 export interface RecognizerOptions {
   lang: VoiceLang
+  /** Everything heard so far, as it comes in. */
   onInterim(text: string): void
+  /** The whole utterance, once, just before `onEnd` (not when nothing was heard). */
   onFinal(result: SpeechResult): void
+  /** Only when nothing usable was heard. */
   onError(code: SpeechErrorCode): void
   onEnd(): void
   /** Hard cap on one go (default 15 s). */
   maxMs?: number
+  /** Quiet after speech that ends it (default 1.6 s). */
+  silenceMs?: number
+}
+
+/** One finished stretch of speech: its guesses, best first, and the top one's confidence. */
+export interface SpeechSegment {
+  alternatives: string[]
+  confidence: number | null
+}
+
+/** For comparing segments: lower-case, single spaces. */
+function squash(text: string): string {
+  return text.toLowerCase().replace(/\s+/g, ' ').trim()
 }
 
 /**
- * A recogniser for one utterance in `lang` (interim results on, up to 3 alternatives). Null when
- * the browser has none. Starting it aborts any other one still listening.
+ * The final segments in order, without repeats. Android Chrome in continuous mode can re-send the
+ * whole utterance as each new final ("dinner", "dinner 2400", "dinner 2400 with Riya"): a segment
+ * that starts with everything so far replaces it; one that's already at the end is dropped.
+ */
+export function mergeSegments(segments: readonly SpeechSegment[]): SpeechSegment[] {
+  const out: SpeechSegment[] = []
+  for (const segment of segments) {
+    const top = squash(segment.alternatives[0] ?? '')
+    if (!top) continue
+    const sofar = squash(out.map((s) => s.alternatives[0] ?? '').join(' '))
+    if (sofar && top.startsWith(sofar)) {
+      out.length = 0
+      out.push(segment)
+    } else if (sofar && (sofar === top || sofar.endsWith(` ${top}`))) {
+      continue
+    } else {
+      out.push(segment)
+    }
+  }
+  return out
+}
+
+/** The utterance from its segments: the tops joined, then each variant with one segment's other guesses. */
+export function joinSegments(segments: readonly SpeechSegment[]): SpeechResult | null {
+  if (segments.length === 0) return null
+  const tops = segments.map((s) => s.alternatives[0] ?? '')
+  const alternatives = [tops.join(' ')]
+  segments.forEach((segment, i) => {
+    for (const other of segment.alternatives.slice(1)) {
+      const text = tops.map((top, k) => (k === i ? other : top)).join(' ')
+      if (!alternatives.includes(text)) alternatives.push(text)
+    }
+  })
+  const known = segments.map((s) => s.confidence).filter((c): c is number => c !== null)
+  return { transcript: alternatives[0] ?? '', alternatives, confidence: known.length > 0 ? Math.min(...known) : null }
+}
+
+/**
+ * A recogniser for one utterance in `lang`: continuous, interim results on, up to 3 alternatives
+ * per stretch. It ends on a pause after speech, on Stop or at the cap, then hands over everything
+ * heard (what was still on screen when Stop came, too). Null when the browser has none. Starting
+ * it aborts any other one still listening.
  */
 export function createRecognizer(opts: RecognizerOptions): Recognizer | null {
   const Recognition = recognitionClass()
@@ -140,54 +203,80 @@ export function createRecognizer(opts: RecognizerOptions): Recognizer | null {
     return null
   }
   rec.lang = opts.lang
-  rec.continuous = false
+  rec.continuous = true
   rec.interimResults = true
   rec.maxAlternatives = 3
 
-  let timer: ReturnType<typeof setTimeout> | null = null
+  let cap: ReturnType<typeof setTimeout> | null = null
+  let quiet: ReturnType<typeof setTimeout> | null = null
   let finished = false
-  let gotFinal = false
+  let segments: SpeechSegment[] = []
+  /** What's heard but not final yet, with the finals before it. */
+  let pending = ''
+  let failure: SpeechErrorCode | null = null
   const clear = () => {
-    if (timer !== null) clearTimeout(timer)
-    timer = null
+    if (cap !== null) clearTimeout(cap)
+    if (quiet !== null) clearTimeout(quiet)
+    cap = null
+    quiet = null
   }
-  const finish = () => {
+  const finish = (deliver = true) => {
     if (finished) return
     finished = true
     clear()
     if (active === rec) active = null
+    const heard = joinSegments(segments) ?? (pending ? { transcript: pending, alternatives: [pending], confidence: null } : null)
+    if (deliver && heard) opts.onFinal(heard)
+    else if (deliver && failure) opts.onError(failure)
     opts.onEnd()
+  }
+  const halt = () => {
+    try {
+      rec.stop()
+    } catch {
+      finish()
+    }
   }
 
   rec.onresult = (event) => {
     if (finished) return
+    // The whole list every time: in continuous mode Android's resultIndex can't be trusted.
+    const finals: SpeechSegment[] = []
     let interim = ''
-    for (let i = event.resultIndex; i < event.results.length; i++) {
+    for (let i = 0; i < event.results.length; i++) {
       const result = event.results[i]
       if (!result) continue
       if (result.isFinal) {
         const alternatives: string[] = []
         for (let k = 0; k < result.length; k++) {
-          const text = result[k]?.transcript.trim()
+          const text = result[k]?.transcript.replace(/\s+/g, ' ').trim()
           if (text && !alternatives.includes(text)) alternatives.push(text)
         }
-        const top = result[0]
         if (alternatives.length === 0) continue
-        gotFinal = true
+        const top = result[0]
         const confidence = top && Number.isFinite(top.confidence) && top.confidence > 0 ? top.confidence : null
-        opts.onFinal({ transcript: alternatives[0] ?? '', alternatives, confidence })
+        finals.push({ alternatives, confidence })
       } else {
         interim += result[0]?.transcript ?? ''
       }
     }
-    if (!gotFinal && interim.trim()) opts.onInterim(interim.trim())
+    segments = mergeSegments(finals)
+    const sofar = segments.map((s) => s.alternatives[0] ?? '').join(' ')
+    const next = interim.replace(/\s+/g, ' ').trim()
+    if (!next || squash(sofar).endsWith(squash(next))) pending = ''
+    else pending = sofar && !squash(next).startsWith(squash(sofar)) ? `${sofar} ${next}` : next
+    const shown = pending || sofar
+    if (!shown) return
+    opts.onInterim(shown)
+    if (quiet !== null) clearTimeout(quiet)
+    quiet = setTimeout(halt, opts.silenceMs ?? END_SILENCE_MS)
   }
   rec.onerror = (event) => {
     if (finished) return
     const code = speechErrorCode(event.error)
-    if (code) opts.onError(code)
+    if (code) failure = code
   }
-  rec.onend = finish
+  rec.onend = () => finish()
 
   return {
     start() {
@@ -203,26 +292,16 @@ export function createRecognizer(opts: RecognizerOptions): Recognizer | null {
         rec.start()
       } catch {
         // Some browsers throw when started twice or without permission: report it plainly.
-        opts.onError('other')
+        failure = 'other'
         finish()
         return
       }
       clear()
-      timer = setTimeout(() => {
-        try {
-          rec.stop()
-        } catch {
-          finish()
-        }
-      }, opts.maxMs ?? MAX_LISTEN_MS)
+      cap = setTimeout(halt, opts.maxMs ?? MAX_LISTEN_MS)
     },
     stop() {
       clear()
-      try {
-        rec.stop()
-      } catch {
-        finish()
-      }
+      halt()
     },
     abort() {
       clear()
@@ -231,7 +310,7 @@ export function createRecognizer(opts: RecognizerOptions): Recognizer | null {
       } catch {
         // Not started.
       }
-      finish()
+      finish(false)
     },
   }
 }
@@ -241,12 +320,17 @@ const DIGIT = /[0-9०-९০-৯੦-੯૦-૯୦-୯௦-௯౦-౯೦-೯൦-�
 
 /**
  * Picks the transcript to use: the first alternative whose normalized text contains a digit
- * (an amount was heard), else the top one. `normalize` turns number words into digits.
+ * (an amount was heard), else the top one, or a longer guess that carries on from it (the top
+ * one sometimes drops the last words). `normalize` turns number words into digits.
  */
 export function bestTranscript(result: SpeechResult, normalize: (text: string) => string = (text) => text): string {
   const options = result.alternatives.length > 0 ? result.alternatives : [result.transcript]
-  for (const option of options) if (DIGIT.test(normalize(option))) return option
-  return options[0] ?? result.transcript
+  const chosen = options.find((option) => DIGIT.test(normalize(option))) ?? options[0] ?? result.transcript
+  // The top guess sometimes drops the end of what was said ("biryani 1450" when another guess
+  // has "biryani 1450 and Sana Sana paid"): a guess that carries on from it keeps those words.
+  const start = chosen.toLowerCase()
+  const longer = options.filter((option) => option.length > chosen.length && option.toLowerCase().startsWith(`${start} `))
+  return longer.reduce((best, option) => (option.length > best.length ? option : best), chosen)
 }
 
 export interface SpeechState {

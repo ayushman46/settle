@@ -294,6 +294,57 @@ export function matchKnownName(name: string, known: readonly string[]): string |
   return byFirstName.length === 1 ? (byFirstName[0] ?? null) : null
 }
 
+/**
+ * How a name sounds, roughly: its consonants, with Indian spellings and what speech recognition
+ * writes folded together ("Nikhil", "Nickel" → "nkl"; "Ishaan", "Ishan" → "sn").
+ */
+export function nameSound(name: string): string {
+  return fold(name)
+    .replace(/\s+/g, '')
+    .replace(/ph/g, 'f')
+    .replace(/ck/g, 'k')
+    .replace(/([bkgtdcjsp])h/g, '$1')
+    .replace(/c(?=[eiy])/g, 's')
+    .replace(/[cq]/g, 'k')
+    .replace(/z/g, 'j')
+    .replace(/w/g, 'v')
+    .replace(/x/g, 'ks')
+    .replace(/[aeiouyh]/g, '')
+    .replace(/(.)\1+/g, '$1')
+}
+
+/**
+ * For a spoken name that matched nobody exactly: the one known person it was probably meant to be.
+ * Speech recognition writes names it doesn't know as words or near-spellings ("Nickel" for
+ * Nikhil, "Ishan" for Ishaan, "Puja" for Pooja). Only when exactly one known first name is one
+ * letter away, or sounds the same with at least three consonants — otherwise null.
+ */
+export function matchSpokenName(name: string, known: readonly string[]): string | null {
+  const key = fold(name)
+  if (key === '' || key.includes(' ')) return null
+  const firstOf = (candidate: string) => fold(candidate).split(' ')[0] ?? ''
+  const spelt = spelling(key)
+  const near = known.filter((candidate) => spelt.length >= 4 && withinOneEdit(spelt, spelling(firstOf(candidate))))
+  if (near.length === 1) return near[0] ?? null
+  if (near.length > 1) return null
+  const sound = nameSound(key)
+  if (sound.length < 3) return null
+  const alike = known.filter((candidate) => nameSound(firstOf(candidate)) === sound)
+  return alike.length === 1 ? (alike[0] ?? null) : null
+}
+
+/** One spelling for the ways Indian names are written in English ("Pooja"/"Puja", "Ishaan"/"Ishan"). */
+function spelling(word: string): string {
+  return word
+    .replace(/oo/g, 'u')
+    .replace(/ee/g, 'i')
+    .replace(/ph/g, 'f')
+    .replace(/ck/g, 'k')
+    .replace(/w/g, 'v')
+    .replace(/z/g, 'j')
+    .replace(/(.)\1+/g, '$1')
+}
+
 /** Whether `a` becomes `b` with at most one letter added, removed or changed ("ria" ↔ "riya"). */
 export function withinOneEdit(a: string, b: string): boolean {
   if (Math.abs(a.length - b.length) > 1) return false

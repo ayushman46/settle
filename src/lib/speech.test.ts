@@ -4,6 +4,9 @@ import { normalizeNumberWords } from '../../shared/numberWords'
 import {
   bestTranscript,
   createRecognizer,
+  END_SILENCE_MS,
+  joinSegments,
+  mergeSegments,
   isSpeechSupported,
   MAX_LISTEN_MS,
   resetSpeechForTests,
@@ -41,13 +44,18 @@ class FakeRecognition implements SpeechRecognitionLike {
     this.onerror?.({ error: 'aborted' })
     this.onend?.()
   }
+  /** Chrome's list of results so far (continuous mode keeps them; an interim is replaced by the next). */
+  results: Array<{ isFinal: boolean } & Array<{ transcript: string; confidence: number }>> = []
   /** One result: interim (one alternative) or final (several). */
   say(alternatives: string[], isFinal: boolean, confidence = 0.9): void {
     const result = Object.assign(
       alternatives.map((transcript, i) => ({ transcript, confidence: i === 0 ? confidence : 0.5 })),
       { isFinal },
     )
-    const event: SpeechRecognitionEventLike = { resultIndex: 0, results: Object.assign([result], {}) }
+    if (this.results.at(-1)?.isFinal === false) this.results.pop()
+    const resultIndex = this.results.length
+    this.results.push(result)
+    const event: SpeechRecognitionEventLike = { resultIndex, results: Object.assign([...this.results], {}) }
     this.onresult?.(event)
   }
   fail(error: string): void {
@@ -82,12 +90,12 @@ describe('isSpeechSupported / createRecognizer', () => {
     expect(createRecognizer({ lang: 'hi-IN', ...handlers() })).toBeNull()
   })
 
-  it('uses the prefixed or standard class, set up for one utterance with 3 alternatives', () => {
+  it('uses the prefixed or standard class, listening continuously with 3 alternatives', () => {
     install()
     expect(isSpeechSupported()).toBe(true)
     const rec = createRecognizer({ lang: 'hi-IN', ...handlers() })
     rec?.start()
-    expect(latest()).toMatchObject({ lang: 'hi-IN', continuous: false, interimResults: true, maxAlternatives: 3, started: 1 })
+    expect(latest()).toMatchObject({ lang: 'hi-IN', continuous: true, interimResults: true, maxAlternatives: 3, started: 1 })
     vi.unstubAllGlobals()
     vi.stubGlobal('SpeechRecognition', FakeRecognition)
     expect(isSpeechSupported()).toBe(true)
@@ -95,20 +103,87 @@ describe('isSpeechSupported / createRecognizer', () => {
 })
 
 describe('createRecognizer — events', () => {
-  it('passes interim text, then the final result with its alternatives, then the end', () => {
+  it('passes interim text, then the whole utterance with its alternatives once it ends', () => {
     install()
     const h = handlers()
     createRecognizer({ lang: 'hi-IN', ...h })?.start()
+    expect(latest()).toMatchObject({ continuous: true, interimResults: true, maxAlternatives: 3 })
     latest().say(['dhai hazaar ka'], false)
     expect(h.onInterim).toHaveBeenLastCalledWith('dhai hazaar ka')
     latest().say(['dhai hazaar ka dinner', 'dhai hazaar ka dinner riya', 'dhai hazaar ka dinner'], true, 0.82)
+    expect(h.onFinal).not.toHaveBeenCalled()
+    latest().stop()
     expect(h.onFinal).toHaveBeenCalledWith({
       transcript: 'dhai hazaar ka dinner',
       alternatives: ['dhai hazaar ka dinner', 'dhai hazaar ka dinner riya'],
       confidence: 0.82,
     })
-    latest().stop()
     expect(h.onEnd).toHaveBeenCalledTimes(1)
+  })
+
+  it('keeps listening through a pause, and joins the stretches', () => {
+    vi.useFakeTimers()
+    install()
+    const h = handlers()
+    createRecognizer({ lang: 'en-IN', ...h })?.start()
+    latest().say(['rent 32000', 'went 32000'], true)
+    vi.advanceTimersByTime(END_SILENCE_MS - 100)
+    expect(latest().stopped).toBe(0)
+    latest().say(['me Aditya'], false)
+    expect(h.onInterim).toHaveBeenLastCalledWith('rent 32000 me Aditya')
+    latest().say(['me Aditya and Neha'], true)
+    vi.advanceTimersByTime(END_SILENCE_MS)
+    expect(latest().stopped).toBe(1)
+    expect(h.onFinal).toHaveBeenCalledWith({
+      transcript: 'rent 32000 me Aditya and Neha',
+      alternatives: ['rent 32000 me Aditya and Neha', 'went 32000 me Aditya and Neha'],
+      confidence: 0.9,
+    })
+  })
+
+  it('ends on its own after a pause once something is heard (not before)', () => {
+    vi.useFakeTimers()
+    install()
+    const h = handlers()
+    createRecognizer({ lang: 'en-IN', ...h })?.start()
+    vi.advanceTimersByTime(END_SILENCE_MS * 3)
+    expect(latest().stopped).toBe(0)
+    latest().say(['lunch 450 with Sneha'], true)
+    vi.advanceTimersByTime(END_SILENCE_MS)
+    expect(latest().stopped).toBe(1)
+    expect(h.onFinal).toHaveBeenCalledTimes(1)
+  })
+
+  it("keeps what was on screen when Stop comes before the browser's final", () => {
+    install()
+    const h = handlers()
+    createRecognizer({ lang: 'en-IN', ...h })?.start()
+    latest().say(['cab 840 with Riya'], false)
+    latest().stop()
+    expect(h.onFinal).toHaveBeenCalledWith({ transcript: 'cab 840 with Riya', alternatives: ['cab 840 with Riya'], confidence: null })
+    expect(h.onError).not.toHaveBeenCalled()
+  })
+
+  it("doesn't repeat Android's cumulative finals", () => {
+    install()
+    const h = handlers()
+    createRecognizer({ lang: 'en-IN', ...h })?.start()
+    latest().say(['dinner'], true)
+    latest().say(['dinner 2400'], true)
+    latest().say(['dinner 2400 with Riya'], true)
+    latest().say(['with Riya'], true)
+    latest().stop()
+    expect(h.onFinal.mock.calls[0]?.[0].transcript).toBe('dinner 2400 with Riya')
+  })
+
+  it('reports an error only when nothing was heard', () => {
+    install()
+    const h = handlers()
+    createRecognizer({ lang: 'en-IN', ...h })?.start()
+    latest().say(['petrol 3000 with Vikram'], true)
+    latest().fail('network')
+    expect(h.onError).not.toHaveBeenCalled()
+    expect(h.onFinal.mock.calls[0]?.[0].transcript).toBe('petrol 3000 with Vikram')
   })
 
   it.each([
@@ -175,6 +250,26 @@ describe('createRecognizer — events', () => {
   })
 })
 
+describe('mergeSegments / joinSegments', () => {
+  it("joins stretches, with each one's other guesses as alternatives", () => {
+    const joined = joinSegments(
+      mergeSegments([
+        { alternatives: ['pizza for 800 and 99', 'pizza for 899'], confidence: 0.7 },
+        { alternatives: ['split with Rahul', 'split with Rahel'], confidence: 0.9 },
+      ]),
+    )
+    expect(joined).toEqual({
+      transcript: 'pizza for 800 and 99 split with Rahul',
+      alternatives: ['pizza for 800 and 99 split with Rahul', 'pizza for 899 split with Rahul', 'pizza for 800 and 99 split with Rahel'],
+      confidence: 0.7,
+    })
+  })
+
+  it('is null with nothing heard', () => {
+    expect(joinSegments(mergeSegments([{ alternatives: ['  '], confidence: null }]))).toBeNull()
+  })
+})
+
 describe('bestTranscript', () => {
   it('takes the first alternative with an amount once number words are digits', () => {
     const result = {
@@ -189,6 +284,11 @@ describe('bestTranscript', () => {
     expect(bestTranscript({ transcript: 'dinner with Riya', alternatives: ['dinner with Riya', 'dinner with Rhea'], confidence: null })).toBe(
       'dinner with Riya',
     )
+  })
+
+  it('takes a guess that carries on from it, when the top one dropped the last words', () => {
+    const result = { transcript: 'biryani 1450', alternatives: ['biryani 1450', 'biryani 1450 and Sana Sana paid', 'Biryani 1450 present in Sana'], confidence: null }
+    expect(bestTranscript(result)).toBe('biryani 1450 and Sana Sana paid')
   })
 
   it('counts Indian digits too', () => {

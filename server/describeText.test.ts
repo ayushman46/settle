@@ -9,6 +9,8 @@ import {
   isNobody,
   isSpeakerName,
   matchKnownName,
+  matchSpokenName,
+  nameSound,
   mentionsPayer,
   payerFromText,
   resolveDate,
@@ -396,5 +398,32 @@ describe('Indian languages (spec 03 §5.3)', () => {
   it('matches composed and decomposed letters alike (য় vs য + nukta)', () => {
     const decomposed = 'আমি দিয়েছি 500'.normalize('NFD')
     expect(payerFromText(decomposed, [])).toBe('Me')
+  })
+})
+
+describe('matchSpokenName', () => {
+  // What Chrome's recogniser wrote for names it didn't know, in the 100-recording voice test.
+  const friends = ['Nikhil Rao', 'Ishaan', 'Pooja', 'Sana', 'Kabir', 'Riya', 'Mihir']
+
+  it.each([
+    ['Nickel', 'Nikhil Rao'],
+    ['Ishan', 'Ishaan'],
+    ['Puja', 'Pooja'],
+    ['Kabeer', 'Kabir'],
+  ])('hears "%s" as %s', (heard, known) => {
+    expect(matchSpokenName(heard, friends)).toBe(known)
+  })
+
+  it.each(['Sonu', 'Rhea', 'Kapil', 'Google', 'Little Angel', 'Ayaan', ''])('leaves "%s" as a new name', (heard) => {
+    expect(matchSpokenName(heard, friends)).toBeNull()
+  })
+
+  it('stays out of it when two friends would fit', () => {
+    expect(matchSpokenName('Ishan', ['Ishaan', 'Ishana'])).toBeNull()
+  })
+
+  it('folds a name to its consonants', () => {
+    expect(nameSound('Nikhil')).toBe('nkl')
+    expect(nameSound('Nickel')).toBe('nkl')
   })
 })

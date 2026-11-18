@@ -8,6 +8,7 @@
  */
 import { z } from 'zod'
 import { normalizeNumberWords } from '../shared/numberWords'
+import { repairSpokenText } from '../shared/spoken'
 import {
   DESCRIBE_BUDGET_MS,
   DESCRIBE_LIMITS,
@@ -33,6 +34,7 @@ import {
   isNobody,
   isSpeakerName,
   matchKnownName,
+  matchSpokenName,
   mentionsPayer,
   payerFromText,
   resolveDate,
@@ -77,7 +79,10 @@ export function parseDescribeRequest(json: unknown, today: string): RequestCheck
   if (!parsed.success) return { ok: false, message: REQUEST_MESSAGES.malformed }
   // Number words become digits before anything reads the text ("dhai hazaar" → 2500), so the
   // amount checks, the title and the model all see the same, exact amount.
-  const text = normalizeNumberWords(cleanText(parsed.data.text) ?? '')
+  const plain = normalizeNumberWords(cleanText(parsed.data.text) ?? '')
+  const hint = /^[A-Za-z]{3}$/.test(parsed.data.currency?.trim() ?? '') ? (parsed.data.currency ?? '').trim().toUpperCase() : null
+  // Spoken: undo what speech recognition gets wrong ("200400" for "two thousand four hundred").
+  const text = parsed.data.source === 'voice' ? repairSpokenText(plain, hint) : plain
   if (text === '') return { ok: false, message: REQUEST_MESSAGES.empty }
   if (Array.from(text).length > DESCRIBE_LIMITS.maxTextChars) return { ok: false, message: REQUEST_MESSAGES.tooLong }
 
@@ -94,7 +99,7 @@ export function parseDescribeRequest(json: unknown, today: string): RequestCheck
     people.push(name)
   }
 
-  const currency = /^[A-Za-z]{3}$/.test(parsed.data.currency?.trim() ?? '') ? (parsed.data.currency ?? '').trim().toUpperCase() : null
+  const currency = hint
   const day = parsed.data.today?.trim() ?? ''
   const input: DescribeInput = { text, currency, people, today: isIsoDate(day) ? day : today }
   const { lang, source } = parsed.data
@@ -204,8 +209,8 @@ function truncate(text: string, max: number): string {
   return characters.length > max ? characters.slice(0, max).join('').trimEnd() : text
 }
 
-/** "@riya's" → "Riya"; the speaker → "Me"; a known person → their known spelling; nobody → null. */
-function canonicalName(raw: string, known: readonly string[]): string | null {
+/** "@riya's" → "Riya"; the speaker → "Me"; a known person → their known spelling (a misheard one too, when it was spoken); nobody → null. */
+function canonicalName(raw: string, known: readonly string[], spoken = false): string | null {
   const name = raw
     .replace(/^[\s@#•*\-–—:]+/, '')
     .replace(/['’]s$/i, '')
@@ -215,7 +220,8 @@ function canonicalName(raw: string, known: readonly string[]): string | null {
   if (name === '') return null
   if (isSpeakerName(name)) return ME
   if (isNobody(name)) return null
-  return matchKnownName(name, known) ?? truncate(capitalise(name, false), MAX_NAME_CHARS)
+  const matched = matchKnownName(name, known) ?? (spoken ? matchSpokenName(name, known) : null)
+  return matched ?? truncate(capitalise(name, false), MAX_NAME_CHARS)
 }
 
 /* ------------------------------------------------------------------ splitting rules */
@@ -368,12 +374,14 @@ export function normalizeDescribed(raw: unknown, input: DescribeInput): Describe
   if (!isRecord(raw)) return NOT_A_SPLIT
   if (toBoolean(pick(raw, FIELDS.isExpense)) === false) return NOT_A_SPLIT
   const { text } = input
+  // A spoken name that matches nobody exactly may still be a known person, misheard.
+  const spoken = input.source === 'voice'
 
   // People: canonical names, only those the text mentions, each once.
   const people: RawPerson[] = []
   const seen = new Set<string>()
   for (const person of rawPeople(pick(raw, FIELDS.people))) {
-    const name = canonicalName(person.name, input.people)
+    const name = canonicalName(person.name, input.people, spoken)
     if (name === null) continue
     if (name !== ME && !textMentions(text, person.name) && !textMentions(text, name)) continue
     const key = fold(name)
@@ -419,7 +427,7 @@ export function normalizeDescribed(raw: unknown, input: DescribeInput): Describe
   let payer = payerFromText(text, settled.people.map((person) => person.name))
   const payerRaw = cleanText(pick(raw, FIELDS.payer))
   if (payer === null && payerRaw !== null && mentionsPayer(text)) {
-    const name = canonicalName(payerRaw, input.people)
+    const name = canonicalName(payerRaw, input.people, spoken)
     if (name === ME ? speaksInFirstPerson(text) : name !== null && (textMentions(text, payerRaw) || textMentions(text, name))) {
       payer = settled.people.find((person) => name !== null && fold(person.name) === fold(name))?.name ?? name
     }

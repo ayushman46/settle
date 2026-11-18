@@ -362,7 +362,7 @@ describe('AiDescribeSheet — speak to split', SLOW, () => {
     const calls = serveDescribe(described({ amount: 2500 }))
     const opened = await openSheet()
     const panel = await listen(opened)
-    expect(recognizer()).toMatchObject({ lang: 'hi-IN', interimResults: true, maxAlternatives: 3, continuous: false })
+    expect(recognizer()).toMatchObject({ lang: 'hi-IN', interimResults: true, maxAlternatives: 3, continuous: true })
     expect(within(opened.sheet).getByRole('button', { name: 'Speak instead' })).toHaveAttribute('aria-pressed', 'true')
     expect(panel).toHaveTextContent('Listening…')
     expect(panel).toHaveTextContent('ढाई हज़ार का डिनर रिया और सैम के साथ, मैंने दिया')

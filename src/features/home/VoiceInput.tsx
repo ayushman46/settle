@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { ChevronDown, Mic, Square } from 'lucide-react'
 import { findNumberPhrases, normalizeNumberWords } from '../../../shared/numberWords'
+import { repairSpokenText } from '../../../shared/spoken'
 import { Button } from '../../components'
 import { useT } from '../../i18n'
 import { bestTranscript, useSpeech, type SpeechErrorCode } from '../../lib/speech'
@@ -55,9 +56,10 @@ export default function VoiceInput({ lang, onLanguage, onResult, onError, onDone
     if (!wasListening.current) return
     wasListening.current = false
     if (status === 'done' && result) {
-      const best = bestTranscript(result, normalizeNumberWords)
+      const tidy = (said: string) => repairSpokenText(normalizeNumberWords(said))
+      const best = bestTranscript(result, tidy)
       const heard = findNumberPhrases(best).map((span) => ({ text: span.text, value: span.value }))
-      latest.current.onResult({ text: normalizeNumberWords(best), heard })
+      latest.current.onResult({ text: tidy(best), heard })
     } else if (status === 'error' && error) {
       latest.current.onError(error)
     } else {

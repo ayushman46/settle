@@ -55,6 +55,18 @@ describe('parseDescribeRequest', () => {
     expect(check).toEqual({ ok: true, input: { text: 'Cab 840 with Riya', currency: 'INR', people: ['Riya Sharma', 'Sam'], today: '2026-10-20' } })
   })
 
+  it("undoes speech recognition's slips in spoken text only", () => {
+    const heard = 'dinner 200400 with Riya and Sam iPad'
+    expect(parseDescribeRequest({ text: heard, source: 'voice', lang: 'en-IN', currency: 'INR' }, TODAY)).toMatchObject({
+      ok: true,
+      input: { text: 'dinner 2400 with Riya and Sam I paid', source: 'voice' },
+    })
+    expect(parseDescribeRequest({ text: 'coffee £360 with Ishan', source: 'voice', currency: 'INR' }, TODAY)).toMatchObject({
+      input: { text: 'coffee 360 with Ishan' },
+    })
+    expect(parseDescribeRequest({ text: heard, currency: 'INR' }, TODAY)).toMatchObject({ input: { text: heard } })
+  })
+
   it('treats hints as optional and forgives odd ones', () => {
     expect(parseDescribeRequest({ text: 'Cab 840' }, TODAY)).toEqual({ ok: true, input: { text: 'Cab 840', currency: null, people: [], today: TODAY } })
     expect(parseDescribeRequest({ text: 'Cab 840', currency: 'rupees', people: null, today: 'yesterday' }, TODAY)).toEqual({
