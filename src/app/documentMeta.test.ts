@@ -68,7 +68,7 @@ describe('index.html', () => {
     expect(meta('meta[name="description"]')).toMatch(/split.*UPI/i)
     expect(meta('meta[property="og:title"]')).toBe(`${BRAND.name} — ${BRAND.tagline}`)
     expect(meta('meta[property="og:description"]')).toMatch(/UPI/)
-    expect(meta('meta[property="og:image"]')).toBe('https://settleupi.vercel.app/og-image.png')
+    expect(meta('meta[property="og:image"]')).toBe('https://settleupi.vercel.app/og-image.jpg')
     expect(meta('meta[name="twitter:card"]')).toBe('summary_large_image')
   })
 
