@@ -1,7 +1,8 @@
 /**
  * Settle accounts: `/api/cloud/*` passes requests to the `settle-api` Edge Function on Supabase
- * (supabase/functions/settle-api) and keeps the passkey session in an HttpOnly cookie on our own
- * domain, so page scripts never see it.
+ * (supabase/functions/settle-api; pay requests and phone notifications go to its sibling,
+ * settle-notify) and keeps the passkey session in an HttpOnly cookie on our own domain, so page
+ * scripts never see it.
  *
  * The function answers a new session in `x-settle-session-set` (or `x-settle-session-clear`);
  * those headers become the cookie here and are never passed to the browser. State-changing
@@ -23,6 +24,13 @@ const MAX_SYNC_BYTES = 1_500_000
 const UPSTREAM_TIMEOUT_MS = 20_000
 const TOKEN = /^[A-Za-z0-9_-]{40,64}$/
 const METHODS = new Set(['GET', 'POST', 'PATCH', 'DELETE'])
+/** Pay requests and phone notifications live in a sibling function, settle-notify. */
+const NOTIFY_PATHS = /^\/(?:requests|push)(?:\/|$)/
+
+/** settle-notify's URL next to settle-api's (null when settle-api is somewhere else). */
+export function notifyUrl(apiUrl: string): string | null {
+  return apiUrl.endsWith('/settle-api') ? `${apiUrl.slice(0, -'/settle-api'.length)}/settle-notify` : null
+}
 
 export interface CloudOptions {
   /** The Edge Function's URL, without a trailing slash; null turns accounts off. */
@@ -80,9 +88,11 @@ export function registerCloud(app: Hono, { url, trust, log, fetchImpl = fetch }:
     if (token && TOKEN.test(token)) headers['x-settle-session'] = token
 
     const search = new URL(c.req.url).search
+    const sub = c.req.path.slice(COOKIE_PATH.length)
+    const base = NOTIFY_PATHS.test(sub) ? (notifyUrl(url) ?? url) : url
     let upstream: Response
     try {
-      upstream = await fetchImpl(`${url}${c.req.path.slice(COOKIE_PATH.length)}${search}`, {
+      upstream = await fetchImpl(`${base}${sub}${search}`, {
         method,
         headers,
         body,

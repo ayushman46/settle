@@ -8,6 +8,7 @@ import { reloadStores } from '../../../data/store'
 import { expenseSchema, friendSchema, groupSchema } from '../../../data/schemas'
 import { t } from '../../../i18n'
 import { cloud } from '../api'
+import { announceNotified } from '../payRequests'
 import { batches, emptyShadow, hashOf, planPull, planPush, recordPushed, type LocalData, type Parsers, type Pulled, type Shadow } from './engine'
 import { SHADOW_KEY, setSyncStatus } from './status'
 
@@ -185,6 +186,7 @@ async function pullAll(shadow: Shadow, mode: 'normal' | 'serverWins'): Promise<S
 async function pushAll(shadow: Shadow): Promise<Shadow | null> {
   let current = shadow
   const plan = planPush(current, readLocal(), Date.now(), hash)
+  let pushed = false
   for (const batch of batches(plan)) {
     const res = await cloud<{ written: number }>('POST', '/sync/push', batch.payload)
     if (!res.ok) {
@@ -193,6 +195,12 @@ async function pushAll(shadow: Shadow): Promise<Shadow | null> {
     }
     current = recordPushed(current, batch.entries)
     saveShadow(current)
+    pushed = true
+  }
+  // Friends on Settle in new splits are asked to pay (best effort: the sync is done either way).
+  if (pushed) {
+    const raised = await cloud<{ notified: number }>('POST', '/requests/raise', {})
+    if (raised.ok) announceNotified(raised.data.notified)
   }
   return current
 }

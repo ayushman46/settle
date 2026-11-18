@@ -31,6 +31,7 @@ import { SpentCard } from '../spent/SpentCard'
 import { SwapCard } from '../swap/SwapCard'
 import { TodayList } from '../today/TodayList'
 import { AccountGroupsCard } from '../account/AccountGroupsCard'
+import { PayRequestsCard } from '../account/PayRequestsCard'
 import { TripOverHome } from '../wrapped/TripOver'
 import { HomeQuickActions } from './HomeQuickActions'
 import { InstallCard } from '../install'
@@ -90,6 +91,8 @@ export function HomeScreen() {
       </div>
 
       <BillDraftCard />
+
+      <PayRequestsCard />
 
       <HomeQuickActions stuckCard={stuck !== null} />
 

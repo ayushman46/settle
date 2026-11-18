@@ -42,6 +42,22 @@ describe('/api/cloud', () => {
     expect(res.headers.get('cache-control')).toBe('no-store')
   })
 
+  it('sends pay requests and notification sign-ups to settle-notify, next to settle-api', async () => {
+    const { app, fetchImpl } = setup(() => json({ requests: [] }), 'https://x.supabase.co/functions/v1/settle-api')
+    const cookie = { cookie: `${CLOUD_SESSION_COOKIE}=${TOKEN}` }
+    await app.request('http://localhost/api/cloud/requests', { headers: cookie })
+    await app.request('http://localhost/api/cloud/push/subscribe', post({ endpoint: 'https://push.test/1' }, cookie))
+    await app.request('http://localhost/api/cloud/requestsx', { headers: cookie })
+    await app.request('http://localhost/api/cloud/me', { headers: cookie })
+    expect(fetchImpl.mock.calls.map(([url]) => String(url))).toEqual([
+      'https://x.supabase.co/functions/v1/settle-notify/requests',
+      'https://x.supabase.co/functions/v1/settle-notify/push/subscribe',
+      'https://x.supabase.co/functions/v1/settle-api/requestsx',
+      'https://x.supabase.co/functions/v1/settle-api/me',
+    ])
+    expect((fetchImpl.mock.calls[0]![1]!.headers as Record<string, string>)['x-settle-session']).toBe(TOKEN)
+  })
+
   it('sends the cookie on as the session header, and clears it when the account says so', async () => {
     const { app, fetchImpl } = setup(() => json({ error: { code: 'unauthenticated' } }, { 'x-settle-session-clear': '1' }, 401))
     const res = await app.request('http://localhost/api/cloud/me', { headers: { cookie: `${CLOUD_SESSION_COOKIE}=${TOKEN}` } })

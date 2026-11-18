@@ -332,3 +332,41 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(networkThenCache(request))
   }
 })
+
+/*
+ * Phone notifications (Web Push): a friend on Settle split something with you ("Ayush split Dinner
+ * with you · Your share is ₹800"). Tapping it opens Settle, where the request waits with Pay.
+ * Only same-origin app paths are opened, whatever the message says.
+ */
+self.addEventListener('push', (event) => {
+  let data
+  try {
+    data = event.data ? event.data.json() : {}
+  } catch {
+    data = { body: event.data ? event.data.text() : '' }
+  }
+  const title = typeof data.title === 'string' && data.title ? data.title.slice(0, 120) : 'Settle'
+  const body = typeof data.body === 'string' ? data.body.slice(0, 240) : 'Someone asked you to pay.'
+  const url = typeof data.url === 'string' && data.url.startsWith('/app') ? data.url : '/app'
+  event.waitUntil(
+    self.registration.showNotification(title, {
+      body,
+      tag: typeof data.tag === 'string' ? data.tag : undefined,
+      icon: '/icon-192.png',
+      badge: '/icon-192.png',
+      data: { url },
+    }),
+  )
+})
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close()
+  const target = new URL(event.notification.data?.url || '/app', self.location.origin).href
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windows) => {
+      const open = windows.find((w) => new URL(w.url).origin === self.location.origin)
+      if (open) return open.navigate(target).then((w) => (w || open).focus())
+      return self.clients.openWindow(target)
+    }),
+  )
+})

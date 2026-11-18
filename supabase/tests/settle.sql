@@ -196,4 +196,51 @@ begin
   assert not has_function_privilege('anon', 'public.delete_account(uuid)', 'execute'), 'anon cannot run delete_account';
 end $$;
 
+
+-- Pay requests: raised for friends on Settle, never twice, kept in step, closed when paid back or deleted.
+begin;
+do $t$
+declare
+  a uuid; r uuid; n integer; amt bigint; st text; nowms bigint := (extract(epoch from now()) * 1000)::bigint;
+begin
+  insert into public.profiles (display_name, phone_number) values ('TestA', '+919800000101') returning id into a;
+  insert into public.profiles (display_name, phone_number) values ('TestR', '+919800000102') returning id into r;
+  insert into public.user_friends (user_id, id, name, phone, created_at, last_used_at, updated_at) values
+    (a, 'f1', 'Riya', '098000 00102', nowms, nowms, nowms), (a, 'f2', 'Sam', null, nowms, nowms, nowms);
+  insert into public.user_expenses (user_id, id, kind, title, category, currency, total, date, payer_id, mode, source, created_at, updated_at)
+    values (a, 'e1', 'split', 'Dinner', 'food', 'INR', 240000, '2026-11-18', 'me', 'equal', 'manual', nowms, nowms);
+  insert into public.user_expense_shares values (a, 'e1', 'me', 80000), (a, 'e1', 'f1', 80000), (a, 'e1', 'f2', 80000);
+  select count(*) into n from public.raise_pay_requests(a);
+  assert n = 1, format('one request raised, got %s', n);
+  select amount, status into amt, st from public.pay_requests where from_user = a and to_user = r;
+  assert amt = 80000 and st = 'open', 'Riya asked for 800';
+  select count(*) into n from public.raise_pay_requests(a);
+  assert n = 0, 'not raised twice';
+  update public.user_expense_shares set share = 90000 where user_id = a and expense_id = 'e1' and friend_id = 'f1';
+  perform public.raise_pay_requests(a);
+  select amount into amt from public.pay_requests where from_user = a and to_user = r;
+  assert amt = 90000, 'amount follows the split';
+  update public.user_expenses set paid_back = '{"f1": 1}'::jsonb where user_id = a and id = 'e1';
+  perform public.raise_pay_requests(a);
+  select status into st from public.pay_requests where from_user = a and to_user = r;
+  assert st = 'settled', format('paid back → settled, got %s', st);
+  insert into public.user_expenses (user_id, id, kind, title, category, currency, total, date, payer_id, mode, source, created_at, updated_at)
+    values (a, 'e2', 'split', 'Cab', 'travel', 'INR', 84000, '2026-11-18', 'me', 'equal', 'manual', nowms, nowms);
+  insert into public.user_expense_shares values (a, 'e2', 'me', 42000), (a, 'e2', 'f1', 42000);
+  select count(*) into n from public.raise_pay_requests(a);
+  assert n = 1, 'cab raised';
+  update public.user_expenses set deleted = true where user_id = a and id = 'e2';
+  perform public.raise_pay_requests(a);
+  select status into st from public.pay_requests where from_user = a and expense_id = 'e2';
+  assert st = 'withdrawn', 'deleted → withdrawn';
+  -- Someone else paid: no request.
+  insert into public.user_expenses (user_id, id, kind, title, category, currency, total, date, payer_id, mode, source, created_at, updated_at)
+    values (a, 'e3', 'split', 'Lunch', 'food', 'INR', 1000, '2026-11-18', 'f1', 'equal', 'manual', nowms, nowms);
+  insert into public.user_expense_shares values (a, 'e3', 'me', 500), (a, 'e3', 'f1', 500);
+  select count(*) into n from public.raise_pay_requests(a);
+  assert n = 0, 'only splits I paid';
+  assert public.indian_mobile('+91 98765-43210') = '+919876543210' and public.indian_mobile('12345') is null, 'phone folding';
+end $t$;
+rollback;
+
 \echo 'Database rules: all good.'
