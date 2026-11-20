@@ -636,7 +636,7 @@ describe('POST /api/describe', () => {
     ['a missing text', {}, REQUEST_MESSAGES.malformed],
     ['a non-string text', { text: 42 }, REQUEST_MESSAGES.malformed],
     ['an empty text', { text: '  ' }, REQUEST_MESSAGES.empty],
-    ['a text over 500 characters', { text: 'a'.repeat(501) }, REQUEST_MESSAGES.tooLong],
+    ['a text over 1200 characters', { text: 'a'.repeat(1201) }, REQUEST_MESSAGES.tooLong],
     ['more than 50 people', { text: 'Cab 840', people: Array.from({ length: 51 }, (_, i) => `P${i}`) }, REQUEST_MESSAGES.tooManyPeople],
   ])('rejects %s with 400', async (_label, body, message) => {
     const response = await expectError(await postDescribe(makeApp(), body), 400, 'bad_request')

@@ -116,6 +116,8 @@ export const STORAGE_KEYS = {
   scanfriend: 'settle.v10.scanfriend',
   /** v10: Group health (src/features/health): how a group’s money stands. */
   health: 'settle.v10.health',
+  /** v11: Nicknames you taught Settle by picking someone under a voice split (src/features/home/nicknames.ts). */
+  nicknames: 'settle.v11.nicknames',
   /** v10: Paid twice? (src/features/twice): one bill paid by two people. */
   twice: 'settle.v10.twice',
   /** v10: Paid too much (src/features/credit): an overpayment kept as credit. */

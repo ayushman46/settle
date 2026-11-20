@@ -1,0 +1,257 @@
+.who {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-1) var(--s-3);
+}
+
+.title {
+  font: var(--text-label);
+}
+
+.summary {
+  color: var(--ink-2);
+  font: var(--text-caption);
+}
+
+.summaryCheck {
+  color: var(--warning-ink);
+  font-weight: 650;
+}
+
+.rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+.row {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.row.check {
+  border-color: color-mix(in srgb, var(--warning) 55%, var(--line));
+  background: color-mix(in srgb, var(--warning-soft) 45%, var(--surface));
+}
+
+.rowButton {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  width: 100%;
+  min-height: var(--tap);
+  padding: var(--s-2) var(--s-3);
+  border: 0;
+  background: none;
+  color: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.rowButton:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: -2px;
+}
+
+.state {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--surface-2);
+}
+
+.state svg {
+  width: 16px;
+  height: 16px;
+}
+
+.sure .state {
+  background: var(--positive-soft);
+  color: var(--positive);
+}
+
+.check .state {
+  background: var(--warning-soft);
+  color: var(--warning-ink);
+}
+
+.new .state {
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+}
+
+.rowText {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.said {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2);
+  color: var(--ink-2);
+  font: var(--text-caption);
+}
+
+.role {
+  padding: 0 var(--s-2);
+  border-radius: var(--r-pill);
+  background: var(--surface-2);
+  font: var(--text-micro);
+}
+
+.match {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2);
+  font: var(--text-label);
+  overflow-wrap: anywhere;
+}
+
+.guess {
+  color: var(--warning-ink);
+  font: var(--text-micro);
+}
+
+.badge {
+  flex: none;
+}
+
+.chevron {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  color: var(--ink-2);
+  transition: transform var(--dur-2) var(--ease-out);
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  padding: 0 var(--s-2) var(--s-2);
+}
+
+.options {
+  display: flex;
+  flex-direction: column;
+  max-height: 280px;
+  overflow-y: auto;
+  border-top: 1px solid var(--line);
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  min-height: var(--tap);
+  padding: var(--s-2);
+  border-radius: var(--r-md, 10px);
+  cursor: pointer;
+}
+
+.option:hover {
+  background: var(--surface-2);
+}
+
+.option:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: -2px;
+}
+
+.optionOn {
+  background: var(--accent-soft);
+}
+
+.optionText {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.optionName {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2);
+  font: var(--text-label);
+  overflow-wrap: anywhere;
+}
+
+.optionWhy {
+  color: var(--ink-2);
+  font: var(--text-caption);
+}
+
+.newIcon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+}
+
+.newIcon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.tick {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  color: var(--accent-ink);
+}
+
+.search {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-height: var(--tap);
+  padding-inline: var(--s-3);
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+  background: var(--surface);
+}
+
+.search svg {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  color: var(--ink-2);
+}
+
+.search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font: var(--text-body);
+  outline: none;
+}

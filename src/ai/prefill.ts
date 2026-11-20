@@ -12,6 +12,7 @@ import { isIsoDate, today } from '../engine/dates'
 import { isKnownCurrency } from '../lib/currencies'
 import { allocate, MAX_MINOR, toMinor } from '../lib/money'
 import { graphemes, nameKey, normalizeName } from '../lib/people'
+import { fold } from '../../shared/nameMatch'
 
 export interface DescribeContext {
   /** Everyone the user knows (ME included). */
@@ -21,6 +22,11 @@ export interface DescribeContext {
   currency: string
   /** Adds (or finds) a friend by name — `addFriend` from the data layer. */
   addFriend: (name: string) => Friend
+  /**
+   * Names already settled: a folded name as said → the friend it means (a pick in "Who's
+   * that?", or a nickname Settle learnt). Checked before anything else; "" means someone new.
+   */
+  pins?: Readonly<Record<string, string>>
 }
 
 export interface ResolvedPerson {
@@ -51,13 +57,18 @@ function firstWord(key: string): string {
   return key.split(' ')[0] ?? ''
 }
 
-function makeMatcher(friends: readonly Friend[], meId: string): (name: string) => string | null {
+function makeMatcher(friends: readonly Friend[], meId: string, pins: Readonly<Record<string, string>> = {}): (name: string) => string | null {
   const others = friends.filter((f) => f.id !== meId)
   const me = friends.find((f) => f.id === meId)
   const meKey = me ? looseKey(me.name) : ''
+  const ids = new Set(friends.map((f) => f.id))
   return (name) => {
     const key = looseKey(name)
     if (!key) return null
+    const pinned = pins[fold(name)]
+    // "" : you said this is someone new, even if a saved name is close.
+    if (pinned === '') return null
+    if (pinned !== undefined && ids.has(pinned)) return pinned
     if (SELF_WORDS.has(key)) return meId
     // A friend with exactly this name beats the user's own name (two Rahuls: the text means the friend).
     const exact = others.find((f) => looseKey(f.name) === key)
@@ -81,8 +92,8 @@ function addValues(a: number | null, b: number | null): number | null {
  * Who the draft means, without changing anything — for the confirm card ("Riya · Sam · +1 new").
  * People who resolve to the same friend are listed once, their parts added up.
  */
-export function resolveDescribedPeople(d: DescribedSplit, ctx: Pick<DescribeContext, 'friends' | 'meId'>): ResolvedPerson[] {
-  const match = makeMatcher(ctx.friends, ctx.meId)
+export function resolveDescribedPeople(d: DescribedSplit, ctx: Pick<DescribeContext, 'friends' | 'meId' | 'pins'>): ResolvedPerson[] {
+  const match = makeMatcher(ctx.friends, ctx.meId, ctx.pins)
   const out: ResolvedPerson[] = []
   const byKey = new Map<string, ResolvedPerson>()
   for (const person of d.people) {
@@ -236,7 +247,7 @@ export function describedToPrefill(d: DescribedSplit, ctx: DescribeContext): Spl
 
   if (d.payer) {
     const payer = normalizeName(d.payer)
-    let payerId = looseKey(payer) ? makeMatcher(ctx.friends, ctx.meId)(payer) : null
+    let payerId = looseKey(payer) ? makeMatcher(ctx.friends, ctx.meId, ctx.pins)(payer) : null
     if (payerId === null && looseKey(payer)) {
       // Someone new — possibly just added above as a participant; addFriend finds them by name.
       try {

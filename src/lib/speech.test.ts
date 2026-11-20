@@ -8,6 +8,7 @@ import {
   joinSegments,
   mergeSegments,
   isSpeechSupported,
+  LONG_SILENCE_MS,
   MAX_LISTEN_MS,
   resetSpeechForTests,
   speechErrorCode,
@@ -106,13 +107,14 @@ describe('createRecognizer — events', () => {
   it('passes interim text, then the whole utterance with its alternatives once it ends', () => {
     install()
     const h = handlers()
-    createRecognizer({ lang: 'hi-IN', ...h })?.start()
+    const rec = createRecognizer({ lang: 'hi-IN', ...h })
+    rec?.start()
     expect(latest()).toMatchObject({ continuous: true, interimResults: true, maxAlternatives: 3 })
     latest().say(['dhai hazaar ka'], false)
-    expect(h.onInterim).toHaveBeenLastCalledWith('dhai hazaar ka')
+    expect(h.onInterim.mock.lastCall?.[0]).toBe('dhai hazaar ka')
     latest().say(['dhai hazaar ka dinner', 'dhai hazaar ka dinner riya', 'dhai hazaar ka dinner'], true, 0.82)
     expect(h.onFinal).not.toHaveBeenCalled()
-    latest().stop()
+    rec?.stop()
     expect(h.onFinal).toHaveBeenCalledWith({
       transcript: 'dhai hazaar ka dinner',
       alternatives: ['dhai hazaar ka dinner', 'dhai hazaar ka dinner riya'],
@@ -130,7 +132,8 @@ describe('createRecognizer — events', () => {
     vi.advanceTimersByTime(END_SILENCE_MS - 100)
     expect(latest().stopped).toBe(0)
     latest().say(['me Aditya'], false)
-    expect(h.onInterim).toHaveBeenLastCalledWith('rent 32000 me Aditya')
+    expect(h.onInterim.mock.lastCall?.[0]).toBe('rent 32000 me Aditya')
+    expect(h.onInterim.mock.lastCall?.[1]).toMatchObject({ pending: 'me Aditya' })
     latest().say(['me Aditya and Neha'], true)
     vi.advanceTimersByTime(END_SILENCE_MS)
     expect(latest().stopped).toBe(1)
@@ -157,22 +160,35 @@ describe('createRecognizer — events', () => {
   it("keeps what was on screen when Stop comes before the browser's final", () => {
     install()
     const h = handlers()
-    createRecognizer({ lang: 'en-IN', ...h })?.start()
+    const rec = createRecognizer({ lang: 'en-IN', ...h })
+    rec?.start()
     latest().say(['cab 840 with Riya'], false)
-    latest().stop()
+    rec?.stop()
     expect(h.onFinal).toHaveBeenCalledWith({ transcript: 'cab 840 with Riya', alternatives: ['cab 840 with Riya'], confidence: null })
     expect(h.onError).not.toHaveBeenCalled()
+  })
+
+  it('keeps the words still on screen when Stop comes after some were settled', () => {
+    install()
+    const h = handlers()
+    const rec = createRecognizer({ lang: 'en-IN', ...h })
+    rec?.start()
+    latest().say(['villa 24000 Rahul paid'], true)
+    latest().say(['cab 3200 Sid'], false)
+    rec?.stop()
+    expect(h.onFinal.mock.calls[0]?.[0].transcript).toBe('villa 24000 Rahul paid cab 3200 Sid')
   })
 
   it("doesn't repeat Android's cumulative finals", () => {
     install()
     const h = handlers()
-    createRecognizer({ lang: 'en-IN', ...h })?.start()
+    const rec = createRecognizer({ lang: 'en-IN', ...h })
+    rec?.start()
     latest().say(['dinner'], true)
     latest().say(['dinner 2400'], true)
     latest().say(['dinner 2400 with Riya'], true)
     latest().say(['with Riya'], true)
-    latest().stop()
+    rec?.stop()
     expect(h.onFinal.mock.calls[0]?.[0].transcript).toBe('dinner 2400 with Riya')
   })
 
@@ -214,17 +230,73 @@ describe('createRecognizer — events', () => {
     expect(h.onEnd).toHaveBeenCalledTimes(1)
   })
 
-  it('stops after 15 seconds at most', () => {
+  it('stops after 90 seconds at most', () => {
     vi.useFakeTimers()
     install()
     const h = handlers()
     createRecognizer({ lang: 'en-IN', ...h })?.start()
-    expect(MAX_LISTEN_MS).toBe(15_000)
-    vi.advanceTimersByTime(14_999)
+    expect(MAX_LISTEN_MS).toBe(90_000)
+    vi.advanceTimersByTime(89_999)
     expect(latest().stopped).toBe(0)
     vi.advanceTimersByTime(1)
     expect(latest().stopped).toBe(1)
     expect(h.onEnd).toHaveBeenCalledTimes(1)
+  })
+
+  it('carries on when the browser ends a session mid-split, keeping what was heard', () => {
+    vi.useFakeTimers()
+    install()
+    const h = handlers()
+    createRecognizer({ lang: 'en-IN', ...h })?.start()
+    const fake = latest()
+    fake.say(['villa 24000 Riya paid'], true)
+    fake.results = []
+    fake.onend?.() // Android ends the session on its own, mid-sentence
+    expect(fake.started).toBe(2)
+    expect(h.onEnd).not.toHaveBeenCalled()
+    fake.say(['cab 3200 Sam paid'], true)
+    expect(h.onInterim.mock.lastCall?.[0]).toBe('villa 24000 Riya paid cab 3200 Sam paid')
+    vi.advanceTimersByTime(LONG_SILENCE_MS)
+    expect(h.onFinal.mock.calls[0]?.[0].transcript).toBe('villa 24000 Riya paid cab 3200 Sam paid')
+    expect(h.onEnd).toHaveBeenCalledTimes(1)
+  })
+
+  it('hands over what it has when the browser ends a session with an error', () => {
+    install()
+    const h = handlers()
+    createRecognizer({ lang: 'en-IN', ...h })?.start()
+    latest().say(['tea 40'], true)
+    latest().fail('network')
+    expect(latest().started).toBe(1)
+    expect(h.onFinal).toHaveBeenCalledTimes(1)
+  })
+
+  it('waits longer for the pause once a long split is under way', () => {
+    vi.useFakeTimers()
+    install()
+    const h = handlers()
+    createRecognizer({ lang: 'en-IN', ...h })?.start()
+    latest().say(['Goa trip villa 24000 Riya paid cab 3200'], true)
+    vi.advanceTimersByTime(END_SILENCE_MS + 100)
+    expect(latest().stopped).toBe(0)
+    vi.advanceTimersByTime(LONG_SILENCE_MS - END_SILENCE_MS)
+    expect(latest().stopped).toBe(1)
+  })
+
+  it('lets the caller decide the pause from what has been heard', () => {
+    vi.useFakeTimers()
+    install()
+    const h = handlers()
+    const silenceFor = (heard: string) => (/ and$/.test(heard) ? 3_500 : 2_000)
+    createRecognizer({ lang: 'en-IN', ...h, silenceFor })?.start()
+    latest().say(['dinner 4850 with Neha and'], true)
+    vi.advanceTimersByTime(3_000)
+    expect(latest().stopped).toBe(0)
+    latest().say(['Arjun'], true)
+    vi.advanceTimersByTime(1_999)
+    expect(latest().stopped).toBe(0)
+    vi.advanceTimersByTime(1)
+    expect(latest().stopped).toBe(1)
   })
 
   it('listens with one recognizer at a time', () => {
@@ -306,7 +378,7 @@ describe('useSpeech', () => {
     act(() => latest().say(['dhai hazaar'], false))
     expect(result.current.interim).toBe('dhai hazaar')
     act(() => latest().say(['dhai hazaar ka dinner'], true))
-    act(() => latest().stop())
+    act(() => result.current.stop())
     expect(result.current).toMatchObject({ status: 'done', interim: '', error: null })
     expect(result.current.result?.transcript).toBe('dhai hazaar ka dinner')
   })

@@ -25,7 +25,7 @@ const UPSTREAM_TIMEOUT_MS = 20_000
 const TOKEN = /^[A-Za-z0-9_-]{40,64}$/
 const METHODS = new Set(['GET', 'POST', 'PATCH', 'DELETE'])
 /** Pay requests and phone notifications live in a sibling function, settle-notify. */
-const NOTIFY_PATHS = /^\/(?:requests|push)(?:\/|$)/
+const NOTIFY_PATHS = /^\/(?:requests|push|people)(?:\/|$)/
 
 /** settle-notify's URL next to settle-api's (null when settle-api is somewhere else). */
 export function notifyUrl(apiUrl: string): string | null {

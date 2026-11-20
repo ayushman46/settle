@@ -11,6 +11,10 @@
  * Phone notifications need VAPID keys in this function's secrets: SETTLE_VAPID_PUBLIC_KEY and
  * SETTLE_VAPID_PRIVATE_KEY (`npx web-push generate-vapid-keys`), optionally SETTLE_VAPID_SUBJECT.
  * Without them the requests still show in the app.
+ *
+ * Also POST /people/on-settle: which of the phone numbers you saved for your own people belong to
+ * a Settle account (and the name they signed up with), so "Who's that?" under a voice split can
+ * show who will be asked to pay in the app. Capped per person per hour.
  */
 import { createClient, type SupabaseClient } from 'npm:@supabase/supabase-js@2'
 
@@ -267,6 +271,45 @@ async function unsubscribe(userId: string, body: Record<string, unknown>) {
   return { ok: true }
 }
 
+/* ------------------------------------------------------------------ who of my people is on Settle */
+
+const MAX_LOOKUP = 200
+
+/** An Indian mobile as +91XXXXXXXXXX (the same rule as the database's indian_mobile()), else null. */
+function indianMobile(raw: string): string | null {
+  const d = raw.replace(/[^0-9]/g, '')
+  if (/^[6-9][0-9]{9}$/.test(d)) return '+91' + d
+  if (/^91[6-9][0-9]{9}$/.test(d)) return '+' + d
+  if (/^0[6-9][0-9]{9}$/.test(d)) return '+91' + d.slice(1)
+  return null
+}
+
+/** For each phone given (as given) that is on someone else's Settle account: the name on it. */
+async function onSettle(userId: string, body: Record<string, unknown>) {
+  await limit(`notify:${userId}:onsettle`, 20, 3600)
+  const given = Array.isArray(body.phones) ? body.phones.slice(0, MAX_LOOKUP) : []
+  const byNumber = new Map<string, string[]>()
+  for (const raw of given) {
+    if (typeof raw !== 'string' || raw.length > 30) continue
+    const number = indianMobile(raw)
+    if (!number) continue
+    byNumber.set(number, [...(byNumber.get(number) ?? []), raw])
+  }
+  if (byNumber.size === 0) return { people: [] }
+  const { data, error } = await db
+    .from('profiles')
+    .select('id, display_name, phone_number')
+    .in('phone_number', [...byNumber.keys()])
+    .is('deleted_at', null)
+  if (error) dbFail(error)
+  const people: Array<{ phone: string; name: string }> = []
+  for (const row of data ?? []) {
+    if (row.id === userId) continue
+    for (const phone of byNumber.get(row.phone_number) ?? []) people.push({ phone, name: row.display_name })
+  }
+  return { people }
+}
+
 /* ------------------------------------------------------------------ router */
 
 function respond(status: number, body: unknown): Response {
@@ -302,6 +345,7 @@ Deno.serve(async (req) => {
     if (req.method === 'POST' && parts.length === 3 && parts[0] === 'requests') return respond(200, await answer(userId, parts[1]!, parts[2]!))
     if (req.method === 'POST' && path === '/push/subscribe') return respond(200, await subscribe(userId, body))
     if (req.method === 'POST' && path === '/push/unsubscribe') return respond(200, await unsubscribe(userId, body))
+    if (req.method === 'POST' && path === '/people/on-settle') return respond(200, await onSettle(userId, body))
     fail('not_found')
   } catch (err) {
     if (err instanceof ApiError) return respond(err.status, { error: { code: err.code, message: err.message } })

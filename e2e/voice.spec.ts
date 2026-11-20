@@ -27,12 +27,18 @@ async function fakeSpeech(page: Page, mode: Mode): Promise<void> {
       onerror: Handler = null
       onend: (() => void) | null = null
       private ended = false
+      private spoke = false
       private end(): void {
         if (this.ended) return
         this.ended = true
         this.onend?.()
       }
       start(): void {
+        // Started again after the session ended by itself (the app carries on listening): a
+        // real browser just listens on; the script was already said.
+        this.ended = false
+        if (this.spoke) return
+        this.spoke = true
         const event = (text: string, isFinal: boolean) => ({
           resultIndex: 0,
           results: [Object.assign([{ transcript: text, confidence: 0.9 }], { isFinal })],
@@ -104,7 +110,7 @@ test.describe('speak to split', () => {
     await page.getByRole('button', { name: 'Speak to split' }).click()
     const sheet = page.getByRole('dialog', { name: 'Just say it' })
     await expect(sheet.getByRole('region', { name: 'Listening in Hindi' })).toBeVisible()
-    await expect(sheet.getByText('“dhai hazaar ka…”')).toBeVisible()
+    await expect(sheet.getByRole('region', { name: 'Listening in Hindi' })).toContainText('2500 ka')
 
     const field = sheet.getByRole('textbox', { name: 'Describe the expense' })
     await expect(field).toHaveValue('2500 ka dinner Riya aur Sam ke saath maine diya')
@@ -159,7 +165,7 @@ test.describe('speak to split', () => {
     const sheet = page.getByRole('dialog', { name: 'Just say it' })
     const panel = sheet.getByRole('region', { name: 'Listening in Hindi' })
     await expect(panel).toBeVisible()
-    await expect(sheet.getByText('“dhai hazaar ka…”')).toBeVisible()
+    await expect(sheet.getByRole('region', { name: 'Listening in Hindi' })).toContainText('2500 ka')
     await page.keyboard.press('Escape')
     await expect(panel).toBeHidden()
     await expect(sheet).toBeVisible()

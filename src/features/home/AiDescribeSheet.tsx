@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { ArrowRight, AudioLines, Check, PenLine, RotateCcw, Sparkles } from 'lucide-react'
+import { ArrowRight, AudioLines, Check, Mic, PenLine, RotateCcw, Sparkles } from 'lucide-react'
+import { fold } from '../../../shared/nameMatch'
 import { DESCRIBE_LIMITS } from '../../../shared/api'
 import { DescribeError, describeSplit, type DescribeErrorCode } from '../../ai'
 import { describedToPrefill, spreadToGroup } from '../../ai/prefill'
@@ -17,6 +18,9 @@ import { aiUsedToday, quotaFor, useAiQuota } from '../../pro/quota'
 import { hasFeature } from '../../pro/store'
 import { useHealth } from '../../state/health'
 import { openPaywall } from '../pro/paywall'
+import { useOnSettle } from '../account/onSettle'
+import { forgetNickname, rememberNickname, useNicknames } from './nicknames'
+import { WhoPicker, type WhoRow } from './WhoPicker'
 import { describeView, heardChips, peopleSummary, sayExamples, type DescribeView } from './describeView'
 import { blankForm, formToDraft, isConverting, settleCurrency, withGroup, withPrefill } from '../split/splitForm'
 import { TRIP_ENABLED } from '../trip/enabled'
@@ -70,6 +74,8 @@ interface VoiceState {
   spoken: boolean
   /** What was said was cut to the AI's limit. */
   tooLong: boolean
+  /** Other ways the recogniser heard it. */
+  alternatives: string[]
   error: SpeechErrorCode | null
 }
 
@@ -97,6 +103,11 @@ export function AiDescribeSheet({ open, onClose, startWith, groupId }: AiDescrib
   const [text, setText] = useState('')
   const [phase, setPhase] = useState<Phase>({ kind: 'idle' })
   const [wasOpen, setWasOpen] = useState(open)
+  const nicknames = useNicknames()
+  /** Who each name in this draft is, as picked in "Who's who" (folded name → friend id; "" someone new). */
+  const [picks, setPicks] = useState<Record<string, string>>({})
+  const pins = useMemo(() => ({ ...nicknames, ...picks }), [nicknames, picks])
+  const people = useMemo(() => friends.filter((f) => f.id !== ME_ID), [friends])
 
   const aiOff = health !== 'loading' && health !== null && !health.configured
   // Speak to split: only where the browser can turn speech into text, and while the AI is on.
@@ -108,6 +119,7 @@ export function AiDescribeSheet({ open, onClose, startWith, groupId }: AiDescrib
     heard: [],
     spoken: false,
     tooLong: false,
+    alternatives: [],
     error: null,
   }))
   /** After speaking, focus moves to "Read it" once the text is in the field. */
@@ -150,8 +162,8 @@ export function AiDescribeSheet({ open, onClose, startWith, groupId }: AiDescrib
 
   const busy = phase.kind === 'reading'
   const view = useMemo<DescribeView | null>(
-    () => (phase.kind === 'draft' ? describeView(phase.draft, { friends, meId: ME_ID, currency: profile.currency }) : null),
-    [phase, friends, profile.currency],
+    () => (phase.kind === 'draft' ? describeView(phase.draft, { friends, meId: ME_ID, currency: profile.currency, pins }) : null),
+    [phase, friends, profile.currency, pins],
   )
 
   const close = (): void => {
@@ -176,6 +188,7 @@ export function AiDescribeSheet({ open, onClose, startWith, groupId }: AiDescrib
     const controller = new AbortController()
     request.current = controller
     setPhase({ kind: 'reading', text: clean })
+    setPicks({})
     try {
       // From a group's page, its members come first: their names are the ones most likely said.
       const groupNames = group ? group.memberIds.map((id) => (id === ME_ID ? 'Me' : (friends.find((f) => f.id === id)?.name ?? ''))).filter(Boolean) : []
@@ -203,7 +216,7 @@ export function AiDescribeSheet({ open, onClose, startWith, groupId }: AiDescrib
     setText(value)
     // Cleared: whatever comes next is typed.
     if (value.trim() === '' && (voice.spoken || voice.heard.length > 0 || voice.tooLong)) {
-      setVoice((v) => ({ ...v, spoken: false, heard: [], tooLong: false }))
+      setVoice((v) => ({ ...v, spoken: false, heard: [], tooLong: false, alternatives: [] }))
     }
     // A changed sentence is a new request: the old answer no longer applies.
     if (phase.kind === 'draft' || phase.kind === 'error') setPhase({ kind: 'idle' })
@@ -216,6 +229,7 @@ export function AiDescribeSheet({ open, onClose, startWith, groupId }: AiDescrib
       friends,
       meId: ME_ID,
       currency: profile.currency,
+      pins,
       addFriend: (name) => addFriend({ name }),
     })
     return voice.spoken
@@ -288,7 +302,7 @@ export function AiDescribeSheet({ open, onClose, startWith, groupId }: AiDescrib
     setVoice((v) => ({ ...v, listening: !v.listening, error: null, tooLong: false }))
   }
 
-  const heardIt = ({ text: said, heard }: VoiceHeard): void => {
+  const heardIt = ({ text: said, heard, alternatives }: VoiceHeard): void => {
     const max = DESCRIBE_LIMITS.maxTextChars
     const chars = Array.from(said.trim())
     const tooLong = chars.length > max
@@ -301,11 +315,48 @@ export function AiDescribeSheet({ open, onClose, startWith, groupId }: AiDescrib
       spoken: true,
       heard: heardChips(heard, profile.currency),
       tooLong,
+      alternatives: alternatives.map((a) => Array.from(a).slice(0, max).join('')),
       error: null,
     }))
     focusRead.current = true
     // Read straight away: speaking is the whole step. Cut short (too long), it waits for a look first.
     if (!tooLong && said.trim()) void read(said.trim(), voice.lang)
+  }
+
+  /** "Not what you said?": another of the recogniser's guesses, read instead. */
+  const pickAlternative = (alt: string): void => {
+    haptic('tap')
+    const was = text
+    setText(alt)
+    setVoice((v) => ({ ...v, alternatives: [was, ...v.alternatives.filter((a) => a !== alt && a !== was)].filter(Boolean).slice(0, 3) }))
+    void read(alt, voice.lang)
+  }
+
+  /** "Who's who": the people in the draft, by the names they were called. */
+  const whoRows = useMemo<WhoRow[]>(() => {
+    if (!view) return []
+    const rows: WhoRow[] = view.people.filter((p) => !p.isMe && p.said).map((p) => ({ said: p.said, friendId: p.isNew ? null : p.id, role: 'in' as const }))
+    const payerSaid = view.payerSaidAs
+    if (payerSaid && view.payerId !== ME_ID && !rows.some((r) => fold(r.said) === fold(payerSaid))) {
+      rows.unshift({ said: payerSaid, friendId: view.payerId.startsWith('new-person:') ? null : view.payerId, role: 'paid' })
+    }
+    return rows
+  }, [view])
+  const onSettle = useOnSettle(friends, whoRows.length > 0)
+  const picked = useMemo(() => new Set(Object.keys(picks)), [picks])
+
+  const pickWho = (said: string, friendId: string | null): void => {
+    haptic('tap')
+    setPicks((p) => ({ ...p, [fold(said)]: friendId ?? '' }))
+    const friend = friendId ? friends.find((f) => f.id === friendId) : null
+    if (friend) {
+      rememberNickname(said, friend.id, friend.name)
+      if (fold(said) !== fold(friend.name)) {
+        toast(t('voice.who.remembered', { said, name: friend.name }), { tone: 'success' })
+      }
+    } else {
+      forgetNickname(said)
+    }
   }
 
   const voiceFailed = (code: SpeechErrorCode): void => {
@@ -387,6 +438,21 @@ export function AiDescribeSheet({ open, onClose, startWith, groupId }: AiDescrib
           </ul>
         )}
 
+        {voice.spoken && voice.alternatives.length > 0 && text !== '' && !voice.listening && (
+          <div className={styles.alts}>
+            <p className={styles.altsLabel}>{t('voice.alt.title')}</p>
+            <ul role="list" className={styles.exampleList}>
+              {voice.alternatives.map((alt) => (
+                <li key={alt}>
+                  <Chip leading={<AudioLines />} onClick={() => pickAlternative(alt)} aria-label={t('voice.alt.aria', { text: alt })}>
+                    {alt}
+                  </Chip>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         {voiceOn && (
           <p className="visually-hidden" role="status">
             {voice.spoken && text !== '' && !voice.listening ? t('voice.listen.heard.aria', { text }) : ''}
@@ -414,6 +480,9 @@ export function AiDescribeSheet({ open, onClose, startWith, groupId }: AiDescrib
               onResult={heardIt}
               onError={voiceFailed}
               onDone={voiceDone}
+              people={people}
+              nicknames={nicknames}
+              currency={group?.currency ?? profile.currency}
             />
           </Suspense>
         )}
@@ -453,6 +522,9 @@ export function AiDescribeSheet({ open, onClose, startWith, groupId }: AiDescrib
             </Banner>
           )}
           {view && <DraftCard view={view} />}
+          {view && whoRows.length > 0 && (
+            <WhoPicker rows={whoRows} people={people} nicknames={nicknames} onSettle={onSettle} picked={picked} onPick={pickWho} />
+          )}
         </div>
 
         {phase.kind === 'idle' && text.trim() === '' && !aiOff && !voice.listening && (
@@ -524,6 +596,22 @@ function announce(view: DescribeView): string {
 
 function QuotaLine({ limited, remaining, voice, onUpgrade }: { limited: boolean; remaining: number; voice: boolean; onUpgrade: () => void }) {
   const t = useT()
+  if (limited && voice) {
+    // Speaking never runs out: that comes first; the typed allowance is the small print.
+    return (
+      <p className={styles.quota}>
+        <Mic aria-hidden="true" className={styles.quotaMic} />
+        <span>
+          <strong className={styles.quotaFree}>{t('voice.free.line')}</strong>
+          {' · '}
+          {remaining <= 0 ? t('voice.free.typedUsed') : t('voice.free.typed', { count: remaining })}
+        </span>
+        <button type="button" className={styles.quotaLink} onClick={onUpgrade}>
+          {t('home.describe.goUnlimited')}
+        </button>
+      </p>
+    )
+  }
   if (!limited) {
     return (
       <p className={styles.quota}>

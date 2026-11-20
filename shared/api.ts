@@ -150,7 +150,7 @@ export type DescribeResponse = DescribedSplit & {
 }
 
 export const DESCRIBE_LIMITS = {
-  maxTextChars: 500,
+  maxTextChars: 1200,
   maxPeople: 50,
   maxNameChars: 40,
 } as const

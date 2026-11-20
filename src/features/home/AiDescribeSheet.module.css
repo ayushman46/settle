@@ -288,3 +288,31 @@
   width: 14px;
   height: 14px;
 }
+
+/* ---------- Speaking is unlimited ---------- */
+
+.quotaMic {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  color: var(--accent-ink);
+}
+
+.quotaFree {
+  color: var(--ink);
+  font-weight: 650;
+}
+
+/* ---------- Not what you said? ---------- */
+
+.alts {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+.altsLabel {
+  padding-inline: var(--s-2);
+  color: var(--ink-2);
+  font: var(--text-caption);
+}

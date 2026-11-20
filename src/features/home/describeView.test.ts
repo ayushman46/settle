@@ -42,10 +42,10 @@ describe('describeView', () => {
       addsUp: true,
     })
     expect(view.people).toEqual([
-      { id: ME_ID, name: 'You', avatarName: 'Ayush', color: 0, isMe: true, isNew: false, share: 80000, detail: null },
-      { id: 'riya', name: 'Riya', avatarName: 'Riya', color: 2, isMe: false, isNew: false, share: 80000, detail: null },
+      { id: ME_ID, name: 'You', avatarName: 'Ayush', color: 0, isMe: true, isNew: false, said: 'Me', share: 80000, detail: null },
+      { id: 'riya', name: 'Riya', avatarName: 'Riya', color: 2, isMe: false, isNew: false, said: 'Riya', share: 80000, detail: null },
       // "Sam" is the one friend it can mean.
-      { id: 'sam', name: 'Sam Kapoor', avatarName: 'Sam Kapoor', color: 3, isMe: false, isNew: false, share: 80000, detail: null },
+      { id: 'sam', name: 'Sam Kapoor', avatarName: 'Sam Kapoor', color: 3, isMe: false, isNew: false, said: 'Sam', share: 80000, detail: null },
     ])
   })
 

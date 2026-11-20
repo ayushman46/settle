@@ -2,7 +2,8 @@
  * Speech to text for "Speak to split" — a thin, typed layer over the browser's Web Speech API
  * (`SpeechRecognition`, `webkitSpeechRecognition` in Chrome and Safari). The browser does the
  * recognising (Chrome online, through Google's speech service; Safari partly on the device);
- * Settle never records or keeps audio. One recognizer at a time; 15 s at most per go.
+ * Settle never records or keeps audio. One recognizer at a time; 90 s at most per go, so a long
+ * split ("Goa trip: villa 24,000 Riya paid, cab 3,200 Sam paid, …") fits in one breath or ten.
  *
  * Numbers in words ("dhai hazaar") are turned into digits by the caller with the shared grammar
  * (`normalizeNumberWords`, passed to `bestTranscript`) — this module stays small so Home's chunk
@@ -90,7 +91,7 @@ export function isSpeechSupported(): boolean {
 }
 
 /** The longest one go of listening (it usually ends sooner: on a pause, or Stop). */
-export const MAX_LISTEN_MS = 15_000
+export const MAX_LISTEN_MS = 90_000
 
 /**
  * Once something has been heard, this long with nothing new ends it. The browser's own
@@ -98,6 +99,16 @@ export const MAX_LISTEN_MS = 15_000
  * "rent 32000"), so we listen continuously and decide ourselves.
  */
 export const END_SILENCE_MS = 1_600
+
+/**
+ * A long split is said with pauses to think ("…and then the cab, that was, um, 3,200"): once this
+ * many words are in, the pause that ends it is `LONG_SILENCE_MS` instead.
+ */
+export const LONG_SPLIT_WORDS = 8
+export const LONG_SILENCE_MS = 2_600
+
+/** The browser ending a session on its own is restarted at most this many times per go. */
+const MAX_RESTARTS = 12
 
 /** The browser's error names → ours (`aborted` is ours too: we stopped it, nothing to say). */
 export function speechErrorCode(error: string): SpeechErrorCode | null {
@@ -123,10 +134,17 @@ export function speechErrorCode(error: string): SpeechErrorCode | null {
 /** The recogniser listening now (one at a time across the app). */
 let active: SpeechRecognitionLike | null = null
 
+/** What's been heard so far, for the live view: settled stretches (with how sure the recogniser is) and the part still changing. */
+export interface LiveHeard {
+  segments: SpeechSegment[]
+  /** Heard but not settled yet (may still change). */
+  pending: string
+}
+
 export interface RecognizerOptions {
   lang: VoiceLang
-  /** Everything heard so far, as it comes in. */
-  onInterim(text: string): void
+  /** Everything heard so far, as it comes in (`live` splits it into settled and changing parts). */
+  onInterim(text: string, live?: LiveHeard): void
   /** The whole utterance, once, just before `onEnd` (not when nothing was heard). */
   onFinal(result: SpeechResult): void
   /** Only when nothing usable was heard. */
@@ -134,8 +152,13 @@ export interface RecognizerOptions {
   onEnd(): void
   /** Hard cap on one go (default 15 s). */
   maxMs?: number
-  /** Quiet after speech that ends it (default 1.6 s). */
+  /** Quiet after speech that ends it (default 1.6 s; 2.6 s once a long split is under way). */
   silenceMs?: number
+  /**
+   * Or: how long a pause ends it, given what's been heard so far (a split that's clearly not
+   * finished yet, "…paid by", waits longer than one that reads as complete).
+   */
+  silenceFor?: (heard: string) => number
 }
 
 /** One finished stretch of speech: its guesses, best first, and the top one's confidence. */
@@ -211,8 +234,19 @@ export function createRecognizer(opts: RecognizerOptions): Recognizer | null {
   let quiet: ReturnType<typeof setTimeout> | null = null
   let finished = false
   let segments: SpeechSegment[] = []
+  /** Stretches from earlier sessions, when the browser ended one on its own mid-split. */
+  let committed: SpeechSegment[] = []
+  /** We asked it to stop (pause, Stop, the cap): its end is the end. */
+  let stopping = false
+  let restarts = 0
+  let startedAt = 0
+  let lastHeardAt = 0
+  /** The pause that ends it, as of the last words heard. */
+  let currentSilence = LONG_SILENCE_MS
   /** What's heard but not final yet, with the finals before it. */
   let pending = ''
+  /** Just the part not final yet (the words after the finals). */
+  let tail = ''
   let failure: SpeechErrorCode | null = null
   const clear = () => {
     if (cap !== null) clearTimeout(cap)
@@ -225,12 +259,15 @@ export function createRecognizer(opts: RecognizerOptions): Recognizer | null {
     finished = true
     clear()
     if (active === rec) active = null
-    const heard = joinSegments(segments) ?? (pending ? { transcript: pending, alternatives: [pending], confidence: null } : null)
+    // Stopped mid-phrase: the words still on screen count too, after the settled ones.
+    const all = tail && segments.length > 0 ? mergeSegments([...segments, { alternatives: [tail], confidence: null }]) : segments
+    const heard = joinSegments(all) ?? (pending ? { transcript: pending, alternatives: [pending], confidence: null } : null)
     if (deliver && heard) opts.onFinal(heard)
     else if (deliver && failure) opts.onError(failure)
     opts.onEnd()
   }
   const halt = () => {
+    stopping = true
     try {
       rec.stop()
     } catch {
@@ -260,23 +297,50 @@ export function createRecognizer(opts: RecognizerOptions): Recognizer | null {
         interim += result[0]?.transcript ?? ''
       }
     }
-    segments = mergeSegments(finals)
+    segments = mergeSegments([...committed, ...finals])
     const sofar = segments.map((s) => s.alternatives[0] ?? '').join(' ')
     const next = interim.replace(/\s+/g, ' ').trim()
     if (!next || squash(sofar).endsWith(squash(next))) pending = ''
     else pending = sofar && !squash(next).startsWith(squash(sofar)) ? `${sofar} ${next}` : next
     const shown = pending || sofar
     if (!shown) return
-    opts.onInterim(shown)
+    lastHeardAt = Date.now()
+    // The part still changing: the interim words after the settled ones.
+    const changing = !pending ? '' : sofar && squash(next).startsWith(squash(sofar)) ? next.slice(sofar.length).trim() : next
+    tail = changing
+    opts.onInterim(shown, { segments, pending: changing })
     if (quiet !== null) clearTimeout(quiet)
-    quiet = setTimeout(halt, opts.silenceMs ?? END_SILENCE_MS)
+    const words = shown.split(' ').length
+    const silence = opts.silenceMs ?? opts.silenceFor?.(shown) ?? (words >= LONG_SPLIT_WORDS ? LONG_SILENCE_MS : END_SILENCE_MS)
+    currentSilence = silence
+    quiet = setTimeout(halt, silence)
   }
   rec.onerror = (event) => {
     if (finished) return
     const code = speechErrorCode(event.error)
     if (code) failure = code
   }
-  rec.onend = () => finish()
+  rec.onend = () => {
+    if (finished) return
+    // Android Chrome ends a session on its own, even in continuous mode, sometimes mid-sentence.
+    // While the person is still talking (heard just now, no error, under the cap), carry on in a
+    // new session and keep what was heard.
+    const now = Date.now()
+    const talking = lastHeardAt > 0 && now - lastHeardAt < Math.max(currentSilence, LONG_SILENCE_MS)
+    if (!stopping && failure === null && talking && restarts < MAX_RESTARTS && now - startedAt < (opts.maxMs ?? MAX_LISTEN_MS)) {
+      restarts++
+      committed = tail ? mergeSegments([...segments, { alternatives: [tail], confidence: null }]) : segments
+      pending = ''
+      tail = ''
+      try {
+        rec.start()
+        return
+      } catch {
+        // Can't start again: hand over what we have.
+      }
+    }
+    finish()
+  }
 
   return {
     start() {
@@ -297,6 +361,7 @@ export function createRecognizer(opts: RecognizerOptions): Recognizer | null {
         return
       }
       clear()
+      startedAt = Date.now()
       cap = setTimeout(halt, opts.maxMs ?? MAX_LISTEN_MS)
     },
     stop() {
@@ -337,6 +402,8 @@ export interface SpeechState {
   status: SpeechStatus
   /** What's been heard so far (cleared when it's final). */
   interim: string
+  /** The same, split into settled stretches and the part still changing (null before anything is heard). */
+  live: LiveHeard | null
   result: SpeechResult | null
   error: SpeechErrorCode | null
   start(): void
@@ -344,9 +411,14 @@ export interface SpeechState {
 }
 
 /** Speech recognition as React state; aborts on unmount or when `lang` changes. */
-export function useSpeech(lang: VoiceLang): SpeechState {
+export function useSpeech(lang: VoiceLang, options: Pick<RecognizerOptions, 'silenceFor'> = {}): SpeechState {
+  const silenceFor = useRef(options.silenceFor)
+  useEffect(() => {
+    silenceFor.current = options.silenceFor
+  })
   const [status, setStatus] = useState<SpeechStatus>('idle')
   const [interim, setInterim] = useState('')
+  const [live, setLive] = useState<LiveHeard | null>(null)
   const [result, setResult] = useState<SpeechResult | null>(null)
   const [error, setError] = useState<SpeechErrorCode | null>(null)
   const recognizer = useRef<Recognizer | null>(null)
@@ -364,11 +436,16 @@ export function useSpeech(lang: VoiceLang): SpeechState {
     recognizer.current?.abort()
     outcome.current = { final: false, error: false }
     setInterim('')
+    setLive(null)
     setResult(null)
     setError(null)
     const rec = createRecognizer({
       lang,
-      onInterim: (text) => setInterim(text),
+      silenceFor: (heard) => silenceFor.current?.(heard) ?? (heard.split(' ').length >= LONG_SPLIT_WORDS ? LONG_SILENCE_MS : END_SILENCE_MS),
+      onInterim: (text, heard) => {
+        setInterim(text)
+        setLive(heard ?? { segments: [], pending: text })
+      },
       onFinal: (heard) => {
         outcome.current.final = true
         setInterim('')
@@ -398,7 +475,7 @@ export function useSpeech(lang: VoiceLang): SpeechState {
     recognizer.current?.stop()
   }, [])
 
-  return { status, interim, result, error, start, stop }
+  return { status, interim, live, result, error, start, stop }
 }
 
 /** Forgets the recogniser listening now (tests). */

@@ -3,7 +3,7 @@
  * split and each person's share — worked out exactly as the split screen will, without saving
  * anything (new people get stand-in ids until "Looks right" adds them for real).
  */
-import { describedToPrefill, missingPeople } from '../../ai/prefill'
+import { describedToPrefill, missingPeople, resolveDescribedPeople } from '../../ai/prefill'
 import type { CategoryId, DescribedSplit, Friend, Minor, SplitMode } from '../../domain/types'
 import { CATEGORY_META } from '../../engine/categories'
 import { splitAmount } from '../../engine/split'
@@ -32,6 +32,8 @@ export interface DescribePerson {
   isMe: boolean
   /** Not in your people yet — added when the draft is used. */
   isNew: boolean
+  /** The name as the text (or speech) had it, before it was matched ("Adi" for Aditya). */
+  said: string
   /** Their share of the total, when the total is known and the split adds up. */
   share: Minor | null
   /** The split's own number for them: "40%" or "×2" (null for equal and exact splits). */
@@ -54,6 +56,8 @@ export interface DescribeView {
   payerName: string
   /** False when the text didn't say who paid (the owner is assumed). */
   payerSaid: boolean
+  /** Who paid, as the text had it (null when it didn't say). */
+  payerSaidAs: string | null
   people: DescribePerson[]
   /** People the text counted but didn't name ("Netflix 649 for 4"). */
   missing: number
@@ -67,6 +71,8 @@ export interface DescribeViewContext {
   meId: string
   /** Your default currency (used when the text named none). */
   currency: string
+  /** Names already settled (see `DescribeContext.pins`). */
+  pins?: Readonly<Record<string, string>>
 }
 
 const MODE_LABELS: Readonly<Record<Exclude<SplitMode, 'items'>, MessageKey>> = {
@@ -84,6 +90,7 @@ function dryRun(d: DescribedSplit, ctx: DescribeViewContext) {
     friends: ctx.friends,
     meId: ctx.meId,
     currency: ctx.currency,
+    pins: ctx.pins,
     addFriend: (raw) => {
       const name = normalizeName(raw)
       const key = nameKey(name)
@@ -134,6 +141,9 @@ export function describeView(d: DescribedSplit, ctx: DescribeViewContext): Descr
       ? splitAmount({ total, currency, mode, participants, payerId })
       : null
   const addsUp = split === null || split.ok
+  // The name each person was called in the text, for "Who's that?".
+  const saidAs = new Map<string, string>()
+  for (const r of resolveDescribedPeople(d, ctx)) if (r.friendId) saidAs.set(r.friendId, r.name)
   const sharesVary = mode === 'shares' && new Set(participants.map((p) => p.input ?? 1)).size > 1
 
   const people: DescribePerson[] = participants.map(({ friendId, input }) => ({
@@ -143,6 +153,7 @@ export function describeView(d: DescribedSplit, ctx: DescribeViewContext): Descr
     color: byId.get(friendId)?.color ?? 0,
     isMe: friendId === ctx.meId,
     isNew: friendId.startsWith(NEW_PREFIX),
+    said: saidAs.get(friendId) ?? byId.get(friendId)?.name ?? '',
     share: split?.ok ? (split.shares[friendId] ?? 0) : null,
     detail: detailFor(mode, input, sharesVary),
   }))
@@ -159,6 +170,7 @@ export function describeView(d: DescribedSplit, ctx: DescribeViewContext): Descr
     payerId,
     payerName: personName(payerId, ctx.meId, byId),
     payerSaid: prefill.payerId !== undefined,
+    payerSaidAs: d.payer ? normalizeName(d.payer) : null,
     people,
     missing: missingPeople(d),
     addsUp,

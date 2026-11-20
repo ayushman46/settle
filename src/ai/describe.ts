@@ -96,7 +96,7 @@ export function describeOfflineMessage(): string {
 
 /** The too-long copy in the UI language. */
 export function describeTooLongMessage(): string {
-  return t('home.describe.tooLong', { max: DESCRIBE_LIMITS.maxTextChars })
+  return t('home.describe.tooLong', { max: String(DESCRIBE_LIMITS.maxTextChars) })
 }
 
 /**

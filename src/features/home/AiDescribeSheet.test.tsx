@@ -1,6 +1,7 @@
-import { act, screen, waitFor, within } from '@testing-library/react'
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { addFriend, expensesStore, friendsStore, peekSplitPrefill, updateProfile } from '../../data'
+import { nicknamesStore } from './nicknames'
 import { ME_ID } from '../../domain/types'
 import { aiUsedToday, consumeAiQuota } from '../../pro/quota'
 import { paywallState } from '../pro/paywall'
@@ -335,13 +336,16 @@ class FakeRecognition {
     this.onerror?.({ error: 'aborted' })
     this.onend?.()
   }
-  say(text: string, isFinal: boolean): void {
-    const result = Object.assign([{ transcript: text, confidence: 0.9 }], { isFinal })
+  say(text: string, isFinal: boolean, others: string[] = [], confidence = 0.9): void {
+    const result = Object.assign([{ transcript: text, confidence }, ...others.map((o) => ({ transcript: o, confidence: 0.4 }))], { isFinal })
     this.onresult?.({ resultIndex: 0, results: [result] })
   }
 }
 
 const recognizer = () => FakeRecognition.instances.at(-1) as FakeRecognition
+
+/** The person stops talking and taps Stop (Escape does the same). The browser ending a session by itself mid-split is carried on from. */
+const stopListening = () => fireEvent.keyDown(window, { key: 'Escape' })
 
 describe('AiDescribeSheet — speak to split', SLOW, () => {
   beforeEach(() => {
@@ -371,10 +375,11 @@ describe('AiDescribeSheet — speak to split', SLOW, () => {
     expect(within(opened.sheet).queryByText('Try one')).not.toBeInTheDocument()
 
     act(() => recognizer().say('ढाई हज़ार का', false))
-    expect(panel).toHaveTextContent('“ढाई हज़ार का…”')
+    expect(panel).toHaveTextContent('What I’m hearing')
+    expect(panel).toHaveTextContent('2500 का')
     act(() => {
       recognizer().say('ढाई हज़ार का डिनर रिया और सैम के साथ मैंने दिया', true)
-      recognizer().stop()
+      stopListening()
     })
 
     await waitFor(() => expect(opened.field).toHaveValue('2500 का डिनर रिया और सैम के साथ मैंने दिया'))
@@ -402,11 +407,12 @@ describe('AiDescribeSheet — speak to split', SLOW, () => {
     consumeAiQuota()
     const calls = serveDescribe(described())
     const opened = await openSheet()
-    expect(within(opened.sheet).getByText(/speaking is unlimited/)).toBeInTheDocument()
+    expect(within(opened.sheet).getByText('Speaking a split is free and unlimited')).toBeInTheDocument()
+    expect(within(opened.sheet).getByText(/typed AI splits used today/)).toBeInTheDocument()
     await listen(opened)
     act(() => {
       recognizer().say('dinner 2400 with Riya and Sam', true)
-      recognizer().stop()
+      stopListening()
     })
     expect(await within(opened.sheet).findByRole('article', { name: 'Dinner' })).toBeInTheDocument()
     expect(calls).toHaveLength(1)
@@ -420,7 +426,7 @@ describe('AiDescribeSheet — speak to split', SLOW, () => {
     await listen(opened)
     act(() => {
       recognizer().say('do sau', true)
-      recognizer().stop()
+      stopListening()
     })
     await waitFor(() => expect(opened.field).toHaveValue('200'))
     // What was said is read by itself, marked as spoken.
@@ -486,11 +492,120 @@ describe('AiDescribeSheet — speak to split', SLOW, () => {
     const opened = await openSheet()
     await listen(opened)
     act(() => {
-      recognizer().say('dinner '.repeat(100).trim(), true)
-      recognizer().stop()
+      recognizer().say('dinner '.repeat(250).trim(), true)
+      stopListening()
     })
     await within(opened.sheet).findByText("That's a lot — keep it short")
-    expect(String((opened.field as HTMLInputElement).value).length).toBe(500)
+    expect(String((opened.field as HTMLInputElement).value).length).toBe(1200)
+  })
+})
+
+describe('AiDescribeSheet — live check, long splits and who’s who', SLOW, () => {
+  beforeEach(() => {
+    FakeRecognition.instances = []
+    vi.stubGlobal('webkitSpeechRecognition', FakeRecognition)
+    window.localStorage.setItem('settle.v4.voice-lang', 'en-IN')
+  })
+  afterEach(() => {
+    window.localStorage.removeItem('settle.v4.voice-lang')
+    nicknamesStore.set({})
+  })
+
+  async function listenEn(opened: Opened) {
+    await opened.user.click(within(opened.sheet).getByRole('button', { name: 'Speak instead' }))
+    const panel = await within(opened.sheet).findByRole('region', { name: 'Listening in English' })
+    await waitFor(() => expect(recognizer()?.started).toBe(1))
+    return panel
+  }
+
+  it('shows what it has understood while you speak a long split, and carries on when the browser stops mid-way', async () => {
+    addFriend({ name: 'Rahul Verma' })
+    addFriend({ name: 'Siddharth Rao' })
+    serveDescribe(described({ title: 'Goa trip', amount: 32800 }))
+    const opened = await openSheet()
+    const panel = await listenEn(opened)
+    act(() => recognizer().say('Goa trip villa 24000 Rahul Verma paid', false))
+    const facts = () => panel.querySelector('dl') as HTMLElement
+    expect(panel).toHaveTextContent('What I’m hearing')
+    expect(facts()).toHaveTextContent('₹24,000')
+    expect(facts()).toHaveTextContent('Rahul Verma')
+    // The browser ends the session by itself mid-sentence: it listens on, keeping what it heard.
+    act(() => {
+      recognizer().say('Goa trip villa 24000 Rahul Verma paid', true)
+      recognizer().onend?.()
+    })
+    expect(recognizer().started).toBe(2)
+    expect(within(opened.sheet).getByRole('region', { name: 'Listening in English' })).toBeInTheDocument()
+    act(() => recognizer().say('and then cab 3200 Sid paid then dinner 5600 I paid with Riya and Zubin', false))
+    expect(facts()).toHaveTextContent('₹32,800')
+    expect(facts()).toHaveTextContent('3 bills')
+    expect(facts()).toHaveTextContent('Sid? — check after')
+    expect(facts()).toHaveTextContent('Zubin (new)')
+    expect(facts()).toHaveTextContent('Riya')
+    act(() => stopListening())
+    await waitFor(() => expect(opened.field).toHaveValue('Goa trip villa 24000 Rahul Verma paid and then cab 3200 Sid paid then dinner 5600 I paid with Riya and Zubin'))
+  })
+
+  it('offers the recogniser’s other guesses, and reads the one you tap', async () => {
+    const calls = serveDescribe(described())
+    const opened = await openSheet()
+    await listenEn(opened)
+    act(() => {
+      recognizer().say('dinner 2400 with Rhea and Sam', true, ['dinner 2400 with Riya and Sam'])
+      stopListening()
+    })
+    await waitFor(() => expect(calls).toHaveLength(1))
+    const guess = await within(opened.sheet).findByRole('button', { name: 'Use “dinner 2400 with Riya and Sam” instead' })
+    await opened.user.click(guess)
+    await waitFor(() => expect(calls).toHaveLength(2))
+    expect(calls[1]?.body).toMatchObject({ text: 'dinner 2400 with Riya and Sam', source: 'voice' })
+    expect(opened.field).toHaveValue('dinner 2400 with Riya and Sam')
+  })
+
+  it('asks which Rahul, lists everyone with a name like it, and remembers the pick as a nickname', async () => {
+    const sharma = addFriend({ name: 'Rahul Sharma', phone: '9876543210' }).id
+    const verma = addFriend({ name: 'Rahul Verma', phone: '9123456789' }).id
+    serveDescribe(described({ title: 'Lunch', amount: 900, people: [{ name: 'Me', value: null }, { name: 'Rahul', value: null }], payer: null }))
+    const opened = await openSheet()
+    await listenEn(opened)
+    act(() => {
+      recognizer().say('lunch 900 with Rahul', true)
+      stopListening()
+    })
+    await within(opened.sheet).findByRole('article', { name: 'Lunch' })
+    const who = within(opened.sheet).getByRole('region', { name: 'Who’s who' })
+    expect(who).toHaveTextContent('1 name to check')
+    // Opened by itself: both Rahuls, with the end of their number.
+    const list = within(who).getByRole('listbox', { name: 'Who is “Rahul”?' })
+    const options = within(list).getAllByRole('option')
+    expect(options.map((o) => o.textContent)).toEqual([
+      expect.stringContaining('Rahul Sharma'),
+      expect.stringContaining('Rahul Verma'),
+      expect.stringContaining('Someone new called “Rahul”'),
+    ])
+    expect(options[1]).toHaveTextContent('ends 6789')
+    await opened.user.click(options[1] as HTMLElement)
+    expect(who).toHaveTextContent('Everyone matched')
+    expect(nicknamesStore.get()).toEqual({ rahul: verma })
+    await opened.user.click(within(opened.sheet).getByRole('button', { name: 'Edit details' }))
+    expect(peekSplitPrefill()?.participants?.map((x) => x.friendId)).toEqual([ME_ID, verma])
+    expect(sharma).not.toBe(verma)
+  })
+
+  it('goes straight to the person a nickname means next time', async () => {
+    const verma = addFriend({ name: 'Rahul Verma' }).id
+    addFriend({ name: 'Rahul Sharma' })
+    nicknamesStore.set({ bhaiya: verma })
+    serveDescribe(described({ title: 'Lunch', amount: 900, people: [{ name: 'Me', value: null }, { name: 'Bhaiya', value: null }], payer: null }))
+    const opened = await openSheet()
+    await listenEn(opened)
+    act(() => {
+      recognizer().say('lunch 900 with bhaiya', true)
+      stopListening()
+    })
+    const card = await within(opened.sheet).findByRole('article', { name: 'Lunch' })
+    expect(card).toHaveTextContent('Rahul Verma')
+    expect(within(opened.sheet).getByRole('region', { name: 'Who’s who' })).toHaveTextContent('Everyone matched')
   })
 })
 

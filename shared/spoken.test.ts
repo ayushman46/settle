@@ -16,6 +16,9 @@ describe('repairSpokenText', () => {
     ['dinner 200400 with Riya and Sam iPad', 'dinner 2400 with Riya and Sam I paid'],
     ['dinner with Riya, I pad, thanks', 'dinner with Riya, I paid, thanks'],
     ['12:50 for lunch with Sam', '1250 for lunch with Sam'],
+    ['movie tickets 960 for me Vikram and Pooja Pooja bed', 'movie tickets 960 for me Vikram and Pooja Pooja paid'],
+    ['the airport 1240 Asian Paint split between me and Ishan', 'the airport 1240 Asian paid split between me and Ishan'],
+    ['birthday dinner for Neha came to 7650 I Pa', 'birthday dinner for Neha came to 7650 I paid'],
   ])('"%s" → "%s"', (heard, fixed) => {
     expect(repairSpokenText(heard)).toBe(fixed)
   })
@@ -27,6 +30,8 @@ describe('repairSpokenText', () => {
     'rent 2,00,400 with Neha', // written with separators: as said
     'snacks 200 and 300 for drinks', // two amounts, not one
     'iPad 30000 with Sam', // an iPad bought, not "I paid"
+    'Asian Paints 2400 for the bedroom', // the brand, with an amount after it
+    'bed 12000 from Pepperfry with Riya',
     'cab 1440.50 with Riya',
     'dinner at 8:30 with Riya', // a time
     'movie 10:30 pm with Sam',

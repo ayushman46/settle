@@ -4,17 +4,9 @@
  * ("USD") when none was typed and a payer ("Sam") when nobody said who paid — so a currency
  * comes only from the text itself, and a payer only when the text talks about paying.
  */
+import { fold, nameSound, spelling, withinOneEdit } from '../shared/nameMatch'
 
-/** Lower-case, accents and punctuation off, single spaces: "Zoë's  CAFÉ!" → "zoes cafe". */
-export function fold(text: string): string {
-  return text
-    .normalize('NFKD')
-    .replace(/\p{M}/gu, '')
-    .toLowerCase()
-    .replace(/['’`]/g, '')
-    .replace(/[^\p{L}\p{N}]+/gu, ' ')
-    .trim()
-}
+export { fold, nameSound, withinOneEdit }
 
 /* ------------------------------------------------------------------ currency */
 
@@ -295,25 +287,6 @@ export function matchKnownName(name: string, known: readonly string[]): string |
 }
 
 /**
- * How a name sounds, roughly: its consonants, with Indian spellings and what speech recognition
- * writes folded together ("Nikhil", "Nickel" → "nkl"; "Ishaan", "Ishan" → "sn").
- */
-export function nameSound(name: string): string {
-  return fold(name)
-    .replace(/\s+/g, '')
-    .replace(/ph/g, 'f')
-    .replace(/ck/g, 'k')
-    .replace(/([bkgtdcjsp])h/g, '$1')
-    .replace(/c(?=[eiy])/g, 's')
-    .replace(/[cq]/g, 'k')
-    .replace(/z/g, 'j')
-    .replace(/w/g, 'v')
-    .replace(/x/g, 'ks')
-    .replace(/[aeiouyh]/g, '')
-    .replace(/(.)\1+/g, '$1')
-}
-
-/**
  * For a spoken name that matched nobody exactly: the one known person it was probably meant to be.
  * Speech recognition writes names it doesn't know as words or near-spellings ("Nickel" for
  * Nikhil, "Ishan" for Ishaan, "Puja" for Pooja). Only when exactly one known first name is one
@@ -331,41 +304,6 @@ export function matchSpokenName(name: string, known: readonly string[]): string 
   if (sound.length < 3) return null
   const alike = known.filter((candidate) => nameSound(firstOf(candidate)) === sound)
   return alike.length === 1 ? (alike[0] ?? null) : null
-}
-
-/** One spelling for the ways Indian names are written in English ("Pooja"/"Puja", "Ishaan"/"Ishan"). */
-function spelling(word: string): string {
-  return word
-    .replace(/oo/g, 'u')
-    .replace(/ee/g, 'i')
-    .replace(/ph/g, 'f')
-    .replace(/ck/g, 'k')
-    .replace(/w/g, 'v')
-    .replace(/z/g, 'j')
-    .replace(/(.)\1+/g, '$1')
-}
-
-/** Whether `a` becomes `b` with at most one letter added, removed or changed ("ria" ↔ "riya"). */
-export function withinOneEdit(a: string, b: string): boolean {
-  if (Math.abs(a.length - b.length) > 1) return false
-  let i = 0
-  let j = 0
-  let edits = 0
-  while (i < a.length && j < b.length) {
-    if (a[i] === b[j]) {
-      i++
-      j++
-      continue
-    }
-    if (++edits > 1) return false
-    if (a.length > b.length) i++
-    else if (b.length > a.length) j++
-    else {
-      i++
-      j++
-    }
-  }
-  return edits + (a.length - i) + (b.length - j) <= 1
 }
 
 /**

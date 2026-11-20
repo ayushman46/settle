@@ -62,6 +62,7 @@ const KEYS = {
   lock: 'settle.v10.lock',
   scanfriend: 'settle.v10.scanfriend',
   health: 'settle.v10.health',
+  nicknames: 'settle.v11.nicknames',
   twice: 'settle.v10.twice',
   credit: 'settle.v10.credit',
   chat: 'settle.v9.chat',

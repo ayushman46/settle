@@ -78,9 +78,9 @@ describe('smsForAi', () => {
     expect(got).not.toContain('481923')
   })
 
-  it('collapses spaces and keeps 500 characters at most', () => {
+  it('collapses spaces and keeps 1200 characters at most', () => {
     expect(smsForAi('a   b\n\nc')).toBe('a b c')
-    expect(Array.from(smsForAi('₹'.repeat(900))).length).toBe(DESCRIBE_LIMITS.maxTextChars)
+    expect(Array.from(smsForAi('₹'.repeat(1500))).length).toBe(DESCRIBE_LIMITS.maxTextChars)
   })
 })
 
