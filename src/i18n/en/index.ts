@@ -12,6 +12,7 @@ import { rotation } from './rotation'
 import { sharein } from './sharein'
 import { trip } from './trip'
 import { voice } from './voice'
+import { paidfor } from './paidfor'
 import { you } from './you'
 import { ui } from './ui'
 import { kit } from './kit'
@@ -108,6 +109,7 @@ export const EN = {
   ...claim,
   ...sharein,
   ...voice,
+  ...paidfor,
   ...delivery,
   ...rotation,
   ...lend,

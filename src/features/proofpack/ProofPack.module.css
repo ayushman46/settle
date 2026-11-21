@@ -1,0 +1,204 @@
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+}
+
+.controls {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+.person {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  font: var(--text-label);
+}
+
+.person select {
+  flex: 1;
+  min-height: var(--tap);
+  padding: 0 var(--s-3);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  color: var(--ink);
+  font: var(--text-body);
+}
+
+.sheet {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+  padding: var(--s-5);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+}
+
+.sheetHead {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-3);
+}
+
+.mark {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  color: var(--positive);
+}
+
+.sheetTitle {
+  font: var(--text-section);
+}
+
+.sheetMeta {
+  color: var(--ink-2);
+  font: var(--text-caption);
+}
+
+.totals {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2) var(--s-5);
+  margin: 0;
+}
+
+.total {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: var(--s-1) var(--s-3);
+  align-items: baseline;
+}
+
+.total dt {
+  color: var(--ink-2);
+  font: var(--text-caption);
+}
+
+.total dd {
+  margin: 0;
+}
+
+.empty {
+  color: var(--ink-2);
+  font: var(--text-body);
+}
+
+.lines {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.line {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  padding-block: var(--s-3);
+  border-top: 1px solid var(--line);
+  break-inside: avoid;
+}
+
+.lineTop {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-3);
+}
+
+.lineWho {
+  display: flex;
+  flex-direction: column;
+  font: var(--text-label);
+  overflow-wrap: anywhere;
+}
+
+.lineDate {
+  color: var(--ink-2);
+  font: var(--text-caption);
+  font-weight: 400;
+}
+
+.lineMeta {
+  color: var(--ink-2);
+  font: var(--text-caption);
+  overflow-wrap: anywhere;
+}
+
+.bills {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: var(--s-1);
+  padding: var(--s-2) var(--s-3);
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+}
+
+.bill {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-3);
+  font: var(--text-caption);
+  font-variant-numeric: tabular-nums;
+}
+
+.gifts {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+.giftsTitle {
+  font: var(--text-label);
+}
+
+.footer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  padding-top: var(--s-3);
+  border-top: 1px solid var(--line);
+  color: var(--ink-2);
+  font: var(--text-micro);
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+/* Printed (or saved as a PDF): only the statement, black on white. */
+@media print {
+  .controls,
+  .actions,
+  [data-print='hide'] {
+    display: none !important;
+  }
+
+  .sheet {
+    padding: 0;
+    box-shadow: none;
+    color: #000;
+    background: #fff;
+  }
+
+  .bills {
+    background: none;
+    border: 1px solid #ccc;
+  }
+}

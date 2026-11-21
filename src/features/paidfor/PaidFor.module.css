@@ -1,0 +1,126 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  padding: var(--s-4);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+}
+
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-1) var(--s-3);
+}
+
+.title {
+  font: var(--text-label);
+}
+
+.count {
+  color: var(--ink-2);
+  font: var(--text-caption);
+}
+
+.countDone {
+  color: var(--positive);
+  font-weight: 650;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  min-height: 44px;
+  border-bottom: 1px solid var(--line);
+}
+
+.row:last-child {
+  border-bottom: 0;
+}
+
+.name {
+  flex: 1;
+  min-width: 0;
+  font: var(--text-label);
+  overflow-wrap: anywhere;
+}
+
+.status {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: var(--s-1);
+  font: var(--text-caption);
+  font-variant-numeric: tabular-nums;
+}
+
+.status svg {
+  width: 16px;
+  height: 16px;
+}
+
+.paid .status {
+  color: var(--positive);
+  font-weight: 650;
+}
+
+.part .status {
+  color: var(--warning-ink);
+}
+
+.open .status {
+  color: var(--ink-2);
+}
+
+.note {
+  color: var(--ink-2);
+  font: var(--text-micro);
+}
+
+.payment {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  width: 100%;
+}
+
+.paymentTitle {
+  color: var(--ink-2);
+  font: var(--text-caption);
+  font-weight: 650;
+}
+
+.billList {
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+}
+
+.billRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-3);
+  padding: var(--s-2) var(--s-3);
+  font: var(--text-label);
+  font-variant-numeric: tabular-nums;
+}
+
+.billName {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.extra {
+  color: var(--ink-2);
+}

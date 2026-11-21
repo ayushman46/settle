@@ -12,12 +12,13 @@ import { ConvertCard } from '../trip/ConvertCard'
 import { TRIP_ENABLED } from '../trip/enabled'
 import { FxNote } from '../trip/FxNote'
 import type { Expense } from '../../domain/types'
+import { BillPaidCard } from '../paidfor/PaidFor'
 
 export interface ExpenseExtensionsProps {
   expense: Expense
 }
 
-/** Feature cards under the expense hero, in order: claims, loan, paid abroad, convert. */
+/** Feature cards under the expense hero, in order: claims, loan, paid abroad, convert, who has paid their part (group bills). */
 export function ExpenseExtensions({ expense }: ExpenseExtensionsProps) {
   return (
     <>
@@ -26,6 +27,8 @@ export function ExpenseExtensions({ expense }: ExpenseExtensionsProps) {
       {LEND_ENABLED && <ByaajRow expenseId={expense.id} />}
       {TRIP_ENABLED && <FxNote expense={expense} />}
       {TRIP_ENABLED && <ConvertCard expense={expense} />}
+      <BillPaidCard expense={expense} />
+      <BillPaidCard expense={expense} />
     </>
   )
 }

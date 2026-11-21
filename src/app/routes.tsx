@@ -329,6 +329,16 @@ const ToolsScreen = lazyScreen(
   () => import('../features/tools/ToolsScreen'),
   (m) => m.ToolsScreen,
 )
+const ProofPackScreen = lazyScreen(
+  'ProofPackScreen',
+  () => import('../features/proofpack/ProofPackScreen'),
+  (m) => m.ProofPackScreen,
+)
+const ImportScreen = lazyScreen(
+  'ImportScreen',
+  () => import('../features/importer/ImportScreen'),
+  (m) => m.default,
+)
 const ChatScreen = lazyScreen(
   'ChatScreen',
   () => import('../features/chat/ChatScreen'),
@@ -444,6 +454,8 @@ export const APP_ROUTES: readonly AppRoute[] = [
   { pattern: '/app/expense/:id', screen: ExpenseDetailScreen, title: 'Expense', tab: null },
   { pattern: '/app/counter/:id', screen: CounterScreen, title: 'Pay at the counter', tab: null },
   { pattern: '/app/chat', screen: ChatScreen, title: 'Chat to split', tab: null },
+  { pattern: '/app/import', screen: ImportScreen, title: 'Bring your Splitwise', tab: null },
+  { pattern: '/app/proof-of-repayments', screen: ProofPackScreen, title: 'Proof of repayments', tab: null },
   { pattern: '/app/groups/:id/settle-day', screen: SettleDayScreen, title: 'Settle day', tab: null },
   { pattern: '/app/groups/:id/checkout', screen: CheckoutScreen, title: 'Settle before you leave', tab: null },
   { pattern: '/app/tools', screen: ToolsScreen, title: 'Everything Settle does', tab: null },

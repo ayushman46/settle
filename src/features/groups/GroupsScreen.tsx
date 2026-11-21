@@ -23,6 +23,7 @@ import { useT } from '../../i18n'
 import { formatMoney } from '../../lib/money'
 import { cx } from '../../lib/cx'
 import { ChatStart } from '../chat/ChatStart'
+import { ImportStart } from '../importer/ImportScreen'
 import { GroupEmoji } from './GroupEmoji'
 import { CreateGroupSheet } from './GroupSheets'
 import { acrossGroups, groupStanding, kindMeta, membersLabel, standingLabel, type GroupStanding } from './groupView'
@@ -129,6 +130,7 @@ export function GroupsScreen() {
             </section>
           )}
           <ChatStart />
+          <ImportStart />
           <Fab extended icon={<Plus strokeWidth={2.5} />} label={t('groups.list.new.cta')} onClick={() => startCreate()} />
         </>
       )}
@@ -250,6 +252,7 @@ function EmptyGroups({ onCreate }: { onCreate: (kind?: GroupKind) => void }) {
         })}
       </div>
       <ChatStart />
+      <ImportStart />
     </div>
   )
 }

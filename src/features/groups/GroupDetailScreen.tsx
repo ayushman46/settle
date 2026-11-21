@@ -35,6 +35,7 @@ import {
   useGroup,
   useGroupBalances,
 } from '../../data'
+import { PaymentPaidFor } from '../paidfor/PaidFor'
 import { BRAND, ME_ID, type Friend, type Group, type Minor, type Settlement } from '../../domain/types'
 import { CATEGORY_META } from '../../engine/categories'
 import { t as translate, useT } from '../../i18n'
@@ -686,6 +687,7 @@ function PaymentSheet({
           </div>
         </dl>
         <KindNoteLine id={s.id} />
+        <PaymentPaidFor group={group} settlement={s} />
         {isWithinFamily(group.id, s.id) && <p className={styles.note}>{t('units.within.label')}</p>}
         <p className={styles.note}>{t('groups.payment.mistake')}</p>
       </div>

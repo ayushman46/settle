@@ -36,6 +36,8 @@ import {
   Repeat,
   Shuffle,
   ShieldAlert,
+  ShieldCheck,
+  ArrowLeftRight,
   Undo2,
   User,
   WalletCards,
@@ -104,12 +106,14 @@ export const TOOLS: readonly ToolEntry[] = [
 
   // Going out, trips and work.
   { id: 'chat', section: 'out', icon: MessagesSquare, title: 'tools.item.chat.title', body: 'tools.item.chat.body', path: '/app/chat' },
+  { id: 'import', section: 'out', icon: ArrowLeftRight, title: 'import.tool.title', body: 'import.tool.body', path: '/app/import' },
   { id: 'report', section: 'out', icon: ReceiptText, title: 'tools.item.report.title', body: 'tools.item.report.body', path: '/app/report' },
 
   // You.
   { id: 'account', section: 'you', icon: Fingerprint, title: 'account.tool.title', body: 'account.tool.body', path: '/app/account' },
   { id: 'score', section: 'you', icon: Gauge, title: 'tools.item.score.title', body: 'tools.item.score.body', path: '/app/score' },
   { id: 'insights', section: 'you', icon: ChartPie, title: 'tools.item.insights.title', body: 'tools.item.insights.body', path: '/app/insights' },
+  { id: 'proofpack', section: 'you', icon: ShieldCheck, title: 'proofpack.tool.title', body: 'proofpack.tool.body', path: '/app/proof-of-repayments' },
   { id: 'stuck', section: 'you', icon: BanknoteArrowDown, title: 'tools.item.stuck.title', body: 'tools.item.stuck.body', path: '/app/stuck' },
   { id: 'fees', section: 'you', icon: Landmark, title: 'tools.item.fees.title', body: 'tools.item.fees.body', path: '/app/fees' },
 ]
